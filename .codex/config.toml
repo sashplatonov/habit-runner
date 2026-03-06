@@ -15,7 +15,3 @@ args = [
 [mcp_servers.git]
 command = "uvx"
 args = ["mcp-server-git", "--repository", "/Users/sash/Dev/Projects/habbit-runner"]
-
-[mcp_servers.eslint]
-command = "npx"
-args = ["-y", "@eslint/mcp@latest"]

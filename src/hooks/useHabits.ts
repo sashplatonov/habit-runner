@@ -11,59 +11,13 @@ import {
   createOutboxEntry
 } from '../lib/db';
 import { generateId } from '../lib/id';
-
-function formatDate(date: Date): string {
-  return date.toISOString().split('T')[0];
-}
-
-function calculateStreak(completions: Record<string, boolean>): {
-  current: number;
-  longest: number;
-} {
-  const today = new Date();
-  let current = 0;
-  let longest = 0;
-  let temp = 0;
-
-  for (let i = 0; i < 365; i++) {
-    const d = new Date(today);
-    d.setDate(d.getDate() - i);
-    const key = formatDate(d);
-    if (completions[key]) {
-      if (i === 0 || current > 0) current++;
-    } else {
-      if (i === 0) {
-        const yesterday = new Date(today);
-        yesterday.setDate(yesterday.getDate() - 1);
-        if (!completions[formatDate(yesterday)]) break;
-      } else {
-        break;
-      }
-    }
-  }
-
-  const sortedDates = Object.keys(completions)
-    .filter((k) => completions[k])
-    .sort();
-
-  for (let i = 0; i < sortedDates.length; i++) {
-    if (i === 0) {
-      temp = 1;
-    } else {
-      const prev = new Date(sortedDates[i - 1]);
-      const curr = new Date(sortedDates[i]);
-      const diff = (curr.getTime() - prev.getTime()) / 86400000;
-      if (diff === 1) {
-        temp++;
-      } else {
-        temp = 1;
-      }
-    }
-    if (temp > longest) longest = temp;
-  }
-
-  return { current, longest };
-}
+import {
+  buildMonthlyCompletionRates,
+  buildWeeklyCompletionData,
+  calculateStreak,
+  countCompletedDays,
+  formatDate
+} from '../lib/habitStats';
 
 export function useHabits() {
   const [habits, setHabits] = useState<Habit[]>([]);
@@ -198,8 +152,7 @@ export function useHabits() {
         };
 
       const { current, longest } = calculateStreak(habit.completions);
-      const completedDays = Object.values(habit.completions).filter(Boolean)
-        .length;
+      const completedDays = countCompletedDays(habit.completions);
       const totalDays = Math.max(
         1,
         Math.ceil(
@@ -207,67 +160,8 @@ export function useHabits() {
         )
       );
 
-      const today = new Date();
-      const weeklyData = [];
-      for (let w = 11; w >= 0; w--) {
-        let count = 0;
-        for (let d = 0; d < 7; d++) {
-          const date = new Date(today);
-          date.setDate(date.getDate() - w * 7 - d);
-          const key = formatDate(date);
-          if (habit.completions[key]) count++;
-        }
-        const weekStart = new Date(today);
-        weekStart.setDate(weekStart.getDate() - w * 7);
-        weeklyData.push({
-          week: `W${weekStart.getMonth() + 1}/${weekStart.getDate()}`,
-          count
-        });
-      }
-
-      const monthlyData = [];
-      const monthNames = [
-        'Jan',
-        'Feb',
-        'Mar',
-        'Apr',
-        'May',
-        'Jun',
-        'Jul',
-        'Aug',
-        'Sep',
-        'Oct',
-        'Nov',
-        'Dec'
-      ];
-
-      for (let m = 5; m >= 0; m--) {
-        const monthDate = new Date(today.getFullYear(), today.getMonth() - m, 1);
-        const daysInMonth = new Date(
-          monthDate.getFullYear(),
-          monthDate.getMonth() + 1,
-          0
-        ).getDate();
-        let completed = 0;
-        for (let d = 1; d <= daysInMonth; d++) {
-          const date = new Date(
-            monthDate.getFullYear(),
-            monthDate.getMonth(),
-            d
-          );
-          if (date > today) break;
-          const key = formatDate(date);
-          if (habit.completions[key]) completed++;
-        }
-        const daysElapsed =
-          monthDate.getMonth() === today.getMonth()
-            ? today.getDate()
-            : daysInMonth;
-        monthlyData.push({
-          month: monthNames[monthDate.getMonth()],
-          rate: Math.round((completed / Math.max(1, daysElapsed)) * 100)
-        });
-      }
+      const weeklyData = buildWeeklyCompletionData(habit.completions);
+      const monthlyData = buildMonthlyCompletionRates(habit.completions);
 
       return {
         totalDays,

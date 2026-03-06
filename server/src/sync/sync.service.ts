@@ -189,6 +189,7 @@ export class SyncService {
           version: payload.version ?? 1
         }
       });
+      await tx.checkin.deleteMany({ where: { habitId: payload.id, userId } });
       await tx.habit.deleteMany({ where: { id: payload.id, userId } });
       applied.push(op.id);
       return;
