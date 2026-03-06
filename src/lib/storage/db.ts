@@ -1,8 +1,8 @@
 import Dexie, { Table } from 'dexie';
-import { Habit } from '../types/habit';
-import { PullResponseDto } from '../types/sync';
-import { DEFAULT_USER_ID } from './config';
-import { generateId } from './id';
+import { Habit } from '@/types/habit';
+import { PullResponseDto } from '@/types/sync';
+import { DEFAULT_USER_ID } from '@/lib/core/config';
+import { generateId } from '@/lib/core/id';
 
 export type SyncEntity = 'habit' | 'checkin';
 export type SyncOpType = 'upsert' | 'delete';

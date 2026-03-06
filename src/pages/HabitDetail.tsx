@@ -8,9 +8,9 @@ import {
   TargetIcon,
   TrashIcon } from
 'lucide-react';
-import { HeatmapGrid } from '../components/HeatmapGrid';
-import { CompletionRing } from '../components/CompletionRing';
-import { useHabits } from '../hooks/useHabits';
+import { HeatmapGrid } from '@/components/HeatmapGrid';
+import { CompletionRing } from '@/components/CompletionRing';
+import { useHabits } from '@/hooks/useHabits';
 import {
   LineChart,
   Line,

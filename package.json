@@ -7,7 +7,10 @@
     "dev": "npx vite",
     "build": "npx vite build",
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
-    "preview": "npx vite preview"
+    "preview": "npx vite preview",
+    "test": "npm run test:unit",
+    "test:unit": "rm -rf .tmp-tests && npx tsc -p tsconfig.test.json && node --test .tmp-tests/tests/unit/**/*.test.js && rm -rf .tmp-tests",
+    "test:coverage": "rm -rf .tmp-tests && npx tsc -p tsconfig.test.json && node --test --experimental-test-coverage .tmp-tests/tests/unit/**/*.test.js && rm -rf .tmp-tests"
   },
   "dependencies": {
     "@emotion/react": "^11.13.3",

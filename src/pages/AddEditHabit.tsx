@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { ArrowLeftIcon, XIcon, PlusIcon } from 'lucide-react';
-import { useHabits } from '../hooks/useHabits';
-import { HabitColor, HabitFrequency } from '../types/habit';
+import { useHabits } from '@/hooks/useHabits';
+import { HabitColor, HabitFrequency } from '@/types/habit';
 interface AddEditHabitProps {
   habitId?: string;
   onNavigate: (view: string, habitId?: string) => void;

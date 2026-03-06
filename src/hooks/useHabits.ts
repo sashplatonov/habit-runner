@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Habit, HabitStats } from '../types/habit';
+import { Habit, HabitStats } from '@/types/habit';
 import {
   loadHabitsFromDb,
   persistHabitInDb,
@@ -9,15 +9,15 @@ import {
   deleteCheckinInDb,
   enqueueOutboxEntry,
   createOutboxEntry
-} from '../lib/db';
-import { generateId } from '../lib/id';
+} from '@/lib/storage/db';
+import { generateId } from '@/lib/core/id';
 import {
   buildMonthlyCompletionRates,
   buildWeeklyCompletionData,
   calculateStreak,
   countCompletedDays,
   formatDate
-} from '../lib/habitStats';
+} from '@/lib/habits/habitStats';
 
 export function useHabits() {
   const [habits, setHabits] = useState<Habit[]>([]);

@@ -1,0 +1,19 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "noEmit": false,
+    "outDir": ".tmp-tests",
+    "rootDir": ".",
+    "types": [
+      "node"
+    ],
+    "allowImportingTsExtensions": false,
+    "isolatedModules": false
+  },
+  "include": [
+    "src/lib/habits/habitStats.ts",
+    "tests/unit/**/*.ts"
+  ]
+}

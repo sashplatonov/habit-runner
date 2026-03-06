@@ -1,4 +1,4 @@
-import { API_BASE_URL } from '../config';
+import { API_BASE_URL } from '@/lib/core/config';
 
 const AUTH_SESSION_KEY = 'habbitRunner.auth.session';
 const EXPIRY_SKEW_SECONDS = 30;

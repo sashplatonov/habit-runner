@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { TrendingUpIcon, ZapIcon, FlameIcon, CalendarIcon } from 'lucide-react';
-import { useHabits } from '../hooks/useHabits';
-import { CompletionRing } from '../components/CompletionRing';
+import { useHabits } from '@/hooks/useHabits';
+import { CompletionRing } from '@/components/CompletionRing';
 import {
   LineChart,
   Line,

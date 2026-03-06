@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { runSyncCycle, SyncRunResult, SyncStatus } from '../lib/syncEngine';
-import { SYNC_ENABLED, SYNC_DISABLED_REASON } from '../lib/config';
+import { runSyncCycle, SyncRunResult, SyncStatus } from '@/lib/sync/syncEngine';
+import { SYNC_ENABLED, SYNC_DISABLED_REASON } from '@/lib/core/config';
 
 export interface SyncEngineState extends SyncRunResult {
   syncNow: () => Promise<void>;

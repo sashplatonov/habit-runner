@@ -1,12 +1,12 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Nav } from './components/Nav';
-import { Dashboard } from './pages/Dashboard';
-import { HabitDetail } from './pages/HabitDetail';
-import { AddEditHabit } from './pages/AddEditHabit';
-import { Stats } from './pages/Stats';
-import { useSyncEngine } from './hooks/useSyncEngine';
-import { OfflineBanner } from './components/OfflineBanner';
-import { AuthGate } from './components/AuthGate';
+import { Nav } from '@/components/Nav';
+import { Dashboard } from '@/pages/Dashboard';
+import { HabitDetail } from '@/pages/HabitDetail';
+import { AddEditHabit } from '@/pages/AddEditHabit';
+import { Stats } from '@/pages/Stats';
+import { useSyncEngine } from '@/hooks/useSyncEngine';
+import { OfflineBanner } from '@/components/OfflineBanner';
+import { AuthGate } from '@/components/AuthGate';
 import {
   AUTH_SESSION_CLEARED_EVENT,
   AuthSession,
@@ -14,9 +14,9 @@ import {
   getSessionUserId,
   parseOAuthCallbackSession,
   readAuthSession
-} from './lib/auth/session';
-import { API_BASE_URL } from './lib/config';
-import { setCurrentUserId } from './lib/db';
+} from '@/lib/auth/session';
+import { API_BASE_URL } from '@/lib/core/config';
+import { setCurrentUserId } from '@/lib/storage/db';
 
 type AppView = 'dashboard' | 'detail' | 'add' | 'edit' | 'stats';
 

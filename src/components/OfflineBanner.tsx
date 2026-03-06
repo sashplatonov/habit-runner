@@ -1,5 +1,5 @@
 import React from 'react';
-import { SyncEngineState } from '../hooks/useSyncEngine';
+import { SyncEngineState } from '@/hooks/useSyncEngine';
 
 interface OfflineBannerProps {
   syncState: SyncEngineState;

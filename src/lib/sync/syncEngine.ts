@@ -8,8 +8,8 @@ import {
   updateOutboxEntryFailure,
   countPendingOutboxEntries,
   getBackoffMs
-} from './db';
-import { pullChanges, pushChanges } from './api/sync';
+} from '@/lib/storage/db';
+import { pullChanges, pushChanges } from '@/lib/api/sync';
 
 export type SyncStatus = 'idle' | 'syncing' | 'offline' | 'error';
 

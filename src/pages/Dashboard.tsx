@@ -6,9 +6,9 @@ import {
   TrendingUpIcon,
   ZapIcon } from
 'lucide-react';
-import { CompletionRing } from '../components/CompletionRing';
-import { Habit } from '../types/habit';
-import { useHabits } from '../hooks/useHabits';
+import { CompletionRing } from '@/components/CompletionRing';
+import { Habit } from '@/types/habit';
+import { useHabits } from '@/hooks/useHabits';
 interface DashboardProps {
   onNavigate: (view: string, habitId?: string) => void;
 }

@@ -11,7 +11,7 @@ import {
   GOOGLE_OAUTH_CLIENT_SECRET,
   OAUTH_DEFAULT_RETURN_TO,
   REFRESH_TOKEN_EXPIRES_DAYS
-} from '../config';
+} from '../common/config';
 
 interface AuthPayload {
   sub: string;

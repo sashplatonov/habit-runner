@@ -1,5 +1,5 @@
 import React from 'react';
-import { API_BASE_URL } from '../lib/config';
+import { API_BASE_URL } from '@/lib/core/config';
 
 interface AuthGateProps {
   onError: (message: string) => void;

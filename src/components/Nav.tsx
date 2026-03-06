@@ -1,6 +1,6 @@
 import React from 'react';
 import { LayoutDashboardIcon, BarChart2Icon, PlusIcon } from 'lucide-react';
-import { SyncEngineState, SyncStatus } from '../hooks/useSyncEngine';
+import { SyncEngineState, SyncStatus } from '@/hooks/useSyncEngine';
 interface NavProps {
   currentView: string;
   onNavigate: (view: string, habitId?: string) => void;

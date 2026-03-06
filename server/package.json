@@ -6,6 +6,10 @@
     "dev": "ts-node-dev --respawn --transpile-only src/main.ts",
     "start": "node dist/main.js",
     "build": "tsc -p tsconfig.build.json",
+    "test": "npm run test:unit && npm run test:e2e",
+    "test:unit": "rm -rf dist-test && npx tsc -p tsconfig.test.json && node --test dist-test/test/unit/**/*.test.js && rm -rf dist-test",
+    "test:e2e": "rm -rf dist-test && npx tsc -p tsconfig.test.json && node --test dist-test/test/e2e/**/*.test.js && rm -rf dist-test",
+    "test:coverage": "rm -rf dist-test && npx tsc -p tsconfig.test.json && node --test --experimental-test-coverage dist-test/test/**/*.test.js && rm -rf dist-test",
     "prisma": "prisma",
     "seed": "ts-node prisma/seed.ts"
   },

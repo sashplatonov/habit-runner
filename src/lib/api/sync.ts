@@ -1,7 +1,7 @@
-import { PullResponseDto, PushResponseDto } from '../../types/sync';
-import { OutboxEntry } from '../db';
-import { API_BASE_URL } from '../config';
-import { getValidAccessToken } from '../auth/session';
+import { PullResponseDto, PushResponseDto } from '@/types/sync';
+import { OutboxEntry } from '@/lib/storage/db';
+import { API_BASE_URL } from '@/lib/core/config';
+import { getValidAccessToken } from '@/lib/auth/session';
 
 const API_BASE = API_BASE_URL;
 
