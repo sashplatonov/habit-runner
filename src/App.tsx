@@ -7,9 +7,10 @@ import { Stats } from '@/pages/Stats';
 import { useSyncEngine } from '@/hooks/useSyncEngine';
 import { OfflineBanner } from '@/components/OfflineBanner';
 import { AuthGate } from '@/components/AuthGate';
+import type {
+  AuthSession} from '@/lib/auth/session';
 import {
   AUTH_SESSION_CLEARED_EVENT,
-  AuthSession,
   clearAuthSession,
   getSessionUserId,
   parseOAuthCallbackSession,
@@ -68,7 +69,7 @@ export function App() {
 
   const navigate = (v: string, habitId?: string) => {
     setView(v as AppView);
-    if (habitId) setActiveHabitId(habitId);
+    if (habitId) {setActiveHabitId(habitId);}
   };
 
   const userEmail = useMemo(() => authSession?.email, [authSession]);

@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { ArrowLeftIcon, XIcon, PlusIcon } from 'lucide-react';
-import { useHabits } from '@/hooks/useHabits';
-import type { HabitColor, HabitFrequency } from '@/types/habit';
+import { useHabits } from '../hooks/useHabits';
+import { Habit, HabitColor, HabitFrequency } from '../types/habit';
 interface AddEditHabitProps {
   habitId?: string;
   onNavigate: (view: string, habitId?: string) => void;
@@ -116,13 +116,13 @@ export function AddEditHabit({ habitId, onNavigate }: AddEditHabitProps) {
   const [tags, setTags] = useState<string[]>(existing?.tags || []);
   const [tagInput, setTagInput] = useState('');
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const selectedColor = COLORS.find((c) => c.value === color) ?? COLORS[0];
+  const selectedColor = COLORS.find((c) => c.value === color)!;
   const validate = () => {
     const e: Record<string, string> = {};
-    if (!name.trim()) {e.name = 'Name is required';}
-    if (name.length > 40) {e.name = 'Max 40 characters';}
+    if (!name.trim()) e.name = 'Name is required';
+    if (name.length > 40) e.name = 'Max 40 characters';
     if (frequency === 'custom' && customDays.length === 0)
-    {e.customDays = 'Select at least one day';}
+    e.customDays = 'Select at least one day';
     return e;
   };
   const handleSubmit = () => {

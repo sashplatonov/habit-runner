@@ -1,5 +1,5 @@
-import { PullResponseDto, PushResponseDto } from '@/types/sync';
-import { OutboxEntry } from '@/lib/storage/db';
+import type { PullResponseDto, PushResponseDto } from '@/types/sync';
+import type { OutboxEntry } from '@/lib/storage/db';
 import { API_BASE_URL } from '@/lib/core/config';
 import { getValidAccessToken } from '@/lib/auth/session';
 
@@ -33,7 +33,7 @@ export async function pullChanges(
   since?: string
 ): Promise<PullResponseDto> {
   const url = new URL(`${API_BASE}/sync/pull`);
-  if (since) url.searchParams.set('since', since);
+  if (since) {url.searchParams.set('since', since);}
   const response = await fetchJson(url.toString(), { method: 'GET' });
   return response.json();
 }

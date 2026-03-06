@@ -176,7 +176,7 @@ export class AuthService {
   }
 
   private normalizeReturnTo(returnTo?: string): string {
-    if (!returnTo) return OAUTH_DEFAULT_RETURN_TO;
+    if (!returnTo) {return OAUTH_DEFAULT_RETURN_TO;}
     try {
       const parsed = new URL(returnTo);
       if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {

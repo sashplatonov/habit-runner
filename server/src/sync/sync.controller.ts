@@ -9,10 +9,11 @@ import {
   UseGuards
 } from '@nestjs/common';
 import { randomUUID } from 'crypto';
-import { RequestWithUser, AuthGuard } from '../auth/auth.guard';
+import type { RequestWithUser} from '../auth/auth.guard';
+import { AuthGuard } from '../auth/auth.guard';
 import { SyncService } from './sync.service';
-import { PullResponseDto } from './dto/pull-response.dto';
-import { PushRequestDto } from './dto/push-request.dto';
+import type { PullResponseDto } from './dto/pull-response.dto';
+import type { PushRequestDto } from './dto/push-request.dto';
 
 @UseGuards(AuthGuard)
 @Controller('sync')
@@ -25,7 +26,7 @@ export class SyncController {
     @Query('since') since?: string
   ): Promise<PullResponseDto> {
     const userId = req.user?.id;
-    if (!userId) throw new UnauthorizedException('Authentication required');
+    if (!userId) {throw new UnauthorizedException('Authentication required');}
     const traceId = this.getTraceId(req);
     req.res?.setHeader('x-trace-id', traceId);
     return this.syncService.pull(userId, since, traceId);
@@ -37,7 +38,7 @@ export class SyncController {
     @Body() body: PushRequestDto
   ): Promise<ReturnType<SyncService['push']>> {
     const userId = req.user?.id;
-    if (!userId) throw new UnauthorizedException('Authentication required');
+    if (!userId) {throw new UnauthorizedException('Authentication required');}
     const traceId = this.getTraceId(req);
     req.res?.setHeader('x-trace-id', traceId);
     return this.syncService.push(userId, body.ops, traceId);

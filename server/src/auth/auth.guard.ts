@@ -1,4 +1,5 @@
-import { Injectable, CanActivate, ExecutionContext, UnauthorizedException } from '@nestjs/common';
+import type { CanActivate, ExecutionContext} from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { AuthService } from './auth.service';
 
 export interface RequestWithUser {
@@ -30,11 +31,11 @@ export class AuthGuard implements CanActivate {
   }
 
   private extractToken(header?: string | string[]): string | null {
-    if (!header) return null;
+    if (!header) {return null;}
     const value = Array.isArray(header) ? header[0] : header;
-    if (!value) return null;
+    if (!value) {return null;}
     const [scheme, token] = value.split(' ');
-    if (scheme?.toLowerCase() !== 'bearer') return null;
+    if (scheme?.toLowerCase() !== 'bearer') {return null;}
     return token?.trim() ?? null;
   }
 }

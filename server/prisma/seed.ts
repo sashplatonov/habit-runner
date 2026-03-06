@@ -89,12 +89,12 @@ async function main() {
     });
   }
 
-  console.log('Seed data ready for demo user:', user.email);
+  process.stdout.write(`Seed data ready for demo user: ${user.email}\n`);
 }
 
 main()
   .catch((error) => {
-    console.error(error);
+    process.stderr.write(`${error instanceof Error ? error.stack ?? error.message : String(error)}\n`);
     process.exit(1);
   })
   .finally(() => prisma.$disconnect());

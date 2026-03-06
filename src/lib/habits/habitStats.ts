@@ -32,12 +32,12 @@ export function calculateStreak(
     day.setDate(day.getDate() - i);
     const key = formatDate(day);
     if (completions[key]) {
-      if (i === 0 || current > 0) current++;
+      if (i === 0 || current > 0) {current++;}
     } else {
       if (i === 0) {
         const yesterday = new Date(today);
         yesterday.setDate(yesterday.getDate() - 1);
-        if (!completions[formatDate(yesterday)]) break;
+        if (!completions[formatDate(yesterday)]) {break;}
       } else {
         break;
       }
@@ -61,7 +61,7 @@ export function calculateStreak(
         temp = 1;
       }
     }
-    if (temp > longest) longest = temp;
+    if (temp > longest) {longest = temp;}
   }
 
   return { current, longest };
@@ -85,7 +85,7 @@ export function buildWeeklyCompletionData(
       const date = new Date(today);
       date.setDate(date.getDate() - w * 7 - d);
       const key = formatDate(date);
-      if (completions[key]) count++;
+      if (completions[key]) {count++;}
     }
     const weekStart = new Date(today);
     weekStart.setDate(weekStart.getDate() - w * 7);
@@ -120,9 +120,9 @@ export function buildMonthlyCompletionRates(
         monthDate.getMonth(),
         d
       );
-      if (date > today) break;
+      if (date > today) {break;}
       const key = formatDate(date);
-      if (completions[key]) completed++;
+      if (completions[key]) {completed++;}
     }
     const daysElapsed =
       monthDate.getMonth() === today.getMonth() ? today.getDate() : daysInMonth;

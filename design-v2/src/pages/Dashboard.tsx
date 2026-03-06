@@ -6,9 +6,10 @@ import {
   TrendingUpIcon,
   ZapIcon } from
 'lucide-react';
-import { CompletionRing } from '@/components/CompletionRing';
-import type { Habit } from '@/types/habit';
-import { useHabits } from '@/hooks/useHabits';
+import { CompletionRing } from '../components/CompletionRing';
+import { MiniHeatmap } from '../components/MiniHeatmap';
+import { Habit } from '../types/habit';
+import { useHabits } from '../hooks/useHabits';
 interface DashboardProps {
   onNavigate: (view: string, habitId?: string) => void;
 }
@@ -73,13 +74,14 @@ function HabitRow({
   // Calculate current streak
   let streak = 0;
   const d = new Date();
-  for (let i = 0; i < 366; i++) {
+  while (true) {
     const key = d.toISOString().split('T')[0];
-    if (!habit.completions[key]) {
+    if (habit.completions[key]) {
+      streak++;
+      d.setDate(d.getDate() - 1);
+    } else {
       break;
     }
-    streak++;
-    d.setDate(d.getDate() - 1);
   }
   // Last 7 days mini bars
   const last7 = Array.from(
@@ -97,7 +99,7 @@ function HabitRow({
   for (let i = 0; i < 30; i++) {
     const date = new Date();
     date.setDate(date.getDate() - i);
-    if (habit.completions[date.toISOString().split('T')[0]]) {rate30++;}
+    if (habit.completions[date.toISOString().split('T')[0]]) rate30++;
   }
   const completionRate = Math.round(rate30 / 30 * 100);
   return (
@@ -142,6 +144,11 @@ function HabitRow({
           </div>
         </div>
       </button>
+
+      {/* 30-day Mini Heatmap */}
+      <div className="hidden sm:flex items-center justify-end mr-2">
+        <MiniHeatmap completions={habit.completions} color={habit.color} />
+      </div>
 
       {/* Last 7 days mini bars */}
       <div className="hidden sm:flex items-end gap-[2px] h-5">
@@ -206,8 +213,8 @@ export function Dashboard({ onNavigate }: DashboardProps) {
     day: 'numeric'
   });
   const filtered = habits.filter((h) => {
-    if (filter === 'pending') {return !h.completions[today];}
-    if (filter === 'done') {return !!h.completions[today];}
+    if (filter === 'pending') return !h.completions[today];
+    if (filter === 'done') return !!h.completions[today];
     return true;
   });
   // Overall streak (days where all habits completed)
@@ -220,7 +227,7 @@ export function Dashboard({ onNavigate }: DashboardProps) {
     if (allDone) {
       overallStreak++;
       d.setDate(d.getDate() - 1);
-    } else {break;}
+    } else break;
   }
   return (
     <div className="min-h-screen bg-[#080810] pt-14">

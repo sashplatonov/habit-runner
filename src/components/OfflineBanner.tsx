@@ -1,12 +1,12 @@
 import React from 'react';
-import { SyncEngineState } from '@/hooks/useSyncEngine';
+import type { SyncEngineState } from '@/hooks/useSyncEngine';
 
 interface OfflineBannerProps {
   syncState: SyncEngineState;
 }
 
 export function OfflineBanner({ syncState }: OfflineBannerProps) {
-  if (syncState.status === 'idle' || syncState.status === 'syncing') return null;
+  if (syncState.status === 'idle' || syncState.status === 'syncing') {return null;}
 
   const isOffline = syncState.status === 'offline';
   const message = isOffline

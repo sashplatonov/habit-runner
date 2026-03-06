@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Habit, HabitStats } from '@/types/habit';
+import type { Habit, HabitStats } from '@/types/habit';
 import {
   loadHabitsFromDb,
   persistHabitInDb,
@@ -26,7 +26,7 @@ export function useHabits() {
     let mounted = true;
     (async () => {
       const stored = await loadHabitsFromDb();
-      if (mounted) setHabits(stored);
+      if (mounted) {setHabits(stored);}
     })();
     return () => {
       mounted = false;
@@ -37,7 +37,7 @@ export function useHabits() {
     const key = date || formatDate(new Date());
     setHabits((prev) =>
       prev.map((habit) => {
-        if (habit.id !== habitId) return habit;
+        if (habit.id !== habitId) {return habit;}
         const hasCompletion = !!habit.completions[key];
         const updatedCompletions = { ...habit.completions };
         if (hasCompletion) {
@@ -106,7 +106,7 @@ export function useHabits() {
   const updateHabit = useCallback((id: string, data: Partial<Habit>) => {
     setHabits((prev) =>
       prev.map((habit) => {
-        if (habit.id !== id) return habit;
+        if (habit.id !== id) {return habit;}
         const updatedHabit: Habit = {
           ...habit,
           ...data,
@@ -141,7 +141,7 @@ export function useHabits() {
     (habitId: string): HabitStats => {
       const habit = habits.find((h) => h.id === habitId);
       if (!habit)
-        return {
+        {return {
           totalDays: 0,
           completedDays: 0,
           currentStreak: 0,
@@ -149,7 +149,7 @@ export function useHabits() {
           completionRate: 0,
           weeklyData: [],
           monthlyData: []
-        };
+        };}
 
       const { current, longest } = calculateStreak(habit.completions);
       const completedDays = countCompletedDays(habit.completions);
@@ -179,7 +179,7 @@ export function useHabits() {
   const getTodayCompletionRate = useCallback(() => {
     const today = formatDate(new Date());
     const active = habits.filter((h) => !h.archived);
-    if (active.length === 0) return 0;
+    if (active.length === 0) {return 0;}
     const completed = active.filter((h) => h.completions[today]).length;
     return Math.round((completed / active.length) * 100);
   }, [habits]);

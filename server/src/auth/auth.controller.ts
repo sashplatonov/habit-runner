@@ -1,6 +1,6 @@
 import { Body, Controller, Get, Post, Query, Redirect } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import {
+import type {
   LoginRequest,
   OAuthCallbackQuery,
   OAuthStartQuery,

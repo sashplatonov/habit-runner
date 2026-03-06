@@ -43,7 +43,7 @@ async function pushPendingOutbox(): Promise<{
   const appliedSet = new Set(response.applied);
   await Promise.all(
     entries.map(async (entry) => {
-      if (appliedSet.has(entry.id)) return;
+      if (appliedSet.has(entry.id)) {return;}
       const conflict = response.conflicts.find((c) => c.opId === entry.id);
       const reason = conflict?.reason ?? 'push rejected';
       const nextRetry = new Date(

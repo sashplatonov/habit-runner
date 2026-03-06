@@ -34,7 +34,7 @@ function toSession(payload: {
 export function readAuthSession(): AuthSession | null {
   try {
     const raw = localStorage.getItem(AUTH_SESSION_KEY);
-    if (!raw) return null;
+    if (!raw) {return null;}
     const parsed = JSON.parse(raw) as AuthSession;
     if (!parsed.accessToken || !parsed.refreshToken || !parsed.expiresAt) {
       return null;
@@ -92,7 +92,7 @@ async function refreshSession(session: AuthSession): Promise<AuthSession> {
 
 export async function getValidAccessToken(): Promise<string | null> {
   const session = readAuthSession();
-  if (!session) return null;
+  if (!session) {return null;}
 
   if (!isTokenExpiring(session)) {
     return session.accessToken;
@@ -132,11 +132,11 @@ function decodeBase64Url(value: string): string | null {
 }
 
 export function getSessionUserId(session: AuthSession | null): string | null {
-  if (!session?.accessToken) return null;
+  if (!session?.accessToken) {return null;}
   const segments = session.accessToken.split('.');
-  if (segments.length < 2) return null;
+  if (segments.length < 2) {return null;}
   const payloadRaw = decodeBase64Url(segments[1]);
-  if (!payloadRaw) return null;
+  if (!payloadRaw) {return null;}
 
   try {
     const payload = JSON.parse(payloadRaw) as AccessTokenPayload;

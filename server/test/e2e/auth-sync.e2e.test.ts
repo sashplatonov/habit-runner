@@ -4,7 +4,8 @@ import { randomUUID } from 'node:crypto';
 import { Module, UnauthorizedException } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { AuthController } from '../../src/auth/auth.controller';
-import { AuthGuard, RequestWithUser } from '../../src/auth/auth.guard';
+import type { RequestWithUser } from '../../src/auth/auth.guard';
+import { AuthGuard } from '../../src/auth/auth.guard';
 import { AuthService } from '../../src/auth/auth.service';
 import { MetricsService } from '../../src/metrics/metrics.service';
 import { PrismaService } from '../../src/prisma/prisma.service';
@@ -125,7 +126,7 @@ class InMemoryPrismaMock {
     updateMany: async (args: { where: { token: string }; data: { revoked: boolean } }) => {
       let count = 0;
       this.refreshTokens = this.refreshTokens.map((token) => {
-        if (token.token !== args.where.token) return token;
+        if (token.token !== args.where.token) {return token;}
         count += 1;
         return { ...token, revoked: args.data.revoked };
       });
@@ -142,7 +143,7 @@ class InMemoryPrismaMock {
     },
     findUnique: async (args: { where: { id: string }; select?: { userId: true } }) => {
       const found = this.habits.find((habit) => habit.id === args.where.id);
-      if (!found) return null;
+      if (!found) {return null;}
       if (args.select?.userId) {
         return { userId: found.userId };
       }
@@ -168,8 +169,8 @@ class InMemoryPrismaMock {
     deleteMany: async (args: { where: { id?: string; userId: string } }) => {
       const before = this.habits.length;
       this.habits = this.habits.filter((habit) => {
-        if (habit.userId !== args.where.userId) return true;
-        if (args.where.id && habit.id !== args.where.id) return true;
+        if (habit.userId !== args.where.userId) {return true;}
+        if (args.where.id && habit.id !== args.where.id) {return true;}
         return false;
       });
       return { count: before - this.habits.length };
@@ -217,9 +218,9 @@ class InMemoryPrismaMock {
     deleteMany: async (args: { where: { habitId: string; date: Date; userId: string } }) => {
       const before = this.checkins.length;
       this.checkins = this.checkins.filter((checkin) => {
-        if (checkin.userId !== args.where.userId) return true;
-        if (checkin.habitId !== args.where.habitId) return true;
-        if (checkin.date.getTime() !== args.where.date.getTime()) return true;
+        if (checkin.userId !== args.where.userId) {return true;}
+        if (checkin.habitId !== args.where.habitId) {return true;}
+        if (checkin.date.getTime() !== args.where.date.getTime()) {return true;}
         return false;
       });
       return { count: before - this.checkins.length };
@@ -260,7 +261,7 @@ class InMemoryPrismaMock {
 
   private compareByTimestampAndId(aTime: Date, bTime: Date, aId: string, bId: string): number {
     const diff = aTime.getTime() - bTime.getTime();
-    if (diff !== 0) return diff;
+    if (diff !== 0) {return diff;}
     return aId.localeCompare(bId);
   }
 
@@ -269,17 +270,17 @@ class InMemoryPrismaMock {
     where: Record<string, unknown>,
     field: 'updatedAt' | 'deletedAt'
   ): boolean {
-    if (typeof where.userId === 'string' && row.userId !== where.userId) return false;
+    if (typeof where.userId === 'string' && row.userId !== where.userId) {return false;}
     const andClause = Array.isArray(where.AND) ? where.AND[0] : undefined;
     const orClause = andClause && typeof andClause === 'object' ? (andClause as { OR?: unknown }).OR : undefined;
-    if (!Array.isArray(orClause) || orClause.length !== 2) return true;
+    if (!Array.isArray(orClause) || orClause.length !== 2) {return true;}
 
     const [first, second] = orClause as Array<Record<string, unknown>>;
     const value = row[field];
-    if (!(value instanceof Date)) return false;
+    if (!(value instanceof Date)) {return false;}
 
     const gtDate = this.extractDate(first[field]);
-    if (gtDate && value.getTime() > gtDate.getTime()) return true;
+    if (gtDate && value.getTime() > gtDate.getTime()) {return true;}
 
     const secondField = second[field];
     const equalsDate = this.extractDate(
@@ -303,7 +304,7 @@ class InMemoryPrismaMock {
       const gt = (value as { gt?: unknown }).gt;
       return gt instanceof Date ? gt : null;
     }
-    if (value instanceof Date) return value;
+    if (value instanceof Date) {return value;}
     return null;
   }
 }

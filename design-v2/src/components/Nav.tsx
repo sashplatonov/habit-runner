@@ -1,26 +1,16 @@
 import React from 'react';
-import { LayoutDashboardIcon, BarChart2Icon, PlusIcon } from 'lucide-react';
-import type { SyncEngineState, SyncStatus } from '@/hooks/useSyncEngine';
+import {
+  LayoutDashboardIcon,
+  BarChart2Icon,
+  PlusIcon,
+  LogOutIcon } from
+'lucide-react';
 interface NavProps {
   currentView: string;
   onNavigate: (view: string, habitId?: string) => void;
-  syncState: SyncEngineState;
-  userEmail?: string;
   onLogout?: () => void;
 }
-const statusLabels: Record<SyncStatus, string> = {
-  idle: 'Synced',
-  syncing: 'Syncing',
-  offline: 'Offline',
-  error: 'Error'
-};
-const statusClasses: Record<SyncStatus, string> = {
-  idle: 'text-emerald-300 border-emerald-300/40 bg-emerald-500/5',
-  syncing: 'text-cyan-300 border-cyan-300/40 bg-cyan-500/5',
-  offline: 'text-amber-300 border-amber-300/40 bg-amber-500/5',
-  error: 'text-rose-300 border-rose-300/40 bg-rose-500/5'
-};
-export function Nav({ currentView, onNavigate, syncState, userEmail, onLogout }: NavProps) {
+export function Nav({ currentView, onNavigate, onLogout }: NavProps) {
   const isActive = (view: string) =>
   currentView === view || view === 'dashboard' && currentView === 'detail';
   return (
@@ -56,32 +46,20 @@ export function Nav({ currentView, onNavigate, syncState, userEmail, onLogout }:
         </button>
       </div>
 
-      <div
-        className={`hidden sm:flex items-center gap-2 border rounded-full px-3 py-1 text-xs font-medium ${statusClasses[syncState.status]}`}
-        title={
-          syncState.lastError
-            ? `Sync error: ${syncState.lastError}`
-            : syncState.lastSyncedAt
-            ? `Last synced at ${new Date(syncState.lastSyncedAt).toLocaleTimeString()}`
-            : undefined
-        }>
-        <span className="h-2 w-2 rounded-full bg-current" />
-        <span>{statusLabels[syncState.status]}</span>
-        {syncState.pending > 0 && (
-          <span className="text-white/70">({syncState.pending} pending)</span>
-        )}
-      </div>
-
+      {/* Right actions */}
       <div className="flex items-center gap-2">
-        {userEmail && (
-          <button
-            onClick={onLogout}
-            className="hidden sm:block text-xs text-[#94a3b8] hover:text-white transition-colors"
-            title={userEmail}
-          >
-            Выйти
+        {/* Logout button */}
+        {onLogout &&
+        <button
+          onClick={onLogout}
+          className="p-1.5 rounded-lg border border-[#1e1e2e] text-[#64748b] hover:text-red-400 hover:border-red-400/30 hover:bg-red-400/10 transition-all duration-200"
+          title="Clear all data">
+
+            <LogOutIcon size={14} />
           </button>
-        )}
+        }
+
+        {/* Add button */}
         <button
           onClick={() => onNavigate('add')}
           className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#00d4ff]/10 border border-[#00d4ff]/30 text-[#00d4ff] text-xs font-medium hover:bg-[#00d4ff]/20 hover:shadow-[0_0_16px_rgba(0,212,255,0.25)] transition-all duration-200">

@@ -1,13 +1,13 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { PrismaClient } from '@prisma/client';
+import type { PrismaClient } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
-import {
+import type {
   PullResponseDto,
   HabitDto,
   CheckinDto,
   TombstoneDto
 } from './dto/pull-response.dto';
-import {
+import type {
   PushConflict,
   PushResponseDto,
   SyncOpDto
@@ -144,10 +144,10 @@ export class SyncService {
     try {
       await this.prisma.$transaction(async (tx: TxClient) => {
         for (const op of ops) {
-          if (!op.id) continue;
+          if (!op.id) {continue;}
 
           const deduplicated = await this.tryCreateLog(tx, op.id);
-          if (!deduplicated) continue;
+          if (!deduplicated) {continue;}
 
           if (op.entity === 'habit') {
             await this.applyHabitOp(tx, userId, op, applied, conflicts);
@@ -177,7 +177,7 @@ export class SyncService {
     conflicts: PushConflict[]
   ) {
     const payload = op.payload as unknown as HabitPayload;
-    if (!payload?.id) return;
+    if (!payload?.id) {return;}
     const timestamp = this.normalizeDate(payload.updatedAt);
 
     if (op.type === 'delete') {
@@ -264,7 +264,7 @@ export class SyncService {
     conflicts: PushConflict[]
   ) {
     const payload = op.payload as unknown as CheckinPayload;
-    if (!payload?.habitId || !payload.date) return;
+    if (!payload?.habitId || !payload.date) {return;}
     const timestamp = this.normalizeDate(payload.updatedAt);
     const date = new Date(payload.date);
     const parentHabit = await tx.habit.findUnique({
@@ -357,12 +357,12 @@ export class SyncService {
   }
 
   private parseCursor(cursor?: string): Cursor | undefined {
-    if (!cursor) return undefined;
+    if (!cursor) {return undefined;}
     const parts = cursor.split('|');
-    if (parts.length < 2) return undefined;
+    if (parts.length < 2) {return undefined;}
     const date = new Date(parts[0]);
     const id = parts[1];
-    if (Number.isNaN(date.getTime())) return undefined;
+    if (Number.isNaN(date.getTime())) {return undefined;}
     return { updatedAt: date, id };
   }
 
@@ -384,10 +384,10 @@ export class SyncService {
   private calculateNextCursor(
     records: { updatedAt: Date; id: string }[]
   ): string | undefined {
-    if (records.length === 0) return undefined;
+    if (records.length === 0) {return undefined;}
     const sorted = records.sort((a, b) => {
       const diff = a.updatedAt.getTime() - b.updatedAt.getTime();
-      if (diff !== 0) return diff;
+      if (diff !== 0) {return diff;}
       return a.id.localeCompare(b.id);
     });
     const last = sorted[sorted.length - 1];
@@ -459,21 +459,21 @@ export class SyncService {
   }
 
   private normalizeDate(value?: string): Date {
-    if (!value) return new Date();
+    if (!value) {return new Date();}
     const parsed = new Date(value);
-    if (Number.isNaN(parsed.getTime())) return new Date();
+    if (Number.isNaN(parsed.getTime())) {return new Date();}
     return parsed;
   }
 
   private isUniqueConstraintError(error: unknown): boolean {
-    if (!error || typeof error !== 'object') return false;
-    if (!('code' in error)) return false;
+    if (!error || typeof error !== 'object') {return false;}
+    if (!('code' in error)) {return false;}
     return (error as { code?: string }).code === 'P2002';
   }
 
   private normalizeTags(value: unknown): unknown {
-    if (value === undefined) return undefined;
-    if (value === null) return undefined;
+    if (value === undefined) {return undefined;}
+    if (value === null) {return undefined;}
     return value;
   }
 }

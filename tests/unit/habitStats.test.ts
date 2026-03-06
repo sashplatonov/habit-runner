@@ -6,7 +6,7 @@ import {
   countCompletedDays,
   buildWeeklyCompletionData,
   buildMonthlyCompletionRates
-} from '../../src/lib/habitStats.js';
+} from '../../src/lib/habits/habitStats.js';
 
 test('formatDate returns YYYY-MM-DD', () => {
   const value = formatDate(new Date('2026-03-05T12:22:00.000Z'));

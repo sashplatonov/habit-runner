@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { runSyncCycle, SyncRunResult, SyncStatus } from '@/lib/sync/syncEngine';
+import type { SyncRunResult, SyncStatus } from '@/lib/sync/syncEngine';
+import { runSyncCycle } from '@/lib/sync/syncEngine';
 import { SYNC_ENABLED, SYNC_DISABLED_REASON } from '@/lib/core/config';
 
 export interface SyncEngineState extends SyncRunResult {
@@ -23,7 +24,7 @@ export function useSyncEngine(enabled = true): SyncEngineState {
       }));
       return;
     }
-    if (runningRef.current) return;
+    if (runningRef.current) {return;}
     runningRef.current = true;
     setState((prev) => ({ ...prev, status: navigator.onLine ? 'syncing' : 'offline' }));
 

@@ -1,6 +1,7 @@
-import Dexie, { Table } from 'dexie';
-import { Habit } from '@/types/habit';
-import { PullResponseDto } from '@/types/sync';
+import type { Table } from 'dexie';
+import Dexie from 'dexie';
+import type { Habit } from '@/types/habit';
+import type { PullResponseDto } from '@/types/sync';
 import { DEFAULT_USER_ID } from '@/lib/core/config';
 import { generateId } from '@/lib/core/id';
 
@@ -203,7 +204,7 @@ export async function upsertCheckinInDb(
     return;
   }
 
-  if (!done) return;
+  if (!done) {return;}
   await db.checkins.add({
     id: generateId(),
     userId,
@@ -263,7 +264,7 @@ export async function ensureSyncMeta(): Promise<SyncMeta> {
   const userId = getCurrentUserId();
   const id = syncMetaId(userId);
   const existing = await db.sync_meta.get(id);
-  if (existing) return existing;
+  if (existing) {return existing;}
   const meta: SyncMeta = {
     id,
     status: 'idle'
@@ -305,7 +306,7 @@ export async function markOutboxEntriesInflight(ids: string[]): Promise<void> {
   await Promise.all(
     ids.map(async (id) => {
       const entry = await db.outbox.get(id);
-      if (!entry || entry.userId !== userId) return;
+      if (!entry || entry.userId !== userId) {return;}
       await db.outbox.update(id, {
         status: 'inflight',
         lastError: undefined
@@ -315,7 +316,7 @@ export async function markOutboxEntriesInflight(ids: string[]): Promise<void> {
 }
 
 export async function deleteOutboxEntries(ids: string[]): Promise<void> {
-  if (ids.length === 0) return;
+  if (ids.length === 0) {return;}
   await db.outbox.bulkDelete(ids);
 }
 
@@ -339,7 +340,7 @@ function dateKeyFromIso(value: string): string {
 async function rebuildHabitCompletions(habitId: string): Promise<void> {
   const userId = getCurrentUserId();
   const habit = await db.habits.get(habitId);
-  if (!habit || habit.userId !== userId) return;
+  if (!habit || habit.userId !== userId) {return;}
   const checkins = await db.checkins
     .where('habitId')
     .equals(habitId)
