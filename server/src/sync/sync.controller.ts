@@ -1,4 +1,13 @@
-import { Body, Controller, Get, Post, Query, Req, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Post,
+  Query,
+  Req,
+  UseGuards
+} from '@nestjs/common';
+import { randomUUID } from 'crypto';
 import { RequestWithUser, AuthGuard } from '../auth/auth.guard';
 import { DEFAULT_USER_ID } from '../config';
 import { SyncService } from './sync.service';
@@ -16,7 +25,9 @@ export class SyncController {
     @Query('since') since?: string
   ): Promise<PullResponseDto> {
     const userId = req.user?.id ?? DEFAULT_USER_ID;
-    return this.syncService.pull(userId, since);
+    const traceId = this.getTraceId(req);
+    req.res?.setHeader('x-trace-id', traceId);
+    return this.syncService.pull(userId, since, traceId);
   }
 
   @Post('push')
@@ -25,6 +36,15 @@ export class SyncController {
     @Body() body: PushRequestDto
   ): Promise<ReturnType<SyncService['push']>> {
     const userId = req.user?.id ?? DEFAULT_USER_ID;
-    return this.syncService.push(userId, body.ops);
+    const traceId = this.getTraceId(req);
+    req.res?.setHeader('x-trace-id', traceId);
+    return this.syncService.push(userId, body.ops, traceId);
+  }
+
+  private getTraceId(req: RequestWithUser): string {
+    const traceIdHeader = req.header('x-trace-id');
+    return traceIdHeader && traceIdHeader.trim().length > 0
+      ? traceIdHeader.trim()
+      : randomUUID();
   }
 }

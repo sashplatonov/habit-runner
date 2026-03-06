@@ -1,9 +1,13 @@
 import { Injectable, CanActivate, ExecutionContext, UnauthorizedException } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { Request } from 'express';
 import { ALLOW_LEGACY_X_USER } from '../config';
 
-export interface RequestWithUser extends Request {
+export interface RequestWithUser {
+  headers: Record<string, string | string[] | undefined>;
+  header(name: string): string | undefined;
+  res?: {
+    setHeader(name: string, value: string): void;
+  };
   user?: {
     id: string;
     email?: string;

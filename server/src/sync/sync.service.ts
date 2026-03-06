@@ -1,5 +1,4 @@
-import { Habit, Checkin, Tombstone, PrismaClientKnownRequestError } from '@prisma/client';
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import {
   PullResponseDto,
@@ -45,100 +44,120 @@ interface CheckinPayload {
 
 @Injectable()
 export class SyncService {
+  private readonly logger = new Logger(SyncService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly metrics: MetricsService
   ) {}
 
-  async pull(userId: string, since?: string): Promise<PullResponseDto> {
+  async pull(userId: string, since?: string, traceId?: string): Promise<PullResponseDto> {
     const pullStart = Date.now();
-    const cursor = this.parseCursor(since);
-    const updatedFilter = cursor
-      ? { AND: [this.buildCursorClause(cursor, 'updatedAt')] }
-      : undefined;
-    const deletedFilter = cursor
-      ? { AND: [this.buildCursorClause(cursor, 'deletedAt')] }
-      : undefined;
+    try {
+      const cursor = this.parseCursor(since);
+      const updatedFilter = cursor
+        ? { AND: [this.buildCursorClause(cursor, 'updatedAt')] }
+        : undefined;
+      const deletedFilter = cursor
+        ? { AND: [this.buildCursorClause(cursor, 'deletedAt')] }
+        : undefined;
 
-    const habits = await this.prisma.habit.findMany({
-      where: {
-        userId,
-        ...updatedFilter
-      },
-      orderBy: [
-        { updatedAt: 'asc' },
-        { id: 'asc' }
-      ],
-      take: 200
-    });
+      const habits = await this.prisma.habit.findMany({
+        where: {
+          userId,
+          ...updatedFilter
+        },
+        orderBy: [
+          { updatedAt: 'asc' },
+          { id: 'asc' }
+        ],
+        take: 200
+      });
 
-    const checkins = await this.prisma.checkin.findMany({
-      where: {
-        userId,
-        ...updatedFilter
-      },
-      orderBy: [
-        { updatedAt: 'asc' },
-        { id: 'asc' }
-      ],
-      take: 200
-    });
+      const checkins = await this.prisma.checkin.findMany({
+        where: {
+          userId,
+          ...updatedFilter
+        },
+        orderBy: [
+          { updatedAt: 'asc' },
+          { id: 'asc' }
+        ],
+        take: 200
+      });
 
-    const tombstones = await this.prisma.tombstone.findMany({
-      where: {
-        userId,
-        ...deletedFilter
-      },
-      orderBy: [
-        { deletedAt: 'asc' },
-        { id: 'asc' }
-      ],
-      take: 200
-    });
+      const tombstones = await this.prisma.tombstone.findMany({
+        where: {
+          userId,
+          ...deletedFilter
+        },
+        orderBy: [
+          { deletedAt: 'asc' },
+          { id: 'asc' }
+        ],
+        take: 200
+      });
 
-    const cursorCandidates = [
-      ...habits.map((h) => ({ updatedAt: h.updatedAt, id: h.id })),
-      ...checkins.map((c) => ({ updatedAt: c.updatedAt, id: c.id })),
-      ...tombstones.map((t) => ({ updatedAt: t.deletedAt, id: t.id }))
-    ];
+      const cursorCandidates = [
+        ...habits.map((h: { updatedAt: Date; id: string }) => ({ updatedAt: h.updatedAt, id: h.id })),
+        ...checkins.map((c: { updatedAt: Date; id: string }) => ({ updatedAt: c.updatedAt, id: c.id })),
+        ...tombstones.map((t: { deletedAt: Date; id: string }) => ({ updatedAt: t.deletedAt, id: t.id }))
+      ];
 
-    const nextCursor = this.calculateNextCursor(cursorCandidates);
-    const serverTime = new Date().toISOString();
+      const nextCursor = this.calculateNextCursor(cursorCandidates);
+      const serverTime = new Date().toISOString();
 
-    this.metrics.recordPull(
-      Date.now() - pullStart,
-      habits.length + checkins.length + tombstones.length
-    );
+      this.metrics.recordPull(
+        Date.now() - pullStart,
+        habits.length + checkins.length + tombstones.length
+      );
 
-    return {
-      habits: habits.map(this.serializeHabit),
-      checkins: checkins.map(this.serializeCheckin),
-      tombstones: tombstones.map(this.serializeTombstone),
-      nextCursor,
-      serverTime
-    };
+      return {
+        habits: habits.map(this.serializeHabit),
+        checkins: checkins.map(this.serializeCheckin),
+        tombstones: tombstones.map(this.serializeTombstone),
+        nextCursor,
+        serverTime
+      };
+    } catch (error) {
+      this.metrics.recordError();
+      this.logger.error(
+        `sync pull failed userId=${userId} traceId=${traceId ?? 'n/a'}`,
+        error instanceof Error ? error.stack : String(error)
+      );
+      throw error;
+    }
   }
 
-  async push(userId: string, ops: SyncOpDto[]): Promise<PushResponseDto> {
+  async push(userId: string, ops: SyncOpDto[], traceId?: string): Promise<PushResponseDto> {
     const pushStart = Date.now();
     const applied: string[] = [];
     const conflicts: PushConflict[] = [];
     const serverTime = new Date().toISOString();
 
-    await this.prisma.$transaction(async (tx) => {
-      for (const op of ops) {
-        if (!op.id) continue;
+    try {
+      await this.prisma.$transaction(async (tx: PrismaService) => {
+        for (const op of ops) {
+          if (!op.id) continue;
 
-        const deduplicated = await this.tryCreateLog(tx, op.id);
-        if (!deduplicated) continue;
+          const deduplicated = await this.tryCreateLog(tx, op.id);
+          if (!deduplicated) continue;
 
-        if (op.entity === 'habit') {
-          await this.applyHabitOp(tx, userId, op, applied, conflicts);
-        } else if (op.entity === 'checkin') {
-          await this.applyCheckinOp(tx, userId, op, applied, conflicts);
+          if (op.entity === 'habit') {
+            await this.applyHabitOp(tx, userId, op, applied, conflicts);
+          } else if (op.entity === 'checkin') {
+            await this.applyCheckinOp(tx, userId, op, applied, conflicts);
+          }
         }
-      }
-    });
+      });
+    } catch (error) {
+      this.metrics.recordError();
+      this.logger.error(
+        `sync push failed userId=${userId} traceId=${traceId ?? 'n/a'}`,
+        error instanceof Error ? error.stack : String(error)
+      );
+      throw error;
+    }
 
     this.metrics.recordPush(Date.now() - pushStart, conflicts.length, ops.length);
     return { applied, conflicts, serverTime };
@@ -151,7 +170,7 @@ export class SyncService {
     applied: string[],
     conflicts: PushConflict[]
   ) {
-    const payload = op.payload as HabitPayload;
+    const payload = op.payload as unknown as HabitPayload;
     if (!payload?.id) return;
     const timestamp = this.normalizeDate(payload.updatedAt);
 
@@ -170,6 +189,13 @@ export class SyncService {
     }
 
     const existing = await tx.habit.findUnique({ where: { id: payload.id } });
+    if (existing && existing.userId !== userId) {
+      conflicts.push({
+        opId: op.id,
+        reason: 'habit belongs to another user'
+      });
+      return;
+    }
     if (
       existing &&
       new Date(existing.updatedAt).getTime() > timestamp.getTime()
@@ -228,10 +254,21 @@ export class SyncService {
     applied: string[],
     conflicts: PushConflict[]
   ) {
-    const payload = op.payload as CheckinPayload;
+    const payload = op.payload as unknown as CheckinPayload;
     if (!payload?.habitId || !payload.date) return;
     const timestamp = this.normalizeDate(payload.updatedAt);
     const date = new Date(payload.date);
+    const parentHabit = await tx.habit.findUnique({
+      where: { id: payload.habitId },
+      select: { userId: true }
+    });
+    if (!parentHabit || parentHabit.userId !== userId) {
+      conflicts.push({
+        opId: op.id,
+        reason: 'checkin habit belongs to another user'
+      });
+      return;
+    }
 
     if (op.type === 'delete') {
       await tx.tombstone.create({
@@ -303,10 +340,7 @@ export class SyncService {
       await tx.syncOpLog.create({ data: { opId } });
       return true;
     } catch (error) {
-      if (
-        error instanceof PrismaClientKnownRequestError &&
-        error.code === 'P2002'
-      ) {
+      if (this.isUniqueConstraintError(error)) {
         return false;
       }
       throw error;
@@ -351,7 +385,20 @@ export class SyncService {
     return `${last.updatedAt.toISOString()}|${last.id}`;
   }
 
-  private serializeHabit(habit: Habit): HabitDto {
+  private serializeHabit(habit: {
+    id: string;
+    name: string;
+    description: string | null;
+    color: string;
+    icon: string;
+    frequency: string;
+    targetStreak: number;
+    tags: unknown;
+    archived: boolean;
+    createdAt: Date;
+    updatedAt: Date;
+    version: number;
+  }): HabitDto {
     return {
       id: habit.id,
       name: habit.name,
@@ -368,7 +415,14 @@ export class SyncService {
     };
   }
 
-  private serializeCheckin(checkin: Checkin): CheckinDto {
+  private serializeCheckin(checkin: {
+    id: string;
+    habitId: string;
+    date: Date;
+    done: boolean;
+    updatedAt: Date;
+    version: number;
+  }): CheckinDto {
     return {
       id: checkin.id,
       habitId: checkin.habitId,
@@ -379,7 +433,13 @@ export class SyncService {
     };
   }
 
-  private serializeTombstone(tombstone: Tombstone): TombstoneDto {
+  private serializeTombstone(tombstone: {
+    id: string;
+    entity: string;
+    entityId: string;
+    deletedAt: Date;
+    version: number;
+  }): TombstoneDto {
     return {
       id: tombstone.id,
       entity: tombstone.entity,
@@ -394,5 +454,11 @@ export class SyncService {
     const parsed = new Date(value);
     if (Number.isNaN(parsed.getTime())) return new Date();
     return parsed;
+  }
+
+  private isUniqueConstraintError(error: unknown): boolean {
+    if (!error || typeof error !== 'object') return false;
+    if (!('code' in error)) return false;
+    return (error as { code?: string }).code === 'P2002';
   }
 }

@@ -11,8 +11,7 @@ import {
   YAxis,
   Tooltip,
   ResponsiveContainer,
-  CartesianGrid,
-  Legend } from
+  CartesianGrid } from
 'recharts';
 interface StatsProps {
   onNavigate: (view: string, habitId?: string) => void;

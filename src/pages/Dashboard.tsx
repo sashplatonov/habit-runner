@@ -73,14 +73,13 @@ function HabitRow({
   // Calculate current streak
   let streak = 0;
   const d = new Date();
-  while (true) {
+  for (let i = 0; i < 366; i++) {
     const key = d.toISOString().split('T')[0];
-    if (habit.completions[key]) {
-      streak++;
-      d.setDate(d.getDate() - 1);
-    } else {
+    if (!habit.completions[key]) {
       break;
     }
+    streak++;
+    d.setDate(d.getDate() - 1);
   }
   // Last 7 days mini bars
   const last7 = Array.from(

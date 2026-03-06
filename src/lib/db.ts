@@ -1,11 +1,6 @@
 import Dexie, { Table } from 'dexie';
 import { Habit } from '../types/habit';
-import {
-  PullResponseDto,
-  HabitDto,
-  CheckinDto,
-  TombstoneDto
-} from '../types/sync';
+import { PullResponseDto } from '../types/sync';
 import { DEFAULT_USER_ID } from './config';
 import { generateId } from './id';
 
