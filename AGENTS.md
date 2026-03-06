@@ -1,3 +1,4 @@
+<!-- Inherits global rules from /Users/sash/.ai-rules/AGENTS.md -->
 # Repository Guidelines
 
 ## Project Structure & Module Organization

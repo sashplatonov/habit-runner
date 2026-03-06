@@ -3,15 +3,29 @@
     "filesystem": {
       "type": "stdio",
       "command": "npx",
-      "args": ["-y", "@modelcontextprotocol/server-filesystem@latest",
-        "/Users/sash/Dev/Projects//habbit-runner",
-        "/Users/sash/AI Rules"]
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-filesystem@latest",
+        "/Users/sash/Dev/Projects/habbit-runner",
+        "/Users/sash/.ai-rules"
+      ]
     },
     "git": {
       "type": "stdio",
       "command": "uvx",
-      "args": ["mcp-server-git", "--repository",
-        "/Users/sash/Dev/Projects/habbit-runner"]
+      "args": [
+        "mcp-server-git",
+        "--repository",
+        "/Users/sash/Dev/Projects/habbit-runner"
+      ]
+    },
+    "eslint": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "-y",
+        "@eslint/mcp@latest"
+      ]
     }
   }
 }
