@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { ArrowLeftIcon, XIcon, PlusIcon } from 'lucide-react';
 import { useHabits } from '@/hooks/useHabits';
 import type { HabitColor, HabitFrequency } from '@/types/habit';
@@ -99,9 +99,9 @@ const SUGGESTED_TAGS = [
 'social'];
 
 export function AddEditHabit({ habitId, onNavigate }: AddEditHabitProps) {
-  const { habits, addHabit, updateHabit } = useHabits();
+  const { allHabits, addHabit, updateHabit } = useHabits();
   const isEdit = !!habitId;
-  const existing = habits.find((h) => h.id === habitId);
+  const existing = allHabits.find((h) => h.id === habitId);
   const [name, setName] = useState(existing?.name || '');
   const [description, setDescription] = useState(existing?.description || '');
   const [color, setColor] = useState<HabitColor>(existing?.color || 'blue');
@@ -117,6 +117,21 @@ export function AddEditHabit({ habitId, onNavigate }: AddEditHabitProps) {
   const [tagInput, setTagInput] = useState('');
   const [errors, setErrors] = useState<Record<string, string>>({});
   const selectedColor = COLORS.find((c) => c.value === color) ?? COLORS[0];
+
+  useEffect(() => {
+    if (!isEdit || !existing) {
+      return;
+    }
+    setName(existing.name);
+    setDescription(existing.description ?? '');
+    setColor(existing.color);
+    setIcon(existing.icon);
+    setFrequency(existing.frequency);
+    setCustomDays(existing.customDays ?? [1, 2, 3, 4, 5]);
+    setTargetStreak(existing.targetStreak);
+    setTags(existing.tags ?? []);
+  }, [existing, isEdit]);
+
   const validate = () => {
     const e: Record<string, string> = {};
     if (!name.trim()) {e.name = 'Name is required';}
@@ -140,7 +155,7 @@ export function AddEditHabit({ habitId, onNavigate }: AddEditHabitProps) {
       frequency,
       customDays: frequency === 'custom' ? customDays : undefined,
       targetStreak,
-      archived: false
+      archived: existing?.archived ?? false
     };
     if (isEdit && habitId) {
       updateHabit(habitId, data);
@@ -163,6 +178,17 @@ export function AddEditHabit({ habitId, onNavigate }: AddEditHabitProps) {
     prev.includes(day) ? prev.filter((d) => d !== day) : [...prev, day]
     );
   };
+
+  if (isEdit && !existing) {
+    return (
+      <div className="min-h-screen bg-[#080810] pt-14">
+        <div className="max-w-lg mx-auto px-4 py-12 text-center text-sm font-mono text-[#64748b]">
+          Loading habit...
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-[#080810] pt-14">
       {/* Header */}

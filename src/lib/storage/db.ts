@@ -372,7 +372,9 @@ export async function applyPullResponse(
       frequency: habit.frequency,
       targetStreak: habit.targetStreak,
       tags: (habit.tags as string[]) ?? [],
-      customDays: undefined,
+      customDays: Array.isArray(habit.customDays) ?
+      habit.customDays.filter((day): day is number => typeof day === 'number') :
+      undefined,
       archived: habit.archived,
       completions: existingCompletions,
       createdAt: habit.createdAt,

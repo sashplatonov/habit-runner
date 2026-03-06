@@ -6,7 +6,9 @@ import {
   TrendingUpIcon,
   CalendarIcon,
   TargetIcon,
-  TrashIcon } from
+  TrashIcon,
+  ArchiveIcon,
+  ArchiveRestoreIcon } from
 'lucide-react';
 import { HeatmapGrid } from '@/components/HeatmapGrid';
 import { CompletionRing } from '@/components/CompletionRing';
@@ -64,8 +66,14 @@ const colorAccent: Record<
   }
 };
 export function HabitDetail({ habitId, onNavigate }: HabitDetailProps) {
-  const { habits, toggleCompletion, getHabitStats, deleteHabit } = useHabits();
-  const habit = habits.find((h) => h.id === habitId);
+  const {
+    allHabits,
+    toggleCompletion,
+    getHabitStats,
+    deleteHabit,
+    updateHabit
+  } = useHabits();
+  const habit = allHabits.find((h) => h.id === habitId);
   const [confirmDelete, setConfirmDelete] = useState(false);
   if (!habit) {
     return (
@@ -81,6 +89,11 @@ export function HabitDetail({ habitId, onNavigate }: HabitDetailProps) {
   const handleDelete = () => {
     deleteHabit(habitId);
     onNavigate('dashboard');
+  };
+  const handleToggleArchive = () => {
+    updateHabit(habitId, {
+      archived: !habit.archived
+    });
   };
   const CustomTooltip = ({
     active,
@@ -131,6 +144,17 @@ export function HabitDetail({ habitId, onNavigate }: HabitDetailProps) {
             </p>
           </div>
           <div className="flex items-center gap-2">
+            <button
+              onClick={handleToggleArchive}
+              className={`p-1.5 rounded border transition-colors ${habit.archived ? 'border-orange-400/30 text-orange-400 bg-orange-400/10 hover:bg-orange-400/20' : 'border-[#1e1e2e] text-[#64748b] hover:text-white hover:border-[#2e2e3e]'}`}
+              title={habit.archived ? 'Unarchive' : 'Archive'}>
+
+              {habit.archived ?
+              <ArchiveRestoreIcon size={13} /> :
+
+              <ArchiveIcon size={13} />
+              }
+            </button>
             <button
               onClick={() => onNavigate('edit', habitId)}
               className="p-1.5 rounded border border-[#1e1e2e] text-[#64748b] hover:text-white hover:border-[#2e2e3e] transition-colors">

@@ -26,6 +26,7 @@ interface HabitPayload {
   color: string;
   icon: string;
   frequency: string;
+  customDays?: unknown;
   targetStreak: number;
   tags?: unknown;
   archived?: boolean;
@@ -221,6 +222,7 @@ export class SyncService {
     const nextVersion = Math.max(existing?.version ?? 0, payload.version ?? 0) + 1;
 
     const tags = this.normalizeTags(payload.tags);
+    const customDays = this.normalizeCustomDays(payload.customDays);
 
     await tx.habit.upsert({
       where: { id: payload.id },
@@ -232,6 +234,7 @@ export class SyncService {
         color: payload.color,
         icon: payload.icon,
         frequency: payload.frequency,
+        customDays: customDays as never,
         targetStreak: payload.targetStreak,
         tags: tags as never,
         archived: payload.archived ?? false,
@@ -245,6 +248,7 @@ export class SyncService {
         color: payload.color,
         icon: payload.icon,
         frequency: payload.frequency,
+        customDays: customDays as never,
         targetStreak: payload.targetStreak,
         tags: tags as never,
         archived: payload.archived ?? false,
@@ -401,6 +405,7 @@ export class SyncService {
     color: string;
     icon: string;
     frequency: string;
+    customDays: unknown;
     targetStreak: number;
     tags: unknown;
     archived: boolean;
@@ -415,6 +420,7 @@ export class SyncService {
       color: habit.color,
       icon: habit.icon,
       frequency: habit.frequency,
+      customDays: habit.customDays ?? undefined,
       targetStreak: habit.targetStreak,
       tags: habit.tags ?? undefined,
       archived: habit.archived,
@@ -475,5 +481,14 @@ export class SyncService {
     if (value === undefined) {return undefined;}
     if (value === null) {return undefined;}
     return value;
+  }
+
+  private normalizeCustomDays(value: unknown): number[] | undefined {
+    if (!Array.isArray(value)) {return undefined;}
+    const days = value
+      .filter((day) => typeof day === 'number')
+      .map((day) => Math.trunc(day))
+      .filter((day) => day >= 0 && day <= 6);
+    return days.length > 0 ? Array.from(new Set(days)) : undefined;
   }
 }

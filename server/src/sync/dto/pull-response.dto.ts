@@ -5,6 +5,7 @@ export interface HabitDto {
   color: string;
   icon: string;
   frequency: string;
+  customDays?: unknown;
   targetStreak: number;
   tags?: unknown;
   archived: boolean;

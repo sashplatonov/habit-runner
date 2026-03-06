@@ -1,5 +1,12 @@
-import React, { useMemo } from 'react';
-import { TrendingUpIcon, ZapIcon, FlameIcon, CalendarIcon } from 'lucide-react';
+import React, { useMemo, useState } from 'react';
+import {
+  TrendingUpIcon,
+  ZapIcon,
+  FlameIcon,
+  CalendarIcon,
+  SearchIcon,
+  TagIcon } from
+'lucide-react';
 import { useHabits } from '@/hooks/useHabits';
 import { CompletionRing } from '@/components/CompletionRing';
 import {
@@ -25,16 +32,48 @@ const colorHex: Record<string, string> = {
   cyan: '#22d3ee'
 };
 export function Stats({ onNavigate }: StatsProps) {
-  const { habits, getHabitStats } = useHabits();
+  const { allHabits, getHabitStats } = useHabits();
+  const [statusFilter, setStatusFilter] = useState<
+    'all' | 'active' | 'archived'>(
+    'all');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+
+  const allTags = useMemo(() => {
+    const tags = new Set<string>();
+    allHabits.forEach((h) => h.tags.forEach((t) => tags.add(t)));
+    return Array.from(tags).sort();
+  }, [allHabits]);
+
+  const filteredHabits = useMemo(() => {
+    return allHabits.filter((h) => {
+      if (statusFilter === 'active' && h.archived) {return false;}
+      if (statusFilter === 'archived' && !h.archived) {return false;}
+      if (searchQuery) {
+        const query = searchQuery.toLowerCase();
+        if (
+          !h.name.toLowerCase().includes(query) &&
+          !h.description.toLowerCase().includes(query)
+        ) {
+          return false;
+        }
+      }
+      if (selectedTags.length > 0 && !selectedTags.some((t) => h.tags.includes(t))) {
+        return false;
+      }
+      return true;
+    });
+  }, [allHabits, statusFilter, searchQuery, selectedTags]);
+
   const allStats = useMemo(
     () =>
-    habits.map((h) => ({
+    filteredHabits.map((h) => ({
       habit: h,
       stats: getHabitStats(h.id)
     })),
-    [habits, getHabitStats]
+    [filteredHabits, getHabitStats]
   );
-  // Overall completion rate over last 30 days
+
   const dailyData = useMemo(() => {
     return Array.from(
       {
@@ -44,23 +83,25 @@ export function Stats({ onNavigate }: StatsProps) {
         const date = new Date();
         date.setDate(date.getDate() - (29 - i));
         const key = date.toISOString().split('T')[0];
-        const completed = habits.filter((h) => h.completions[key]).length;
+        const completed = filteredHabits.filter(
+          (h) => h.completions[key]
+        ).length;
         return {
           day: date.toLocaleDateString('en-US', {
             month: 'short',
             day: 'numeric'
           }),
           completed,
-          total: habits.length,
+          total: filteredHabits.length,
           rate:
-          habits.length > 0 ?
-          Math.round(completed / habits.length * 100) :
+          filteredHabits.length > 0 ?
+          Math.round(completed / filteredHabits.length * 100) :
           0
         };
       }
     );
-  }, [habits]);
-  // Per-habit monthly rates
+  }, [filteredHabits]);
+
   const habitMonthlyData = useMemo(() => {
     const monthNames = [
     'Jan',
@@ -95,7 +136,7 @@ export function Stats({ onNavigate }: StatsProps) {
         const entry: Record<string, string | number> = {
           month: monthNames[monthDate.getMonth()]
         };
-        habits.forEach((h) => {
+        filteredHabits.forEach((h) => {
           let completed = 0;
           for (let d = 1; d <= daysInMonth; d++) {
             const date = new Date(
@@ -118,8 +159,8 @@ export function Stats({ onNavigate }: StatsProps) {
         return entry;
       }
     );
-  }, [habits]);
-  // Best performers
+  }, [filteredHabits]);
+
   const sorted = [...allStats].sort(
     (a, b) => b.stats.completionRate - a.stats.completionRate
   );
@@ -146,7 +187,6 @@ export function Stats({ onNavigate }: StatsProps) {
     active,
     payload,
     label
-
 
 
 
@@ -195,6 +235,7 @@ export function Stats({ onNavigate }: StatsProps) {
 
 
 
+
   }: {active?: boolean;payload?: {value: number;}[];label?: string;}) => {
     if (active && payload && payload.length) {
       return (
@@ -207,6 +248,11 @@ export function Stats({ onNavigate }: StatsProps) {
 
     }
     return null;
+  };
+  const toggleTag = (tag: string) => {
+    setSelectedTags((prev) =>
+    prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]
+    );
   };
   return (
     <div className="min-h-screen bg-[#080810] pt-14">
@@ -276,6 +322,60 @@ export function Stats({ onNavigate }: StatsProps) {
             <div className="text-xl font-mono font-bold text-white">
               {currentStreaks}
             </div>
+          </div>
+        </div>
+
+        {/* Filters */}
+        <div className="bg-[#0f0f1a] border border-[#1e1e2e] rounded-lg p-4 space-y-4">
+          <div className="flex flex-col sm:flex-row gap-3">
+            <div className="flex-1 relative">
+              <SearchIcon
+                size={14}
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-[#64748b]" />
+
+              <input
+                type="text"
+                placeholder="Search habits..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full bg-[#12121f] border border-[#1e1e2e] rounded-lg pl-9 pr-3 py-2 text-sm text-white placeholder-[#64748b] focus:outline-none focus:border-[#00d4ff]/50 transition-colors" />
+
+            </div>
+
+            <div className="flex bg-[#12121f] border border-[#1e1e2e] rounded-lg p-1">
+              {(['all', 'active', 'archived'] as const).map((status) =>
+              <button
+                key={status}
+                onClick={() => setStatusFilter(status)}
+                className={`px-3 py-1 rounded-md text-xs font-mono capitalize transition-colors ${statusFilter === status ? 'bg-[#1e1e2e] text-white' : 'text-[#64748b] hover:text-white'}`}>
+
+                  {status}
+                </button>
+              )}
+            </div>
+          </div>
+
+          <div className="flex items-start gap-2">
+            <TagIcon
+              size={14}
+              className="text-[#64748b] mt-1 flex-shrink-0" />
+
+            {allTags.length > 0 ? (
+              <div className="flex flex-wrap gap-1.5">
+                {allTags.map((tag) =>
+                  <button
+                    key={tag}
+                    onClick={() => toggleTag(tag)}
+                    className={`px-2 py-1 rounded border text-[10px] font-mono transition-colors ${selectedTags.includes(tag) ? 'bg-[#00d4ff]/10 border-[#00d4ff]/30 text-[#00d4ff]' : 'bg-[#12121f] border-[#1e1e2e] text-[#64748b] hover:border-[#2e2e3e] hover:text-white'}`}>
+                    #{tag}
+                  </button>
+                )}
+              </div>
+            ) : (
+              <span className="text-[11px] font-mono text-[#64748b]">
+                No tags yet
+              </span>
+            )}
           </div>
         </div>
 
@@ -381,7 +481,7 @@ export function Stats({ onNavigate }: StatsProps) {
                 tickFormatter={(v) => `${v}%`} />
 
               <Tooltip content={<CustomTooltip />} />
-              {habits.map((h) =>
+              {filteredHabits.map((h) =>
               <Line
                 key={h.id}
                 type="monotone"
@@ -411,8 +511,13 @@ export function Stats({ onNavigate }: StatsProps) {
           <h2 className="text-xs font-mono text-[#64748b] uppercase tracking-wider mb-3">
             Habit performance
           </h2>
+          {sorted.length === 0 ?
+          <div className="text-center py-8 text-sm text-[#64748b] font-mono">
+              No habits match the current filters.
+            </div> :
+
           <div className="space-y-2">
-            {sorted.map(({ habit, stats }, i) => {
+              {sorted.map(({ habit, stats }, i) => {
               const hex = colorHex[habit.color];
               return (
                 <button
@@ -420,51 +525,52 @@ export function Stats({ onNavigate }: StatsProps) {
                   onClick={() => onNavigate('detail', habit.id)}
                   className="w-full flex items-center gap-3 p-2.5 rounded-lg hover:bg-[#12121f] transition-colors text-left">
 
-                  <span className="text-[10px] font-mono text-[#64748b] w-4">
-                    {i + 1}
-                  </span>
-                  <span className="text-base">{habit.icon}</span>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="text-xs font-medium text-white truncate">
-                        {habit.name}
-                      </span>
-                      <span
+                    <span className="text-[10px] font-mono text-[#64748b] w-4">
+                      {i + 1}
+                    </span>
+                    <span className="text-base">{habit.icon}</span>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-xs font-medium text-white truncate">
+                          {habit.name}
+                        </span>
+                        <span
                         className="text-[10px] font-mono ml-2 flex-shrink-0"
                         style={{
                           color: hex
                         }}>
 
-                        {stats.completionRate}%
+                          {stats.completionRate}%
+                        </span>
+                      </div>
+                      <div className="h-1 bg-[#1e1e2e] rounded-full overflow-hidden">
+                        <div
+                          className="h-full rounded-full"
+                          style={{
+                            width: `${stats.completionRate}%`,
+                            backgroundColor: hex,
+                            boxShadow: `0 0 6px ${hex}60`
+                          }} />
+
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1 flex-shrink-0">
+                      <FlameIcon size={10} className="text-orange-400" />
+                      <span className="text-[10px] font-mono text-orange-400">
+                        {stats.currentStreak}
                       </span>
                     </div>
-                    <div className="h-1 bg-[#1e1e2e] rounded-full overflow-hidden">
-                      <div
-                        className="h-full rounded-full"
-                        style={{
-                          width: `${stats.completionRate}%`,
-                          backgroundColor: hex,
-                          boxShadow: `0 0 6px ${hex}60`
-                        }} />
+                    <CompletionRing
+                      percentage={stats.completionRate}
+                      size={28}
+                      strokeWidth={2}
+                      color={habit.color} />
 
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-1 flex-shrink-0">
-                    <FlameIcon size={10} className="text-orange-400" />
-                    <span className="text-[10px] font-mono text-orange-400">
-                      {stats.currentStreak}
-                    </span>
-                  </div>
-                  <CompletionRing
-                    percentage={stats.completionRate}
-                    size={28}
-                    strokeWidth={2}
-                    color={habit.color} />
-
-                </button>);
+                  </button>);
 
             })}
-          </div>
+            </div>
+          }
         </div>
 
         {/* Weekly heatmap summary */}

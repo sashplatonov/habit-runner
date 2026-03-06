@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   CheckIcon,
   ChevronRightIcon,
@@ -7,6 +7,7 @@ import {
   ZapIcon } from
 'lucide-react';
 import { CompletionRing } from '@/components/CompletionRing';
+import { MiniHeatmap } from '@/components/MiniHeatmap';
 import type { Habit } from '@/types/habit';
 import { useHabits } from '@/hooks/useHabits';
 interface DashboardProps {
@@ -143,6 +144,11 @@ function HabitRow({
         </div>
       </button>
 
+      {/* 30-day Mini Heatmap */}
+      <div className="hidden sm:flex items-center justify-end mr-2">
+        <MiniHeatmap completions={habit.completions} color={habit.color} />
+      </div>
+
       {/* Last 7 days mini bars */}
       <div className="hidden sm:flex items-end gap-[2px] h-5">
         {last7.map((done, i) =>
@@ -196,6 +202,7 @@ function HabitRow({
 export function Dashboard({ onNavigate }: DashboardProps) {
   const { habits, toggleCompletion, getTodayCompletionRate } = useHabits();
   const [filter, setFilter] = useState<'all' | 'pending' | 'done'>('all');
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const today = new Date().toISOString().split('T')[0];
   const todayRate = getTodayCompletionRate();
   const completedToday = habits.filter((h) => h.completions[today]).length;
@@ -205,9 +212,24 @@ export function Dashboard({ onNavigate }: DashboardProps) {
     month: 'short',
     day: 'numeric'
   });
+  const allTags = useMemo(() => {
+    const tags = new Set<string>();
+    habits.forEach((habit) => {
+      habit.tags.forEach((tag) => tags.add(tag));
+    });
+    return Array.from(tags).sort();
+  }, [habits]);
+  const toggleTag = (tag: string) => {
+    setSelectedTags((prev) =>
+    prev.includes(tag) ? prev.filter((item) => item !== tag) : [...prev, tag]
+    );
+  };
   const filtered = habits.filter((h) => {
     if (filter === 'pending') {return !h.completions[today];}
     if (filter === 'done') {return !!h.completions[today];}
+    if (selectedTags.length > 0 && !selectedTags.some((tag) => h.tags.includes(tag))) {
+      return false;
+    }
     return true;
   });
   // Overall streak (days where all habits completed)
@@ -302,7 +324,8 @@ export function Dashboard({ onNavigate }: DashboardProps) {
 
       {/* Filter tabs */}
       <div className="border-b border-[#1e1e2e] px-4">
-        <div className="max-w-2xl mx-auto flex gap-0">
+        <div className="max-w-2xl mx-auto">
+          <div className="flex gap-0">
           {(['all', 'pending', 'done'] as const).map((f) =>
           <button
             key={f}
@@ -317,6 +340,31 @@ export function Dashboard({ onNavigate }: DashboardProps) {
             }
             </button>
           )}
+          </div>
+          <div className="py-2.5 flex items-center gap-1.5 overflow-x-auto">
+            {allTags.length > 0 ? (
+              <>
+                {allTags.map((tag) =>
+                  <button
+                    key={tag}
+                    onClick={() => toggleTag(tag)}
+                    className={`text-[10px] font-mono px-2 py-1 rounded border whitespace-nowrap transition-colors ${selectedTags.includes(tag) ? 'bg-[#00d4ff]/10 border-[#00d4ff]/30 text-[#00d4ff]' : 'bg-[#0f0f1a] border-[#1e1e2e] text-[#64748b] hover:text-white hover:border-[#2e2e3e]'}`}>
+                    #{tag}
+                  </button>
+                )}
+                {selectedTags.length > 0 && (
+                  <button
+                    onClick={() => setSelectedTags([])}
+                    className="text-[10px] font-mono px-2 py-1 rounded border whitespace-nowrap bg-[#0f0f1a] border-[#ef4444]/30 text-[#ef4444] hover:bg-[#ef4444]/10 transition-colors"
+                  >
+                    Clear tags
+                  </button>
+                )}
+              </>
+            ) : (
+              <span className="text-[10px] font-mono text-[#64748b]">No tags yet</span>
+            )}
+          </div>
         </div>
       </div>
 

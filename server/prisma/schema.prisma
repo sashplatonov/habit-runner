@@ -26,6 +26,7 @@ model Habit {
   color       String
   icon        String
   frequency   String
+  customDays  Json?
   targetStreak Int
   tags        Json?
   archived    Boolean   @default(false)

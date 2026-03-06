@@ -1,11 +1,10 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Nav } from '@/components/Nav';
 import { Dashboard } from '@/pages/Dashboard';
 import { HabitDetail } from '@/pages/HabitDetail';
 import { AddEditHabit } from '@/pages/AddEditHabit';
 import { Stats } from '@/pages/Stats';
 import { useSyncEngine } from '@/hooks/useSyncEngine';
-import { OfflineBanner } from '@/components/OfflineBanner';
 import { AuthGate } from '@/components/AuthGate';
 import type {
   AuthSession} from '@/lib/auth/session';
@@ -30,7 +29,7 @@ export function App() {
     return session;
   });
   const [authError, setAuthError] = useState<string | undefined>();
-  const syncState = useSyncEngine(Boolean(authSession));
+  useSyncEngine(Boolean(authSession));
 
   useEffect(() => {
     setCurrentUserId(getSessionUserId(authSession));
@@ -72,8 +71,6 @@ export function App() {
     if (habitId) {setActiveHabitId(habitId);}
   };
 
-  const userEmail = useMemo(() => authSession?.email, [authSession]);
-
   const logout = async () => {
     const refreshToken = authSession?.refreshToken;
     clearAuthSession();
@@ -112,11 +109,8 @@ export function App() {
       <Nav
         currentView={view}
         onNavigate={navigate}
-        syncState={syncState}
-        userEmail={userEmail}
         onLogout={logout}
       />
-      <OfflineBanner syncState={syncState} />
       {view === 'dashboard' && <Dashboard onNavigate={navigate} />}
       {view === 'detail' && activeHabitId && (
         <HabitDetail habitId={activeHabitId} onNavigate={navigate} />
