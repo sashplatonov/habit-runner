@@ -6,7 +6,6 @@ function parseNumber(value: string | undefined, fallback: number): number {
 }
 
 export const PORT = parseNumber(process.env.PORT, 4000);
-export const DEFAULT_USER_ID = process.env.DEFAULT_USER_ID ?? 'demo-user';
 export const AUTH_SECRET = process.env.AUTH_SECRET ?? 'dev-secret';
 export const DATABASE_URL =
   process.env.DATABASE_URL ??
@@ -21,7 +20,6 @@ export const REFRESH_TOKEN_EXPIRES_DAYS = parseNumber(
   process.env.REFRESH_TOKEN_EXPIRES_DAYS,
   30
 );
-export const ALLOW_LEGACY_X_USER = process.env.ALLOW_LEGACY_X_USER === 'true';
 export const API_PUBLIC_URL = process.env.API_PUBLIC_URL ?? `http://localhost:${PORT}`;
 export const OAUTH_DEFAULT_RETURN_TO =
   process.env.OAUTH_DEFAULT_RETURN_TO ?? 'http://localhost:5173';

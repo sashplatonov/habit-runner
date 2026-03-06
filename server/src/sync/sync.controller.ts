@@ -5,11 +5,11 @@ import {
   Post,
   Query,
   Req,
+  UnauthorizedException,
   UseGuards
 } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import { RequestWithUser, AuthGuard } from '../auth/auth.guard';
-import { DEFAULT_USER_ID } from '../config';
 import { SyncService } from './sync.service';
 import { PullResponseDto } from './dto/pull-response.dto';
 import { PushRequestDto } from './dto/push-request.dto';
@@ -24,7 +24,8 @@ export class SyncController {
     @Req() req: RequestWithUser,
     @Query('since') since?: string
   ): Promise<PullResponseDto> {
-    const userId = req.user?.id ?? DEFAULT_USER_ID;
+    const userId = req.user?.id;
+    if (!userId) throw new UnauthorizedException('Authentication required');
     const traceId = this.getTraceId(req);
     req.res?.setHeader('x-trace-id', traceId);
     return this.syncService.pull(userId, since, traceId);
@@ -35,7 +36,8 @@ export class SyncController {
     @Req() req: RequestWithUser,
     @Body() body: PushRequestDto
   ): Promise<ReturnType<SyncService['push']>> {
-    const userId = req.user?.id ?? DEFAULT_USER_ID;
+    const userId = req.user?.id;
+    if (!userId) throw new UnauthorizedException('Authentication required');
     const traceId = this.getTraceId(req);
     req.res?.setHeader('x-trace-id', traceId);
     return this.syncService.push(userId, body.ops, traceId);

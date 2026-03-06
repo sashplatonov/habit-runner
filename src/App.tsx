@@ -8,6 +8,7 @@ import { useSyncEngine } from './hooks/useSyncEngine';
 import { OfflineBanner } from './components/OfflineBanner';
 import { AuthGate } from './components/AuthGate';
 import {
+  AUTH_SESSION_CLEARED_EVENT,
   AuthSession,
   clearAuthSession,
   getSessionUserId,
@@ -33,6 +34,19 @@ export function App() {
   useEffect(() => {
     setCurrentUserId(getSessionUserId(authSession));
   }, [authSession]);
+
+  useEffect(() => {
+    const onSessionCleared = () => {
+      setCurrentUserId(null);
+      setAuthSession(null);
+      setAuthError('Сессия истекла. Выполните вход снова.');
+    };
+
+    window.addEventListener(AUTH_SESSION_CLEARED_EVENT, onSessionCleared);
+    return () => {
+      window.removeEventListener(AUTH_SESSION_CLEARED_EVENT, onSessionCleared);
+    };
+  }, []);
 
   useEffect(() => {
     const url = new URL(window.location.href);

@@ -3,5 +3,8 @@ dist
 .git
 .idea
 npm-debug.log*
-server/node_modules
-server/dist
+docs
+.codex
+.claude
+secrets
+server

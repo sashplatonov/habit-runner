@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { PrismaClient } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import {
   PullResponseDto,
@@ -41,6 +42,11 @@ interface CheckinPayload {
   version?: number;
   updatedAt?: string;
 }
+
+type TxClient = Omit<
+  PrismaClient,
+  '$on' | '$connect' | '$disconnect' | '$use' | '$transaction' | '$extends'
+>;
 
 @Injectable()
 export class SyncService {
@@ -136,7 +142,7 @@ export class SyncService {
     const serverTime = new Date().toISOString();
 
     try {
-      await this.prisma.$transaction(async (tx: PrismaService) => {
+      await this.prisma.$transaction(async (tx: TxClient) => {
         for (const op of ops) {
           if (!op.id) continue;
 
@@ -164,7 +170,7 @@ export class SyncService {
   }
 
   private async applyHabitOp(
-    tx: PrismaService,
+    tx: TxClient,
     userId: string,
     op: SyncOpDto,
     applied: string[],
@@ -213,6 +219,8 @@ export class SyncService {
 
     const nextVersion = Math.max(existing?.version ?? 0, payload.version ?? 0) + 1;
 
+    const tags = this.normalizeTags(payload.tags);
+
     await tx.habit.upsert({
       where: { id: payload.id },
       create: {
@@ -224,7 +232,7 @@ export class SyncService {
         icon: payload.icon,
         frequency: payload.frequency,
         targetStreak: payload.targetStreak,
-        tags: payload.tags ?? null,
+        tags: tags as never,
         archived: payload.archived ?? false,
         createdAt: this.normalizeDate(payload.createdAt),
         updatedAt: timestamp,
@@ -237,7 +245,7 @@ export class SyncService {
         icon: payload.icon,
         frequency: payload.frequency,
         targetStreak: payload.targetStreak,
-        tags: payload.tags ?? null,
+        tags: tags as never,
         archived: payload.archived ?? false,
         updatedAt: timestamp,
         version: nextVersion
@@ -248,7 +256,7 @@ export class SyncService {
   }
 
   private async applyCheckinOp(
-    tx: PrismaService,
+    tx: TxClient,
     userId: string,
     op: SyncOpDto,
     applied: string[],
@@ -333,7 +341,7 @@ export class SyncService {
   }
 
   private async tryCreateLog(
-    tx: PrismaService,
+    tx: TxClient,
     opId: string
   ): Promise<boolean> {
     try {
@@ -460,5 +468,11 @@ export class SyncService {
     if (!error || typeof error !== 'object') return false;
     if (!('code' in error)) return false;
     return (error as { code?: string }).code === 'P2002';
+  }
+
+  private normalizeTags(value: unknown): unknown {
+    if (value === undefined) return undefined;
+    if (value === null) return undefined;
+    return value;
   }
 }

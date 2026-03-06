@@ -2,6 +2,7 @@ import { API_BASE_URL } from '../config';
 
 const AUTH_SESSION_KEY = 'habbitRunner.auth.session';
 const EXPIRY_SKEW_SECONDS = 30;
+export const AUTH_SESSION_CLEARED_EVENT = 'habbitRunner.auth.session-cleared';
 
 export interface AuthSession {
   accessToken: string;
@@ -57,6 +58,7 @@ export function saveAuthSession(payload: {
 
 export function clearAuthSession(): void {
   localStorage.removeItem(AUTH_SESSION_KEY);
+  window.dispatchEvent(new Event(AUTH_SESSION_CLEARED_EVENT));
 }
 
 function isTokenExpiring(session: AuthSession): boolean {

@@ -1,6 +1,5 @@
 import { Injectable, CanActivate, ExecutionContext, UnauthorizedException } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { ALLOW_LEGACY_X_USER } from '../config';
 
 export interface RequestWithUser {
   headers: Record<string, string | string[] | undefined>;
@@ -25,14 +24,6 @@ export class AuthGuard implements CanActivate {
       const payload = this.authService.verifyAccessToken(token);
       request.user = { id: payload.sub, email: payload.email };
       return true;
-    }
-
-    if (ALLOW_LEGACY_X_USER) {
-      const fallbackUserId = request.header('x-user-id');
-      if (fallbackUserId) {
-        request.user = { id: fallbackUserId };
-        return true;
-      }
     }
 
     throw new UnauthorizedException('Authentication required');
