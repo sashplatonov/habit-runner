@@ -1,28 +1,41 @@
+x-service-defaults: &service_defaults
+  restart: unless-stopped
+  logging:
+    driver: json-file
+    options:
+      max-size: 10m
+      max-file: "3"
+
 services:
   db:
+    <<: *service_defaults
     image: postgres:16-alpine
-    container_name: habbit_runner_db
-    restart: unless-stopped
     environment:
-      POSTGRES_DB: habbit_runner
-      POSTGRES_USER: habbit
-      POSTGRES_PASSWORD: password
+      POSTGRES_DB: ${POSTGRES_DB:-habbit_runner}
+      POSTGRES_USER: ${POSTGRES_USER:-habbit}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
     ports:
       - "${DB_PORT:-5433}:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U habbit -d habbit_runner"]
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${POSTGRES_USER:-habbit} -d ${POSTGRES_DB:-habbit_runner}"
+        ]
       interval: 5s
       timeout: 3s
       retries: 10
+    networks:
+      - backend
 
   api:
+    <<: *service_defaults
     build:
       context: ./server
       dockerfile: Dockerfile
-    container_name: habbit_runner_api
-    restart: unless-stopped
+    init: true
     depends_on:
       db:
         condition: service_healthy
@@ -39,16 +52,19 @@ services:
       retries: 10
       start_period: 15s
     ports:
-      - "4000:4000"
+      - "${API_PORT:-4000}:4000"
+    networks:
+      - backend
+      - edge
 
   web:
+    <<: *service_defaults
     build:
       context: .
       dockerfile: Dockerfile.web
       args:
-        VITE_API_BASE_URL: http://localhost:4000
-    container_name: habbit_runner_web
-    restart: unless-stopped
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL:-http://localhost:4000}
+    init: true
     depends_on:
       api:
         condition: service_healthy
@@ -59,7 +75,15 @@ services:
       retries: 10
       start_period: 10s
     ports:
-      - "5173:80"
+      - "${WEB_PORT:-5173}:80"
+    networks:
+      - edge
 
 volumes:
   pgdata:
+
+networks:
+  backend:
+    driver: bridge
+  edge:
+    driver: bridge
