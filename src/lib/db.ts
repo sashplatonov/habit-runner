@@ -8,7 +8,16 @@ export type SyncEntity = 'habit' | 'checkin';
 export type SyncOpType = 'upsert' | 'delete';
 export type OutboxStatus = 'pending' | 'inflight' | 'failed';
 
-export const USER_ID = DEFAULT_USER_ID;
+let currentUserId = DEFAULT_USER_ID;
+
+export function setCurrentUserId(userId?: string | null): void {
+  const normalized = userId?.trim();
+  currentUserId = normalized ? normalized : DEFAULT_USER_ID;
+}
+
+export function getCurrentUserId(): string {
+  return currentUserId;
+}
 
 export interface HabitEntity {
   id: string;
@@ -48,7 +57,7 @@ export interface TombstoneEntity {
 }
 
 export interface SyncMeta {
-  id: 'meta';
+  id: string;
   status: 'idle' | 'syncing' | 'offline' | 'error';
   lastCursor?: string;
   lastSyncedAt?: string;
@@ -110,9 +119,10 @@ export function habitEntityToDomain(entity: HabitEntity): Habit {
 }
 
 export function domainToHabitEntity(habit: Habit): HabitEntity {
+  const userId = getCurrentUserId();
   return {
     id: habit.id,
-    userId: USER_ID,
+    userId,
     name: habit.name,
     description: habit.description,
     color: habit.color,
@@ -130,7 +140,8 @@ export function domainToHabitEntity(habit: Habit): HabitEntity {
 }
 
 export async function loadHabitsFromDb(): Promise<Habit[]> {
-  const records = await db.habits.where({ userId: USER_ID }).toArray();
+  const userId = getCurrentUserId();
+  const records = await db.habits.where({ userId }).toArray();
   return records.map(habitEntityToDomain);
 }
 
@@ -139,18 +150,23 @@ export async function persistHabitInDb(habit: Habit): Promise<void> {
 }
 
 export async function removeHabitFromDb(id: string): Promise<void> {
-  await db.habits.delete(id);
-  await db.checkins.where({ habitId: id, userId: USER_ID }).delete();
+  const userId = getCurrentUserId();
+  const target = await db.habits.get(id);
+  if (target?.userId === userId) {
+    await db.habits.delete(id);
+  }
+  await db.checkins.where({ habitId: id, userId }).delete();
 }
 
 export async function addTombstone(
   entity: SyncEntity,
   entityId: string,
   version: number
- ): Promise<void> {
+): Promise<void> {
+  const userId = getCurrentUserId();
   await db.tombstones.add({
     id: generateId(),
-    userId: USER_ID,
+    userId,
     entity,
     entityId,
     version,
@@ -163,13 +179,14 @@ export async function upsertCheckinInDb(
   date: string,
   done: boolean
 ): Promise<void> {
+  const userId = getCurrentUserId();
   const normalized = date;
   const existing = await db.checkins
     .where('habitId')
     .equals(habitId)
     .filter(
       (record) =>
-        record.date === normalized && record.userId === USER_ID
+        record.date === normalized && record.userId === userId
     )
     .first();
 
@@ -189,7 +206,7 @@ export async function upsertCheckinInDb(
   if (!done) return;
   await db.checkins.add({
     id: generateId(),
-    userId: USER_ID,
+    userId,
     habitId,
     date: normalized,
     done,
@@ -199,13 +216,14 @@ export async function upsertCheckinInDb(
 }
 
 export async function deleteCheckinInDb(habitId: string, date: string): Promise<void> {
+  const userId = getCurrentUserId();
   const normalized = date;
   const existing = await db.checkins
     .where('habitId')
     .equals(habitId)
     .filter(
       (record) =>
-        record.date === normalized && record.userId === USER_ID
+        record.date === normalized && record.userId === userId
     )
     .first();
   if (existing) {
@@ -222,9 +240,10 @@ export function createOutboxEntry(
   type: SyncOpType,
   payload: Record<string, unknown>
 ): OutboxEntry {
+  const userId = getCurrentUserId();
   return {
     id: generateId(),
-    userId: USER_ID,
+    userId,
     entity,
     type,
     payload,
@@ -236,11 +255,17 @@ export function createOutboxEntry(
   };
 }
 
+function syncMetaId(userId: string): string {
+  return `meta:${userId}`;
+}
+
 export async function ensureSyncMeta(): Promise<SyncMeta> {
-  const existing = await db.sync_meta.get('meta');
+  const userId = getCurrentUserId();
+  const id = syncMetaId(userId);
+  const existing = await db.sync_meta.get(id);
   if (existing) return existing;
   const meta: SyncMeta = {
-    id: 'meta',
+    id,
     status: 'idle'
   };
   await db.sync_meta.put(meta);
@@ -253,16 +278,21 @@ export async function updateSyncMeta(data: Partial<SyncMeta>): Promise<void> {
 }
 
 export async function countPendingOutboxEntries(): Promise<number> {
-  return await db.outbox.filter((entry) => entry.status !== 'inflight').count();
+  const userId = getCurrentUserId();
+  return await db.outbox
+    .filter((entry) => entry.userId === userId && entry.status !== 'inflight')
+    .count();
 }
 
 const ISO_NOW = () => new Date().toISOString();
 
 export async function getReadyOutboxEntries(limit = 32): Promise<OutboxEntry[]> {
+  const userId = getCurrentUserId();
   const now = ISO_NOW();
   return await db.outbox
     .filter(
       (entry) =>
+        entry.userId === userId &&
         entry.status !== 'inflight' &&
         (!entry.nextRetryAt || entry.nextRetryAt <= now)
     )
@@ -271,13 +301,16 @@ export async function getReadyOutboxEntries(limit = 32): Promise<OutboxEntry[]> 
 }
 
 export async function markOutboxEntriesInflight(ids: string[]): Promise<void> {
+  const userId = getCurrentUserId();
   await Promise.all(
-    ids.map((id) =>
-      db.outbox.update(id, {
+    ids.map(async (id) => {
+      const entry = await db.outbox.get(id);
+      if (!entry || entry.userId !== userId) return;
+      await db.outbox.update(id, {
         status: 'inflight',
         lastError: undefined
-      })
-    )
+      });
+    })
   );
 }
 
@@ -304,10 +337,13 @@ function dateKeyFromIso(value: string): string {
 }
 
 async function rebuildHabitCompletions(habitId: string): Promise<void> {
+  const userId = getCurrentUserId();
+  const habit = await db.habits.get(habitId);
+  if (!habit || habit.userId !== userId) return;
   const checkins = await db.checkins
     .where('habitId')
     .equals(habitId)
-    .filter((record) => record.userId === USER_ID && record.done)
+    .filter((record) => record.userId === userId && record.done)
     .toArray();
   const completions: Record<string, boolean> = {};
   checkins.forEach((checkin) => {
@@ -319,12 +355,15 @@ async function rebuildHabitCompletions(habitId: string): Promise<void> {
 export async function applyPullResponse(
   response: PullResponseDto
 ): Promise<void> {
+  const userId = getCurrentUserId();
   const touchedHabits = new Set<string>();
   const habitPromises = response.habits.map(async (habit) => {
     const existing = await db.habits.get(habit.id);
+    const existingCompletions =
+      existing?.userId === userId ? existing.completions : {};
     await db.habits.put({
       id: habit.id,
-      userId: USER_ID,
+      userId,
       name: habit.name,
       description: habit.description ?? null,
       color: habit.color,
@@ -334,7 +373,7 @@ export async function applyPullResponse(
       tags: (habit.tags as string[]) ?? [],
       customDays: undefined,
       archived: habit.archived,
-      completions: existing?.completions ?? {},
+      completions: existingCompletions,
       createdAt: habit.createdAt,
       updatedAt: habit.updatedAt,
       version: habit.version
@@ -349,13 +388,13 @@ export async function applyPullResponse(
       .filter(
         (record) =>
           record.date === checkin.date &&
-          record.userId === USER_ID &&
+          record.userId === userId &&
           record.id !== checkin.id
       )
       .delete();
     await db.checkins.put({
       id: checkin.id,
-      userId: USER_ID,
+      userId,
       habitId: checkin.habitId,
       date: checkin.date,
       done: checkin.done,

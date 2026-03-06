@@ -10,19 +10,29 @@ import { AuthGate } from './components/AuthGate';
 import {
   AuthSession,
   clearAuthSession,
+  getSessionUserId,
   parseOAuthCallbackSession,
   readAuthSession
 } from './lib/auth/session';
 import { API_BASE_URL } from './lib/config';
+import { setCurrentUserId } from './lib/db';
 
 type AppView = 'dashboard' | 'detail' | 'add' | 'edit' | 'stats';
 
 export function App() {
   const [view, setView] = useState<AppView>('dashboard');
   const [activeHabitId, setActiveHabitId] = useState<string | undefined>();
-  const [authSession, setAuthSession] = useState<AuthSession | null>(() => readAuthSession());
+  const [authSession, setAuthSession] = useState<AuthSession | null>(() => {
+    const session = readAuthSession();
+    setCurrentUserId(getSessionUserId(session));
+    return session;
+  });
   const [authError, setAuthError] = useState<string | undefined>();
   const syncState = useSyncEngine(Boolean(authSession));
+
+  useEffect(() => {
+    setCurrentUserId(getSessionUserId(authSession));
+  }, [authSession]);
 
   useEffect(() => {
     const url = new URL(window.location.href);
@@ -32,6 +42,7 @@ export function App() {
 
     const session = parseOAuthCallbackSession(url);
     if (session) {
+      setCurrentUserId(getSessionUserId(session));
       setAuthSession(session);
       window.history.replaceState({}, '', '/');
       return;
@@ -51,6 +62,7 @@ export function App() {
   const logout = async () => {
     const refreshToken = authSession?.refreshToken;
     clearAuthSession();
+    setCurrentUserId(null);
     setAuthSession(null);
     if (!refreshToken) {
       return;

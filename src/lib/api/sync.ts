@@ -1,10 +1,9 @@
 import { PullResponseDto, PushResponseDto } from '../../types/sync';
 import { OutboxEntry } from '../db';
-import { API_BASE_URL, DEFAULT_USER_ID } from '../config';
+import { API_BASE_URL } from '../config';
 import { getValidAccessToken } from '../auth/session';
 
 const API_BASE = API_BASE_URL;
-const USER_ID = DEFAULT_USER_ID;
 
 async function fetchJson(
   url: string,
@@ -15,7 +14,7 @@ async function fetchJson(
   if (accessToken) {
     headers.set('Authorization', `Bearer ${accessToken}`);
   } else {
-    headers.set('x-user-id', USER_ID);
+    throw new Error('Authentication required');
   }
   if (init.method && init.method !== 'GET') {
     headers.set('Content-Type', 'application/json');

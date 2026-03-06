@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Habit, HabitColor, HabitFrequency, HabitStats } from '../types/habit';
+import { Habit, HabitStats } from '../types/habit';
 import {
   loadHabitsFromDb,
   persistHabitInDb,
@@ -14,108 +14,6 @@ import { generateId } from '../lib/id';
 
 function formatDate(date: Date): string {
   return date.toISOString().split('T')[0];
-}
-
-function generateSeedData(): Habit[] {
-  const today = new Date();
-  const baseDay = new Date(today.getTime() - 90 * 86400000);
-  const completions: Record<string, boolean> = {};
-
-  for (let i = 0; i < 90; i++) {
-    const d = new Date(today);
-    d.setDate(d.getDate() - i);
-    const key = formatDate(d);
-    completions[key] = Math.random() > 0.25;
-  }
-
-  const completions2: Record<string, boolean> = {};
-  for (let i = 0; i < 90; i++) {
-    const d = new Date(today);
-    d.setDate(d.getDate() - i);
-    const key = formatDate(d);
-    completions2[key] = Math.random() > 0.35;
-  }
-
-  const completions3: Record<string, boolean> = {};
-  for (let i = 0; i < 90; i++) {
-    const d = new Date(today);
-    d.setDate(d.getDate() - i);
-    const key = formatDate(d);
-    completions3[key] = i % 7 !== 0 && i % 7 !== 6 && Math.random() > 0.2;
-  }
-
-  const completions4: Record<string, boolean> = {};
-  for (let i = 0; i < 60; i++) {
-    const d = new Date(today);
-    d.setDate(d.getDate() - i);
-    const key = formatDate(d);
-    completions4[key] = Math.random() > 0.45;
-  }
-
-  const defaults = [
-    {
-      id: 'h1',
-      name: 'Deep Work',
-      description: '2 hours of focused, distraction-free work',
-      color: 'blue' as HabitColor,
-      icon: '⚡',
-      tags: ['productivity', 'focus'],
-      frequency: 'daily' as HabitFrequency,
-      targetStreak: 30,
-      completions,
-      createdAt: baseDay.toISOString(),
-      updatedAt: baseDay.toISOString(),
-      version: 1,
-      archived: false
-    },
-    {
-      id: 'h2',
-      name: 'Exercise',
-      description: '30 min workout or run',
-      color: 'green' as HabitColor,
-      icon: '🏃',
-      tags: ['health', 'fitness'],
-      frequency: 'daily' as HabitFrequency,
-      targetStreak: 21,
-      completions: completions2,
-      createdAt: baseDay.toISOString(),
-      updatedAt: baseDay.toISOString(),
-      version: 1,
-      archived: false
-    },
-    {
-      id: 'h3',
-      name: 'Read',
-      description: '30 pages of non-fiction',
-      color: 'purple' as HabitColor,
-      icon: '📖',
-      tags: ['learning', 'growth'],
-      frequency: 'weekdays' as HabitFrequency,
-      targetStreak: 20,
-      completions: completions3,
-      createdAt: baseDay.toISOString(),
-      updatedAt: baseDay.toISOString(),
-      version: 1,
-      archived: false
-    },
-    {
-      id: 'h4',
-      name: 'Meditate',
-      description: '10 min mindfulness session',
-      color: 'cyan' as HabitColor,
-      icon: '🧘',
-      tags: ['wellness', 'mental'],
-      frequency: 'daily' as HabitFrequency,
-      targetStreak: 14,
-      completions: completions4,
-      createdAt: new Date(today.getTime() - 60 * 86400000).toISOString(),
-      updatedAt: new Date(today.getTime() - 60 * 86400000).toISOString(),
-      version: 1,
-      archived: false
-    }
-  ];
-
-  return defaults;
 }
 
 function calculateStreak(completions: Record<string, boolean>): {
@@ -174,12 +72,6 @@ export function useHabits() {
     let mounted = true;
     (async () => {
       const stored = await loadHabitsFromDb();
-      if (stored.length === 0) {
-        const seed = generateSeedData();
-        await Promise.all(seed.map((habit) => persistHabitInDb(habit)));
-        if (mounted) setHabits(seed);
-        return;
-      }
       if (mounted) setHabits(stored);
     })();
     return () => {

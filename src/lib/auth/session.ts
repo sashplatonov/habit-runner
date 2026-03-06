@@ -11,6 +11,10 @@ export interface AuthSession {
   email?: string;
 }
 
+interface AccessTokenPayload {
+  sub?: string;
+}
+
 function toSession(payload: {
   accessToken: string;
   refreshToken: string;
@@ -113,4 +117,29 @@ export function parseOAuthCallbackSession(url: URL): AuthSession | null {
   }
 
   return saveAuthSession({ accessToken, refreshToken, expiresIn, email });
+}
+
+function decodeBase64Url(value: string): string | null {
+  const normalized = value.replace(/-/g, '+').replace(/_/g, '/');
+  const padded = normalized.padEnd(Math.ceil(normalized.length / 4) * 4, '=');
+  try {
+    return atob(padded);
+  } catch {
+    return null;
+  }
+}
+
+export function getSessionUserId(session: AuthSession | null): string | null {
+  if (!session?.accessToken) return null;
+  const segments = session.accessToken.split('.');
+  if (segments.length < 2) return null;
+  const payloadRaw = decodeBase64Url(segments[1]);
+  if (!payloadRaw) return null;
+
+  try {
+    const payload = JSON.parse(payloadRaw) as AccessTokenPayload;
+    return payload.sub?.trim() ?? null;
+  } catch {
+    return null;
+  }
 }
