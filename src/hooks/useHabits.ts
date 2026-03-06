@@ -1,11 +1,16 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Habit, HabitColor, HabitFrequency, HabitStats } from '../types/habit';
-
-const STORAGE_KEY = 'habit-tracker-v1';
-
-function generateId(): string {
-  return Math.random().toString(36).slice(2) + Date.now().toString(36);
-}
+import {
+  loadHabitsFromDb,
+  persistHabitInDb,
+  removeHabitFromDb,
+  addTombstone,
+  upsertCheckinInDb,
+  deleteCheckinInDb,
+  enqueueOutboxEntry,
+  createOutboxEntry
+} from '../lib/db';
+import { generateId } from '../lib/id';
 
 function formatDate(date: Date): string {
   return date.toISOString().split('T')[0];
@@ -13,9 +18,9 @@ function formatDate(date: Date): string {
 
 function generateSeedData(): Habit[] {
   const today = new Date();
+  const baseDay = new Date(today.getTime() - 90 * 86400000);
   const completions: Record<string, boolean> = {};
 
-  // Generate 90 days of semi-random completions
   for (let i = 0; i < 90; i++) {
     const d = new Date(today);
     d.setDate(d.getDate() - i);
@@ -47,60 +52,70 @@ function generateSeedData(): Habit[] {
     completions4[key] = Math.random() > 0.45;
   }
 
-  return [
-  {
-    id: 'h1',
-    name: 'Deep Work',
-    description: '2 hours of focused, distraction-free work',
-    color: 'blue',
-    icon: '⚡',
-    tags: ['productivity', 'focus'],
-    frequency: 'daily',
-    targetStreak: 30,
-    completions,
-    createdAt: formatDate(new Date(today.getTime() - 90 * 86400000)),
-    archived: false
-  },
-  {
-    id: 'h2',
-    name: 'Exercise',
-    description: '30 min workout or run',
-    color: 'green',
-    icon: '🏃',
-    tags: ['health', 'fitness'],
-    frequency: 'daily',
-    targetStreak: 21,
-    completions: completions2,
-    createdAt: formatDate(new Date(today.getTime() - 90 * 86400000)),
-    archived: false
-  },
-  {
-    id: 'h3',
-    name: 'Read',
-    description: '30 pages of non-fiction',
-    color: 'purple',
-    icon: '📖',
-    tags: ['learning', 'growth'],
-    frequency: 'weekdays',
-    targetStreak: 20,
-    completions: completions3,
-    createdAt: formatDate(new Date(today.getTime() - 90 * 86400000)),
-    archived: false
-  },
-  {
-    id: 'h4',
-    name: 'Meditate',
-    description: '10 min mindfulness session',
-    color: 'cyan',
-    icon: '🧘',
-    tags: ['wellness', 'mental'],
-    frequency: 'daily',
-    targetStreak: 14,
-    completions: completions4,
-    createdAt: formatDate(new Date(today.getTime() - 60 * 86400000)),
-    archived: false
-  }];
+  const defaults = [
+    {
+      id: 'h1',
+      name: 'Deep Work',
+      description: '2 hours of focused, distraction-free work',
+      color: 'blue' as HabitColor,
+      icon: '⚡',
+      tags: ['productivity', 'focus'],
+      frequency: 'daily' as HabitFrequency,
+      targetStreak: 30,
+      completions,
+      createdAt: baseDay.toISOString(),
+      updatedAt: baseDay.toISOString(),
+      version: 1,
+      archived: false
+    },
+    {
+      id: 'h2',
+      name: 'Exercise',
+      description: '30 min workout or run',
+      color: 'green' as HabitColor,
+      icon: '🏃',
+      tags: ['health', 'fitness'],
+      frequency: 'daily' as HabitFrequency,
+      targetStreak: 21,
+      completions: completions2,
+      createdAt: baseDay.toISOString(),
+      updatedAt: baseDay.toISOString(),
+      version: 1,
+      archived: false
+    },
+    {
+      id: 'h3',
+      name: 'Read',
+      description: '30 pages of non-fiction',
+      color: 'purple' as HabitColor,
+      icon: '📖',
+      tags: ['learning', 'growth'],
+      frequency: 'weekdays' as HabitFrequency,
+      targetStreak: 20,
+      completions: completions3,
+      createdAt: baseDay.toISOString(),
+      updatedAt: baseDay.toISOString(),
+      version: 1,
+      archived: false
+    },
+    {
+      id: 'h4',
+      name: 'Meditate',
+      description: '10 min mindfulness session',
+      color: 'cyan' as HabitColor,
+      icon: '🧘',
+      tags: ['wellness', 'mental'],
+      frequency: 'daily' as HabitFrequency,
+      targetStreak: 14,
+      completions: completions4,
+      createdAt: new Date(today.getTime() - 60 * 86400000).toISOString(),
+      updatedAt: new Date(today.getTime() - 60 * 86400000).toISOString(),
+      version: 1,
+      archived: false
+    }
+  ];
 
+  return defaults;
 }
 
 function calculateStreak(completions: Record<string, boolean>): {
@@ -112,7 +127,6 @@ function calculateStreak(completions: Record<string, boolean>): {
   let longest = 0;
   let temp = 0;
 
-  // Current streak
   for (let i = 0; i < 365; i++) {
     const d = new Date(today);
     d.setDate(d.getDate() - i);
@@ -121,7 +135,6 @@ function calculateStreak(completions: Record<string, boolean>): {
       if (i === 0 || current > 0) current++;
     } else {
       if (i === 0) {
-        // Check yesterday
         const yesterday = new Date(today);
         yesterday.setDate(yesterday.getDate() - 1);
         if (!completions[formatDate(yesterday)]) break;
@@ -131,10 +144,9 @@ function calculateStreak(completions: Record<string, boolean>): {
     }
   }
 
-  // Longest streak
-  const sortedDates = Object.keys(completions).
-  filter((k) => completions[k]).
-  sort();
+  const sortedDates = Object.keys(completions)
+    .filter((k) => completions[k])
+    .sort();
 
   for (let i = 0; i < sortedDates.length; i++) {
     if (i === 0) {
@@ -156,72 +168,146 @@ function calculateStreak(completions: Record<string, boolean>): {
 }
 
 export function useHabits() {
-  const [habits, setHabits] = useState<Habit[]>(() => {
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) return JSON.parse(stored);
-    } catch {}
-    return generateSeedData();
-  });
+  const [habits, setHabits] = useState<Habit[]>([]);
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(habits));
-  }, [habits]);
+    let mounted = true;
+    (async () => {
+      const stored = await loadHabitsFromDb();
+      if (stored.length === 0) {
+        const seed = generateSeedData();
+        await Promise.all(seed.map((habit) => persistHabitInDb(habit)));
+        if (mounted) setHabits(seed);
+        return;
+      }
+      if (mounted) setHabits(stored);
+    })();
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   const toggleCompletion = useCallback((habitId: string, date?: string) => {
     const key = date || formatDate(new Date());
     setHabits((prev) =>
-    prev.map((h) =>
-    h.id === habitId ?
-    {
-      ...h,
-      completions: { ...h.completions, [key]: !h.completions[key] }
-    } :
-    h
-    )
+      prev.map((habit) => {
+        if (habit.id !== habitId) return habit;
+        const hasCompletion = !!habit.completions[key];
+        const updatedCompletions = { ...habit.completions };
+        if (hasCompletion) {
+          delete updatedCompletions[key];
+        } else {
+          updatedCompletions[key] = true;
+        }
+
+        const updatedHabit: Habit = {
+          ...habit,
+          completions: updatedCompletions,
+          updatedAt: new Date().toISOString(),
+          version: (habit.version ?? 1) + 1
+        };
+
+        void persistHabitInDb(updatedHabit);
+        if (hasCompletion) {
+          void deleteCheckinInDb(habitId, key);
+        } else {
+          void upsertCheckinInDb(habitId, key, true);
+        }
+
+        const payload = hasCompletion
+          ? { habitId, date: key }
+          : {
+              habitId,
+              date: key,
+              done: true,
+              version: updatedHabit.version ?? 1
+            };
+
+        const entry = createOutboxEntry(
+          'checkin',
+          hasCompletion ? 'delete' : 'upsert',
+          payload
+        );
+
+        void enqueueOutboxEntry(entry);
+        return updatedHabit;
+      })
     );
   }, []);
 
   const addHabit = useCallback(
     (data: Omit<Habit, 'id' | 'completions' | 'createdAt'>) => {
+      const now = new Date().toISOString();
       const newHabit: Habit = {
         ...data,
         id: generateId(),
         completions: {},
-        createdAt: formatDate(new Date())
+        createdAt: now,
+        updatedAt: now,
+        version: 1,
+        archived: data.archived ?? false
       };
+
       setHabits((prev) => [...prev, newHabit]);
+      void persistHabitInDb(newHabit);
+      const entry = createOutboxEntry('habit', 'upsert', newHabit);
+      void enqueueOutboxEntry(entry);
       return newHabit.id;
     },
     []
   );
 
   const updateHabit = useCallback((id: string, data: Partial<Habit>) => {
-    setHabits((prev) => prev.map((h) => h.id === id ? { ...h, ...data } : h));
+    setHabits((prev) =>
+      prev.map((habit) => {
+        if (habit.id !== id) return habit;
+        const updatedHabit: Habit = {
+          ...habit,
+          ...data,
+          updatedAt: new Date().toISOString(),
+          version: (habit.version ?? 1) + 1
+        };
+        void persistHabitInDb(updatedHabit);
+        const entry = createOutboxEntry('habit', 'upsert', updatedHabit);
+        void enqueueOutboxEntry(entry);
+        return updatedHabit;
+      })
+    );
   }, []);
 
   const deleteHabit = useCallback((id: string) => {
-    setHabits((prev) => prev.filter((h) => h.id !== id));
+    setHabits((prev) => {
+      const target = prev.find((habit) => habit.id === id);
+      if (target) {
+        void addTombstone('habit', id, target.version ?? 1);
+        void removeHabitFromDb(id);
+        const entry = createOutboxEntry('habit', 'delete', {
+          id,
+          version: target.version ?? 1
+        });
+        void enqueueOutboxEntry(entry);
+      }
+      return prev.filter((habit) => habit.id !== id);
+    });
   }, []);
 
   const getHabitStats = useCallback(
     (habitId: string): HabitStats => {
       const habit = habits.find((h) => h.id === habitId);
       if (!habit)
-      return {
-        totalDays: 0,
-        completedDays: 0,
-        currentStreak: 0,
-        longestStreak: 0,
-        completionRate: 0,
-        weeklyData: [],
-        monthlyData: []
-      };
+        return {
+          totalDays: 0,
+          completedDays: 0,
+          currentStreak: 0,
+          longestStreak: 0,
+          completionRate: 0,
+          weeklyData: [],
+          monthlyData: []
+        };
 
       const { current, longest } = calculateStreak(habit.completions);
-      const completedDays = Object.values(habit.completions).filter(
-        Boolean
-      ).length;
+      const completedDays = Object.values(habit.completions).filter(Boolean)
+        .length;
       const totalDays = Math.max(
         1,
         Math.ceil(
@@ -229,7 +315,6 @@ export function useHabits() {
         )
       );
 
-      // Weekly data (last 12 weeks)
       const today = new Date();
       const weeklyData = [];
       for (let w = 11; w >= 0; w--) {
@@ -248,21 +333,21 @@ export function useHabits() {
         });
       }
 
-      // Monthly data (last 6 months)
       const monthlyData = [];
       const monthNames = [
-      'Jan',
-      'Feb',
-      'Mar',
-      'Apr',
-      'May',
-      'Jun',
-      'Jul',
-      'Aug',
-      'Sep',
-      'Oct',
-      'Nov',
-      'Dec'];
+        'Jan',
+        'Feb',
+        'Mar',
+        'Apr',
+        'May',
+        'Jun',
+        'Jul',
+        'Aug',
+        'Sep',
+        'Oct',
+        'Nov',
+        'Dec'
+      ];
 
       for (let m = 5; m >= 0; m--) {
         const monthDate = new Date(today.getFullYear(), today.getMonth() - m, 1);
@@ -283,12 +368,12 @@ export function useHabits() {
           if (habit.completions[key]) completed++;
         }
         const daysElapsed =
-        monthDate.getMonth() === today.getMonth() ?
-        today.getDate() :
-        daysInMonth;
+          monthDate.getMonth() === today.getMonth()
+            ? today.getDate()
+            : daysInMonth;
         monthlyData.push({
           month: monthNames[monthDate.getMonth()],
-          rate: Math.round(completed / Math.max(1, daysElapsed) * 100)
+          rate: Math.round((completed / Math.max(1, daysElapsed)) * 100)
         });
       }
 
@@ -297,7 +382,7 @@ export function useHabits() {
         completedDays,
         currentStreak: current,
         longestStreak: longest,
-        completionRate: Math.round(completedDays / totalDays * 100),
+        completionRate: Math.round((completedDays / totalDays) * 100),
         weeklyData,
         monthlyData
       };
@@ -310,7 +395,7 @@ export function useHabits() {
     const active = habits.filter((h) => !h.archived);
     if (active.length === 0) return 0;
     const completed = active.filter((h) => h.completions[today]).length;
-    return Math.round(completed / active.length * 100);
+    return Math.round((completed / active.length) * 100);
   }, [habits]);
 
   return {

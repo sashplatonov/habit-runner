@@ -13,6 +13,8 @@ export interface Habit {
   targetStreak: number;
   completions: Record<string, boolean>; // "YYYY-MM-DD" -> true
   createdAt: string;
+  updatedAt?: string;
+  version?: number;
   archived: boolean;
 }
 
