@@ -37,10 +37,10 @@ export function Nav({
         className="flex items-center gap-2 group"
       >
         <div className="w-7 h-7 rounded border border-accent/40 flex items-center justify-center bg-accent/10">
-          <span className="text-accent text-xs font-mono font-bold">HT</span>
+          <span className="text-accent text-xs font-mono font-bold">HR</span>
         </div>
         <span className="text-foreground font-semibold text-sm tracking-tight hidden sm:block">
-          HabitTrack
+          Habbit Runner
         </span>
       </button>
 
