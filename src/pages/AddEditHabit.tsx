@@ -140,28 +140,34 @@ export function AddEditHabit({ habitId, onNavigate }: AddEditHabitProps) {
     {e.customDays = 'Select at least one day';}
     return e;
   };
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     const e = validate();
     if (Object.keys(e).length > 0) {
       setErrors(e);
       return;
     }
+    const normalizedTagInput = tagInput.toLowerCase().replace(/[^a-z0-9]/g, '');
+    const nextTags = normalizedTagInput &&
+      !tags.includes(normalizedTagInput) &&
+      tags.length < 5
+      ? [...tags, normalizedTagInput]
+      : tags;
     const data = {
       name: name.trim(),
       description: description.trim(),
       color,
       icon,
-      tags,
+      tags: nextTags,
       frequency,
       customDays: frequency === 'custom' ? customDays : undefined,
       targetStreak,
       archived: existing?.archived ?? false
     };
     if (isEdit && habitId) {
-      updateHabit(habitId, data);
+      await updateHabit(habitId, data);
       onNavigate('detail', habitId);
     } else {
-      const newId = addHabit(data);
+      const newId = await addHabit(data);
       onNavigate('detail', newId);
     }
   };

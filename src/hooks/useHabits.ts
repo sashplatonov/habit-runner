@@ -82,7 +82,7 @@ export function useHabits() {
   }, []);
 
   const addHabit = useCallback(
-    (data: Omit<Habit, 'id' | 'completions' | 'createdAt'>) => {
+    async (data: Omit<Habit, 'id' | 'completions' | 'createdAt'>) => {
       const now = new Date().toISOString();
       const newHabit: Habit = {
         ...data,
@@ -95,31 +95,30 @@ export function useHabits() {
       };
 
       setHabits((prev) => [...prev, newHabit]);
-      void persistHabitInDb(newHabit);
+      await persistHabitInDb(newHabit);
       const entry = createOutboxEntry('habit', 'upsert', newHabit);
-      void enqueueOutboxEntry(entry);
+      await enqueueOutboxEntry(entry);
       return newHabit.id;
     },
     []
   );
 
-  const updateHabit = useCallback((id: string, data: Partial<Habit>) => {
+  const updateHabit = useCallback(async (id: string, data: Partial<Habit>) => {
+    const existing = habits.find((habit) => habit.id === id);
+    if (!existing) {return;}
+    const updatedHabit: Habit = {
+      ...existing,
+      ...data,
+      updatedAt: new Date().toISOString(),
+      version: (existing.version ?? 1) + 1
+    };
     setHabits((prev) =>
-      prev.map((habit) => {
-        if (habit.id !== id) {return habit;}
-        const updatedHabit: Habit = {
-          ...habit,
-          ...data,
-          updatedAt: new Date().toISOString(),
-          version: (habit.version ?? 1) + 1
-        };
-        void persistHabitInDb(updatedHabit);
-        const entry = createOutboxEntry('habit', 'upsert', updatedHabit);
-        void enqueueOutboxEntry(entry);
-        return updatedHabit;
-      })
+      prev.map((habit) => (habit.id === id ? updatedHabit : habit))
     );
-  }, []);
+    await persistHabitInDb(updatedHabit);
+    const entry = createOutboxEntry('habit', 'upsert', updatedHabit);
+    await enqueueOutboxEntry(entry);
+  }, [habits]);
 
   const deleteHabit = useCallback((id: string) => {
     setHabits((prev) => {
