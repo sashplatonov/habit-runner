@@ -31,6 +31,8 @@ model Habit {
   targetStreak Int
   tags        Json?
   archived    Boolean   @default(false)
+  sortOrder   Int       @default(0)
+  reminderTime String?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @default(now()) @updatedAt
   version     Int       @default(1)

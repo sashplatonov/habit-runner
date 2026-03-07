@@ -12,6 +12,8 @@ export interface HabitDto {
   createdAt: string;
   updatedAt: string;
   version: number;
+  sortOrder: number;
+  reminderTime?: string;
 }
 
 export interface CheckinDto {

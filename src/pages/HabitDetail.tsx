@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   ArrowLeftIcon,
   EditIcon,
@@ -41,6 +41,7 @@ export function HabitDetail() {
   const { push } = useUndo();
   const habit = habitId ? allHabits.find((h) => h.id === habitId) : undefined;
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [reminderInput, setReminderInput] = useState('');
   const today = formatDate(new Date());
   const isTodayFrozen = habit ? habit.freezeDays.includes(today) : false;
   const handleDelete = useCallback(async () => {
@@ -76,6 +77,27 @@ export function HabitDetail() {
       : [...habit.freezeDays, today];
     await updateHabit(habitId, { freezeDays: nextFreezeDays });
   }, [habit, habitId, isTodayFrozen, today, updateHabit]);
+  useEffect(() => {
+    setReminderInput(habit?.reminderTime ?? '');
+  }, [habit?.reminderTime]);
+  const handleReminderBlur = useCallback(async () => {
+    if (!habitId) {
+      return;
+    }
+    if (habit?.reminderTime === reminderInput) {
+      return;
+    }
+    await updateHabit(habitId, {
+      reminderTime: reminderInput || undefined
+    });
+  }, [habit, habitId, reminderInput, updateHabit]);
+  const clearReminder = useCallback(async () => {
+    if (!habitId) {
+      return;
+    }
+    setReminderInput('');
+    await updateHabit(habitId, { reminderTime: undefined });
+  }, [habitId, updateHabit]);
 
   const handleToggleCompletion = useCallback(async () => {
     if (!habitId || !habit) {
@@ -253,6 +275,37 @@ export function HabitDetail() {
               {stats.completedDays}
             </div>
             <div className="text-[9px] font-mono text-muted">days</div>
+          </div>
+        </div>
+
+        <div className="bg-bg-secondary border border-border rounded-2xl p-4 space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="text-[11px] font-mono text-muted uppercase tracking-[0.5em]">
+              Daily reminder
+            </div>
+            {reminderInput && (
+              <button
+                type="button"
+                onClick={clearReminder}
+                className="text-[9px] font-mono uppercase tracking-wider text-muted hover:text-foreground"
+              >
+                Clear
+              </button>
+            )}
+          </div>
+          <div className="flex items-center gap-3 flex-wrap">
+            <input
+              type="time"
+              value={reminderInput}
+              onChange={(event) => setReminderInput(event.target.value)}
+              onBlur={handleReminderBlur}
+              className="rounded-xl border border-border bg-bg-primary px-3 py-2 text-sm font-mono focus:border-accent/60 focus:outline-none focus:shadow-[0_0_16px_var(--glow)] transition"
+            />
+            <p className="text-[11px] text-muted">
+              {reminderInput
+                ? `You will be reminded at ${reminderInput}`
+                : 'No reminder set.'}
+            </p>
           </div>
         </div>
 

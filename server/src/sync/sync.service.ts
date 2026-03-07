@@ -33,6 +33,8 @@ interface HabitPayload {
   version?: number;
   updatedAt?: string;
   createdAt?: string;
+  sortOrder?: number;
+  reminderTime?: string | null;
 }
 
 interface CheckinPayload {
@@ -220,6 +222,13 @@ export class SyncService {
     }
 
     const nextVersion = Math.max(existing?.version ?? 0, payload.version ?? 0) + 1;
+    const sortOrder =
+      this.normalizeSortOrder(payload.sortOrder) ??
+      existing?.sortOrder ??
+      0;
+    const reminderTime = this.normalizeReminderTime(
+      payload.reminderTime ?? existing?.reminderTime
+    );
 
     const tags = this.normalizeTags(payload.tags);
     const customDays = this.normalizeCustomDays(payload.customDays);
@@ -239,6 +248,8 @@ export class SyncService {
         tags: tags as never,
         archived: payload.archived ?? false,
         createdAt: this.normalizeDate(payload.createdAt),
+        sortOrder,
+        reminderTime,
         updatedAt: timestamp,
         version: nextVersion
       },
@@ -252,6 +263,8 @@ export class SyncService {
         targetStreak: payload.targetStreak,
         tags: tags as never,
         archived: payload.archived ?? false,
+        sortOrder,
+        reminderTime,
         updatedAt: timestamp,
         version: nextVersion
       }
@@ -412,6 +425,8 @@ export class SyncService {
     createdAt: Date;
     updatedAt: Date;
     version: number;
+    sortOrder: number;
+    reminderTime: string | null;
   }): HabitDto {
     return {
       id: habit.id,
@@ -426,7 +441,9 @@ export class SyncService {
       archived: habit.archived,
       createdAt: habit.createdAt.toISOString(),
       updatedAt: habit.updatedAt.toISOString(),
-      version: habit.version
+      version: habit.version,
+      sortOrder: habit.sortOrder,
+      reminderTime: habit.reminderTime ?? undefined
     };
   }
 
@@ -490,5 +507,33 @@ export class SyncService {
       .map((day) => Math.trunc(day))
       .filter((day) => day >= 0 && day <= 6);
     return days.length > 0 ? Array.from(new Set(days)) : undefined;
+  }
+
+  private normalizeSortOrder(value?: unknown): number | undefined {
+    if (typeof value !== 'number' || !Number.isFinite(value)) {
+      return undefined;
+    }
+    return Math.trunc(value);
+  }
+
+  private normalizeReminderTime(value?: string | null): string | null {
+    if (!value || typeof value !== 'string') {
+      return null;
+    }
+    if (!/^\d{2}:\d{2}$/.test(value)) {
+      return null;
+    }
+    const [hours, minutes] = value.split(':').map((segment) => Number(segment));
+    if (
+      Number.isNaN(hours) ||
+      Number.isNaN(minutes) ||
+      hours < 0 ||
+      hours > 23 ||
+      minutes < 0 ||
+      minutes > 59
+    ) {
+      return null;
+    }
+    return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
   }
 }

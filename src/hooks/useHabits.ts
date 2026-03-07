@@ -29,6 +29,11 @@ type ToggleCompletionResult = {
   done: boolean;
 };
 
+type HabitUpsertInput = Omit<Habit, 'id' | 'completions' | 'createdAt'> & {
+  sortOrder?: number;
+  reminderTime?: string | null;
+};
+
 export function useHabits() {
   const currentUserId = getCurrentUserId();
 
@@ -64,7 +69,20 @@ export function useHabits() {
     });
   }, [habitEntities, completionsByHabitId]);
 
-  const habits = useMemo(() => allHabits.filter((habit) => !habit.archived), [allHabits]);
+  const orderedHabits = useMemo(() => {
+    const copy = [...allHabits];
+    return copy.sort((a, b) => {
+      const first = a.sortOrder ?? 0;
+      const second = b.sortOrder ?? 0;
+      if (first !== second) {return first - second;}
+      return a.createdAt.localeCompare(b.createdAt);
+    });
+  }, [allHabits]);
+
+  const habits = useMemo(
+    () => orderedHabits.filter((habit) => !habit.archived),
+    [orderedHabits]
+  );
 
   const toggleCompletion = useCallback(
     async (habitId: string, date?: string): Promise<ToggleCompletionResult> => {
@@ -127,7 +145,7 @@ export function useHabits() {
     }, []);
 
   const addHabit = useCallback(
-    async (data: Omit<Habit, 'id' | 'completions' | 'createdAt'>) => {
+    async (data: HabitUpsertInput) => {
       const now = new Date().toISOString();
       const newHabit: Habit = {
         ...data,
@@ -136,6 +154,8 @@ export function useHabits() {
         createdAt: now,
         updatedAt: now,
         version: 1,
+        sortOrder: data.sortOrder ?? Date.now(),
+        reminderTime: data.reminderTime ?? undefined,
         archived: data.archived ?? false,
         freezeDays: data.freezeDays ?? []
       };

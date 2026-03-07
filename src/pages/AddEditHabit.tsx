@@ -115,6 +115,7 @@ export function AddEditHabit() {
   const [targetStreak, setTargetStreak] = useState(existing?.targetStreak || 21);
   const [tags, setTags] = useState<string[]>(existing?.tags || []);
   const [tagInput, setTagInput] = useState('');
+  const [reminderTime, setReminderTime] = useState(existing?.reminderTime || '');
   const [errors, setErrors] = useState<Record<string, string>>({});
   const selectedColor = COLORS.find((c) => c.value === color) ?? COLORS[0];
 
@@ -130,6 +131,7 @@ export function AddEditHabit() {
     setCustomDays(existing.customDays ?? [1, 2, 3, 4, 5]);
     setTargetStreak(existing.targetStreak);
     setTags(existing.tags ?? []);
+    setReminderTime(existing.reminderTime ?? '');
   }, [existing, isEdit]);
 
   const validate = () => {
@@ -161,7 +163,8 @@ export function AddEditHabit() {
       frequency,
       customDays: frequency === 'custom' ? customDays : undefined,
       targetStreak,
-      archived: existing?.archived ?? false
+      archived: existing?.archived ?? false,
+      reminderTime: reminderTime || undefined
     };
     if (isEdit && habitId) {
       await updateHabit(habitId, data);
@@ -472,6 +475,25 @@ export function AddEditHabit() {
                 </button>
             )}
           </div>
+        </div>
+        <div>
+          <label className="block text-[10px] font-mono text-muted uppercase tracking-wider mb-2">
+            Reminder
+          </label>
+          <div className="flex flex-wrap items-center gap-3">
+            <input
+              type="time"
+              value={reminderTime}
+              onChange={(e) => setReminderTime(e.target.value)}
+              className="rounded-lg border border-border bg-bg-secondary px-3 py-2 text-sm font-mono focus:border-accent/60 focus:outline-none focus:shadow-[0_0_12px_var(--glow)] transition"
+            />
+            <span className="text-[11px] font-mono text-muted">
+              {reminderTime ? `Daily at ${reminderTime}` : 'No reminder yet'}
+            </span>
+          </div>
+          <p className="text-[9px] font-mono text-muted mt-1">
+            Reminder calls appear on the dashboard when the app is open.
+          </p>
         </div>
       </div>
     </div>);

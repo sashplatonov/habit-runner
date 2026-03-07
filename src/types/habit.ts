@@ -17,6 +17,8 @@ export interface Habit {
   updatedAt?: string;
   version?: number;
   archived: boolean;
+  sortOrder: number;
+  reminderTime?: string;
 }
 
 export interface HabitStats {

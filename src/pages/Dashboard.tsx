@@ -1,11 +1,13 @@
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
+  BellRingIcon,
   CheckIcon,
   ChevronRightIcon,
   FlameIcon,
+  GripVerticalIcon,
   TrendingUpIcon,
-  ZapIcon } from
-'lucide-react';
+  ZapIcon
+} from 'lucide-react';
 import { CompletionRing } from '@/components/CompletionRing';
 import { MiniHeatmap } from '@/components/MiniHeatmap';
 import type { Habit } from '@/types/habit';
@@ -14,15 +16,33 @@ import { HABIT_COLOR_THEMES } from '@/lib/theme/habit-colors';
 import { useNavigate } from '@/lib/router';
 import { Onboarding, type OnboardingTemplate } from '@/components/Onboarding';
 import { useUndo } from '@/lib/undo';
+
+type Reminder = {
+  habitId: string;
+  time: string;
+  message: string;
+};
+type HabitRowProps = {
+  habit: Habit;
+  onToggle: () => void;
+  onDetail: () => void;
+  onDragStart?: (event: React.DragEvent<HTMLDivElement>) => void;
+  onDragOver?: (event: React.DragEvent<HTMLDivElement>) => void;
+  onDrop?: (event: React.DragEvent<HTMLDivElement>) => void;
+  onDragEnd?: () => void;
+  isDropTarget?: boolean;
+};
+
 function HabitRow({
   habit,
   onToggle,
-  onDetail
-
-
-
-
-}: {habit: Habit;onToggle: () => void;onDetail: () => void;}) {
+  onDetail,
+  onDragStart,
+  onDragOver,
+  onDrop,
+  onDragEnd,
+  isDropTarget
+}: HabitRowProps) {
   const today = new Date().toISOString().split('T')[0];
   const completed = !!habit.completions[today];
   const accent = HABIT_COLOR_THEMES[habit.color];
@@ -58,7 +78,17 @@ function HabitRow({
   const completionRate = Math.round(rate30 / 30 * 100);
   return (
     <div
-      className={`group flex items-center gap-3 px-4 py-3 border-b border-border hover:bg-bg-secondary transition-colors cursor-pointer ${completed ? 'opacity-100' : 'opacity-90'}`}>
+      draggable={Boolean(onDragStart)}
+      onDragStart={onDragStart}
+      onDragOver={onDragOver}
+      onDrop={onDrop}
+      onDragEnd={onDragEnd}
+      className={`group flex items-center gap-3 px-4 py-3 border-b border-border hover:bg-bg-secondary transition-colors cursor-pointer ${completed ? 'opacity-100' : 'opacity-90'} ${isDropTarget ? 'border-accent/60 bg-accent/5' : ''}`}
+    >
+
+      <div className="flex items-center gap-2 pr-1">
+        <GripVerticalIcon size={14} className="text-muted" aria-hidden />
+      </div>
 
       {/* Checkbox */}
       <button
@@ -152,7 +182,14 @@ function HabitRow({
     </div>);
 
 }
-const DEFAULT_CATEGORY = 'Uncategorized';
+
+function DropIndicator() {
+  return (
+    <div className="px-4 py-1">
+      <div className="h-[3px] w-full rounded-full bg-gradient-to-r from-accent to-accent-secondary animate-pulse transition-all" />
+    </div>
+  );
+}
 
 export function Dashboard() {
   const navigate = useNavigate();
@@ -160,9 +197,138 @@ export function Dashboard() {
     habits,
     toggleCompletion,
     addHabit,
+    updateHabit,
     getTodayCompletionRate,
     formatDate
   } = useHabits();
+  const [draggedHabitId, setDraggedHabitId] = useState<string | null>(null);
+  const [dragOverHabitId, setDragOverHabitId] = useState<string | null>(null);
+  const [dropHint, setDropHint] = useState<{ habitId: string; position: 'above' | 'below' } | null>(null);
+  const reminderTracker = useRef<Record<string, string>>({});
+  const [reminders, setReminders] = useState<Reminder[]>([]);
+  const applySortOrder = useCallback(
+    async (orderedHabits: Habit[]) => {
+      await Promise.all(
+        orderedHabits.map((habit, index) => {
+          const targetOrder = index;
+          if (habit.sortOrder === targetOrder) {
+            return Promise.resolve();
+          }
+          return updateHabit(habit.id, { sortOrder: targetOrder });
+        })
+      );
+    },
+    [updateHabit]
+  );
+  const handleDragStart = useCallback(
+    (event: React.DragEvent<HTMLDivElement>, habitId: string) => {
+      event.dataTransfer?.setData('text/plain', habitId);
+      event.dataTransfer?.setDragImage(new Image(), 0, 0);
+      setDraggedHabitId(habitId);
+      setDropHint(null);
+    },
+    []
+  );
+  const handleDragOver = useCallback(
+    (event: React.DragEvent<HTMLDivElement>, habitId: string) => {
+      event.preventDefault();
+      if (!draggedHabitId || draggedHabitId === habitId) {
+        setDropHint(null);
+        setDragOverHabitId(null);
+        return;
+      }
+      const bounds = event.currentTarget.getBoundingClientRect();
+      const midpoint = bounds.top + bounds.height / 2;
+      const position = event.clientY < midpoint ? 'above' : 'below';
+      setDropHint({ habitId, position });
+      setDragOverHabitId(habitId);
+    },
+    [draggedHabitId]
+  );
+  const handleDrop = useCallback(
+    async (event: React.DragEvent<HTMLDivElement>, habitId: string) => {
+      event.preventDefault();
+      if (!draggedHabitId || draggedHabitId === habitId) {
+        setDragOverHabitId(null);
+        setDraggedHabitId(null);
+        return;
+      }
+      const original = [...habits];
+      const sourceIndex = original.findIndex((habit) => habit.id === draggedHabitId);
+      const targetIndex = original.findIndex((habit) => habit.id === habitId);
+      if (sourceIndex === -1 || targetIndex === -1) {
+        setDragOverHabitId(null);
+        setDraggedHabitId(null);
+        return;
+      }
+      const position =
+        dropHint?.habitId === habitId
+          ? dropHint.position
+          : (() => {
+              const bounds = event.currentTarget.getBoundingClientRect();
+              const midpoint = bounds.top + bounds.height / 2;
+              return event.clientY < midpoint ? 'above' : 'below';
+            })();
+      const ordered = [...original];
+      const [moved] = ordered.splice(sourceIndex, 1);
+      let insertIndex = targetIndex + (position === 'below' ? 1 : 0);
+      if (sourceIndex < insertIndex) {
+        insertIndex = Math.max(0, insertIndex - 1);
+      }
+      insertIndex = Math.max(0, Math.min(ordered.length, insertIndex));
+      ordered.splice(insertIndex, 0, moved);
+      await applySortOrder(ordered);
+      setDragOverHabitId(null);
+      setDraggedHabitId(null);
+      setDropHint(null);
+    },
+    [applySortOrder, draggedHabitId, habits, dropHint]
+  );
+  const handleDragEnd = useCallback(() => {
+    setDraggedHabitId(null);
+    setDragOverHabitId(null);
+    setDropHint(null);
+  }, []);
+  useEffect(() => {
+    const checkReminders = () => {
+      const now = new Date();
+      const pad = (value: number) => String(value).padStart(2, '0');
+      const hhmm = `${pad(now.getHours())}:${pad(now.getMinutes())}`;
+      const todayKey = formatDate(now);
+      habits.forEach((habit) => {
+        if (!habit.reminderTime || habit.archived) {return;}
+        if (habit.reminderTime !== hhmm) {return;}
+        if (reminderTracker.current[habit.id] === todayKey) {return;}
+        reminderTracker.current[habit.id] = todayKey;
+        setReminders((prev) =>
+          prev.some((item) => item.habitId === habit.id)
+            ? prev
+            : [
+                ...prev,
+                {
+                  habitId: habit.id,
+                  time: habit.reminderTime,
+                  message: `Reminder: ${habit.name} (${habit.reminderTime})`
+                }
+              ]
+        );
+      });
+    };
+    checkReminders();
+    if (typeof window === 'undefined') {
+      return;
+    }
+    const interval = window.setInterval(checkReminders, 30_000);
+    return () => window.clearInterval(interval);
+  }, [formatDate, habits]);
+  useEffect(() => {
+    setReminders((prev) =>
+      prev.filter((reminder) => habits.some((habit) => habit.id === reminder.habitId))
+    );
+  }, [habits]);
+  const handleDismissReminder = useCallback((habitId: string) => {
+    setReminders((prev) => prev.filter((reminder) => reminder.habitId !== habitId));
+  }, []);
   const { push } = useUndo();
   const [addingTemplate, setAddingTemplate] = useState<string | null>(null);
 
@@ -222,28 +388,6 @@ export function Dashboard() {
     });
   }, [habits, filter, selectedTags, today]);
 
-  const categorySections = useMemo(() => {
-    const buckets: Record<string, Habit[]> = {};
-    filtered.forEach((habit) => {
-      const key = habit.tags[0] ?? DEFAULT_CATEGORY;
-      if (!buckets[key]) {
-        buckets[key] = [];
-      }
-      buckets[key].push(habit);
-    });
-    return Object.entries(buckets)
-      .map(([name, sectionHabits]) => ({ name, habits: sectionHabits }))
-    .sort((a, b) => {
-      if (a.name === DEFAULT_CATEGORY) {
-        return 1;
-      }
-      if (b.name === DEFAULT_CATEGORY) {
-        return -1;
-      }
-      return a.name.localeCompare(b.name, 'ru');
-    });
-  }, [filtered]);
-
   const handleToggle = useCallback(
     async (habit: Habit) => {
       const wasDone = habit.completions[today];
@@ -255,8 +399,9 @@ export function Dashboard() {
           await toggleCompletion(habit.id, today);
         }
       });
+      handleDismissReminder(habit.id);
     },
-    [push, today, toggleCompletion]
+    [push, today, toggleCompletion, handleDismissReminder]
   );
 
   const handleExport = useCallback(() => {
@@ -361,7 +506,7 @@ export function Dashboard() {
           </div>
           <div className="flex items-center justify-between gap-3">
             <div className="text-[10px] font-mono uppercase tracking-[0.4em] text-muted">
-              Group by tags
+              Filters
             </div>
             <button
               type="button"
@@ -411,6 +556,47 @@ export function Dashboard() {
         </div>
       </div>
 
+      {reminders.length > 0 && (
+        <div className="max-w-2xl mx-auto px-4 py-3 space-y-2">
+          {reminders.map((reminder) => {
+            const habit = habits.find((item) => item.id === reminder.habitId);
+            if (!habit) {return null;}
+            return (
+              <div
+                key={reminder.habitId}
+                className="flex flex-col gap-2 rounded-2xl border border-accent/20 bg-accent/5 px-4 py-3"
+              >
+                <div className="flex items-center gap-2">
+                  <BellRingIcon size={16} className="text-accent-secondary" />
+                  <div className="text-sm font-semibold text-foreground">
+                    {reminder.message}
+                  </div>
+                  <span className="text-[10px] font-mono text-muted ml-auto">
+                    {reminder.time}
+                  </span>
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => handleToggle(habit)}
+                    className="flex-1 rounded-full border border-accent px-3 py-1.5 text-[10px] font-mono uppercase tracking-[0.3em] text-accent hover:bg-accent/10 transition-colors"
+                  >
+                    Mark done
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleDismissReminder(habit.id)}
+                    className="flex-1 rounded-full border border-border px-3 py-1.5 text-[10px] font-mono uppercase tracking-[0.3em] text-muted hover:text-foreground hover:border-border-hover transition-colors"
+                  >
+                    Dismiss
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
       {/* Filter tabs */}
       <div className="border-b border-border px-4">
         <div className="max-w-2xl mx-auto">
@@ -458,33 +644,32 @@ export function Dashboard() {
       </div>
 
       {/* Habit list */}
-      <div className="max-w-2xl mx-auto py-6 space-y-6">
+      <div className="max-w-2xl mx-auto py-6 space-y-1">
         {filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 text-muted">
             <div className="text-4xl mb-3">✓</div>
             <p className="font-mono text-sm">All habits are currently paused</p>
           </div>
         ) : (
-          categorySections.map((section) => (
-            <section
-              key={section.name}
-              className="space-y-3 rounded-3xl border border-border bg-bg-secondary/40 p-4"
-            >
-              <div className="flex items-center justify-between border-b border-border pb-2 text-[10px] uppercase tracking-[0.4em] text-muted">
-                <span>{section.name}</span>
-                <span>{section.habits.length} items</span>
-              </div>
-              <div className="space-y-1">
-                {section.habits.map((habit) => (
-                  <HabitRow
-                    key={habit.id}
-                    habit={habit}
-                    onToggle={() => handleToggle(habit)}
-                    onDetail={() => navigate(`/habit/${habit.id}`)}
-                  />
-                ))}
-              </div>
-            </section>
+          filtered.map((habit) => (
+            <React.Fragment key={habit.id}>
+              {dropHint?.habitId === habit.id && dropHint.position === 'above' && (
+                <DropIndicator />
+              )}
+              <HabitRow
+                habit={habit}
+                onToggle={() => handleToggle(habit)}
+                onDetail={() => navigate(`/habit/${habit.id}`)}
+                onDragStart={(event) => handleDragStart(event, habit.id)}
+                onDragOver={(event) => handleDragOver(event, habit.id)}
+                onDrop={(event) => handleDrop(event, habit.id)}
+                onDragEnd={handleDragEnd}
+                isDropTarget={dragOverHabitId === habit.id}
+              />
+              {dropHint?.habitId === habit.id && dropHint.position === 'below' && (
+                <DropIndicator />
+              )}
+            </React.Fragment>
           ))
         )}
       </div>

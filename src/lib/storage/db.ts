@@ -36,6 +36,8 @@ export interface HabitEntity {
   createdAt: string;
   updatedAt: string;
   version: number;
+  sortOrder: number;
+  reminderTime?: string | null;
   freezeDays: string[];
 }
 
@@ -96,6 +98,25 @@ export class HabbitRunnerDb extends Dexie {
       sync_meta: 'id, status',
       outbox: 'id, userId, entity, type, status'
     });
+
+    this.version(2)
+      .stores({
+        habits: 'id, userId, updatedAt, version, sortOrder',
+        checkins: 'id, userId, habitId, date, updatedAt, version',
+        tombstones: 'id, userId, entity, entityId, deletedAt',
+        sync_meta: 'id, status',
+        outbox: 'id, userId, entity, type, status'
+      })
+      .upgrade((transaction) =>
+        transaction.habits.toCollection().modify((record) => {
+          if (record.sortOrder === undefined || record.sortOrder === null) {
+            record.sortOrder = Date.parse(record.createdAt) || Date.now();
+          }
+          if (!Object.prototype.hasOwnProperty.call(record, 'reminderTime')) {
+            record.reminderTime = null;
+          }
+        })
+      );
   }
 }
 
@@ -114,6 +135,8 @@ export function habitEntityToDomain(entity: HabitEntity): Habit {
     tags: entity.tags,
     completions: { ...entity.completions },
     freezeDays: entity.freezeDays ?? [],
+    sortOrder: entity.sortOrder ?? Date.parse(entity.createdAt),
+    reminderTime: entity.reminderTime ?? undefined,
     createdAt: entity.createdAt,
     updatedAt: entity.updatedAt,
     version: entity.version,
@@ -139,6 +162,8 @@ export function domainToHabitEntity(habit: Habit): HabitEntity {
     createdAt: habit.createdAt,
     updatedAt: habit.updatedAt ?? habit.createdAt,
     version: habit.version ?? 1,
+    sortOrder: habit.sortOrder ?? Date.parse(habit.createdAt),
+    reminderTime: habit.reminderTime ?? null,
     freezeDays: habit.freezeDays ?? []
   };
 }
@@ -351,7 +376,13 @@ export async function applyPullResponse(
       archived: habit.archived,
       createdAt: habit.createdAt,
       updatedAt: habit.updatedAt,
-      version: habit.version
+      version: habit.version,
+      sortOrder:
+        typeof habit.sortOrder === 'number'
+          ? habit.sortOrder
+          : Date.parse(habit.createdAt) || Date.now(),
+      reminderTime:
+        typeof habit.reminderTime === 'string' ? habit.reminderTime : null
     });
   });
 
