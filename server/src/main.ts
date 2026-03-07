@@ -8,7 +8,7 @@ async function bootstrap() {
   const logger = new Logger('Bootstrap');
   const app = await NestFactory.create(AppModule, { cors: true });
   await app.listen(PORT);
-  logger.log(`habbit-runner API listening on http://localhost:${PORT}`);
+  logger.log(`Habbit Runner API listening on http://localhost:${PORT}`);
 }
 
 bootstrap().catch((error) => {

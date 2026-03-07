@@ -3,7 +3,7 @@
 Локальные переменные окружения описываются в корневом `.env.example` (клиент) и `server/.env.example` (API).
 
 ## 1. Auth / multi-user
-- API требует JWT access token в заголовке `Authorization: Bearer ...`; логин на `POST /auth/login` с `email` (например `demo@habbit-runner.local`) возвращает access + refresh.
+- API требует JWT access token в заголовке `Authorization: Bearer ...`; логин в Habbit Runner на `POST /auth/login` с `email` (например `demo@habbit-runner.local`) возвращает access + refresh.
 - Refresh token обновляет access через `POST /auth/refresh`, logout просто инвалидирует refresh.
 - Guard в `SyncController` вытаскивает `user.id` из токена, что обеспечивает изоляцию между пользователями. Переменная окружения `ALLOW_LEGACY_X_USER=true` позволяет временно использовать `x-user-id` для отладки.
 
