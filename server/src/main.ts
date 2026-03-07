@@ -1,5 +1,5 @@
 import 'reflect-metadata';
-import { Logger } from '@nestjs/common';
+import { Logger, ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { CORS_ORIGINS, PORT } from './common/config';
@@ -12,6 +12,13 @@ async function bootstrap() {
       credentials: true
     }
   });
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      transform: true,
+      forbidNonWhitelisted: true
+    })
+  );
   await app.listen(PORT);
   logger.log(`Habbit Runner API listening on http://localhost:${PORT}`);
 }

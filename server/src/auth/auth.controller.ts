@@ -20,33 +20,39 @@ import type {
 } from './dto/auth.dto';
 import { AuthGuard } from './auth.guard';
 import type { RequestWithUser } from './auth.guard';
+import { Throttle } from '@nestjs/throttler';
 
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
+  @Throttle({ default: { limit: 10, ttl: 60 } })
   @Post('login')
   async login(@Body() body: LoginRequest) {
     return this.authService.login(body.email);
   }
 
+  @Throttle({ default: { limit: 10, ttl: 60 } })
   @Get('google/start')
   @Redirect()
   async startGoogle(@Query() query: OAuthStartQuery) {
     return { url: await this.authService.createOAuthAuthorizationUrl(query.returnTo) };
   }
 
+  @Throttle({ default: { limit: 10, ttl: 60 } })
   @Get('google/callback')
   @Redirect()
   async googleCallback(@Query() query: OAuthCallbackQuery) {
     return { url: await this.authService.handleOAuthCallback(query.code, query.state) };
   }
 
+  @Throttle({ default: { limit: 10, ttl: 60 } })
   @Post('refresh')
   async refresh(@Body() body: RefreshRequest) {
     return this.authService.refreshToken(body.refreshToken);
   }
 
+  @Throttle({ default: { limit: 10, ttl: 60 } })
   @Post('logout')
   async logout(@Body() body: RefreshRequest) {
     await this.authService.revokeToken(body.refreshToken);
@@ -54,6 +60,7 @@ export class AuthController {
   }
 
   @UseGuards(AuthGuard)
+  @Throttle({ default: { limit: 20, ttl: 60 } })
   @Get('theme')
   async getTheme(@Req() req: RequestWithUser) {
     const userId = req.user?.id;
@@ -64,6 +71,7 @@ export class AuthController {
   }
 
   @UseGuards(AuthGuard)
+  @Throttle({ default: { limit: 20, ttl: 60 } })
   @Put('theme')
   async updateTheme(@Req() req: RequestWithUser, @Body() body: UpdateThemeRequest) {
     const userId = req.user?.id;

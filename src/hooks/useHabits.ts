@@ -21,6 +21,7 @@ import {
   formatDate
 } from '@/lib/habits/habitStats';
 import { useLiveQuery } from '@/hooks/useLiveQuery';
+import { buildCompletionsByHabitId } from '@/hooks/useHabits.helpers';
 
 export function useHabits() {
   const currentUserId = getCurrentUserId();
@@ -35,18 +36,10 @@ export function useHabits() {
     [currentUserId]
   );
 
-  const completionsByHabitId = useMemo(() => {
-    const map: Record<string, Record<string, boolean>> = {};
-    (checkinEntities ?? []).forEach((checkin) => {
-      if (!checkin.done) {
-        return;
-      }
-      const habitMap = map[checkin.habitId] ?? {};
-      habitMap[checkin.date] = true;
-      map[checkin.habitId] = habitMap;
-    });
-    return map;
-  }, [checkinEntities]);
+  const completionsByHabitId = useMemo(
+    () => buildCompletionsByHabitId(checkinEntities ?? []),
+    [checkinEntities]
+  );
 
   const allHabits = useMemo<Habit[]>(() => {
     if (!habitEntities) {

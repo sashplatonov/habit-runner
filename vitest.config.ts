@@ -1,0 +1,22 @@
+import { defineConfig } from 'vitest/config';
+import path from 'node:path';
+
+export default defineConfig({
+  resolve: {
+    alias: {
+      '@': path.resolve(__dirname, 'src')
+    }
+  },
+  test: {
+    globals: true,
+    environment: 'node',
+    include: ['tests/**/*.test.ts'],
+    coverage: {
+      reporter: ['text', 'lcov'],
+      exclude: ['node_modules', 'tests/helpers']
+    }
+  },
+  esbuild: {
+    tsconfig: './tsconfig.test.json'
+  }
+});

@@ -13,7 +13,7 @@ import type { RequestWithUser} from '../auth/auth.guard';
 import { AuthGuard } from '../auth/auth.guard';
 import { SyncService } from './sync.service';
 import type { PullResponseDto } from './dto/pull-response.dto';
-import type { PushRequestDto } from './dto/push-request.dto';
+import { PushRequestDto } from './dto/push-request.dto';
 
 @UseGuards(AuthGuard)
 @Controller('sync')

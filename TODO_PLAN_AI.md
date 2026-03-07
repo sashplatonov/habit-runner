@@ -34,37 +34,37 @@ P0 — Критические технические проблемы (блок�
  ---
 P1 — Технический долг (усложняет разработку фич)
 
-5. Нет тестов (фактически)
+5. [DONE] Нет тестов (фактически)
 
 - Состояние: 1 unit-тест (tests/unit/habitStats.test.ts), 1 e2e-заглушка, 1 guard-тест. Нет test runner в scripts.
 - Решение: Настроить Vitest для фронта, Jest для сервера. Покрыть критичные пути: sync engine, useHabits, auth guard, push/pull.
 - Файлы: package.json, server/package.json, vitest.config.ts
 
-6. Нет валидации входных данных на сервере
+6. [DONE] Нет валидации входных данных на сервере
 
 - Проблема: DTOs (push-request.dto.ts, pull-response.dto.ts) — чистые интерфейсы/классы без class-validator декораторов. Нет ValidationPipe. Сервер принимает любой payload.
 - Решение: Добавить class-validator + class-transformer, включить глобальный ValidationPipe в main.ts.
 - Файлы: server/src/main.ts, server/src/sync/dto/*.ts, server/src/auth/dto/*.ts
 
-7. Нет rate limiting
+7. [DONE] Нет rate limiting
 
 - Проблема: Ни один endpoint не ограничен по частоте. Push/pull можно спамить.
 - Решение: @nestjs/throttler — глобальный лимит + stricter на auth endpoints.
 - Файлы: server/src/app.module.ts, server/src/main.ts
 
-8. Нет Error Boundary на фронте
+8. [DONE] Нет Error Boundary на фронте
 
 - Проблема: Любая ошибка рендера крашит всё приложение.
 - Решение: Обернуть App в ErrorBoundary с fallback UI.
 - Файлы: src/App.tsx, новый src/components/ErrorBoundary.tsx
 
-9. SyncOpLog растёт бесконечно
+9. [DONE] SyncOpLog растёт бесконечно
 
 - Проблема: Таблица SyncOpLog хранит каждый opId навсегда для дедупликации, но без TTL/cleanup.
 - Решение: Добавить cron-job или migration для очистки записей старше 30 дней.
 - Файлы: server/prisma/schema.prisma, новый cleanup сервис
 
-10. Нет PWA manifest и иконок
+10. [DONE] Нет PWA manifest и иконок
 
 - Проблема: public/ содержит только vite.svg. Нет manifest.json, нет иконок для установки PWA.
 - Решение: Сгенерировать manifest + иконки, настроить vite-plugin-pwa.

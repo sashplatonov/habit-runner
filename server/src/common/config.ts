@@ -42,3 +42,13 @@ export const CORS_ORIGINS = parseOrigins(
 export const GOOGLE_OAUTH_CLIENT_ID = process.env.GOOGLE_OAUTH_CLIENT_ID ?? '';
 export const GOOGLE_OAUTH_CLIENT_SECRET =
   process.env.GOOGLE_OAUTH_CLIENT_SECRET ?? '';
+
+export const THROTTLE_TTL_SECONDS = parseNumber(
+  process.env.THROTTLE_TTL_SECONDS,
+  60
+);
+export const THROTTLE_LIMIT = parseNumber(process.env.THROTTLE_LIMIT, 120);
+export const SYNC_OP_LOG_RETENTION_DAYS = parseNumber(
+  process.env.SYNC_OP_LOG_RETENTION_DAYS,
+  30
+);

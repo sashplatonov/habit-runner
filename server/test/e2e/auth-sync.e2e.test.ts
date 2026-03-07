@@ -1,4 +1,4 @@
-import { test, after, before, beforeEach } from 'node:test';
+import { afterAll, beforeAll, beforeEach, test } from '@jest/globals';
 import * as assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
 import { Module, UnauthorizedException } from '@nestjs/common';
@@ -332,7 +332,7 @@ let authController: AuthController;
 let syncController: SyncController;
 let authGuard: AuthGuard;
 
-before(async () => {
+beforeAll(async () => {
   prisma.reset();
   app = await NestFactory.createApplicationContext(TestAppModule, { logger: false });
   authController = app.get(AuthController);
@@ -340,7 +340,7 @@ before(async () => {
   authGuard = app.get(AuthGuard);
 });
 
-after(async () => {
+afterAll(async () => {
   await app.close();
 });
 

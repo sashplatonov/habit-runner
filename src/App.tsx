@@ -10,6 +10,7 @@ import { AuthGate } from '@/components/AuthGate';
 import type {
   AuthSession
 } from '@/lib/auth/session';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 import {
   AUTH_SESSION_CLEARED_EVENT,
   clearAuthSession,
@@ -98,35 +99,35 @@ export function App() {
     }
   };
 
-  if (!authSession) {
-    return (
-      <>
-        <AuthGate onError={setAuthError} />
-        {authError && (
-          <div className="fixed bottom-4 left-1/2 -translate-x-1/2 rounded-lg border border-accent-secondary/30 bg-accent-secondary/10 px-4 py-2 text-xs text-accent-secondary">
-            {authError}
-          </div>
-        )}
-      </>
-    );
-  }
-
   return (
-    <BrowserRouter>
-      <div className="min-h-screen bg-bg-primary">
-        <Nav onLogout={logout} theme={theme} onThemeChange={setTheme} />
-        <main className="pt-14">
-          <Routes>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/habit/new" element={<AddEditHabit />} />
-            <Route path="/habit/:id" element={<HabitDetail />} />
-            <Route path="/habit/:id/edit" element={<AddEditHabit />} />
-            <Route path="/stats" element={<Stats />} />
-            <Route path="/auth/callback" element={<AuthCallbackPage />} />
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
-        </main>
-      </div>
-    </BrowserRouter>
+    <ErrorBoundary>
+      {authSession ? (
+        <BrowserRouter>
+          <div className="min-h-screen bg-bg-primary">
+            <Nav onLogout={logout} theme={theme} onThemeChange={setTheme} />
+            <main className="pt-14">
+              <Routes>
+                <Route path="/" element={<Dashboard />} />
+                <Route path="/habit/new" element={<AddEditHabit />} />
+                <Route path="/habit/:id" element={<HabitDetail />} />
+                <Route path="/habit/:id/edit" element={<AddEditHabit />} />
+                <Route path="/stats" element={<Stats />} />
+                <Route path="/auth/callback" element={<AuthCallbackPage />} />
+                <Route path="*" element={<Navigate to="/" replace />} />
+              </Routes>
+            </main>
+          </div>
+        </BrowserRouter>
+      ) : (
+        <>
+          <AuthGate onError={setAuthError} />
+          {authError && (
+            <div className="fixed bottom-4 left-1/2 -translate-x-1/2 rounded-lg border border-accent-secondary/30 bg-accent-secondary/10 px-4 py-2 text-xs text-accent-secondary">
+              {authError}
+            </div>
+          )}
+        </>
+      )}
+    </ErrorBoundary>
   );
 }
