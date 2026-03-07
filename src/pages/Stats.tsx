@@ -10,6 +10,7 @@ import {
 import { useHabits } from '@/hooks/useHabits';
 import { CompletionRing } from '@/components/CompletionRing';
 import { HABIT_COLOR_THEMES } from '@/lib/theme/habit-colors';
+import { formatAppDate } from '@/lib/i18n';
 import {
   LineChart,
   Line,
@@ -79,7 +80,7 @@ export function Stats() {
           (h) => h.completions[key]
         ).length;
         return {
-          day: date.toLocaleDateString('en-US', {
+          day: formatAppDate(date, {
             month: 'short',
             day: 'numeric'
           }),

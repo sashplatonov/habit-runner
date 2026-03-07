@@ -107,26 +107,26 @@ P2 — Отсутствующие ключевые фичи (есть в каж�
  ---
 P3 — Улучшения UX и качества
 
-18. Accessibility (a11y)
+18. [DONE] Accessibility (a11y)
 
-- Нет skip-links, aria-labels неполные, keyboard navigation по Dashboard не работает.
-- Focus management при переключении views.
+- Добавлены skip-link и `main#main-content` с focus management при смене маршрутов.
+- Улучшены aria-label/title для навигации и действий; добавлена keyboard navigation (Enter/Space) для строк привычек на Dashboard.
 
-19. Responsive мелочи
+19. [DONE] Responsive мелочи
 
-- Mini heatmap и 7-day bars скрыты на мобильных (hidden sm:flex), но streak тоже скрыт (hidden md:flex). На телефоне видно мало информации.
+- Mini heatmap, 7-day bars и streak теперь показываются и на мобильных (в компактном виде), чтобы карточки были информативными на телефоне.
 
-20. Локализация
+20. [DONE] Локализация
 
-- Интерфейс частично на русском (ошибка сессии), частично на английском. Нужно i18n или консистентный язык.
+- Приведён UI к консистентному английскому и добавлен единый helper форматирования дат (`src/lib/i18n.ts`) для Dashboard/Stats.
 
-21. API-документация (Swagger)
+21. [DONE] API-документация (Swagger/OpenAPI)
 
-- Нет Swagger/OpenAPI. Подключить @nestjs/swagger для документации endpoints.
+- Добавлены `/docs/openapi.json` и UI-страница `/docs` (Swagger UI) для просмотра актуального OpenAPI-описания endpoint-ов.
 
-22. Логирование на фронте
+22. [DONE] Логирование на фронте
 
-- Ошибки синхронизации молча проглатываются. Добавить structured logging или Sentry.
+- Добавлен structured client logging: глобальный сбор UI/unhandled ошибок и логирование проблем sync-цикла.
 
  ---
 Приоритетная roadmap

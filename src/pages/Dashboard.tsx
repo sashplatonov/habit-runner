@@ -16,6 +16,7 @@ import { HABIT_COLOR_THEMES } from '@/lib/theme/habit-colors';
 import { useNavigate } from '@/lib/router';
 import { Onboarding, type OnboardingTemplate } from '@/components/Onboarding';
 import { useUndo } from '@/lib/undo';
+import { formatAppDate } from '@/lib/i18n';
 
 type Reminder = {
   habitId: string;
@@ -83,6 +84,20 @@ function HabitRow({
       onDragOver={onDragOver}
       onDrop={onDrop}
       onDragEnd={onDragEnd}
+      tabIndex={0}
+      role="listitem"
+      aria-label={`${habit.name}, ${completed ? 'completed' : 'not completed'}`}
+      onKeyDown={(event) => {
+        if (event.key === 'Enter') {
+          event.preventDefault();
+          onDetail();
+          return;
+        }
+        if (event.key === ' ') {
+          event.preventDefault();
+          onToggle();
+        }
+      }}
       className={`group flex items-center gap-3 px-4 py-3 border-b border-border hover:bg-bg-secondary transition-colors cursor-pointer ${completed ? 'opacity-100' : 'opacity-90'} ${isDropTarget ? 'border-accent/60 bg-accent/5' : ''}`}
     >
 
@@ -92,6 +107,7 @@ function HabitRow({
 
       {/* Checkbox */}
       <button
+        type="button"
         onClick={(e) => {
           e.stopPropagation();
           onToggle();
@@ -106,6 +122,7 @@ function HabitRow({
 
       {/* Icon + Name */}
       <button
+        type="button"
         onClick={onDetail}
         className="flex items-center gap-2.5 flex-1 min-w-0 text-left">
 
@@ -132,12 +149,12 @@ function HabitRow({
       </button>
 
       {/* 30-day Mini Heatmap */}
-      <div className="hidden sm:flex items-center justify-end mr-2">
+      <div className="flex items-center justify-end mr-1" aria-hidden>
         <MiniHeatmap completions={habit.completions} color={habit.color} />
       </div>
 
       {/* Last 7 days mini bars */}
-      <div className="hidden sm:flex items-end gap-[2px] h-5">
+      <div className="flex items-end gap-[1px] h-4 sm:h-5" aria-hidden>
         {last7.map((done, i) =>
         <div
           key={i}
@@ -152,7 +169,7 @@ function HabitRow({
       </div>
 
       {/* Streak */}
-      <div className="hidden md:flex items-center gap-1 w-16 justify-end">
+      <div className="flex items-center gap-1 w-12 sm:w-16 justify-end">
         {streak > 0 &&
         <>
             <FlameIcon size={11} className="text-accent-secondary" />
@@ -174,7 +191,9 @@ function HabitRow({
 
       {/* Chevron */}
       <button
+        type="button"
         onClick={onDetail}
+        aria-label={`Open details for ${habit.name}`}
         className="text-border-hover group-hover:text-muted transition-colors">
 
         <ChevronRightIcon size={14} />
@@ -360,7 +379,7 @@ export function Dashboard() {
   const todayRate = getTodayCompletionRate();
   const completedToday = habits.filter((h) => h.completions[today]).length;
   const totalActive = habits.length;
-  const dateStr = new Date().toLocaleDateString('en-US', {
+  const dateStr = formatAppDate(new Date(), {
     weekday: 'long',
     month: 'short',
     day: 'numeric'
@@ -604,6 +623,7 @@ export function Dashboard() {
           {(['all', 'pending', 'done'] as const).map((f) =>
           <button
             key={f}
+            type="button"
             onClick={() => setFilter(f)}
             className={`px-4 py-2.5 text-xs font-mono uppercase tracking-wider border-b-2 transition-colors ${filter === f ? 'border-accent text-accent' : 'border-transparent text-muted hover:text-foreground'}`}>
 
@@ -622,6 +642,7 @@ export function Dashboard() {
                 {allTags.map((tag) =>
                   <button
                     key={tag}
+                    type="button"
                     onClick={() => toggleTag(tag)}
                     className={`text-[10px] font-mono px-2 py-1 rounded border whitespace-nowrap transition-colors ${selectedTags.includes(tag) ? 'bg-accent/10 border-accent/30 text-accent' : 'bg-bg-secondary border-border text-muted hover:text-foreground hover:border-border-hover'}`}>
                     #{tag}
@@ -629,6 +650,7 @@ export function Dashboard() {
                 )}
                 {selectedTags.length > 0 && (
                   <button
+                    type="button"
                     onClick={() => setSelectedTags([])}
                     className="text-[10px] font-mono px-2 py-1 rounded border whitespace-nowrap bg-bg-secondary border-accent/30 text-accent hover:bg-accent/10 transition-colors"
                   >
@@ -644,7 +666,7 @@ export function Dashboard() {
       </div>
 
       {/* Habit list */}
-      <div className="max-w-2xl mx-auto py-6 space-y-1">
+      <div className="max-w-2xl mx-auto py-6 space-y-1" role="list" aria-label="Habit list">
         {filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 text-muted">
             <div className="text-4xl mb-3">✓</div>

@@ -7,8 +7,10 @@ import { PrismaModule } from './prisma/prisma.module';
 import { AuthModule } from './auth/auth.module';
 import { MetricsModule } from './metrics/metrics.module';
 import { THROTTLE_LIMIT, THROTTLE_TTL_SECONDS } from './common/config';
+import { OpenApiController } from './docs/openapi.controller';
 
 @Module({
+  controllers: [OpenApiController],
   imports: [
     ScheduleModule.forRoot(),
     ThrottlerModule.forRoot({

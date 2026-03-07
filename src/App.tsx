@@ -1,5 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from '@/lib/router';
+import {
+  BrowserRouter,
+  Routes,
+  Route,
+  Navigate,
+  useLocation
+} from '@/lib/router';
 import { Nav } from '@/components/Nav';
 import { Dashboard } from '@/pages/Dashboard';
 import { HabitDetail } from '@/pages/HabitDetail';
@@ -22,6 +28,7 @@ import { API_BASE_URL } from '@/lib/core/config';
 import { setCurrentUserId } from '@/lib/storage/db';
 import { useTheme } from '@/hooks/useTheme';
 import { UndoProvider } from '@/lib/undo';
+import { installGlobalClientLogging } from '@/lib/logging/clientLogger';
 
 type AuthCallbackPageProps = {
   message?: string;
@@ -33,6 +40,19 @@ function AuthCallbackPage({ message }: AuthCallbackPageProps) {
       <div className="text-sm font-mono text-muted">{message ?? 'Finishing login…'}</div>
     </div>
   );
+}
+
+function RouteFocusManager() {
+  const location = useLocation();
+
+  useEffect(() => {
+    const main = document.getElementById('main-content');
+    if (main) {
+      main.focus();
+    }
+  }, [location.pathname]);
+
+  return null;
 }
 
 export function App() {
@@ -60,6 +80,10 @@ export function App() {
     return () => {
       window.removeEventListener(AUTH_SESSION_CLEARED_EVENT, onSessionCleared);
     };
+  }, []);
+
+  useEffect(() => {
+    return installGlobalClientLogging();
   }, []);
 
   useEffect(() => {
@@ -106,8 +130,15 @@ export function App() {
       {authSession ? (
         <BrowserRouter>
           <div className="min-h-screen bg-bg-primary">
+            <a
+              href="#main-content"
+              className="sr-only focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:z-[60] focus:rounded-md focus:border focus:border-accent focus:bg-bg-card focus:px-3 focus:py-2 focus:text-xs focus:text-foreground"
+            >
+              Skip to main content
+            </a>
             <Nav onLogout={logout} theme={theme} onThemeChange={setTheme} />
-            <main className="pt-14">
+            <RouteFocusManager />
+            <main id="main-content" tabIndex={-1} className="pt-14 focus:outline-none">
               <Routes>
                 <Route path="/" element={<Dashboard />} />
                 <Route path="/habit/new" element={<AddEditHabit />} />

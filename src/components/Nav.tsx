@@ -22,7 +22,10 @@ export function Nav({ onLogout, theme, onThemeChange }: NavProps) {
   const lightThemes = THEMES.filter((t) => t.group === 'light');
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 h-14 border-b border-border bg-bg-primary/95 backdrop-blur-sm flex items-center px-4 justify-between">
+    <nav
+      className="fixed top-0 left-0 right-0 z-50 h-14 border-b border-border bg-bg-primary/95 backdrop-blur-sm flex items-center px-4 justify-between"
+      aria-label="Primary navigation"
+    >
       <Link to="/" className="flex items-center gap-2 group">
         <div className="w-7 h-7 rounded border border-accent/40 flex items-center justify-center bg-accent/10">
           <span className="text-accent text-xs font-mono font-bold">HR</span>
@@ -53,7 +56,12 @@ export function Nav({ onLogout, theme, onThemeChange }: NavProps) {
 
       <div className="flex items-center gap-2">
         <div className="group relative">
-          <button className="p-1.5 rounded-lg border border-border text-muted hover:text-foreground hover:border-border-hover transition-all duration-200">
+          <button
+            type="button"
+            className="p-1.5 rounded-lg border border-border text-muted hover:text-foreground hover:border-border-hover transition-all duration-200"
+            aria-label="Choose color theme"
+            title="Choose color theme"
+          >
             <PaletteIcon size={14} />
           </button>
           <div className="absolute right-0 top-full mt-2 w-36 bg-bg-card border border-border rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 p-1.5 flex flex-col gap-0.5">
@@ -64,8 +72,10 @@ export function Nav({ onLogout, theme, onThemeChange }: NavProps) {
             {darkThemes.map((t) => (
               <button
                 key={t.id}
+                type="button"
                 onClick={() => onThemeChange(t.id)}
                 className={`flex items-center gap-2 px-2 py-1.5 rounded-md text-xs font-mono transition-colors ${theme === t.id ? 'bg-accent/10 text-accent' : 'text-muted hover:bg-bg-secondary hover:text-foreground'}`}
+                aria-label={`Switch to ${t.name} theme`}
               >
                 <div className="flex gap-0.5">
                   <div
@@ -90,8 +100,10 @@ export function Nav({ onLogout, theme, onThemeChange }: NavProps) {
             {lightThemes.map((t) => (
               <button
                 key={t.id}
+                type="button"
                 onClick={() => onThemeChange(t.id)}
                 className={`flex items-center gap-2 px-2 py-1.5 rounded-md text-xs font-mono transition-colors ${theme === t.id ? 'bg-accent/10 text-accent' : 'text-muted hover:bg-bg-secondary hover:text-foreground'}`}
+                aria-label={`Switch to ${t.name} theme`}
               >
                 <div className="flex gap-0.5">
                   <div
@@ -111,9 +123,11 @@ export function Nav({ onLogout, theme, onThemeChange }: NavProps) {
 
         {onLogout && (
           <button
+            type="button"
             onClick={onLogout}
             className="p-1.5 rounded-lg border border-border text-muted hover:text-accent-secondary hover:border-accent-secondary/30 hover:bg-accent-secondary/10 transition-all duration-200"
             title="Clear all data"
+            aria-label="Log out"
           >
             <LogOutIcon size={14} />
           </button>

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import type { SyncRunResult, SyncStatus } from '@/lib/sync/syncEngine';
 import { runSyncCycle } from '@/lib/sync/syncEngine';
 import { SYNC_ENABLED, SYNC_DISABLED_REASON } from '@/lib/core/config';
+import { logClientError, logClientInfo } from '@/lib/logging/clientLogger';
 
 export interface SyncEngineState extends SyncRunResult {
   syncNow: () => Promise<void>;
@@ -17,6 +18,7 @@ export function useSyncEngine(enabled = true): SyncEngineState {
 
   const syncNow = useCallback(async () => {
     if (!enabled) {
+      logClientInfo('sync.skipped', 'Sync skipped because user is not authenticated');
       setState((prev) => ({
         ...prev,
         status: 'offline',
@@ -29,6 +31,7 @@ export function useSyncEngine(enabled = true): SyncEngineState {
     setState((prev) => ({ ...prev, status: navigator.onLine ? 'syncing' : 'offline' }));
 
     if (!SYNC_ENABLED) {
+      logClientInfo('sync.disabled', SYNC_DISABLED_REASON);
       setState((prev) => ({
         ...prev,
         status: 'offline',
@@ -48,6 +51,7 @@ export function useSyncEngine(enabled = true): SyncEngineState {
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       const status: SyncStatus = !navigator.onLine ? 'offline' : 'error';
+      logClientError('sync.cycle_failed', message, { status });
       setState((prev) => ({
         ...prev,
         status,
