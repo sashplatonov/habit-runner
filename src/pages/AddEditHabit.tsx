@@ -2,10 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { ArrowLeftIcon, XIcon, PlusIcon } from 'lucide-react';
 import { useHabits } from '@/hooks/useHabits';
 import type { HabitColor, HabitFrequency } from '@/types/habit';
-interface AddEditHabitProps {
-  habitId?: string;
-  onNavigate: (view: string, habitId?: string) => void;
-}
+import { useNavigate, useParams } from '@/lib/router';
 const COLORS: {
   value: HabitColor;
   label: string;
@@ -98,10 +95,13 @@ const SUGGESTED_TAGS = [
 'creative',
 'social'];
 
-export function AddEditHabit({ habitId, onNavigate }: AddEditHabitProps) {
+export function AddEditHabit() {
+  const navigate = useNavigate();
+  const params = useParams();
+  const habitId = params.id;
   const { allHabits, addHabit, updateHabit } = useHabits();
-  const isEdit = !!habitId;
-  const existing = allHabits.find((h) => h.id === habitId);
+  const isEdit = Boolean(habitId);
+  const existing = habitId ? allHabits.find((h) => h.id === habitId) : undefined;
   const [name, setName] = useState(existing?.name || '');
   const [description, setDescription] = useState(existing?.description || '');
   const [color, setColor] = useState<HabitColor>(existing?.color || 'blue');
@@ -165,10 +165,10 @@ export function AddEditHabit({ habitId, onNavigate }: AddEditHabitProps) {
     };
     if (isEdit && habitId) {
       await updateHabit(habitId, data);
-      onNavigate('detail', habitId);
+      navigate(`/habit/${habitId}`);
     } else {
       const newId = await addHabit(data);
-      onNavigate('detail', newId);
+      navigate(`/habit/${newId}`);
     }
   };
   const addTag = (tag: string) => {
@@ -202,9 +202,9 @@ export function AddEditHabit({ habitId, onNavigate }: AddEditHabitProps) {
         <div className="max-w-lg mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
             <button
-              onClick={() =>
-              onNavigate(isEdit ? 'detail' : 'dashboard', habitId)
-              }
+            onClick={() =>
+            navigate(isEdit && habitId ? `/habit/${habitId}` : '/')
+            }
               className="text-muted hover:text-foreground transition-colors">
 
               <ArrowLeftIcon size={16} />

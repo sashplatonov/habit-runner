@@ -1,14 +1,16 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
 import type { Habit, HabitStats } from '@/types/habit';
 import {
-  loadHabitsFromDb,
+  db,
+  habitEntityToDomain,
   persistHabitInDb,
   removeHabitFromDb,
   addTombstone,
   upsertCheckinInDb,
   deleteCheckinInDb,
   enqueueOutboxEntry,
-  createOutboxEntry
+  createOutboxEntry,
+  getCurrentUserId
 } from '@/lib/storage/db';
 import { generateId } from '@/lib/core/id';
 import {
@@ -18,67 +20,97 @@ import {
   countCompletedDays,
   formatDate
 } from '@/lib/habits/habitStats';
+import { useLiveQuery } from '@/hooks/useLiveQuery';
 
 export function useHabits() {
-  const [habits, setHabits] = useState<Habit[]>([]);
+  const currentUserId = getCurrentUserId();
 
-  useEffect(() => {
-    let mounted = true;
-    (async () => {
-      const stored = await loadHabitsFromDb();
-      if (mounted) {setHabits(stored);}
-    })();
-    return () => {
-      mounted = false;
-    };
-  }, []);
+  const habitEntities = useLiveQuery(
+    () => db.habits.where({ userId: currentUserId }).toArray(),
+    [currentUserId]
+  );
 
-  const toggleCompletion = useCallback((habitId: string, date?: string) => {
+  const checkinEntities = useLiveQuery(
+    () => db.checkins.where({ userId: currentUserId }).toArray(),
+    [currentUserId]
+  );
+
+  const completionsByHabitId = useMemo(() => {
+    const map: Record<string, Record<string, boolean>> = {};
+    (checkinEntities ?? []).forEach((checkin) => {
+      if (!checkin.done) {
+        return;
+      }
+      const habitMap = map[checkin.habitId] ?? {};
+      habitMap[checkin.date] = true;
+      map[checkin.habitId] = habitMap;
+    });
+    return map;
+  }, [checkinEntities]);
+
+  const allHabits = useMemo<Habit[]>(() => {
+    if (!habitEntities) {
+      return [];
+    }
+    return habitEntities.map((entity) => {
+      const domain = habitEntityToDomain(entity);
+      return {
+        ...domain,
+        completions: completionsByHabitId[domain.id] ?? {}
+      };
+    });
+  }, [habitEntities, completionsByHabitId]);
+
+  const habits = useMemo(() => allHabits.filter((habit) => !habit.archived), [allHabits]);
+
+  const toggleCompletion = useCallback(async (habitId: string, date?: string) => {
     const key = date || formatDate(new Date());
-    setHabits((prev) =>
-      prev.map((habit) => {
-        if (habit.id !== habitId) {return habit;}
-        const hasCompletion = !!habit.completions[key];
-        const updatedCompletions = { ...habit.completions };
-        if (hasCompletion) {
-          delete updatedCompletions[key];
-        } else {
-          updatedCompletions[key] = true;
-        }
+    const userId = getCurrentUserId();
+    const existingCheckin = await db.checkins
+      .where('habitId')
+      .equals(habitId)
+      .filter(
+        (record) =>
+          record.date === key && record.userId === userId && record.done
+      )
+      .first();
+    const hasCompletion = Boolean(existingCheckin);
 
-        const updatedHabit: Habit = {
-          ...habit,
-          completions: updatedCompletions,
-          updatedAt: new Date().toISOString(),
-          version: (habit.version ?? 1) + 1
+    if (hasCompletion) {
+      await deleteCheckinInDb(habitId, key);
+    } else {
+      await upsertCheckinInDb(habitId, key, true);
+    }
+
+    const entity = await db.habits.get(habitId);
+    if (!entity) {
+      return;
+    }
+    const base = habitEntityToDomain(entity);
+    const updatedHabit: Habit = {
+      ...base,
+      updatedAt: new Date().toISOString(),
+      version: (entity.version ?? 0) + 1
+    };
+
+    await persistHabitInDb(updatedHabit);
+
+    const payload = hasCompletion
+      ? { habitId, date: key }
+      : {
+          habitId,
+          date: key,
+          done: true,
+          version: updatedHabit.version ?? 1
         };
 
-        void persistHabitInDb(updatedHabit);
-        if (hasCompletion) {
-          void deleteCheckinInDb(habitId, key);
-        } else {
-          void upsertCheckinInDb(habitId, key, true);
-        }
-
-        const payload = hasCompletion
-          ? { habitId, date: key }
-          : {
-              habitId,
-              date: key,
-              done: true,
-              version: updatedHabit.version ?? 1
-            };
-
-        const entry = createOutboxEntry(
-          'checkin',
-          hasCompletion ? 'delete' : 'upsert',
-          payload
-        );
-
-        void enqueueOutboxEntry(entry);
-        return updatedHabit;
-      })
+    const entry = createOutboxEntry(
+      'checkin',
+      hasCompletion ? 'delete' : 'upsert',
+      payload
     );
+
+    await enqueueOutboxEntry(entry);
   }, []);
 
   const addHabit = useCallback(
@@ -94,7 +126,6 @@ export function useHabits() {
         archived: data.archived ?? false
       };
 
-      setHabits((prev) => [...prev, newHabit]);
       await persistHabitInDb(newHabit);
       const entry = createOutboxEntry('habit', 'upsert', newHabit);
       await enqueueOutboxEntry(entry);
@@ -104,41 +135,39 @@ export function useHabits() {
   );
 
   const updateHabit = useCallback(async (id: string, data: Partial<Habit>) => {
-    const existing = habits.find((habit) => habit.id === id);
-    if (!existing) {return;}
+    const entity = await db.habits.get(id);
+    if (!entity) {
+      return;
+    }
+    const existing = habitEntityToDomain(entity);
     const updatedHabit: Habit = {
       ...existing,
       ...data,
       updatedAt: new Date().toISOString(),
-      version: (existing.version ?? 1) + 1
+      version: (entity.version ?? 0) + 1
     };
-    setHabits((prev) =>
-      prev.map((habit) => (habit.id === id ? updatedHabit : habit))
-    );
     await persistHabitInDb(updatedHabit);
     const entry = createOutboxEntry('habit', 'upsert', updatedHabit);
     await enqueueOutboxEntry(entry);
-  }, [habits]);
+  }, []);
 
   const deleteHabit = useCallback((id: string) => {
-    setHabits((prev) => {
-      const target = prev.find((habit) => habit.id === id);
-      if (target) {
-        void addTombstone('habit', id, target.version ?? 1);
-        void removeHabitFromDb(id);
-        const entry = createOutboxEntry('habit', 'delete', {
-          id,
-          version: target.version ?? 1
-        });
-        void enqueueOutboxEntry(entry);
+    (async () => {
+      const entity = await db.habits.get(id);
+      if (!entity) {
+        return;
       }
-      return prev.filter((habit) => habit.id !== id);
-    });
+      const version = entity.version ?? 1;
+      await addTombstone('habit', id, version);
+      await removeHabitFromDb(id);
+      const entry = createOutboxEntry('habit', 'delete', { id, version });
+      await enqueueOutboxEntry(entry);
+    })();
   }, []);
 
   const getHabitStats = useCallback(
     (habitId: string): HabitStats => {
-      const habit = habits.find((h) => h.id === habitId);
+      const habit = allHabits.find((h) => h.id === habitId);
       if (!habit)
         {return {
           totalDays: 0,
@@ -172,20 +201,19 @@ export function useHabits() {
         monthlyData
       };
     },
-    [habits]
+    [allHabits]
   );
 
   const getTodayCompletionRate = useCallback(() => {
     const today = formatDate(new Date());
-    const active = habits.filter((h) => !h.archived);
-    if (active.length === 0) {return 0;}
-    const completed = active.filter((h) => h.completions[today]).length;
-    return Math.round((completed / active.length) * 100);
+    if (habits.length === 0) {return 0;}
+    const completed = habits.filter((h) => h.completions[today]).length;
+    return Math.round((completed / habits.length) * 100);
   }, [habits]);
 
   return {
-    habits: habits.filter((h) => !h.archived),
-    allHabits: habits,
+    habits,
+    allHabits,
     toggleCompletion,
     addHabit,
     updateHabit,

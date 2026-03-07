@@ -63,8 +63,6 @@ export class AuthService {
   private readonly accessTokenExpiry = ACCESS_TOKEN_EXPIRES_IN as jwt.SignOptions['expiresIn'];
   private readonly accessTokenTtlSeconds = ACCESS_TOKEN_TTL_SECONDS;
   private readonly refreshTokenDays = REFRESH_TOKEN_EXPIRES_DAYS;
-  private readonly oauthStates = new Map<string, OAuthStartPayload>();
-
   constructor(private readonly prisma: PrismaService) {}
 
   async login(email: string) {
@@ -75,13 +73,14 @@ export class AuthService {
     return this.issueTokenPair(user);
   }
 
-  createOAuthAuthorizationUrl(returnTo?: string): string {
+  async createOAuthAuthorizationUrl(returnTo?: string): Promise<string> {
     this.ensureGoogleConfig();
     const state = randomBytes(16).toString('hex');
-    this.oauthStates.set(state, {
+    const payload: OAuthStartPayload = {
       returnTo: this.normalizeReturnTo(returnTo),
       expiresAt: Date.now() + 10 * 60 * 1000
-    });
+    };
+    await this.storeOAuthState(state, payload);
 
     const url = new URL('https://accounts.google.com/o/oauth2/v2/auth');
     url.searchParams.set('client_id', GOOGLE_OAUTH_CLIENT_ID);
@@ -95,7 +94,7 @@ export class AuthService {
   }
 
   async handleOAuthCallback(code: string, state: string): Promise<string> {
-    const statePayload = this.consumeOAuthState(state);
+    const statePayload = await this.consumeOAuthState(state);
     const tokenSet = await this.exchangeOAuthCode(code);
     const idToken = tokenSet.id_token;
     if (!idToken) {
@@ -232,17 +231,6 @@ export class AuthService {
     return `${API_PUBLIC_URL}/auth/google/callback`;
   }
 
-  private consumeOAuthState(state: string): OAuthStartPayload {
-    const payload = this.oauthStates.get(state);
-    this.oauthStates.delete(state);
-
-    if (!payload || payload.expiresAt < Date.now()) {
-      throw new UnauthorizedException('Invalid OAuth state');
-    }
-
-    return payload;
-  }
-
   private async exchangeOAuthCode(code: string): Promise<OAuthTokens> {
     const body = new URLSearchParams({
       code,
@@ -318,6 +306,28 @@ export class AuthService {
         email: true
       }
     });
+  }
+
+  private async storeOAuthState(state: string, payload: OAuthStartPayload): Promise<void> {
+    await this.prisma.oAuthState.create({
+      data: {
+        state,
+        returnTo: payload.returnTo,
+        expiresAt: new Date(payload.expiresAt)
+      }
+    });
+  }
+
+  private async consumeOAuthState(state: string): Promise<OAuthStartPayload> {
+    const record = await this.prisma.oAuthState.findUnique({ where: { state } });
+    await this.prisma.oAuthState.deleteMany({ where: { state } });
+    if (!record || record.expiresAt.getTime() < Date.now()) {
+      throw new UnauthorizedException('Invalid OAuth state');
+    }
+    return {
+      returnTo: record.returnTo,
+      expiresAt: record.expiresAt.getTime()
+    };
   }
 
   private normalizeTheme(value: string): ThemeId {

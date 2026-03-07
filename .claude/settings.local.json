@@ -4,13 +4,14 @@
       "mcp__filesystem__list_directory",
       "mcp__filesystem__read_text_file",
       "mcp__filesystem__directory_tree",
-      "Bash(git:*)"
+      "Bash(git:*)",
+      "mcp__filesystem__read_multiple_files"
     ]
   },
+  "enableAllProjectMcpServers": true,
   "enabledMcpjsonServers": [
     "filesystem",
     "git",
     "eslint"
-  ],
-  "enableAllProjectMcpServers": true
+  ]
 }

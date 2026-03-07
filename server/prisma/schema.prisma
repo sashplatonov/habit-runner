@@ -68,6 +68,13 @@ model SyncOpLog {
   createdAt DateTime @default(now())
 }
 
+model OAuthState {
+  state     String   @id
+  returnTo  String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}
+
 model RefreshToken {
   id        String   @id @default(cuid())
   token     String   @unique

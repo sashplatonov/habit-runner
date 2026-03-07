@@ -23,11 +23,11 @@ import {
   ResponsiveContainer,
   CartesianGrid } from
 'recharts';
-interface HabitDetailProps {
-  habitId: string;
-  onNavigate: (view: string, habitId?: string) => void;
-}
-export function HabitDetail({ habitId, onNavigate }: HabitDetailProps) {
+import { useNavigate, useParams } from '@/lib/router';
+export function HabitDetail() {
+  const navigate = useNavigate();
+  const params = useParams();
+  const habitId = params.id;
   const {
     allHabits,
     toggleCompletion,
@@ -35,7 +35,7 @@ export function HabitDetail({ habitId, onNavigate }: HabitDetailProps) {
     deleteHabit,
     updateHabit
   } = useHabits();
-  const habit = allHabits.find((h) => h.id === habitId);
+  const habit = habitId ? allHabits.find((h) => h.id === habitId) : undefined;
   const [confirmDelete, setConfirmDelete] = useState(false);
   if (!habit) {
     return (
@@ -49,8 +49,10 @@ export function HabitDetail({ habitId, onNavigate }: HabitDetailProps) {
   const today = new Date().toISOString().split('T')[0];
   const completedToday = !!habit.completions[today];
   const handleDelete = () => {
-    deleteHabit(habitId);
-    onNavigate('dashboard');
+    if (habitId) {
+      deleteHabit(habitId);
+    }
+    navigate('/');
   };
   const handleToggleArchive = () => {
     updateHabit(habitId, {
@@ -91,7 +93,7 @@ export function HabitDetail({ habitId, onNavigate }: HabitDetailProps) {
       <div className="border-b border-border bg-bg-primary px-4 py-4 sticky top-14 z-10">
         <div className="max-w-2xl mx-auto flex items-center gap-3">
           <button
-            onClick={() => onNavigate('dashboard')}
+            onClick={() => navigate('/')}
             className="text-muted hover:text-foreground transition-colors p-1 -ml-1">
 
             <ArrowLeftIcon size={16} />
@@ -118,7 +120,7 @@ export function HabitDetail({ habitId, onNavigate }: HabitDetailProps) {
               }
             </button>
             <button
-              onClick={() => onNavigate('edit', habitId)}
+              onClick={() => habitId && navigate(`/habit/${habitId}/edit`)}
               className="p-1.5 rounded border border-border text-muted hover:text-foreground hover:border-border-hover transition-colors">
 
               <EditIcon size={13} />

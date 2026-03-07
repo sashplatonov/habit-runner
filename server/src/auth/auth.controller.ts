@@ -32,8 +32,8 @@ export class AuthController {
 
   @Get('google/start')
   @Redirect()
-  startGoogle(@Query() query: OAuthStartQuery) {
-    return { url: this.authService.createOAuthAuthorizationUrl(query.returnTo) };
+  async startGoogle(@Query() query: OAuthStartQuery) {
+    return { url: await this.authService.createOAuthAuthorizationUrl(query.returnTo) };
   }
 
   @Get('google/callback')

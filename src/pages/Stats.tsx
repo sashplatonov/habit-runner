@@ -21,10 +21,9 @@ import {
   ResponsiveContainer,
   CartesianGrid } from
 'recharts';
-interface StatsProps {
-  onNavigate: (view: string, habitId?: string) => void;
-}
-export function Stats({ onNavigate }: StatsProps) {
+import { useNavigate } from '@/lib/router';
+export function Stats() {
+  const navigate = useNavigate();
   const { allHabits, getHabitStats } = useHabits();
   const [statusFilter, setStatusFilter] = useState<
     'all' | 'active' | 'archived'>(
@@ -515,7 +514,7 @@ export function Stats({ onNavigate }: StatsProps) {
               return (
                 <button
                   key={habit.id}
-                  onClick={() => onNavigate('detail', habit.id)}
+                  onClick={() => navigate(`/habit/${habit.id}`)}
                   className="w-full flex items-center gap-3 p-2.5 rounded-lg hover:bg-bg-card transition-colors text-left">
 
                     <span className="text-[10px] font-mono text-muted w-4">

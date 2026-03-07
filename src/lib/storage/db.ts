@@ -133,17 +133,11 @@ export function domainToHabitEntity(habit: Habit): HabitEntity {
     tags: habit.tags,
     customDays: habit.customDays,
     archived: habit.archived,
-    completions: { ...habit.completions },
+    completions: {},
     createdAt: habit.createdAt,
     updatedAt: habit.updatedAt ?? habit.createdAt,
     version: habit.version ?? 1
   };
-}
-
-export async function loadHabitsFromDb(): Promise<Habit[]> {
-  const userId = getCurrentUserId();
-  const records = await db.habits.where({ userId }).toArray();
-  return records.map(habitEntityToDomain);
 }
 
 export async function persistHabitInDb(habit: Habit): Promise<void> {
@@ -333,35 +327,11 @@ export async function updateOutboxEntryFailure(
   });
 }
 
-function dateKeyFromIso(value: string): string {
-  return value.split('T')[0];
-}
-
-async function rebuildHabitCompletions(habitId: string): Promise<void> {
-  const userId = getCurrentUserId();
-  const habit = await db.habits.get(habitId);
-  if (!habit || habit.userId !== userId) {return;}
-  const checkins = await db.checkins
-    .where('habitId')
-    .equals(habitId)
-    .filter((record) => record.userId === userId && record.done)
-    .toArray();
-  const completions: Record<string, boolean> = {};
-  checkins.forEach((checkin) => {
-    completions[dateKeyFromIso(checkin.date)] = true;
-  });
-  await db.habits.update(habitId, { completions });
-}
-
 export async function applyPullResponse(
   response: PullResponseDto
 ): Promise<void> {
   const userId = getCurrentUserId();
-  const touchedHabits = new Set<string>();
   const habitPromises = response.habits.map(async (habit) => {
-    const existing = await db.habits.get(habit.id);
-    const existingCompletions =
-      existing?.userId === userId ? existing.completions : {};
     await db.habits.put({
       id: habit.id,
       userId,
@@ -376,12 +346,10 @@ export async function applyPullResponse(
       habit.customDays.filter((day): day is number => typeof day === 'number') :
       undefined,
       archived: habit.archived,
-      completions: existingCompletions,
       createdAt: habit.createdAt,
       updatedAt: habit.updatedAt,
       version: habit.version
     });
-    touchedHabits.add(habit.id);
   });
 
   const checkinPromises = response.checkins.map(async (checkin) => {
@@ -404,23 +372,17 @@ export async function applyPullResponse(
       updatedAt: checkin.updatedAt,
       version: checkin.version
     });
-    touchedHabits.add(checkin.habitId);
   });
 
   const tombstonePromises = response.tombstones.map(async (tombstone) => {
     if (tombstone.entity === 'habit') {
       await removeHabitFromDb(tombstone.entityId);
-      touchedHabits.add(tombstone.entityId);
     } else if (tombstone.entity === 'checkin') {
       await db.checkins.delete(tombstone.entityId);
     }
   });
 
   await Promise.all([...habitPromises, ...checkinPromises, ...tombstonePromises]);
-
-  await Promise.all(
-    Array.from(touchedHabits).map((habitId) => rebuildHabitCompletions(habitId))
-  );
 }
 
 export function getBackoffMs(retries: number): number {

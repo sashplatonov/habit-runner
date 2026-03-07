@@ -1,163 +1,178 @@
-# План миграции Habbit Runner в offline-first с серверной синхронизацией (с приоритетами)
+Habbit Runner — План технических и функциональных улучшений
 
-## Краткое резюме
+Контекст
 
-Текущее состояние: фронт на React+Vite хранит всё в localStorage через useHabits (src/hooks/useHabits.ts), backend отсутствует.
-Целевое состояние: Postgres + API синка (pull/push), IndexedDB (Dexie) + outbox, PWA-кеш, устойчивый оффлайн и детерминированная синхронизация при восстановлении сети.
+Проект — offline-first PWA трекер привычек (React + Vite + Dexie / NestJS + Prisma + PostgreSQL). Основная архитектура sync-движка реализована (P0–P5 из TODO_PLAN_AI.md закрыты). Сейчас приложение функционально, но имеет ряд технических долгов и отсутствующих фич, стандартных для habit-трекеров.
 
-## Приоритеты и этапы
+ ---
+P0 — Критические технические проблемы (блокируют масштабирование)
 
-### P0 — Архитектурный каркас и контракт (блокер для всего остального)
+1. [DONE] Нет роутера — ручной view-стейт в App.tsx
 
-1. ✅ Зафиксировать целевой стек (default):
-    - Frontend: React + TypeScript + Vite + vite-plugin-pwa + Dexie.
-    - Backend: NestJS + Prisma + Postgres.
-    - Auth: JWT access + refresh.
-2. ✅ Утвердить доменную модель и курсор синка:
-    - updated_at + version для habits и checkins.
-    - Удаления через tombstones (или deleted_at, но в этом плане — tombstones как default).
-    - Cursor: (server_updated_at, id) для стабильного порядка.
-3. ✅ Утвердить минимальный sync-контракт:
-    - GET /sync/pull?since=<cursor>
-    - POST /sync/push { ops:[...] }
-4. ✅ Зафиксировать артефакт плана в репозитории (при реализации): docs/offline-sync-plan.md.
+- Проблема: Навигация через useState<AppView> + prop drilling onNavigate во все компоненты. Нет URL-based routing, нельзя поделиться ссылкой, нет кнопки «назад» в браузере, нет deep linking.
+- Решение: Внедрить react-router-dom (или @tanstack/router). Маршруты: /, /habit/:id, /habit/new, /habit/:id/edit, /stats.
+- Файлы: src/App.tsx, все src/pages/*.tsx, src/components/Nav.tsx
 
-Критерий готовности P0: есть окончательная спецификация API/схем/конфликтов, без открытых архитектурных решений.
+2. [DONE] useHabits загружает ВСЕ привычки в память
 
-———
+- Проблема: loadHabitsFromDb() вытягивает все записи + все completions (вложенный Record<string, boolean>) в один массив. При 50+ привычках и годе данных — тысячи записей в стейте.
+- Решение: Пагинация/ленивая загрузка. Completions хранить в checkins таблице Dexie, а не дублировать в habits.completions. Использовать useLiveQuery из Dexie для реактивных запросов вместо ручного useState + useEffect.
+- Файлы: src/hooks/useHabits.ts, src/lib/storage/db.ts
 
-### P1 — Сервер и БД (ядро синка)
+3. [DONE] CORS настроен как { cors: true } — разрешает все origins
 
-1. ✅ Развернуть backend-модуль:
-    - NestJS приложение (можно в apps/api или server/).
-    - Prisma schema + миграции.
-2. ✅ Создать таблицы:
-    - habits: id, user_id, поля привычки, updated_at, version, created_at.
-    - checkins: id, habit_id, user_id, date, done, updated_at, version.
-    - tombstones: id, user_id, entity, entity_id, deleted_at, version.
-3. ✅ Ограничения и идемпотентность:
-    - UNIQUE(user_id, habit_id, date) для check-ins (upsert).
-    - Серверная валидация op.id (защита от повторной обработки).
-4. ✅ Реализовать pull:
-    - Возврат изменений после since по всем сущностям.
-    - Стабильная сортировка + nextCursor.
-5. ✅ Реализовать push:
-    - Применение outbox-операций транзакционно.
-    - LWW для habits по updated_at/version.
-    - Идемпотентный upsert для checkins.
-    - Ответ: applied, conflicts, serverTime.
+- Проблема: server/src/main.ts:9 — NestFactory.create(AppModule, { cors: true }) в проде пропускает запросы с любого домена.
+- Решение: Настроить whitelist origins из env (CORS_ORIGINS).
+- Файлы: server/src/main.ts, server/src/common/config.ts
 
-Критерий готовности P1: API синка проходит интеграционные тесты и корректно обрабатывает повторы, удаления и конфликты.
+4. [DONE] OAuth state хранится в памяти процесса
 
-———
+- Проблема: AuthService.oauthStates = new Map() — при перезапуске сервера или нескольких инстансах все pending OAuth-сессии теряются.
+- Решение: Хранить state в Redis или в таблице БД с TTL.
+- Файлы: server/src/auth/auth.service.ts
 
-### P2 — Локальная offline-модель на фронте
+ ---
+P1 — Технический долг (усложняет разработку фич)
 
-1. ✅ Ввести Dexie-слой:
-    - Таблицы habits, checkins, tombstones, sync_meta, outbox.
-2. ✅ Перенести чтение/запись с localStorage на репозиторий (storage abstraction):
-    - habitRepo, checkinRepo, syncRepo.
-3. ✅ Миграция данных:
-    - One-time перенос из localStorage (habit-tracker-v1) в IndexedDB.
-    - Маркер версии локальной схемы.
-4. ✅ Обновить UI-поток:
-    - Любое действие пользователя сначала пишет в IndexedDB.
-    - В outbox добавляется операция для последующего push.
+5. Нет тестов (фактически)
 
-Критерий готовности P2: приложение полностью работает локально без сети и без потери данных после перезагрузки.
+- Состояние: 1 unit-тест (tests/unit/habitStats.test.ts), 1 e2e-заглушка, 1 guard-тест. Нет test runner в scripts.
+- Решение: Настроить Vitest для фронта, Jest для сервера. Покрыть критичные пути: sync engine, useHabits, auth guard, push/pull.
+- Файлы: package.json, server/package.json, vitest.config.ts
 
-———
+6. Нет валидации входных данных на сервере
 
-### P3 — Sync Engine (pull/apply/push) + управление конфликтами
+- Проблема: DTOs (push-request.dto.ts, pull-response.dto.ts) — чистые интерфейсы/классы без class-validator декораторов. Нет ValidationPipe. Сервер принимает любой payload.
+- Решение: Добавить class-validator + class-transformer, включить глобальный ValidationPipe в main.ts.
+- Файлы: server/src/main.ts, server/src/sync/dto/*.ts, server/src/auth/dto/*.ts
 
-1. ✅ Реализовать syncEngine:
-    - Триггеры: старт приложения, online, ручной retry.
-    - Порядок: pull -> apply -> push -> pull(confirm).
-2. ✅ Обработка конфликтов:
-    - habits: LWW (серверный winner, клиент получает merge-result).
-    - checkins: upsert по (habit_id, date), конфликт минимален.
-3. ✅ Outbox-стратегия:
-    - FIFO, ретраи с backoff, дедупликация по op.id.
-    - Частичный успех: удалять только applied.
-4. ✅ Состояние синка в UI:
-    - Индикатор: offline / syncing / synced / error.
-    - Диагностика: количество операций в outbox, последняя ошибка.
+7. Нет rate limiting
 
-Критерий готовности P3: после оффлайн-сессии данные стабильно сходятся с сервером после восстановления сети.
+- Проблема: Ни один endpoint не ограничен по частоте. Push/pull можно спамить.
+- Решение: @nestjs/throttler — глобальный лимит + stricter на auth endpoints.
+- Файлы: server/src/app.module.ts, server/src/main.ts
 
-———
+8. Нет Error Boundary на фронте
 
-### P4 — PWA и сетевой слой
+- Проблема: Любая ошибка рендера крашит всё приложение.
+- Решение: Обернуть App в ErrorBoundary с fallback UI.
+- Файлы: src/App.tsx, новый src/components/ErrorBoundary.tsx
 
-1. ✅ Подключить vite-plugin-pwa:
-    - Precache shell (html/js/css/icons).
-    - Runtime cache для API GET (осторожно, без кэширования mutating-запросов).
-2. ✅ Service Worker стратегии:
-    - App shell: StaleWhileRevalidate.
-    - API pull: NetworkFirst с fallback.
-3. ✅ Offline UX:
-    - Явный баннер offline.
-    - Очередь изменений без блокировки UI.
-4. ✅ (Опционально) Background Sync:
-    - Если поддерживается браузером — запуск push в фоне.
+9. SyncOpLog растёт бесконечно
 
-Критерий готовности P4: установка PWA, загрузка и базовая навигация работают оффлайн; синк продолжается после возвращения сети.
+- Проблема: Таблица SyncOpLog хранит каждый opId навсегда для дедупликации, но без TTL/cleanup.
+- Решение: Добавить cron-job или migration для очистки записей старше 30 дней.
+- Файлы: server/prisma/schema.prisma, новый cleanup сервис
 
-———
+10. Нет PWA manifest и иконок
 
-### P5 — Надёжность, безопасность, rollout
+- Проблема: public/ содержит только vite.svg. Нет manifest.json, нет иконок для установки PWA.
+- Решение: Сгенерировать manifest + иконки, настроить vite-plugin-pwa.
+- Файлы: public/, vite.config.ts
 
-1. ✅ Auth и multi-user изоляция:
-    - JWT access/refresh, user scoping во всех запросах и таблицах.
-2. ✅ Наблюдаемость:
-    - Метрики: latency pull/push, conflict rate, outbox depth, sync failures.
-    - Логи с trace-id операции.
-3. ✅ Rollout-план:
-    - Этап 1: single-user beta.
-    - Этап 2: ограниченный rollout.
-    - Этап 3: full.
-4. ✅ Backward compatibility:
-    - Фича-флаг на новый sync-движок.
-    - Возможность fallback на локальный режим при недоступности API.
+ ---
+P2 — Отсутствующие ключевые фичи (есть в каждом популярном трекере)
 
-Критерий готовности P5: контролируемый релиз без потери данных и с наблюдаемой стабильностью.
+11. Напоминания / уведомления
 
-## Изменения публичных интерфейсов (API/типы)
+- Push-нотификации (Web Push API) или хотя бы in-app напоминания с настройкой времени.
+- Серверная часть: хранить push-подписки, cron для отправки.
 
-1. GET /sync/pull?since=<cursor>
-   Ответ: { habits: HabitDTO[], checkins: CheckinDTO[], tombstones: TombstoneDTO[], nextCursor: string }
-2. POST /sync/push
-   Запрос: { ops: SyncOpDTO[] }
-   Ответ: { applied: string[], conflicts: ConflictDTO[], serverTime: string }
-3. DTO/типы:
-    - HabitDTO с updated_at, version.
-    - CheckinDTO с date, updated_at, version.
-    - TombstoneDTO с entity, entity_id, deleted_at, version.
-    - SyncOpDTO: { id, type, entity, payload, clientTime }.
-4. Локальные типы фронта:
-    - SyncMeta (lastCursor, lastSuccessAt, lastError).
-    - OutboxItem (opId, status, retryCount, nextRetryAt).
+12. Streak protection / "freeze days"
 
-## Тесты и сценарии приёмки
+- Возможность «заморозить» день (болезнь, отпуск) без потери streak.
+- Модель: добавить freezeDays: string[] в Habit или отдельную таблицу.
 
-1. Unit:
-    - Конвертация cursor, merge/LWW, outbox-дедуп, retry/backoff.
-2. Integration (API):
-    - pull после since, push с повтором op.id, delete через tombstone, checkin upsert.
-3. E2E (offline-first):
-    - Открыть app online → уйти offline → отметить привычки → перезагрузить → вернуть сеть → данные синкнулись.
-4. Конкурентный сценарий:
-    - Два клиента меняют одну привычку; проверить LWW и предсказуемый итог.
-5. Негативные:
-    - Частичный push success, 500/timeout, просроченный JWT, повреждённый cursor.
-6. Performance smoke:
-    - 10k checkins, pull/push не деградирует критично, UI остаётся отзывчивым.
+13. Порядок привычек (drag & drop)
 
-## Допущения и выбранные defaults
+- Сейчас список не упорядочен (или по createdAt). Пользователи хотят менять порядок.
+- Добавить sortOrder: number в Habit, drag-and-drop на Dashboard.
 
-1. Default backend: NestJS + Prisma + Postgres (Neon/Supabase).
-2. Default API-стиль: REST (не tRPC) для простого sync-контракта.
-3. Конфликты привычек: LWW; конфликт чек-инов минимизируется уникальным ключом и upsert.
-4. Удаления: отдельные tombstones (не soft delete в основных таблицах).
-5. Cursor default: (server_updated_at, id) в сериализованной строке.
-6. Источник истины: сервер; клиент хранит materialized snapshot + outbox.
+14. Категории / группировка
+
+- Tags есть, но нет группировки по ним на Dashboard. Добавить секции или фильтр-табы по тегам.
+
+15. Экспорт данных
+
+- CSV/JSON экспорт привычек и completions. Важно для доверия пользователей.
+
+16. Onboarding / пустое состояние
+
+- При первом входе — wizard с предложением создать 2–3 привычки из шаблонов.
+- Сейчас пустой Dashboard показывает "All habits completed!" что вводит в заблуждение.
+
+17. Undo для чекинов и удалений
+
+- Toast с "Undo" на 5 секунд после toggle completion или delete habit.
+
+ ---
+P3 — Улучшения UX и качества
+
+18. Accessibility (a11y)
+
+- Нет skip-links, aria-labels неполные, keyboard navigation по Dashboard не работает.
+- Focus management при переключении views.
+
+19. Responsive мелочи
+
+- Mini heatmap и 7-day bars скрыты на мобильных (hidden sm:flex), но streak тоже скрыт (hidden md:flex). На телефоне видно мало информации.
+
+20. Локализация
+
+- Интерфейс частично на русском (ошибка сессии), частично на английском. Нужно i18n или консистентный язык.
+
+21. API-документация (Swagger)
+
+- Нет Swagger/OpenAPI. Подключить @nestjs/swagger для документации endpoints.
+
+22. Логирование на фронте
+
+- Ошибки синхронизации молча проглатываются. Добавить structured logging или Sentry.
+
+ ---
+Приоритетная roadmap
+
+┌─────────┬───────┬─────────────────────────────────────────┬────────┬────────────────────────────────────────────────────────┐
+│ Порядок │  ID   │                   Что                   │ Усилие │                        Влияние                         │
+├─────────┼───────┼─────────────────────────────────────────┼────────┼────────────────────────────────────────────────────────┤
+│ 1       │ P0.1  │ React Router                            │ M      │ Высокое — разблокирует deep links, SSR, code splitting │
+├─────────┼───────┼─────────────────────────────────────────┼────────┼────────────────────────────────────────────────────────┤
+│ 2       │ P0.3  │ CORS whitelist                          │ S      │ Высокое — безопасность                                 │
+├─────────┼───────┼─────────────────────────────────────────┼────────┼────────────────────────────────────────────────────────┤
+│ 3       │ P1.6  │ Валидация DTO                           │ S      │ Высокое — безопасность                                 │
+├─────────┼───────┼─────────────────────────────────────────┼────────┼────────────────────────────────────────────────────────┤
+│ 4       │ P1.7  │ Rate limiting                           │ S      │ Высокое — безопасность                                 │
+├─────────┼───────┼─────────────────────────────────────────┼────────┼────────────────────────────────────────────────────────┤
+│ 5       │ P1.8  │ Error Boundary                          │ S      │ Среднее — UX-стабильность                              │
+├─────────┼───────┼─────────────────────────────────────────┼────────┼────────────────────────────────────────────────────────┤
+│ 6       │ P0.2  │ useLiveQuery + убрать completions дубль │ L      │ Высокое — производительность                           │
+├─────────┼───────┼─────────────────────────────────────────┼────────┼────────────────────────────────────────────────────────┤
+│ 7       │ P1.10 │ PWA manifest + иконки                   │ S      │ Среднее — installability                               │
+├─────────┼───────┼─────────────────────────────────────────┼────────┼────────────────────────────────────────────────────────┤
+│ 8       │ P2.16 │ Onboarding / empty state                │ S      │ Среднее — retention                                    │
+├─────────┼───────┼─────────────────────────────────────────┼────────┼────────────────────────────────────────────────────────┤
+│ 9       │ P2.13 │ Drag & drop порядок                     │ M      │ Среднее — UX                                           │
+├─────────┼───────┼─────────────────────────────────────────┼────────┼────────────────────────────────────────────────────────┤
+│ 10      │ P2.12 │ Freeze days                             │ M      │ Среднее — мотивация                                    │
+├─────────┼───────┼─────────────────────────────────────────┼────────┼────────────────────────────────────────────────────────┤
+│ 11      │ P2.11 │ Push-уведомления                        │ L      │ Высокое — engagement                                   │
+├─────────┼───────┼─────────────────────────────────────────┼────────┼────────────────────────────────────────────────────────┤
+│ 12      │ P2.15 │ Экспорт данных                          │ S      │ Среднее — доверие                                      │
+├─────────┼───────┼─────────────────────────────────────────┼────────┼────────────────────────────────────────────────────────┤
+│ 13      │ P1.5  │ Тесты (Vitest + Jest)                   │ L      │ Высокое — maintainability                              │
+├─────────┼───────┼─────────────────────────────────────────┼────────┼────────────────────────────────────────────────────────┤
+│ 14      │ P0.4  │ OAuth state в БД                        │ M      │ Среднее — reliability                                  │
+├─────────┼───────┼─────────────────────────────────────────┼────────┼────────────────────────────────────────────────────────┤
+│ 15      │ P1.9  │ SyncOpLog cleanup                       │ S      │ Низкое — ops                                           │
+└─────────┴───────┴─────────────────────────────────────────┴────────┴────────────────────────────────────────────────────────┘
+
+S = < 1 день, M = 1–3 дня, L = 3+ дней
+
+ ---
+Верификация
+
+- После каждого изменения: npm run lint && npm run build (фронт), cd server && npm run build (сервер)
+- P0.1 (Router): проверить deep link /habit/:id, кнопку назад браузера, refresh на любом маршруте
+- P0.3 (CORS): curl с чужого origin — должен получить 403
+- P1.6 (Validation): отправить невалидный payload на /sync/push — должен получить 400
+- P2.16 (Onboarding): открыть приложение без привычек — должен увидеть wizard

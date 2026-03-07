@@ -11,9 +11,7 @@ import { MiniHeatmap } from '@/components/MiniHeatmap';
 import type { Habit } from '@/types/habit';
 import { useHabits } from '@/hooks/useHabits';
 import { HABIT_COLOR_THEMES } from '@/lib/theme/habit-colors';
-interface DashboardProps {
-  onNavigate: (view: string, habitId?: string) => void;
-}
+import { useNavigate } from '@/lib/router';
 function HabitRow({
   habit,
   onToggle,
@@ -152,7 +150,8 @@ function HabitRow({
     </div>);
 
 }
-export function Dashboard({ onNavigate }: DashboardProps) {
+export function Dashboard() {
+  const navigate = useNavigate();
   const { habits, toggleCompletion, getTodayCompletionRate } = useHabits();
   const [filter, setFilter] = useState<'all' | 'pending' | 'done'>('all');
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
@@ -334,7 +333,7 @@ export function Dashboard({ onNavigate }: DashboardProps) {
           key={habit.id}
           habit={habit}
           onToggle={() => toggleCompletion(habit.id)}
-          onDetail={() => onNavigate('detail', habit.id)} />
+          onDetail={() => navigate(`/habit/${habit.id}`)} />
 
         )
         }

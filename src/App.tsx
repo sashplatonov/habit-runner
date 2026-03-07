@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { BrowserRouter, Routes, Route, Navigate } from '@/lib/router';
 import { Nav } from '@/components/Nav';
 import { Dashboard } from '@/pages/Dashboard';
 import { HabitDetail } from '@/pages/HabitDetail';
@@ -7,7 +8,8 @@ import { Stats } from '@/pages/Stats';
 import { useSyncEngine } from '@/hooks/useSyncEngine';
 import { AuthGate } from '@/components/AuthGate';
 import type {
-  AuthSession} from '@/lib/auth/session';
+  AuthSession
+} from '@/lib/auth/session';
 import {
   AUTH_SESSION_CLEARED_EVENT,
   clearAuthSession,
@@ -19,11 +21,19 @@ import { API_BASE_URL } from '@/lib/core/config';
 import { setCurrentUserId } from '@/lib/storage/db';
 import { useTheme } from '@/hooks/useTheme';
 
-type AppView = 'dashboard' | 'detail' | 'add' | 'edit' | 'stats';
+type AuthCallbackPageProps = {
+  message?: string;
+};
+
+function AuthCallbackPage({ message }: AuthCallbackPageProps) {
+  return (
+    <div className="min-h-screen pt-14 bg-bg-primary flex items-center justify-center">
+      <div className="text-sm font-mono text-muted">{message ?? 'Finishing login…'}</div>
+    </div>
+  );
+}
 
 export function App() {
-  const [view, setView] = useState<AppView>('dashboard');
-  const [activeHabitId, setActiveHabitId] = useState<string | undefined>();
   const [authSession, setAuthSession] = useState<AuthSession | null>(() => {
     const session = readAuthSession();
     setCurrentUserId(getSessionUserId(session));
@@ -68,11 +78,6 @@ export function App() {
     window.history.replaceState({}, '', '/');
   }, []);
 
-  const navigate = (v: string, habitId?: string) => {
-    setView(v as AppView);
-    if (habitId) {setActiveHabitId(habitId);}
-  };
-
   const logout = async () => {
     const refreshToken = authSession?.refreshToken;
     clearAuthSession();
@@ -107,23 +112,21 @@ export function App() {
   }
 
   return (
-    <div className="min-h-screen bg-bg-primary">
-      <Nav
-        currentView={view}
-        onNavigate={navigate}
-        onLogout={logout}
-        theme={theme}
-        onThemeChange={setTheme}
-      />
-      {view === 'dashboard' && <Dashboard onNavigate={navigate} />}
-      {view === 'detail' && activeHabitId && (
-        <HabitDetail habitId={activeHabitId} onNavigate={navigate} />
-      )}
-      {view === 'add' && <AddEditHabit onNavigate={navigate} />}
-      {view === 'edit' && activeHabitId && (
-        <AddEditHabit habitId={activeHabitId} onNavigate={navigate} />
-      )}
-      {view === 'stats' && <Stats onNavigate={navigate} />}
-    </div>
+    <BrowserRouter>
+      <div className="min-h-screen bg-bg-primary">
+        <Nav onLogout={logout} theme={theme} onThemeChange={setTheme} />
+        <main className="pt-14">
+          <Routes>
+            <Route path="/" element={<Dashboard />} />
+            <Route path="/habit/new" element={<AddEditHabit />} />
+            <Route path="/habit/:id" element={<HabitDetail />} />
+            <Route path="/habit/:id/edit" element={<AddEditHabit />} />
+            <Route path="/stats" element={<Stats />} />
+            <Route path="/auth/callback" element={<AuthCallbackPage />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </main>
+      </div>
+    </BrowserRouter>
   );
 }
