@@ -53,9 +53,13 @@ export function useHabits() {
     }
     return habitEntities.map((entity) => {
       const domain = habitEntityToDomain(entity);
+      const baseCompletions = { ...(completionsByHabitId[domain.id] ?? {}) };
+      (domain.freezeDays ?? []).forEach((date) => {
+        baseCompletions[date] = true;
+      });
       return {
         ...domain,
-        completions: completionsByHabitId[domain.id] ?? {}
+        completions: baseCompletions
       };
     });
   }, [habitEntities, completionsByHabitId]);
@@ -132,7 +136,8 @@ export function useHabits() {
         createdAt: now,
         updatedAt: now,
         version: 1,
-        archived: data.archived ?? false
+        archived: data.archived ?? false,
+        freezeDays: data.freezeDays ?? []
       };
 
       await persistHabitInDb(newHabit);

@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Get,
@@ -11,9 +12,8 @@ import {
   UseGuards
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import type {
+import {
   LoginRequest,
-  OAuthCallbackQuery,
   OAuthStartQuery,
   RefreshRequest,
   UpdateThemeRequest
@@ -42,8 +42,14 @@ export class AuthController {
   @Throttle({ default: { limit: 10, ttl: 60 } })
   @Get('google/callback')
   @Redirect()
-  async googleCallback(@Query() query: OAuthCallbackQuery) {
-    return { url: await this.authService.handleOAuthCallback(query.code, query.state) };
+  async googleCallback(
+    @Query('code') code?: string,
+    @Query('state') state?: string
+  ) {
+    if (!code || !state) {
+      throw new BadRequestException('Missing OAuth callback parameters');
+    }
+    return { url: await this.authService.handleOAuthCallback(code, state) };
   }
 
   @Throttle({ default: { limit: 10, ttl: 60 } })

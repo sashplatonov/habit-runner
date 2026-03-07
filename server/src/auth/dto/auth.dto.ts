@@ -7,7 +7,9 @@ export class LoginRequest {
 
 export class OAuthStartQuery {
   @IsOptional()
-  @IsUrl()
+  @IsUrl({
+    require_tld: false,
+  })
   returnTo?: string;
 }
 

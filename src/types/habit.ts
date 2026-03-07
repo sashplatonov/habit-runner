@@ -12,6 +12,7 @@ export interface Habit {
   customDays?: number[]; // 0=Sun, 1=Mon, ... 6=Sat
   targetStreak: number;
   completions: Record<string, boolean>; // "YYYY-MM-DD" -> true
+  freezeDays: string[];
   createdAt: string;
   updatedAt?: string;
   version?: number;

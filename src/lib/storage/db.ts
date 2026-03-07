@@ -36,6 +36,7 @@ export interface HabitEntity {
   createdAt: string;
   updatedAt: string;
   version: number;
+  freezeDays: string[];
 }
 
 export interface CheckinEntity {
@@ -112,6 +113,7 @@ export function habitEntityToDomain(entity: HabitEntity): Habit {
     targetStreak: entity.targetStreak,
     tags: entity.tags,
     completions: { ...entity.completions },
+    freezeDays: entity.freezeDays ?? [],
     createdAt: entity.createdAt,
     updatedAt: entity.updatedAt,
     version: entity.version,
@@ -136,7 +138,8 @@ export function domainToHabitEntity(habit: Habit): HabitEntity {
     completions: {},
     createdAt: habit.createdAt,
     updatedAt: habit.updatedAt ?? habit.createdAt,
-    version: habit.version ?? 1
+    version: habit.version ?? 1,
+    freezeDays: habit.freezeDays ?? []
   };
 }
 

@@ -42,6 +42,7 @@ export function HabitDetail() {
   const habit = habitId ? allHabits.find((h) => h.id === habitId) : undefined;
   const [confirmDelete, setConfirmDelete] = useState(false);
   const today = formatDate(new Date());
+  const isTodayFrozen = habit ? habit.freezeDays.includes(today) : false;
   const handleDelete = useCallback(async () => {
     if (!habitId) {
       return;
@@ -66,6 +67,16 @@ export function HabitDetail() {
       archived: !habit.archived
     });
   }, [habit, habitId, updateHabit]);
+  const toggleFreezeToday = useCallback(async () => {
+    if (!habitId || !habit) {
+      return;
+    }
+    const nextFreezeDays = isTodayFrozen
+      ? habit.freezeDays.filter((date) => date !== today)
+      : [...habit.freezeDays, today];
+    await updateHabit(habitId, { freezeDays: nextFreezeDays });
+  }, [habit, habitId, isTodayFrozen, today, updateHabit]);
+
   const handleToggleCompletion = useCallback(async () => {
     if (!habitId || !habit) {
       return;
@@ -138,10 +149,10 @@ export function HabitDetail() {
               {habit.description}
             </p>
           </div>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={handleToggleArchive}
-              className={`p-1.5 rounded border transition-colors ${habit.archived ? 'border-accent-secondary/30 text-accent-secondary bg-accent-secondary/10 hover:bg-accent-secondary/20' : 'border-border text-muted hover:text-foreground hover:border-border-hover'}`}
+            <div className="flex items-center gap-2">
+              <button
+                onClick={handleToggleArchive}
+                className={`p-1.5 rounded border transition-colors ${habit.archived ? 'border-accent-secondary/30 text-accent-secondary bg-accent-secondary/10 hover:bg-accent-secondary/20' : 'border-border text-muted hover:text-foreground hover:border-border-hover'}`}
               title={habit.archived ? 'Unarchive' : 'Archive'}>
 
               {habit.archived ?
@@ -170,6 +181,13 @@ export function HabitDetail() {
               }>
 
               {completedToday ? '✓ Done' : 'Mark Done'}
+            </button>
+            <button
+              type="button"
+              onClick={toggleFreezeToday}
+              className="px-3 py-1 rounded-full text-[10px] font-mono uppercase tracking-[0.3em] border border-border text-muted hover:border-accent hover:text-accent transition"
+            >
+              {isTodayFrozen ? 'Unfreeze today' : 'Freeze today'}
             </button>
           </div>
         </div>

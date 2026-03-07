@@ -31,7 +31,7 @@ Habbit Runner is built on a [Magic Patterns](https://magicpatterns.com) Vite tem
 
 ### Google Authentication
 
-> Приложение больше не поддерживает Apple OAuth — на клиенте работает только путь `/auth/google`.
+> The application no longer supports Apple OAuth — only the `/auth/google` flow is available in the UI.
 
 1. Open the [Google Cloud Console](https://console.cloud.google.com) and make sure the project selector (top bar) shows the project you want to use. If needed, create a new project (`Select a project → NEW PROJECT`) and wait for it to finish provisioning.
 2. In the same bar, click **APIs & Services → OAuth consent screen**. Choose either **External** (if anyone outside your Google Workspace will log in) or **Internal** (if just your organization). Click **CREATE** and:
@@ -44,5 +44,5 @@ Habbit Runner is built on a [Magic Patterns](https://magicpatterns.com) Vite tem
    - Click **Create**; Google displays a modal with your **Client ID** and **Client Secret**.
 4. Copy the values into `server/.env` for `GOOGLE_OAUTH_CLIENT_ID` and `GOOGLE_OAUTH_CLIENT_SECRET`. Keep this file secret.
 5. Confirm `API_PUBLIC_URL` matches the API base URL you actually hit (e.g., `http://localhost:4000`) and `OAUTH_DEFAULT_RETURN_TO` equals the frontend origin (`http://localhost:5173`). These settings ensure the redirect back path aligns with the ones you registered in the Google Console.
-6. Start the backend and frontend (`docker compose`, `npm run dev`, whatever your workflow is). In the UI click **Продолжить с Google**; you will be redirected through Google’s login screens, and after granting consent you’ll land back at `http://localhost:5173/auth/callback` with the tokens appended as query parameters.
+6. Start the backend and frontend (`docker compose`, `npm run dev`, whatever your workflow is). In the UI click **Continue with Google**; you will be redirected through Google’s login screens, and after granting consent you’ll land back at `http://localhost:5173/auth/callback` with the tokens appended as query parameters.
 7. When you deploy to another domain, revisit the Google credential: add that domain to **Authorized redirect URIs** (again ending with `/auth/google/callback`), and update `API_PUBLIC_URL`/`OAUTH_DEFAULT_RETURN_TO` before issuing new client secrets to avoid redirect mismatches.
