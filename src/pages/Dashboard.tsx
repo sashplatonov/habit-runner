@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import {
   CheckIcon,
   ChevronRightIcon,
@@ -12,6 +12,8 @@ import type { Habit } from '@/types/habit';
 import { useHabits } from '@/hooks/useHabits';
 import { HABIT_COLOR_THEMES } from '@/lib/theme/habit-colors';
 import { useNavigate } from '@/lib/router';
+import { Onboarding, type OnboardingTemplate } from '@/components/Onboarding';
+import { useUndo } from '@/lib/undo';
 function HabitRow({
   habit,
   onToggle,
@@ -150,12 +152,45 @@ function HabitRow({
     </div>);
 
 }
+const DEFAULT_CATEGORY = 'Uncategorized';
+
 export function Dashboard() {
   const navigate = useNavigate();
-  const { habits, toggleCompletion, getTodayCompletionRate } = useHabits();
+  const {
+    habits,
+    toggleCompletion,
+    addHabit,
+    getTodayCompletionRate,
+    formatDate
+  } = useHabits();
+  const { push } = useUndo();
+  const [addingTemplate, setAddingTemplate] = useState<string | null>(null);
+
+  const handleTemplateSelect = useCallback(
+    async (template: OnboardingTemplate) => {
+      setAddingTemplate(template.name);
+      try {
+        const newId = await addHabit({
+          name: template.name,
+          description: template.description,
+          icon: template.icon,
+          color: template.color,
+          tags: template.tags,
+          frequency: template.frequency,
+          customDays: template.customDays,
+          targetStreak: template.targetStreak
+        });
+        navigate(`/habit/${newId}`);
+      } finally {
+        setAddingTemplate(null);
+      }
+    },
+    [addHabit, navigate]
+  );
+
   const [filter, setFilter] = useState<'all' | 'pending' | 'done'>('all');
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
-  const today = new Date().toISOString().split('T')[0];
+  const today = formatDate(new Date());
   const todayRate = getTodayCompletionRate();
   const completedToday = habits.filter((h) => h.completions[today]).length;
   const totalActive = habits.length;
@@ -171,19 +206,108 @@ export function Dashboard() {
     });
     return Array.from(tags).sort();
   }, [habits]);
-  const toggleTag = (tag: string) => {
-    setSelectedTags((prev) =>
-    prev.includes(tag) ? prev.filter((item) => item !== tag) : [...prev, tag]
-    );
-  };
-  const filtered = habits.filter((h) => {
-    if (filter === 'pending') {return !h.completions[today];}
-    if (filter === 'done') {return !!h.completions[today];}
-    if (selectedTags.length > 0 && !selectedTags.some((tag) => h.tags.includes(tag))) {
-      return false;
+
+  const filtered = useMemo(() => {
+    return habits.filter((h) => {
+      if (filter === 'pending') {
+        return !h.completions[today];
+      }
+      if (filter === 'done') {
+        return !!h.completions[today];
+      }
+      if (selectedTags.length > 0 && !selectedTags.some((tag) => h.tags.includes(tag))) {
+        return false;
+      }
+      return true;
+    });
+  }, [habits, filter, selectedTags, today]);
+
+  const categorySections = useMemo(() => {
+    const buckets: Record<string, Habit[]> = {};
+    filtered.forEach((habit) => {
+      const key = habit.tags[0] ?? DEFAULT_CATEGORY;
+      if (!buckets[key]) {
+        buckets[key] = [];
+      }
+      buckets[key].push(habit);
+    });
+    return Object.entries(buckets)
+      .map(([name, sectionHabits]) => ({ name, habits: sectionHabits }))
+    .sort((a, b) => {
+      if (a.name === DEFAULT_CATEGORY) {
+        return 1;
+      }
+      if (b.name === DEFAULT_CATEGORY) {
+        return -1;
+      }
+      return a.name.localeCompare(b.name, 'ru');
+    });
+  }, [filtered]);
+
+  const handleToggle = useCallback(
+    async (habit: Habit) => {
+      const wasDone = habit.completions[today];
+      await toggleCompletion(habit.id, today);
+      push({
+        message: wasDone ? `Unchecked: ${habit.name}` : `Checked: ${habit.name}`,
+        actionLabel: 'Undo',
+        onUndo: async () => {
+          await toggleCompletion(habit.id, today);
+        }
+      });
+    },
+    [push, today, toggleCompletion]
+  );
+
+  const handleExport = useCallback(() => {
+    if (typeof document === 'undefined') {
+      return;
     }
-    return true;
-  });
+    if (habits.length === 0) {
+      return;
+    }
+    const escape = (value: string) => `"${value.replace(/"/g, '""')}"`;
+    const rows = habits.map((habit) => {
+      const completionDates = Object.entries(habit.completions)
+        .filter(([, done]) => done)
+        .map(([date]) => date);
+      return [
+        escape(habit.name),
+        escape(habit.description),
+        escape(habit.tags.join('|')),
+        escape(JSON.stringify(completionDates))
+      ].join(',');
+    });
+    const csv = ['name,description,tags,completions', ...rows].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `habits-export-${new Date().toISOString().split('T')[0]}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  }, [habits]);
+
+  const toggleTag = useCallback((tag: string) => {
+    setSelectedTags((prev) =>
+      prev.includes(tag) ? prev.filter((item) => item !== tag) : [...prev, tag]
+    );
+  }, []);
+
+  if (habits.length === 0) {
+    return (
+      <div className="min-h-screen bg-bg-primary pt-14">
+        <Onboarding
+          onCreateCustom={() => navigate('/habit/new')}
+          onTemplateSelect={handleTemplateSelect}
+          activeTemplate={addingTemplate}
+        />
+      </div>
+    );
+  }
+
   // Overall streak (days where all habits completed)
   let overallStreak = 0;
   const d = new Date();
@@ -194,8 +318,11 @@ export function Dashboard() {
     if (allDone) {
       overallStreak++;
       d.setDate(d.getDate() - 1);
-    } else {break;}
+    } else {
+      break;
+    }
   }
+
   return (
     <div className="min-h-screen bg-bg-primary pt-14">
       {/* Header */}
@@ -213,8 +340,8 @@ export function Dashboard() {
                 className="text-3xl font-mono font-bold text-accent"
                 style={{
                   textShadow: '0 0 20px var(--glow)'
-                }}>
-
+                }}
+              >
                 {todayRate}%
               </div>
               <div className="text-[10px] font-mono text-muted">
@@ -222,8 +349,6 @@ export function Dashboard() {
               </div>
             </div>
           </div>
-
-          {/* Progress bar */}
           <div className="h-1 bg-border rounded-full overflow-hidden mb-4">
             <div
               className="h-full rounded-full transition-all duration-700"
@@ -231,12 +356,24 @@ export function Dashboard() {
                 width: `${todayRate}%`,
                 background: 'linear-gradient(90deg, var(--accent), var(--accent-secondary))',
                 boxShadow: '0 0 8px var(--glow)'
-              }} />
-
+              }}
+            />
+          </div>
+          <div className="flex items-center justify-between gap-3">
+            <div className="text-[10px] font-mono uppercase tracking-[0.4em] text-muted">
+              Group by tags
+            </div>
+            <button
+              type="button"
+              onClick={handleExport}
+              className="text-[10px] font-mono uppercase tracking-[0.3em] border border-border px-3 py-1 rounded-full transition hover:border-accent hover:text-accent"
+            >
+              Export CSV
+            </button>
           </div>
 
           {/* Stats row */}
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-3 gap-2 mt-4">
             <div className="bg-bg-secondary border border-border rounded-lg px-3 py-2">
               <div className="flex items-center gap-1.5 mb-1">
                 <ZapIcon size={10} className="text-accent" />
@@ -321,22 +458,35 @@ export function Dashboard() {
       </div>
 
       {/* Habit list */}
-      <div className="max-w-2xl mx-auto">
-        {filtered.length === 0 ?
-        <div className="flex flex-col items-center justify-center py-16 text-muted">
+      <div className="max-w-2xl mx-auto py-6 space-y-6">
+        {filtered.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-16 text-muted">
             <div className="text-4xl mb-3">✓</div>
-            <p className="font-mono text-sm">All habits completed!</p>
-          </div> :
-
-        filtered.map((habit) =>
-        <HabitRow
-          key={habit.id}
-          habit={habit}
-          onToggle={() => toggleCompletion(habit.id)}
-          onDetail={() => navigate(`/habit/${habit.id}`)} />
-
-        )
-        }
+            <p className="font-mono text-sm">All habits are currently paused</p>
+          </div>
+        ) : (
+          categorySections.map((section) => (
+            <section
+              key={section.name}
+              className="space-y-3 rounded-3xl border border-border bg-bg-secondary/40 p-4"
+            >
+              <div className="flex items-center justify-between border-b border-border pb-2 text-[10px] uppercase tracking-[0.4em] text-muted">
+                <span>{section.name}</span>
+                <span>{section.habits.length} items</span>
+              </div>
+              <div className="space-y-1">
+                {section.habits.map((habit) => (
+                  <HabitRow
+                    key={habit.id}
+                    habit={habit}
+                    onToggle={() => handleToggle(habit)}
+                    onDetail={() => navigate(`/habit/${habit.id}`)}
+                  />
+                ))}
+              </div>
+            </section>
+          ))
+        )}
       </div>
     </div>);
 

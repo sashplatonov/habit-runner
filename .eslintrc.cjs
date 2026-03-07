@@ -35,7 +35,7 @@ module.exports = {
       'error',
       {
         allowConstantExport: true,
-        allowExportNames: ['useNavigate', 'useLocation', 'useParams'],
+        allowExportNames: ['useNavigate', 'useLocation', 'useParams', 'useUndo'],
       },
     ],
   },

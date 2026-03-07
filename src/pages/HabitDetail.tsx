@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import {
   ArrowLeftIcon,
   EditIcon,
@@ -24,6 +24,7 @@ import {
   CartesianGrid } from
 'recharts';
 import { useNavigate, useParams } from '@/lib/router';
+import { useUndo } from '@/lib/undo';
 export function HabitDetail() {
   const navigate = useNavigate();
   const params = useParams();
@@ -33,10 +34,52 @@ export function HabitDetail() {
     toggleCompletion,
     getHabitStats,
     deleteHabit,
-    updateHabit
+    restoreHabit,
+    updateHabit,
+    formatDate
   } = useHabits();
+  const { push } = useUndo();
   const habit = habitId ? allHabits.find((h) => h.id === habitId) : undefined;
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const today = formatDate(new Date());
+  const handleDelete = useCallback(async () => {
+    if (!habitId) {
+      return;
+    }
+    const deleted = await deleteHabit(habitId);
+    if (deleted) {
+      push({
+        message: `Habit "${deleted.name}" was deleted`,
+        actionLabel: 'Restore',
+        onUndo: async () => {
+          await restoreHabit(deleted);
+        }
+      });
+    }
+    navigate('/');
+  }, [deleteHabit, habitId, navigate, push, restoreHabit]);
+  const handleToggleArchive = useCallback(() => {
+    if (!habitId || !habit) {
+      return;
+    }
+    updateHabit(habitId, {
+      archived: !habit.archived
+    });
+  }, [habit, habitId, updateHabit]);
+  const handleToggleCompletion = useCallback(async () => {
+    if (!habitId || !habit) {
+      return;
+    }
+    const wasDone = habit.completions[today];
+    await toggleCompletion(habitId, today);
+    push({
+      message: wasDone ? `Unchecked: ${habit.name}` : `Checked: ${habit.name}`,
+      actionLabel: 'Undo',
+      onUndo: async () => {
+        await toggleCompletion(habitId, today);
+      }
+    });
+  }, [habit, habitId, push, today, toggleCompletion]);
   if (!habit) {
     return (
       <div className="min-h-screen bg-bg-primary pt-14 flex items-center justify-center">
@@ -46,19 +89,7 @@ export function HabitDetail() {
   }
   const stats = getHabitStats(habitId);
   const accent = HABIT_COLOR_THEMES[habit.color];
-  const today = new Date().toISOString().split('T')[0];
   const completedToday = !!habit.completions[today];
-  const handleDelete = () => {
-    if (habitId) {
-      deleteHabit(habitId);
-    }
-    navigate('/');
-  };
-  const handleToggleArchive = () => {
-    updateHabit(habitId, {
-      archived: !habit.archived
-    });
-  };
   const CustomTooltip = ({
     active,
     payload,
@@ -126,7 +157,7 @@ export function HabitDetail() {
               <EditIcon size={13} />
             </button>
             <button
-              onClick={() => toggleCompletion(habitId)}
+              onClick={handleToggleCompletion}
               className={`px-3 py-1.5 rounded text-xs font-mono font-medium border transition-all duration-200 ${completedToday ? 'border-border text-muted bg-transparent' : 'text-bg-primary font-bold'}`}
               style={
               !completedToday ?

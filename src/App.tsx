@@ -21,6 +21,7 @@ import {
 import { API_BASE_URL } from '@/lib/core/config';
 import { setCurrentUserId } from '@/lib/storage/db';
 import { useTheme } from '@/hooks/useTheme';
+import { UndoProvider } from '@/lib/undo';
 
 type AuthCallbackPageProps = {
   message?: string;
@@ -52,7 +53,7 @@ export function App() {
     const onSessionCleared = () => {
       setCurrentUserId(null);
       setAuthSession(null);
-      setAuthError('Сессия истекла. Выполните вход снова.');
+      setAuthError('Session expired. Please log in again.');
     };
 
     window.addEventListener(AUTH_SESSION_CLEARED_EVENT, onSessionCleared);
@@ -75,7 +76,7 @@ export function App() {
       return;
     }
 
-    setAuthError('Не удалось завершить OAuth вход. Проверьте настройки провайдера и redirect URI.');
+    setAuthError('Failed to complete OAuth login. Check provider setup and redirect URI.');
     window.history.replaceState({}, '', '/');
   }, []);
 
@@ -100,7 +101,8 @@ export function App() {
   };
 
   return (
-    <ErrorBoundary>
+    <UndoProvider>
+      <ErrorBoundary>
       {authSession ? (
         <BrowserRouter>
           <div className="min-h-screen bg-bg-primary">
@@ -127,7 +129,8 @@ export function App() {
             </div>
           )}
         </>
-      )}
-    </ErrorBoundary>
+        )}
+      </ErrorBoundary>
+    </UndoProvider>
   );
 }

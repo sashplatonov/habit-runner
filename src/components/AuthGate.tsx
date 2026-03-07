@@ -16,9 +16,9 @@ export function AuthGate({ onError }: AuthGateProps) {
   return (
     <div className="min-h-screen bg-bg-primary flex items-center justify-center px-4">
       <div className="w-full max-w-md border border-border rounded-2xl bg-bg-secondary p-6 text-foreground">
-        <h1 className="text-xl font-semibold mb-2">Вход в Habbit Runner</h1>
+        <h1 className="text-xl font-semibold mb-2">Sign in to Habbit Runner</h1>
         <p className="text-sm text-muted mb-6">
-          Авторизуйтесь через Google, чтобы включить синхронизацию между устройствами.
+          Sign in with Google to enable sync across your devices.
         </p>
 
         <div className="space-y-3">
@@ -26,15 +26,15 @@ export function AuthGate({ onError }: AuthGateProps) {
             className="w-full rounded-lg border border-border-hover bg-bg-card px-4 py-2.5 text-sm font-medium hover:border-accent/40 hover:bg-accent/10 transition-colors"
             onClick={startOAuth}
           >
-            Продолжить с Google
+            Continue with Google
           </button>
         </div>
 
         <button
           className="mt-4 text-xs text-muted hover:text-foreground"
-          onClick={() => onError('OAuth не настроен. Заполните переменные в server/.env и перезапустите API.')}
+          onClick={() => onError('OAuth is not configured. Fill in server/.env and restart the API.')}
         >
-          Не работает вход?
+          Sign-in not working?
         </button>
       </div>
     </div>

@@ -23,6 +23,12 @@ import {
 import { useLiveQuery } from '@/hooks/useLiveQuery';
 import { buildCompletionsByHabitId } from '@/hooks/useHabits.helpers';
 
+type ToggleCompletionResult = {
+  habitId: string;
+  date: string;
+  done: boolean;
+};
+
 export function useHabits() {
   const currentUserId = getCurrentUserId();
 
@@ -56,20 +62,21 @@ export function useHabits() {
 
   const habits = useMemo(() => allHabits.filter((habit) => !habit.archived), [allHabits]);
 
-  const toggleCompletion = useCallback(async (habitId: string, date?: string) => {
-    const key = date || formatDate(new Date());
-    const userId = getCurrentUserId();
-    const existingCheckin = await db.checkins
-      .where('habitId')
-      .equals(habitId)
-      .filter(
-        (record) =>
-          record.date === key && record.userId === userId && record.done
-      )
-      .first();
-    const hasCompletion = Boolean(existingCheckin);
+  const toggleCompletion = useCallback(
+    async (habitId: string, date?: string): Promise<ToggleCompletionResult> => {
+      const key = date || formatDate(new Date());
+      const userId = getCurrentUserId();
+      const existingCheckin = await db.checkins
+        .where('habitId')
+        .equals(habitId)
+        .filter(
+          (record) =>
+            record.date === key && record.userId === userId && record.done
+        )
+        .first();
+      const hadCompletion = Boolean(existingCheckin);
 
-    if (hasCompletion) {
+    if (hadCompletion) {
       await deleteCheckinInDb(habitId, key);
     } else {
       await upsertCheckinInDb(habitId, key, true);
@@ -77,7 +84,11 @@ export function useHabits() {
 
     const entity = await db.habits.get(habitId);
     if (!entity) {
-      return;
+      return {
+        habitId,
+        date: key,
+        done: !hadCompletion
+      };
     }
     const base = habitEntityToDomain(entity);
     const updatedHabit: Habit = {
@@ -88,23 +99,28 @@ export function useHabits() {
 
     await persistHabitInDb(updatedHabit);
 
-    const payload = hasCompletion
-      ? { habitId, date: key }
-      : {
-          habitId,
-          date: key,
-          done: true,
-          version: updatedHabit.version ?? 1
-        };
+      const payload = hadCompletion
+        ? { habitId, date: key }
+        : {
+            habitId,
+            date: key,
+            done: true,
+            version: updatedHabit.version ?? 1
+          };
 
-    const entry = createOutboxEntry(
-      'checkin',
-      hasCompletion ? 'delete' : 'upsert',
-      payload
-    );
+      const entry = createOutboxEntry(
+        'checkin',
+        hadCompletion ? 'delete' : 'upsert',
+        payload
+      );
 
-    await enqueueOutboxEntry(entry);
-  }, []);
+      await enqueueOutboxEntry(entry);
+      return {
+        habitId,
+        date: key,
+        done: !hadCompletion
+      };
+    }, []);
 
   const addHabit = useCallback(
     async (data: Omit<Habit, 'id' | 'completions' | 'createdAt'>) => {
@@ -144,18 +160,45 @@ export function useHabits() {
     await enqueueOutboxEntry(entry);
   }, []);
 
-  const deleteHabit = useCallback((id: string) => {
-    (async () => {
+  const deleteHabit = useCallback(
+    async (id: string) => {
       const entity = await db.habits.get(id);
+      const backup = allHabits.find((h) => h.id === id);
       if (!entity) {
-        return;
+        return backup;
       }
       const version = entity.version ?? 1;
       await addTombstone('habit', id, version);
       await removeHabitFromDb(id);
       const entry = createOutboxEntry('habit', 'delete', { id, version });
       await enqueueOutboxEntry(entry);
-    })();
+      return backup;
+    },
+    [allHabits]
+  );
+
+  const restoreHabit = useCallback(async (habit: Habit) => {
+    await persistHabitInDb(habit);
+    await db.tombstones
+      .where({
+        entity: 'habit',
+        entityId: habit.id
+      })
+      .delete();
+    const habitEntry = createOutboxEntry('habit', 'upsert', habit);
+    await enqueueOutboxEntry(habitEntry);
+    const completionDates = Object.entries(habit.completions)
+      .filter(([, done]) => done)
+      .map(([date]) => date);
+    for (const date of completionDates) {
+      await upsertCheckinInDb(habit.id, date, true);
+      const entry = createOutboxEntry('checkin', 'upsert', {
+        habitId: habit.id,
+        date,
+        done: true
+      });
+      await enqueueOutboxEntry(entry);
+    }
   }, []);
 
   const getHabitStats = useCallback(
@@ -211,6 +254,7 @@ export function useHabits() {
     addHabit,
     updateHabit,
     deleteHabit,
+    restoreHabit,
     getHabitStats,
     getTodayCompletionRate,
     formatDate
