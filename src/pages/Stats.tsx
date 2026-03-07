@@ -9,6 +9,7 @@ import {
 'lucide-react';
 import { useHabits } from '@/hooks/useHabits';
 import { CompletionRing } from '@/components/CompletionRing';
+import { HABIT_COLOR_THEMES } from '@/lib/theme/habit-colors';
 import {
   LineChart,
   Line,
@@ -23,14 +24,6 @@ import {
 interface StatsProps {
   onNavigate: (view: string, habitId?: string) => void;
 }
-const colorHex: Record<string, string> = {
-  blue: '#00d4ff',
-  green: '#00ff88',
-  purple: '#a855f7',
-  orange: '#f97316',
-  red: '#ef4444',
-  cyan: '#22d3ee'
-};
 export function Stats({ onNavigate }: StatsProps) {
   const { allHabits, getHabitStats } = useHabits();
   const [statusFilter, setStatusFilter] = useState<
@@ -197,8 +190,8 @@ export function Stats({ onNavigate }: StatsProps) {
   }: {active?: boolean;payload?: {name: string;value: number;color: string;}[];label?: string;}) => {
     if (active && payload && payload.length) {
       return (
-        <div className="bg-[#12121f] border border-[#1e1e2e] rounded px-3 py-2 space-y-1">
-          <p className="text-[10px] font-mono text-[#64748b] mb-1">{label}</p>
+        <div className="bg-bg-card border border-border rounded px-3 py-2 space-y-1">
+          <p className="text-[10px] font-mono text-muted mb-1">{label}</p>
           {payload.map((p) =>
           <div key={p.name} className="flex items-center gap-2">
               <div
@@ -207,7 +200,7 @@ export function Stats({ onNavigate }: StatsProps) {
                 backgroundColor: p.color
               }} />
 
-              <span className="text-[10px] font-mono text-[#64748b]">
+              <span className="text-[10px] font-mono text-muted">
                 {p.name}:
               </span>
               <span
@@ -239,9 +232,9 @@ export function Stats({ onNavigate }: StatsProps) {
   }: {active?: boolean;payload?: {value: number;}[];label?: string;}) => {
     if (active && payload && payload.length) {
       return (
-        <div className="bg-[#12121f] border border-[#1e1e2e] rounded px-2 py-1.5">
-          <p className="text-[10px] font-mono text-[#64748b]">{label}</p>
-          <p className="text-xs font-mono font-bold text-[#00d4ff]">
+        <div className="bg-bg-card border border-border rounded px-2 py-1.5">
+          <p className="text-[10px] font-mono text-muted">{label}</p>
+          <p className="text-xs font-mono font-bold text-accent">
             {payload[0].value}%
           </p>
         </div>);
@@ -255,40 +248,40 @@ export function Stats({ onNavigate }: StatsProps) {
     );
   };
   return (
-    <div className="min-h-screen bg-[#080810] pt-14">
+    <div className="min-h-screen bg-bg-primary pt-14">
       {/* Header */}
-      <div className="border-b border-[#1e1e2e] px-4 py-4">
+      <div className="border-b border-border px-4 py-4">
         <div className="max-w-2xl mx-auto">
-          <p className="text-[10px] font-mono text-[#64748b] uppercase tracking-widest mb-1">
+          <p className="text-[10px] font-mono text-muted uppercase tracking-widest mb-1">
             Overview
           </p>
-          <h1 className="text-xl font-semibold text-white">Statistics</h1>
+          <h1 className="text-xl font-semibold text-foreground">Statistics</h1>
         </div>
       </div>
 
       <div className="max-w-2xl mx-auto px-4 py-4 space-y-4">
         {/* Top stats */}
         <div className="grid grid-cols-4 gap-2">
-          <div className="bg-[#0f0f1a] border border-[#1e1e2e] rounded-lg p-3">
+          <div className="bg-bg-secondary border border-border rounded-lg p-3">
             <div className="flex items-center gap-1 mb-2">
-              <ZapIcon size={10} className="text-[#00d4ff]" />
-              <span className="text-[9px] font-mono text-[#64748b] uppercase tracking-wider">
+              <ZapIcon size={10} className="text-accent" />
+              <span className="text-[9px] font-mono text-muted uppercase tracking-wider">
                 Avg Rate
               </span>
             </div>
             <div
-              className="text-xl font-mono font-bold text-[#00d4ff]"
+              className="text-xl font-mono font-bold text-accent"
               style={{
-                textShadow: '0 0 12px rgba(0,212,255,0.4)'
+                textShadow: '0 0 12px var(--glow)'
               }}>
 
               {avgRate}%
             </div>
           </div>
-          <div className="bg-[#0f0f1a] border border-[#1e1e2e] rounded-lg p-3">
+          <div className="bg-bg-secondary border border-border rounded-lg p-3">
             <div className="flex items-center gap-1 mb-2">
               <FlameIcon size={10} className="text-orange-400" />
-              <span className="text-[9px] font-mono text-[#64748b] uppercase tracking-wider">
+              <span className="text-[9px] font-mono text-muted uppercase tracking-wider">
                 Best
               </span>
             </div>
@@ -296,58 +289,58 @@ export function Stats({ onNavigate }: StatsProps) {
               {bestStreak}d
             </div>
           </div>
-          <div className="bg-[#0f0f1a] border border-[#1e1e2e] rounded-lg p-3">
+          <div className="bg-bg-secondary border border-border rounded-lg p-3">
             <div className="flex items-center gap-1 mb-2">
-              <TrendingUpIcon size={10} className="text-[#00ff88]" />
-              <span className="text-[9px] font-mono text-[#64748b] uppercase tracking-wider">
+              <TrendingUpIcon size={10} className="text-accent-secondary" />
+              <span className="text-[9px] font-mono text-muted uppercase tracking-wider">
                 Total
               </span>
             </div>
             <div
-              className="text-xl font-mono font-bold text-[#00ff88]"
+              className="text-xl font-mono font-bold text-accent-secondary"
               style={{
-                textShadow: '0 0 12px rgba(0,255,136,0.4)'
+                textShadow: '0 0 12px var(--glow-secondary)'
               }}>
 
               {totalCompletions}
             </div>
           </div>
-          <div className="bg-[#0f0f1a] border border-[#1e1e2e] rounded-lg p-3">
+          <div className="bg-bg-secondary border border-border rounded-lg p-3">
             <div className="flex items-center gap-1 mb-2">
-              <CalendarIcon size={10} className="text-[#64748b]" />
-              <span className="text-[9px] font-mono text-[#64748b] uppercase tracking-wider">
+              <CalendarIcon size={10} className="text-muted" />
+              <span className="text-[9px] font-mono text-muted uppercase tracking-wider">
                 Active
               </span>
             </div>
-            <div className="text-xl font-mono font-bold text-white">
+            <div className="text-xl font-mono font-bold text-foreground">
               {currentStreaks}
             </div>
           </div>
         </div>
 
         {/* Filters */}
-        <div className="bg-[#0f0f1a] border border-[#1e1e2e] rounded-lg p-4 space-y-4">
+        <div className="bg-bg-secondary border border-border rounded-lg p-4 space-y-4">
           <div className="flex flex-col sm:flex-row gap-3">
             <div className="flex-1 relative">
               <SearchIcon
                 size={14}
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-[#64748b]" />
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
 
               <input
                 type="text"
                 placeholder="Search habits..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-[#12121f] border border-[#1e1e2e] rounded-lg pl-9 pr-3 py-2 text-sm text-white placeholder-[#64748b] focus:outline-none focus:border-[#00d4ff]/50 transition-colors" />
+                className="w-full bg-bg-card border border-border rounded-lg pl-9 pr-3 py-2 text-sm text-foreground placeholder-muted focus:outline-none focus:border-accent/50 transition-colors" />
 
             </div>
 
-            <div className="flex bg-[#12121f] border border-[#1e1e2e] rounded-lg p-1">
+            <div className="flex bg-bg-card border border-border rounded-lg p-1">
               {(['all', 'active', 'archived'] as const).map((status) =>
               <button
                 key={status}
                 onClick={() => setStatusFilter(status)}
-                className={`px-3 py-1 rounded-md text-xs font-mono capitalize transition-colors ${statusFilter === status ? 'bg-[#1e1e2e] text-white' : 'text-[#64748b] hover:text-white'}`}>
+                className={`px-3 py-1 rounded-md text-xs font-mono capitalize transition-colors ${statusFilter === status ? 'bg-border text-foreground' : 'text-muted hover:text-foreground'}`}>
 
                   {status}
                 </button>
@@ -358,7 +351,7 @@ export function Stats({ onNavigate }: StatsProps) {
           <div className="flex items-start gap-2">
             <TagIcon
               size={14}
-              className="text-[#64748b] mt-1 flex-shrink-0" />
+              className="text-muted mt-1 flex-shrink-0" />
 
             {allTags.length > 0 ? (
               <div className="flex flex-wrap gap-1.5">
@@ -366,13 +359,13 @@ export function Stats({ onNavigate }: StatsProps) {
                   <button
                     key={tag}
                     onClick={() => toggleTag(tag)}
-                    className={`px-2 py-1 rounded border text-[10px] font-mono transition-colors ${selectedTags.includes(tag) ? 'bg-[#00d4ff]/10 border-[#00d4ff]/30 text-[#00d4ff]' : 'bg-[#12121f] border-[#1e1e2e] text-[#64748b] hover:border-[#2e2e3e] hover:text-white'}`}>
+                    className={`px-2 py-1 rounded border text-[10px] font-mono transition-colors ${selectedTags.includes(tag) ? 'bg-accent/10 border-accent/30 text-accent' : 'bg-bg-card border-border text-muted hover:border-border-hover hover:text-foreground'}`}>
                     #{tag}
                   </button>
                 )}
               </div>
             ) : (
-              <span className="text-[11px] font-mono text-[#64748b]">
+              <span className="text-[11px] font-mono text-muted">
                 No tags yet
               </span>
             )}
@@ -380,12 +373,12 @@ export function Stats({ onNavigate }: StatsProps) {
         </div>
 
         {/* Daily completion rate — 30 days */}
-        <div className="bg-[#0f0f1a] border border-[#1e1e2e] rounded-lg p-4">
+        <div className="bg-bg-secondary border border-border rounded-lg p-4">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xs font-mono text-[#64748b] uppercase tracking-wider">
+            <h2 className="text-xs font-mono text-muted uppercase tracking-wider">
               Daily completion rate — 30 days
             </h2>
-            <span className="text-[10px] font-mono text-[#00d4ff]">
+            <span className="text-[10px] font-mono text-accent">
               {avgRate}% avg
             </span>
           </div>
@@ -402,13 +395,13 @@ export function Stats({ onNavigate }: StatsProps) {
 
               <CartesianGrid
                 strokeDasharray="3 3"
-                stroke="#1e1e2e"
+                stroke="var(--border)"
                 vertical={false} />
 
               <XAxis
                 dataKey="day"
                 tick={{
-                  fill: '#64748b',
+                  fill: 'var(--text-muted)',
                   fontSize: 9,
                   fontFamily: 'JetBrains Mono'
                 }}
@@ -417,7 +410,7 @@ export function Stats({ onNavigate }: StatsProps) {
 
               <YAxis
                 tick={{
-                  fill: '#64748b',
+                  fill: 'var(--text-muted)',
                   fontSize: 9,
                   fontFamily: 'JetBrains Mono'
                 }}
@@ -429,10 +422,10 @@ export function Stats({ onNavigate }: StatsProps) {
               <Tooltip content={<DailyTooltip />} />
               <Bar
                 dataKey="rate"
-                fill="#00d4ff"
+                fill="var(--accent)"
                 radius={[2, 2, 0, 0]}
                 style={{
-                  filter: 'drop-shadow(0 0 4px rgba(0,212,255,0.4))'
+                  filter: 'drop-shadow(0 0 4px var(--glow))'
                 }} />
 
             </BarChart>
@@ -440,8 +433,8 @@ export function Stats({ onNavigate }: StatsProps) {
         </div>
 
         {/* Per-habit trend lines */}
-        <div className="bg-[#0f0f1a] border border-[#1e1e2e] rounded-lg p-4">
-          <h2 className="text-xs font-mono text-[#64748b] uppercase tracking-wider mb-4">
+        <div className="bg-bg-secondary border border-border rounded-lg p-4">
+          <h2 className="text-xs font-mono text-muted uppercase tracking-wider mb-4">
             Per-habit monthly rate
           </h2>
           <ResponsiveContainer width="100%" height={150}>
@@ -456,13 +449,13 @@ export function Stats({ onNavigate }: StatsProps) {
 
               <CartesianGrid
                 strokeDasharray="3 3"
-                stroke="#1e1e2e"
+                stroke="var(--border)"
                 vertical={false} />
 
               <XAxis
                 dataKey="month"
                 tick={{
-                  fill: '#64748b',
+                  fill: 'var(--text-muted)',
                   fontSize: 10,
                   fontFamily: 'JetBrains Mono'
                 }}
@@ -471,7 +464,7 @@ export function Stats({ onNavigate }: StatsProps) {
 
               <YAxis
                 tick={{
-                  fill: '#64748b',
+                  fill: 'var(--text-muted)',
                   fontSize: 10,
                   fontFamily: 'JetBrains Mono'
                 }}
@@ -486,19 +479,19 @@ export function Stats({ onNavigate }: StatsProps) {
                 key={h.id}
                 type="monotone"
                 dataKey={h.name}
-                stroke={colorHex[h.color]}
+                stroke={HABIT_COLOR_THEMES[h.color].hex}
                 strokeWidth={1.5}
                 dot={{
-                  fill: colorHex[h.color],
+                  fill: HABIT_COLOR_THEMES[h.color].hex,
                   r: 2.5,
                   strokeWidth: 0
                 }}
                 activeDot={{
                   r: 4,
-                  fill: colorHex[h.color]
+                  fill: HABIT_COLOR_THEMES[h.color].hex
                 }}
                 style={{
-                  filter: `drop-shadow(0 0 3px ${colorHex[h.color]}80)`
+                  filter: `drop-shadow(0 0 3px ${HABIT_COLOR_THEMES[h.color].hex}80)`
                 }} />
 
               )}
@@ -507,31 +500,31 @@ export function Stats({ onNavigate }: StatsProps) {
         </div>
 
         {/* Habit leaderboard */}
-        <div className="bg-[#0f0f1a] border border-[#1e1e2e] rounded-lg p-4">
-          <h2 className="text-xs font-mono text-[#64748b] uppercase tracking-wider mb-3">
+        <div className="bg-bg-secondary border border-border rounded-lg p-4">
+          <h2 className="text-xs font-mono text-muted uppercase tracking-wider mb-3">
             Habit performance
           </h2>
           {sorted.length === 0 ?
-          <div className="text-center py-8 text-sm text-[#64748b] font-mono">
+          <div className="text-center py-8 text-sm text-muted font-mono">
               No habits match the current filters.
             </div> :
 
           <div className="space-y-2">
               {sorted.map(({ habit, stats }, i) => {
-              const hex = colorHex[habit.color];
+              const hex = HABIT_COLOR_THEMES[habit.color].hex;
               return (
                 <button
                   key={habit.id}
                   onClick={() => onNavigate('detail', habit.id)}
-                  className="w-full flex items-center gap-3 p-2.5 rounded-lg hover:bg-[#12121f] transition-colors text-left">
+                  className="w-full flex items-center gap-3 p-2.5 rounded-lg hover:bg-bg-card transition-colors text-left">
 
-                    <span className="text-[10px] font-mono text-[#64748b] w-4">
+                    <span className="text-[10px] font-mono text-muted w-4">
                       {i + 1}
                     </span>
                     <span className="text-base">{habit.icon}</span>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between mb-1">
-                        <span className="text-xs font-medium text-white truncate">
+                        <span className="text-xs font-medium text-foreground truncate">
                           {habit.name}
                         </span>
                         <span
@@ -543,7 +536,7 @@ export function Stats({ onNavigate }: StatsProps) {
                           {stats.completionRate}%
                         </span>
                       </div>
-                      <div className="h-1 bg-[#1e1e2e] rounded-full overflow-hidden">
+                      <div className="h-1 bg-border rounded-full overflow-hidden">
                         <div
                           className="h-full rounded-full"
                           style={{
@@ -574,15 +567,15 @@ export function Stats({ onNavigate }: StatsProps) {
         </div>
 
         {/* Weekly heatmap summary */}
-        <div className="bg-[#0f0f1a] border border-[#1e1e2e] rounded-lg p-4">
-          <h2 className="text-xs font-mono text-[#64748b] uppercase tracking-wider mb-3">
+        <div className="bg-bg-secondary border border-border rounded-lg p-4">
+          <h2 className="text-xs font-mono text-muted uppercase tracking-wider mb-3">
             Weekly breakdown — last 12 weeks
           </h2>
           <div className="space-y-2">
             {allStats.map(({ habit, stats }) =>
             <div key={habit.id} className="flex items-center gap-3">
                 <span className="text-sm w-5">{habit.icon}</span>
-                <span className="text-[11px] text-[#64748b] w-20 truncate font-mono">
+                <span className="text-[11px] text-muted w-20 truncate font-mono">
                   {habit.name}
                 </span>
                 <div className="flex-1 flex items-end gap-[2px] h-6">
@@ -593,7 +586,7 @@ export function Stats({ onNavigate }: StatsProps) {
                   style={{
                     height: `${w.count / 7 * 100}%`,
                     minHeight: 2,
-                    backgroundColor: colorHex[habit.color],
+                    backgroundColor: HABIT_COLOR_THEMES[habit.color].hex,
                     opacity: 0.3 + i / 12 * 0.7
                   }} />
 
@@ -602,7 +595,7 @@ export function Stats({ onNavigate }: StatsProps) {
                 <span
                 className="text-[10px] font-mono w-8 text-right"
                 style={{
-                  color: colorHex[habit.color]
+                  color: HABIT_COLOR_THEMES[habit.color].hex
                 }}>
 
                   {stats.completionRate}%

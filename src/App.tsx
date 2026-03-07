@@ -17,6 +17,7 @@ import {
 } from '@/lib/auth/session';
 import { API_BASE_URL } from '@/lib/core/config';
 import { setCurrentUserId } from '@/lib/storage/db';
+import { useTheme } from '@/hooks/useTheme';
 
 type AppView = 'dashboard' | 'detail' | 'add' | 'edit' | 'stats';
 
@@ -28,6 +29,7 @@ export function App() {
     setCurrentUserId(getSessionUserId(session));
     return session;
   });
+  const { theme, setTheme } = useTheme(Boolean(authSession));
   const [authError, setAuthError] = useState<string | undefined>();
   useSyncEngine(Boolean(authSession));
 
@@ -105,11 +107,13 @@ export function App() {
   }
 
   return (
-    <div className="min-h-screen bg-[#080810]">
+    <div className="min-h-screen bg-bg-primary">
       <Nav
         currentView={view}
         onNavigate={navigate}
         onLogout={logout}
+        theme={theme}
+        onThemeChange={setTheme}
       />
       {view === 'dashboard' && <Dashboard onNavigate={navigate} />}
       {view === 'detail' && activeHabitId && (

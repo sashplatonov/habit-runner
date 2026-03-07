@@ -1,11 +1,25 @@
-import { Body, Controller, Get, Post, Query, Redirect } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Post,
+  Put,
+  Query,
+  Redirect,
+  Req,
+  UnauthorizedException,
+  UseGuards
+} from '@nestjs/common';
 import { AuthService } from './auth.service';
 import type {
   LoginRequest,
   OAuthCallbackQuery,
   OAuthStartQuery,
-  RefreshRequest
+  RefreshRequest,
+  UpdateThemeRequest
 } from './dto/auth.dto';
+import { AuthGuard } from './auth.guard';
+import type { RequestWithUser } from './auth.guard';
 
 @Controller('auth')
 export class AuthController {
@@ -37,5 +51,25 @@ export class AuthController {
   async logout(@Body() body: RefreshRequest) {
     await this.authService.revokeToken(body.refreshToken);
     return { success: true };
+  }
+
+  @UseGuards(AuthGuard)
+  @Get('theme')
+  async getTheme(@Req() req: RequestWithUser) {
+    const userId = req.user?.id;
+    if (!userId) {throw new UnauthorizedException('Authentication required');}
+
+    const theme = await this.authService.getUserTheme(userId);
+    return { theme };
+  }
+
+  @UseGuards(AuthGuard)
+  @Put('theme')
+  async updateTheme(@Req() req: RequestWithUser, @Body() body: UpdateThemeRequest) {
+    const userId = req.user?.id;
+    if (!userId) {throw new UnauthorizedException('Authentication required');}
+
+    const theme = await this.authService.updateUserTheme(userId, body.theme);
+    return { theme };
   }
 }

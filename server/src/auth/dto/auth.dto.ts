@@ -14,3 +14,7 @@ export class OAuthCallbackQuery {
 export class RefreshRequest {
   refreshToken!: string;
 }
+
+export class UpdateThemeRequest {
+  theme!: string;
+}

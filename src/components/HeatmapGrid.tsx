@@ -1,35 +1,11 @@
 import React, { useState } from 'react';
+import { DEFAULT_HABIT_COLOR, HABIT_COLOR_THEMES } from '@/lib/theme/habit-colors';
+import type { HabitColor } from '@/types/habit';
 interface HeatmapGridProps {
   completions: Record<string, boolean>;
-  color?: 'blue' | 'green' | 'purple' | 'orange' | 'red' | 'cyan';
+  color?: HabitColor;
   weeks?: number;
 }
-const colorMap = {
-  blue: {
-    levels: ['#0d1117', '#0d2d3d', '#0a4a6e', '#006b9f', '#00d4ff'],
-    glow: 'rgba(0,212,255,0.6)'
-  },
-  green: {
-    levels: ['#0d1117', '#0d2d1a', '#0a4a28', '#007a3d', '#00ff88'],
-    glow: 'rgba(0,255,136,0.6)'
-  },
-  purple: {
-    levels: ['#0d1117', '#1a0d2e', '#2d0a4a', '#5b1a8f', '#a855f7'],
-    glow: 'rgba(168,85,247,0.6)'
-  },
-  orange: {
-    levels: ['#0d1117', '#2d1a0d', '#4a2a0a', '#8f4a1a', '#f97316'],
-    glow: 'rgba(249,115,22,0.6)'
-  },
-  red: {
-    levels: ['#0d1117', '#2d0d0d', '#4a0a0a', '#8f1a1a', '#ef4444'],
-    glow: 'rgba(239,68,68,0.6)'
-  },
-  cyan: {
-    levels: ['#0d1117', '#0d2a2d', '#0a3d4a', '#0a6b7a', '#22d3ee'],
-    glow: 'rgba(34,211,238,0.6)'
-  }
-};
 function formatDate(date: Date): string {
   return date.toISOString().split('T')[0];
 }
@@ -38,7 +14,7 @@ function getIntensity(completed: boolean | undefined): number {
 }
 export function HeatmapGrid({
   completions,
-  color = 'blue',
+  color = DEFAULT_HABIT_COLOR,
   weeks = 26
 }: HeatmapGridProps) {
   const [tooltip, setTooltip] = useState<{
@@ -47,7 +23,7 @@ export function HeatmapGrid({
     x: number;
     y: number;
   } | null>(null);
-  const { levels, glow } = colorMap[color];
+  const { heatmapLevels: levels, glow } = HABIT_COLOR_THEMES[color];
   // Build grid: weeks columns, 7 rows (Sun-Sat)
   const today = new Date();
   const cells: {
@@ -103,7 +79,7 @@ export function HeatmapGrid({
           return (
             <div
               key={i}
-              className="w-[11px] mr-[2px] text-[9px] font-mono text-[#64748b] overflow-visible whitespace-nowrap">
+              className="w-[11px] mr-[2px] text-[9px] font-mono text-muted overflow-visible whitespace-nowrap">
 
               {label ? label.label : ''}
             </div>);
@@ -117,7 +93,7 @@ export function HeatmapGrid({
           {dayLabels.map((d, i) =>
           <div
             key={i}
-            className="h-[11px] text-[9px] font-mono text-[#64748b] flex items-center">
+            className="h-[11px] text-[9px] font-mono text-muted flex items-center">
 
               {i % 2 === 1 ? d : ''}
             </div>
@@ -137,7 +113,7 @@ export function HeatmapGrid({
                   key={di}
                   className="w-[11px] h-[11px] rounded-[2px] cursor-pointer transition-transform hover:scale-125"
                   style={{
-                    backgroundColor: isFuture ? '#0d1117' : bg,
+                    backgroundColor: isFuture ? 'var(--bg-secondary)' : bg,
                     opacity: isFuture ? 0.3 : 1,
                     boxShadow:
                     cell.completed && !isFuture ?
@@ -167,14 +143,14 @@ export function HeatmapGrid({
       {/* Tooltip */}
       {tooltip &&
       <div
-        className="fixed z-50 pointer-events-none px-2 py-1 rounded bg-[#12121f] border border-[#1e1e2e] text-[10px] font-mono text-white shadow-lg"
+        className="fixed z-50 pointer-events-none px-2 py-1 rounded bg-bg-card border border-border text-[10px] font-mono text-foreground shadow-lg"
         style={{
           left: tooltip.x + 16,
           top: tooltip.y - 28
         }}>
 
           <span
-          className={tooltip.completed ? 'text-[#00ff88]' : 'text-[#64748b]'}>
+          className={tooltip.completed ? 'text-accent-secondary' : 'text-muted'}>
 
             {tooltip.completed ? '✓' : '○'}
           </span>{' '}

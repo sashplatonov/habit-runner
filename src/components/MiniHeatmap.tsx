@@ -1,37 +1,11 @@
 import React from 'react';
+import { HABIT_COLOR_THEMES } from '@/lib/theme/habit-colors';
 import type { HabitColor } from '@/types/habit';
 
 interface MiniHeatmapProps {
   completions: Record<string, boolean>;
   color: HabitColor;
 }
-
-const colorMap = {
-  blue: {
-    filled: '#00d4ff',
-    glow: 'rgba(0,212,255,0.6)'
-  },
-  green: {
-    filled: '#00ff88',
-    glow: 'rgba(0,255,136,0.6)'
-  },
-  purple: {
-    filled: '#a855f7',
-    glow: 'rgba(168,85,247,0.6)'
-  },
-  orange: {
-    filled: '#f97316',
-    glow: 'rgba(249,115,22,0.6)'
-  },
-  red: {
-    filled: '#ef4444',
-    glow: 'rgba(239,68,68,0.6)'
-  },
-  cyan: {
-    filled: '#22d3ee',
-    glow: 'rgba(34,211,238,0.6)'
-  }
-};
 
 function formatDate(date: Date): string {
   return date.toISOString().split('T')[0];
@@ -49,7 +23,7 @@ export function MiniHeatmap({ completions, color }: MiniHeatmapProps) {
 
   const startDay = days[0].getDay();
   const emptyCells = Array.from({ length: startDay });
-  const { filled, glow } = colorMap[color];
+  const { hex, glow } = HABIT_COLOR_THEMES[color];
 
   return (
     <div className="grid grid-rows-7 grid-flow-col gap-[2px]">
@@ -67,7 +41,7 @@ export function MiniHeatmap({ completions, color }: MiniHeatmapProps) {
             key={dateStr}
             className="w-[4px] h-[4px] rounded-[1px] transition-all duration-300"
             style={{
-              backgroundColor: isCompleted ? filled : '#1e1e2e',
+              backgroundColor: isCompleted ? hex : 'var(--border)',
               boxShadow: isCompleted ? `0 0 4px ${glow}` : 'none',
               opacity: isCompleted ? 1 : 0.5
             }}

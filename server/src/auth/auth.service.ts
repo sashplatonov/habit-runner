@@ -42,6 +42,21 @@ type SessionUser = {
   email: string;
 };
 
+const THEME_IDS = [
+  'midnight',
+  'ember',
+  'violet',
+  'matrix',
+  'arctic',
+  'sakura',
+  'lavender',
+  'mint',
+  'peach',
+  'cloud'
+] as const;
+
+type ThemeId = (typeof THEME_IDS)[number];
+
 @Injectable()
 export class AuthService {
   private readonly secret = AUTH_SECRET;
@@ -117,6 +132,31 @@ export class AuthService {
       expiresIn: this.accessTokenTtlSeconds,
       tokenType: 'Bearer'
     };
+  }
+
+  async getUserTheme(userId: string): Promise<ThemeId> {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { theme: true }
+    });
+
+    if (!user) {
+      throw new UnauthorizedException('User no longer exists');
+    }
+
+    return this.normalizeTheme(user.theme);
+  }
+
+  async updateUserTheme(userId: string, theme: string): Promise<ThemeId> {
+    const normalizedTheme = this.normalizeTheme(theme);
+
+    const user = await this.prisma.user.update({
+      where: { id: userId },
+      data: { theme: normalizedTheme },
+      select: { theme: true }
+    });
+
+    return this.normalizeTheme(user.theme);
   }
 
   verifyAccessToken(token: string): AuthPayload {
@@ -278,5 +318,12 @@ export class AuthService {
         email: true
       }
     });
+  }
+
+  private normalizeTheme(value: string): ThemeId {
+    if (THEME_IDS.includes(value as ThemeId)) {
+      return value as ThemeId;
+    }
+    return 'midnight';
   }
 }

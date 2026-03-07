@@ -1,4 +1,3 @@
-
 /* eslint-env node */
 /** @type {import('tailwindcss').Config} */
 module.exports = {
@@ -9,17 +8,15 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        "bg-primary": "#080810",
-        "bg-secondary": "#0f0f1a",
-        "bg-card": "#12121f",
-        border: "#1e1e2e",
-        "border-hover": "#2e2e3e",
-        muted: "#64748b",
-        "accent-blue": "#00d4ff",
-        "accent-green": "#00ff88",
-        "accent-purple": "#a855f7",
-        "accent-orange": "#f97316",
-        "accent-cyan": "#22d3ee",
+        "bg-primary": "var(--bg-primary)",
+        "bg-secondary": "var(--bg-secondary)",
+        "bg-card": "var(--bg-card)",
+        border: "var(--border)",
+        "border-hover": "var(--border-hover)",
+        foreground: "var(--text-primary)",
+        muted: "var(--text-muted)",
+        accent: "var(--accent)",
+        "accent-secondary": "var(--accent-secondary)",
       },
       fontFamily: {
         mono: ["JetBrains Mono", "Fira Code", "monospace"],

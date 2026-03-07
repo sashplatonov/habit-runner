@@ -14,16 +14,16 @@ function startOAuth() {
 
 export function AuthGate({ onError }: AuthGateProps) {
   return (
-    <div className="min-h-screen bg-[#080810] flex items-center justify-center px-4">
-      <div className="w-full max-w-md border border-[#1e1e2e] rounded-2xl bg-[#0f0f1a] p-6 text-white">
+    <div className="min-h-screen bg-bg-primary flex items-center justify-center px-4">
+      <div className="w-full max-w-md border border-border rounded-2xl bg-bg-secondary p-6 text-foreground">
         <h1 className="text-xl font-semibold mb-2">Вход в Habbit Runner</h1>
-        <p className="text-sm text-[#94a3b8] mb-6">
+        <p className="text-sm text-muted mb-6">
           Авторизуйтесь через Google, чтобы включить синхронизацию между устройствами.
         </p>
 
         <div className="space-y-3">
           <button
-            className="w-full rounded-lg border border-white/20 bg-white/5 px-4 py-2.5 text-sm font-medium hover:bg-white/10 transition-colors"
+            className="w-full rounded-lg border border-border-hover bg-bg-card px-4 py-2.5 text-sm font-medium hover:border-accent/40 hover:bg-accent/10 transition-colors"
             onClick={startOAuth}
           >
             Продолжить с Google
@@ -31,7 +31,7 @@ export function AuthGate({ onError }: AuthGateProps) {
         </div>
 
         <button
-          className="mt-4 text-xs text-[#94a3b8] hover:text-white"
+          className="mt-4 text-xs text-muted hover:text-foreground"
           onClick={() => onError('OAuth не настроен. Заполните переменные в server/.env и перезапустите API.')}
         >
           Не работает вход?
