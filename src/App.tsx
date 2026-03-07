@@ -98,7 +98,7 @@ export function App() {
       <>
         <AuthGate onError={setAuthError} />
         {authError && (
-          <div className="fixed bottom-4 left-1/2 -translate-x-1/2 rounded-lg border border-rose-500/30 bg-rose-500/10 px-4 py-2 text-xs text-rose-200">
+          <div className="fixed bottom-4 left-1/2 -translate-x-1/2 rounded-lg border border-accent-secondary/30 bg-accent-secondary/10 px-4 py-2 text-xs text-accent-secondary">
             {authError}
           </div>
         )}

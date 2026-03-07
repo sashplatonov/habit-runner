@@ -280,12 +280,12 @@ export function Stats({ onNavigate }: StatsProps) {
           </div>
           <div className="bg-bg-secondary border border-border rounded-lg p-3">
             <div className="flex items-center gap-1 mb-2">
-              <FlameIcon size={10} className="text-orange-400" />
+              <FlameIcon size={10} className="text-accent-secondary" />
               <span className="text-[9px] font-mono text-muted uppercase tracking-wider">
                 Best
               </span>
             </div>
-            <div className="text-xl font-mono font-bold text-orange-400">
+            <div className="text-xl font-mono font-bold text-accent-secondary">
               {bestStreak}d
             </div>
           </div>
@@ -548,8 +548,8 @@ export function Stats({ onNavigate }: StatsProps) {
                       </div>
                     </div>
                     <div className="flex items-center gap-1 flex-shrink-0">
-                      <FlameIcon size={10} className="text-orange-400" />
-                      <span className="text-[10px] font-mono text-orange-400">
+                      <FlameIcon size={10} className="text-accent-secondary" />
+                      <span className="text-[10px] font-mono text-accent-secondary">
                         {stats.currentStreak}
                       </span>
                     </div>

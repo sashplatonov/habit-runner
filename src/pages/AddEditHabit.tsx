@@ -269,17 +269,17 @@ export function AddEditHabit({ habitId, onNavigate }: AddEditHabitProps) {
                 }}
                 placeholder="e.g. Deep Work"
                 maxLength={40}
-                className="w-full bg-bg-secondary border border-border rounded-lg px-3 py-2.5 text-sm text-foreground placeholder-border-hover font-medium focus:outline-none focus:border-accent/50 focus:shadow-[0_0_12px_rgba(0,212,255,0.1)] transition-all"
+                className="w-full bg-bg-secondary border border-border rounded-lg px-3 py-2.5 text-sm text-foreground placeholder-border-hover font-medium focus:outline-none focus:border-accent/50 focus:shadow-[0_0_12px_var(--glow)] transition-all"
                 style={
                 errors.name ?
                 {
-                  borderColor: '#ef4444'
+                  borderColor: 'var(--accent-secondary)'
                 } :
                 {}
                 } />
 
               {errors.name &&
-              <p className="text-[10px] font-mono text-red-400 mt-1">
+              <p className="text-[10px] font-mono text-accent-secondary mt-1">
                   {errors.name}
                 </p>
               }
@@ -294,7 +294,7 @@ export function AddEditHabit({ habitId, onNavigate }: AddEditHabitProps) {
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder="Brief description..."
                 maxLength={100}
-                className="w-full bg-bg-secondary border border-border rounded-lg px-3 py-2.5 text-sm text-foreground placeholder-border-hover focus:outline-none focus:border-accent/50 focus:shadow-[0_0_12px_rgba(0,212,255,0.1)] transition-all" />
+                className="w-full bg-bg-secondary border border-border rounded-lg px-3 py-2.5 text-sm text-foreground placeholder-border-hover focus:outline-none focus:border-accent/50 focus:shadow-[0_0_12px_var(--glow)] transition-all" />
 
             </div>
           </div>
@@ -368,7 +368,7 @@ export function AddEditHabit({ habitId, onNavigate }: AddEditHabitProps) {
               )}
               </div>
               {errors.customDays &&
-            <p className="text-[10px] font-mono text-red-400 mt-1">
+            <p className="text-[10px] font-mono text-accent-secondary mt-1">
                   {errors.customDays}
                 </p>
             }

@@ -108,7 +108,7 @@ export function HabitDetail({ habitId, onNavigate }: HabitDetailProps) {
           <div className="flex items-center gap-2">
             <button
               onClick={handleToggleArchive}
-              className={`p-1.5 rounded border transition-colors ${habit.archived ? 'border-orange-400/30 text-orange-400 bg-orange-400/10 hover:bg-orange-400/20' : 'border-border text-muted hover:text-foreground hover:border-border-hover'}`}
+              className={`p-1.5 rounded border transition-colors ${habit.archived ? 'border-accent-secondary/30 text-accent-secondary bg-accent-secondary/10 hover:bg-accent-secondary/20' : 'border-border text-muted hover:text-foreground hover:border-border-hover'}`}
               title={habit.archived ? 'Unarchive' : 'Archive'}>
 
               {habit.archived ?
@@ -147,12 +147,12 @@ export function HabitDetail({ habitId, onNavigate }: HabitDetailProps) {
         <div className="grid grid-cols-4 gap-2">
           <div className="bg-bg-secondary border border-border rounded-lg p-3">
             <div className="flex items-center gap-1 mb-2">
-              <FlameIcon size={10} className="text-orange-400" />
+              <FlameIcon size={10} className="text-accent-secondary" />
               <span className="text-[9px] font-mono text-muted uppercase tracking-wider">
                 Streak
               </span>
             </div>
-            <div className="text-xl font-mono font-bold text-orange-400">
+            <div className="text-xl font-mono font-bold text-accent-secondary">
               {stats.currentStreak}
             </div>
             <div className="text-[9px] font-mono text-muted">days</div>
@@ -242,14 +242,11 @@ export function HabitDetail({ habitId, onNavigate }: HabitDetailProps) {
               {habit.tags.map((tag) =>
               <span
                 key={tag}
-                className="text-[10px] font-mono px-2 py-0.5 rounded border"
-                style={{
-                  color: accent.hex,
-                  borderColor: accent.glow,
-                  backgroundColor: accent.dim
-                }}>
-
-                  #{tag}
+                className="inline-flex items-center gap-1 text-[10px] font-mono px-2 py-0.5 rounded border border-border bg-bg-card text-foreground">
+                  <span
+                  className="w-1.5 h-1.5 rounded-full"
+                  style={{ backgroundColor: accent.hex }} />
+                  {tag}
                 </span>
               )}
             </div>
@@ -382,7 +379,7 @@ export function HabitDetail({ habitId, onNavigate }: HabitDetailProps) {
           {!confirmDelete ?
           <button
             onClick={() => setConfirmDelete(true)}
-            className="flex items-center gap-2 text-xs font-mono text-red-400 hover:text-red-300 border border-red-400/20 hover:border-red-400/40 px-3 py-2 rounded transition-colors">
+            className="flex items-center gap-2 text-xs font-mono text-accent hover:text-accent-secondary/80 border border-accent/20 hover:border-accent/40 px-3 py-2 rounded transition-colors">
 
               <TrashIcon size={12} />
               Delete habit
@@ -394,7 +391,7 @@ export function HabitDetail({ habitId, onNavigate }: HabitDetailProps) {
               </span>
               <button
               onClick={handleDelete}
-              className="text-xs font-mono text-red-400 border border-red-400/40 px-3 py-1.5 rounded hover:bg-red-400/10 transition-colors">
+              className="text-xs font-mono text-accent border border-accent/40 px-3 py-1.5 rounded hover:bg-accent/10 transition-colors">
 
                 Delete
               </button>

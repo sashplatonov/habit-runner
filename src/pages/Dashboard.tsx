@@ -90,9 +90,11 @@ function HabitRow({
             {habit.tags.slice(0, 2).map((tag) =>
             <span
               key={tag}
-              className={`text-[10px] font-mono ${accent.textClass} opacity-70`}>
-
-                #{tag}
+              className="inline-flex items-center gap-1 text-[10px] font-mono text-foreground bg-bg-card border border-border rounded px-1.5 py-0.5">
+                <span
+                className="w-1.5 h-1.5 rounded-full"
+                style={{ backgroundColor: accent.hex }} />
+                {tag}
               </span>
             )}
           </div>
@@ -123,8 +125,8 @@ function HabitRow({
       <div className="hidden md:flex items-center gap-1 w-16 justify-end">
         {streak > 0 &&
         <>
-            <FlameIcon size={11} className="text-orange-400" />
-            <span className="text-[11px] font-mono text-orange-400">
+            <FlameIcon size={11} className="text-accent-secondary" />
+            <span className="text-[11px] font-mono text-accent-secondary">
               {streak}
             </span>
           </>
@@ -249,12 +251,12 @@ export function Dashboard({ onNavigate }: DashboardProps) {
             </div>
             <div className="bg-bg-secondary border border-border rounded-lg px-3 py-2">
               <div className="flex items-center gap-1.5 mb-1">
-                <FlameIcon size={10} className="text-orange-400" />
+                <FlameIcon size={10} className="text-accent-secondary" />
                 <span className="text-[10px] font-mono text-muted uppercase tracking-wider">
                   Streak
                 </span>
               </div>
-              <span className="text-lg font-mono font-bold text-orange-400">
+              <span className="text-lg font-mono font-bold text-accent-secondary">
                 {overallStreak}d
               </span>
             </div>
@@ -306,7 +308,7 @@ export function Dashboard({ onNavigate }: DashboardProps) {
                 {selectedTags.length > 0 && (
                   <button
                     onClick={() => setSelectedTags([])}
-                    className="text-[10px] font-mono px-2 py-1 rounded border whitespace-nowrap bg-bg-secondary border-red-400/30 text-red-400 hover:bg-red-400/10 transition-colors"
+                    className="text-[10px] font-mono px-2 py-1 rounded border whitespace-nowrap bg-bg-secondary border-accent/30 text-accent hover:bg-accent/10 transition-colors"
                   >
                     Clear tags
                   </button>
