@@ -33,7 +33,10 @@ module.exports = {
     ],
     'react-refresh/only-export-components': [
       'error',
-      { allowConstantExport: true },
+      {
+        allowConstantExport: true,
+        allowExportNames: ['useNavigate', 'useLocation', 'useParams'],
+      },
     ],
   },
   overrides: [

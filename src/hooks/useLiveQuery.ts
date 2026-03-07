@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 
 export function useLiveQuery<T>(query: () => Promise<T>, dependencies: unknown[] = []): T | undefined {
   const [value, setValue] = useState<T>();
+  const dependenciesKey = JSON.stringify(dependencies);
 
   useEffect(() => {
     let active = true;
@@ -18,8 +19,7 @@ export function useLiveQuery<T>(query: () => Promise<T>, dependencies: unknown[]
       active = false;
       subscription.unsubscribe();
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, dependencies);
+  }, [query, dependenciesKey]);
 
   return value;
 }

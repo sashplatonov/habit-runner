@@ -21,8 +21,17 @@ export class ErrorBoundary extends Component<Props, State> {
 
   componentDidCatch(error: Error, info: ErrorInfo): void {
     this.setState({ info });
-    // eslint-disable-next-line no-console
-    console.error('Uncaught error in UI', error, info);
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(
+        new CustomEvent('app-ui-error', {
+          detail: {
+            message: error.message,
+            stack: error.stack,
+            componentStack: info.componentStack
+          }
+        })
+      );
+    }
   }
 
   render() {
