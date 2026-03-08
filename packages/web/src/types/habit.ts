@@ -10,7 +10,8 @@ export interface Habit {
   frequency: HabitFrequency;
   customDays?: number[]; // 0=Sun, 1=Mon, ... 6=Sat
   targetStreak: number;
-  completions: Record<string, boolean>; // "YYYY-MM-DD" -> true
+  dailyTarget: number;
+  completions: Record<string, number>; // "YYYY-MM-DD" -> completion count
   freezeDays: string[];
   createdAt: string;
   updatedAt?: string;

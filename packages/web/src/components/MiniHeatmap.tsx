@@ -3,7 +3,8 @@ import { HABIT_COLOR_THEMES } from '@/lib/theme/habit-colors';
 import type { HabitColor } from '@/types/habit';
 
 interface MiniHeatmapProps {
-  completions: Record<string, boolean>;
+  completions: Record<string, number>;
+  dailyTarget?: number;
   color: HabitColor;
 }
 
@@ -11,7 +12,7 @@ function formatDate(date: Date): string {
   return date.toISOString().split('T')[0];
 }
 
-export function MiniHeatmap({ completions, color }: MiniHeatmapProps) {
+export function MiniHeatmap({ completions, dailyTarget = 1, color }: MiniHeatmapProps) {
   const today = new Date();
   const days = [];
 
@@ -35,7 +36,7 @@ export function MiniHeatmap({ completions, color }: MiniHeatmapProps) {
       ))}
       {days.map((date) => {
         const dateStr = formatDate(date);
-        const isCompleted = !!completions[dateStr];
+        const isCompleted = (completions[dateStr] ?? 0) >= dailyTarget;
         return (
           <div
             key={dateStr}

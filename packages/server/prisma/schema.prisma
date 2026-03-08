@@ -28,6 +28,7 @@ model Habit {
   frequency   String
   customDays  Json?
   targetStreak Int
+  dailyTarget Int       @default(1)
   tags        Json?
   archived    Boolean   @default(false)
   sortOrder   Int       @default(0)
@@ -45,6 +46,7 @@ model Checkin {
   userId    String
   date      DateTime
   done      Boolean
+  count     Int      @default(1)
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt
   version   Int      @default(1)

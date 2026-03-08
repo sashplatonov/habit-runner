@@ -28,10 +28,11 @@ export interface HabitEntity {
   icon: string;
   frequency: string;
   targetStreak: number;
+  dailyTarget: number;
   tags: string[];
   customDays?: number[];
   archived: boolean;
-  completions: Record<string, boolean>;
+  completions: Record<string, number>;
   createdAt: string;
   updatedAt: string;
   version: number;
@@ -47,6 +48,7 @@ export interface CheckinEntity {
   habitId: string;
   date: string;
   done: boolean;
+  count?: number;
   updatedAt: string;
   version: number;
 }
@@ -118,6 +120,41 @@ export class HabbitRunnerDb extends Dexie {
           if (!Object.prototype.hasOwnProperty.call(record, 'reminderEnabled')) {
             record.reminderEnabled = true;
           }
+          if (!Object.prototype.hasOwnProperty.call(record, 'dailyTarget')) {
+            record.dailyTarget = 1;
+          }
+        })
+      );
+
+    this.version(3)
+      .stores({
+        habits: 'id, userId, updatedAt, version, sortOrder',
+        checkins: 'id, userId, habitId, date, updatedAt, version',
+        tombstones: 'id, userId, entity, entityId, deletedAt',
+        sync_meta: 'id, status',
+        outbox: 'id, userId, entity, type, status'
+      })
+      .upgrade((transaction) =>
+        transaction.checkins.toCollection().modify((record) => {
+          if (!Object.prototype.hasOwnProperty.call(record, 'count')) {
+            record.count = 1;
+          }
+        })
+      );
+
+    this.version(4)
+      .stores({
+        habits: 'id, userId, updatedAt, version, sortOrder',
+        checkins: 'id, userId, habitId, date, updatedAt, version',
+        tombstones: 'id, userId, entity, entityId, deletedAt',
+        sync_meta: 'id, status',
+        outbox: 'id, userId, entity, type, status'
+      })
+      .upgrade((transaction) =>
+        transaction.habits.toCollection().modify((record) => {
+          if (!Object.prototype.hasOwnProperty.call(record, 'dailyTarget')) {
+            record.dailyTarget = 1;
+          }
         })
       );
   }
@@ -135,6 +172,7 @@ export function habitEntityToDomain(entity: HabitEntity): Habit {
       frequency: entity.frequency as Habit['frequency'],
       customDays: entity.customDays,
       targetStreak: entity.targetStreak,
+      dailyTarget: Math.max(1, Math.trunc(entity.dailyTarget ?? 1)),
       tags: entity.tags,
       completions: { ...entity.completions },
       freezeDays: entity.freezeDays ?? [],
@@ -159,6 +197,7 @@ export function domainToHabitEntity(habit: Habit): HabitEntity {
     icon: habit.icon,
     frequency: habit.frequency,
     targetStreak: habit.targetStreak,
+    dailyTarget: Math.max(1, Math.trunc(habit.dailyTarget ?? 1)),
     tags: habit.tags,
     customDays: habit.customDays,
     archived: habit.archived,
@@ -205,7 +244,8 @@ export async function addTombstone(
 export async function upsertCheckinInDb(
   habitId: string,
   date: string,
-  done: boolean
+  done: boolean,
+  count = 1
 ): Promise<void> {
   const userId = getCurrentUserId();
   const normalized = date;
@@ -223,8 +263,10 @@ export async function upsertCheckinInDb(
       await db.checkins.delete(existing.id);
       return;
     }
+    const normalizedCount = Math.max(1, Math.trunc(count));
     await db.checkins.update(existing.id, {
       done,
+      count: normalizedCount,
       updatedAt: new Date().toISOString(),
       version: Math.max(existing.version, 1) + 1
     });
@@ -232,12 +274,14 @@ export async function upsertCheckinInDb(
   }
 
   if (!done) {return;}
+  const normalizedCount = Math.max(1, Math.trunc(count));
   await db.checkins.add({
     id: generateId(),
     userId,
     habitId,
     date: normalized,
     done,
+    count: normalizedCount,
     updatedAt: new Date().toISOString(),
     version: 1
   });
@@ -374,6 +418,7 @@ export async function applyPullResponse(
       icon: habit.icon,
       frequency: habit.frequency,
       targetStreak: habit.targetStreak,
+      dailyTarget: Math.max(1, Math.trunc(habit.dailyTarget ?? 1)),
       tags: (habit.tags as string[]) ?? [],
       customDays: Array.isArray(habit.customDays) ?
       habit.customDays.filter((day): day is number => typeof day === 'number') :
@@ -408,6 +453,7 @@ export async function applyPullResponse(
       habitId: checkin.habitId,
       date: checkin.date,
       done: checkin.done,
+      count: Math.max(1, Math.trunc(checkin.count ?? 1)),
       updatedAt: checkin.updatedAt,
       version: checkin.version
     });

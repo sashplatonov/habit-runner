@@ -13,6 +13,7 @@ export interface HabitDto {
   frequency: string;
   customDays?: unknown;
   targetStreak: number;
+  dailyTarget?: number;
   tags?: unknown;
   archived: boolean;
   createdAt: string;
@@ -28,6 +29,7 @@ export interface CheckinDto {
   habitId: string;
   date: string;
   done: boolean;
+  count?: number;
   updatedAt: string;
   version: number;
 }

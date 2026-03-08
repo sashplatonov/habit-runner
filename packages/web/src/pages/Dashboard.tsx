@@ -25,7 +25,7 @@ const parseReminderMinutes = (value: string): number | null => {
 
 export function Dashboard() {
   const navigate = useNavigate();
-  const { habits, toggleCompletion, addHabit, updateHabit, getTodayCompletionRate, formatDate } = useHabits();
+  const { habits, setCompletionCount, addHabit, updateHabit, getTodayCompletionRate, formatDate } = useHabits();
   const [draggedHabitId, setDraggedHabitId] = useState<string | null>(null);
   const [dragOverHabitId, setDragOverHabitId] = useState<string | null>(null);
   const [dropHint, setDropHint] = useState<{ habitId: string; position: 'above' | 'below' } | null>(null);
@@ -221,7 +221,8 @@ export function Dashboard() {
           tags: template.tags,
           frequency: template.frequency,
           customDays: template.customDays,
-          targetStreak: template.targetStreak
+          targetStreak: template.targetStreak,
+          dailyTarget: 1
         });
         navigate(`/habit/${newId}`);
       } finally {
@@ -235,7 +236,7 @@ export function Dashboard() {
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const today = formatDate(new Date());
   const todayRate = getTodayCompletionRate();
-  const completedToday = habits.filter((h) => h.completions[today]).length;
+  const completedToday = habits.filter((h) => (h.completions[today] ?? 0) >= Math.max(1, h.dailyTarget ?? 1)).length;
   const totalActive = habits.length;
   const dateStr = formatAppDate(new Date(), { weekday: 'long', month: 'short', day: 'numeric' });
 
@@ -250,10 +251,10 @@ export function Dashboard() {
   const filtered = useMemo(() => {
     return habits.filter((h) => {
       if (filter === 'pending') {
-        return !h.completions[today];
+        return (h.completions[today] ?? 0) < Math.max(1, h.dailyTarget ?? 1);
       }
       if (filter === 'done') {
-        return !!h.completions[today];
+        return (h.completions[today] ?? 0) >= Math.max(1, h.dailyTarget ?? 1);
       }
       if (selectedTags.length > 0 && !selectedTags.some((tag) => h.tags.includes(tag))) {
         return false;
@@ -264,18 +265,20 @@ export function Dashboard() {
 
   const handleToggle = useCallback(
     async (habit: Habit) => {
-      const wasDone = habit.completions[today];
-      await toggleCompletion(habit.id, today);
+      const target = Math.max(1, habit.dailyTarget ?? 1);
+      const previousCount = habit.completions[today] ?? 0;
+      const nextCount = previousCount >= target ? 0 : previousCount + 1;
+      await setCompletionCount(habit.id, today, nextCount);
       push({
-        message: wasDone ? `Unchecked: ${habit.name}` : `Checked: ${habit.name}`,
+        message: nextCount >= target ? `Done: ${habit.name} (${nextCount}/${target})` : `Progress: ${habit.name} (${nextCount}/${target})`,
         actionLabel: 'Undo',
         onUndo: async () => {
-          await toggleCompletion(habit.id, today);
+          await setCompletionCount(habit.id, today, previousCount);
         }
       });
       handleDismissReminder(habit.id);
     },
-    [push, today, toggleCompletion, handleDismissReminder]
+    [push, setCompletionCount, today, handleDismissReminder]
   );
 
   const handleExport = useCallback(() => {
@@ -285,8 +288,8 @@ export function Dashboard() {
     const escape = (value: string) => `"${value.replace(/"/g, '""')}"`;
     const rows = habits.map((habit) => {
       const completionDates = Object.entries(habit.completions)
-        .filter(([, done]) => done)
-        .map(([date]) => date);
+        .filter(([, count]) => count > 0)
+        .map(([date, count]) => ({ date, count }));
       return [
         escape(habit.name),
         escape(habit.description),
@@ -315,7 +318,7 @@ export function Dashboard() {
   d.setDate(d.getDate() - 1);
   for (let i = 0; i < 30; i++) {
     const key = d.toISOString().split('T')[0];
-    const allDone = habits.every((h) => h.completions[key]);
+    const allDone = habits.every((h) => (h.completions[key] ?? 0) >= Math.max(1, h.dailyTarget ?? 1));
     if (allDone) {
       overallStreak++;
       d.setDate(d.getDate() - 1);

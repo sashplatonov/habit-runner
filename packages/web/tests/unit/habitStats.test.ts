@@ -14,12 +14,12 @@ test('formatDate returns YYYY-MM-DD', () => {
 
 test('calculateStreak handles current and longest streaks', () => {
   const referenceDate = new Date('2026-03-06T08:00:00.000Z');
-  const completions: Record<string, boolean> = {
-    '2026-03-06': true,
-    '2026-03-05': true,
-    '2026-03-04': true,
-    '2026-03-02': true,
-    '2026-03-01': true
+  const completions: Record<string, number> = {
+    '2026-03-06': 1,
+    '2026-03-05': 1,
+    '2026-03-04': 1,
+    '2026-03-02': 1,
+    '2026-03-01': 1
   };
 
   const result = calculateStreak(completions, referenceDate);
@@ -28,10 +28,10 @@ test('calculateStreak handles current and longest streaks', () => {
 
 test('calculateStreak keeps current streak at zero when today is incomplete', () => {
   const referenceDate = new Date('2026-03-06T08:00:00.000Z');
-  const completions: Record<string, boolean> = {
-    '2026-03-05': true,
-    '2026-03-04': true,
-    '2026-03-03': true
+  const completions: Record<string, number> = {
+    '2026-03-05': 1,
+    '2026-03-04': 1,
+    '2026-03-03': 1
   };
 
   const result = calculateStreak(completions, referenceDate);
@@ -39,21 +39,21 @@ test('calculateStreak keeps current streak at zero when today is incomplete', ()
 });
 
 test('countCompletedDays counts only truthy values', () => {
-  const completions: Record<string, boolean> = {
-    '2026-03-01': true,
-    '2026-03-02': false,
-    '2026-03-03': true
+  const completions: Record<string, number> = {
+    '2026-03-01': 1,
+    '2026-03-02': 0,
+    '2026-03-03': 2
   };
   expect(countCompletedDays(completions)).toBe(2);
 });
 
 test('buildWeeklyCompletionData aggregates days by week window', () => {
   const referenceDate = new Date('2026-03-06T08:00:00.000Z');
-  const completions: Record<string, boolean> = {
-    '2026-03-06': true,
-    '2026-03-05': true,
-    '2026-03-02': true,
-    '2026-02-26': true
+  const completions: Record<string, number> = {
+    '2026-03-06': 1,
+    '2026-03-05': 1,
+    '2026-03-02': 1,
+    '2026-02-26': 1
   };
   const result = buildWeeklyCompletionData(completions, 2, referenceDate);
 
@@ -64,15 +64,15 @@ test('buildWeeklyCompletionData aggregates days by week window', () => {
 
 test('buildMonthlyCompletionRates returns rounded percentage', () => {
   const referenceDate = new Date('2026-03-15T08:00:00.000Z');
-  const completions: Record<string, boolean> = {
-    '2026-03-01': true,
-    '2026-03-03': true,
-    '2026-03-04': true,
-    '2026-03-08': true,
-    '2026-03-14': true,
-    '2026-02-01': true,
-    '2026-02-03': true,
-    '2026-02-05': true
+  const completions: Record<string, number> = {
+    '2026-03-01': 1,
+    '2026-03-03': 1,
+    '2026-03-04': 1,
+    '2026-03-08': 1,
+    '2026-03-14': 1,
+    '2026-02-01': 1,
+    '2026-02-03': 1,
+    '2026-02-05': 1
   };
   const result = buildMonthlyCompletionRates(completions, 2, referenceDate);
 

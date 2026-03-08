@@ -19,8 +19,9 @@ export function formatDate(date: Date): string {
 }
 
 export function calculateStreak(
-  completions: Record<string, boolean>,
-  referenceDate = new Date()
+  completions: Record<string, number>,
+  referenceDate = new Date(),
+  dailyTarget = 1
 ): { current: number; longest: number } {
   const today = new Date(referenceDate);
   let current = 0;
@@ -31,13 +32,13 @@ export function calculateStreak(
     const day = new Date(today);
     day.setDate(day.getDate() - i);
     const key = formatDate(day);
-    if (completions[key]) {
+    if ((completions[key] ?? 0) >= dailyTarget) {
       if (i === 0 || current > 0) {current++;}
     } else {
       if (i === 0) {
         const yesterday = new Date(today);
         yesterday.setDate(yesterday.getDate() - 1);
-        if (!completions[formatDate(yesterday)]) {break;}
+        if ((completions[formatDate(yesterday)] ?? 0) < dailyTarget) {break;}
       } else {
         break;
       }
@@ -45,7 +46,7 @@ export function calculateStreak(
   }
 
   const sortedDates = Object.keys(completions)
-    .filter((k) => completions[k])
+    .filter((k) => (completions[k] ?? 0) >= dailyTarget)
     .sort();
 
   for (let i = 0; i < sortedDates.length; i++) {
@@ -67,14 +68,15 @@ export function calculateStreak(
   return { current, longest };
 }
 
-export function countCompletedDays(completions: Record<string, boolean>): number {
-  return Object.values(completions).filter(Boolean).length;
+export function countCompletedDays(completions: Record<string, number>, dailyTarget = 1): number {
+  return Object.values(completions).filter((count) => (count ?? 0) >= dailyTarget).length;
 }
 
 export function buildWeeklyCompletionData(
-  completions: Record<string, boolean>,
+  completions: Record<string, number>,
   weeks = 12,
-  referenceDate = new Date()
+  referenceDate = new Date(),
+  dailyTarget = 1
 ): { week: string; count: number }[] {
   const today = new Date(referenceDate);
   const data = [];
@@ -85,7 +87,7 @@ export function buildWeeklyCompletionData(
       const date = new Date(today);
       date.setDate(date.getDate() - w * 7 - d);
       const key = formatDate(date);
-      if (completions[key]) {count++;}
+      if ((completions[key] ?? 0) >= dailyTarget) {count++;}
     }
     const weekStart = new Date(today);
     weekStart.setDate(weekStart.getDate() - w * 7);
@@ -99,9 +101,10 @@ export function buildWeeklyCompletionData(
 }
 
 export function buildMonthlyCompletionRates(
-  completions: Record<string, boolean>,
+  completions: Record<string, number>,
   months = 6,
-  referenceDate = new Date()
+  referenceDate = new Date(),
+  dailyTarget = 1
 ): { month: string; rate: number }[] {
   const today = new Date(referenceDate);
   const data = [];
@@ -122,7 +125,7 @@ export function buildMonthlyCompletionRates(
       );
       if (date > today) {break;}
       const key = formatDate(date);
-      if (completions[key]) {completed++;}
+      if ((completions[key] ?? 0) >= dailyTarget) {completed++;}
     }
     const daysElapsed =
       monthDate.getMonth() === today.getMonth() ? today.getDate() : daysInMonth;

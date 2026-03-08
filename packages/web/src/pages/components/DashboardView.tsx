@@ -42,14 +42,16 @@ function HabitRow({
   isDropTarget
 }: HabitRowProps) {
   const today = new Date().toISOString().split('T')[0];
-  const completed = !!habit.completions[today];
+  const target = Math.max(1, habit.dailyTarget ?? 1);
+  const todayCount = habit.completions[today] ?? 0;
+  const completed = todayCount >= target;
   const accent = HABIT_COLOR_THEMES[habit.color];
 
   let streak = 0;
   const d = new Date();
   for (let i = 0; i < 366; i++) {
     const key = d.toISOString().split('T')[0];
-    if (!habit.completions[key]) {
+    if ((habit.completions[key] ?? 0) < target) {
       break;
     }
     streak++;
@@ -59,14 +61,14 @@ function HabitRow({
   const last7 = Array.from({ length: 7 }, (_, i) => {
     const date = new Date();
     date.setDate(date.getDate() - (6 - i));
-    return !!habit.completions[date.toISOString().split('T')[0]];
+    return (habit.completions[date.toISOString().split('T')[0]] ?? 0) >= target;
   });
 
   let rate30 = 0;
   for (let i = 0; i < 30; i++) {
     const date = new Date();
     date.setDate(date.getDate() - i);
-    if (habit.completions[date.toISOString().split('T')[0]]) {
+    if ((habit.completions[date.toISOString().split('T')[0]] ?? 0) >= target) {
       rate30++;
     }
   }
@@ -123,6 +125,9 @@ function HabitRow({
           <div className={`text-sm font-medium ${completed ? 'text-muted line-through' : 'text-foreground'} truncate`}>
             {habit.name}
           </div>
+          <div className="text-[10px] font-mono text-muted mt-0.5">
+            {todayCount}/{target} today
+          </div>
           <div className="flex items-center gap-2 mt-0.5">
             {habit.tags.slice(0, 2).map((tag) => (
               <span
@@ -138,7 +143,7 @@ function HabitRow({
       </button>
 
       <div className="flex items-center justify-end mr-1" aria-hidden>
-        <MiniHeatmap completions={habit.completions} color={habit.color} />
+        <MiniHeatmap completions={habit.completions} dailyTarget={target} color={habit.color} />
       </div>
 
       <div className="flex items-end gap-[1px] h-4 sm:h-5" aria-hidden>
@@ -369,7 +374,7 @@ export function DashboardView({
                 {f}
                 {f === 'pending' && (
                   <span className="ml-1.5 text-[9px] bg-border px-1 py-0.5 rounded font-mono">
-                    {habits.filter((h) => !h.completions[today]).length}
+                    {habits.filter((h) => (h.completions[today] ?? 0) < Math.max(1, h.dailyTarget ?? 1)).length}
                   </span>
                 )}
               </button>

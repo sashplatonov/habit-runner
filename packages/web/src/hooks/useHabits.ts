@@ -26,7 +26,7 @@ import { buildCompletionsByHabitId } from '@/hooks/useHabits.helpers';
 type ToggleCompletionResult = {
   habitId: string;
   date: string;
-  done: boolean;
+  count: number;
 };
 
 type HabitUpsertInput = Omit<Habit, 'id' | 'completions' | 'createdAt'> & {
@@ -60,7 +60,7 @@ export function useHabits() {
       const domain = habitEntityToDomain(entity);
       const baseCompletions = { ...(completionsByHabitId[domain.id] ?? {}) };
       (domain.freezeDays ?? []).forEach((date) => {
-        baseCompletions[date] = true;
+        baseCompletions[date] = Math.max(1, baseCompletions[date] ?? 1);
       });
       return {
         ...domain,
@@ -96,43 +96,47 @@ export function useHabits() {
             record.date === key && record.userId === userId && record.done
         )
         .first();
-      const hadCompletion = Boolean(existingCheckin);
+      const currentCount = existingCheckin && existingCheckin.done
+        ? Math.max(1, Math.trunc(existingCheckin.count ?? 1))
+        : 0;
+      const nextCount = currentCount > 0 ? 0 : 1;
 
-    if (hadCompletion) {
-      await deleteCheckinInDb(habitId, key);
-    } else {
-      await upsertCheckinInDb(habitId, key, true);
-    }
+      if (nextCount > 0) {
+        await upsertCheckinInDb(habitId, key, true, nextCount);
+      } else {
+        await deleteCheckinInDb(habitId, key);
+      }
 
-    const entity = await db.habits.get(habitId);
-    if (!entity) {
-      return {
-        habitId,
-        date: key,
-        done: !hadCompletion
+      const entity = await db.habits.get(habitId);
+      if (!entity) {
+        return {
+          habitId,
+          date: key,
+          count: nextCount
+        };
+      }
+      const base = habitEntityToDomain(entity);
+      const updatedHabit: Habit = {
+        ...base,
+        updatedAt: new Date().toISOString(),
+        version: (entity.version ?? 0) + 1
       };
-    }
-    const base = habitEntityToDomain(entity);
-    const updatedHabit: Habit = {
-      ...base,
-      updatedAt: new Date().toISOString(),
-      version: (entity.version ?? 0) + 1
-    };
 
-    await persistHabitInDb(updatedHabit);
+      await persistHabitInDb(updatedHabit);
 
-      const payload = hadCompletion
+      const payload = nextCount === 0
         ? { habitId, date: key }
         : {
             habitId,
             date: key,
             done: true,
+            count: nextCount,
             version: updatedHabit.version ?? 1
           };
 
       const entry = createOutboxEntry(
         'checkin',
-        hadCompletion ? 'delete' : 'upsert',
+        nextCount === 0 ? 'delete' : 'upsert',
         payload
       );
 
@@ -140,7 +144,7 @@ export function useHabits() {
       return {
         habitId,
         date: key,
-        done: !hadCompletion
+        count: nextCount
       };
     }, []);
 
@@ -151,6 +155,7 @@ export function useHabits() {
       ...data,
       id: generateId(),
       completions: {},
+      dailyTarget: Math.max(1, Math.trunc(data.dailyTarget ?? 1)),
       createdAt: now,
       updatedAt: now,
       version: 1,
@@ -214,14 +219,14 @@ export function useHabits() {
     const habitEntry = createOutboxEntry('habit', 'upsert', habit);
     await enqueueOutboxEntry(habitEntry);
     const completionDates = Object.entries(habit.completions)
-      .filter(([, done]) => done)
-      .map(([date]) => date);
-    for (const date of completionDates) {
-      await upsertCheckinInDb(habit.id, date, true);
+      .filter(([, count]) => count > 0);
+    for (const [date, count] of completionDates) {
+      await upsertCheckinInDb(habit.id, date, true, count);
       const entry = createOutboxEntry('checkin', 'upsert', {
         habitId: habit.id,
         date,
-        done: true
+        done: true,
+        count
       });
       await enqueueOutboxEntry(entry);
     }
@@ -241,8 +246,9 @@ export function useHabits() {
           monthlyData: []
         };}
 
-      const { current, longest } = calculateStreak(habit.completions);
-      const completedDays = countCompletedDays(habit.completions);
+      const dailyTarget = Math.max(1, habit.dailyTarget ?? 1);
+      const { current, longest } = calculateStreak(habit.completions, new Date(), dailyTarget);
+      const completedDays = countCompletedDays(habit.completions, dailyTarget);
       const totalDays = Math.max(
         1,
         Math.ceil(
@@ -250,8 +256,8 @@ export function useHabits() {
         )
       );
 
-      const weeklyData = buildWeeklyCompletionData(habit.completions);
-      const monthlyData = buildMonthlyCompletionRates(habit.completions);
+      const weeklyData = buildWeeklyCompletionData(habit.completions, 12, new Date(), dailyTarget);
+      const monthlyData = buildMonthlyCompletionRates(habit.completions, 6, new Date(), dailyTarget);
 
       return {
         totalDays,
@@ -269,14 +275,48 @@ export function useHabits() {
   const getTodayCompletionRate = useCallback(() => {
     const today = formatDate(new Date());
     if (habits.length === 0) {return 0;}
-    const completed = habits.filter((h) => h.completions[today]).length;
+    const completed = habits.filter((h) => (h.completions[today] ?? 0) >= Math.max(1, h.dailyTarget ?? 1)).length;
     return Math.round((completed / habits.length) * 100);
   }, [habits]);
+
+  const setCompletionCount = useCallback(
+    async (habitId: string, date: string, count: number): Promise<ToggleCompletionResult> => {
+      const normalizedCount = Math.max(0, Math.trunc(count));
+      const habit = allHabits.find((item) => item.id === habitId);
+      const maxCount = Math.max(1, habit?.dailyTarget ?? 1);
+      const clampedCount = Math.min(normalizedCount, maxCount);
+      if (clampedCount > 0) {
+        await upsertCheckinInDb(habitId, date, true, clampedCount);
+      } else {
+        await deleteCheckinInDb(habitId, date);
+      }
+
+      const entity = await db.habits.get(habitId);
+      if (entity) {
+        const updatedHabit: Habit = {
+          ...habitEntityToDomain(entity),
+          updatedAt: new Date().toISOString(),
+          version: (entity.version ?? 0) + 1
+        };
+        await persistHabitInDb(updatedHabit);
+      }
+
+      const payload = clampedCount === 0
+        ? { habitId, date }
+        : { habitId, date, done: true, count: clampedCount };
+      const entry = createOutboxEntry('checkin', clampedCount === 0 ? 'delete' : 'upsert', payload);
+      await enqueueOutboxEntry(entry);
+
+      return { habitId, date, count: clampedCount };
+    },
+    [allHabits]
+  );
 
   return {
     habits,
     allHabits,
     toggleCompletion,
+    setCompletionCount,
     addHabit,
     updateHabit,
     deleteHabit,

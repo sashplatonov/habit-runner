@@ -50,6 +50,7 @@ export const serializeHabit = (habit: {
   frequency: string;
   customDays: unknown;
   targetStreak: number;
+  dailyTarget: number;
   tags: unknown;
   archived: boolean;
   sortOrder: number;
@@ -67,6 +68,7 @@ export const serializeHabit = (habit: {
   frequency: habit.frequency,
   customDays: Array.isArray(habit.customDays) ? habit.customDays as number[] : undefined,
   targetStreak: habit.targetStreak,
+  dailyTarget: habit.dailyTarget,
   tags: Array.isArray(habit.tags) ? habit.tags as string[] : [],
   archived: habit.archived,
   sortOrder: habit.sortOrder,
@@ -82,6 +84,7 @@ export const serializeCheckin = (checkin: {
   habitId: string;
   date: Date;
   done: boolean;
+  count: number;
   updatedAt: Date;
   version: number;
 }): CheckinDto => ({
@@ -89,6 +92,7 @@ export const serializeCheckin = (checkin: {
   habitId: checkin.habitId,
   date: checkin.date.toISOString(),
   done: checkin.done,
+  count: checkin.count,
   updatedAt: checkin.updatedAt.toISOString(),
   version: checkin.version
 });

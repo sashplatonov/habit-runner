@@ -12,6 +12,7 @@ export interface HabitPayload {
   frequency: string;
   customDays?: unknown;
   targetStreak: number;
+  dailyTarget?: number;
   tags?: unknown;
   archived?: boolean;
   version?: number;
@@ -27,6 +28,7 @@ export interface CheckinPayload {
   habitId: string;
   date: string;
   done: boolean;
+  count?: number;
   version?: number;
   updatedAt?: string;
 }
@@ -36,6 +38,7 @@ export interface ExistingHabitRecord {
   updatedAt: Date;
   version: number;
   sortOrder: number;
+  dailyTarget: number;
   reminderTime: string | null;
   reminderEnabled: boolean;
 }

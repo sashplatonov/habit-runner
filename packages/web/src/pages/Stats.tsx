@@ -44,7 +44,7 @@ export function Stats() {
       const date = new Date();
       date.setDate(date.getDate() - (29 - i));
       const key = date.toISOString().split('T')[0];
-      const completed = filteredHabits.filter((h) => h.completions[key]).length;
+      const completed = filteredHabits.filter((h) => (h.completions[key] ?? 0) >= Math.max(1, h.dailyTarget ?? 1)).length;
       return {
         day: formatAppDate(date, { month: 'short', day: 'numeric' }),
         completed,
@@ -68,7 +68,7 @@ export function Stats() {
           const date = new Date(monthDate.getFullYear(), monthDate.getMonth(), d);
           if (date > today) {break;}
           const key = date.toISOString().split('T')[0];
-          if (h.completions[key]) {completed++;}
+          if ((h.completions[key] ?? 0) >= Math.max(1, h.dailyTarget ?? 1)) {completed++;}
         }
         const daysElapsed = monthDate.getMonth() === today.getMonth() ? today.getDate() : daysInMonth;
         entry[h.name] = Math.round((completed / Math.max(1, daysElapsed)) * 100);

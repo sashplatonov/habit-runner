@@ -22,6 +22,7 @@ type HabitRecord = {
   frequency: string;
   customDays?: unknown;
   targetStreak: number;
+  dailyTarget: number;
   tags: unknown;
   archived: boolean;
   createdAt: Date;
@@ -35,6 +36,7 @@ type CheckinRecord = {
   userId: string;
   date: Date;
   done: boolean;
+  count: number;
   updatedAt: Date;
   version: number;
 };
@@ -69,6 +71,7 @@ export class InMemoryPrismaMock {
         icon: 'book-open',
         frequency: 'daily',
         targetStreak: 7,
+        dailyTarget: 1,
         tags: ['mindset'],
         archived: false,
         createdAt: new Date('2026-03-01T10:00:00.000Z'),
@@ -186,7 +189,7 @@ export class InMemoryPrismaMock {
     upsert: async (args: {
       where: { habit_date_unique: { habitId: string; date: Date } };
       create: Omit<CheckinRecord, 'id'>;
-      update: Pick<CheckinRecord, 'done' | 'updatedAt' | 'version'>;
+      update: Pick<CheckinRecord, 'done' | 'count' | 'updatedAt' | 'version'>;
     }) => {
       const { habitId, date } = args.where.habit_date_unique;
       const index = this.checkins.findIndex(

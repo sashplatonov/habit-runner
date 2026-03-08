@@ -18,6 +18,17 @@ const shouldShowEditLoading = (isEdit: boolean, hasExisting: boolean): boolean =
   return !hasExisting;
 };
 
+const TARGET_STREAK_OPTIONS = [7, 14, 21, 30, 60, 90, 180, 365];
+const DAILY_TARGET_OPTIONS = [1, 2, 3, 4, 5];
+
+const getClosestStreakTick = (value: number): number => {
+  return TARGET_STREAK_OPTIONS.reduce((closest, current) => {
+    return Math.abs(current - value) < Math.abs(closest - value)
+      ? current
+      : closest;
+  }, TARGET_STREAK_OPTIONS[0]);
+};
+
 export function AddEditHabit() {
   const navigate = useNavigate();
   const params = useParams();
@@ -36,7 +47,10 @@ export function AddEditHabit() {
   const [customDays, setCustomDays] = useState<number[]>(
     existing?.customDays || [1, 2, 3, 4, 5]
   );
-  const [targetStreak, setTargetStreak] = useState(existing?.targetStreak || 21);
+  const [targetStreak, setTargetStreak] = useState(
+    getClosestStreakTick(existing?.targetStreak ?? 21)
+  );
+  const [dailyTarget, setDailyTarget] = useState(1);
   const [tags, setTags] = useState<string[]>(existing?.tags || []);
   const [tagInput, setTagInput] = useState('');
   const [reminderTime, setReminderTime] = useState(existing?.reminderTime || '');
@@ -45,6 +59,24 @@ export function AddEditHabit() {
   );
   const [errors, setErrors] = useState<Record<string, string>>({});
   const selectedColor = COLORS.find((c) => c.value === color) ?? COLORS[0];
+  const currentStreakIndex = Math.max(
+    0,
+    TARGET_STREAK_OPTIONS.indexOf(targetStreak)
+  );
+  const canDecreaseStreak = currentStreakIndex > 0;
+  const canIncreaseStreak = currentStreakIndex < TARGET_STREAK_OPTIONS.length - 1;
+  const decreaseTargetStreak = () => {
+    if (!canDecreaseStreak) {
+      return;
+    }
+    setTargetStreak(TARGET_STREAK_OPTIONS[currentStreakIndex - 1]);
+  };
+  const increaseTargetStreak = () => {
+    if (!canIncreaseStreak) {
+      return;
+    }
+    setTargetStreak(TARGET_STREAK_OPTIONS[currentStreakIndex + 1]);
+  };
 
   useEffect(() => {
     if (!isEdit || !existing) {
@@ -56,7 +88,8 @@ export function AddEditHabit() {
     setIcon(existing.icon);
     setFrequency(existing.frequency);
     setCustomDays(existing.customDays ?? [1, 2, 3, 4, 5]);
-    setTargetStreak(existing.targetStreak);
+    setTargetStreak(getClosestStreakTick(existing.targetStreak));
+    setDailyTarget(existing.dailyTarget ?? 1);
     setTags(existing.tags ?? []);
     setReminderTime(existing.reminderTime ?? '');
     setReminderEnabled(existing.reminderEnabled ?? true);
@@ -91,6 +124,7 @@ export function AddEditHabit() {
       frequency,
       customDays: frequency === 'custom' ? customDays : undefined,
       targetStreak,
+      dailyTarget: Math.max(1, Math.trunc(dailyTarget)),
       archived: existing?.archived ?? false,
       reminderTime: reminderTime || undefined,
       reminderEnabled
@@ -322,22 +356,65 @@ export function AddEditHabit() {
               {targetStreak} days
             </span>
           </label>
-          <input
-            type="range"
-            min={7}
-            max={365}
-            step={7}
-            value={targetStreak}
-            onChange={(e) => setTargetStreak(Number(e.target.value))}
-            className="w-full h-1 bg-border rounded-full appearance-none cursor-pointer"
-            style={{
-              accentColor: selectedColor.hex
-            }} />
-
-          <div className="flex justify-between mt-1">
-            <span className="text-[9px] font-mono text-muted">7d</span>
-            <span className="text-[9px] font-mono text-muted">365d</span>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={decreaseTargetStreak}
+              disabled={!canDecreaseStreak}
+              className="h-8 min-w-8 px-2 rounded-lg border border-border bg-bg-secondary text-xs font-mono text-muted hover:text-foreground hover:border-border-hover disabled:opacity-40 disabled:hover:border-border disabled:hover:text-muted transition"
+            >
+              -
+            </button>
+            <div className="flex-1 grid grid-cols-4 gap-1.5">
+              {TARGET_STREAK_OPTIONS.map((value) => (
+                <button
+                  key={value}
+                  type="button"
+                  onClick={() => setTargetStreak(value)}
+                  className={`h-8 px-2 rounded-lg border text-[10px] font-mono transition ${
+                    targetStreak === value
+                      ? 'border-accent/50 bg-accent/10 text-accent'
+                      : 'border-border bg-bg-secondary text-muted hover:border-border-hover'
+                  }`}
+                >
+                  {value}d
+                </button>
+              ))}
+            </div>
+            <button
+              type="button"
+              onClick={increaseTargetStreak}
+              disabled={!canIncreaseStreak}
+              className="h-8 min-w-8 px-2 rounded-lg border border-border bg-bg-secondary text-xs font-mono text-muted hover:text-foreground hover:border-border-hover disabled:opacity-40 disabled:hover:border-border disabled:hover:text-muted transition"
+            >
+              +
+            </button>
           </div>
+        </div>
+
+        <div>
+          <label className="block text-[10px] font-mono text-muted uppercase tracking-wider mb-2">
+            Daily target
+          </label>
+          <div className="flex items-center gap-2">
+            {DAILY_TARGET_OPTIONS.map((value) => (
+              <button
+                key={value}
+                type="button"
+                onClick={() => setDailyTarget(value)}
+                className={`px-3 py-1.5 rounded-lg border text-[11px] font-mono transition ${
+                  dailyTarget === value
+                    ? 'border-accent/50 bg-accent/10 text-accent'
+                    : 'border-border bg-bg-secondary text-muted hover:border-border-hover'
+                }`}
+              >
+                {value}x/day
+              </button>
+            ))}
+          </div>
+          <p className="text-[9px] font-mono text-muted mt-1">
+            Habit counts as done only when today's completions reach this target.
+          </p>
         </div>
 
         {/* Tags */}

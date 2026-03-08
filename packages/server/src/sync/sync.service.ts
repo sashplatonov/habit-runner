@@ -245,6 +245,7 @@ export class SyncService {
         frequency: payload.frequency,
         customDays: writeValues.customDays as never,
         targetStreak: payload.targetStreak,
+        dailyTarget: writeValues.dailyTarget,
         tags: writeValues.tags as never,
         archived: payload.archived ?? false,
         createdAt: normalizeDate(payload.createdAt),
@@ -262,6 +263,7 @@ export class SyncService {
         frequency: payload.frequency,
         customDays: writeValues.customDays as never,
         targetStreak: payload.targetStreak,
+        dailyTarget: writeValues.dailyTarget,
         tags: writeValues.tags as never,
         archived: payload.archived ?? false,
         sortOrder: writeValues.sortOrder,
@@ -279,6 +281,7 @@ export class SyncService {
   ): {
     nextVersion: number;
     sortOrder: number;
+    dailyTarget: number;
     reminderTime: string | null;
     reminderEnabled: boolean;
     tags: unknown;
@@ -287,6 +290,7 @@ export class SyncService {
     return {
       nextVersion: this.resolveHabitVersion(existing, payload.version),
       sortOrder: this.resolveHabitSortOrder(existing, payload.sortOrder),
+      dailyTarget: this.resolveHabitDailyTarget(existing, payload.dailyTarget),
       reminderTime: this.resolveHabitReminderTime(existing, payload.reminderTime),
       reminderEnabled: this.resolveHabitReminderEnabled(existing, payload.reminderEnabled),
       tags: normalizeTags(payload.tags),
@@ -300,6 +304,13 @@ export class SyncService {
 
   private resolveHabitSortOrder(existing: ExistingHabitRecord | null, payloadSortOrder?: number): number {
     return normalizeSortOrder(payloadSortOrder) ?? existing?.sortOrder ?? 0;
+  }
+
+  private resolveHabitDailyTarget(existing: ExistingHabitRecord | null, payloadDailyTarget?: number): number {
+    if (typeof payloadDailyTarget === 'number' && Number.isFinite(payloadDailyTarget)) {
+      return Math.max(1, Math.trunc(payloadDailyTarget));
+    }
+    return Math.max(1, existing?.dailyTarget ?? 1);
   }
 
   private resolveHabitReminderTime(
@@ -358,23 +369,13 @@ export class SyncService {
     const existing = await tx.checkin.findFirst({
       where: { habitId: payload.habitId, date, userId }
     }) as ExistingCheckinRecord | null;
-    if (
-      existing &&
-      new Date(existing.updatedAt).getTime() > timestamp.getTime()
-    ) {
-      conflicts.push({
-        opId: op.id,
-        reason: 'server already has newer checkin',
-        serverValue: {
-          version: existing.version,
-          updatedAt: existing.updatedAt
-        }
-      });
+    if (this.hasNewerCheckinConflict(existing, timestamp, op.id, conflicts)) {
       return;
     }
 
     const nextVersion =
       Math.max(existing?.version ?? 0, payload.version ?? 0) + 1;
+    const normalizedCount = Math.max(1, Math.trunc(payload.count ?? 1));
 
     await tx.checkin.upsert({
       where: {
@@ -388,17 +389,40 @@ export class SyncService {
         userId,
         date,
         done: payload.done,
+        count: normalizedCount,
         updatedAt: timestamp,
         version: nextVersion
       },
       update: {
         done: payload.done,
+        count: normalizedCount,
         updatedAt: timestamp,
         version: nextVersion
       }
     });
 
     applied.push(op.id);
+  }
+
+  private hasNewerCheckinConflict(
+    existing: ExistingCheckinRecord | null,
+    timestamp: Date,
+    opId: string,
+    conflicts: PushConflict[]
+  ): boolean {
+    if (!existing || new Date(existing.updatedAt).getTime() <= timestamp.getTime()) {
+      return false;
+    }
+
+    conflicts.push({
+      opId,
+      reason: 'server already has newer checkin',
+      serverValue: {
+        version: existing.version,
+        updatedAt: existing.updatedAt
+      }
+    });
+    return true;
   }
 
   private async tryCreateLog(

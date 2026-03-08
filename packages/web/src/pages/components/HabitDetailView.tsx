@@ -24,11 +24,6 @@ import {
 import type { Habit } from '@/types/habit';
 import type { HabitColorTheme } from '@/lib/theme/habit-colors';
 
-type TimeFormat = '12' | '24';
-type NotificationPermissionState = 'default' | 'denied' | 'granted';
-
-const TIME_FORMATS: TimeFormat[] = ['24', '12'];
-
 type HabitStats = {
   currentStreak: number;
   longestStreak: number;
@@ -44,30 +39,15 @@ type HabitDetailViewProps = {
   stats: HabitStats;
   accent: HabitColorTheme;
   completedToday: boolean;
-  reminderInput: string;
-  reminderDraft12: string;
-  reminderDraft24: string;
-  reminderError: string;
-  timeFormat: TimeFormat;
-  reminderEnabled: boolean;
-  isReminderDirty: boolean;
-  notificationSupported: boolean;
-  notificationPermission: NotificationPermissionState;
+  todayCompletionCount: number;
   confirmDelete: boolean;
   isTodayFrozen: boolean;
-  reminderDisplay: string;
   navigate: (to: string) => void;
-  setTimeFormat: (format: TimeFormat) => void;
   setConfirmDelete: (value: boolean) => void;
   handleToggleArchive: () => void;
-  handleToggleCompletion: () => Promise<void>;
+  handleIncrementCompletion: () => Promise<void>;
+  handleDecrementCompletion: () => Promise<void>;
   toggleFreezeToday: () => Promise<void>;
-  handleToggleReminderEnabled: () => Promise<void>;
-  clearReminder: () => Promise<void>;
-  handleReminder24Change: (value: string) => void;
-  handleReminder12Change: (value: string) => void;
-  handleReminderBlur: () => void;
-  handleReminderSave: () => Promise<void>;
   handleDelete: () => Promise<void>;
 };
 
@@ -101,32 +81,20 @@ export function HabitDetailView({
   stats,
   accent,
   completedToday,
-  reminderInput,
-  reminderDraft12,
-  reminderDraft24,
-  reminderError,
-  timeFormat,
-  reminderEnabled,
-  isReminderDirty,
-  notificationSupported,
-  notificationPermission,
+  todayCompletionCount,
   confirmDelete,
   isTodayFrozen,
-  reminderDisplay,
   navigate,
-  setTimeFormat,
   setConfirmDelete,
   handleToggleArchive,
-  handleToggleCompletion,
+  handleIncrementCompletion,
+  handleDecrementCompletion,
   toggleFreezeToday,
-  handleToggleReminderEnabled,
-  clearReminder,
-  handleReminder24Change,
-  handleReminder12Change,
-  handleReminderBlur,
-  handleReminderSave,
   handleDelete
 }: HabitDetailViewProps) {
+  const dailyTarget = Math.max(1, habit.dailyTarget ?? 1);
+  const canIncrement = todayCompletionCount < dailyTarget;
+
   return (
     <div className="min-h-screen bg-bg-primary pt-14">
       <div className="border-b border-border bg-bg-primary px-4 py-4 sticky top-14 z-10">
@@ -159,11 +127,12 @@ export function HabitDetailView({
             </button>
             <button
               onClick={() => {
-                void handleToggleCompletion();
+                void handleIncrementCompletion();
               }}
+              disabled={!canIncrement}
               className={`px-3 py-1.5 rounded text-xs font-mono font-medium border transition-all duration-200 ${
                 completedToday ? 'border-border text-muted bg-transparent' : 'text-bg-primary font-bold'
-              }`}
+              } disabled:opacity-40 disabled:cursor-not-allowed`}
               style={
                 !completedToday
                   ? {
@@ -174,7 +143,17 @@ export function HabitDetailView({
                   : {}
               }
             >
-              {completedToday ? '✓ Done' : 'Mark Done'}
+              {completedToday ? 'Done' : 'Add +1'}
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                void handleDecrementCompletion();
+              }}
+              disabled={todayCompletionCount <= 0}
+              className="px-3 py-1.5 rounded text-xs font-mono font-medium border border-border text-muted transition disabled:opacity-40 disabled:cursor-not-allowed hover:border-border-hover hover:text-foreground"
+            >
+              -1
             </button>
             <button
               type="button"
@@ -227,109 +206,14 @@ export function HabitDetailView({
           </div>
         </div>
 
-        <div className="bg-bg-secondary border border-border rounded-2xl p-4 space-y-3">
-          <div className="flex items-center justify-between">
-            <div className="text-[11px] font-mono text-muted uppercase tracking-[0.5em]">Daily reminder</div>
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={() => {
-                  void handleToggleReminderEnabled();
-                }}
-                className={`px-3 py-1.5 rounded-lg border text-[9px] font-mono uppercase tracking-wider transition ${
-                  reminderEnabled
-                    ? 'border-accent/40 bg-accent/10 text-accent'
-                    : 'border-border bg-bg-primary text-muted hover:border-border-hover'
-                }`}
-              >
-                {reminderEnabled ? 'Notifications enabled' : 'Notifications disabled'}
-              </button>
-              {reminderInput && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    void clearReminder();
-                  }}
-                  className="text-[9px] font-mono uppercase tracking-wider text-muted hover:text-foreground"
-                >
-                  Clear
-                </button>
-              )}
-            </div>
-          </div>
-          <div className="flex flex-col gap-2">
-            <div className="flex flex-wrap items-center gap-3">
-              <div className="flex gap-1">
-                {TIME_FORMATS.map((format) => (
-                  <button
-                    key={format}
-                    type="button"
-                    onClick={() => setTimeFormat(format)}
-                    className={`px-2 py-1 rounded border text-[10px] font-mono uppercase tracking-wider transition ${
-                      timeFormat === format
-                        ? 'border-accent/40 bg-accent/10 text-accent'
-                        : 'border-border bg-bg-primary text-muted hover:border-border-hover'
-                    }`}
-                  >
-                    {format === '24' ? '24h' : '12h'}
-                  </button>
-                ))}
-              </div>
-              <div className="flex-1 min-w-[170px]">
-                {timeFormat === '24' ? (
-                  <input
-                    type="text"
-                    value={reminderDraft24}
-                    onChange={(event) => handleReminder24Change(event.target.value)}
-                    onBlur={handleReminderBlur}
-                    placeholder="HH:MM"
-                    className="w-full rounded-xl border border-border bg-bg-primary px-3 py-2 text-sm font-mono focus:border-accent/60 focus:outline-none focus:shadow-[0_0_16px_var(--glow)] transition"
-                  />
-                ) : (
-                  <input
-                    type="text"
-                    value={reminderDraft12}
-                    onChange={(event) => handleReminder12Change(event.target.value)}
-                    onBlur={handleReminderBlur}
-                    placeholder="e.g. 7:30 PM"
-                    className="w-full rounded-xl border border-border bg-bg-primary px-3 py-2 text-sm font-mono focus:border-accent/60 focus:outline-none focus:shadow-[0_0_16px_var(--glow)] transition"
-                  />
-                )}
-              </div>
-              <button
-                type="button"
-                onClick={() => {
-                  void handleReminderSave();
-                }}
-                disabled={!isReminderDirty || Boolean(reminderError)}
-                className="px-3 py-1.5 rounded-lg border border-border text-[9px] font-mono uppercase tracking-wider transition-colors disabled:opacity-40 disabled:border-border disabled:text-muted"
-                style={
-                  isReminderDirty && !reminderError
-                    ? {
-                        backgroundColor: accent.hex,
-                        color: '#fff',
-                        boxShadow: `0 0 12px ${accent.glow}`
-                      }
-                    : undefined
-                }
-              >
-                Save changes
-              </button>
-            </div>
-            {reminderError && <p className="text-[9px] font-mono text-accent-secondary">{reminderError}</p>}
-            {!reminderError && (
-              <p className="text-[9px] font-mono text-muted">
-                {notificationSupported
-                  ? notificationPermission === 'granted'
-                    ? 'Browser notifications are enabled'
-                    : notificationPermission === 'denied'
-                      ? 'Notifications are blocked. Enable them in your browser'
-                      : 'Click "Notifications enabled" to grant permission'
-                  : 'Your browser does not support notifications'}
-              </p>
-            )}
-            <p className="text-[11px] text-muted">{reminderDisplay || 'No reminder set.'}</p>
-          </div>
+        <div className="bg-bg-secondary border border-border rounded-2xl p-4">
+          <div className="text-[11px] font-mono text-muted uppercase tracking-[0.5em] mb-2">Today</div>
+          <p className="text-sm text-foreground">
+            Completed <span className="font-mono font-bold" style={{ color: accent.hex }}>{todayCompletionCount}</span> / {dailyTarget} today.
+          </p>
+          <p className="text-[11px] text-muted mt-1">
+            Reminder settings are available on the edit screen.
+          </p>
         </div>
 
         <div className="bg-bg-secondary border border-border rounded-lg p-4 flex items-center gap-4">
@@ -371,7 +255,7 @@ export function HabitDetailView({
             <span className="text-[10px] font-mono text-muted">{stats.completedDays} completions</span>
           </div>
           <div className="overflow-x-auto">
-            <HeatmapGrid completions={habit.completions} color={habit.color} weeks={26} />
+            <HeatmapGrid completions={habit.completions} dailyTarget={dailyTarget} color={habit.color} weeks={26} />
           </div>
         </div>
 

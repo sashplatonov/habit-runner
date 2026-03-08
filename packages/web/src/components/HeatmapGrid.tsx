@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { DEFAULT_HABIT_COLOR, HABIT_COLOR_THEMES } from '@/lib/theme/habit-colors';
 import type { HabitColor } from '@/types/habit';
 interface HeatmapGridProps {
-  completions: Record<string, boolean>;
+  completions: Record<string, number>;
+  dailyTarget?: number;
   color?: HabitColor;
   weeks?: number;
 }
@@ -14,6 +15,7 @@ function getIntensity(completed: boolean | undefined): number {
 }
 export function HeatmapGrid({
   completions,
+  dailyTarget = 1,
   color = DEFAULT_HABIT_COLOR,
   weeks = 26
 }: HeatmapGridProps) {
@@ -46,7 +48,7 @@ export function HeatmapGrid({
       const dateStr = formatDate(date);
       week.push({
         date: dateStr,
-        completed: !!completions[dateStr],
+        completed: (completions[dateStr] ?? 0) >= dailyTarget,
         isToday: dateStr === formatDate(today)
       });
     }
