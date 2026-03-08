@@ -1,16 +1,21 @@
 {
   "name": "habbit-runner",
   "private": true,
-  "workspaces": ["packages/*"],
+  "workspaces": [
+    "packages/*"
+  ],
   "scripts": {
-    "dev": "npm run dev --workspaces --if-present",
+    "dev": "turbo dev",
     "dev:web": "npm run dev --workspace=@habbit-runner/web",
     "dev:server": "npm run dev --workspace=@habbit-runner/server",
     "dev:all": "npm run dev --workspaces --if-present",
-    "build": "npm run build --workspace=@habbit-runner/shared && npm run build --workspace=@habbit-runner/server && npm run build --workspace=@habbit-runner/web",
+    "build": "turbo build",
     "build:web": "npm run build --workspace=@habbit-runner/web",
     "build:server": "npm run build --workspace=@habbit-runner/server",
-    "lint": "npm run lint --workspaces --if-present",
-    "clean": "npm run clean --workspaces --if-present"
+    "lint": "turbo lint",
+    "clean": "turbo run clean"
+  },
+  "devDependencies": {
+    "turbo": "^1.13.4"
   }
 }
