@@ -59,8 +59,10 @@ export function useHabits() {
     return habitEntities.map((entity) => {
       const domain = habitEntityToDomain(entity);
       const baseCompletions = { ...(completionsByHabitId[domain.id] ?? {}) };
+      const dailyTarget = Math.max(1, domain.dailyTarget ?? 1);
       (domain.freezeDays ?? []).forEach((date) => {
-        baseCompletions[date] = Math.max(1, baseCompletions[date] ?? 1);
+        const existingCount = baseCompletions[date] ?? 0;
+        baseCompletions[date] = Math.max(dailyTarget, existingCount);
       });
       return {
         ...domain,
