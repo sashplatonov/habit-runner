@@ -1,22 +1,30 @@
-# Habbit Runner
+# 🏃 Habbit Runner
 
 Habbit Runner is built on a [Magic Patterns](https://magicpatterns.com) Vite template tailored to this design: [Source Design](https://www.magicpatterns.com/c/a6wro8plb53dmt2pzr6t7n)
 
-## Getting Started
+## 📚 Documentation
+
+- 📌 Start here: [docs/README.md](./docs/README.md)
+- 🏗️ Architecture: [docs/architecture.md](./docs/architecture.md)
+- 🚀 Initial setup: [docs/getting-started.md](./docs/getting-started.md)
+- 🔄 Offline sync: [docs/offline-sync-plan.md](./docs/offline-sync-plan.md)
+- 🛡️ Reliability and rollout: [docs/reliability-rollout.md](./docs/reliability-rollout.md)
+
+## 🚀 Getting Started
 
 1. Run `npm install`
 2. Run `npm run dev`
 
-## Environment
+## ⚙️ Environment
 
-### Client
+### 🖥️ Client
 
 - Copy `.env.example` to `.env` and tune the following keys:
   - `VITE_API_BASE_URL` (defaults to `http://localhost:4000`)
   - `VITE_SYNC_ENABLED` lets you disable sync (`false` to stay offline)
   - `API_PORT`, `WEB_PORT`, `DB_PORT` control `docker compose` published ports
 
-### API
+### 🧠 API
 
    1. `cd packages/server`
    2. Copy `packages/server/.env.example` to `packages/server/.env` and update each value to match your database and secrets:
@@ -29,7 +37,7 @@ Habbit Runner is built on a [Magic Patterns](https://magicpatterns.com) Vite tem
      - Redirect config: `API_PUBLIC_URL` (public URL of API) and `OAUTH_DEFAULT_RETURN_TO` (UI origin)
 3. Run `npm install` (first time) and start the API with `npm run dev`
 
-### Google Authentication
+### 🔐 Google Authentication
 
 > The application no longer supports Apple OAuth — only the `/auth/google` flow is available in the UI.
 

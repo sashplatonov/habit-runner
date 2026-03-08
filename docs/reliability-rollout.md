@@ -1,24 +1,68 @@
-# Надёжность, наблюдаемость и план релиза
+# 🛡️ Reliability and Rollout
 
-Локальные переменные окружения описываются в корневом `.env.example` (клиент) и `packages/server/.env.example` (API).
+This guide covers auth safety, observability, rollout stages, and fallback behavior.
 
-## 1. Auth / multi-user
-- API требует JWT access token в заголовке `Authorization: Bearer ...`; логин в Habbit Runner на `POST /auth/login` с `email` (например `demo@habbit-runner.local`) возвращает access + refresh.
-- Refresh token обновляет access через `POST /auth/refresh`, logout просто инвалидирует refresh.
-- Guard в `SyncController` вытаскивает `user.id` из токена, что обеспечивает изоляцию между пользователями. Переменная окружения `ALLOW_LEGACY_X_USER=true` позволяет временно использовать `x-user-id` для отладки.
+## 📑 Table of Contents
 
-## 2. Метрики и наблюдаемость
-- `MetricsService` считает количество `pull`/`push`, средние задержки, конфликты и ошибки.  
-- Статусы доступны по `GET /metrics` (без auth); собираются публичные показатели, которые можно подставить в Prometheus/Logstash.
-- Любая ошибка синка инкрементирует счётчик ошибок (`sync failures`) и пишет запись в server log.
-- Для трассировки API принимает `x-trace-id` (если не передан, сервер генерирует UUID), возвращает его в ответе и добавляет в ошибки sync-пайплайна.
+1. [Auth and Multi-User Isolation](#-auth-and-multi-user-isolation)
+2. [Metrics and Observability](#-metrics-and-observability)
+3. [Rollout Stages](#-rollout-stages)
+4. [Backward Compatibility and Rollback](#-backward-compatibility-and-rollback)
+5. [Navigation](#-navigation)
 
-## 3. Rollout
-1. **Beta (закрытая):** запускаем API локально с `ALLOW_LEGACY_X_USER=true`, `VITE_SYNC_ENABLED=true`, базовыми пользователями и наблюдаем `/metrics`.
-2. **Ограниченный промо:** развертываем на staging, включив monitoring (метрики), отключаем `ALLOW_LEGACY_X_USER`, докидана проверка `Authorization`, фиксируем баги.
-3. **Full:** включаем public API, подключаем реальную базу (Supabase/Neon), переносим фронт в плавный rollout, отключаем экспериментальные флаги.
+## 🔐 Auth and Multi-User Isolation
 
-## 4. Backward compatibility
-- `VITE_SYNC_ENABLED=false` отключает синхронизацию на клиенте и держит все данные в IndexedDB, что полезно при проблемах с API.
-- `ALLOW_LEGACY_X_USER` позволяет временно работать с простым `x-user-id` для быстрых проверок в деве.
-- Все изменения обёрнуты документацией: если синк падает, можно посмотреть `/metrics` + `OfflineBanner` и вручную перезапустить через кнопку Retry.
+- API sync endpoints require `Authorization: Bearer <access_token>`.
+- Login flow:
+  - `POST /auth/login` returns access + refresh tokens.
+  - `POST /auth/refresh` rotates access token from refresh token.
+- User isolation:
+  - `SyncController` resolves `user.id` from JWT to keep tenant boundaries strict.
+- Debug fallback:
+  - `ALLOW_LEGACY_X_USER=true` temporarily allows legacy `x-user-id` behavior in dev-only scenarios.
+
+## 📈 Metrics and Observability
+
+- `MetricsService` records:
+  - pull/push counts
+  - average latencies
+  - conflicts
+  - sync failures
+- Public endpoint:
+  - `GET /metrics`
+- Trace correlation:
+  - API accepts `x-trace-id`
+  - if absent, server generates UUID
+  - trace ID is returned in response headers and logged in failure paths
+
+## 🚦 Rollout Stages
+
+1. Beta (closed):
+   - `ALLOW_LEGACY_X_USER=true`
+   - `VITE_SYNC_ENABLED=true`
+   - monitor `/metrics` and logs
+2. Staging ramp:
+   - disable `ALLOW_LEGACY_X_USER`
+   - validate strict auth behavior
+   - monitor conflicts and sync error rate
+3. Full release:
+   - production database and API exposure
+   - gradual frontend rollout
+   - remove temporary flags
+
+## ♻️ Backward Compatibility and Rollback
+
+- Client fallback:
+  - `VITE_SYNC_ENABLED=false` keeps app local-only via IndexedDB.
+- Server fallback:
+  - temporary `ALLOW_LEGACY_X_USER` for controlled debug windows.
+- Operational rollback:
+  - switch client to offline mode
+  - investigate `/metrics`, logs, and trace IDs
+  - retry synchronization after server stability recovery
+
+## ↕️ Navigation
+
+- Previous: [🔄 Offline Sync Plan](./offline-sync-plan.md)
+- Back to docs index: [⬅️ Documentation Home](./README.md)
+- Back to repository root: [⬅️ Root README](../README.md)

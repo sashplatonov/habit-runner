@@ -1,37 +1,92 @@
-# Offline sync plan
+# 🔄 Offline Sync Plan
 
-## Stack & architecture
+This document describes the offline-first sync model and operational contract.
 
-- Frontend: React + TypeScript + Vite powered by `vite-plugin-pwa` for Workbox-backed service worker and offline caching.
-- Local storage: Dexie-backed IndexedDB with tables for `habits`, `checkins`, `tombstones`, `sync_meta`, `outbox`; the UI talks to these repositories instead of `localStorage`.
-- Backend: NestJS (or Fastify) + TypeScript + Prisma/Drizzle connected to Postgres (Supabase or Neon). Auth relies on JWT access/refresh tokens.
-- Hosting: frontend on Cloudflare Pages/Vercel; API on Cloudflare Workers/Fly/Render; Postgres on Supabase or Neon.
+## 📑 Table of Contents
 
-## Domain model & versioning
+1. [Stack and Storage](#-stack-and-storage)
+2. [Domain Model and Versioning](#-domain-model-and-versioning)
+3. [Sync API Contract](#-sync-api-contract)
+4. [Client Metadata and Triggers](#-client-metadata-and-triggers)
+5. [Failure Handling](#-failure-handling)
+6. [Navigation](#-navigation)
 
-- Every `habit` and `checkin` row includes `created_at`, `updated_at`, `version` (increment on every mutation) and `user_id`.
-- Deletions only surface through the `tombstones` table (`entity`, `entity_id`, `deleted_at`, `version`) to prevent resurrecting soft-deleted data during sync.
-- Cursor format is `(server_updated_at, id)` serialized into a stable string so the pull query can page deterministically across entities ordered by timestamp + id.
-- Conflict policy: `habits` follow last-write-wins by comparing server `updated_at/version`; `checkins` are idempotent upserts keyed by `(habit_id, date)` so duplicate pushes have no effect.
+## 🧱 Stack and Storage
 
-## Sync contract (P0)
+- Frontend: React + TypeScript + Vite (PWA-capable setup)
+- Local storage: IndexedDB repositories for:
+  - `habits`
+  - `checkins`
+  - `tombstones`
+  - `sync_meta`
+  - `outbox`
+- Backend: NestJS + Prisma + PostgreSQL
+- Auth: JWT access/refresh tokens
+
+## 🧬 Domain Model and Versioning
+
+- Every synced `habit` and `checkin` includes:
+  - `created_at`
+  - `updated_at`
+  - `version`
+  - `user_id`
+- Deletions propagate through `tombstones` so deleted entities are not recreated.
+- Cursor format uses stable ordering by `(updated_at, id)` for deterministic paging.
+- Conflict policy:
+  - Habits: last-write-wins using `updated_at/version`
+  - Checkins: idempotent upsert semantics
+
+## 📡 Sync API Contract
 
 ### Pull
 
-- `GET /sync/pull?since=<cursor>`
-- Returns `{ habits: HabitDTO[], checkins: CheckinDTO[], tombstones: TombstoneDTO[], nextCursor: string }`
-- Server filters rows changed after the provided cursor, sorts by `(updated_at, id)`, and emits `nextCursor` for the next page.
+- Endpoint: `GET /sync/pull?since=<cursor>`
+- Response:
+  - `{ habits, checkins, tombstones, nextCursor }`
+- Behavior:
+  - Returns all server-side changes after the cursor
+  - Provides `nextCursor` for incremental sync
 
 ### Push
 
-- `POST /sync/push` with body `{ ops: SyncOpDTO[] }`
-- Each `SyncOpDTO` includes `{ id, type, entity, payload, clientTime }`
-- Server applies operations inside a transaction, deduplicates by `id`, answers with `{ applied: string[], conflicts: ConflictDTO[], serverTime: string }`.
-- Responses detail which ops succeeded, any conflicts, and the resulting server time used for cursor advancement.
+- Endpoint: `POST /sync/push`
+- Request:
+  - `{ ops: SyncOpDTO[] }`
+- Typical operation shape:
+  - `{ id, type, entity, payload, clientTime }`
+- Response:
+  - `{ applied, conflicts, serverTime }`
+- Behavior:
+  - Transactional application
+  - Idempotency by operation ID
+  - Explicit conflict reporting
 
-## Client metadata & triggers
+## ⏱️ Client Metadata and Triggers
 
-- Local `sync_meta` tracks `lastCursor`, `lastSuccessAt`, `lastError`, and `status` (`offline`, `syncing`, `synced`, `error`).
-- `outbox` stores pending ops along with `opId`, `status`, `retryCount`, `nextRetryAt`, `payload`, and `clientTime`.
-- Sync engine runs on app start and on the browser `online` event; it always pulls before a push and re-pulls after a push to confirm server state.
-- UI surfaces the offline indicator, outbox depth, and last sync error so users can see when background sync is blocked.
+- `sync_meta` tracks:
+  - `lastCursor`
+  - `lastSuccessAt`
+  - `lastError`
+  - `status` (`offline`, `syncing`, `synced`, `error`)
+- `outbox` tracks pending operations and retry metadata.
+- Sync triggers:
+  - app startup
+  - browser `online` event
+  - manual retry actions
+- Execution order:
+  - Pull → Push → Pull confirmation
+
+## 🚨 Failure Handling
+
+- Failed sync attempts increment server error metrics.
+- Client keeps operations in outbox for retry instead of dropping data.
+- UI should expose:
+  - offline status
+  - pending outbox count
+  - last error details
+
+## ↕️ Navigation
+
+- Previous: [🏗️ Architecture Overview](./architecture.md)
+- Back to docs index: [⬅️ Documentation Home](./README.md)
+- Next: [🛡️ Reliability and Rollout](./reliability-rollout.md)
