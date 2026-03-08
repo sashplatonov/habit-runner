@@ -25,6 +25,65 @@ import {
 'recharts';
 import { useNavigate, useParams } from '@/lib/router';
 import { useUndo } from '@/lib/undo';
+
+type TimeFormat = '12' | '24';
+
+const formatTo12Hour = (value: string) => {
+  if (!value) {
+    return '';
+  }
+  const [hourStr, minuteStr] = value.split(':');
+  const hourNumber = Number(hourStr);
+  if (Number.isNaN(hourNumber)) {
+    return value;
+  }
+  const period = hourNumber >= 12 ? 'PM' : 'AM';
+  const normalizedHour = hourNumber % 12 === 0 ? 12 : hourNumber % 12;
+  return `${normalizedHour}:${minuteStr} ${period}`;
+};
+
+const parseTwelveHourTime = (value: string): string | null => {
+  const trimmed = value.trim();
+  if (!trimmed) {
+    return '';
+  }
+  const match = trimmed.match(/^(\d{1,2}):(\d{2})\s*(am|pm)$/i);
+  if (!match) {
+    return null;
+  }
+  const hours = Number(match[1]);
+  const minutes = Number(match[2]);
+  if (hours < 1 || hours > 12 || minutes < 0 || minutes > 59) {
+    return null;
+  }
+  const suffix = match[3].toLowerCase();
+  const normalizedHours =
+    suffix === 'am' ? (hours === 12 ? 0 : hours) : (hours === 12 ? 12 : hours + 12);
+  return `${normalizedHours.toString().padStart(2, '0')}:${minutes
+    .toString()
+    .padStart(2, '0')}`;
+};
+
+const parseTwentyFourHourTime = (value: string): string | null => {
+  const trimmed = value.trim();
+  if (!trimmed) {
+    return '';
+  }
+  const match = trimmed.match(/^([01]\d|2[0-3]):([0-5]\d)$/);
+  if (!match) {
+    return null;
+  }
+  return `${match[1]}:${match[2]}`;
+};
+
+const formatReminderDisplay = (value: string, format: TimeFormat) => {
+  if (!value) {
+    return '';
+  }
+  return format === '12' ? formatTo12Hour(value) : value;
+};
+
+const TIME_FORMATS: TimeFormat[] = ['24', '12'];
 export function HabitDetail() {
   const navigate = useNavigate();
   const params = useParams();
@@ -42,6 +101,11 @@ export function HabitDetail() {
   const habit = habitId ? allHabits.find((h) => h.id === habitId) : undefined;
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [reminderInput, setReminderInput] = useState('');
+  const [timeFormat, setTimeFormat] = useState<TimeFormat>('24');
+  const [reminderDraft12, setReminderDraft12] = useState('');
+  const [reminderDraft24, setReminderDraft24] = useState('');
+  const [reminderError, setReminderError] = useState('');
+  const [isReminderDirty, setIsReminderDirty] = useState(false);
   const today = formatDate(new Date());
   const isTodayFrozen = habit ? habit.freezeDays.includes(today) : false;
   const handleDelete = useCallback(async () => {
@@ -80,22 +144,45 @@ export function HabitDetail() {
   useEffect(() => {
     setReminderInput(habit?.reminderTime ?? '');
   }, [habit?.reminderTime]);
-  const handleReminderBlur = useCallback(async () => {
-    if (!habitId) {
+
+  useEffect(() => {
+    setReminderDraft12(formatTo12Hour(reminderInput));
+  }, [reminderInput]);
+  useEffect(() => {
+    setReminderDraft24(reminderInput);
+  }, [reminderInput]);
+
+  useEffect(() => {
+    setIsReminderDirty(Boolean(habit?.reminderTime !== reminderInput));
+  }, [habit?.reminderTime, reminderInput]);
+
+  useEffect(() => {
+    setReminderError('');
+  }, [timeFormat]);
+  const handleReminderSave = useCallback(async () => {
+    if (!habitId || reminderError) {
       return;
     }
     if (habit?.reminderTime === reminderInput) {
+      setIsReminderDirty(false);
       return;
     }
     await updateHabit(habitId, {
       reminderTime: reminderInput || undefined
     });
-  }, [habit, habitId, reminderInput, updateHabit]);
+    setIsReminderDirty(false);
+    setReminderError('');
+  }, [habit?.reminderTime, habitId, reminderError, reminderInput, updateHabit]);
+  const handleReminderBlur = useCallback(() => {
+    void handleReminderSave();
+  }, [handleReminderSave]);
   const clearReminder = useCallback(async () => {
     if (!habitId) {
       return;
     }
     setReminderInput('');
+    setReminderError('');
+    setReminderDraft12('');
     await updateHabit(habitId, { reminderTime: undefined });
   }, [habitId, updateHabit]);
 
@@ -293,17 +380,98 @@ export function HabitDetail() {
               </button>
             )}
           </div>
-          <div className="flex items-center gap-3 flex-wrap">
-            <input
-              type="time"
-              value={reminderInput}
-              onChange={(event) => setReminderInput(event.target.value)}
-              onBlur={handleReminderBlur}
-              className="rounded-xl border border-border bg-bg-primary px-3 py-2 text-sm font-mono focus:border-accent/60 focus:outline-none focus:shadow-[0_0_16px_var(--glow)] transition"
-            />
+          <div className="flex flex-col gap-2">
+            <div className="flex flex-wrap items-center gap-3">
+              <div className="flex gap-1">
+                {TIME_FORMATS.map((format) => (
+                  <button
+                    key={format}
+                    type="button"
+                    onClick={() => setTimeFormat(format)}
+                    className={`px-2 py-1 rounded border text-[10px] font-mono uppercase tracking-wider transition ${
+                      timeFormat === format
+                        ? 'border-accent/40 bg-accent/10 text-accent'
+                        : 'border-border bg-bg-primary text-muted hover:border-border-hover'
+                    }`}
+                  >
+                    {format === '24' ? '24h' : '12h'}
+                  </button>
+                ))}
+              </div>
+              <div className="flex-1 min-w-[170px]">
+                {timeFormat === '24' ? (
+                  <input
+                    type="text"
+                    value={reminderDraft24}
+                    onChange={(event) => {
+                      const value = event.target.value;
+                      setReminderDraft24(value);
+                      const parsed = parseTwentyFourHourTime(value);
+                      if (parsed === null) {
+                        if (value.trim()) {
+                          setReminderError('Use format like 19:30');
+                        }
+                        return;
+                      }
+                      setReminderError('');
+                      setReminderInput(parsed);
+                    }}
+                    onBlur={handleReminderBlur}
+                    placeholder="HH:MM"
+                    className="w-full rounded-xl border border-border bg-bg-primary px-3 py-2 text-sm font-mono focus:border-accent/60 focus:outline-none focus:shadow-[0_0_16px_var(--glow)] transition"
+                  />
+                ) : (
+                  <input
+                    type="text"
+                    value={reminderDraft12}
+                    onChange={(event) => {
+                      const value = event.target.value;
+                      setReminderDraft12(value);
+                      const parsed = parseTwelveHourTime(value);
+                      if (parsed === null) {
+                        if (value.trim()) {
+                          setReminderError('Use format like 7:30 PM');
+                        }
+                        return;
+                      }
+                      setReminderError('');
+                      setReminderInput(parsed);
+                    }}
+                    onBlur={handleReminderBlur}
+                    placeholder="e.g. 7:30 PM"
+                    className="w-full rounded-xl border border-border bg-bg-primary px-3 py-2 text-sm font-mono focus:border-accent/60 focus:outline-none focus:shadow-[0_0_16px_var(--glow)] transition"
+                  />
+                )}
+              </div>
+              <button
+                type="button"
+                onClick={handleReminderSave}
+                disabled={!isReminderDirty || Boolean(reminderError)}
+                className="px-3 py-1.5 rounded-lg border border-border text-[9px] font-mono uppercase tracking-wider transition-colors disabled:opacity-40 disabled:border-border disabled:text-muted"
+                style={
+                  isReminderDirty && !reminderError
+                    ? {
+                        backgroundColor: accent.hex,
+                        color: '#fff',
+                        boxShadow: `0 0 12px ${accent.glow}`
+                      }
+                    : undefined
+                }
+              >
+                Save changes
+              </button>
+            </div>
+            {reminderError && (
+              <p className="text-[9px] font-mono text-accent-secondary">
+                {reminderError}
+              </p>
+            )}
             <p className="text-[11px] text-muted">
               {reminderInput
-                ? `You will be reminded at ${reminderInput}`
+                ? `You will be reminded at ${formatReminderDisplay(
+                    reminderInput,
+                    timeFormat
+                  )}`
                 : 'No reminder set.'}
             </p>
           </div>
