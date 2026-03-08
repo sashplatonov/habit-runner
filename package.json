@@ -13,6 +13,8 @@
     "build:web": "npm run build --workspace=@habbit-runner/web",
     "build:server": "npm run build --workspace=@habbit-runner/server",
     "lint": "turbo lint",
+    "lint:fix": "turbo run lint:fix",
+    "check": "npm run lint && npm run build && npm run build:server && (cd packages/server && npx prisma generate)",
     "clean": "turbo run clean"
   },
   "devDependencies": {

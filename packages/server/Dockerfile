@@ -27,6 +27,7 @@ COPY --from=base /app/package.json /app/package-lock.json ./
 COPY --from=base /app/node_modules ./node_modules
 COPY --from=base /app/packages/shared ./packages/shared
 COPY --from=base /app/packages/server/prisma ./prisma
+COPY --from=base /app/packages/server/prisma.config.ts ./prisma.config.ts
 COPY --from=base /app/packages/server/dist ./dist
 COPY --from=base /app/packages/server/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 

@@ -21,6 +21,16 @@ module.exports = {
     eqeqeq: ['error', 'always'],
     curly: ['error', 'all'],
     'object-shorthand': ['error', 'always'],
+    complexity: ['error', 25],
+    'max-params': ['error', 5],
+    'max-lines-per-function': [
+      'error',
+      { max: 700, skipBlankLines: true, skipComments: true },
+    ],
+    'max-lines': [
+      'error',
+      { max: 500, skipBlankLines: true, skipComments: true },
+    ],
     '@typescript-eslint/consistent-type-imports': [
       'error',
       { prefer: 'type-imports' },

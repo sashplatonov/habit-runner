@@ -1,11 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
-import type { PrismaClient } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import type {
-  PullResponseDto,
-  HabitDto,
-  CheckinDto,
-  TombstoneDto
+  PullResponseDto
 } from './dto/pull-response.dto';
 import type {
   PushConflict,
@@ -13,44 +9,29 @@ import type {
   SyncOpDto
 } from './dto/push-request.dto';
 import { MetricsService } from '../metrics/metrics.service';
-
-interface Cursor {
-  updatedAt: Date;
-  id: string;
-}
-
-interface HabitPayload {
-  id: string;
-  name: string;
-  description?: string | null;
-  color: string;
-  icon: string;
-  frequency: string;
-  customDays?: unknown;
-  targetStreak: number;
-  tags?: unknown;
-  archived?: boolean;
-  version?: number;
-  updatedAt?: string;
-  createdAt?: string;
-  sortOrder?: number;
-  reminderTime?: string | null;
-  reminderEnabled?: boolean;
-}
-
-interface CheckinPayload {
-  id?: string;
-  habitId: string;
-  date: string;
-  done: boolean;
-  version?: number;
-  updatedAt?: string;
-}
-
-type TxClient = Omit<
-  PrismaClient,
-  '$on' | '$connect' | '$disconnect' | '$use' | '$transaction' | '$extends'
->;
+import type {
+  CheckinPayload,
+  ExistingCheckinRecord,
+  ExistingHabitRecord,
+  HabitPayload,
+  ParentHabitRecord,
+  TxClient
+} from './sync.types';
+import {
+  buildCursorClause,
+  calculateNextCursor,
+  isUniqueConstraintError,
+  normalizeCustomDays,
+  normalizeDate,
+  normalizeReminderEnabled,
+  normalizeReminderTime,
+  normalizeSortOrder,
+  normalizeTags,
+  parseCursor,
+  serializeCheckin,
+  serializeHabit,
+  serializeTombstone
+} from './sync.utils';
 
 @Injectable()
 export class SyncService {
@@ -64,12 +45,12 @@ export class SyncService {
   async pull(userId: string, since?: string, traceId?: string): Promise<PullResponseDto> {
     const pullStart = Date.now();
     try {
-      const cursor = this.parseCursor(since);
+      const cursor = parseCursor(since);
       const updatedFilter = cursor
-        ? { AND: [this.buildCursorClause(cursor, 'updatedAt')] }
+        ? { AND: [buildCursorClause(cursor, 'updatedAt')] }
         : undefined;
       const deletedFilter = cursor
-        ? { AND: [this.buildCursorClause(cursor, 'deletedAt')] }
+        ? { AND: [buildCursorClause(cursor, 'deletedAt')] }
         : undefined;
 
       const habits = await this.prisma.habit.findMany({
@@ -114,7 +95,7 @@ export class SyncService {
         ...tombstones.map((t: { deletedAt: Date; id: string }) => ({ updatedAt: t.deletedAt, id: t.id }))
       ];
 
-      const nextCursor = this.calculateNextCursor(cursorCandidates);
+      const nextCursor = calculateNextCursor(cursorCandidates);
       const serverTime = new Date().toISOString();
 
       this.metrics.recordPull(
@@ -123,9 +104,9 @@ export class SyncService {
       );
 
       return {
-        habits: habits.map(this.serializeHabit),
-        checkins: checkins.map(this.serializeCheckin),
-        tombstones: tombstones.map(this.serializeTombstone),
+        habits: habits.map(serializeHabit),
+        checkins: checkins.map(serializeCheckin),
+        tombstones: tombstones.map(serializeTombstone),
         nextCursor,
         serverTime
       };
@@ -146,17 +127,18 @@ export class SyncService {
     const serverTime = new Date().toISOString();
 
     try {
-      await this.prisma.$transaction(async (tx: TxClient) => {
+      await this.prisma.$transaction(async (tx) => {
+        const txClient = tx as unknown as TxClient;
         for (const op of ops) {
           if (!op.id) {continue;}
 
-          const deduplicated = await this.tryCreateLog(tx, op.id);
+          const deduplicated = await this.tryCreateLog(txClient, op.id);
           if (!deduplicated) {continue;}
 
           if (op.entity === 'habit') {
-            await this.applyHabitOp(tx, userId, op, applied, conflicts);
+            await this.applyHabitOp(txClient, userId, op, applied, conflicts);
           } else if (op.entity === 'checkin') {
-            await this.applyCheckinOp(tx, userId, op, applied, conflicts);
+            await this.applyCheckinOp(txClient, userId, op, applied, conflicts);
           }
         }
       });
@@ -182,62 +164,75 @@ export class SyncService {
   ) {
     const payload = op.payload as unknown as HabitPayload;
     if (!payload?.id) {return;}
-    const timestamp = this.normalizeDate(payload.updatedAt);
+    const timestamp = normalizeDate(payload.updatedAt);
 
     if (op.type === 'delete') {
-      await tx.tombstone.create({
-        data: {
-          userId,
-          entity: 'habit',
-          entityId: payload.id,
-          version: payload.version ?? 1
-        }
-      });
-      await tx.checkin.deleteMany({ where: { habitId: payload.id, userId } });
-      await tx.habit.deleteMany({ where: { id: payload.id, userId } });
+      await this.deleteHabit(tx, userId, payload);
       applied.push(op.id);
       return;
     }
 
-    const existing = await tx.habit.findUnique({ where: { id: payload.id } });
-    if (existing && existing.userId !== userId) {
+    const existing = await tx.habit.findUnique({ where: { id: payload.id } }) as ExistingHabitRecord | null;
+    if (this.hasHabitOwnershipConflict(existing, userId)) {
       conflicts.push({
         opId: op.id,
         reason: 'habit belongs to another user'
       });
       return;
     }
-    if (
-      existing &&
-      new Date(existing.updatedAt).getTime() > timestamp.getTime()
-    ) {
-      conflicts.push({
-        opId: op.id,
-        reason: 'server already has newer habit',
-        serverValue: {
-          version: existing.version,
-          updatedAt: existing.updatedAt
-        }
-      });
-      return;
+    if (this.hasNewerHabitConflict(existing, timestamp, op.id, conflicts)) {return;}
+
+    await this.upsertHabit(tx, userId, payload, existing, timestamp);
+
+    applied.push(op.id);
+  }
+
+  private async deleteHabit(tx: TxClient, userId: string, payload: HabitPayload): Promise<void> {
+    await tx.tombstone.create({
+      data: {
+        userId,
+        entity: 'habit',
+        entityId: payload.id,
+        version: payload.version ?? 1
+      }
+    });
+    await tx.checkin.deleteMany({ where: { habitId: payload.id, userId } });
+    await tx.habit.deleteMany({ where: { id: payload.id, userId } });
+  }
+
+  private hasHabitOwnershipConflict(existing: ExistingHabitRecord | null, userId: string): boolean {
+    return Boolean(existing && existing.userId !== userId);
+  }
+
+  private hasNewerHabitConflict(
+    existing: ExistingHabitRecord | null,
+    timestamp: Date,
+    opId: string,
+    conflicts: PushConflict[]
+  ): boolean {
+    if (!existing || new Date(existing.updatedAt).getTime() <= timestamp.getTime()) {
+      return false;
     }
 
-    const nextVersion = Math.max(existing?.version ?? 0, payload.version ?? 0) + 1;
-    const sortOrder =
-      this.normalizeSortOrder(payload.sortOrder) ??
-      existing?.sortOrder ??
-      0;
-    const reminderTime = this.normalizeReminderTime(
-      payload.reminderTime ?? existing?.reminderTime
-    );
-    const reminderEnabled = this.normalizeReminderEnabled(
-      payload.reminderEnabled,
-      existing?.reminderEnabled ?? true
-    );
+    conflicts.push({
+      opId,
+      reason: 'server already has newer habit',
+      serverValue: {
+        version: existing.version,
+        updatedAt: existing.updatedAt
+      }
+    });
+    return true;
+  }
 
-    const tags = this.normalizeTags(payload.tags);
-    const customDays = this.normalizeCustomDays(payload.customDays);
-
+  private async upsertHabit(
+    tx: TxClient,
+    userId: string,
+    payload: HabitPayload,
+    existing: ExistingHabitRecord | null,
+    timestamp: Date
+  ): Promise<void> {
+    const writeValues = this.buildHabitWriteValues(payload, existing);
     await tx.habit.upsert({
       where: { id: payload.id },
       create: {
@@ -248,16 +243,16 @@ export class SyncService {
         color: payload.color,
         icon: payload.icon,
         frequency: payload.frequency,
-        customDays: customDays as never,
+        customDays: writeValues.customDays as never,
         targetStreak: payload.targetStreak,
-        tags: tags as never,
+        tags: writeValues.tags as never,
         archived: payload.archived ?? false,
-        createdAt: this.normalizeDate(payload.createdAt),
-        sortOrder,
-        reminderTime,
-        reminderEnabled,
+        createdAt: normalizeDate(payload.createdAt),
+        sortOrder: writeValues.sortOrder,
+        reminderTime: writeValues.reminderTime,
+        reminderEnabled: writeValues.reminderEnabled,
         updatedAt: timestamp,
-        version: nextVersion
+        version: writeValues.nextVersion
       },
       update: {
         name: payload.name,
@@ -265,19 +260,60 @@ export class SyncService {
         color: payload.color,
         icon: payload.icon,
         frequency: payload.frequency,
-        customDays: customDays as never,
+        customDays: writeValues.customDays as never,
         targetStreak: payload.targetStreak,
-        tags: tags as never,
+        tags: writeValues.tags as never,
         archived: payload.archived ?? false,
-        sortOrder,
-        reminderTime,
-        reminderEnabled,
+        sortOrder: writeValues.sortOrder,
+        reminderTime: writeValues.reminderTime,
+        reminderEnabled: writeValues.reminderEnabled,
         updatedAt: timestamp,
-        version: nextVersion
+        version: writeValues.nextVersion
       }
     });
+  }
 
-    applied.push(op.id);
+  private buildHabitWriteValues(
+    payload: HabitPayload,
+    existing: ExistingHabitRecord | null
+  ): {
+    nextVersion: number;
+    sortOrder: number;
+    reminderTime: string | null;
+    reminderEnabled: boolean;
+    tags: unknown;
+    customDays: number[] | undefined;
+  } {
+    return {
+      nextVersion: this.resolveHabitVersion(existing, payload.version),
+      sortOrder: this.resolveHabitSortOrder(existing, payload.sortOrder),
+      reminderTime: this.resolveHabitReminderTime(existing, payload.reminderTime),
+      reminderEnabled: this.resolveHabitReminderEnabled(existing, payload.reminderEnabled),
+      tags: normalizeTags(payload.tags),
+      customDays: normalizeCustomDays(payload.customDays)
+    };
+  }
+
+  private resolveHabitVersion(existing: ExistingHabitRecord | null, payloadVersion?: number): number {
+    return Math.max(existing?.version ?? 0, payloadVersion ?? 0) + 1;
+  }
+
+  private resolveHabitSortOrder(existing: ExistingHabitRecord | null, payloadSortOrder?: number): number {
+    return normalizeSortOrder(payloadSortOrder) ?? existing?.sortOrder ?? 0;
+  }
+
+  private resolveHabitReminderTime(
+    existing: ExistingHabitRecord | null,
+    payloadReminderTime?: string | null
+  ): string | null {
+    return normalizeReminderTime(payloadReminderTime ?? existing?.reminderTime);
+  }
+
+  private resolveHabitReminderEnabled(
+    existing: ExistingHabitRecord | null,
+    payloadReminderEnabled?: boolean
+  ): boolean {
+    return normalizeReminderEnabled(payloadReminderEnabled, existing?.reminderEnabled ?? true);
   }
 
   private async applyCheckinOp(
@@ -289,12 +325,12 @@ export class SyncService {
   ) {
     const payload = op.payload as unknown as CheckinPayload;
     if (!payload?.habitId || !payload.date) {return;}
-    const timestamp = this.normalizeDate(payload.updatedAt);
+    const timestamp = normalizeDate(payload.updatedAt);
     const date = new Date(payload.date);
     const parentHabit = await tx.habit.findUnique({
       where: { id: payload.habitId },
       select: { userId: true }
-    });
+    }) as ParentHabitRecord | null;
     if (!parentHabit || parentHabit.userId !== userId) {
       conflicts.push({
         opId: op.id,
@@ -321,7 +357,7 @@ export class SyncService {
 
     const existing = await tx.checkin.findFirst({
       where: { habitId: payload.habitId, date, userId }
-    });
+    }) as ExistingCheckinRecord | null;
     if (
       existing &&
       new Date(existing.updatedAt).getTime() > timestamp.getTime()
@@ -373,189 +409,10 @@ export class SyncService {
       await tx.syncOpLog.create({ data: { opId } });
       return true;
     } catch (error) {
-      if (this.isUniqueConstraintError(error)) {
+      if (isUniqueConstraintError(error)) {
         return false;
       }
       throw error;
     }
-  }
-
-  private parseCursor(cursor?: string): Cursor | undefined {
-    if (!cursor) {return undefined;}
-    const parts = cursor.split('|');
-    if (parts.length < 2) {return undefined;}
-    const date = new Date(parts[0]);
-    const id = parts[1];
-    if (Number.isNaN(date.getTime())) {return undefined;}
-    return { updatedAt: date, id };
-  }
-
-  private buildCursorClause(
-    cursor: Cursor,
-    field: 'updatedAt' | 'deletedAt'
-  ) {
-    return {
-      OR: [
-        { [field]: { gt: cursor.updatedAt } },
-        {
-          [field]: { equals: cursor.updatedAt },
-          id: { gt: cursor.id }
-        }
-      ]
-    };
-  }
-
-  private calculateNextCursor(
-    records: { updatedAt: Date; id: string }[]
-  ): string | undefined {
-    if (records.length === 0) {return undefined;}
-    const sorted = records.sort((a, b) => {
-      const diff = a.updatedAt.getTime() - b.updatedAt.getTime();
-      if (diff !== 0) {return diff;}
-      return a.id.localeCompare(b.id);
-    });
-    const last = sorted[sorted.length - 1];
-    return `${last.updatedAt.toISOString()}|${last.id}`;
-  }
-
-  private serializeHabit(habit: {
-    id: string;
-    name: string;
-    description: string | null;
-    color: string;
-    icon: string;
-    frequency: string;
-    customDays: unknown;
-    targetStreak: number;
-    tags: unknown;
-    archived: boolean;
-    createdAt: Date;
-    updatedAt: Date;
-    version: number;
-    sortOrder: number;
-    reminderTime: string | null;
-    reminderEnabled: boolean;
-  }): HabitDto {
-    return {
-      id: habit.id,
-      name: habit.name,
-      description: habit.description,
-      color: habit.color,
-      icon: habit.icon,
-      frequency: habit.frequency,
-      customDays: habit.customDays ?? undefined,
-      targetStreak: habit.targetStreak,
-      tags: habit.tags ?? undefined,
-      archived: habit.archived,
-      createdAt: habit.createdAt.toISOString(),
-      updatedAt: habit.updatedAt.toISOString(),
-      version: habit.version,
-      sortOrder: habit.sortOrder,
-      reminderTime: habit.reminderTime ?? undefined,
-      reminderEnabled: habit.reminderEnabled
-    };
-  }
-
-  private serializeCheckin(checkin: {
-    id: string;
-    habitId: string;
-    date: Date;
-    done: boolean;
-    updatedAt: Date;
-    version: number;
-  }): CheckinDto {
-    return {
-      id: checkin.id,
-      habitId: checkin.habitId,
-      date: checkin.date.toISOString(),
-      done: checkin.done,
-      updatedAt: checkin.updatedAt.toISOString(),
-      version: checkin.version
-    };
-  }
-
-  private serializeTombstone(tombstone: {
-    id: string;
-    entity: string;
-    entityId: string;
-    deletedAt: Date;
-    version: number;
-  }): TombstoneDto {
-    return {
-      id: tombstone.id,
-      entity: tombstone.entity,
-      entityId: tombstone.entityId,
-      deletedAt: tombstone.deletedAt.toISOString(),
-      version: tombstone.version
-    };
-  }
-
-  private normalizeDate(value?: string): Date {
-    if (!value) {return new Date();}
-    const parsed = new Date(value);
-    if (Number.isNaN(parsed.getTime())) {return new Date();}
-    return parsed;
-  }
-
-  private isUniqueConstraintError(error: unknown): boolean {
-    if (!error || typeof error !== 'object') {return false;}
-    if (!('code' in error)) {return false;}
-    return (error as { code?: string }).code === 'P2002';
-  }
-
-  private normalizeTags(value: unknown): unknown {
-    if (value === undefined) {return undefined;}
-    if (value === null) {return undefined;}
-    return value;
-  }
-
-  private normalizeCustomDays(value: unknown): number[] | undefined {
-    if (!Array.isArray(value)) {return undefined;}
-    const days = value
-      .filter((day) => typeof day === 'number')
-      .map((day) => Math.trunc(day))
-      .filter((day) => day >= 0 && day <= 6);
-    return days.length > 0 ? Array.from(new Set(days)) : undefined;
-  }
-
-  private normalizeReminderEnabled(
-    value: unknown,
-    fallback?: boolean
-  ): boolean {
-    if (typeof value === 'boolean') {
-      return value;
-    }
-    if (typeof fallback === 'boolean') {
-      return fallback;
-    }
-    return true;
-  }
-
-  private normalizeSortOrder(value?: unknown): number | undefined {
-    if (typeof value !== 'number' || !Number.isFinite(value)) {
-      return undefined;
-    }
-    return Math.trunc(value);
-  }
-
-  private normalizeReminderTime(value?: string | null): string | null {
-    if (!value || typeof value !== 'string') {
-      return null;
-    }
-    if (!/^\d{2}:\d{2}$/.test(value)) {
-      return null;
-    }
-    const [hours, minutes] = value.split(':').map((segment) => Number(segment));
-    if (
-      Number.isNaN(hours) ||
-      Number.isNaN(minutes) ||
-      hours < 0 ||
-      hours > 23 ||
-      minutes < 0 ||
-      minutes > 59
-    ) {
-      return null;
-    }
-    return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
   }
 }

@@ -3,97 +3,20 @@ import { ArrowLeftIcon, XIcon, PlusIcon } from 'lucide-react';
 import { useHabits } from '@/hooks/useHabits';
 import type { HabitColor, HabitFrequency } from '@/types/habit';
 import { useNavigate, useParams } from '@/lib/router';
-const COLORS: {
-  value: HabitColor;
-  label: string;
-  hex: string;
-}[] = [
-{
-  value: 'blue',
-  label: 'Blue',
-  hex: '#00d4ff'
-},
-{
-  value: 'green',
-  label: 'Green',
-  hex: '#00ff88'
-},
-{
-  value: 'purple',
-  label: 'Purple',
-  hex: '#a855f7'
-},
-{
-  value: 'orange',
-  label: 'Orange',
-  hex: '#f97316'
-},
-{
-  value: 'red',
-  label: 'Red',
-  hex: '#ef4444'
-},
-{
-  value: 'cyan',
-  label: 'Cyan',
-  hex: '#22d3ee'
-}];
+import {
+  COLORS,
+  DAY_LABELS,
+  FREQUENCIES,
+  ICONS,
+  SUGGESTED_TAGS
+} from './components/add-edit-habit.constants';
 
-const FREQUENCIES: {
-  value: HabitFrequency;
-  label: string;
-  desc: string;
-}[] = [
-{
-  value: 'daily',
-  label: 'Daily',
-  desc: 'Every day'
-},
-{
-  value: 'weekdays',
-  label: 'Weekdays',
-  desc: 'Mon–Fri'
-},
-{
-  value: 'weekends',
-  label: 'Weekends',
-  desc: 'Sat–Sun'
-},
-{
-  value: 'custom',
-  label: 'Custom',
-  desc: 'Choose days'
-}];
-
-const ICONS = [
-'⚡',
-'🏃',
-'📖',
-'🧘',
-'💪',
-'🎯',
-'💻',
-'🎨',
-'🎵',
-'🌱',
-'💧',
-'🍎',
-'✍️',
-'🧪',
-'🔬'];
-
-const DAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-const SUGGESTED_TAGS = [
-'health',
-'fitness',
-'productivity',
-'learning',
-'wellness',
-'focus',
-'growth',
-'mental',
-'creative',
-'social'];
+const shouldShowEditLoading = (isEdit: boolean, hasExisting: boolean): boolean => {
+  if (!isEdit) {
+    return false;
+  }
+  return !hasExisting;
+};
 
 export function AddEditHabit() {
   const navigate = useNavigate();
@@ -102,6 +25,7 @@ export function AddEditHabit() {
   const { allHabits, addHabit, updateHabit } = useHabits();
   const isEdit = Boolean(habitId);
   const existing = habitId ? allHabits.find((h) => h.id === habitId) : undefined;
+  const hasExisting = Boolean(existing);
   const [name, setName] = useState(existing?.name || '');
   const [description, setDescription] = useState(existing?.description || '');
   const [color, setColor] = useState<HabitColor>(existing?.color || 'blue');
@@ -194,7 +118,7 @@ export function AddEditHabit() {
   };
   const toggleReminderEnabled = () => setReminderEnabled((value) => !value);
 
-  if (isEdit && !existing) {
+  if (shouldShowEditLoading(isEdit, hasExisting)) {
     return (
       <div className="min-h-screen bg-bg-primary pt-14">
         <div className="max-w-lg mx-auto px-4 py-12 text-center text-sm font-mono text-muted">

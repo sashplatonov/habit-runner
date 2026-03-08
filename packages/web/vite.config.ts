@@ -10,6 +10,29 @@ export default defineConfig({
       '@': path.resolve(__dirname, 'src')
     }
   },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (!id.includes('node_modules')) {
+            return
+          }
+
+          if (id.includes('recharts')) {
+            return 'vendor-recharts'
+          }
+
+          if (id.includes('/d3-') || id.includes('/d3/')) {
+            return 'vendor-d3'
+          }
+
+          if (id.includes('dexie')) {
+            return 'vendor-dexie'
+          }
+        }
+      }
+    }
+  },
   plugins: [
     react(),
     VitePWA({
