@@ -1,3 +1,9 @@
+export const SYNC_ENTITY_VALUES = ['habit', 'checkin'] as const;
+export type SyncEntity = (typeof SYNC_ENTITY_VALUES)[number];
+
+export const SYNC_OP_TYPE_VALUES = ['upsert', 'delete'] as const;
+export type SyncOpType = (typeof SYNC_OP_TYPE_VALUES)[number];
+
 export interface HabitDto {
   id: string;
   name: string;
@@ -42,7 +48,7 @@ export interface PullResponseDto {
   serverTime: string;
 }
 
-export interface PushConflictDto {
+export interface PushConflict {
   opId: string;
   reason: string;
   serverValue?: unknown;
@@ -50,6 +56,14 @@ export interface PushConflictDto {
 
 export interface PushResponseDto {
   applied: string[];
-  conflicts: PushConflictDto[];
+  conflicts: PushConflict[];
   serverTime: string;
+}
+
+export interface SyncOpDto {
+  id: string;
+  entity: SyncEntity;
+  type: SyncOpType;
+  payload: Record<string, unknown>;
+  clientTime?: string;
 }

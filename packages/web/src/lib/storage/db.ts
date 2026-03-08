@@ -2,11 +2,10 @@ import type { Table } from 'dexie';
 import Dexie from 'dexie';
 import type { Habit } from '@/types/habit';
 import type { PullResponseDto } from '@/types/sync';
+import type { SyncEntity, SyncOpType } from '@habbit-runner/shared';
 import { DEFAULT_USER_ID } from '@/lib/core/config';
 import { generateId } from '@/lib/core/id';
 
-export type SyncEntity = 'habit' | 'checkin';
-export type SyncOpType = 'upsert' | 'delete';
 export type OutboxStatus = 'pending' | 'inflight' | 'failed';
 
 let currentUserId = DEFAULT_USER_ID;

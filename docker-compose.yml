@@ -33,19 +33,19 @@ services:
   api:
     <<: *service_defaults
     build:
-      context: ./server
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: packages/server/Dockerfile
     init: true
     depends_on:
       db:
         condition: service_healthy
     env_file:
-      - server/.env
+      - packages/server/.env
     healthcheck:
       test:
         [
           "CMD-SHELL",
-          "node -e \"fetch('http://127.0.0.1:4000/metrics').then((r)=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))\""
+          "node -e \"const p=Number(process.env.PORT||4000);const net=require('node:net');const socket=net.connect({host:'127.0.0.1',port:p},()=>{socket.destroy();process.exit(0)});socket.on('error',()=>process.exit(1));setTimeout(()=>process.exit(1),2500);\""
         ]
       interval: 10s
       timeout: 5s
@@ -61,7 +61,7 @@ services:
     <<: *service_defaults
     build:
       context: .
-      dockerfile: Dockerfile.web
+      dockerfile: packages/web/Dockerfile
       args:
         VITE_API_BASE_URL: ${VITE_API_BASE_URL:-http://localhost:4000}
     init: true

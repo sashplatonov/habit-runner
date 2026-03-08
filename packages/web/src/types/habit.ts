@@ -1,5 +1,4 @@
-export type HabitColor = 'blue' | 'green' | 'purple' | 'orange' | 'red' | 'cyan';
-export type HabitFrequency = 'daily' | 'weekdays' | 'weekends' | 'custom';
+import type { HabitColor, HabitFrequency } from '@habbit-runner/shared';
 
 export interface Habit {
   id: string;
@@ -28,8 +27,8 @@ export interface HabitStats {
   currentStreak: number;
   longestStreak: number;
   completionRate: number;
-  weeklyData: {week: string;count: number;}[];
-  monthlyData: {month: string;rate: number;}[];
+  weeklyData: { week: string; count: number }[];
+  monthlyData: { month: string; rate: number }[];
 }
 
 export type AppView = 'dashboard' | 'detail' | 'add' | 'edit' | 'stats';

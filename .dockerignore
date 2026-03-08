@@ -1,5 +1,7 @@
 node_modules
+packages/*/node_modules
 dist
+packages/*/dist
 .git
 .idea
 npm-debug.log*
@@ -7,4 +9,3 @@ docs
 .codex
 .claude
 secrets
-server

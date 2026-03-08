@@ -5,16 +5,19 @@ import {
   IsObject,
   IsOptional,
   IsString,
-  ValidateNested
+  ValidateNested,
 } from 'class-validator';
 
-export const SYNC_ENTITY_VALUES = ['habit', 'checkin'] as const;
-export type SyncEntity = (typeof SYNC_ENTITY_VALUES)[number];
+import type {
+  SyncEntity,
+  SyncOpDto as SharedSyncOpDto,
+  SyncOpType,
+} from '@habbit-runner/shared';
 
-export const SYNC_OP_TYPE_VALUES = ['upsert', 'delete'] as const;
-export type SyncOpType = (typeof SYNC_OP_TYPE_VALUES)[number];
+const SYNC_ENTITY_VALUES = ['habit', 'checkin'] as const;
+const SYNC_OP_TYPE_VALUES = ['upsert', 'delete'] as const;
 
-export class SyncOpDto {
+export class SyncOpDto implements SharedSyncOpDto {
   @IsString()
   id!: string;
 
@@ -39,14 +42,4 @@ export class PushRequestDto {
   ops!: SyncOpDto[];
 }
 
-export interface PushConflict {
-  opId: string;
-  reason: string;
-  serverValue?: unknown;
-}
-
-export interface PushResponseDto {
-  applied: string[];
-  conflicts: PushConflict[];
-  serverTime: string;
-}
+export type { PushConflict, PushResponseDto } from '@habbit-runner/shared';

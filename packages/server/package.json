@@ -1,5 +1,5 @@
 {
-  "name": "habbit-runner-api",
+  "name": "@habbit-runner/server",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -11,9 +11,11 @@
     "test:e2e": "jest --runInBand --testPathPattern=test/e2e",
     "test:coverage": "rm -rf dist-test && npx tsc -p tsconfig.test.json && node --test --experimental-test-coverage dist-test/test/**/*.test.js && rm -rf dist-test",
     "prisma": "prisma",
-    "seed": "ts-node prisma/seed.ts"
+    "seed": "ts-node prisma/seed.ts",
+    "clean": "rm -rf dist dist-test"
   },
-"dependencies": {
+  "dependencies": {
+    "@habbit-runner/shared": "*",
     "@nestjs/common": "^10.0.0",
     "@nestjs/core": "^10.0.0",
     "@nestjs/platform-express": "^10.0.0",

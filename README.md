@@ -18,8 +18,8 @@ Habbit Runner is built on a [Magic Patterns](https://magicpatterns.com) Vite tem
 
 ### API
 
-   1. `cd server`
-   2. Copy `server/.env.example` to `server/.env` and update each value to match your database and secrets:
+   1. `cd packages/server`
+   2. Copy `packages/server/.env.example` to `packages/server/.env` and update each value to match your database and secrets:
       - `DATABASE_URL`, `AUTH_SECRET`, `ACCESS_TOKEN_EXPIRES_IN`, `ACCESS_TOKEN_TTL_SECONDS`, `REFRESH_TOKEN_EXPIRES_DAYS`
       - When running the API via `docker compose`, PostgreSQL lives at the `db` service, so the default `DATABASE_URL=postgresql://habbit:password@db:5432/habbit_runner` works. When you run `npm run dev` against a standalone Postgres on your machine, change the host to `localhost:5432`.
       - Compose also supports `POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD` overrides for the DB service.
@@ -42,7 +42,7 @@ Habbit Runner is built on a [Magic Patterns](https://magicpatterns.com) Vite tem
    - In **Authorized JavaScript origins** add `http://localhost:5173` if you run the frontend locally.
    - In **Authorized redirect URIs** add `http://localhost:4000/auth/google/callback`. If you run the API under a different host/port (e.g., on a remote server), use that base URL instead, keeping `/auth/google/callback` at the end.
    - Click **Create**; Google displays a modal with your **Client ID** and **Client Secret**.
-4. Copy the values into `server/.env` for `GOOGLE_OAUTH_CLIENT_ID` and `GOOGLE_OAUTH_CLIENT_SECRET`. Keep this file secret.
+4. Copy the values into `packages/server/.env` for `GOOGLE_OAUTH_CLIENT_ID` and `GOOGLE_OAUTH_CLIENT_SECRET`. Keep this file secret.
 5. Confirm `API_PUBLIC_URL` matches the API base URL you actually hit (e.g., `http://localhost:4000`) and `OAUTH_DEFAULT_RETURN_TO` equals the frontend origin (`http://localhost:5173`). These settings ensure the redirect back path aligns with the ones you registered in the Google Console.
 6. Start the backend and frontend (`docker compose`, `npm run dev`, whatever your workflow is). In the UI click **Continue with Google**; you will be redirected through Google’s login screens, and after granting consent you’ll land back at `http://localhost:5173/auth/callback` with the tokens appended as query parameters.
 7. When you deploy to another domain, revisit the Google credential: add that domain to **Authorized redirect URIs** (again ending with `/auth/google/callback`), and update `API_PUBLIC_URL`/`OAUTH_DEFAULT_RETURN_TO` before issuing new client secrets to avoid redirect mismatches.
