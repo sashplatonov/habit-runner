@@ -35,6 +35,7 @@ interface HabitPayload {
   createdAt?: string;
   sortOrder?: number;
   reminderTime?: string | null;
+  reminderEnabled?: boolean;
 }
 
 interface CheckinPayload {
@@ -229,6 +230,10 @@ export class SyncService {
     const reminderTime = this.normalizeReminderTime(
       payload.reminderTime ?? existing?.reminderTime
     );
+    const reminderEnabled = this.normalizeReminderEnabled(
+      payload.reminderEnabled,
+      existing?.reminderEnabled ?? true
+    );
 
     const tags = this.normalizeTags(payload.tags);
     const customDays = this.normalizeCustomDays(payload.customDays);
@@ -250,6 +255,7 @@ export class SyncService {
         createdAt: this.normalizeDate(payload.createdAt),
         sortOrder,
         reminderTime,
+        reminderEnabled,
         updatedAt: timestamp,
         version: nextVersion
       },
@@ -265,6 +271,7 @@ export class SyncService {
         archived: payload.archived ?? false,
         sortOrder,
         reminderTime,
+        reminderEnabled,
         updatedAt: timestamp,
         version: nextVersion
       }
@@ -427,6 +434,7 @@ export class SyncService {
     version: number;
     sortOrder: number;
     reminderTime: string | null;
+    reminderEnabled: boolean;
   }): HabitDto {
     return {
       id: habit.id,
@@ -443,7 +451,8 @@ export class SyncService {
       updatedAt: habit.updatedAt.toISOString(),
       version: habit.version,
       sortOrder: habit.sortOrder,
-      reminderTime: habit.reminderTime ?? undefined
+      reminderTime: habit.reminderTime ?? undefined,
+      reminderEnabled: habit.reminderEnabled
     };
   }
 
@@ -507,6 +516,19 @@ export class SyncService {
       .map((day) => Math.trunc(day))
       .filter((day) => day >= 0 && day <= 6);
     return days.length > 0 ? Array.from(new Set(days)) : undefined;
+  }
+
+  private normalizeReminderEnabled(
+    value: unknown,
+    fallback?: boolean
+  ): boolean {
+    if (typeof value === 'boolean') {
+      return value;
+    }
+    if (typeof fallback === 'boolean') {
+      return fallback;
+    }
+    return true;
   }
 
   private normalizeSortOrder(value?: unknown): number | undefined {

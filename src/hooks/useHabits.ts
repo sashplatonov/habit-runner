@@ -147,18 +147,19 @@ export function useHabits() {
   const addHabit = useCallback(
     async (data: HabitUpsertInput) => {
       const now = new Date().toISOString();
-      const newHabit: Habit = {
-        ...data,
-        id: generateId(),
-        completions: {},
-        createdAt: now,
-        updatedAt: now,
-        version: 1,
-        sortOrder: data.sortOrder ?? Date.now(),
-        reminderTime: data.reminderTime ?? undefined,
-        archived: data.archived ?? false,
-        freezeDays: data.freezeDays ?? []
-      };
+    const newHabit: Habit = {
+      ...data,
+      id: generateId(),
+      completions: {},
+      createdAt: now,
+      updatedAt: now,
+      version: 1,
+      sortOrder: data.sortOrder ?? Date.now(),
+      reminderTime: data.reminderTime ?? undefined,
+      reminderEnabled: data.reminderEnabled ?? true,
+      archived: data.archived ?? false,
+      freezeDays: data.freezeDays ?? []
+    };
 
       await persistHabitInDb(newHabit);
       const entry = createOutboxEntry('habit', 'upsert', newHabit);

@@ -38,6 +38,7 @@ export interface HabitEntity {
   version: number;
   sortOrder: number;
   reminderTime?: string | null;
+  reminderEnabled: boolean;
   freezeDays: string[];
 }
 
@@ -115,6 +116,9 @@ export class HabbitRunnerDb extends Dexie {
           if (!Object.prototype.hasOwnProperty.call(record, 'reminderTime')) {
             record.reminderTime = null;
           }
+          if (!Object.prototype.hasOwnProperty.call(record, 'reminderEnabled')) {
+            record.reminderEnabled = true;
+          }
         })
       );
   }
@@ -123,25 +127,26 @@ export class HabbitRunnerDb extends Dexie {
 export const db = new HabbitRunnerDb();
 
 export function habitEntityToDomain(entity: HabitEntity): Habit {
-  return {
-    id: entity.id,
-    name: entity.name,
-    description: entity.description ?? '',
-    color: entity.color as Habit['color'],
-    icon: entity.icon,
-    frequency: entity.frequency as Habit['frequency'],
-    customDays: entity.customDays,
-    targetStreak: entity.targetStreak,
-    tags: entity.tags,
-    completions: { ...entity.completions },
-    freezeDays: entity.freezeDays ?? [],
-    sortOrder: entity.sortOrder ?? Date.parse(entity.createdAt),
-    reminderTime: entity.reminderTime ?? undefined,
-    createdAt: entity.createdAt,
-    updatedAt: entity.updatedAt,
-    version: entity.version,
-    archived: entity.archived
-  };
+    return {
+      id: entity.id,
+      name: entity.name,
+      description: entity.description ?? '',
+      color: entity.color as Habit['color'],
+      icon: entity.icon,
+      frequency: entity.frequency as Habit['frequency'],
+      customDays: entity.customDays,
+      targetStreak: entity.targetStreak,
+      tags: entity.tags,
+      completions: { ...entity.completions },
+      freezeDays: entity.freezeDays ?? [],
+      sortOrder: entity.sortOrder ?? Date.parse(entity.createdAt),
+      reminderTime: entity.reminderTime ?? undefined,
+      reminderEnabled: entity.reminderEnabled ?? true,
+      createdAt: entity.createdAt,
+      updatedAt: entity.updatedAt,
+      version: entity.version,
+      archived: entity.archived
+    };
 }
 
 export function domainToHabitEntity(habit: Habit): HabitEntity {
@@ -164,6 +169,7 @@ export function domainToHabitEntity(habit: Habit): HabitEntity {
     version: habit.version ?? 1,
     sortOrder: habit.sortOrder ?? Date.parse(habit.createdAt),
     reminderTime: habit.reminderTime ?? null,
+    reminderEnabled: habit.reminderEnabled ?? true,
     freezeDays: habit.freezeDays ?? []
   };
 }

@@ -27,6 +27,7 @@ import { useNavigate, useParams } from '@/lib/router';
 import { useUndo } from '@/lib/undo';
 
 type TimeFormat = '12' | '24';
+type NotificationPermissionState = 'default' | 'denied' | 'granted';
 
 const formatTo12Hour = (value: string) => {
   if (!value) {
@@ -106,6 +107,10 @@ export function HabitDetail() {
   const [reminderDraft24, setReminderDraft24] = useState('');
   const [reminderError, setReminderError] = useState('');
   const [isReminderDirty, setIsReminderDirty] = useState(false);
+  const [reminderEnabled, setReminderEnabled] = useState(true);
+  const [notificationSupported, setNotificationSupported] = useState(false);
+  const [notificationPermission, setNotificationPermission] =
+    useState<NotificationPermissionState>('default');
   const today = formatDate(new Date());
   const isTodayFrozen = habit ? habit.freezeDays.includes(today) : false;
   const handleDelete = useCallback(async () => {
@@ -146,6 +151,21 @@ export function HabitDetail() {
   }, [habit?.reminderTime]);
 
   useEffect(() => {
+    setReminderEnabled(habit?.reminderEnabled ?? true);
+  }, [habit?.reminderEnabled]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+    const supported = 'Notification' in window;
+    setNotificationSupported(supported);
+    if (supported) {
+      setNotificationPermission(Notification.permission as NotificationPermissionState);
+    }
+  }, []);
+
+  useEffect(() => {
     setReminderDraft12(formatTo12Hour(reminderInput));
   }, [reminderInput]);
   useEffect(() => {
@@ -168,11 +188,12 @@ export function HabitDetail() {
       return;
     }
     await updateHabit(habitId, {
-      reminderTime: reminderInput || undefined
+      reminderTime: reminderInput || undefined,
+      reminderEnabled
     });
     setIsReminderDirty(false);
     setReminderError('');
-  }, [habit?.reminderTime, habitId, reminderError, reminderInput, updateHabit]);
+  }, [habit?.reminderTime, habitId, reminderError, reminderInput, reminderEnabled, updateHabit]);
   const handleReminderBlur = useCallback(() => {
     void handleReminderSave();
   }, [handleReminderSave]);
@@ -183,8 +204,59 @@ export function HabitDetail() {
     setReminderInput('');
     setReminderError('');
     setReminderDraft12('');
-    await updateHabit(habitId, { reminderTime: undefined });
-  }, [habitId, updateHabit]);
+    setReminderDraft24('');
+    await updateHabit(habitId, {
+      reminderTime: undefined,
+      reminderEnabled
+    });
+  }, [habitId, reminderEnabled, updateHabit]);
+
+  const handleToggleReminderEnabled = useCallback(async () => {
+    if (!habitId) {
+      return;
+    }
+    const nextValue = !reminderEnabled;
+    setReminderEnabled(nextValue);
+    setReminderError('');
+
+    if (nextValue) {
+      if (notificationSupported) {
+        if (
+          typeof window !== 'undefined' &&
+          'Notification' in window &&
+          typeof Notification !== 'undefined'
+        ) {
+          const currentPermission =
+            Notification.permission as NotificationPermissionState;
+          if (currentPermission === 'default') {
+            const result = await Notification.requestPermission();
+            setNotificationPermission(result as NotificationPermissionState);
+            if (result !== 'granted') {
+              setReminderError(
+                'Allow browser notifications to receive reminders'
+              );
+            }
+          } else if (currentPermission === 'denied') {
+            setNotificationPermission(currentPermission);
+            setReminderError(
+              'Browser notifications are blocked. Enable them in your settings'
+            );
+          } else {
+            setNotificationPermission(currentPermission);
+          }
+        }
+      } else {
+        setReminderError('Your browser does not support notifications');
+      }
+    }
+
+    await updateHabit(habitId, { reminderEnabled: nextValue });
+  }, [
+    habitId,
+    notificationSupported,
+    reminderEnabled,
+    updateHabit
+  ]);
 
   const handleToggleCompletion = useCallback(async () => {
     if (!habitId || !habit) {
@@ -370,15 +442,28 @@ export function HabitDetail() {
             <div className="text-[11px] font-mono text-muted uppercase tracking-[0.5em]">
               Daily reminder
             </div>
-            {reminderInput && (
+            <div className="flex items-center gap-2">
               <button
                 type="button"
-                onClick={clearReminder}
-                className="text-[9px] font-mono uppercase tracking-wider text-muted hover:text-foreground"
+                onClick={handleToggleReminderEnabled}
+                className={`px-3 py-1.5 rounded-lg border text-[9px] font-mono uppercase tracking-wider transition ${
+                  reminderEnabled
+                    ? 'border-accent/40 bg-accent/10 text-accent'
+                    : 'border-border bg-bg-primary text-muted hover:border-border-hover'
+                }`}
               >
-                Clear
+                {reminderEnabled ? 'Notifications enabled' : 'Notifications disabled'}
               </button>
-            )}
+              {reminderInput && (
+                <button
+                  type="button"
+                  onClick={clearReminder}
+                  className="text-[9px] font-mono uppercase tracking-wider text-muted hover:text-foreground"
+                >
+                  Clear
+                </button>
+              )}
+            </div>
           </div>
           <div className="flex flex-col gap-2">
             <div className="flex flex-wrap items-center gap-3">
@@ -464,6 +549,17 @@ export function HabitDetail() {
             {reminderError && (
               <p className="text-[9px] font-mono text-accent-secondary">
                 {reminderError}
+              </p>
+            )}
+            {!reminderError && (
+              <p className="text-[9px] font-mono text-muted">
+                {notificationSupported
+                  ? notificationPermission === 'granted'
+                    ? 'Browser notifications are enabled'
+                    : notificationPermission === 'denied'
+                      ? 'Notifications are blocked. Enable them in your browser'
+                      : 'Click "Notifications enabled" to grant permission'
+                  : 'Your browser does not support notifications'}
               </p>
             )}
             <p className="text-[11px] text-muted">

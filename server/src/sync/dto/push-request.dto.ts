@@ -5,7 +5,6 @@ import {
   IsObject,
   IsOptional,
   IsString,
-  IsUUID,
   ValidateNested
 } from 'class-validator';
 
@@ -16,7 +15,7 @@ export const SYNC_OP_TYPE_VALUES = ['upsert', 'delete'] as const;
 export type SyncOpType = (typeof SYNC_OP_TYPE_VALUES)[number];
 
 export class SyncOpDto {
-  @IsUUID()
+  @IsString()
   id!: string;
 
   @IsIn(SYNC_OP_TYPE_VALUES)

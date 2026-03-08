@@ -116,6 +116,9 @@ export function AddEditHabit() {
   const [tags, setTags] = useState<string[]>(existing?.tags || []);
   const [tagInput, setTagInput] = useState('');
   const [reminderTime, setReminderTime] = useState(existing?.reminderTime || '');
+  const [reminderEnabled, setReminderEnabled] = useState(
+    existing?.reminderEnabled ?? true
+  );
   const [errors, setErrors] = useState<Record<string, string>>({});
   const selectedColor = COLORS.find((c) => c.value === color) ?? COLORS[0];
 
@@ -132,6 +135,7 @@ export function AddEditHabit() {
     setTargetStreak(existing.targetStreak);
     setTags(existing.tags ?? []);
     setReminderTime(existing.reminderTime ?? '');
+    setReminderEnabled(existing.reminderEnabled ?? true);
   }, [existing, isEdit]);
 
   const validate = () => {
@@ -164,7 +168,8 @@ export function AddEditHabit() {
       customDays: frequency === 'custom' ? customDays : undefined,
       targetStreak,
       archived: existing?.archived ?? false,
-      reminderTime: reminderTime || undefined
+      reminderTime: reminderTime || undefined,
+      reminderEnabled
     };
     if (isEdit && habitId) {
       await updateHabit(habitId, data);
@@ -187,6 +192,7 @@ export function AddEditHabit() {
     prev.includes(day) ? prev.filter((d) => d !== day) : [...prev, day]
     );
   };
+  const toggleReminderEnabled = () => setReminderEnabled((value) => !value);
 
   if (isEdit && !existing) {
     return (
@@ -487,12 +493,25 @@ export function AddEditHabit() {
               onChange={(e) => setReminderTime(e.target.value)}
               className="rounded-lg border border-border bg-bg-secondary px-3 py-2 text-sm font-mono focus:border-accent/60 focus:outline-none focus:shadow-[0_0_12px_var(--glow)] transition"
             />
+            <button
+              type="button"
+              onClick={toggleReminderEnabled}
+              className={`px-3 py-1.5 rounded-lg border text-[9px] font-mono uppercase tracking-wider transition ${
+                reminderEnabled
+                  ? 'border-accent/40 bg-accent/10 text-accent'
+                  : 'border-border bg-bg-secondary text-muted hover:border-border-hover'
+              }`}
+            >
+              {reminderEnabled ? 'Reminders enabled' : 'Reminders disabled'}
+            </button>
             <span className="text-[11px] font-mono text-muted">
               {reminderTime ? `Daily at ${reminderTime}` : 'No reminder yet'}
-            </span>
+              </span>
           </div>
           <p className="text-[9px] font-mono text-muted mt-1">
-            Reminder calls appear on the dashboard when the app is open.
+            {reminderEnabled
+              ? 'Reminder calls appear on the dashboard when the app is open.'
+              : 'Notifications are disabled. Enable them to receive reminders.'}
           </p>
         </div>
       </div>

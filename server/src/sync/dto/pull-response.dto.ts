@@ -14,6 +14,7 @@ export interface HabitDto {
   version: number;
   sortOrder: number;
   reminderTime?: string;
+  reminderEnabled?: boolean;
 }
 
 export interface CheckinDto {

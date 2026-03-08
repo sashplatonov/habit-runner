@@ -23,6 +23,16 @@ type Reminder = {
   time: string;
   message: string;
 };
+
+const parseReminderMinutes = (value: string): number | null => {
+  const match = value.match(/^([01]\d|2[0-3]):([0-5]\d)$/);
+  if (!match) {
+    return null;
+  }
+  const hours = Number(match[1]);
+  const minutes = Number(match[2]);
+  return hours * 60 + minutes;
+};
 type HabitRowProps = {
   habit: Habit;
   onToggle: () => void;
@@ -224,7 +234,27 @@ export function Dashboard() {
   const [dragOverHabitId, setDragOverHabitId] = useState<string | null>(null);
   const [dropHint, setDropHint] = useState<{ habitId: string; position: 'above' | 'below' } | null>(null);
   const reminderTracker = useRef<Record<string, string>>({});
+  const reminderLastCheckRef = useRef<number | null>(null);
   const [reminders, setReminders] = useState<Reminder[]>([]);
+  const sendBrowserNotification = useCallback((habit: Habit) => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+    if (!('Notification' in window)) {
+      return;
+    }
+    if (Notification.permission !== 'granted') {
+      return;
+    }
+    try {
+      new Notification('Habbit reminder', {
+        body: `Time for: ${habit.name}`,
+        tag: `habit-reminder-${habit.id}`
+      });
+    } catch {
+      // ignore failures from browsers that block without throwing
+    }
+  }, []);
   const applySortOrder = useCallback(
     async (orderedHabits: Habit[]) => {
       await Promise.all(
@@ -310,15 +340,27 @@ export function Dashboard() {
   }, []);
   useEffect(() => {
     const checkReminders = () => {
-      const now = new Date();
-      const pad = (value: number) => String(value).padStart(2, '0');
-      const hhmm = `${pad(now.getHours())}:${pad(now.getMinutes())}`;
-      const todayKey = formatDate(now);
+      const nowTs = Date.now();
+      const now = new Date(nowTs);
+      const nowMinutes = now.getHours() * 60 + now.getMinutes();
+      const nowDayKey = formatDate(now);
+      const previousTs = reminderLastCheckRef.current ?? nowTs;
+      reminderLastCheckRef.current = nowTs;
+      const previous = new Date(previousTs);
+      const previousMinutes = previous.getHours() * 60 + previous.getMinutes();
+      const previousDayKey = formatDate(previous);
+
       habits.forEach((habit) => {
-        if (!habit.reminderTime || habit.archived) {return;}
-        if (habit.reminderTime !== hhmm) {return;}
-        if (reminderTracker.current[habit.id] === todayKey) {return;}
-        reminderTracker.current[habit.id] = todayKey;
+        if (!habit.reminderTime || habit.archived || habit.reminderEnabled === false) {return;}
+        if (reminderTracker.current[habit.id] === nowDayKey) {return;}
+        const reminderMinutes = parseReminderMinutes(habit.reminderTime);
+        if (reminderMinutes === null) {return;}
+        const crossedReminderTime =
+          previousDayKey === nowDayKey
+            ? reminderMinutes > previousMinutes && reminderMinutes <= nowMinutes
+            : nowMinutes >= reminderMinutes;
+        if (!crossedReminderTime) {return;}
+        reminderTracker.current[habit.id] = nowDayKey;
         setReminders((prev) =>
           prev.some((item) => item.habitId === habit.id)
             ? prev
@@ -327,10 +369,11 @@ export function Dashboard() {
                 {
                   habitId: habit.id,
                   time: habit.reminderTime,
-                  message: `Reminder: ${habit.name} (${habit.reminderTime})`
-                }
-              ]
+                message: `Reminder: ${habit.name} (${habit.reminderTime})`
+              }
+            ]
         );
+        sendBrowserNotification(habit);
       });
     };
     checkReminders();
@@ -338,8 +381,17 @@ export function Dashboard() {
       return;
     }
     const interval = window.setInterval(checkReminders, 30_000);
-    return () => window.clearInterval(interval);
-  }, [formatDate, habits]);
+    const onVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        checkReminders();
+      }
+    };
+    document.addEventListener('visibilitychange', onVisibilityChange);
+    return () => {
+      window.clearInterval(interval);
+      document.removeEventListener('visibilitychange', onVisibilityChange);
+    };
+  }, [formatDate, habits, sendBrowserNotification]);
   useEffect(() => {
     setReminders((prev) =>
       prev.filter((reminder) => habits.some((habit) => habit.id === reminder.habitId))
