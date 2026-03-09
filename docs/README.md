@@ -10,6 +10,7 @@ Use this page as your entry point and navigate deeper by topic.
 3. [🔄 Offline Sync Plan](./offline-sync-plan.md)
 4. [🛡️ Reliability and Rollout](./reliability-rollout.md)
 5. [🤖 GitHub Automation (Renovate + Trivy)](./github-automation.md)
+6. [🧹 Project Health Review](./project-health.md)
 
 ## 🧭 Suggested Reading Path
 
@@ -18,6 +19,14 @@ Use this page as your entry point and navigate deeper by topic.
 3. Dive into [🔄 Offline Sync Plan](./offline-sync-plan.md)
 4. Finish with [🛡️ Reliability and Rollout](./reliability-rollout.md)
 5. Configure [🤖 GitHub Automation (Renovate + Trivy)](./github-automation.md)
+6. Review [🧹 Project Health Review](./project-health.md) for cleanup decisions
+
+## ✅ Daily Quality Workflow
+
+1. Run `npm run lint`
+2. Run `npm run test --workspace=@habbit-runner/web`
+3. Run `npm run build`
+4. Before backend schema-related changes, run `cd packages/server && npx prisma generate`
 
 ## ↕️ Navigation
 

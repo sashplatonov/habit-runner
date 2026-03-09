@@ -17,7 +17,6 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
-    "@emotion/react": "^11.14.0",
     "@habbit-runner/shared": "*",
     "dexie": "^4.3.0",
     "lucide-react": "0.577.0",

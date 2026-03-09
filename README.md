@@ -10,11 +10,30 @@ Habbit Runner is built on a [Magic Patterns](https://magicpatterns.com) Vite tem
 - 🔄 Offline sync: [docs/offline-sync-plan.md](./docs/offline-sync-plan.md)
 - 🛡️ Reliability and rollout: [docs/reliability-rollout.md](./docs/reliability-rollout.md)
 - 🤖 GitHub automation (Renovate + Trivy): [docs/github-automation.md](./docs/github-automation.md)
+- 🧹 Project health review: [docs/project-health.md](./docs/project-health.md)
 
 ## 🚀 Getting Started
 
 1. Run `npm install`
 2. Run `npm run dev`
+
+## ✅ Quality Gates
+
+- `npm run lint` runs ESLint for all workspaces.
+- `npm run build` builds shared, server, and web through Turbo.
+- `npm run check` is the recommended pre-PR command:
+  - lint
+  - full build
+  - server build
+  - Prisma client generation in `packages/server`
+
+## 📦 Current State (March 9, 2026)
+
+- ✅ Monorepo with npm workspaces: `packages/web`, `packages/server`, `packages/shared`
+- ✅ ESLint v10 flat-config in all packages
+- ✅ Web unit tests on Vitest
+- ✅ Security and dependency automation via Renovate + Trivy
+- ✅ Dependency cleanup applied in web package (`@emotion/react` removed as unused)
 
 ## ⚙️ Environment
 
