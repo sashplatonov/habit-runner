@@ -12,7 +12,7 @@ import { HabitDetail } from '@/pages/HabitDetail';
 import { AddEditHabit } from '@/pages/AddEditHabit';
 import { Stats } from '@/pages/Stats';
 import { useSyncEngine } from '@/hooks/useSyncEngine';
-import { AuthGate } from '@/components/AuthGate';
+import { PublicLanding } from '@/components/PublicLanding';
 import type {
   AuthSession
 } from '@/lib/auth/session';
@@ -124,6 +124,9 @@ export function App() {
     }
   };
 
+  const isAuthCallbackPath =
+    typeof window !== 'undefined' && window.location.pathname === '/auth/callback';
+
   return (
     <UndoProvider>
       <ErrorBoundary>
@@ -153,11 +156,10 @@ export function App() {
         </BrowserRouter>
       ) : (
         <>
-          <AuthGate onError={setAuthError} />
-          {authError && (
-            <div className="fixed bottom-4 left-1/2 -translate-x-1/2 rounded-lg border border-accent-secondary/30 bg-accent-secondary/10 px-4 py-2 text-xs text-accent-secondary">
-              {authError}
-            </div>
+          {isAuthCallbackPath ? (
+            <AuthCallbackPage />
+          ) : (
+            <PublicLanding authError={authError} onHelpClick={setAuthError} />
           )}
         </>
         )}

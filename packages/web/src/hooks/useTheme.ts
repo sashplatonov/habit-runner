@@ -104,9 +104,9 @@ export function useTheme(isAuthenticated = false) {
         return stored as ThemeId;
       }
     } catch {
-      return 'midnight';
+      return 'cloud';
     }
-    return 'midnight';
+    return 'cloud';
   });
   const [serverSyncReady, setServerSyncReady] = useState(!isAuthenticated);
 

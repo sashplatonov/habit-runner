@@ -1,15 +1,8 @@
 import React from 'react';
-import { API_BASE_URL } from '@/lib/core/config';
+import { startOAuthLogin } from '@/lib/auth/oauth';
 
 interface AuthGateProps {
   onError: (message: string) => void;
-}
-
-function startOAuth() {
-  const returnTo = window.location.origin;
-  const url = new URL(`${API_BASE_URL}/auth/google/start`);
-  url.searchParams.set('returnTo', returnTo);
-  window.location.assign(url.toString());
 }
 
 export function AuthGate({ onError }: AuthGateProps) {
@@ -24,7 +17,7 @@ export function AuthGate({ onError }: AuthGateProps) {
         <div className="space-y-3">
           <button
             className="w-full rounded-lg border border-border-hover bg-bg-card px-4 py-2.5 text-sm font-medium hover:border-accent/40 hover:bg-accent/10 transition-colors"
-            onClick={startOAuth}
+            onClick={startOAuthLogin}
           >
             Continue with Google
           </button>
