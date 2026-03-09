@@ -22,21 +22,38 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Run Trivy scan
-        uses: aquasecurity/trivy-action@0.28.0
+      - name: Install Trivy
+        uses: aquasecurity/setup-trivy@v0.2.5
         with:
-          scan-type: fs
-          scan-ref: .
-          format: sarif
-          output: trivy-results.sarif
-          severity: CRITICAL,HIGH
-          ignore-unfixed: true
-          vuln-type: os,library
-          exit-code: '1'
+          cache: true
+          version: v0.69.3
+
+      - name: Run Trivy scan
+        id: trivy-scan
+        shell: bash
+        run: |
+          set -uo pipefail
+
+          scan_exit=0
+          trivy fs . \
+            --format sarif \
+            --output trivy-results.sarif \
+            --severity CRITICAL,HIGH \
+            --ignore-unfixed \
+            --vuln-type os,library || scan_exit=$?
+
+          if [ "$scan_exit" -gt 1 ]; then
+            echo "Trivy failed with exit code $scan_exit"
+            exit $scan_exit
+          fi
+
+          if [ "$scan_exit" -eq 1 ]; then
+            echo "Trivy found critical/high vulnerabilities"
+            exit 1
+          fi
 
       - name: Upload SARIF report
         if: always()
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@v4
         with:
           sarif_file: trivy-results.sarif
-
