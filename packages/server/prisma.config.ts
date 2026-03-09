@@ -1,11 +1,10 @@
 import 'dotenv/config';
-import { defineConfig } from 'prisma/config';
 
-export default defineConfig({
+export default {
   schema: 'prisma/schema.prisma',
   datasource: {
     url:
       process.env.DATABASE_URL ??
       'postgresql://habbit:password@localhost:5432/habbit_runner'
   }
-});
+};

@@ -12,7 +12,7 @@
     "test:unit": "jest --runInBand --testPathPattern=test/unit",
     "test:e2e": "jest --runInBand --testPathPattern=test/e2e",
     "test:coverage": "rm -rf dist-test && npx tsc -p tsconfig.test.json && node --test --experimental-test-coverage dist-test/test/**/*.test.js && rm -rf dist-test",
-    "prisma": "prisma",
+    "prisma": "npx prisma",
     "seed": "ts-node prisma/seed.ts",
     "clean": "rm -rf dist dist-test"
   },
@@ -42,7 +42,6 @@
     "@typescript-eslint/parser": "^8.56.1",
     "eslint": "^10.0.3",
     "jest": "^30.2.0",
-    "prisma": "^7.4.2",
     "ts-jest": "^29.4.6",
     "ts-node": "^10.9.2",
     "ts-node-dev": "^2.0.0",

@@ -13,6 +13,7 @@ on:
 permissions:
   contents: read
   security-events: write
+  actions: read
 
 jobs:
   trivy:
@@ -40,20 +41,29 @@ jobs:
             --output trivy-results.sarif \
             --severity CRITICAL,HIGH \
             --ignore-unfixed \
-            --vuln-type os,library || scan_exit=$?
+            --vuln-type os,library \
+            --exit-code 100 || scan_exit=$?
 
-          if [ "$scan_exit" -gt 1 ]; then
-            echo "Trivy failed with exit code $scan_exit"
-            exit $scan_exit
-          fi
-
-          if [ "$scan_exit" -eq 1 ]; then
+          if [ "$scan_exit" -eq 100 ]; then
             echo "Trivy found critical/high vulnerabilities"
             exit 1
+          fi
+
+          if [ "$scan_exit" -ne 0 ]; then
+            echo "Trivy failed with exit code $scan_exit"
+            exit $scan_exit
           fi
 
       - name: Upload SARIF report
         if: always()
         uses: github/codeql-action/upload-sarif@v4
+        continue-on-error: true
         with:
           sarif_file: trivy-results.sarif
+
+      - name: Upload SARIF artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: trivy-results
+          path: trivy-results.sarif
