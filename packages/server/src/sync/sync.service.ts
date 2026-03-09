@@ -335,33 +335,18 @@ export class SyncService {
     conflicts: PushConflict[]
   ) {
     const payload = op.payload as unknown as CheckinPayload;
-    if (!payload?.habitId || !payload.date) {return;}
+    if (!payload?.habitId || !payload.date) {
+      return;
+    }
     const timestamp = normalizeDate(payload.updatedAt);
     const date = new Date(payload.date);
-    const parentHabit = await tx.habit.findUnique({
-      where: { id: payload.habitId },
-      select: { userId: true }
-    }) as ParentHabitRecord | null;
-    if (!parentHabit || parentHabit.userId !== userId) {
-      conflicts.push({
-        opId: op.id,
-        reason: 'checkin habit belongs to another user'
-      });
+    const parentHabit = await this.findParentHabit(tx, payload.habitId);
+    if (!this.canApplyCheckinForUser(parentHabit, userId, op.id, conflicts)) {
       return;
     }
 
     if (op.type === 'delete') {
-      await tx.tombstone.create({
-        data: {
-          userId,
-          entity: 'checkin',
-          entityId: payload.id ?? `${payload.habitId}:${payload.date}`,
-          version: payload.version ?? 1
-        }
-      });
-      await tx.checkin.deleteMany({
-        where: { habitId: payload.habitId, date, userId }
-      });
+      await this.deleteCheckin(tx, userId, payload, date);
       applied.push(op.id);
       return;
     }
@@ -402,6 +387,49 @@ export class SyncService {
     });
 
     applied.push(op.id);
+  }
+
+  private async findParentHabit(tx: TxClient, habitId: string): Promise<ParentHabitRecord | null> {
+    return tx.habit.findUnique({
+      where: { id: habitId },
+      select: { userId: true }
+    }) as Promise<ParentHabitRecord | null>;
+  }
+
+  private canApplyCheckinForUser(
+    parentHabit: ParentHabitRecord | null,
+    userId: string,
+    opId: string,
+    conflicts: PushConflict[]
+  ): boolean {
+    if (parentHabit && parentHabit.userId === userId) {
+      return true;
+    }
+
+    conflicts.push({
+      opId,
+      reason: 'checkin habit belongs to another user'
+    });
+    return false;
+  }
+
+  private async deleteCheckin(
+    tx: TxClient,
+    userId: string,
+    payload: CheckinPayload,
+    date: Date
+  ): Promise<void> {
+    await tx.tombstone.create({
+      data: {
+        userId,
+        entity: 'checkin',
+        entityId: payload.id ?? `${payload.habitId}:${payload.date}`,
+        version: payload.version ?? 1
+      }
+    });
+    await tx.checkin.deleteMany({
+      where: { habitId: payload.habitId, date, userId }
+    });
   }
 
   private hasNewerCheckinConflict(

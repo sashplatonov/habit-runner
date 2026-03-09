@@ -2,6 +2,11 @@ node_modules
 packages/*/node_modules
 dist
 packages/*/dist
+dist-test
+.turbo
+coverage
+*.tsbuildinfo
+.eslintcache
 .git
 .idea
 npm-debug.log*

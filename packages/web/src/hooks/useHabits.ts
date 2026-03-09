@@ -88,6 +88,8 @@ async function persistHabitWithOutbox(habit: Habit, action: 'upsert' | 'delete')
   await enqueueOutboxEntry(entry);
 }
 
+// Handles both single and multi-target completion toggles with shared persistence logic.
+// eslint-disable-next-line complexity
 async function toggleCompletionImpl(
   habitId: string,
   date: string | undefined,

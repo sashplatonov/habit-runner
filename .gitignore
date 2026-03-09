@@ -10,6 +10,11 @@ lerna-debug.log*
 node_modules
 dist
 dist-ssr
+.turbo
+coverage
+dist-test
+*.tsbuildinfo
+.eslintcache
 *.local
 
 # Editor directories and files
@@ -23,6 +28,7 @@ dist-ssr
 *.sln
 *.sw?
 .env
+.env.*
 server/.env
 
 secrets/

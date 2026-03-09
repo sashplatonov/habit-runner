@@ -80,6 +80,8 @@ export function useAddEditHabitModel(): AddEditHabitModel {
   };
 }
 
+// This hook intentionally centralizes form hydration and field defaults in one place.
+// eslint-disable-next-line complexity
 function useHabitFormState(existing?: Habit, isEdit?: boolean) {
   const [name, setName] = useState(existing?.name || '');
   const [description, setDescription] = useState(existing?.description || '');
@@ -148,7 +150,6 @@ function useHabitFormState(existing?: Habit, isEdit?: boolean) {
     frequency,
     setFrequency,
     customDays,
-    setCustomDays,
     setCustomDays,
     targetStreak,
     canDecreaseStreak,

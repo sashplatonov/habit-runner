@@ -161,7 +161,7 @@ export class AuthService {
   verifyAccessToken(token: string): AuthPayload {
     try {
       return jwt.verify(token, this.secret) as AuthPayload;
-    } catch (error) {
+    } catch {
       throw new UnauthorizedException('Invalid token');
     }
   }
