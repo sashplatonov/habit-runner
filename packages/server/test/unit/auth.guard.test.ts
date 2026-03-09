@@ -1,3 +1,5 @@
+import * as assert from 'node:assert/strict';
+import { describe, it } from 'node:test';
 import { UnauthorizedException } from '@nestjs/common';
 import { AuthGuard } from '../../src/auth/auth.guard';
 
@@ -34,7 +36,7 @@ describe('AuthGuard', () => {
   it('accepts valid bearer token and sets user on request', async () => {
     const authService = {
       verifyAccessToken(token: string) {
-        expect(token).toBe('valid-token');
+        assert.equal(token, 'valid-token');
         return { sub: 'user-1', email: 'u1@example.com' };
       }
     };
@@ -46,8 +48,8 @@ describe('AuthGuard', () => {
 
     const result = await guard.canActivate(context);
 
-    expect(result).toBe(true);
-    expect(request.user).toEqual({ id: 'user-1', email: 'u1@example.com' });
+    assert.equal(result, true);
+    assert.deepEqual(request.user, { id: 'user-1', email: 'u1@example.com' });
   });
 
   it('rejects request without bearer token', async () => {
@@ -62,8 +64,9 @@ describe('AuthGuard', () => {
       verifyAccessToken: () => ({ sub: 'x', email: 'x@example.com' })
     });
 
-    await expect(guard.canActivate(context)).rejects.toBeInstanceOf(
-      UnauthorizedException
-    );
+    await assert.rejects(() => guard.canActivate(context), (error: unknown) => {
+      assert.ok(error instanceof UnauthorizedException);
+      return true;
+    });
   });
 });

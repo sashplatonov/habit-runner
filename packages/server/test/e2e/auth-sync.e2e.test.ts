@@ -1,5 +1,5 @@
-import { afterAll, beforeAll, beforeEach, test } from '@jest/globals';
 import * as assert from 'node:assert/strict';
+import { test } from 'node:test';
 import { Module, UnauthorizedException } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { AuthController } from '../../src/auth/auth.controller';
@@ -33,7 +33,7 @@ let authController: AuthController;
 let syncController: SyncController;
 let authGuard: AuthGuard;
 
-beforeAll(async () => {
+test.before(async () => {
   prisma.reset();
   app = await NestFactory.createApplicationContext(TestAppModule, { logger: false });
   authController = app.get(AuthController);
@@ -41,11 +41,11 @@ beforeAll(async () => {
   authGuard = app.get(AuthGuard);
 });
 
-afterAll(async () => {
+test.after(async () => {
   await app.close();
 });
 
-beforeEach(() => {
+test.beforeEach(() => {
   prisma.reset();
 });
 
