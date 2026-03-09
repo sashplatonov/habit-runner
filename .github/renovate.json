@@ -1,0 +1,36 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended"
+  ],
+  "timezone": "Europe/Belgrade",
+  "schedule": [
+    "after 06:00 on monday"
+  ],
+  "labels": [
+    "dependencies"
+  ],
+  "dependencyDashboard": true,
+  "separateMajorMinor": true,
+  "rangeStrategy": "replace",
+  "packageRules": [
+    {
+      "matchManagers": [
+        "npm"
+      ],
+      "groupName": "npm non-major updates",
+      "matchUpdateTypes": [
+        "patch",
+        "minor",
+        "digest"
+      ]
+    },
+    {
+      "matchManagers": [
+        "dockerfile",
+        "docker-compose"
+      ],
+      "groupName": "docker updates"
+    }
+  ]
+}

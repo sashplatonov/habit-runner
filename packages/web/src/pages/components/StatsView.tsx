@@ -21,6 +21,7 @@ import {
 import { CompletionRing } from '@/components/CompletionRing';
 import { HABIT_COLOR_THEMES } from '@/lib/theme/habit-colors';
 import type { Habit } from '@/types/habit';
+import { invokeIfFunction } from '@/lib/callback';
 
 type HabitStats = {
   completionRate: number;
@@ -216,7 +217,7 @@ function FiltersPanel({
             {allTags.map((tag) => (
               <button
                 key={tag}
-                onClick={() => toggleTag(tag)}
+                onClick={() => invokeIfFunction(toggleTag, tag)}
                 className={`px-2 py-1 rounded border text-[10px] font-mono transition-colors ${
                   selectedTags.includes(tag)
                     ? 'bg-accent/10 border-accent/30 text-accent'

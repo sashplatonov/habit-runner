@@ -9,6 +9,7 @@ Habbit Runner is built on a [Magic Patterns](https://magicpatterns.com) Vite tem
 - 🚀 Initial setup: [docs/getting-started.md](./docs/getting-started.md)
 - 🔄 Offline sync: [docs/offline-sync-plan.md](./docs/offline-sync-plan.md)
 - 🛡️ Reliability and rollout: [docs/reliability-rollout.md](./docs/reliability-rollout.md)
+- 🤖 GitHub automation (Renovate + Trivy): [docs/github-automation.md](./docs/github-automation.md)
 
 ## 🚀 Getting Started
 

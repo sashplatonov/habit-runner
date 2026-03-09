@@ -15,8 +15,5 @@ export default defineConfig({
       reporter: ['text', 'lcov'],
       exclude: ['node_modules', 'tests/helpers']
     }
-  },
-  esbuild: {
-    tsconfig: './tsconfig.test.json'
   }
 });

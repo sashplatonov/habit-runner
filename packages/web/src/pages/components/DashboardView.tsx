@@ -3,6 +3,7 @@ import { BellRingIcon, FlameIcon, TrendingUpIcon, ZapIcon } from 'lucide-react';
 import { Onboarding, type OnboardingTemplate } from '@/components/Onboarding';
 import type { Habit } from '@/types/habit';
 import { HabitRow, DropIndicator } from './DashboardView.helpers';
+import { invokeIfFunction } from '@/lib/callback';
 
 type Reminder = {
   habitId: string;
@@ -209,7 +210,7 @@ function FilterBar({
                 <button
                   key={tag}
                   type="button"
-                  onClick={() => toggleTag(tag)}
+                  onClick={() => invokeIfFunction(toggleTag, tag)}
                   className={`text-[10px] font-mono px-2 py-1 rounded border whitespace-nowrap transition-colors ${
                     selectedTags.includes(tag)
                       ? 'bg-accent/10 border-accent/30 text-accent'
@@ -222,7 +223,7 @@ function FilterBar({
               {selectedTags.length > 0 && (
                 <button
                   type="button"
-                  onClick={() => setSelectedTags([])}
+                  onClick={() => invokeIfFunction(setSelectedTags, [])}
                   className="text-[10px] font-mono px-2 py-1 rounded border whitespace-nowrap bg-bg-secondary border-accent/30 text-accent hover:bg-accent/10 transition-colors"
                 >
                   Clear tags

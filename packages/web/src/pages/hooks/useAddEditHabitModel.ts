@@ -3,6 +3,7 @@ import { useNavigate, useParams } from '@/lib/router';
 import { useHabits } from '@/hooks/useHabits';
 import type { Habit, HabitColor, HabitFrequency } from '@/types/habit';
 import { COLORS } from '../components/add-edit-habit.constants';
+import { invokeIfFunction } from '@/lib/callback';
 
 const TARGET_STREAK_OPTIONS = [7, 14, 21, 30, 60, 90, 180, 365];
 
@@ -29,6 +30,7 @@ export type AddEditHabitModel = {
   customDays: number[];
   toggleCustomDay: (day: number) => void;
   targetStreak: number;
+  setTargetStreak: React.Dispatch<React.SetStateAction<number>>;
   canDecreaseStreak: boolean;
   canIncreaseStreak: boolean;
   decreaseTargetStreak: () => void;
@@ -152,6 +154,7 @@ function useHabitFormState(existing?: Habit, isEdit?: boolean) {
     customDays,
     setCustomDays,
     targetStreak,
+    setTargetStreak,
     canDecreaseStreak,
     canIncreaseStreak,
     decreaseTargetStreak,
@@ -159,6 +162,7 @@ function useHabitFormState(existing?: Habit, isEdit?: boolean) {
     dailyTarget,
     setDailyTarget,
     tags,
+    setTags,
     tagInput,
     setTagInput,
     reminderTime,
@@ -171,6 +175,7 @@ function useHabitFormState(existing?: Habit, isEdit?: boolean) {
   };
 }
 
+// eslint-disable-next-line max-lines-per-function
 function useHabitHandlers({
   name,
   description,
@@ -204,14 +209,12 @@ function useHabitHandlers({
   navigate: (path: string) => void;
 }) {
   const validate = useCallback(() => validateForm(name, frequency, customDays), [name, frequency, customDays]);
-
   const handleSubmit = useCallback(async () => {
     const validationErrors = validate();
     if (Object.keys(validationErrors).length > 0) {
-      setErrors(validationErrors);
+      invokeIfFunction(setErrors, validationErrors);
       return;
     }
-
     const normalizedTags = normalizeTags(tagInput, tags);
     const payload = buildHabitPayload({
       name,
@@ -227,7 +230,6 @@ function useHabitHandlers({
       reminderTime,
       reminderEnabled
     });
-
     if (isEdit && habitId) {
       await updateHabit(habitId, payload);
       navigate(`/habit/${habitId}`);
@@ -257,32 +259,35 @@ function useHabitHandlers({
     setErrors,
     tagInput
   ]);
-
   const addTag = useCallback(
     (tag: string) => {
       const sanitized = tag.toLowerCase().replace(/[^a-z0-9]/g, '');
       if (sanitized && !tags.includes(sanitized) && tags.length < 5) {
-        setTags((prev) => [...prev, sanitized]);
+        if (typeof setTags === 'function') {
+          setTags((prev) => [...prev, sanitized]);
+        }
       }
-      setTagInput('');
+      invokeIfFunction(setTagInput, '');
     },
     [tags, setTags, setTagInput]
   );
-
   const removeTag = useCallback((tag: string) => {
-    setTags((prev) => prev.filter((item) => item !== tag));
+    if (typeof setTags === 'function') {
+      setTags((prev) => prev.filter((item) => item !== tag));
+    }
   }, [setTags]);
-
   const toggleCustomDay = useCallback((day: number) => {
-    setCustomDays((prev) =>
-      prev.includes(day) ? prev.filter((value) => value !== day) : [...prev, day]
-    );
+    if (typeof setCustomDays === 'function') {
+      setCustomDays((prev) =>
+        prev.includes(day) ? prev.filter((value) => value !== day) : [...prev, day]
+      );
+    }
   }, [setCustomDays]);
-
   const toggleReminderEnabled = useCallback(() => {
-    setReminderEnabled((value) => !value);
+    if (typeof setReminderEnabled === 'function') {
+      setReminderEnabled((value) => !value);
+    }
   }, [setReminderEnabled]);
-
   const handleBack = useCallback(() => {
     const destination = isEdit && habitId ? `/habit/${habitId}` : '/';
     navigate(destination);
@@ -295,7 +300,6 @@ function useHabitHandlers({
     toggleReminderEnabled,
     handleSubmit,
     handleBack,
-    selectedColor,
     // errors setters forwarded for validation use
   } as const;
 }

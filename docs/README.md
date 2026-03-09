@@ -9,6 +9,7 @@ Use this page as your entry point and navigate deeper by topic.
 2. [🏗️ Architecture Overview](./architecture.md)
 3. [🔄 Offline Sync Plan](./offline-sync-plan.md)
 4. [🛡️ Reliability and Rollout](./reliability-rollout.md)
+5. [🤖 GitHub Automation (Renovate + Trivy)](./github-automation.md)
 
 ## 🧭 Suggested Reading Path
 
@@ -16,6 +17,7 @@ Use this page as your entry point and navigate deeper by topic.
 2. Continue with [🏗️ Architecture Overview](./architecture.md)
 3. Dive into [🔄 Offline Sync Plan](./offline-sync-plan.md)
 4. Finish with [🛡️ Reliability and Rollout](./reliability-rollout.md)
+5. Configure [🤖 GitHub Automation (Renovate + Trivy)](./github-automation.md)
 
 ## ↕️ Navigation
 

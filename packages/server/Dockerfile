@@ -26,15 +26,18 @@ RUN apk add --no-cache openssl ca-certificates
 COPY --from=base /app/package.json /app/package-lock.json ./
 COPY --from=base /app/node_modules ./node_modules
 COPY --from=base /app/packages/shared ./packages/shared
-COPY --from=base /app/packages/server/prisma ./prisma
-COPY --from=base /app/packages/server/prisma.config.ts ./prisma.config.ts
-COPY --from=base /app/packages/server/dist ./dist
+COPY --from=base /app/packages/server/package.json ./packages/server/package.json
+COPY --from=base /app/packages/server/node_modules ./packages/server/node_modules
+COPY --from=base /app/packages/server/prisma ./packages/server/prisma
+COPY --from=base /app/packages/server/prisma.config.ts ./packages/server/prisma.config.ts
+COPY --from=base /app/packages/server/dist ./packages/server/dist
 COPY --from=base /app/packages/server/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh \
   && chown -R node:node /app
 
 USER node
+WORKDIR /app/packages/server
 EXPOSE 4000
 ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
 CMD ["node", "dist/main.js"]

@@ -6,6 +6,7 @@ import React, {
   useMemo,
   useState
 } from 'react';
+import { invokeIfFunction } from '@/lib/callback';
 
 type RouterLocation = {
   pathname: string;
@@ -175,9 +176,7 @@ export function Link({ to, replace, onClick, ...rest }: LinkProps) {
   const { navigate } = context;
 
   const handleClick: React.MouseEventHandler<HTMLAnchorElement> = (event) => {
-    if (onClick) {
-      onClick(event);
-    }
+    invokeIfFunction(onClick, event);
     if (event.defaultPrevented) {
       return;
     }

@@ -44,6 +44,9 @@ export const ICONS = [
 
 export const DAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
+export const TARGET_STREAK_OPTIONS = [7, 14, 21, 30, 60, 90, 180, 365];
+export const DAILY_TARGET_OPTIONS = [1, 2, 3, 4, 5];
+
 export const SUGGESTED_TAGS = [
   'health',
   'fitness',

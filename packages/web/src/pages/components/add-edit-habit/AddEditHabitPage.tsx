@@ -1,13 +1,8 @@
 import React from 'react';
-import { ArrowLeftIcon, XIcon } from 'lucide-react';
-import {
-  COLORS,
-  DAY_LABELS,
-  FREQUENCIES,
-  ICONS,
-  SUGGESTED_TAGS
-} from '../add-edit-habit.constants';
+import { ArrowLeftIcon, PlusIcon, XIcon } from 'lucide-react';
+import { COLORS, DAILY_TARGET_OPTIONS, DAY_LABELS, FREQUENCIES, ICONS, SUGGESTED_TAGS, TARGET_STREAK_OPTIONS } from '../add-edit-habit.constants';
 import type { AddEditHabitModel } from '@/pages/hooks/useAddEditHabitModel';
+import { invokeIfFunction } from '@/lib/callback';
 
 export function AddEditHabitPage({ model }: { model: AddEditHabitModel }) {
   const {
@@ -29,6 +24,7 @@ export function AddEditHabitPage({ model }: { model: AddEditHabitModel }) {
     canIncreaseStreak,
     decreaseTargetStreak,
     increaseTargetStreak,
+    setTargetStreak,
     dailyTarget,
     setDailyTarget,
     tags,
@@ -45,14 +41,13 @@ export function AddEditHabitPage({ model }: { model: AddEditHabitModel }) {
     handleSubmit,
     handleBack
   } = model;
-
   return (
     <div className="min-h-screen bg-bg-primary pt-14">
-      <HabitHeaderSection
+      <HeaderSection
         isEdit={isEdit}
-        handleBack={handleBack}
-        handleSubmit={handleSubmit}
         selectedColor={selectedColor}
+        onBack={handleBack}
+        onSubmit={handleSubmit}
       />
       <div className="max-w-lg mx-auto px-4 py-6 space-y-5">
         <IconNameSection
@@ -61,26 +56,29 @@ export function AddEditHabitPage({ model }: { model: AddEditHabitModel }) {
           description={description}
           setDescription={setDescription}
           icon={icon}
-          errorMessage={errors.name}
+          setIcon={setIcon}
+          selectedColor={selectedColor}
+          nameError={errors.name}
         />
-        <IconPickerSection icon={icon} setIcon={setIcon} />
-        <ColorAndFrequencySection
+        <ColorFrequencySection
           color={color}
           setColor={setColor}
           frequency={frequency}
           setFrequency={setFrequency}
+          customDays={customDays}
+          toggleCustomDay={toggleCustomDay}
+          customDaysError={errors.customDays}
         />
-        {frequency === 'custom' && (
-          <CustomDaysSection customDays={customDays} toggleCustomDay={toggleCustomDay} error={errors.customDays} />
-        )}
         <TargetSection
           targetStreak={targetStreak}
-          canDecrease={canDecreaseStreak}
-          canIncrease={canIncreaseStreak}
-          decrease={decreaseTargetStreak}
-          increase={increaseTargetStreak}
+          canDecreaseStreak={canDecreaseStreak}
+          canIncreaseStreak={canIncreaseStreak}
+          decreaseTargetStreak={decreaseTargetStreak}
+          increaseTargetStreak={increaseTargetStreak}
+          setTargetStreak={setTargetStreak}
           dailyTarget={dailyTarget}
           setDailyTarget={setDailyTarget}
+          selectedColor={selectedColor}
         />
         <TagsSection
           tags={tags}
@@ -88,8 +86,9 @@ export function AddEditHabitPage({ model }: { model: AddEditHabitModel }) {
           setTagInput={setTagInput}
           addTag={addTag}
           removeTag={removeTag}
+          selectedColor={selectedColor}
         />
-        <RemindersSection
+        <ReminderSection
           reminderEnabled={reminderEnabled}
           toggleReminderEnabled={toggleReminderEnabled}
           reminderTime={reminderTime}
@@ -99,24 +98,29 @@ export function AddEditHabitPage({ model }: { model: AddEditHabitModel }) {
     </div>
   );
 }
-
-function HabitHeaderSection({
+function HeaderSection({
   isEdit,
-  handleBack,
-  handleSubmit,
-  selectedColor
-}: Pick<AddEditHabitModel, 'isEdit' | 'handleBack' | 'handleSubmit' | 'selectedColor'>) {
+  selectedColor,
+  onBack,
+  onSubmit
+}: {
+  isEdit: boolean;
+  selectedColor: AddEditHabitModel['selectedColor'];
+  onBack: () => void;
+  onSubmit: () => Promise<void>;
+}) {
   return (
     <div className="border-b border-border bg-bg-primary px-4 py-4 sticky top-14 z-10">
       <div className="max-w-lg mx-auto flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <button onClick={handleBack} className="text-muted hover:text-foreground transition-colors">
+          <button type="button" onClick={onBack} className="text-muted hover:text-foreground transition-colors">
             <ArrowLeftIcon size={16} />
           </button>
           <h1 className="text-base font-semibold text-foreground">{isEdit ? 'Edit Habit' : 'New Habit'}</h1>
         </div>
         <button
-          onClick={handleSubmit}
+          type="button"
+          onClick={onSubmit}
           className="px-4 py-1.5 rounded text-xs font-mono font-bold text-bg-primary transition-all duration-200"
           style={{
             backgroundColor: selectedColor.hex,
@@ -129,268 +133,364 @@ function HabitHeaderSection({
     </div>
   );
 }
-
 function IconNameSection({
   name,
   setName,
   description,
   setDescription,
   icon,
-  errorMessage
-}: Pick<AddEditHabitModel, 'name' | 'setName' | 'description' | 'setDescription' | 'icon'> & {
-  errorMessage?: string;
+  setIcon,
+  selectedColor,
+  nameError
+}: {
+  name: string;
+  setName: AddEditHabitModel['setName'];
+  description: string;
+  setDescription: AddEditHabitModel['setDescription'];
+  icon: string;
+  setIcon: AddEditHabitModel['setIcon'];
+  selectedColor: AddEditHabitModel['selectedColor'];
+  nameError?: string;
 }) {
   return (
     <div className="flex gap-3">
       <div className="flex-shrink-0">
-        <div className="w-12 h-12 rounded-2xl bg-bg-card border border-border flex items-center justify-center text-2xl">
-          {icon}
+        <label className="block text-[10px] font-mono text-muted uppercase tracking-wider mb-2">Icon</label>
+        <div className="grid grid-cols-5 gap-1 bg-bg-secondary border border-border rounded-lg p-2">
+          {ICONS.map((option) => (
+            <button
+              key={option}
+              type="button"
+              onClick={() => setIcon(option)}
+              className={`w-8 h-8 rounded flex items-center justify-center text-base transition-all ${
+                icon === option ? 'bg-border ring-1' : 'hover:bg-border'
+              }`}
+              style={icon === option ? { ringColor: selectedColor.hex } : undefined}
+            >
+              {option}
+            </button>
+          ))}
         </div>
       </div>
-      <div className="flex-1 space-y-2">
-        <input
-          type="text"
-          value={name}
-          onChange={(event) => setName(event.target.value)}
-          placeholder="Habit name"
-          className="w-full bg-bg-secondary border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder-muted focus:outline-none focus:border-accent/50"
-        />
-        {errorMessage && <p className="text-[11px] font-mono text-rose-400">{errorMessage}</p>}
-        <textarea
-          value={description}
-          onChange={(event) => setDescription(event.target.value)}
-          placeholder="Description (optional)"
-          className="w-full bg-bg-secondary border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder-muted focus:outline-none focus:border-accent/50 h-20 resize-none"
-        />
+      <div className="flex-1 space-y-3">
+        <div>
+          <label className="block text-[10px] font-mono text-muted uppercase tracking-wider mb-2">Name *</label>
+          <input
+            type="text"
+            value={name}
+            onChange={(event) => setName(event.target.value)}
+            placeholder="e.g. Deep Work"
+            maxLength={40}
+            className="w-full bg-bg-secondary border border-border rounded-lg px-3 py-2.5 text-sm text-foreground placeholder-border-hover font-medium focus:outline-none focus:border-accent/50 focus:shadow-[0_0_12px_var(--glow)] transition-all"
+            style={nameError ? { borderColor: 'var(--accent-secondary)' } : undefined}
+          />
+          {nameError && <p className="text-[10px] font-mono text-accent-secondary mt-1">{nameError}</p>}
+        </div>
+        <div>
+          <label className="block text-[10px] font-mono text-muted uppercase tracking-wider mb-2">Description</label>
+          <input
+            type="text"
+            value={description}
+            onChange={(event) => setDescription(event.target.value)}
+            placeholder="Brief description..."
+            maxLength={100}
+            className="w-full bg-bg-secondary border border-border rounded-lg px-3 py-2.5 text-sm text-foreground placeholder-border-hover focus:outline-none focus:border-accent/50 focus:shadow-[0_0_12px_var(--glow)] transition-all"
+          />
+        </div>
       </div>
     </div>
   );
 }
-
-function IconPickerSection({ icon, setIcon }: Pick<AddEditHabitModel, 'icon' | 'setIcon'>) {
-  return (
-    <div>
-      <div className="text-[11px] font-mono text-muted mb-2">Icon</div>
-      <div className="flex flex-wrap gap-2">
-        {ICONS.map((option) => (
-          <button
-            key={option}
-            type="button"
-            onClick={() => setIcon(option)}
-            className={`w-9 h-9 rounded-xl border flex items-center justify-center text-lg transition-colors ${
-              icon === option ? 'border-accent text-accent' : 'border-border text-muted'
-            }`}
-          >
-            {option}
-          </button>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function ColorAndFrequencySection({
+function ColorFrequencySection({
   color,
   setColor,
   frequency,
-  setFrequency
-}: Pick<AddEditHabitModel, 'color' | 'setColor' | 'frequency' | 'setFrequency'>) {
-  return (
-    <div className="grid grid-cols-2 gap-4">
-      <div>
-        <div className="text-[11px] font-mono text-muted mb-2">Color theme</div>
-        <div className="flex flex-wrap gap-2">
-          {COLORS.map((option) => (
-            <button
-              key={option.value}
-              type="button"
-              onClick={() => setColor(option.value)}
-              className={`w-10 h-10 rounded-2xl border flex items-center justify-center text-base transition-colors ${
-                color === option.value ? `${option.borderClass} ${option.shadowClass}` : 'border-border'
-              }`}
-              style={{ backgroundColor: option.hex }}
-            >
-              {color === option.value && <XIcon size={14} className="text-white" />}
-            </button>
-          ))}
-        </div>
-      </div>
-      <div>
-        <div className="text-[11px] font-mono text-muted mb-2">Frequency</div>
-        <div className="flex flex-wrap gap-2">
-          {FREQUENCIES.map((option) => (
-            <button
-              key={option.value}
-              type="button"
-              onClick={() => setFrequency(option.value)}
-              className={`px-3 py-1 rounded-full text-xs font-mono border transition-colors ${
-                frequency === option.value ? 'bg-border text-foreground' : 'border-border text-muted'
-              }`}
-            >
-              {option.label}
-            </button>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function CustomDaysSection({ customDays, toggleCustomDay, error }: {
+  setFrequency,
+  customDays,
+  toggleCustomDay,
+  customDaysError
+}: {
+  color: AddEditHabitModel['color'];
+  setColor: AddEditHabitModel['setColor'];
+  frequency: AddEditHabitModel['frequency'];
+  setFrequency: AddEditHabitModel['setFrequency'];
   customDays: AddEditHabitModel['customDays'];
   toggleCustomDay: AddEditHabitModel['toggleCustomDay'];
-  error?: string;
+  customDaysError?: string;
 }) {
   return (
     <div>
-      <div className="text-[11px] font-mono text-muted mb-2">Custom days</div>
-      <div className="flex flex-wrap gap-2">
-        {DAY_LABELS.map((label, index) => (
+      <label className="block text-[10px] font-mono text-muted uppercase tracking-wider mb-2">Color</label>
+      <div className="flex gap-2">
+        {COLORS.map((option) => (
           <button
-            key={label}
+            key={option.value}
             type="button"
-            onClick={() => toggleCustomDay(index + 1)}
-            className={`px-3 py-1 rounded-full text-xs font-mono border transition-colors ${
-              customDays.includes(index + 1) ? 'bg-border text-foreground' : 'border-border text-muted'
-            }`}
+            onClick={() => setColor(option.value)}
+            className="w-8 h-8 rounded-full border-2 transition-all duration-200 flex items-center justify-center"
+            style={{
+              backgroundColor: `${option.hex}20`,
+              borderColor: color === option.value ? option.hex : 'transparent',
+              boxShadow: color === option.value ? `0 0 12px ${option.hex}60` : 'none'
+            }}
+            title={option.label}
           >
-            {label}
+            <div className="w-3 h-3 rounded-full" style={{ backgroundColor: option.hex }} />
           </button>
         ))}
       </div>
-      {error && <p className="text-[11px] font-mono text-rose-400">{error}</p>}
+      <label className="block text-[10px] font-mono text-muted uppercase tracking-wider mb-2 mt-4">Frequency</label>
+      <div className="grid grid-cols-4 gap-1.5">
+        {FREQUENCIES.map((option) => (
+          <button
+            key={option.value}
+            type="button"
+            onClick={() => setFrequency(option.value)}
+            className={`px-2 py-2.5 rounded-lg border text-center transition-all duration-200 ${
+              frequency === option.value ? 'border-accent/50 bg-accent/10' : 'border-border bg-bg-secondary hover:border-border-hover'
+            }`}
+          >
+            <div className={`text-xs font-mono font-medium ${frequency === option.value ? 'text-accent' : 'text-foreground'}`}>
+              {option.label}
+            </div>
+            <div className="text-[9px] font-mono text-muted mt-0.5">{option.desc}</div>
+          </button>
+        ))}
+      </div>
+      {frequency === 'custom' && (
+        <div className="mt-3">
+          <div className="flex gap-1.5">
+            {DAY_LABELS.map((day, index) => (
+              <button
+                key={day}
+                type="button"
+                onClick={() => toggleCustomDay(index)}
+                className={`flex-1 py-2 rounded text-[10px] font-mono font-medium border transition-all duration-200 ${
+                  customDays.includes(index)
+                    ? 'border-accent/50 bg-accent/10 text-accent'
+                    : 'border-border bg-bg-secondary text-muted'
+                }`}
+              >
+                {day[0]}
+              </button>
+            ))}
+          </div>
+          {customDaysError && <p className="text-[10px] font-mono text-accent-secondary mt-1">{customDaysError}</p>}
+        </div>
+      )}
     </div>
   );
 }
-
 function TargetSection({
   targetStreak,
-  canDecrease,
-  canIncrease,
-  decrease,
-  increase,
+  canDecreaseStreak,
+  canIncreaseStreak,
+  decreaseTargetStreak,
+  increaseTargetStreak,
+  setTargetStreak,
   dailyTarget,
-  setDailyTarget
-}: Pick<AddEditHabitModel, 'targetStreak' | 'dailyTarget' | 'setDailyTarget'> & {
-  canDecrease: boolean;
-  canIncrease: boolean;
-  decrease: () => void;
-  increase: () => void;
+  setDailyTarget,
+  selectedColor
+}: {
+  targetStreak: number;
+  canDecreaseStreak: boolean;
+  canIncreaseStreak: boolean;
+  decreaseTargetStreak: () => void;
+  increaseTargetStreak: () => void;
+  setTargetStreak: AddEditHabitModel['setTargetStreak'];
+  dailyTarget: number;
+  setDailyTarget: AddEditHabitModel['setDailyTarget'];
+  selectedColor: AddEditHabitModel['selectedColor'];
 }) {
   return (
-    <div className="grid grid-cols-2 gap-4">
+    <>
       <div>
-        <div className="text-[11px] font-mono text-muted mb-2">Target streak</div>
+        <label className="block text-[10px] font-mono text-muted uppercase tracking-wider mb-2">
+          Target streak{' '}
+          <span className="font-bold" style={{ color: selectedColor.hex }}>
+            {targetStreak} days
+          </span>
+        </label>
         <div className="flex items-center gap-2">
           <button
             type="button"
-            onClick={decrease}
-            disabled={!canDecrease}
-            className="rounded-full border border-border text-xs font-mono px-3 py-1"
+            onClick={decreaseTargetStreak}
+            disabled={!canDecreaseStreak}
+            className="h-8 min-w-8 px-2 rounded-lg border border-border bg-bg-secondary text-xs font-mono text-muted hover:text-foreground hover:border-border-hover disabled:opacity-40 disabled:hover:border-border disabled:hover:text-muted transition"
           >
             -
           </button>
-          <span className="text-sm font-medium">{targetStreak} days</span>
+          <div className="flex-1 grid grid-cols-4 gap-1.5">
+            {TARGET_STREAK_OPTIONS.map((value) => (
+              <button
+                key={value}
+                type="button"
+                onClick={() => setTargetStreak(value)}
+                className={`h-8 px-2 rounded-lg border text-[10px] font-mono transition ${
+                  targetStreak === value
+                    ? 'border-accent/50 bg-accent/10 text-accent'
+                    : 'border-border bg-bg-secondary text-muted hover:border-border-hover'
+                }`}
+              >
+                {value}d
+              </button>
+            ))}
+          </div>
           <button
             type="button"
-            onClick={increase}
-            disabled={!canIncrease}
-            className="rounded-full border border-border text-xs font-mono px-3 py-1"
+            onClick={increaseTargetStreak}
+            disabled={!canIncreaseStreak}
+            className="h-8 min-w-8 px-2 rounded-lg border border-border bg-bg-secondary text-xs font-mono text-muted hover:text-foreground hover:border-border-hover disabled:opacity-40 disabled:hover:border-border disabled:hover:text-muted transition"
           >
             +
           </button>
         </div>
       </div>
       <div>
-        <div className="text-[11px] font-mono text-muted mb-2">Daily target</div>
-        <input
-          type="number"
-          min={1}
-          value={dailyTarget}
-          onChange={(event) => setDailyTarget(Math.max(1, Math.trunc(Number(event.target.value) || 1)))}
-          className="w-full bg-bg-secondary border border-border rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:border-accent/50"
-        />
+        <label className="block text-[10px] font-mono text-muted uppercase tracking-wider mb-2">Daily target</label>
+        <div className="flex items-center gap-2">
+          {DAILY_TARGET_OPTIONS.map((value) => (
+            <button
+              key={value}
+              type="button"
+              onClick={() => setDailyTarget(value)}
+              className={`px-3 py-1.5 rounded-lg border text-[11px] font-mono transition ${
+                dailyTarget === value
+                  ? 'border-accent/50 bg-accent/10 text-accent'
+                  : 'border-border bg-bg-secondary text-muted hover:border-border-hover'
+              }`}
+            >
+              {value}x/day
+            </button>
+          ))}
+        </div>
+        <p className="text-[9px] font-mono text-muted mt-1">
+          Habit counts as done only when today&apos;s completions reach this target.
+        </p>
       </div>
-    </div>
+    </>
   );
 }
-
 function TagsSection({
   tags,
   tagInput,
   setTagInput,
   addTag,
-  removeTag
-}: Pick<AddEditHabitModel, 'tags' | 'tagInput' | 'setTagInput' | 'addTag' | 'removeTag'>) {
+  removeTag,
+  selectedColor
+}: {
+  tags: string[];
+  tagInput: string;
+  setTagInput: AddEditHabitModel['setTagInput'];
+  addTag: AddEditHabitModel['addTag'];
+  removeTag: AddEditHabitModel['removeTag'];
+  selectedColor: AddEditHabitModel['selectedColor'];
+}) {
   return (
     <div>
-      <div className="text-[11px] font-mono text-muted mb-2">Tags</div>
+      <label className="block text-[10px] font-mono text-muted uppercase tracking-wider mb-2">
+        Tags <span className="text-border-hover">({tags.length}/5)</span>
+      </label>
+      <div className="flex flex-wrap gap-1.5 mb-2">
+        {tags.map((tag) => (
+          <span
+            key={tag}
+            className="flex items-center gap-1 text-[10px] font-mono px-2 py-1 rounded border"
+            style={{
+              color: selectedColor.hex,
+              borderColor: `${selectedColor.hex}40`,
+              backgroundColor: `${selectedColor.hex}10`
+            }}
+          >
+            #{tag}
+            <button type="button" onClick={() => invokeIfFunction(removeTag, tag)} className="opacity-60 hover:opacity-100">
+              <XIcon size={9} />
+            </button>
+          </span>
+        ))}
+      </div>
       <div className="flex gap-2">
         <input
           type="text"
           value={tagInput}
           onChange={(event) => setTagInput(event.target.value)}
-          placeholder="Add tag"
-          className="flex-1 bg-bg-secondary border border-border rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:border-accent/50"
+            onKeyDown={(event) => {
+              if (event.key === 'Enter' || event.key === ',') {
+                event.preventDefault();
+                invokeIfFunction(addTag, tagInput);
+              }
+            }}
+          placeholder="Add tag..."
+          maxLength={20}
+          disabled={tags.length >= 5}
+          className="flex-1 bg-bg-secondary border border-border rounded-lg px-3 py-2 text-xs text-foreground placeholder-border-hover font-mono focus:outline-none focus:border-accent/50 transition-all disabled:opacity-40"
         />
         <button
           type="button"
-          onClick={() => addTag(tagInput)}
-          className="rounded-full border border-border px-3 py-1.5 text-xs font-mono"
+          onClick={() => invokeIfFunction(addTag, tagInput)}
+          disabled={!tagInput.trim() || tags.length >= 5}
+          className="px-3 py-2 rounded-lg border border-border text-muted hover:text-foreground hover:border-border-hover transition-colors disabled:opacity-40"
         >
-          Add
+          <PlusIcon size={13} />
         </button>
       </div>
-      <div className="flex flex-wrap gap-2 mt-2">
-        {tags.map((tag) => (
-          <button
-            key={tag}
-            type="button"
-            onClick={() => removeTag(tag)}
-            className="text-[10px] font-mono rounded-full border border-border bg-bg-card px-2 py-1 flex items-center gap-1"
-          >
-            #{tag}
-            <XIcon size={12} />
-          </button>
-        ))}
-      </div>
-      <div className="flex flex-wrap gap-2 mt-2 text-[10px] font-mono text-muted">
-        {SUGGESTED_TAGS.map((tag) => (
-          <button
-            key={tag}
-            type="button"
-            onClick={() => addTag(tag)}
-            className="uppercase tracking-[0.3em] border border-border rounded-full px-2 py-1"
-          >
-            {tag}
-          </button>
-        ))}
+      <div className="flex flex-wrap gap-1.5 mt-2">
+        {SUGGESTED_TAGS.filter((tag) => !tags.includes(tag))
+          .slice(0, 6)
+          .map((tag) => (
+            <button
+              key={tag}
+              type="button"
+              onClick={() => invokeIfFunction(addTag, tag)}
+              disabled={tags.length >= 5}
+              className="text-[9px] font-mono text-muted border border-border px-2 py-0.5 rounded hover:text-foreground hover:border-border-hover transition-colors disabled:opacity-40"
+            >
+              +{tag}
+            </button>
+          ))}
       </div>
     </div>
   );
 }
-
-function RemindersSection({
+function ReminderSection({
   reminderEnabled,
   toggleReminderEnabled,
   reminderTime,
   setReminderTime
-}: Pick<AddEditHabitModel, 'reminderEnabled' | 'toggleReminderEnabled' | 'reminderTime' | 'setReminderTime'>) {
+}: {
+  reminderEnabled: boolean;
+  toggleReminderEnabled: () => void;
+  reminderTime: string;
+  setReminderTime: AddEditHabitModel['setReminderTime'];
+}) {
   return (
     <div>
-      <div className="flex items-center justify-between mb-2">
-        <span className="text-[11px] font-mono text-muted">Reminders</span>
-        <label className="flex items-center gap-2 text-[10px] font-mono">
-          <input type="checkbox" checked={reminderEnabled} onChange={toggleReminderEnabled} />
-          Enabled
-        </label>
+      <label className="block text-[10px] font-mono text-muted uppercase tracking-wider mb-2">Reminder</label>
+      <div className="flex flex-wrap items-center gap-3">
+        <input
+          type="time"
+          value={reminderTime}
+          onChange={(event) => setReminderTime(event.target.value)}
+          className="rounded-lg border border-border bg-bg-secondary px-3 py-2 text-sm font-mono focus:border-accent/60 focus:outline-none focus:shadow-[0_0_12px_var(--glow)] transition"
+        />
+        <button
+          type="button"
+          onClick={toggleReminderEnabled}
+          className={`px-3 py-1.5 rounded-lg border text-[9px] font-mono uppercase tracking-wider transition ${
+            reminderEnabled
+              ? 'border-accent/40 bg-accent/10 text-accent'
+              : 'border-border bg-bg-secondary text-muted hover:border-border-hover'
+          }`}
+        >
+          {reminderEnabled ? 'Reminders enabled' : 'Reminders disabled'}
+        </button>
+        <span className="text-[11px] font-mono text-muted">{reminderTime ? `Daily at ${reminderTime}` : 'No reminder yet'}</span>
       </div>
-      <input
-        type="time"
-        value={reminderTime}
-        onChange={(event) => setReminderTime(event.target.value)}
-        className="w-full bg-bg-secondary border border-border rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:border-accent/50"
-      />
+      <p className="text-[9px] font-mono text-muted mt-1">
+        {reminderEnabled
+          ? 'Reminder calls appear on the dashboard when the app is open.'
+          : 'Notifications are disabled. Enable them to receive reminders.'}
+      </p>
     </div>
   );
 }

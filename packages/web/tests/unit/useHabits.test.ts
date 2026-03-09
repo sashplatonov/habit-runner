@@ -22,9 +22,20 @@ test('buildCompletionsByHabitId groups only completed checkins', () => {
 
   const result = buildCompletionsByHabitId(checkins);
 
-  expect(result['habit-1']).toEqual({ '2026-03-01': true });
-  expect(result['habit-2']).toEqual({ '2026-03-01': true });
+  expect(result['habit-1']).toEqual({ '2026-03-01': 1 });
+  expect(result['habit-2']).toEqual({ '2026-03-01': 1 });
   expect(result['habit-1']['2026-03-02']).toBeUndefined();
+});
+
+test('buildCompletionsByHabitId sums counts per date', () => {
+  const checkins: CheckinEntity[] = [
+    baseCheckin({ id: 'checkin-1', count: 2 }),
+    baseCheckin({ id: 'checkin-2', count: 3 })
+  ];
+
+  const result = buildCompletionsByHabitId(checkins);
+
+  expect(result['habit-1']).toEqual({ '2026-03-01': 5 });
 });
 
 test('buildCompletionsByHabitId returns empty map when no completed checkins', () => {
