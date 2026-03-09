@@ -1,47 +1,40 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { DEFAULT_HABIT_COLOR, HABIT_COLOR_THEMES } from '@/lib/theme/habit-colors';
 import type { HabitColor } from '@/types/habit';
+
 interface HeatmapGridProps {
   completions: Record<string, number>;
   dailyTarget?: number;
   color?: HabitColor;
   weeks?: number;
 }
+
+type HeatmapCell = {
+  date: string;
+  completed: boolean;
+  isToday: boolean;
+};
+
 function formatDate(date: Date): string {
   return date.toISOString().split('T')[0];
 }
+
 function getIntensity(completed: boolean | undefined): number {
   return completed ? 4 : 0;
 }
-export function HeatmapGrid({
-  completions,
-  dailyTarget = 1,
-  color = DEFAULT_HABIT_COLOR,
-  weeks = 26
-}: HeatmapGridProps) {
-  const [tooltip, setTooltip] = useState<{
-    date: string;
-    completed: boolean;
-    x: number;
-    y: number;
-  } | null>(null);
-  const { heatmapLevels: levels, glow } = HABIT_COLOR_THEMES[color];
-  // Build grid: weeks columns, 7 rows (Sun-Sat)
+
+function buildHeatmapCells(
+  completions: Record<string, number>,
+  dailyTarget: number,
+  weeks: number
+): HeatmapCell[][] {
   const today = new Date();
-  const cells: {
-    date: string;
-    completed: boolean;
-    isToday: boolean;
-  }[][] = [];
-  // Find the Sunday of the current week
+  const cells: HeatmapCell[][] = [];
   const startDate = new Date(today);
   startDate.setDate(startDate.getDate() - startDate.getDay() - (weeks - 1) * 7);
+
   for (let w = 0; w < weeks; w++) {
-    const week: {
-      date: string;
-      completed: boolean;
-      isToday: boolean;
-    }[] = [];
+    const week: HeatmapCell[] = [];
     for (let d = 0; d < 7; d++) {
       const date = new Date(startDate);
       date.setDate(startDate.getDate() + w * 7 + d);
@@ -54,111 +47,163 @@ export function HeatmapGrid({
     }
     cells.push(week);
   }
-  const dayLabels = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
-  const monthLabels: {
-    label: string;
-    col: number;
-  }[] = [];
+  return cells;
+}
+
+function buildMonthLabels(cells: HeatmapCell[][]): { label: string; col: number }[] {
+  const labels: { label: string; col: number }[] = [];
   let lastMonth = -1;
-  cells.forEach((week, i) => {
+
+  cells.forEach((week, index) => {
     const month = new Date(week[0].date).getMonth();
     if (month !== lastMonth) {
-      monthLabels.push({
-        label: new Date(week[0].date).toLocaleString('default', {
-          month: 'short'
-        }),
-        col: i
+      labels.push({
+        label: new Date(week[0].date).toLocaleString('default', { month: 'short' }),
+        col: index
       });
       lastMonth = month;
     }
   });
+
+  return labels;
+}
+
+function DayLabels() {
+  const dayLabels = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+  return (
+    <div className="flex flex-col gap-[2px] mr-1.5">
+      {dayLabels.map((day, index) => (
+        <div
+          key={index}
+          className="h-[11px] text-[9px] font-mono text-muted flex items-center">
+          {index % 2 === 1 ? day : ''}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function MonthLabels({ labels }: { labels: { label: string; col: number }[] }) {
+  return (
+    <div className="flex mb-1 ml-6">
+      {labels.map((label, index) => (
+        <div
+          key={index}
+          className="w-[11px] mr-[2px] text-[9px] font-mono text-muted overflow-visible whitespace-nowrap">
+          {label.label}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function HeatmapCells({
+  cells,
+  levels,
+  glow,
+  today,
+  onHover,
+  onLeave
+}: {
+  cells: HeatmapCell[][];
+  levels: string[];
+  glow: string;
+  today: Date;
+  onHover: (cell: HeatmapCell, event: React.MouseEvent<HTMLDivElement>) => void;
+  onLeave: () => void;
+}) {
+  return (
+    <div className="flex gap-[2px]">
+      {cells.map((week, wi) => (
+        <div key={wi} className="flex flex-col gap-[2px]">
+          {week.map((cell, di) => {
+            const intensity = getIntensity(cell.completed);
+            const bg = levels[intensity];
+            const isFuture = new Date(cell.date) > today;
+            return (
+              <div
+                key={di}
+                className="w-[11px] h-[11px] rounded-[2px] cursor-pointer transition-transform hover:scale-125"
+                style={{
+                  backgroundColor: isFuture ? 'var(--bg-secondary)' : bg,
+                  opacity: isFuture ? 0.3 : 1,
+                  boxShadow:
+                    cell.completed && !isFuture ? `0 0 4px ${glow}` : 'none',
+                  outline: cell.isToday ? `1px solid ${levels[4]}` : 'none',
+                  outlineOffset: '1px'
+                }}
+                onMouseEnter={(event) => onHover(cell, event)}
+                onMouseLeave={onLeave}
+              />
+            );
+          })}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function HeatmapTooltip({ tooltip }: { tooltip: { x: number; y: number; completed: boolean; date: string } | null }) {
+  if (!tooltip) {
+    return null;
+  }
+  return (
+    <div
+      className="fixed z-50 pointer-events-none px-2 py-1 rounded bg-bg-card border border-border text-[10px] font-mono text-foreground shadow-lg"
+      style={{ left: tooltip.x + 16, top: tooltip.y - 28 }}>
+      <span className={tooltip.completed ? 'text-accent-secondary' : 'text-muted'}>
+        {tooltip.completed ? '✓' : '○'}
+      </span>{' '}
+      {tooltip.date}
+    </div>
+  );
+}
+
+export function HeatmapGrid({
+  completions,
+  dailyTarget = 1,
+  color = DEFAULT_HABIT_COLOR,
+  weeks = 26
+}: HeatmapGridProps) {
+  const [tooltip, setTooltip] = useState<{
+    date: string;
+    completed: boolean;
+    x: number;
+    y: number;
+  } | null>(null);
+  const today = useMemo(() => new Date(), []);
+  const cells = useMemo(
+    () => buildHeatmapCells(completions, dailyTarget, weeks),
+    [completions, dailyTarget, weeks]
+  );
+  const monthLabels = useMemo(() => buildMonthLabels(cells), [cells]);
+  const { heatmapLevels: levels, glow } = HABIT_COLOR_THEMES[color];
+
+  const handleHover = (cell: HeatmapCell, event: React.MouseEvent<HTMLDivElement>) => {
+    const rect = event.currentTarget.getBoundingClientRect();
+    setTooltip({
+      date: cell.date,
+      completed: cell.completed,
+      x: rect.left,
+      y: rect.top
+    });
+  };
+
   return (
     <div className="relative select-none">
-      {/* Month labels */}
-      <div className="flex mb-1 ml-6">
-        {cells.map((_, i) => {
-          const label = monthLabels.find((m) => m.col === i);
-          return (
-            <div
-              key={i}
-              className="w-[11px] mr-[2px] text-[9px] font-mono text-muted overflow-visible whitespace-nowrap">
-
-              {label ? label.label : ''}
-            </div>);
-
-        })}
-      </div>
-
+      <MonthLabels labels={monthLabels} />
       <div className="flex gap-0">
-        {/* Day labels */}
-        <div className="flex flex-col gap-[2px] mr-1.5">
-          {dayLabels.map((d, i) =>
-          <div
-            key={i}
-            className="h-[11px] text-[9px] font-mono text-muted flex items-center">
-
-              {i % 2 === 1 ? d : ''}
-            </div>
-          )}
-        </div>
-
-        {/* Grid */}
-        <div className="flex gap-[2px]">
-          {cells.map((week, wi) =>
-          <div key={wi} className="flex flex-col gap-[2px]">
-              {week.map((cell, di) => {
-              const intensity = getIntensity(cell.completed);
-              const bg = levels[intensity];
-              const isFuture = new Date(cell.date) > today;
-              return (
-                <div
-                  key={di}
-                  className="w-[11px] h-[11px] rounded-[2px] cursor-pointer transition-transform hover:scale-125"
-                  style={{
-                    backgroundColor: isFuture ? 'var(--bg-secondary)' : bg,
-                    opacity: isFuture ? 0.3 : 1,
-                    boxShadow:
-                    cell.completed && !isFuture ?
-                    `0 0 4px ${glow}` :
-                    'none',
-                    outline: cell.isToday ? `1px solid ${levels[4]}` : 'none',
-                    outlineOffset: '1px'
-                  }}
-                  onMouseEnter={(e) => {
-                    const rect = e.currentTarget.getBoundingClientRect();
-                    setTooltip({
-                      date: cell.date,
-                      completed: cell.completed,
-                      x: rect.left,
-                      y: rect.top
-                    });
-                  }}
-                  onMouseLeave={() => setTooltip(null)} />);
-
-
-            })}
-            </div>
-          )}
-        </div>
+        <DayLabels />
+        <HeatmapCells
+          cells={cells}
+          levels={levels}
+          glow={glow}
+          today={today}
+          onHover={handleHover}
+          onLeave={() => setTooltip(null)}
+        />
       </div>
-
-      {/* Tooltip */}
-      {tooltip &&
-      <div
-        className="fixed z-50 pointer-events-none px-2 py-1 rounded bg-bg-card border border-border text-[10px] font-mono text-foreground shadow-lg"
-        style={{
-          left: tooltip.x + 16,
-          top: tooltip.y - 28
-        }}>
-
-          <span
-          className={tooltip.completed ? 'text-accent-secondary' : 'text-muted'}>
-
-            {tooltip.completed ? '✓' : '○'}
-          </span>{' '}
-          {tooltip.date}
-        </div>
-      }
-    </div>);
-
+      <HeatmapTooltip tooltip={tooltip} />
+    </div>
+  );
 }

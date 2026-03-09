@@ -18,53 +18,65 @@ export function formatDate(date: Date): string {
   return date.toISOString().split('T')[0];
 }
 
-export function calculateStreak(
+function buildCompletedDates(
   completions: Record<string, number>,
-  referenceDate = new Date(),
-  dailyTarget = 1
-): { current: number; longest: number } {
-  const today = new Date(referenceDate);
-  let current = 0;
+  dailyTarget: number
+): string[] {
+  return Object.keys(completions)
+    .filter((key) => (completions[key] ?? 0) >= dailyTarget)
+    .sort();
+}
+
+function countCurrentStreak(
+  completedDates: Set<string>,
+  referenceDate: Date
+): number {
+  let count = 0;
+  const cursor = new Date(referenceDate);
+  while (count < 365) {
+    const key = formatDate(cursor);
+    if (!completedDates.has(key)) {
+      break;
+    }
+    count++;
+    cursor.setDate(cursor.getDate() - 1);
+  }
+  return count;
+}
+
+function countLongestStreak(completedDates: string[]): number {
   let longest = 0;
   let temp = 0;
 
-  for (let i = 0; i < 365; i++) {
-    const day = new Date(today);
-    day.setDate(day.getDate() - i);
-    const key = formatDate(day);
-    if ((completions[key] ?? 0) >= dailyTarget) {
-      if (i === 0 || current > 0) {current++;}
-    } else {
-      if (i === 0) {
-        const yesterday = new Date(today);
-        yesterday.setDate(yesterday.getDate() - 1);
-        if ((completions[formatDate(yesterday)] ?? 0) < dailyTarget) {break;}
-      } else {
-        break;
-      }
-    }
-  }
-
-  const sortedDates = Object.keys(completions)
-    .filter((k) => (completions[k] ?? 0) >= dailyTarget)
-    .sort();
-
-  for (let i = 0; i < sortedDates.length; i++) {
+  for (let i = 0; i < completedDates.length; i++) {
     if (i === 0) {
       temp = 1;
     } else {
-      const prev = new Date(sortedDates[i - 1]);
-      const curr = new Date(sortedDates[i]);
-      const diff = (curr.getTime() - prev.getTime()) / MS_PER_DAY;
-      if (diff === 1) {
+      const prev = new Date(completedDates[i - 1]);
+      const curr = new Date(completedDates[i]);
+      if ((curr.getTime() - prev.getTime()) / MS_PER_DAY === 1) {
         temp++;
       } else {
         temp = 1;
       }
     }
-    if (temp > longest) {longest = temp;}
+    if (temp > longest) {
+      longest = temp;
+    }
   }
 
+  return longest;
+}
+
+export function calculateStreak(
+  completions: Record<string, number>,
+  referenceDate = new Date(),
+  dailyTarget = 1
+): { current: number; longest: number } {
+  const completedDates = buildCompletedDates(completions, dailyTarget);
+  const completedSet = new Set(completedDates);
+  const current = countCurrentStreak(completedSet, referenceDate);
+  const longest = countLongestStreak(completedDates);
   return { current, longest };
 }
 

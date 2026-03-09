@@ -1,64 +1,42 @@
+const sharedConfig = require('../shared/.eslintrc.cjs');
+
+const sharedExtends = Array.isArray(sharedConfig.extends)
+  ? [...sharedConfig.extends]
+  : sharedConfig.extends
+  ? [sharedConfig.extends]
+  : [];
+const sharedPlugins = Array.isArray(sharedConfig.plugins) ? [...sharedConfig.plugins] : [];
+const sharedOverrides = Array.isArray(sharedConfig.overrides) ? [...sharedConfig.overrides] : [];
+
 module.exports = {
-  root: true,
-  env: { browser: true, es2022: true },
-  extends: [
-    'eslint:recommended',
-    'plugin:@typescript-eslint/recommended',
-    'plugin:react-hooks/recommended',
-  ],
-  parser: '@typescript-eslint/parser',
-  parserOptions: {
-    ecmaVersion: 'latest',
-    sourceType: 'module',
-  },
-  plugins: ['react-refresh'],
+  ...sharedConfig,
+  env: { ...sharedConfig.env, browser: true },
+  extends: [...sharedExtends, 'plugin:react-hooks/recommended'],
+  plugins: [...sharedPlugins, 'react-refresh'],
   rules: {
+    ...sharedConfig.rules,
     'no-alert': 'error',
     'no-console': 'error',
-    'no-debugger': 'error',
-    'no-var': 'error',
-    'prefer-const': 'error',
-    eqeqeq: ['error', 'always'],
-    curly: ['error', 'all'],
-    'object-shorthand': ['error', 'always'],
-    complexity: ['error', 25],
-    'max-params': ['error', 5],
-    'max-lines-per-function': [
-      'error',
-      { max: 700, skipBlankLines: true, skipComments: true },
-    ],
-    'max-lines': [
-      'error',
-      { max: 500, skipBlankLines: true, skipComments: true },
-    ],
-    '@typescript-eslint/consistent-type-imports': [
-      'error',
-      { prefer: 'type-imports' },
-    ],
-    '@typescript-eslint/no-explicit-any': 'error',
-    '@typescript-eslint/no-unused-vars': [
-      'error',
-      { argsIgnorePattern: '^_', varsIgnorePattern: '^_' },
-    ],
     'react-refresh/only-export-components': [
       'error',
       {
         allowConstantExport: true,
-        allowExportNames: ['useNavigate', 'useLocation', 'useParams', 'useUndo'],
-      },
-    ],
+        allowExportNames: ['useNavigate', 'useLocation', 'useParams', 'useUndo']
+      }
+    ]
   },
   overrides: [
+    ...sharedOverrides,
     {
       files: ['server/**/*.ts'],
       env: {
         browser: false,
         node: true,
-        es2022: true,
+        es2022: true
       },
       rules: {
-        '@typescript-eslint/consistent-type-imports': 'off',
-      },
-    },
-  ],
+        '@typescript-eslint/consistent-type-imports': 'off'
+      }
+    }
+  ]
 };
