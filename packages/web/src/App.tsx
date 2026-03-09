@@ -13,6 +13,7 @@ import { AddEditHabit } from '@/pages/AddEditHabit';
 import { Stats } from '@/pages/Stats';
 import { useSyncEngine } from '@/hooks/useSyncEngine';
 import { PublicLanding } from '@/components/PublicLanding';
+import { PublicSeoPage } from '@/components/PublicSeoPage';
 import type {
   AuthSession
 } from '@/lib/auth/session';
@@ -53,6 +54,22 @@ function RouteFocusManager() {
   }, [location.pathname]);
 
   return null;
+}
+
+function PublicRouter({ authError, onHelpClick }: { authError?: string; onHelpClick: (message: string) => void }) {
+  const path = typeof window === 'undefined' ? '/' : window.location.pathname;
+
+  if (path === '/habit-tracker') {
+    return <PublicSeoPage intent="habit-tracker" />;
+  }
+  if (path === '/streak-tracker') {
+    return <PublicSeoPage intent="streak-tracker" />;
+  }
+  if (path === '/daily-routine-planner') {
+    return <PublicSeoPage intent="daily-routine-planner" />;
+  }
+
+  return <PublicLanding authError={authError} onHelpClick={onHelpClick} />;
 }
 
 export function App() {
@@ -159,7 +176,7 @@ export function App() {
           {isAuthCallbackPath ? (
             <AuthCallbackPage />
           ) : (
-            <PublicLanding authError={authError} onHelpClick={setAuthError} />
+            <PublicRouter authError={authError} onHelpClick={setAuthError} />
           )}
         </>
         )}
