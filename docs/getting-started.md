@@ -22,8 +22,8 @@ Set up Habbit Runner locally for frontend and backend development.
 
 1. Install dependencies from the repository root:
    - `npm install`
-2. Configure root environment:
-   - Copy `.env.example` to `.env`
+2. Configure frontend environment:
+   - Copy `packages/web/.env.example` to `packages/web/.env`
 3. Configure backend environment:
    - Copy `packages/server/.env.example` to `packages/server/.env`
 4. Generate Prisma client:
@@ -37,10 +37,14 @@ Set up Habbit Runner locally for frontend and backend development.
 
 ## 🔐 Environment Variables
 
-### Root (`.env`)
+### Frontend (`packages/web/.env`)
 
 - `VITE_API_BASE_URL` (default `http://localhost:4000`)
 - `VITE_SYNC_ENABLED` (`true` or `false`)
+- `VITE_DEFAULT_USER_ID` seeds Dexie records for offline demos
+
+### Root (`.env`)
+
 - `API_PORT`, `WEB_PORT`, `DB_PORT` (for Docker Compose)
 - `HR_DB_NAME`, `HR_DB_USER`, `HR_DB_PASSWORD` (for the Postgres container used by Docker Compose; kept separate from generic `POSTGRES_*` platform variables)
 

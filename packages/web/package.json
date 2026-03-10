@@ -24,6 +24,10 @@
     "react-dom": "^19.2.4",
     "recharts": "^3.8.0"
   },
+  "optionalDependencies": {
+    "@rollup/rollup-linux-x64-musl": "4.59.0",
+    "@rollup/rollup-linux-arm64-musl": "4.59.0"
+  },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.1",
     "@eslint/js": "^10.0.1",

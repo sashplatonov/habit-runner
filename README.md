@@ -39,11 +39,15 @@ Habbit Runner is built on a [Magic Patterns](https://magicpatterns.com) Vite tem
 
 ### 🖥️ Client
 
-- Copy `.env.example` to `.env` and tune the following keys:
+- Copy `packages/web/.env.example` to `packages/web/.env` before launching the dev server. Keep the file in sync with your backend host:
   - `VITE_API_BASE_URL` (defaults to `http://localhost:4000`)
   - `VITE_SYNC_ENABLED` lets you disable sync (`false` to stay offline)
-  - `API_PORT`, `WEB_PORT`, `DB_PORT` control `docker compose` published ports
-  - `HR_DB_NAME`, `HR_DB_USER`, `HR_DB_PASSWORD` control the Postgres container credentials used by `docker compose`
+  - `VITE_DEFAULT_USER_ID` seeds Dexie records for offline demos
+
+### 🐳 Docker Compose
+
+- The tracked root `.env` controls the published ports, Postgres credentials, and any compose-wide overrides (`API_PORT`, `WEB_PORT`, `DB_PORT`, `HR_DB_NAME`, `HR_DB_USER`, `HR_DB_PASSWORD`). Edit this file when you need to adjust the stack.
+- If you ever need to override `VITE_API_BASE_URL` while building or running the web service, export it before invoking `docker compose up`; the Compose file already provides a `http://localhost:4000` default.
 
 ### 🧠 API
 

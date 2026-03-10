@@ -61,9 +61,10 @@ This is an **offline-first habit tracker PWA** with a separate NestJS API backen
 
 | Location | Var | Purpose |
 |---|---|---|
-| `.env` | `VITE_API_BASE_URL` | API origin (default `http://localhost:4000`) |
-| `.env` | `VITE_SYNC_ENABLED` | Set to `false` to disable sync |
-| `.env` | `VITE_DEFAULT_USER_ID` | User ID embedded in Dexie records |
+| `packages/web/.env` | `VITE_API_BASE_URL` | API origin (default `http://localhost:4000`) |
+| `packages/web/.env` | `VITE_SYNC_ENABLED` | Set to `false` to disable sync |
+| `packages/web/.env` | `VITE_DEFAULT_USER_ID` | User ID embedded in Dexie records |
+| `.env` | `API_PORT`, `WEB_PORT`, `DB_PORT`, `HR_DB_*` | Docker Compose port/DB overrides (root file already checked in with safe defaults) |
 | `packages/server/.env` | `DATABASE_URL` | PostgreSQL connection string |
 | `packages/server/.env` | `AUTH_SECRET` | JWT signing secret |
 | `packages/server/.env` | `GOOGLE_OAUTH_CLIENT_ID/SECRET` | Google OAuth credentials |
