@@ -11,9 +11,13 @@ services:
     <<: *service_defaults
     image: postgres:18-alpine
     environment:
-      POSTGRES_DB: ${POSTGRES_DB:-habbit_runner}
-      POSTGRES_USER: ${POSTGRES_USER:-habbit}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
+      # Use app-specific variable names to avoid Dokploy or host-level
+      # POSTGRES_* values leaking into initdb and breaking Postgres 18 startup.
+      POSTGRES_DB: ${HR_DB_NAME:-habbit_runner}
+      POSTGRES_USER: ${HR_DB_USER:-habbit}
+      POSTGRES_PASSWORD: ${HR_DB_PASSWORD:-password}
+      # Force C locale on alpine (no locales installed); required for PG 18 initdb.
+      POSTGRES_INITDB_ARGS: "--locale=C --encoding=UTF8"
     ports:
       - "${DB_PORT:-5433}:5432"
     volumes:
@@ -22,7 +26,7 @@ services:
       test:
         [
           "CMD-SHELL",
-          "pg_isready -U ${POSTGRES_USER:-habbit} -d ${POSTGRES_DB:-habbit_runner}"
+          "pg_isready -U ${HR_DB_USER:-habbit} -d ${HR_DB_NAME:-habbit_runner}"
         ]
       interval: 5s
       timeout: 3s

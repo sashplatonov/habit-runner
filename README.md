@@ -43,6 +43,7 @@ Habbit Runner is built on a [Magic Patterns](https://magicpatterns.com) Vite tem
   - `VITE_API_BASE_URL` (defaults to `http://localhost:4000`)
   - `VITE_SYNC_ENABLED` lets you disable sync (`false` to stay offline)
   - `API_PORT`, `WEB_PORT`, `DB_PORT` control `docker compose` published ports
+  - `HR_DB_NAME`, `HR_DB_USER`, `HR_DB_PASSWORD` control the Postgres container credentials used by `docker compose`
 
 ### 🧠 API
 
@@ -50,7 +51,7 @@ Habbit Runner is built on a [Magic Patterns](https://magicpatterns.com) Vite tem
    2. Copy `packages/server/.env.example` to `packages/server/.env` and update each value to match your database and secrets:
       - `DATABASE_URL`, `AUTH_SECRET`, `ACCESS_TOKEN_EXPIRES_IN`, `ACCESS_TOKEN_TTL_SECONDS`, `REFRESH_TOKEN_EXPIRES_DAYS`
       - When running the API via `docker compose`, PostgreSQL lives at the `db` service, so the default `DATABASE_URL=postgresql://habbit:password@db:5432/habbit_runner` works. When you run `npm run dev` against a standalone Postgres on your machine, change the host to `localhost:5432`.
-      - Compose also supports `POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD` overrides for the DB service.
+      - `docker compose` now reads DB container credentials from root `.env` via `HR_DB_NAME`, `HR_DB_USER`, `HR_DB_PASSWORD`. This avoids collisions with platform-level `POSTGRES_*` variables in systems such as Dockploy.
    - For OAuth login, configure Google credentials only:
      - `GOOGLE_OAUTH_CLIENT_ID`
      - `GOOGLE_OAUTH_CLIENT_SECRET`

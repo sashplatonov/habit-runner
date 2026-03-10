@@ -42,6 +42,7 @@ Set up Habbit Runner locally for frontend and backend development.
 - `VITE_API_BASE_URL` (default `http://localhost:4000`)
 - `VITE_SYNC_ENABLED` (`true` or `false`)
 - `API_PORT`, `WEB_PORT`, `DB_PORT` (for Docker Compose)
+- `HR_DB_NAME`, `HR_DB_USER`, `HR_DB_PASSWORD` (for the Postgres container used by Docker Compose; kept separate from generic `POSTGRES_*` platform variables)
 
 ### Backend (`packages/server/.env`)
 
