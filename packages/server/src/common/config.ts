@@ -15,7 +15,7 @@ function parseOrigins(value: string | undefined, fallback: string[]): string[] {
     .filter(Boolean);
 }
 
-export const PORT = parseNumber(process.env.PORT, 4000);
+export const PORT = parseNumber(process.env.PORT, 3000);
 export const AUTH_SECRET = process.env.AUTH_SECRET ?? 'dev-secret';
 export const DATABASE_URL =
   process.env.DATABASE_URL ??

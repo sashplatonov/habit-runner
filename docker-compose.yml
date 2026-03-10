@@ -18,8 +18,6 @@ services:
       POSTGRES_PASSWORD: ${HR_DB_PASSWORD:-password}
       # Force C locale on alpine (no locales installed); required for PG 18 initdb.
       POSTGRES_INITDB_ARGS: "--locale=C --encoding=UTF8"
-    ports:
-      - "${DB_PORT:-5433}:5432"
     volumes:
       - pgdata18:/var/lib/postgresql
     healthcheck:
@@ -43,20 +41,28 @@ services:
     depends_on:
       db:
         condition: service_healthy
-    env_file:
-      - packages/server/.env
+    environment:
+      DATABASE_URL: ${DATABASE_URL:-postgresql://habbit:password@db:5432/habbit_runner}
+      DEFAULT_DB_SCHEMA: ${DEFAULT_DB_SCHEMA:-habbit_runner}
+      PORT: 3000
+      AUTH_SECRET: ${AUTH_SECRET:-dev-secret}
+      ACCESS_TOKEN_EXPIRES_IN: ${ACCESS_TOKEN_EXPIRES_IN:-1h}
+      ACCESS_TOKEN_TTL_SECONDS: ${ACCESS_TOKEN_TTL_SECONDS:-3600}
+      REFRESH_TOKEN_EXPIRES_DAYS: ${REFRESH_TOKEN_EXPIRES_DAYS:-30}
+      API_PUBLIC_URL: ${API_PUBLIC_URL:-http://localhost:${WEB_PORT:-80}/api}
+      OAUTH_DEFAULT_RETURN_TO: ${OAUTH_DEFAULT_RETURN_TO:-http://localhost:${WEB_PORT:-80}}
+      GOOGLE_OAUTH_CLIENT_ID: ${GOOGLE_OAUTH_CLIENT_ID:-}
+      GOOGLE_OAUTH_CLIENT_SECRET: ${GOOGLE_OAUTH_CLIENT_SECRET:-}
     healthcheck:
       test:
         [
           "CMD-SHELL",
-          "node -e \"const p=Number(process.env.PORT||4000);const net=require('node:net');const socket=net.connect({host:'127.0.0.1',port:p},()=>{socket.destroy();process.exit(0)});socket.on('error',()=>process.exit(1));setTimeout(()=>process.exit(1),2500);\""
+          "node -e \"const p=Number(process.env.PORT||3000);const net=require('node:net');const socket=net.connect({host:'127.0.0.1',port:p},()=>{socket.destroy();process.exit(0)});socket.on('error',()=>process.exit(1));setTimeout(()=>process.exit(1),2500);\""
         ]
       interval: 10s
       timeout: 5s
       retries: 10
       start_period: 15s
-    ports:
-      - "${API_PORT:-4000}:4000"
     networks:
       - backend
       - edge
@@ -67,7 +73,7 @@ services:
       context: .
       dockerfile: packages/web/Dockerfile
       args:
-        VITE_API_BASE_URL: ${VITE_API_BASE_URL:-http://localhost:4000}
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL:-/api}
     init: true
     depends_on:
       api:
@@ -79,7 +85,7 @@ services:
       retries: 10
       start_period: 10s
     ports:
-      - "${WEB_PORT:-5173}:80"
+      - "${WEB_PORT:-80}:80"
     networks:
       - edge
 

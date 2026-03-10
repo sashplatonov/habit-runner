@@ -38,6 +38,6 @@ RUN chmod +x /usr/local/bin/docker-entrypoint.sh \
 
 USER node
 WORKDIR /app/packages/server
-EXPOSE 4000
+EXPOSE 3000
 ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
 CMD ["node", "dist/main.js"]

@@ -31,7 +31,7 @@ npm run seed                         # seed the database
 ### Docker (full stack)
 ```bash
 docker compose up --build            # start db + api + web
-docker compose up db                 # start only PostgreSQL on port 5433
+docker compose up db                 # start only PostgreSQL inside compose network
 ```
 
 ## Architecture
@@ -61,12 +61,13 @@ This is an **offline-first habit tracker PWA** with a separate NestJS API backen
 
 | Location | Var | Purpose |
 |---|---|---|
-| `packages/web/.env` | `VITE_API_BASE_URL` | API origin (default `http://localhost:4000`) |
+| `packages/web/.env` | `VITE_API_BASE_URL` | API origin (default `http://localhost:4000` for local, `/api` for Docker with nginx proxy) |
 | `packages/web/.env` | `VITE_SYNC_ENABLED` | Set to `false` to disable sync |
 | `packages/web/.env` | `VITE_DEFAULT_USER_ID` | User ID embedded in Dexie records |
-| `.env` | `API_PORT`, `WEB_PORT`, `DB_PORT`, `HR_DB_*` | Docker Compose port/DB overrides (root file already checked in with safe defaults) |
-| `packages/server/.env` | `DATABASE_URL` | PostgreSQL connection string |
-| `packages/server/.env` | `AUTH_SECRET` | JWT signing secret |
-| `packages/server/.env` | `GOOGLE_OAUTH_CLIENT_ID/SECRET` | Google OAuth credentials |
-| `packages/server/.env` | `API_PUBLIC_URL` | Public API base URL (for OAuth redirect) |
-| `packages/server/.env` | `OAUTH_DEFAULT_RETURN_TO` | Frontend origin to redirect after OAuth |
+| `.env` | `WEB_PORT`, `HR_DB_*` | Docker Compose published web port and Postgres container credentials |
+| `.env` | `DATABASE_URL`, `AUTH_SECRET`, token TTLs, Google OAuth vars | Docker Compose source for `api` container env |
+| `docker-compose.yml` defaults | `API_PUBLIC_URL`, `OAUTH_DEFAULT_RETURN_TO` | Derived from `WEB_PORT` (`/api` + frontend origin) unless explicitly overridden |
+| `packages/server/.env` | `DATABASE_URL` | Local (non-Docker) PostgreSQL connection string |
+| `packages/server/.env` | `AUTH_SECRET` | Local JWT signing secret |
+| `packages/server/.env` | `GOOGLE_OAUTH_CLIENT_ID/SECRET` | Local Google OAuth credentials |
+| `packages/server/.env` | `API_PUBLIC_URL`, `OAUTH_DEFAULT_RETURN_TO` | Local OAuth redirect settings |
