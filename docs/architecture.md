@@ -53,6 +53,7 @@ PostgreSQL
   - `metrics` for public sync/health telemetry
   - `prisma` for database access and persistence
 - Contracts are validated through DTOs and Nest validation pipes.
+- `PrismaService` ensures `DEFAULT_DB_SCHEMA` exists (it runs `CREATE SCHEMA IF NOT EXISTS` before connecting) so tables are ready without manual schema bootstrapping.
 
 ## 🤝 Shared Contracts
 

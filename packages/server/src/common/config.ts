@@ -20,6 +20,8 @@ export const AUTH_SECRET = process.env.AUTH_SECRET ?? 'dev-secret';
 export const DATABASE_URL =
   process.env.DATABASE_URL ??
   'postgresql://habbit:password@localhost:5432/habbit_runner';
+export const DEFAULT_DB_SCHEMA =
+  process.env.DEFAULT_DB_SCHEMA?.trim() || 'public';
 export const ACCESS_TOKEN_EXPIRES_IN =
   process.env.ACCESS_TOKEN_EXPIRES_IN ?? '1h';
 export const ACCESS_TOKEN_TTL_SECONDS = parseNumber(

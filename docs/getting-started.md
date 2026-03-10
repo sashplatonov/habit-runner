@@ -51,6 +51,8 @@ Set up Habbit Runner locally for frontend and backend development.
   - `ACCESS_TOKEN_EXPIRES_IN`
   - `ACCESS_TOKEN_TTL_SECONDS`
   - `REFRESH_TOKEN_EXPIRES_DAYS`
+  - `DEFAULT_DB_SCHEMA` (default `public`) controls which Postgres schema hosts the Prisma tables.
+  - Prisma will run `CREATE SCHEMA IF NOT EXISTS` before the first connection, but you still need to apply the Prisma migrations/seeds inside that schema before relying on the tables.
 - Google OAuth:
   - `GOOGLE_OAUTH_CLIENT_ID`
   - `GOOGLE_OAUTH_CLIENT_SECRET`

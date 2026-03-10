@@ -53,7 +53,8 @@ export class SyncService {
         ? { AND: [buildCursorClause(cursor, 'deletedAt')] }
         : undefined;
 
-      const habits = await this.prisma.habit.findMany({
+      const client = await this.prisma.getClient();
+      const habits = await client.habit.findMany({
         where: {
           userId,
           ...updatedFilter
@@ -65,7 +66,7 @@ export class SyncService {
         take: 200
       });
 
-      const checkins = await this.prisma.checkin.findMany({
+      const checkins = await client.checkin.findMany({
         where: {
           userId,
           ...updatedFilter
@@ -77,7 +78,7 @@ export class SyncService {
         take: 200
       });
 
-      const tombstones = await this.prisma.tombstone.findMany({
+      const tombstones = await client.tombstone.findMany({
         where: {
           userId,
           ...deletedFilter
@@ -127,7 +128,8 @@ export class SyncService {
     const serverTime = new Date().toISOString();
 
     try {
-      await this.prisma.$transaction(async (tx) => {
+      const client = await this.prisma.getClient();
+      await client.$transaction(async (tx) => {
         const txClient = tx as unknown as TxClient;
         for (const op of ops) {
           if (!op.id) {continue;}
