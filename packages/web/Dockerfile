@@ -13,9 +13,16 @@ RUN npm run build -w @habbit-runner/shared
 
 COPY packages/web/ packages/web/
 WORKDIR /app/packages/web
+ARG TARGETARCH=amd64
 ARG VITE_API_BASE_URL=http://localhost:4000
 ENV VITE_API_BASE_URL=${VITE_API_BASE_URL}
-RUN npm install --no-save --workspace=@habbit-runner/web @rollup/rollup-linux-arm64-musl@4.59.0
+# choose the Rollup binary that matches the target architecture
+RUN case "${TARGETARCH}" in \
+      amd64) ROLLUP_ARCH=x64 ;; \
+      arm64) ROLLUP_ARCH=arm64 ;; \
+      *) ROLLUP_ARCH=x64 ;; \
+    esac && \
+    npm install --no-save --workspace=@habbit-runner/web @rollup/rollup-linux-${ROLLUP_ARCH}-musl@4.59.0
 RUN npm run build
 
 FROM nginx:1.27-alpine AS runtime
