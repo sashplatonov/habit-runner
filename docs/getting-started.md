@@ -41,7 +41,7 @@ Set up Habbit Runner locally for frontend and backend development.
 
 ### Frontend (`packages/web/.env`)
 
-- `VITE_API_BASE_URL` (default `http://localhost:4000`)
+- `VITE_API_BASE_URL` (default `http://localhost:3000` for local dev; use `/api` in Docker Compose)
 - `VITE_SYNC_ENABLED` (`true` or `false`)
 - `VITE_DEFAULT_USER_ID` seeds Dexie records for offline demos
 - For Docker Compose, frontend requests are proxied by nginx, so use `/api` as the client base URL.

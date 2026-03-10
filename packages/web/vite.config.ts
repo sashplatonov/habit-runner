@@ -2,6 +2,7 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
 import path from 'node:path'
+import { resolveApiProxyTarget } from './src/lib/api/devProxy'
 import { shouldCacheAppShell } from './src/lib/pwa/runtimeCaching'
 
 // https://vitejs.dev/config/
@@ -9,7 +10,10 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: process.env.API_TARGET_URL ?? 'http://localhost:3000',
+        target: resolveApiProxyTarget(
+          process.env.API_TARGET_URL,
+          process.env.VITE_API_BASE_URL
+        ),
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api/, '')
       }
@@ -69,6 +73,7 @@ export default defineConfig({
         ]
       },
       workbox: {
+        navigateFallbackDenylist: [/^\/api\//],
         runtimeCaching: [
           {
             urlPattern: /^https?:\/\/.*\/sync\/pull/,

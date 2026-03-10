@@ -12,7 +12,7 @@ COPY packages/shared/ packages/shared/
 RUN npm run build -w @habbit-runner/shared
 
 COPY packages/web/ packages/web/
-ARG VITE_API_BASE_URL=http://localhost:4000
+ARG VITE_API_BASE_URL=/api
 ENV VITE_API_BASE_URL=${VITE_API_BASE_URL}
 RUN npm run build -w @habbit-runner/web
 

@@ -19,7 +19,7 @@ cd packages/web && npm run preview    # preview the web build
 ### Server (`cd packages/server`)
 ```bash
 npm install                          # install dependencies (runs automatically if you used root install)
-npm run dev                          # start NestJS API at http://localhost:4000 (ts-node-dev)
+npm run dev                          # start NestJS API at http://localhost:3000 (tsx watch)
 npm run build                        # compile TypeScript to dist/
 npm run start                        # run compiled build
 npx prisma migrate dev               # apply DB migrations
@@ -61,7 +61,7 @@ This is an **offline-first habit tracker PWA** with a separate NestJS API backen
 
 | Location | Var | Purpose |
 |---|---|---|
-| `packages/web/.env` | `VITE_API_BASE_URL` | API origin (default `http://localhost:4000` for local, `/api` for Docker with nginx proxy) |
+| `packages/web/.env` | `VITE_API_BASE_URL` | API origin (default `http://localhost:3000` for local, `/api` for Docker with nginx proxy) |
 | `packages/web/.env` | `VITE_SYNC_ENABLED` | Set to `false` to disable sync |
 | `packages/web/.env` | `VITE_DEFAULT_USER_ID` | User ID embedded in Dexie records |
 | `.env` | `WEB_PORT`, `HR_DB_*` | Docker Compose published web port and Postgres container credentials |
