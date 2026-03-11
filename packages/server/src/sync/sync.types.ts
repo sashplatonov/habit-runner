@@ -37,7 +37,7 @@ export interface ExistingHabitRecord {
   userId: string;
   updatedAt: Date;
   version: number;
-  sortOrder: number;
+  sortOrder: number | bigint;
   dailyTarget: number;
   reminderTime: string | null;
   reminderEnabled: boolean;

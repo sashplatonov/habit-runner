@@ -53,7 +53,7 @@ export const serializeHabit = (habit: {
   dailyTarget: number;
   tags: unknown;
   archived: boolean;
-  sortOrder: number;
+  sortOrder: number | bigint;
   reminderTime: string | null;
   reminderEnabled: boolean;
   createdAt: Date;
@@ -71,7 +71,7 @@ export const serializeHabit = (habit: {
   dailyTarget: habit.dailyTarget,
   tags: Array.isArray(habit.tags) ? habit.tags as string[] : [],
   archived: habit.archived,
-  sortOrder: habit.sortOrder,
+  sortOrder: Number(habit.sortOrder ?? 0),
   reminderTime: habit.reminderTime ?? undefined,
   reminderEnabled: habit.reminderEnabled,
   createdAt: habit.createdAt.toISOString(),
