@@ -343,6 +343,6 @@ export class AuthService {
     if (THEME_IDS.includes(value as ThemeId)) {
       return value as ThemeId;
     }
-    return 'midnight';
+    return 'cloud';
   }
 }

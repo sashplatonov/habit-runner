@@ -126,6 +126,9 @@ export function App() {
     clearAuthSession();
     setCurrentUserId(null);
     setAuthSession(null);
+    if (typeof window !== 'undefined') {
+      window.history.replaceState({}, '', '/');
+    }
     if (!refreshToken) {
       return;
     }

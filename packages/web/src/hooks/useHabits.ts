@@ -12,7 +12,7 @@ import {
   createOutboxEntry,
   getCurrentUserId
 } from '@/lib/storage/db';
-import { generateId } from '@/lib/core/id';
+import { createHabitId } from '@/lib/core/habit-id';
 import {
   buildMonthlyCompletionRates,
   buildWeeklyCompletionData,
@@ -141,7 +141,7 @@ async function addHabitImpl(data: HabitUpsertInput) {
   const now = new Date().toISOString();
   const newHabit: Habit = {
     ...data,
-    id: generateId(),
+    id: createHabitId(data.name),
     completions: {},
     dailyTarget: Math.max(1, Math.trunc(data.dailyTarget ?? 1)),
     createdAt: now,
