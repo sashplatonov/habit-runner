@@ -117,23 +117,27 @@ function HabitRowMobileStats({
   habit,
   streak,
   last7,
-  completionRate
+  completionRate,
+  className
 }: {
   habit: Habit;
   streak: number;
   last7: boolean[];
   completionRate: number;
+  className?: string;
 }) {
   const accent = HABIT_COLOR_THEMES[habit.color];
   return (
-    <div className="mt-2 flex flex-wrap items-center gap-2 text-[10px] font-mono uppercase tracking-[0.3em] text-muted sm:hidden">
+    <div
+      className={`mt-1 flex flex-wrap items-center gap-2 text-[10px] font-mono uppercase tracking-[0.3em] text-muted text-foreground ${className ?? ''}`}
+    >
       {streak > 0 && (
-        <div className="flex items-center gap-1 text-[10px] text-foreground">
+        <div className="flex items-center gap-1">
           <FlameIcon size={12} className="text-accent-secondary" />
-          <span className="font-semibold text-foreground">{streak}d streak</span>
+          <span className="font-semibold text-foreground">{streak}d</span>
         </div>
       )}
-      <div className="flex items-center gap-1 text-[10px] text-foreground">
+      <div className="flex items-center gap-1">
         <TrendingUpIcon size={12} className="text-accent-secondary" />
         <span className="font-semibold text-foreground">{completionRate}% 30d</span>
       </div>
@@ -174,95 +178,103 @@ export function HabitRow({
   const completionRate = calculate30DayRate(habit.completions, target);
 
   return (
-    <div
-      draggable={Boolean(onDragStart)}
-      onDragStart={onDragStart}
-      onDragOver={onDragOver}
-      onDrop={onDrop}
-      onDragEnd={onDragEnd}
-      tabIndex={0}
-      role="listitem"
-      aria-label={`${habit.name}, ${completed ? 'completed' : 'not completed'}`}
-      onKeyDown={(event) => {
-        if (event.key === 'Enter') {
-          event.preventDefault();
-          onDetail();
-          return;
-        }
-        if (event.key === ' ') {
-          event.preventDefault();
-          onToggle();
-        }
-      }}
-      className={`group flex items-center gap-3 px-4 py-3 border-b border-border hover:bg-bg-secondary transition-colors cursor-pointer ${
-        completed ? 'opacity-100' : 'opacity-90'
-      } ${isDropTarget ? 'border-accent/60 bg-accent/5' : ''}`}
-    >
-      <div className="hidden sm:flex items-center gap-2 pr-1">
-        <GripVerticalIcon size={14} className="text-muted" aria-hidden />
+    <div className="flex flex-col gap-1">
+      <div
+        draggable={Boolean(onDragStart)}
+        onDragStart={onDragStart}
+        onDragOver={onDragOver}
+        onDrop={onDrop}
+        onDragEnd={onDragEnd}
+        tabIndex={0}
+        role="listitem"
+        aria-label={`${habit.name}, ${completed ? 'completed' : 'not completed'}`}
+        onKeyDown={(event) => {
+          if (event.key === 'Enter') {
+            event.preventDefault();
+            onDetail();
+            return;
+          }
+          if (event.key === ' ') {
+            event.preventDefault();
+            onToggle();
+          }
+        }}
+        className={`group flex flex-wrap items-center gap-3 border-b border-border hover:bg-bg-secondary transition-colors cursor-pointer px-3 py-2 sm:px-4 sm:py-3 ${
+          completed ? 'opacity-100' : 'opacity-90'
+        } ${isDropTarget ? 'border-accent/60 bg-accent/5' : ''}`}
+      >
+        <div className="hidden sm:flex items-center gap-2 pr-1">
+          <GripVerticalIcon size={14} className="text-muted" aria-hidden />
+        </div>
+
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            onToggle();
+          }}
+          className={`flex-shrink-0 w-5 h-5 rounded border-2 flex items-center justify-center transition-all duration-200 ${
+            completed
+              ? `${accent.bgClass} ${accent.borderClass} ${accent.shadowClass}`
+              : 'border-border-hover hover:border-muted'
+          }`}
+          aria-label={`Mark ${habit.name} as ${completed ? 'incomplete' : 'complete'}`}
+        >
+          {completed && <CheckIcon size={11} className={accent.textClass} strokeWidth={3} />}
+        </button>
+
+        <button
+          type="button"
+          onClick={onDetail}
+          className="flex flex-1 min-w-0 flex-col gap-1 text-left sm:flex-row sm:items-center sm:gap-2.5"
+        >
+          <span className="flex-shrink-0 text-base leading-none">{habit.icon}</span>
+          <div className="min-w-0 flex-1">
+            <div className={`text-sm font-medium ${completed ? 'text-muted line-through' : 'text-foreground'} truncate`}>
+              {habit.name}
+            </div>
+            <div className="text-[10px] font-mono text-muted mt-0.5">
+              {todayCount}/{target} today
+            </div>
+            <div className="hidden sm:flex items-center gap-2 mt-0.5">
+              {habit.tags.slice(0, 2).map((tag) => (
+                <span
+                  key={tag}
+                  className="inline-flex items-center gap-1 text-[10px] font-mono text-foreground bg-bg-card border border-border rounded px-1.5 py-0.5"
+                >
+                  <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: accent.hex }} />
+                  {tag}
+                </span>
+              ))}
+            </div>
+          </div>
+        </button>
+
+        <HabitRowMetrics
+          habit={habit}
+          target={target}
+          streak={streak}
+          last7={last7}
+          completionRate={completionRate}
+        />
+
+        <button
+          type="button"
+          onClick={onDetail}
+          aria-label={`Open details for ${habit.name}`}
+          className="hidden sm:block text-border-hover group-hover:text-muted transition-colors"
+        >
+          <ChevronRightIcon size={14} />
+        </button>
       </div>
 
-      <button
-        type="button"
-        onClick={(e) => {
-          e.stopPropagation();
-          onToggle();
-        }}
-        className={`flex-shrink-0 w-5 h-5 rounded border-2 flex items-center justify-center transition-all duration-200 ${
-          completed
-            ? `${accent.bgClass} ${accent.borderClass} ${accent.shadowClass}`
-            : 'border-border-hover hover:border-muted'
-        }`}
-        aria-label={`Mark ${habit.name} as ${completed ? 'incomplete' : 'complete'}`}
-      >
-        {completed && <CheckIcon size={11} className={accent.textClass} strokeWidth={3} />}
-      </button>
-
-      <button type="button" onClick={onDetail} className="flex items-center gap-2.5 flex-1 min-w-0 text-left">
-        <span className="flex-shrink-0 text-base leading-none">{habit.icon}</span>
-        <div className="min-w-0 flex-1">
-          <div className={`text-sm font-medium ${completed ? 'text-muted line-through' : 'text-foreground'} truncate`}>
-            {habit.name}
-          </div>
-          <div className="text-[10px] font-mono text-muted mt-0.5">
-            {todayCount}/{target} today
-          </div>
-          <div className="hidden sm:flex items-center gap-2 mt-0.5">
-            {habit.tags.slice(0, 2).map((tag) => (
-              <span
-                key={tag}
-                className="inline-flex items-center gap-1 text-[10px] font-mono text-foreground bg-bg-card border border-border rounded px-1.5 py-0.5"
-              >
-                <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: accent.hex }} />
-                {tag}
-              </span>
-            ))}
-          </div>
-          <HabitRowMobileStats
-            habit={habit}
-            streak={streak}
-            last7={last7}
-            completionRate={completionRate}
-          />
-        </div>
-      </button>
-
-      <HabitRowMetrics
+      <HabitRowMobileStats
         habit={habit}
-        target={target}
         streak={streak}
         last7={last7}
         completionRate={completionRate}
+        className="sm:hidden"
       />
-
-      <button
-        type="button"
-        onClick={onDetail}
-        aria-label={`Open details for ${habit.name}`}
-        className="hidden sm:block text-border-hover group-hover:text-muted transition-colors"
-      >
-        <ChevronRightIcon size={14} />
-      </button>
     </div>
   );
 }
