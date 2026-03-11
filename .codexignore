@@ -8,3 +8,17 @@ coverage/
 .turbo/
 tmp/
 *.log
+.env
+.env.*
+packages/*/node_modules/
+packages/*/dist/
+packages/*/dist-ssr/
+packages/*/dist-test/
+packages/*/coverage/
+packages/*/build/
+packages/*/.turbo/
+packages/*/.cache/
+packages/*/.vite/
+packages/*/tmp/
+secrets/
+backups/

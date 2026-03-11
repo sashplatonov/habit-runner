@@ -46,3 +46,12 @@
 - Keep commits focused and include schema/config changes in the same commit when required.
 - PRs should include: summary, changed paths, manual verification steps, env/db impacts, and screenshots for UI changes.
 - Link related issue/task IDs and note follow-up work explicitly.
+
+## Agent Ignore Guidance
+The root `.codexignore`/`.claudeignore` lists the directories that agents should skip, so keep this section aligned with those files.
+
+- `node_modules/` both at the workspace root and under each `packages/*/node_modules/`
+- Built/dist outputs: `dist/`, `dist-ssr/`, `dist-test/`, `packages/*/dist*/`, and any `build/` artifacts
+- Cache/temp layers: `.turbo/`, `.cache/`, `.vite/`, `tmp/`, `packages/*/.turbo/`, `packages/*/.cache/`, `packages/*/.vite/`, and `packages/*/tmp/`
+- Environment/secrets: `.env`, `.env.*`, `packages/*/.env*`, `packages/server/.env`, `secrets/`, and `backups/`
+- Ignore tooling scaffolds that already dress these directories (e.g., `.claude/`, `.codex/`, `.dokploy/`) unless the task explicitly targets them.
