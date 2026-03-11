@@ -1,9 +1,9 @@
 import type { PullResponseDto, PushResponseDto } from '@/types/sync';
 import type { OutboxEntry } from '@/lib/storage/db';
-import { API_BASE_URL } from '@/lib/core/config';
+import { buildApiUrl } from '@/lib/api/url';
 import { getValidAccessToken } from '@/lib/auth/session';
 
-const API_BASE = API_BASE_URL;
+const buildUrl = buildApiUrl;
 
 async function fetchJson(
   url: string,
@@ -32,7 +32,7 @@ async function fetchJson(
 export async function pullChanges(
   since?: string
 ): Promise<PullResponseDto> {
-  const url = new URL(`${API_BASE}/sync/pull`);
+  const url = new URL(buildUrl('/sync/pull'));
   if (since) {url.searchParams.set('since', since);}
   const response = await fetchJson(url.toString(), { method: 'GET' });
   return response.json();
@@ -50,7 +50,7 @@ export async function pushChanges(
       clientTime: entry.clientTime
     }))
   };
-  const response = await fetchJson(`${API_BASE}/sync/push`, {
+  const response = await fetchJson(buildUrl('/sync/push'), {
     method: 'POST',
     body: JSON.stringify(payload)
   });

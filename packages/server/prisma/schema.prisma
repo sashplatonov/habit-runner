@@ -9,12 +9,14 @@ datasource db {
 model User {
   id        String   @id @default(cuid())
   email     String   @unique
-  theme     String   @default("midnight")
+  theme     String   @default("cloud")
   habits    Habit[]
   checkins  Checkin[]
   tombstones Tombstone[]
   refreshTokens RefreshToken[]
   createdAt DateTime @default(now())
+
+  @@map("users")
 }
 
 model Habit {
@@ -38,6 +40,8 @@ model Habit {
   updatedAt   DateTime  @default(now()) @updatedAt
   version     Int       @default(1)
   checkins    Checkin[]
+
+  @@map("habits")
 }
 
 model Checkin {
@@ -55,6 +59,7 @@ model Checkin {
   user      User     @relation(fields: [userId], references: [id])
 
   @@unique([habitId, date], name: "habit_date_unique")
+  @@map("checkins")
 }
 
 model Tombstone {
@@ -65,11 +70,15 @@ model Tombstone {
   version   Int
   deletedAt DateTime @default(now())
   user      User     @relation(fields: [userId], references: [id])
+
+  @@map("tombstones")
 }
 
 model SyncOpLog {
   opId      String   @id
   createdAt DateTime @default(now())
+
+  @@map("sync_op_logs")
 }
 
 model OAuthState {
@@ -77,6 +86,8 @@ model OAuthState {
   returnTo  String
   expiresAt DateTime
   createdAt DateTime @default(now())
+
+  @@map("oauth_states")
 }
 
 model RefreshToken {
@@ -87,4 +98,6 @@ model RefreshToken {
   revoked   Boolean  @default(false)
   createdAt DateTime @default(now())
   expiresAt DateTime
+
+  @@map("refresh_tokens")
 }

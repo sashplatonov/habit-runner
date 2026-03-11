@@ -9,20 +9,24 @@ x-service-defaults: &service_defaults
 services:
   db:
     <<: *service_defaults
-    image: postgres:16-alpine
+    profiles:
+      - db
+    image: postgres:18-alpine
     environment:
-      POSTGRES_DB: ${POSTGRES_DB:-habbit_runner}
-      POSTGRES_USER: ${POSTGRES_USER:-habbit}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
-    ports:
-      - "${DB_PORT:-5433}:5432"
+      # Use app-specific variable names to avoid Dokploy or host-level
+      # POSTGRES_* values leaking into initdb and breaking Postgres 18 startup.
+      POSTGRES_DB: ${HR_DB_NAME:-habbit_runner}
+      POSTGRES_USER: ${HR_DB_USER:-habbit}
+      POSTGRES_PASSWORD: ${HR_DB_PASSWORD:-password}
+      # Force C locale on alpine (no locales installed); required for PG 18 initdb.
+      POSTGRES_INITDB_ARGS: "--locale=C --encoding=UTF8"
     volumes:
-      - pgdata:/var/lib/postgresql/data
+      - pgdata18:/var/lib/postgresql
     healthcheck:
       test:
         [
           "CMD-SHELL",
-          "pg_isready -U ${POSTGRES_USER:-habbit} -d ${POSTGRES_DB:-habbit_runner}"
+          "pg_isready -U ${HR_DB_USER:-habbit} -d ${HR_DB_NAME:-habbit_runner}"
         ]
       interval: 5s
       timeout: 3s
@@ -39,23 +43,34 @@ services:
     depends_on:
       db:
         condition: service_healthy
-    env_file:
-      - packages/server/.env
+    environment:
+      DATABASE_URL: ${DATABASE_URL:-postgresql://habbit:password@db:5432/habbit_runner}
+      DEFAULT_DB_SCHEMA: ${DEFAULT_DB_SCHEMA:-habbit_runner}
+      PORT: 3000
+      AUTH_SECRET: ${AUTH_SECRET:-dev-secret}
+      ACCESS_TOKEN_EXPIRES_IN: ${ACCESS_TOKEN_EXPIRES_IN:-1h}
+      ACCESS_TOKEN_TTL_SECONDS: ${ACCESS_TOKEN_TTL_SECONDS:-3600}
+      REFRESH_TOKEN_EXPIRES_DAYS: ${REFRESH_TOKEN_EXPIRES_DAYS:-30}
+      API_PUBLIC_URL: ${API_PUBLIC_URL:-http://localhost:${WEB_PORT:-80}/api}
+      OAUTH_DEFAULT_RETURN_TO: ${OAUTH_DEFAULT_RETURN_TO:-http://localhost:${WEB_PORT:-80}}
+      GOOGLE_OAUTH_CLIENT_ID: ${GOOGLE_OAUTH_CLIENT_ID:-}
+      GOOGLE_OAUTH_CLIENT_SECRET: ${GOOGLE_OAUTH_CLIENT_SECRET:-}
+    expose:
+      - "3000"
     healthcheck:
       test:
         [
           "CMD-SHELL",
-          "node -e \"const p=Number(process.env.PORT||4000);const net=require('node:net');const socket=net.connect({host:'127.0.0.1',port:p},()=>{socket.destroy();process.exit(0)});socket.on('error',()=>process.exit(1));setTimeout(()=>process.exit(1),2500);\""
+          "node -e \"const p=Number(process.env.PORT||3000);const net=require('node:net');const socket=net.connect({host:'127.0.0.1',port:p},()=>{socket.destroy();process.exit(0)});socket.on('error',()=>process.exit(1));setTimeout(()=>process.exit(1),2500);\""
         ]
       interval: 10s
       timeout: 5s
       retries: 10
       start_period: 15s
-    ports:
-      - "${API_PORT:-4000}:4000"
     networks:
       - backend
       - edge
+      - dokploy-ipv6
 
   web:
     <<: *service_defaults
@@ -63,7 +78,7 @@ services:
       context: .
       dockerfile: packages/web/Dockerfile
       args:
-        VITE_API_BASE_URL: ${VITE_API_BASE_URL:-http://localhost:4000}
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL:-/api}
     init: true
     depends_on:
       api:
@@ -74,16 +89,18 @@ services:
       timeout: 5s
       retries: 10
       start_period: 10s
-    ports:
-      - "${WEB_PORT:-5173}:80"
+    expose:
+      - "${WEB_PORT:-80}"
     networks:
       - edge
 
 volumes:
-  pgdata:
+  pgdata18:
 
 networks:
   backend:
     driver: bridge
   edge:
     driver: bridge
+  dokploy-ipv6:
+    external: true

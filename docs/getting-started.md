@@ -22,11 +22,13 @@ Set up Habbit Runner locally for frontend and backend development.
 
 1. Install dependencies from the repository root:
    - `npm install`
-2. Configure root environment:
+2. Configure frontend environment:
+   - Create `packages/web/.env` with required `VITE_*` variables
+3. Configure Docker Compose environment (only if you run Docker):
    - Copy `.env.example` to `.env`
-3. Configure backend environment:
-   - Copy `packages/server/.env.example` to `packages/server/.env`
-4. Generate Prisma client:
+4. Configure backend environment (for local non-Docker server runs):
+   - Create `packages/server/.env` with database/auth/OAuth variables
+5. Generate Prisma client:
    - `cd packages/server && npx prisma generate`
 
 ## 💻 Run in Development
@@ -37,13 +39,27 @@ Set up Habbit Runner locally for frontend and backend development.
 
 ## 🔐 Environment Variables
 
+### Frontend (`packages/web/.env`)
+
+- `VITE_API_BASE_URL` (default `http://localhost:3000` for local dev; use `/api` in Docker Compose)
+- `VITE_SYNC_ENABLED` (`true` or `false`)
+- `VITE_DEFAULT_USER_ID` seeds Dexie records for offline demos
+- For Docker Compose, frontend requests are proxied by nginx, so use `/api` as the client base URL.
+
 ### Root (`.env`)
 
-- `VITE_API_BASE_URL` (default `http://localhost:4000`)
-- `VITE_SYNC_ENABLED` (`true` or `false`)
-- `API_PORT`, `WEB_PORT`, `DB_PORT` (for Docker Compose)
+- Docker source of truth for all container env:
+  - published port: `WEB_PORT` (frontend entrypoint)
+  - DB container credentials: `HR_DB_NAME`, `HR_DB_USER`, `HR_DB_PASSWORD`
+  - API container settings: `DATABASE_URL`, `DEFAULT_DB_SCHEMA`, `AUTH_SECRET`, token TTLs, Google OAuth credentials (`api` runs on internal `3000`)
+  - `api` and `db` are internal-only in Docker Compose (no published host ports)
+  - OAuth URLs are derived in Compose from `WEB_PORT` by default:
+    - `API_PUBLIC_URL` -> `http://localhost:${WEB_PORT}/api`
+    - `OAUTH_DEFAULT_RETURN_TO` -> `http://localhost:${WEB_PORT}`
 
 ### Backend (`packages/server/.env`)
+
+Used only by local API runs (`npm run dev:server` / `npm run dev`), not by Docker Compose.
 
 - Database and auth:
   - `DATABASE_URL`
@@ -51,6 +67,8 @@ Set up Habbit Runner locally for frontend and backend development.
   - `ACCESS_TOKEN_EXPIRES_IN`
   - `ACCESS_TOKEN_TTL_SECONDS`
   - `REFRESH_TOKEN_EXPIRES_DAYS`
+  - `DEFAULT_DB_SCHEMA` (default `public`) controls which Postgres schema hosts the Prisma tables.
+  - Prisma will run `CREATE SCHEMA IF NOT EXISTS` before the first connection, but you still need to apply the Prisma migrations/seeds inside that schema before relying on the tables.
 - Google OAuth:
   - `GOOGLE_OAUTH_CLIENT_ID`
   - `GOOGLE_OAUTH_CLIENT_SECRET`
@@ -61,8 +79,10 @@ Set up Habbit Runner locally for frontend and backend development.
 
 1. Set Docker host (Colima):
    - `export DOCKER_HOST=unix:///Users/sash/.colima/default/docker.sock`
-2. Start stack:
+2. Start the default stack (no database container):
    - `docker compose up --build`
+3. Start the stack with the Postgres database included (profile `db` must be enabled):
+   - `docker compose --profile db up --build`
 
 ## ✅ Verification Checklist
 

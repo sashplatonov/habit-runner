@@ -29,6 +29,8 @@ dist-test
 *.sw?
 .env
 .env.*
+!.env.example
 server/.env
 
 secrets/
+.claude/settings.local.json

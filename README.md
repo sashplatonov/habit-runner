@@ -39,18 +39,25 @@ Habbit Runner is built on a [Magic Patterns](https://magicpatterns.com) Vite tem
 
 ### 🖥️ Client
 
-- Copy `.env.example` to `.env` and tune the following keys:
-  - `VITE_API_BASE_URL` (defaults to `http://localhost:4000`)
+- Create `packages/web/.env` before launching the dev server and set:
+  - `VITE_API_BASE_URL` (defaults to `http://localhost:3000` for local dev; use `/api` behind Docker/nginx)
   - `VITE_SYNC_ENABLED` lets you disable sync (`false` to stay offline)
-  - `API_PORT`, `WEB_PORT`, `DB_PORT` control `docker compose` published ports
+  - `VITE_DEFAULT_USER_ID` seeds Dexie records for offline demos
+
+### 🐳 Docker Compose
+
+- Copy root `.env.example` to `.env`; this root `.env` is the Docker source of truth for container env (published web port, DB credentials, API auth/token settings, and Google credentials).
+- `api` and `db` have no published host ports; external clients reach backend only via the `web` nginx reverse proxy at `/api`.
+- `docker compose` injects API env directly from root `.env`; `packages/server/.env` is not used inside containers.
+- By default in Docker, Compose derives `API_PUBLIC_URL` as `http://localhost:${WEB_PORT}/api` and `OAUTH_DEFAULT_RETURN_TO` as `http://localhost:${WEB_PORT}`.
 
 ### 🧠 API
 
    1. `cd packages/server`
-   2. Copy `packages/server/.env.example` to `packages/server/.env` and update each value to match your database and secrets:
+   2. Create `packages/server/.env` and configure values for local non-Docker backend runs:
       - `DATABASE_URL`, `AUTH_SECRET`, `ACCESS_TOKEN_EXPIRES_IN`, `ACCESS_TOKEN_TTL_SECONDS`, `REFRESH_TOKEN_EXPIRES_DAYS`
-      - When running the API via `docker compose`, PostgreSQL lives at the `db` service, so the default `DATABASE_URL=postgresql://habbit:password@db:5432/habbit_runner` works. When you run `npm run dev` against a standalone Postgres on your machine, change the host to `localhost:5432`.
-      - Compose also supports `POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD` overrides for the DB service.
+      - For local `npm run dev:server`, use `localhost` in `DATABASE_URL` (not `db`).
+      - For Docker, edit only root `.env`; compose passes those values into the `api` service.
    - For OAuth login, configure Google credentials only:
      - `GOOGLE_OAUTH_CLIENT_ID`
      - `GOOGLE_OAUTH_CLIENT_SECRET`
@@ -68,9 +75,15 @@ Habbit Runner is built on a [Magic Patterns](https://magicpatterns.com) Vite tem
    - Scroll down, click **Save and Continue**, skip the optional **Test users** section for Internal apps (or add your accounts manually), and finish the wizard.
 3. Go to **Credentials** in the left sidebar, then click **Create credentials → OAuth client ID**. Choose **Web application** as the application type. Name it e.g. “Habbit Runner Local”.
    - In **Authorized JavaScript origins** add `http://localhost:5173` if you run the frontend locally.
-   - In **Authorized redirect URIs** add `http://localhost:4000/auth/google/callback`. If you run the API under a different host/port (e.g., on a remote server), use that base URL instead, keeping `/auth/google/callback` at the end.
+   - In **Authorized redirect URIs** add:
+     - `http://localhost:3000/auth/google/callback` for local non-Docker backend runs.
+     - `http://localhost/api/auth/google/callback` for Docker Compose default (`WEB_PORT=80`, API hidden behind web proxy).
+     - If you run on a different host, keep the same `/auth/google/callback` path on the API URL base used by the app.
    - Click **Create**; Google displays a modal with your **Client ID** and **Client Secret**.
 4. Copy the values into `packages/server/.env` for `GOOGLE_OAUTH_CLIENT_ID` and `GOOGLE_OAUTH_CLIENT_SECRET`. Keep this file secret.
-5. Confirm `API_PUBLIC_URL` matches the API base URL you actually hit (e.g., `http://localhost:4000`) and `OAUTH_DEFAULT_RETURN_TO` equals the frontend origin (`http://localhost:5173`). These settings ensure the redirect back path aligns with the ones you registered in the Google Console.
-6. Start the backend and frontend (`docker compose`, `npm run dev`, whatever your workflow is). In the UI click **Continue with Google**; you will be redirected through Google’s login screens, and after granting consent you’ll land back at `http://localhost:5173/auth/callback` with the tokens appended as query parameters.
+5. Confirm `API_PUBLIC_URL` matches the API base URL your app uses:
+   - Local non-Docker backend: `http://localhost:3000`
+   - Docker Compose default: `http://localhost/api`
+   and keep `OAUTH_DEFAULT_RETURN_TO` at the frontend origin (for example `http://localhost` with default `WEB_PORT=80`).
+6. Start the backend and frontend (`docker compose`, `npm run dev`, whatever your workflow is). In the UI click **Continue with Google**; you will be redirected through Google’s login screens, and after granting consent you’ll land back at `http://localhost/auth/callback` (or your configured frontend origin) with the tokens appended as query parameters.
 7. When you deploy to another domain, revisit the Google credential: add that domain to **Authorized redirect URIs** (again ending with `/auth/google/callback`), and update `API_PUBLIC_URL`/`OAUTH_DEFAULT_RETURN_TO` before issuing new client secrets to avoid redirect mismatches.
