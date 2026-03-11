@@ -1,0 +1,10 @@
+services:
+  api:
+    networks:
+      - backend
+      - edge
+      - dokploy-ipv6
+
+networks:
+  dokploy-ipv6:
+    external: true
