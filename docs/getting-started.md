@@ -81,6 +81,7 @@ Used only by local API runs (`npm run dev:server` / `npm run dev`), not by Docke
    - `export DOCKER_HOST=unix:///Users/sash/.colima/default/docker.sock`
 2. Start the default stack (no database container):
    - `docker compose up --build`
+   - Ensure `.env` defines a reachable `DATABASE_URL`, because the stack will not start Postgres unless you enable the `db` profile; otherwise `api` will fail waiting for a local database.
 3. Start the stack with the Postgres database included (profile `db` must be enabled):
    - `docker compose --profile db up --build`
 
