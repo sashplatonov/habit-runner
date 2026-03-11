@@ -20,7 +20,6 @@ import type {
 import {
   buildCursorClause,
   calculateNextCursor,
-  isUniqueConstraintError,
   normalizeCustomDays,
   normalizeDate,
   normalizeReminderEnabled,
@@ -472,14 +471,10 @@ export class SyncService {
     tx: TxClient,
     opId: string
   ): Promise<boolean> {
-    try {
-      await tx.syncOpLog.create({ data: { opId } });
-      return true;
-    } catch (error) {
-      if (isUniqueConstraintError(error)) {
-        return false;
-      }
-      throw error;
-    }
+    const result = await tx.syncOpLog.createMany({
+      data: [{ opId }],
+      skipDuplicates: true
+    });
+    return result.count > 0;
   }
 }
