@@ -79,8 +79,10 @@ Used only by local API runs (`npm run dev:server` / `npm run dev`), not by Docke
 
 1. Set Docker host (Colima):
    - `export DOCKER_HOST=unix:///Users/sash/.colima/default/docker.sock`
-2. Start stack:
+2. Start the default stack (no database container):
    - `docker compose up --build`
+3. Start the stack with the Postgres database included (profile `db` must be enabled):
+   - `docker compose --profile db up --build`
 
 ## ✅ Verification Checklist
 

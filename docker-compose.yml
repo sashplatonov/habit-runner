@@ -9,6 +9,8 @@ x-service-defaults: &service_defaults
 services:
   db:
     <<: *service_defaults
+    profiles:
+      - db
     image: postgres:18-alpine
     environment:
       # Use app-specific variable names to avoid Dokploy or host-level
