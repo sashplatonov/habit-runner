@@ -238,12 +238,20 @@ export class InMemoryPrismaMock {
   };
 
   syncOpLog = {
-    create: async (args: { data: { opId: string } }) => {
-      if (this.syncOpIds.has(args.data.opId)) {
-        throw { code: 'P2002' };
+    createMany: async (args: { data: Array<{ opId: string }>; skipDuplicates: boolean }) => {
+      let count = 0;
+      for (const entry of args.data) {
+        if (this.syncOpIds.has(entry.opId)) {
+          if (!args.skipDuplicates) {
+            throw { code: 'P2002' };
+          }
+          continue;
+        }
+        this.syncOpIds.add(entry.opId);
+        count += 1;
       }
-      this.syncOpIds.add(args.data.opId);
-      return { opId: args.data.opId };
+
+      return { count };
     }
   };
 

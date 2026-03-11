@@ -17,6 +17,19 @@ dist-test
 .eslintcache
 *.local
 
+# Workspace packages
+packages/*/node_modules
+packages/*/dist
+packages/*/dist-ssr
+packages/*/dist-test
+packages/*/coverage
+packages/*/build
+packages/*/.turbo
+packages/*/.cache
+packages/*/.vite
+packages/*/.env
+packages/*/.env.*
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
@@ -30,7 +43,7 @@ dist-test
 .env
 .env.*
 !.env.example
-server/.env
+packages/server/.env
 
 secrets/
 .claude/settings.local.json

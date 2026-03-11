@@ -37,7 +37,7 @@ export interface ExistingHabitRecord {
   userId: string;
   updatedAt: Date;
   version: number;
-  sortOrder: number;
+  sortOrder: number | bigint;
   dailyTarget: number;
   reminderTime: string | null;
   reminderEnabled: boolean;
@@ -54,7 +54,10 @@ export interface ExistingCheckinRecord {
 
 export type TxClient = {
   syncOpLog: {
-    create(args: { data: { opId: string } }): Promise<unknown>;
+    createMany(args: {
+      data: { opId: string }[];
+      skipDuplicates: boolean;
+    }): Promise<{ count: number }>;
   };
   tombstone: {
     create(args: {

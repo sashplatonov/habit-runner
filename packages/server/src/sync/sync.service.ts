@@ -20,7 +20,6 @@ import type {
 import {
   buildCursorClause,
   calculateNextCursor,
-  isUniqueConstraintError,
   normalizeCustomDays,
   normalizeDate,
   normalizeReminderEnabled,
@@ -282,7 +281,7 @@ export class SyncService {
     existing: ExistingHabitRecord | null
   ): {
     nextVersion: number;
-    sortOrder: number;
+    sortOrder: bigint;
     dailyTarget: number;
     reminderTime: string | null;
     reminderEnabled: boolean;
@@ -304,8 +303,21 @@ export class SyncService {
     return Math.max(existing?.version ?? 0, payloadVersion ?? 0) + 1;
   }
 
-  private resolveHabitSortOrder(existing: ExistingHabitRecord | null, payloadSortOrder?: number): number {
-    return normalizeSortOrder(payloadSortOrder) ?? existing?.sortOrder ?? 0;
+  private resolveHabitSortOrder(existing: ExistingHabitRecord | null, payloadSortOrder?: number): bigint {
+    const normalizedSortOrder = normalizeSortOrder(payloadSortOrder);
+    if (typeof normalizedSortOrder === 'number') {
+      return BigInt(normalizedSortOrder);
+    }
+
+    const existingSortOrder = existing?.sortOrder;
+    if (typeof existingSortOrder === 'bigint') {
+      return existingSortOrder;
+    }
+    if (typeof existingSortOrder === 'number') {
+      return BigInt(Math.trunc(existingSortOrder));
+    }
+
+    return 0n;
   }
 
   private resolveHabitDailyTarget(existing: ExistingHabitRecord | null, payloadDailyTarget?: number): number {
@@ -459,14 +471,10 @@ export class SyncService {
     tx: TxClient,
     opId: string
   ): Promise<boolean> {
-    try {
-      await tx.syncOpLog.create({ data: { opId } });
-      return true;
-    } catch (error) {
-      if (isUniqueConstraintError(error)) {
-        return false;
-      }
-      throw error;
-    }
+    const result = await tx.syncOpLog.createMany({
+      data: [{ opId }],
+      skipDuplicates: true
+    });
+    return result.count > 0;
   }
 }

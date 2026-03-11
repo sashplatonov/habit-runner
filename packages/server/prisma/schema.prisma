@@ -33,7 +33,7 @@ model Habit {
   dailyTarget Int       @default(1)
   tags        Json?
   archived    Boolean   @default(false)
-  sortOrder   Int       @default(0)
+  sortOrder   BigInt    @default(0)
   reminderTime String?
   reminderEnabled Boolean @default(true)
   createdAt   DateTime  @default(now())

@@ -2,9 +2,13 @@ node_modules
 packages/*/node_modules
 dist
 packages/*/dist
+packages/*/dist-ssr
 dist-test
+packages/*/dist-test
 .turbo
+packages/*/.turbo
 coverage
+packages/*/coverage
 *.tsbuildinfo
 .eslintcache
 .git
@@ -14,5 +18,13 @@ docs
 .codex
 .claude
 secrets
+backups
 .env
+.env.*
 packages/*/.env
+packages/*/.env.*
+packages/*/.cache
+packages/*/.vite
+packages/*/build
+packages/*/tmp
+tmp
