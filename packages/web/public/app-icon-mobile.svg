@@ -1,0 +1,26 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="84" y1="56" x2="428" y2="456" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#22D3EE"/>
+      <stop offset="0.52" stop-color="#2563EB"/>
+      <stop offset="1" stop-color="#0F172A"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="148" y1="138" x2="372" y2="366" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#F8FAFC"/>
+      <stop offset="1" stop-color="#BAE6FD"/>
+    </linearGradient>
+    <linearGradient id="spark" x1="250" y1="220" x2="346" y2="320" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FDE047"/>
+      <stop offset="1" stop-color="#22C55E"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="136" fill="#020617"/>
+  <rect x="28" y="28" width="456" height="456" rx="124" fill="url(#bg)"/>
+  <circle cx="256" cy="256" r="156" fill="#020817" fill-opacity="0.18"/>
+  <rect x="126" y="116" width="88" height="280" rx="34" fill="url(#accent)"/>
+  <rect x="298" y="116" width="88" height="280" rx="34" fill="url(#accent)"/>
+  <rect x="186" y="220" width="140" height="72" rx="30" fill="url(#accent)"/>
+  <rect x="106" y="104" width="40" height="304" rx="20" fill="#E2E8F0" fill-opacity="0.18"/>
+  <rect x="366" y="104" width="40" height="304" rx="20" fill="#0F172A" fill-opacity="0.24"/>
+  <path d="M220 286C213.376 286 207.747 281.193 206.709 274.651C205.671 268.11 209.544 261.79 215.855 259.208L246.055 246.849C250.841 244.89 256.332 245.89 260.111 249.436L275.409 263.791L326.389 214.28C332.738 208.113 342.884 208.26 349.051 214.61C355.218 220.959 355.071 231.105 348.722 237.272L286.613 297.594C280.474 303.557 270.729 303.796 264.307 298.142L243.358 279.692L226.069 285.051C224.067 285.687 222.035 286 220 286Z" fill="url(#spark)"/>
+</svg>

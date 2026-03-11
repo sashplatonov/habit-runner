@@ -1,0 +1,35 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="84" y1="56" x2="428" y2="456" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#22D3EE"/>
+      <stop offset="0.52" stop-color="#2563EB"/>
+      <stop offset="1" stop-color="#0F172A"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="150" y1="160" x2="384" y2="352" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#F8FAFC"/>
+      <stop offset="1" stop-color="#BAE6FD"/>
+    </linearGradient>
+    <linearGradient id="spark" x1="256" y1="152" x2="340" y2="332" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FDE047"/>
+      <stop offset="1" stop-color="#22C55E"/>
+    </linearGradient>
+    <filter id="shadow" x="53" y="33" width="406" height="446" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feFlood flood-opacity="0" result="BackgroundImageFix"/>
+      <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
+      <feOffset dy="18"/>
+      <feGaussianBlur stdDeviation="22"/>
+      <feComposite in2="hardAlpha" operator="out"/>
+      <feColorMatrix type="matrix" values="0 0 0 0 0.0313726 0 0 0 0 0.0901961 0 0 0 0 0.2 0 0 0 0.35 0"/>
+      <feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_1_2"/>
+      <feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow_1_2" result="shape"/>
+    </filter>
+  </defs>
+  <rect x="40" y="40" width="432" height="432" rx="112" fill="#020617"/>
+  <rect x="56" y="56" width="400" height="400" rx="96" fill="url(#bg)"/>
+  <path d="M126 132C126 117.641 137.641 106 152 106H194C208.359 106 220 117.641 220 132V380C220 394.359 208.359 406 194 406H152C137.641 406 126 394.359 126 380V132Z" fill="#E2E8F0" fill-opacity="0.2"/>
+  <path d="M292 132C292 117.641 303.641 106 318 106H360C374.359 106 386 117.641 386 132V380C386 394.359 374.359 406 360 406H318C303.641 406 292 394.359 292 380V132Z" fill="#0F172A" fill-opacity="0.28"/>
+  <g filter="url(#shadow)">
+    <path d="M160 134C160 122.954 168.954 114 180 114H196C207.046 114 216 122.954 216 134V224H296V134C296 122.954 304.954 114 316 114H332C343.046 114 352 122.954 352 134V378C352 389.046 343.046 398 332 398H316C304.954 398 296 389.046 296 378V286H216V378C216 389.046 207.046 398 196 398H180C168.954 398 160 389.046 160 378V134Z" fill="url(#accent)"/>
+    <path d="M154 290C146.661 290 140.509 284.322 139.92 277.006C139.332 269.69 144.499 263.096 151.701 261.925L210.043 252.443C214.865 251.659 219.755 253.238 223.235 256.689L254.6 287.79L332.411 183.565C337.533 176.707 347.246 175.299 354.104 180.421C360.962 185.543 362.37 195.256 357.248 202.114L269.024 320.247C266.346 323.833 262.244 326.086 257.791 326.449C253.339 326.812 248.924 325.251 245.708 322.189L205.068 283.495L158.98 289.708C157.326 289.903 155.663 290 154 290Z" fill="url(#spark)"/>
+  </g>
+</svg>
