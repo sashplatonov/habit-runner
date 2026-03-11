@@ -3,7 +3,8 @@ import {
   CheckIcon,
   ChevronRightIcon,
   FlameIcon,
-  GripVerticalIcon
+  GripVerticalIcon,
+  TrendingUpIcon
 } from 'lucide-react';
 import { CompletionRing } from '@/components/CompletionRing';
 import { MiniHeatmap } from '@/components/MiniHeatmap';
@@ -112,6 +113,47 @@ function HabitRowMetrics({
   );
 }
 
+function HabitRowMobileStats({
+  habit,
+  streak,
+  last7,
+  completionRate
+}: {
+  habit: Habit;
+  streak: number;
+  last7: boolean[];
+  completionRate: number;
+}) {
+  const accent = HABIT_COLOR_THEMES[habit.color];
+  return (
+    <div className="mt-2 flex flex-wrap items-center gap-2 text-[10px] font-mono uppercase tracking-[0.3em] text-muted sm:hidden">
+      {streak > 0 && (
+        <div className="flex items-center gap-1 text-[10px] text-foreground">
+          <FlameIcon size={12} className="text-accent-secondary" />
+          <span className="font-semibold text-foreground">{streak}d streak</span>
+        </div>
+      )}
+      <div className="flex items-center gap-1 text-[10px] text-foreground">
+        <TrendingUpIcon size={12} className="text-accent-secondary" />
+        <span className="font-semibold text-foreground">{completionRate}% 30d</span>
+      </div>
+      <div className="flex items-center gap-[2px] h-5" aria-hidden>
+        {last7.map((done, i) => (
+          <span
+            key={i}
+            className="w-[4px] rounded-sm transition-all"
+            style={{
+              height: done ? '100%' : '45%',
+              backgroundColor: done ? accent.hex : 'var(--border)',
+              opacity: done ? 1 : 0.5 + i * 0.03
+            }}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export function HabitRow({
   habit,
   onToggle,
@@ -196,6 +238,12 @@ export function HabitRow({
               </span>
             ))}
           </div>
+          <HabitRowMobileStats
+            habit={habit}
+            streak={streak}
+            last7={last7}
+            completionRate={completionRate}
+          />
         </div>
       </button>
 
