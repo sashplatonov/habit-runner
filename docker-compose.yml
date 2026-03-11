@@ -66,6 +66,7 @@ services:
     networks:
       - backend
       - edge
+      - dokploy-ipv6
 
   web:
     <<: *service_defaults
@@ -97,3 +98,5 @@ networks:
     driver: bridge
   edge:
     driver: bridge
+  dokploy-ipv6:
+    external: true
