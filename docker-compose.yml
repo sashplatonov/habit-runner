@@ -11,12 +11,9 @@ services:
     <<: *service_defaults
     image: postgres:18-alpine
     environment:
-      # Use app-specific variable names to avoid Dokploy or host-level
-      # POSTGRES_* values leaking into initdb and breaking Postgres 18 startup.
       POSTGRES_DB: ${HR_DB_NAME:-habbit_runner}
       POSTGRES_USER: ${HR_DB_USER:-habbit}
       POSTGRES_PASSWORD: ${HR_DB_PASSWORD:-password}
-      # Force C locale on alpine (no locales installed); required for PG 18 initdb.
       POSTGRES_INITDB_ARGS: "--locale=C --encoding=UTF8"
     volumes:
       - pgdata18:/var/lib/postgresql
@@ -49,8 +46,8 @@ services:
       ACCESS_TOKEN_EXPIRES_IN: ${ACCESS_TOKEN_EXPIRES_IN:-1h}
       ACCESS_TOKEN_TTL_SECONDS: ${ACCESS_TOKEN_TTL_SECONDS:-3600}
       REFRESH_TOKEN_EXPIRES_DAYS: ${REFRESH_TOKEN_EXPIRES_DAYS:-30}
-      API_PUBLIC_URL: ${API_PUBLIC_URL:-http://localhost:${WEB_PORT:-80}/api}
-      OAUTH_DEFAULT_RETURN_TO: ${OAUTH_DEFAULT_RETURN_TO:-http://localhost:${WEB_PORT:-80}}
+      API_PUBLIC_URL: ${API_PUBLIC_URL:-https://app.example.com/api}
+      OAUTH_DEFAULT_RETURN_TO: ${OAUTH_DEFAULT_RETURN_TO:-https://app.example.com}
       GOOGLE_OAUTH_CLIENT_ID: ${GOOGLE_OAUTH_CLIENT_ID:-}
       GOOGLE_OAUTH_CLIENT_SECRET: ${GOOGLE_OAUTH_CLIENT_SECRET:-}
     healthcheck:
@@ -63,6 +60,8 @@ services:
       timeout: 5s
       retries: 10
       start_period: 15s
+    expose:
+      - "3000"
     networks:
       - backend
       - edge
@@ -85,18 +84,7 @@ services:
       timeout: 5s
       retries: 10
       start_period: 10s
-    ports:
+    expose:
       - "${WEB_PORT:-80}:80"
     networks:
       - edge
-
-volumes:
-  pgdata18:
-
-networks:
-  backend:
-    driver: bridge
-  edge:
-    driver: bridge
-  dokploy-ipv6:
-    external: true
