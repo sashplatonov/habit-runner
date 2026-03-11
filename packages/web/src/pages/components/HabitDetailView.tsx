@@ -103,16 +103,18 @@ function HabitDetailHeader({
 > & { canIncrement: boolean; isTodayFrozen: boolean }) {
   return (
     <div className="border-b border-border bg-bg-primary px-4 py-4 sticky top-14 z-10">
-      <div className="max-w-2xl mx-auto flex items-center gap-3">
-        <button onClick={() => navigate('/')} className="text-muted hover:text-foreground transition-colors p-1 -ml-1">
-          <ArrowLeftIcon size={16} />
-        </button>
-        <span className="text-xl">{habit.icon}</span>
-        <div className="flex-1 min-w-0">
-          <h1 className="text-base font-semibold text-foreground truncate">{habit.name}</h1>
-          <p className="text-[11px] text-muted truncate">{habit.description}</p>
+      <div className="max-w-2xl mx-auto flex flex-col gap-3 sm:flex-row sm:items-center">
+        <div className="flex items-center gap-3 min-w-0 flex-1">
+          <button onClick={() => navigate('/')} className="text-muted hover:text-foreground transition-colors p-1 -ml-1 flex-shrink-0">
+            <ArrowLeftIcon size={16} />
+          </button>
+          <span className="text-xl flex-shrink-0">{habit.icon}</span>
+          <div className="flex-1 min-w-0">
+            <h1 className="text-base font-semibold text-foreground break-words sm:truncate">{habit.name}</h1>
+            <p className="text-[11px] text-muted break-words sm:truncate">{habit.description}</p>
+          </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2 sm:justify-end">
           <button
             onClick={handleToggleArchive}
             className={`p-1.5 rounded border transition-colors ${
@@ -177,7 +179,7 @@ function HabitDetailHeader({
 
 function StatCardGrid({ stats, accent }: Pick<HabitDetailViewProps, 'stats' | 'accent'>) {
   return (
-    <div className="grid grid-cols-4 gap-2">
+    <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
       <div className="bg-bg-secondary border border-border rounded-lg p-3">
         <div className="flex items-center gap-1 mb-2">
           <FlameIcon size={10} className="text-accent-secondary" />

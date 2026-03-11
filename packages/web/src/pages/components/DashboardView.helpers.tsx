@@ -61,6 +61,57 @@ type HabitRowProps = {
   isDropTarget?: boolean;
 };
 
+function HabitRowMetrics({
+  habit,
+  target,
+  streak,
+  last7,
+  completionRate
+}: {
+  habit: Habit;
+  target: number;
+  streak: number;
+  last7: boolean[];
+  completionRate: number;
+}) {
+  const accent = HABIT_COLOR_THEMES[habit.color];
+
+  return (
+    <>
+      <div className="hidden lg:flex items-center justify-end mr-1" aria-hidden>
+        <MiniHeatmap completions={habit.completions} dailyTarget={target} color={habit.color} />
+      </div>
+
+      <div className="hidden md:flex items-end gap-[1px] h-4 sm:h-5" aria-hidden>
+        {last7.map((done, i) => (
+          <div
+            key={i}
+            className="w-[4px] rounded-sm transition-all"
+            style={{
+              height: done ? '100%' : '30%',
+              backgroundColor: done ? accent.hex : 'var(--border)',
+              opacity: i === 6 ? 1 : 0.5 + i * 0.07
+            }}
+          />
+        ))}
+      </div>
+
+      <div className="hidden sm:flex items-center gap-1 w-12 sm:w-16 justify-end">
+        {streak > 0 && (
+          <>
+            <FlameIcon size={11} className="text-accent-secondary" />
+            <span className="text-[11px] font-mono text-accent-secondary">{streak}</span>
+          </>
+        )}
+      </div>
+
+      <div className="hidden md:block">
+        <CompletionRing percentage={completionRate} size={32} strokeWidth={2.5} color={habit.color} showText={false} />
+      </div>
+    </>
+  );
+}
+
 export function HabitRow({
   habit,
   onToggle,
@@ -105,7 +156,7 @@ export function HabitRow({
         completed ? 'opacity-100' : 'opacity-90'
       } ${isDropTarget ? 'border-accent/60 bg-accent/5' : ''}`}
     >
-      <div className="flex items-center gap-2 pr-1">
+      <div className="hidden sm:flex items-center gap-2 pr-1">
         <GripVerticalIcon size={14} className="text-muted" aria-hidden />
       </div>
 
@@ -126,15 +177,15 @@ export function HabitRow({
       </button>
 
       <button type="button" onClick={onDetail} className="flex items-center gap-2.5 flex-1 min-w-0 text-left">
-        <span className="text-base leading-none">{habit.icon}</span>
-        <div className="min-w-0">
+        <span className="flex-shrink-0 text-base leading-none">{habit.icon}</span>
+        <div className="min-w-0 flex-1">
           <div className={`text-sm font-medium ${completed ? 'text-muted line-through' : 'text-foreground'} truncate`}>
             {habit.name}
           </div>
           <div className="text-[10px] font-mono text-muted mt-0.5">
             {todayCount}/{target} today
           </div>
-          <div className="flex items-center gap-2 mt-0.5">
+          <div className="hidden sm:flex items-center gap-2 mt-0.5">
             {habit.tags.slice(0, 2).map((tag) => (
               <span
                 key={tag}
@@ -148,40 +199,19 @@ export function HabitRow({
         </div>
       </button>
 
-      <div className="flex items-center justify-end mr-1" aria-hidden>
-        <MiniHeatmap completions={habit.completions} dailyTarget={target} color={habit.color} />
-      </div>
-
-      <div className="flex items-end gap-[1px] h-4 sm:h-5" aria-hidden>
-        {last7.map((done, i) => (
-          <div
-            key={i}
-            className="w-[4px] rounded-sm transition-all"
-            style={{
-              height: done ? '100%' : '30%',
-              backgroundColor: done ? accent.hex : 'var(--border)',
-              opacity: i === 6 ? 1 : 0.5 + i * 0.07
-            }}
-          />
-        ))}
-      </div>
-
-      <div className="flex items-center gap-1 w-12 sm:w-16 justify-end">
-        {streak > 0 && (
-          <>
-            <FlameIcon size={11} className="text-accent-secondary" />
-            <span className="text-[11px] font-mono text-accent-secondary">{streak}</span>
-          </>
-        )}
-      </div>
-
-      <CompletionRing percentage={completionRate} size={32} strokeWidth={2.5} color={habit.color} showText={false} />
+      <HabitRowMetrics
+        habit={habit}
+        target={target}
+        streak={streak}
+        last7={last7}
+        completionRate={completionRate}
+      />
 
       <button
         type="button"
         onClick={onDetail}
         aria-label={`Open details for ${habit.name}`}
-        className="text-border-hover group-hover:text-muted transition-colors"
+        className="hidden sm:block text-border-hover group-hover:text-muted transition-colors"
       >
         <ChevronRightIcon size={14} />
       </button>
