@@ -40,9 +40,6 @@ services:
       context: .
       dockerfile: packages/server/Dockerfile
     init: true
-    depends_on:
-      db:
-        condition: service_healthy
     environment:
       DATABASE_URL: ${DATABASE_URL:-postgresql://habbit:password@db:5432/habbit_runner}
       DEFAULT_DB_SCHEMA: ${DEFAULT_DB_SCHEMA:-habbit_runner}
