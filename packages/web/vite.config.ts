@@ -7,6 +7,9 @@ import { shouldCacheAppShell } from './src/lib/pwa/runtimeCaching'
 
 // https://vitejs.dev/config/
 export default defineConfig({
+  define: {
+    __BUILD_TIME__: JSON.stringify(new Date().toISOString())
+  },
   server: {
     proxy: {
       '/api': {

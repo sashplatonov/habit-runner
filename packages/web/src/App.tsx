@@ -178,6 +178,14 @@ export function App() {
                   <Route path="*" element={<Navigate to="/" replace />} />
                 </Routes>
               </main>
+              <footer className="py-4 text-center">
+                <span className="text-[11px] font-mono text-muted/30 select-none">
+                  {new Date(__BUILD_TIME__).toLocaleString('en-GB', {
+                    day: 'numeric', month: 'short', year: 'numeric',
+                    hour: '2-digit', minute: '2-digit', timeZoneName: 'short'
+                  })}
+                </span>
+              </footer>
             </div>
           </PullToRefresh>
         </BrowserRouter>
