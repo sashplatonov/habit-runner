@@ -21,7 +21,7 @@ services:
       # Force C locale on alpine (no locales installed); required for PG 18 initdb.
       POSTGRES_INITDB_ARGS: "--locale=C --encoding=UTF8"
     volumes:
-      - pgdata18:/var/lib/postgresql
+      - habbit_runner_pgdata18:/var/lib/postgresql
     healthcheck:
       test:
         [
@@ -67,7 +67,6 @@ services:
     networks:
       - backend
       - edge
-      - dokploy-ipv6
 
   web:
     <<: *service_defaults
@@ -92,12 +91,10 @@ services:
       - edge
 
 volumes:
-  pgdata18:
+  habbit_runner_pgdata18:
 
 networks:
   backend:
     driver: bridge
   edge:
     driver: bridge
-  dokploy-ipv6:
-    external: true
