@@ -97,7 +97,7 @@ function HabitRowMetrics({
         ))}
       </div>
 
-      <div className="hidden sm:flex items-center gap-1 w-12 sm:w-16 justify-end">
+      <div className="flex items-center gap-1 w-12 sm:w-16 justify-end">
         {streak > 0 && (
           <>
             <FlameIcon size={11} className="text-accent-secondary" />
@@ -178,35 +178,45 @@ export function HabitRow({
   const completionRate = calculate30DayRate(habit.completions, target);
 
   return (
-    <div className="flex flex-col gap-1">
+    <div
+      draggable={Boolean(onDragStart)}
+      onDragStart={onDragStart}
+      onDragOver={onDragOver}
+      onDrop={onDrop}
+      onDragEnd={onDragEnd}
+      tabIndex={0}
+      role="listitem"
+      aria-label={`${habit.name}, ${completed ? 'completed' : 'not completed'}`}
+      onKeyDown={(event) => {
+        if (event.key === 'Enter') {
+          event.preventDefault();
+          onDetail();
+          return;
+        }
+        if (event.key === ' ') {
+          event.preventDefault();
+          onToggle();
+        }
+      }}
+      className={`group flex items-stretch bg-bg-secondary border border-border rounded-xl overflow-hidden hover:border-border-hover transition-colors cursor-pointer ${
+        isDropTarget ? 'border-accent/60 bg-accent/5' : ''
+      }`}
+    >
+      {/* Accent strip */}
       <div
-        draggable={Boolean(onDragStart)}
-        onDragStart={onDragStart}
-        onDragOver={onDragOver}
-        onDrop={onDrop}
-        onDragEnd={onDragEnd}
-        tabIndex={0}
-        role="listitem"
-        aria-label={`${habit.name}, ${completed ? 'completed' : 'not completed'}`}
-        onKeyDown={(event) => {
-          if (event.key === 'Enter') {
-            event.preventDefault();
-            onDetail();
-            return;
-          }
-          if (event.key === ' ') {
-            event.preventDefault();
-            onToggle();
-          }
-        }}
-        className={`group flex flex-wrap items-center gap-3 border-b border-border hover:bg-bg-secondary transition-colors cursor-pointer px-3 py-2 sm:px-4 sm:py-3 ${
-          completed ? 'opacity-100' : 'opacity-90'
-        } ${isDropTarget ? 'border-accent/60 bg-accent/5' : ''}`}
-      >
-        <div className="hidden sm:flex items-center gap-2 pr-1">
+        className="w-1 self-stretch flex-shrink-0"
+        style={{ background: accent.hex }}
+        aria-hidden
+      />
+
+      {/* Card body */}
+      <div className="flex-1 flex items-center gap-3 px-3 py-2.5">
+        {/* Drag handle */}
+        <div className="hidden sm:flex items-center pr-1">
           <GripVerticalIcon size={14} className="text-muted" aria-hidden />
         </div>
 
+        {/* Checkbox */}
         <button
           type="button"
           onClick={(e) => {
@@ -223,10 +233,11 @@ export function HabitRow({
           {completed && <CheckIcon size={11} className={accent.textClass} strokeWidth={3} />}
         </button>
 
+        {/* Icon + info */}
         <button
           type="button"
           onClick={onDetail}
-          className="flex flex-1 min-w-0 flex-col gap-1 text-left sm:flex-row sm:items-center sm:gap-2.5"
+          className="flex flex-1 min-w-0 items-center gap-2.5 text-left"
         >
           <span className="flex-shrink-0 text-base leading-none">{habit.icon}</span>
           <div className="min-w-0 flex-1">
@@ -247,9 +258,16 @@ export function HabitRow({
                 </span>
               ))}
             </div>
+            <HabitRowMobileStats
+              habit={habit}
+              streak={streak}
+              last7={last7}
+              completionRate={completionRate}
+            />
           </div>
         </button>
 
+        {/* Desktop metrics */}
         <HabitRowMetrics
           habit={habit}
           target={target}
@@ -258,6 +276,7 @@ export function HabitRow({
           completionRate={completionRate}
         />
 
+        {/* Chevron */}
         <button
           type="button"
           onClick={onDetail}
@@ -267,14 +286,6 @@ export function HabitRow({
           <ChevronRightIcon size={14} />
         </button>
       </div>
-
-      <HabitRowMobileStats
-        habit={habit}
-        streak={streak}
-        last7={last7}
-        completionRate={completionRate}
-        className="sm:hidden"
-      />
     </div>
   );
 }

@@ -269,7 +269,7 @@ function HabitListSection({
   }
 
   return (
-    <div className="max-w-2xl mx-auto py-6 space-y-1" role="list" aria-label="Habit list">
+    <div className="max-w-2xl mx-auto py-3 flex flex-col gap-2 px-4" role="list" aria-label="Habit list">
       {filtered.map((habit) => (
         <React.Fragment key={habit.id}>
           {dropHint?.habitId === habit.id && dropHint.position === 'above' && <DropIndicator />}
