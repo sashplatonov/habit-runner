@@ -61,14 +61,16 @@ export default defineConfig({
         display: 'standalone',
         icons: [
           {
-            src: 'android-chrome-192x192.png',
+            src: 'app-icon-mobile.png',
             sizes: '192x192',
-            type: 'image/png'
+            type: 'image/png',
+            purpose: 'any maskable'
           },
           {
-            src: 'android-chrome-512x512.png',
+            src: 'app-icon.png',
             sizes: '512x512',
-            type: 'image/png'
+            type: 'image/png',
+            purpose: 'any maskable'
           }
         ]
       },

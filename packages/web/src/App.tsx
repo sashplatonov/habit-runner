@@ -30,6 +30,7 @@ import { setCurrentUserId } from '@/lib/storage/db';
 import { useTheme } from '@/hooks/useTheme';
 import { UndoProvider } from '@/lib/undo';
 import { installGlobalClientLogging } from '@/lib/logging/clientLogger';
+import { PullToRefresh } from '@/components/PullToRefresh';
 
 type AuthCallbackPageProps = {
   message?: string;
@@ -80,7 +81,7 @@ export function App() {
   });
   const { theme, setTheme } = useTheme(Boolean(authSession));
   const [authError, setAuthError] = useState<string | undefined>();
-  useSyncEngine(Boolean(authSession));
+  const syncState = useSyncEngine(Boolean(authSession));
 
   useEffect(() => {
     setCurrentUserId(getSessionUserId(authSession));
@@ -152,27 +153,33 @@ export function App() {
       <ErrorBoundary>
       {authSession ? (
         <BrowserRouter>
-          <div className="min-h-screen bg-bg-primary">
-            <a
-              href="#main-content"
-              className="sr-only focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:z-[60] focus:rounded-md focus:border focus:border-accent focus:bg-bg-card focus:px-3 focus:py-2 focus:text-xs focus:text-foreground"
-            >
-              Skip to main content
-            </a>
-            <Nav onLogout={logout} theme={theme} onThemeChange={setTheme} />
-            <RouteFocusManager />
-            <main id="main-content" tabIndex={-1} className="pt-14 focus:outline-none">
-              <Routes>
-                <Route path="/" element={<Dashboard />} />
-                <Route path="/habit/new" element={<AddEditHabit />} />
-                <Route path="/habit/:id" element={<HabitDetail />} />
-                <Route path="/habit/:id/edit" element={<AddEditHabit />} />
-                <Route path="/stats" element={<Stats />} />
-                <Route path="/auth/callback" element={<AuthCallbackPage />} />
-                <Route path="*" element={<Navigate to="/" replace />} />
-              </Routes>
-            </main>
-          </div>
+          <PullToRefresh
+            enabled={Boolean(authSession)}
+            isRefreshing={syncState.status === 'syncing'}
+            onRefresh={syncState.syncNow}
+          >
+            <div className="min-h-screen bg-bg-primary">
+              <a
+                href="#main-content"
+                className="sr-only focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:z-[60] focus:rounded-md focus:border focus:border-accent focus:bg-bg-card focus:px-3 focus:py-2 focus:text-xs focus:text-foreground"
+              >
+                Skip to main content
+              </a>
+              <Nav onLogout={logout} theme={theme} onThemeChange={setTheme} />
+              <RouteFocusManager />
+              <main id="main-content" tabIndex={-1} className="pt-14 focus:outline-none">
+                <Routes>
+                  <Route path="/" element={<Dashboard />} />
+                  <Route path="/habit/new" element={<AddEditHabit />} />
+                  <Route path="/habit/:id" element={<HabitDetail />} />
+                  <Route path="/habit/:id/edit" element={<AddEditHabit />} />
+                  <Route path="/stats" element={<Stats />} />
+                  <Route path="/auth/callback" element={<AuthCallbackPage />} />
+                  <Route path="*" element={<Navigate to="/" replace />} />
+                </Routes>
+              </main>
+            </div>
+          </PullToRefresh>
         </BrowserRouter>
       ) : (
         <>
