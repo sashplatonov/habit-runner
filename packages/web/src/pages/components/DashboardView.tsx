@@ -1,6 +1,7 @@
 import React from 'react';
 import { BellRingIcon, FlameIcon, TrendingUpIcon, ZapIcon } from 'lucide-react';
 import { Onboarding, type OnboardingTemplate } from '@/components/Onboarding';
+import { CompletionRing } from '@/components/CompletionRing';
 import type { Habit } from '@/types/habit';
 import { HabitRow, DropIndicator } from './DashboardView.helpers';
 import { invokeIfFunction } from '@/lib/callback';
@@ -52,19 +53,39 @@ function DashboardHero({
   return (
     <div className="border-b border-border bg-bg-primary px-4 py-4">
       <div className="max-w-2xl mx-auto">
-        <div className="flex items-start justify-between mb-4">
-          <div>
-            <p className="text-[11px] font-mono text-muted uppercase tracking-widest mb-1">{dateStr}</p>
-            <h1 className="text-xl font-semibold text-foreground">Today</h1>
-          </div>
-          <div className="text-right">
-            <div className="text-3xl font-mono font-bold text-accent" style={{ textShadow: '0 0 20px var(--glow)' }}>
-              {todayRate}%
+        <div className="flex items-center gap-5 mb-3">
+          <CompletionRing size={88} strokeWidth={7} percentage={todayRate} />
+          <div className="flex-1 flex flex-col gap-2">
+            <div>
+              <p className="text-[11px] font-mono text-muted uppercase tracking-widest mb-0.5">{dateStr}</p>
+              <h1 className="text-xl font-semibold text-foreground">Today</h1>
             </div>
-            <div className="text-[10px] font-mono text-muted">{completedToday}/{totalActive} done</div>
+            <div className="grid grid-cols-3 gap-2">
+              <div className="bg-bg-card border border-border rounded-xl px-3 py-2">
+                <div className="flex items-center gap-1.5 mb-1">
+                  <ZapIcon size={10} className="text-accent" />
+                  <span className="text-[10px] font-mono text-muted uppercase tracking-wider">Active</span>
+                </div>
+                <span className="text-lg font-mono font-bold text-foreground">{totalActive}</span>
+              </div>
+              <div className="bg-bg-card border border-border rounded-xl px-3 py-2">
+                <div className="flex items-center gap-1.5 mb-1">
+                  <FlameIcon size={10} className="text-accent-secondary" />
+                  <span className="text-[10px] font-mono text-muted uppercase tracking-wider">Streak</span>
+                </div>
+                <span className="text-lg font-mono font-bold text-accent-secondary">{overallStreak}d</span>
+              </div>
+              <div className="bg-bg-card border border-border rounded-xl px-3 py-2">
+                <div className="flex items-center gap-1.5 mb-1">
+                  <TrendingUpIcon size={10} className="text-accent-secondary" />
+                  <span className="text-[10px] font-mono text-muted uppercase tracking-wider">Done</span>
+                </div>
+                <span className="text-lg font-mono font-bold text-accent-secondary">{completedToday}</span>
+              </div>
+            </div>
           </div>
         </div>
-        <div className="h-1 bg-border rounded-full overflow-hidden mb-4">
+        <div className="h-[3px] bg-border rounded-full overflow-hidden mb-3">
           <div
             className="h-full rounded-full transition-all duration-700"
             style={{
@@ -83,29 +104,6 @@ function DashboardHero({
           >
             Export CSV
           </button>
-        </div>
-        <div className="grid grid-cols-3 gap-2 mt-4">
-          <div className="bg-bg-secondary border border-border rounded-lg px-3 py-2">
-            <div className="flex items-center gap-1.5 mb-1">
-              <ZapIcon size={10} className="text-accent" />
-              <span className="text-[10px] font-mono text-muted uppercase tracking-wider">Active</span>
-            </div>
-            <span className="text-lg font-mono font-bold text-foreground">{totalActive}</span>
-          </div>
-          <div className="bg-bg-secondary border border-border rounded-lg px-3 py-2">
-            <div className="flex items-center gap-1.5 mb-1">
-              <FlameIcon size={10} className="text-accent-secondary" />
-              <span className="text-[10px] font-mono text-muted uppercase tracking-wider">Streak</span>
-            </div>
-            <span className="text-lg font-mono font-bold text-accent-secondary">{overallStreak}d</span>
-          </div>
-          <div className="bg-bg-secondary border border-border rounded-lg px-3 py-2">
-            <div className="flex items-center gap-1.5 mb-1">
-              <TrendingUpIcon size={10} className="text-accent-secondary" />
-              <span className="text-[10px] font-mono text-muted uppercase tracking-wider">Done</span>
-            </div>
-            <span className="text-lg font-mono font-bold text-accent-secondary">{completedToday}</span>
-          </div>
         </div>
       </div>
     </div>
