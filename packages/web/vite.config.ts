@@ -52,25 +52,44 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
+      injectRegister: 'auto',
       manifest: {
-        name: 'Habit Runner',
+        name: 'Habbit Runner',
         short_name: 'HabitRunner',
         description: 'Offline-first habit tracking with sync',
+        id: '/',
+        start_url: '/',
         theme_color: '#080810',
         background_color: '#080810',
         display: 'standalone',
+        display_override: ['window-controls-overlay', 'standalone'],
+        orientation: 'portrait',
+        lang: 'en',
+        categories: ['productivity', 'lifestyle'],
         icons: [
           {
-            src: 'app-icon-mobile.png',
+            src: 'icon-192.png',
             sizes: '192x192',
             type: 'image/png',
-            purpose: 'any maskable'
+            purpose: 'any'
           },
           {
-            src: 'app-icon.png',
+            src: 'icon-192.png',
+            sizes: '192x192',
+            type: 'image/png',
+            purpose: 'maskable'
+          },
+          {
+            src: 'icon-512.png',
             sizes: '512x512',
             type: 'image/png',
-            purpose: 'any maskable'
+            purpose: 'any'
+          },
+          {
+            src: 'icon-512.png',
+            sizes: '512x512',
+            type: 'image/png',
+            purpose: 'maskable'
           }
         ]
       },
