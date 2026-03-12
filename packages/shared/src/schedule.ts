@@ -1,4 +1,4 @@
-import type { HabitFrequency, HabitSchedule, WeekOfMonth } from './habit';
+import type { HabitFrequency, HabitSchedule, WeekOfMonth } from './habit.js';
 
 const WEEKDAY_ORDER = [1, 2, 3, 4, 5, 6, 0];
 const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
