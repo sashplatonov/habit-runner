@@ -29,6 +29,7 @@ model Habit {
   icon        String
   frequency   String
   customDays  Json?
+  schedule    Json?
   targetStreak Int
   dailyTarget Int       @default(1)
   tags        Json?

@@ -116,6 +116,7 @@ export function HabitDetail() {
       handleToggleArchive={handleToggleArchive}
       handleIncrementCompletion={handleIncrementCompletion}
       handleDecrementCompletion={handleDecrementCompletion}
+      setCompletionCount={setCompletionCount}
       toggleFreezeToday={toggleFreezeToday}
       handleDelete={handleDelete}
     />

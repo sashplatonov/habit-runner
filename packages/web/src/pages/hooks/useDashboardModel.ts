@@ -7,6 +7,7 @@ import { formatAppDate } from '@/lib/i18n';
 import type { Habit } from '@/types/habit';
 import type { OnboardingTemplate } from '@/components/Onboarding';
 import type { HabitUpsertInput } from '@/pages/hooks/useAddEditHabitModel';
+import { isScheduledForDate, resolveHabitSchedule } from '@/lib/habits/schedule';
 
 type UndoPushAction = {
   message: string;
@@ -21,7 +22,10 @@ export function useDashboardModel() {
   const [addingTemplate, setAddingTemplate] = useState<string | null>(null);
   const [filter, setFilter] = useState<'all' | 'pending' | 'done'>('all');
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
-  const today = formatDate(new Date());
+  const todayDate = new Date();
+  todayDate.setHours(0, 0, 0, 0);
+  const today = formatDate(todayDate);
+  const todayKey = today;
   const todayRate = getTodayCompletionRate();
   const completedToday = habits.filter((habit) => (habit.completions[today] ?? 0) >= Math.max(1, habit.dailyTarget ?? 1)).length;
   const totalActive = habits.length;
@@ -42,7 +46,7 @@ export function useDashboardModel() {
   });
 
   const dragHandlers = useDragHandlers(habits, updateHabit);
-  const data = useDashboardData(habits, filter, selectedTags, today);
+  const data = useDashboardData(habits, filter, selectedTags, todayDate, todayKey);
   const handlers = useDashboardHandlers({
     addHabit,
     navigate,
@@ -95,7 +99,8 @@ function useDashboardData(
   habits: Habit[],
   filter: 'all' | 'pending' | 'done',
   selectedTags: string[],
-  today: string
+  today: Date,
+  todayKey: string
 ) {
   const allTags = useMemo(() => {
     const tags = new Set<string>();
@@ -106,18 +111,21 @@ function useDashboardData(
   const filtered = useMemo(
     () =>
       habits.filter((habit) => {
-        if (filter === 'pending') {
-          return (habit.completions[today] ?? 0) < Math.max(1, habit.dailyTarget ?? 1);
-        }
-        if (filter === 'done') {
-          return (habit.completions[today] ?? 0) >= Math.max(1, habit.dailyTarget ?? 1);
-        }
         if (selectedTags.length > 0 && !selectedTags.some((tag) => habit.tags.includes(tag))) {
           return false;
         }
+        const schedule = resolveHabitSchedule(habit);
+        const scheduledToday = isScheduledForDate(schedule, today);
+        const completedToday = (habit.completions[todayKey] ?? 0) >= Math.max(1, habit.dailyTarget ?? 1);
+        if (filter === 'pending') {
+          return scheduledToday && !completedToday;
+        }
+        if (filter === 'done') {
+          return scheduledToday && completedToday;
+        }
         return true;
       }),
-    [habits, filter, selectedTags, today]
+    [habits, filter, selectedTags, today, todayKey]
   );
 
   const overallStreak = useMemo(() => {
@@ -126,7 +134,15 @@ function useDashboardData(
     cursor.setDate(cursor.getDate() - 1);
     for (let i = 0; i < 30; i += 1) {
       const key = cursor.toISOString().split('T')[0];
-      const allDone = habits.every((habit) => (habit.completions[key] ?? 0) >= Math.max(1, habit.dailyTarget ?? 1));
+      const keyDate = new Date(cursor);
+      keyDate.setHours(0, 0, 0, 0);
+      const allDone = habits.every((habit) => {
+        const schedule = resolveHabitSchedule(habit);
+        if (!isScheduledForDate(schedule, keyDate)) {
+          return true;
+        }
+        return (habit.completions[key] ?? 0) >= Math.max(1, habit.dailyTarget ?? 1);
+      });
       if (allDone) {
         streak += 1;
         cursor.setDate(cursor.getDate() - 1);

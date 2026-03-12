@@ -73,6 +73,7 @@ export function SidebarNav({ theme, onThemeChange, onLogout }: SidebarNavProps) 
   return (
     <aside
       className="hidden sm:flex fixed left-0 top-0 h-screen w-[220px] flex-col bg-bg-primary border-r border-border px-3 py-4 z-50"
+      style={{ paddingTop: 'calc(var(--safe-area-inset-top, 0px) + 1rem)' }}
       aria-label="Sidebar navigation"
     >
       <Link to="/" className="flex items-center gap-2.5 px-2 mb-5">

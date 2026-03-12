@@ -31,6 +31,7 @@ import {
   serializeHabit,
   serializeTombstone
 } from './sync.utils';
+import { HABIT_FREQUENCIES, HabitFrequency, HabitSchedule, normalizeSchedule, scheduleFromLegacy } from '@habbit-runner/shared';
 
 @Injectable()
 export class SyncService {
@@ -245,6 +246,7 @@ export class SyncService {
         icon: payload.icon,
         frequency: payload.frequency,
         customDays: writeValues.customDays as never,
+        schedule: writeValues.schedule as never,
         targetStreak: payload.targetStreak,
         dailyTarget: writeValues.dailyTarget,
         tags: writeValues.tags as never,
@@ -263,6 +265,7 @@ export class SyncService {
         icon: payload.icon,
         frequency: payload.frequency,
         customDays: writeValues.customDays as never,
+        schedule: writeValues.schedule as never,
         targetStreak: payload.targetStreak,
         dailyTarget: writeValues.dailyTarget,
         tags: writeValues.tags as never,
@@ -287,6 +290,7 @@ export class SyncService {
     reminderEnabled: boolean;
     tags: unknown;
     customDays: number[] | undefined;
+    schedule: HabitSchedule;
   } {
     return {
       nextVersion: this.resolveHabitVersion(existing, payload.version),
@@ -295,7 +299,8 @@ export class SyncService {
       reminderTime: this.resolveHabitReminderTime(existing, payload.reminderTime),
       reminderEnabled: this.resolveHabitReminderEnabled(existing, payload.reminderEnabled),
       tags: normalizeTags(payload.tags),
-      customDays: normalizeCustomDays(payload.customDays)
+      customDays: normalizeCustomDays(payload.customDays),
+      schedule: this.resolveHabitSchedule(existing, payload)
     };
   }
 
@@ -339,6 +344,34 @@ export class SyncService {
     payloadReminderEnabled?: boolean
   ): boolean {
     return normalizeReminderEnabled(payloadReminderEnabled, existing?.reminderEnabled ?? true);
+  }
+
+  private resolveHabitSchedule(
+    existing: ExistingHabitRecord | null,
+    payload: HabitPayload
+  ): HabitSchedule {
+    const normalized = normalizeSchedule(payload.schedule);
+    if (normalized) {
+      return normalized;
+    }
+    if (existing?.schedule) {
+      const inherited = normalizeSchedule(existing.schedule);
+      if (inherited) {
+        return inherited;
+      }
+    }
+    const frequency = this.normalizeHabitFrequency(payload.frequency);
+    return scheduleFromLegacy(frequency, normalizeCustomDays(payload.customDays));
+  }
+
+  private normalizeHabitFrequency(value: unknown): HabitFrequency {
+    if (typeof value !== 'string') {
+      return 'daily';
+    }
+    if ((HABIT_FREQUENCIES as readonly string[]).includes(value)) {
+      return value as HabitFrequency;
+    }
+    return 'daily';
   }
 
   private async applyCheckinOp(

@@ -4,6 +4,7 @@ import type {
   TombstoneDto
 } from './dto/pull-response.dto';
 import type { Cursor } from './sync.types';
+import { HabitFrequency, normalizeSchedule, scheduleFromLegacy } from '@habbit-runner/shared';
 
 export const parseCursor = (cursor?: string): Cursor | undefined => {
   if (!cursor) {return undefined;}
@@ -49,6 +50,7 @@ export const serializeHabit = (habit: {
   icon: string;
   frequency: string;
   customDays: unknown;
+  schedule?: unknown;
   targetStreak: number;
   dailyTarget: number;
   tags: unknown;
@@ -74,6 +76,12 @@ export const serializeHabit = (habit: {
   sortOrder: Number(habit.sortOrder ?? 0),
   reminderTime: habit.reminderTime ?? undefined,
   reminderEnabled: habit.reminderEnabled,
+  schedule:
+    normalizeSchedule(habit.schedule) ??
+    scheduleFromLegacy(
+      habit.frequency as HabitFrequency,
+      Array.isArray(habit.customDays) ? habit.customDays.map((day) => Number(day)).filter((day) => Number.isFinite(day)) as number[] : undefined
+    ),
   createdAt: habit.createdAt.toISOString(),
   updatedAt: habit.updatedAt.toISOString(),
   version: habit.version
