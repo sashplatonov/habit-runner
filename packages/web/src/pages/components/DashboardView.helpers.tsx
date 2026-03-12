@@ -1,10 +1,8 @@
 import React from 'react';
 import {
   CheckIcon,
-  ChevronRightIcon,
   FlameIcon,
   GripVerticalIcon,
-  TrendingUpIcon
 } from 'lucide-react';
 import { CompletionRing } from '@/components/CompletionRing';
 import { MiniHeatmap } from '@/components/MiniHeatmap';
@@ -113,45 +111,21 @@ function HabitRowMetrics({
   );
 }
 
-function HabitRowMobileStats({
-  habit,
-  streak,
-  last7,
-  completionRate,
-}: {
-  habit: Habit;
-  streak: number;
-  last7: boolean[];
-  completionRate: number;
-}) {
-  const accent = HABIT_COLOR_THEMES[habit.color];
+
+function MiniBars({ last7, accentHex }: { last7: boolean[]; accentHex: string }) {
   return (
-    <div
-      className="mt-1 flex flex-wrap items-center gap-2 text-[10px] font-mono uppercase tracking-[0.3em] text-muted text-foreground"
-    >
-      {streak > 0 && (
-        <div className="flex items-center gap-1">
-          <FlameIcon size={12} className="text-accent-secondary" />
-          <span className="font-semibold text-foreground">{streak}d</span>
-        </div>
-      )}
-      <div className="flex items-center gap-1">
-        <TrendingUpIcon size={12} className="text-accent-secondary" />
-        <span className="font-semibold text-foreground">{completionRate}% 30d</span>
-      </div>
-      <div className="flex items-center gap-[2px] h-5" aria-hidden>
-        {last7.map((done, i) => (
-          <span
-            key={i}
-            className="w-[4px] rounded-sm transition-all"
-            style={{
-              height: done ? '100%' : '45%',
-              backgroundColor: done ? accent.hex : 'var(--border)',
-              opacity: done ? 1 : 0.5 + i * 0.03
-            }}
-          />
-        ))}
-      </div>
+    <div className="flex items-end gap-[2px] h-[13px]" aria-hidden>
+      {last7.map((done, i) => (
+        <span
+          key={i}
+          className="w-[3px] rounded-sm transition-all"
+          style={{
+            height: done ? '100%' : '40%',
+            backgroundColor: done ? accentHex : 'var(--border)',
+            opacity: done ? 1 : 0.4 + i * 0.07
+          }}
+        />
+      ))}
     </div>
   );
 }
@@ -208,60 +182,41 @@ export function HabitRow({
       />
 
       {/* Card body */}
-      <div className="flex-1 flex items-center gap-3 px-3 py-2.5">
-        {/* Drag handle */}
-        <div className="hidden sm:flex items-center pr-1">
+      <div className="flex-1 flex items-center gap-3 px-3 py-3">
+        {/* Drag handle — desktop only */}
+        <div className="hidden sm:flex items-center">
           <GripVerticalIcon size={14} className="text-muted" aria-hidden />
         </div>
 
-        {/* Checkbox */}
-        <button
-          type="button"
-          onClick={(e) => {
-            e.stopPropagation();
-            onToggle();
-          }}
-          className={`flex-shrink-0 w-5 h-5 rounded border-2 flex items-center justify-center transition-all duration-200 ${
-            completed
-              ? `${accent.bgClass} ${accent.borderClass} ${accent.shadowClass}`
-              : 'border-border-hover hover:border-muted'
-          }`}
-          aria-label={`Mark ${habit.name} as ${completed ? 'incomplete' : 'complete'}`}
-        >
-          {completed && <CheckIcon size={11} className={accent.textClass} strokeWidth={3} />}
-        </button>
-
-        {/* Icon + info */}
+        {/* Icon with colored background */}
         <button
           type="button"
           onClick={onDetail}
-          className="flex flex-1 min-w-0 items-center gap-2.5 text-left"
+          className="flex-shrink-0 w-9 h-9 rounded-xl flex items-center justify-center text-lg"
+          style={{ background: accent.dim }}
+          tabIndex={-1}
+          aria-hidden
         >
-          <span className="flex-shrink-0 text-base leading-none">{habit.icon}</span>
-          <div className="min-w-0 flex-1">
-            <div className={`text-sm font-medium ${completed ? 'text-muted line-through' : 'text-foreground'} truncate`}>
-              {habit.name}
-            </div>
-            <div className="text-[10px] font-mono text-muted mt-0.5">
-              {todayCount}/{target} today
-            </div>
-            <div className="hidden sm:flex items-center gap-2 mt-0.5">
-              {habit.tags.slice(0, 2).map((tag) => (
-                <span
-                  key={tag}
-                  className="inline-flex items-center gap-1 text-[10px] font-mono text-foreground bg-bg-card border border-border rounded px-1.5 py-0.5"
-                >
-                  <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: accent.hex }} />
-                  {tag}
-                </span>
-              ))}
-            </div>
-            <HabitRowMobileStats
-              habit={habit}
-              streak={streak}
-              last7={last7}
-              completionRate={completionRate}
-            />
+          {habit.icon}
+        </button>
+
+        {/* Info */}
+        <button
+          type="button"
+          onClick={onDetail}
+          className="flex-1 min-w-0 text-left"
+        >
+          <div className={`text-sm font-semibold ${completed ? 'text-muted line-through' : 'text-foreground'} truncate`}>
+            {habit.name}
+          </div>
+          <div className="flex items-center gap-2 mt-1">
+            {streak > 0 && (
+              <div className="flex items-center gap-1 text-[11px] font-mono font-medium" style={{ color: accent.hex }}>
+                <FlameIcon size={10} />
+                {streak}d
+              </div>
+            )}
+            <MiniBars last7={last7} accentHex={accent.hex} />
           </div>
         </button>
 
@@ -274,14 +229,22 @@ export function HabitRow({
           completionRate={completionRate}
         />
 
-        {/* Chevron */}
+        {/* Check button — large, right side */}
         <button
           type="button"
-          onClick={onDetail}
-          aria-label={`Open details for ${habit.name}`}
-          className="hidden sm:block text-border-hover group-hover:text-muted transition-colors"
+          onClick={(e) => {
+            e.stopPropagation();
+            onToggle();
+          }}
+          className={`flex-shrink-0 w-9 h-9 rounded-xl border-[1.5px] flex items-center justify-center transition-all duration-200 ${
+            completed
+              ? `${accent.bgClass} ${accent.borderClass}`
+              : 'border-border-hover hover:border-muted'
+          }`}
+          style={completed ? { boxShadow: `0 0 12px ${accent.glow}` } : undefined}
+          aria-label={`Mark ${habit.name} as ${completed ? 'incomplete' : 'complete'}`}
         >
-          <ChevronRightIcon size={14} />
+          {completed && <CheckIcon size={14} className={accent.textClass} strokeWidth={3} />}
         </button>
       </div>
     </div>

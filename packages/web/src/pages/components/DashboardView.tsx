@@ -51,15 +51,18 @@ function DashboardHero({
   handleExport
 }: Pick<DashboardViewProps, 'dateStr' | 'todayRate' | 'completedToday' | 'totalActive' | 'overallStreak' | 'handleExport'>) {
   return (
-    <div className="border-b border-border bg-bg-primary px-4 py-4">
+    <>
+      <div className="px-4 pt-4 pb-3 bg-bg-primary">
+        <div className="max-w-2xl mx-auto">
+          <p className="text-[11px] font-mono text-muted uppercase tracking-widest mb-0.5">{dateStr}</p>
+          <h1 className="text-xl font-semibold text-foreground">Today</h1>
+        </div>
+      </div>
+    <div className="border-b border-border bg-bg-primary px-4 pb-4">
       <div className="max-w-2xl mx-auto">
         <div className="flex items-center gap-5 mb-3">
           <CompletionRing size={88} strokeWidth={7} percentage={todayRate} />
-          <div className="flex-1 flex flex-col gap-2">
-            <div>
-              <p className="text-[11px] font-mono text-muted uppercase tracking-widest mb-0.5">{dateStr}</p>
-              <h1 className="text-xl font-semibold text-foreground">Today</h1>
-            </div>
+          <div className="flex-1">
             <div className="grid grid-cols-3 gap-2">
               <div className="bg-bg-card border border-border rounded-xl px-3 py-2">
                 <div className="flex items-center gap-1.5 mb-1">
@@ -107,6 +110,7 @@ function DashboardHero({
         </div>
       </div>
     </div>
+    </>
   );
 }
 
