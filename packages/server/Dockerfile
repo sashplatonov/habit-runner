@@ -6,7 +6,7 @@ COPY packages/shared/package.json packages/shared/
 COPY packages/server/package.json packages/server/
 COPY tsconfig.base.json ./
 
-RUN npm ci --workspace=@habbit-runner/shared --workspace=@habbit-runner/server
+RUN npm ci --ignore-scripts --workspace=@habbit-runner/shared --workspace=@habbit-runner/server
 
 COPY packages/shared/ packages/shared/
 RUN npm run build -w @habbit-runner/shared

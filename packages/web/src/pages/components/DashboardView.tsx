@@ -5,6 +5,7 @@ import { CompletionRing } from '@/components/CompletionRing';
 import type { Habit } from '@/types/habit';
 import { HabitRow, DropIndicator } from './DashboardView.helpers';
 import { invokeIfFunction } from '@/lib/callback';
+import { isScheduledForDate, resolveHabitSchedule } from '@/lib/habits/schedule';
 
 type Reminder = {
   habitId: string;
@@ -52,7 +53,10 @@ function DashboardHero({
 }: Pick<DashboardViewProps, 'dateStr' | 'todayRate' | 'completedToday' | 'totalActive' | 'overallStreak' | 'handleExport'>) {
   return (
     <>
-      <div className="px-4 pt-4 pb-3 bg-bg-primary">
+      <div
+        className="px-4 pt-4 pb-3 bg-bg-primary"
+        style={{ paddingTop: 'calc(var(--safe-area-inset-top, 0px) + 1rem)' }}
+      >
         <div className="max-w-2xl mx-auto">
           <p className="text-[11px] font-mono text-muted uppercase tracking-widest mb-0.5">{dateStr}</p>
           <h1 className="text-xl font-semibold text-foreground">Today</h1>
@@ -182,9 +186,15 @@ function FilterBar({
   | 'habits'
   | 'today'
 >) {
-  const pendingCount = habits.filter(
-    (habit) => (habit.completions[today] ?? 0) < Math.max(1, habit.dailyTarget ?? 1)
-  ).length;
+  const todayDate = new Date(today);
+  todayDate.setHours(0, 0, 0, 0);
+  const pendingCount = habits.filter((habit) => {
+    const schedule = resolveHabitSchedule(habit);
+    if (!isScheduledForDate(schedule, todayDate)) {
+      return false;
+    }
+    return (habit.completions[today] ?? 0) < Math.max(1, habit.dailyTarget ?? 1);
+  }).length;
   return (
     <div className="border-b border-border px-4">
       <div className="max-w-2xl mx-auto">

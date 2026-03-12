@@ -16,10 +16,10 @@ import { createHabitId } from '@/lib/core/habit-id';
 import {
   buildMonthlyCompletionRates,
   buildWeeklyCompletionData,
-  calculateStreak,
   countCompletedDays,
   formatDate
 } from '@/lib/habits/habitStats';
+import { calculateScheduledCompletionRate, calculateScheduledStreak } from '@/lib/habits/schedule';
 import { useLiveQuery } from '@/hooks/useLiveQuery';
 import { buildCompletionsByHabitId } from '@/hooks/useHabits.helpers';
 
@@ -261,7 +261,8 @@ function getHabitStatsImpl(habitId: string, allHabits: Habit[]): HabitStats {
     };
   }
   const dailyTarget = Math.max(1, habit.dailyTarget ?? 1);
-  const { current, longest } = calculateStreak(habit.completions, new Date(), dailyTarget);
+  const { current, longest } = calculateScheduledStreak(habit, habit.completions, new Date());
+  const completionRate = calculateScheduledCompletionRate(habit, habit.completions, new Date());
   const completedDays = countCompletedDays(habit.completions, dailyTarget);
   const totalDays = Math.max(
     1,
@@ -272,7 +273,7 @@ function getHabitStatsImpl(habitId: string, allHabits: Habit[]): HabitStats {
     completedDays,
     currentStreak: current,
     longestStreak: longest,
-    completionRate: Math.round((completedDays / totalDays) * 100),
+    completionRate,
     weeklyData: buildWeeklyCompletionData(habit.completions, 12, new Date(), dailyTarget),
     monthlyData: buildMonthlyCompletionRates(habit.completions, 6, new Date(), dailyTarget)
   };

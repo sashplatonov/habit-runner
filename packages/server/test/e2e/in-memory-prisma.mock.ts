@@ -28,6 +28,7 @@ type HabitRecord = {
   createdAt: Date;
   updatedAt: Date;
   version: number;
+  schedule?: unknown;
 };
 
 type CheckinRecord = {
@@ -70,6 +71,7 @@ export class InMemoryPrismaMock {
         color: '#22c55e',
         icon: 'book-open',
         frequency: 'daily',
+        schedule: { type: 'daily' },
         targetStreak: 7,
         dailyTarget: 1,
         tags: ['mindset'],

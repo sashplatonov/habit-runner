@@ -4,6 +4,8 @@ export type SyncEntity = (typeof SYNC_ENTITY_VALUES)[number];
 export const SYNC_OP_TYPE_VALUES = ['upsert', 'delete'] as const;
 export type SyncOpType = (typeof SYNC_OP_TYPE_VALUES)[number];
 
+import type { HabitSchedule } from './habit.js';
+
 export interface HabitDto {
   id: string;
   name: string;
@@ -12,6 +14,7 @@ export interface HabitDto {
   icon: string;
   frequency: string;
   customDays?: unknown;
+  schedule?: HabitSchedule;
   targetStreak: number;
   dailyTarget?: number;
   tags?: unknown;

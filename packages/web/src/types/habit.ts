@@ -1,4 +1,4 @@
-import type { HabitColor, HabitFrequency } from '@habbit-runner/shared';
+import type { HabitColor, HabitFrequency, HabitSchedule } from '@habbit-runner/shared';
 
 export interface Habit {
   id: string;
@@ -9,6 +9,7 @@ export interface Habit {
   tags: string[];
   frequency: HabitFrequency;
   customDays?: number[]; // 0=Sun, 1=Mon, ... 6=Sat
+  schedule?: HabitSchedule;
   targetStreak: number;
   dailyTarget: number;
   completions: Record<string, number>; // "YYYY-MM-DD" -> completion count

@@ -2,7 +2,8 @@ import type { Table } from 'dexie';
 import Dexie from 'dexie';
 import type { Habit } from '@/types/habit';
 import type { PullResponseDto } from '@/types/sync';
-import type { SyncEntity, SyncOpType } from '@habbit-runner/shared';
+import type { HabitSchedule, SyncEntity, SyncOpType } from '@habbit-runner/shared';
+import { normalizeSchedule, scheduleFromLegacy } from '@habbit-runner/shared';
 import { DEFAULT_USER_ID } from '@/lib/core/config';
 import { generateId } from '@/lib/core/id';
 
@@ -31,6 +32,7 @@ export interface HabitEntity {
   dailyTarget: number;
   tags: string[];
   customDays?: number[];
+  schedule?: HabitSchedule;
   archived: boolean;
   completions: Record<string, number>;
   createdAt: string;
@@ -182,9 +184,12 @@ export function habitEntityToDomain(entity: HabitEntity): Habit {
       createdAt: entity.createdAt,
       updatedAt: entity.updatedAt,
       version: entity.version,
-      archived: entity.archived
+      archived: entity.archived,
+      schedule:
+        normalizeSchedule(entity.schedule) ??
+        scheduleFromLegacy(entity.frequency as Habit['frequency'], entity.customDays)
     };
-}
+  }
 
 export function domainToHabitEntity(habit: Habit): HabitEntity {
   const userId = getCurrentUserId();
@@ -200,6 +205,7 @@ export function domainToHabitEntity(habit: Habit): HabitEntity {
     dailyTarget: Math.max(1, Math.trunc(habit.dailyTarget ?? 1)),
     tags: habit.tags,
     customDays: habit.customDays,
+    schedule: habit.schedule,
     archived: habit.archived,
     completions: {},
     createdAt: habit.createdAt,

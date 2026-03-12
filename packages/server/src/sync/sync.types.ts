@@ -11,6 +11,7 @@ export interface HabitPayload {
   icon: string;
   frequency: string;
   customDays?: unknown;
+  schedule?: unknown;
   targetStreak: number;
   dailyTarget?: number;
   tags?: unknown;
@@ -41,6 +42,7 @@ export interface ExistingHabitRecord {
   dailyTarget: number;
   reminderTime: string | null;
   reminderEnabled: boolean;
+  schedule?: unknown;
 }
 
 export interface ParentHabitRecord {

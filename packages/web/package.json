@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "prebuild": "npm run build -w @habbit-runner/shared",
     "dev": "npx vite",
     "build": "npx vite build",
     "lint": "eslint src tests --ext .js,.jsx,.ts,.tsx --max-warnings 0",

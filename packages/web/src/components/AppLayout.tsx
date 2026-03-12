@@ -19,7 +19,10 @@ export function AppLayout({ theme, onThemeChange, onLogout, children }: AppLayou
           id="main-content"
           tabIndex={-1}
           className="focus:outline-none sm:!pb-0"
-          style={{ paddingBottom: 'calc(72px + env(safe-area-inset-bottom))' }}
+          style={{
+            paddingTop: 'var(--safe-area-inset-top, 0px)',
+            paddingBottom: 'calc(72px + var(--safe-area-inset-bottom, 0px))'
+          }}
         >
           {children}
         </main>
