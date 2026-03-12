@@ -119,7 +119,7 @@ function PullIndicator({ isRefreshing, pullDistance }: { isRefreshing: boolean; 
     <>
       <div
         aria-hidden={!indicatorVisible}
-        className={`pointer-events-none fixed left-1/2 top-16 z-40 -translate-x-1/2 transition-all duration-200 ${
+        className={`pointer-events-none fixed left-1/2 top-4 z-40 -translate-x-1/2 transition-all duration-200 ${
           indicatorVisible ? 'opacity-100' : 'opacity-0'
         }`}
         style={{
