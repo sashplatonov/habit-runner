@@ -299,7 +299,7 @@ function HabitListSection({
 export function DashboardView(props: DashboardViewProps) {
   if (props.habits.length === 0) {
     return (
-      <div className="min-h-screen bg-bg-primary pt-14">
+      <div className="min-h-screen bg-bg-primary">
         <Onboarding
           onCreateCustom={() => props.navigate('/habit/new')}
           onTemplateSelect={props.handleTemplateSelect}
@@ -310,7 +310,7 @@ export function DashboardView(props: DashboardViewProps) {
   }
 
   return (
-    <div className="min-h-screen bg-bg-primary pt-14">
+    <div className="min-h-screen bg-bg-primary">
       <DashboardHero
         dateStr={props.dateStr}
         todayRate={props.todayRate}

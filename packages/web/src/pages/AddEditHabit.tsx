@@ -6,7 +6,7 @@ export function AddEditHabit() {
   const model = useAddEditHabitModel();
   if (model.shouldShowLoading) {
     return (
-      <div className="min-h-screen bg-bg-primary pt-14">
+      <div className="min-h-screen bg-bg-primary">
         <div className="max-w-lg mx-auto px-4 py-12 text-center text-sm font-mono text-muted">
           Loading habit...
         </div>

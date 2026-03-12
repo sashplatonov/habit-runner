@@ -102,7 +102,7 @@ function HabitDetailHeader({
   | 'toggleFreezeToday'
 > & { canIncrement: boolean; isTodayFrozen: boolean }) {
   return (
-    <div className="border-b border-border bg-bg-primary px-4 py-4 sticky top-14 z-10">
+    <div className="border-b border-border bg-bg-primary px-4 py-4 sticky top-0 z-10">
       <div className="max-w-2xl mx-auto flex flex-col gap-3 sm:flex-row sm:items-center">
         <div className="flex items-center gap-3 min-w-0 flex-1">
           <button onClick={() => navigate('/')} className="text-muted hover:text-foreground transition-colors p-1 -ml-1 flex-shrink-0">
@@ -419,7 +419,7 @@ export function HabitDetailView({
   const canIncrement = todayCompletionCount < dailyTarget;
 
   return (
-    <div className="min-h-screen bg-bg-primary pt-14">
+    <div className="min-h-screen bg-bg-primary">
       <HabitDetailHeader
         habit={habit}
         habitId={habitId}

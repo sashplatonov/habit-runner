@@ -42,7 +42,7 @@ export function AddEditHabitPage({ model }: { model: AddEditHabitModel }) {
     handleBack
   } = model;
   return (
-    <div className="min-h-screen bg-bg-primary pt-14">
+    <div className="min-h-screen bg-bg-primary">
       <HeaderSection
         isEdit={isEdit}
         selectedColor={selectedColor}
@@ -110,7 +110,7 @@ function HeaderSection({
   onSubmit: () => Promise<void>;
 }) {
   return (
-    <div className="border-b border-border bg-bg-primary px-4 py-4 sticky top-14 z-10">
+    <div className="border-b border-border bg-bg-primary px-4 py-4 sticky top-0 z-10">
       <div className="max-w-lg mx-auto flex items-center justify-between">
         <div className="flex items-center gap-3">
           <button type="button" onClick={onBack} className="text-muted hover:text-foreground transition-colors">
