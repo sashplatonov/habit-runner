@@ -118,18 +118,16 @@ function HabitRowMobileStats({
   streak,
   last7,
   completionRate,
-  className
 }: {
   habit: Habit;
   streak: number;
   last7: boolean[];
   completionRate: number;
-  className?: string;
 }) {
   const accent = HABIT_COLOR_THEMES[habit.color];
   return (
     <div
-      className={`mt-1 flex flex-wrap items-center gap-2 text-[10px] font-mono uppercase tracking-[0.3em] text-muted text-foreground ${className ?? ''}`}
+      className="mt-1 flex flex-wrap items-center gap-2 text-[10px] font-mono uppercase tracking-[0.3em] text-muted text-foreground"
     >
       {streak > 0 && (
         <div className="flex items-center gap-1">
@@ -204,7 +202,7 @@ export function HabitRow({
     >
       {/* Accent strip */}
       <div
-        className="w-1 self-stretch flex-shrink-0"
+        className="w-1 self-stretch flex-shrink-0 rounded-l-xl"
         style={{ background: accent.hex }}
         aria-hidden
       />

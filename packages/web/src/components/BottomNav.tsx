@@ -6,7 +6,8 @@ import {
   PaletteIcon,
   SearchIcon,
   MoonIcon,
-  SunIcon
+  SunIcon,
+  LogOutIcon
 } from 'lucide-react';
 import { Link, useLocation } from '@/lib/router';
 import { THEMES, type ThemeId } from '@/hooks/useTheme';
@@ -14,9 +15,10 @@ import { THEMES, type ThemeId } from '@/hooks/useTheme';
 interface BottomNavProps {
   theme: ThemeId;
   onThemeChange: (id: ThemeId) => void;
+  onLogout?: () => void | Promise<void>;
 }
 
-export function BottomNav({ theme, onThemeChange }: BottomNavProps) {
+export function BottomNav({ theme, onThemeChange, onLogout }: BottomNavProps) {
   const [isThemeOpen, setIsThemeOpen] = useState(false);
   const themeRef = useRef<HTMLDivElement>(null);
   const location = useLocation();
@@ -39,8 +41,8 @@ export function BottomNav({ theme, onThemeChange }: BottomNavProps) {
 
   return (
     <nav
-      className="flex sm:hidden fixed bottom-0 left-0 right-0 h-[72px] bg-bg-primary/95 border-t border-border backdrop-blur-sm z-50"
-      style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
+      className="flex sm:hidden fixed bottom-0 left-0 right-0 bg-bg-primary/95 border-t border-border backdrop-blur-sm z-50"
+      style={{ height: 'calc(72px + env(safe-area-inset-bottom))', paddingBottom: 'env(safe-area-inset-bottom)' }}
       aria-label="Mobile navigation"
     >
       {/* Dashboard */}
@@ -107,7 +109,7 @@ export function BottomNav({ theme, onThemeChange }: BottomNavProps) {
         </button>
 
         {isThemeOpen && (
-          <div className="absolute bottom-[72px] right-0 w-44 bg-bg-card border border-border rounded-xl shadow-2xl p-2 flex flex-col gap-0.5 z-10">
+          <div className="absolute right-0 w-44 bg-bg-card border border-border rounded-xl shadow-2xl p-2 flex flex-col gap-0.5 z-10" style={{ bottom: 'calc(72px + env(safe-area-inset-bottom))' }}>
             <div className="flex items-center gap-1.5 px-2 py-1">
               <MoonIcon size={10} className="text-muted" />
               <span className="text-[9px] font-mono text-muted uppercase tracking-wider">Dark</span>
@@ -145,6 +147,19 @@ export function BottomNav({ theme, onThemeChange }: BottomNavProps) {
                 {t.name}
               </button>
             ))}
+            {onLogout && (
+              <>
+                <div className="h-px bg-border my-1" />
+                <button
+                  type="button"
+                  onClick={() => { void onLogout(); setIsThemeOpen(false); }}
+                  className="flex items-center gap-2 px-2 py-1.5 rounded-lg text-xs font-mono text-muted hover:bg-bg-secondary hover:text-accent-secondary transition-colors"
+                >
+                  <LogOutIcon size={12} />
+                  Logout
+                </button>
+              </>
+            )}
           </div>
         )}
       </div>

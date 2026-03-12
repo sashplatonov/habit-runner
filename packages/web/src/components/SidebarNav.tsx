@@ -1,3 +1,4 @@
+import React, { useRef, useState } from 'react';
 import {
   LayoutDashboardIcon,
   BarChart2Icon,
@@ -17,8 +18,21 @@ interface SidebarNavProps {
 }
 
 export function SidebarNav({ theme, onThemeChange, onLogout }: SidebarNavProps) {
+  const [isThemeOpen, setIsThemeOpen] = useState(false);
+  const themeRef = useRef<HTMLDivElement>(null);
   const darkThemes = THEMES.filter((t) => t.group === 'dark');
   const lightThemes = THEMES.filter((t) => t.group === 'light');
+
+  React.useEffect(() => {
+    if (!isThemeOpen) return;
+    const handleClick = (e: MouseEvent) => {
+      if (themeRef.current && !themeRef.current.contains(e.target as Node)) {
+        setIsThemeOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, [isThemeOpen]);
 
   return (
     <aside
@@ -72,17 +86,19 @@ export function SidebarNav({ theme, onThemeChange, onLogout }: SidebarNavProps) 
         <div className="text-[10px] font-mono text-muted uppercase tracking-[0.2em] px-2 mb-1">
           Appearance
         </div>
-        <div className="group relative">
+        <div ref={themeRef} className="relative">
           <button
             type="button"
-            className="flex w-full items-center gap-2.5 px-3 py-2 rounded-xl text-sm font-medium text-muted hover:text-foreground hover:bg-bg-secondary transition-all duration-200"
+            onClick={() => setIsThemeOpen((prev) => !prev)}
+            className={`flex w-full items-center gap-2.5 px-3 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${isThemeOpen ? 'bg-bg-secondary text-foreground' : 'text-muted hover:text-foreground hover:bg-bg-secondary'}`}
             aria-label="Choose color theme"
           >
             <PaletteIcon size={16} />
             <span className="flex-1 text-left capitalize">{theme}</span>
-            <span className="text-[10px] opacity-50">▼</span>
+            <span className="text-[10px] opacity-50">{isThemeOpen ? '▲' : '▼'}</span>
           </button>
-          <div className="absolute left-0 bottom-full mb-1 w-full bg-bg-card border border-border rounded-xl shadow-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 p-1.5 flex flex-col gap-0.5 z-10">
+          {isThemeOpen && (
+          <div className="absolute left-0 bottom-full mb-1 w-full bg-bg-card border border-border rounded-xl shadow-2xl p-1.5 flex flex-col gap-0.5 z-10">
             <div className="flex items-center gap-1.5 px-2 py-1">
               <MoonIcon size={10} className="text-muted" />
               <span className="text-[9px] font-mono text-muted uppercase tracking-wider">Dark</span>
@@ -123,6 +139,7 @@ export function SidebarNav({ theme, onThemeChange, onLogout }: SidebarNavProps) 
               </button>
             ))}
           </div>
+          )}
         </div>
 
         {onLogout && (

@@ -18,7 +18,8 @@ export function AppLayout({ theme, onThemeChange, onLogout, children }: AppLayou
         <main
           id="main-content"
           tabIndex={-1}
-          className="focus:outline-none pb-[72px] sm:pb-0"
+          className="focus:outline-none sm:!pb-0"
+          style={{ paddingBottom: 'calc(72px + env(safe-area-inset-bottom))' }}
         >
           {children}
         </main>
@@ -31,7 +32,7 @@ export function AppLayout({ theme, onThemeChange, onLogout, children }: AppLayou
           </span>
         </footer>
       </div>
-      <BottomNav theme={theme} onThemeChange={onThemeChange} />
+      <BottomNav theme={theme} onThemeChange={onThemeChange} onLogout={onLogout} />
     </div>
   );
 }
