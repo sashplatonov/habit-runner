@@ -18,18 +18,77 @@ interface BottomNavProps {
   onLogout?: () => void | Promise<void>;
 }
 
+interface ThemePanelProps {
+  theme: ThemeId;
+  onThemeChange: (id: ThemeId) => void;
+  onLogout?: () => void | Promise<void>;
+  onClose: () => void;
+}
+
+function ThemePanel({ theme, onThemeChange, onLogout, onClose }: ThemePanelProps) {
+  const darkThemes = THEMES.filter((t) => t.group === 'dark');
+  const lightThemes = THEMES.filter((t) => t.group === 'light');
+  const themeBtn = `flex items-center gap-2 px-2 py-1.5 rounded-lg text-xs font-mono transition-colors`;
+  const activeTheme = `bg-accent/10 text-accent`;
+  const inactiveTheme = `text-muted hover:bg-bg-secondary hover:text-foreground`;
+
+  const renderTheme = (t: (typeof THEMES)[number]) => (
+    <button
+      key={t.id}
+      type="button"
+      onClick={() => { onThemeChange(t.id); onClose(); }}
+      className={`${themeBtn} ${theme === t.id ? activeTheme : inactiveTheme}`}
+    >
+      <div className="flex gap-0.5">
+        <div className="w-2 h-2 rounded-full" style={{ backgroundColor: t.accent }} />
+        <div className="w-2 h-2 rounded-full" style={{ backgroundColor: t.accentSecondary }} />
+      </div>
+      {t.name}
+    </button>
+  );
+
+  return (
+    <div
+      className="absolute right-0 w-44 bg-bg-card border border-border rounded-xl shadow-2xl p-2 flex flex-col gap-0.5 z-10"
+      style={{ bottom: 'calc(72px + env(safe-area-inset-bottom))' }}
+    >
+      <div className="flex items-center gap-1.5 px-2 py-1">
+        <MoonIcon size={10} className="text-muted" />
+        <span className="text-[9px] font-mono text-muted uppercase tracking-wider">Dark</span>
+      </div>
+      {darkThemes.map(renderTheme)}
+      <div className="h-px bg-border my-1" />
+      <div className="flex items-center gap-1.5 px-2 py-1">
+        <SunIcon size={10} className="text-muted" />
+        <span className="text-[9px] font-mono text-muted uppercase tracking-wider">Light</span>
+      </div>
+      {lightThemes.map(renderTheme)}
+      {onLogout && (
+        <>
+          <div className="h-px bg-border my-1" />
+          <button
+            type="button"
+            onClick={() => { void onLogout(); onClose(); }}
+            className="flex items-center gap-2 px-2 py-1.5 rounded-lg text-xs font-mono text-muted hover:bg-bg-secondary hover:text-accent-secondary transition-colors"
+          >
+            <LogOutIcon size={12} />
+            Logout
+          </button>
+        </>
+      )}
+    </div>
+  );
+}
+
 export function BottomNav({ theme, onThemeChange, onLogout }: BottomNavProps) {
   const [isThemeOpen, setIsThemeOpen] = useState(false);
   const themeRef = useRef<HTMLDivElement>(null);
   const location = useLocation();
-  const darkThemes = THEMES.filter((t) => t.group === 'dark');
-  const lightThemes = THEMES.filter((t) => t.group === 'light');
-
   const isHome = location.pathname === '/';
   const isStats = location.pathname === '/stats';
 
   React.useEffect(() => {
-    if (!isThemeOpen) return;
+    if (!isThemeOpen) { return; }
     const handleClick = (e: MouseEvent) => {
       if (themeRef.current && !themeRef.current.contains(e.target as Node)) {
         setIsThemeOpen(false);
@@ -45,7 +104,6 @@ export function BottomNav({ theme, onThemeChange, onLogout }: BottomNavProps) {
       style={{ height: 'calc(72px + env(safe-area-inset-bottom))', paddingBottom: 'env(safe-area-inset-bottom)' }}
       aria-label="Mobile navigation"
     >
-      {/* Dashboard */}
       <Link
         to="/"
         className={`flex-1 flex flex-col items-center justify-center gap-1 transition-colors ${isHome ? 'text-accent' : 'text-muted'}`}
@@ -57,7 +115,6 @@ export function BottomNav({ theme, onThemeChange, onLogout }: BottomNavProps) {
         <span className="text-[10px] font-medium">Dashboard</span>
       </Link>
 
-      {/* Stats */}
       <Link
         to="/stats"
         className={`flex-1 flex flex-col items-center justify-center gap-1 transition-colors ${isStats ? 'text-accent' : 'text-muted'}`}
@@ -69,7 +126,6 @@ export function BottomNav({ theme, onThemeChange, onLogout }: BottomNavProps) {
         <span className="text-[10px] font-medium">Stats</span>
       </Link>
 
-      {/* FAB */}
       <div className="flex-[0_0_72px] flex items-center justify-center">
         <Link
           to="/habit/new"
@@ -81,7 +137,6 @@ export function BottomNav({ theme, onThemeChange, onLogout }: BottomNavProps) {
         </Link>
       </div>
 
-      {/* Search — placeholder */}
       <button
         type="button"
         disabled
@@ -94,7 +149,6 @@ export function BottomNav({ theme, onThemeChange, onLogout }: BottomNavProps) {
         <span className="text-[10px] font-medium">Search</span>
       </button>
 
-      {/* Theme */}
       <div ref={themeRef} className="flex-1 flex flex-col items-center justify-center gap-1 relative">
         <button
           type="button"
@@ -107,60 +161,13 @@ export function BottomNav({ theme, onThemeChange, onLogout }: BottomNavProps) {
           </div>
           <span className="text-[10px] font-medium">Theme</span>
         </button>
-
         {isThemeOpen && (
-          <div className="absolute right-0 w-44 bg-bg-card border border-border rounded-xl shadow-2xl p-2 flex flex-col gap-0.5 z-10" style={{ bottom: 'calc(72px + env(safe-area-inset-bottom))' }}>
-            <div className="flex items-center gap-1.5 px-2 py-1">
-              <MoonIcon size={10} className="text-muted" />
-              <span className="text-[9px] font-mono text-muted uppercase tracking-wider">Dark</span>
-            </div>
-            {darkThemes.map((t) => (
-              <button
-                key={t.id}
-                type="button"
-                onClick={() => { onThemeChange(t.id); setIsThemeOpen(false); }}
-                className={`flex items-center gap-2 px-2 py-1.5 rounded-lg text-xs font-mono transition-colors ${theme === t.id ? 'bg-accent/10 text-accent' : 'text-muted hover:bg-bg-secondary hover:text-foreground'}`}
-              >
-                <div className="flex gap-0.5">
-                  <div className="w-2 h-2 rounded-full" style={{ backgroundColor: t.accent }} />
-                  <div className="w-2 h-2 rounded-full" style={{ backgroundColor: t.accentSecondary }} />
-                </div>
-                {t.name}
-              </button>
-            ))}
-            <div className="h-px bg-border my-1" />
-            <div className="flex items-center gap-1.5 px-2 py-1">
-              <SunIcon size={10} className="text-muted" />
-              <span className="text-[9px] font-mono text-muted uppercase tracking-wider">Light</span>
-            </div>
-            {lightThemes.map((t) => (
-              <button
-                key={t.id}
-                type="button"
-                onClick={() => { onThemeChange(t.id); setIsThemeOpen(false); }}
-                className={`flex items-center gap-2 px-2 py-1.5 rounded-lg text-xs font-mono transition-colors ${theme === t.id ? 'bg-accent/10 text-accent' : 'text-muted hover:bg-bg-secondary hover:text-foreground'}`}
-              >
-                <div className="flex gap-0.5">
-                  <div className="w-2 h-2 rounded-full" style={{ backgroundColor: t.accent }} />
-                  <div className="w-2 h-2 rounded-full" style={{ backgroundColor: t.accentSecondary }} />
-                </div>
-                {t.name}
-              </button>
-            ))}
-            {onLogout && (
-              <>
-                <div className="h-px bg-border my-1" />
-                <button
-                  type="button"
-                  onClick={() => { void onLogout(); setIsThemeOpen(false); }}
-                  className="flex items-center gap-2 px-2 py-1.5 rounded-lg text-xs font-mono text-muted hover:bg-bg-secondary hover:text-accent-secondary transition-colors"
-                >
-                  <LogOutIcon size={12} />
-                  Logout
-                </button>
-              </>
-            )}
-          </div>
+          <ThemePanel
+            theme={theme}
+            onThemeChange={onThemeChange}
+            onLogout={onLogout}
+            onClose={() => setIsThemeOpen(false)}
+          />
         )}
       </div>
     </nav>
