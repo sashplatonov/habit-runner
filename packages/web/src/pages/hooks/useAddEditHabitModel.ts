@@ -3,7 +3,7 @@ import { useNavigate, useParams } from '@/lib/router';
 import { useHabits } from '@/hooks/useHabits';
 import type { Habit, HabitColor, HabitFrequency, HabitSchedule } from '@/types/habit';
 import { COLORS } from '../components/add-edit-habit.constants';
-import { scheduleFromLegacy } from '@habbit-runner/shared';
+import { normalizeSchedule, scheduleFromLegacy } from '@habbit-runner/shared';
 import { invokeIfFunction } from '@/lib/callback';
 
 const TARGET_STREAK_OPTIONS = [7, 14, 21, 30, 60, 90, 180, 365];
@@ -97,7 +97,8 @@ function useHabitFormState(existing?: Habit, isEdit?: boolean) {
   const [frequency, setFrequency] = useState<HabitFrequency>(existing?.frequency || 'daily');
   const [customDays, setCustomDays] = useState<number[]>(existing?.customDays || [1, 2, 3, 4, 5]);
   const [schedule, setSchedule] = useState<HabitSchedule>(
-    existing?.schedule ?? scheduleFromLegacy(existing?.frequency ?? 'daily', existing?.customDays)
+    normalizeSchedule(existing?.schedule) ??
+      scheduleFromLegacy(existing?.frequency ?? 'daily', existing?.customDays)
   );
   const [targetStreak, setTargetStreak] = useState(getClosestStreakTick(existing?.targetStreak ?? 21));
   const [dailyTarget, setDailyTarget] = useState(existing?.dailyTarget ?? 1);
@@ -117,7 +118,10 @@ function useHabitFormState(existing?: Habit, isEdit?: boolean) {
     setIcon(existing.icon);
     setFrequency(existing.frequency);
     setCustomDays(existing.customDays ?? [1, 2, 3, 4, 5]);
-    setSchedule(existing.schedule ?? scheduleFromLegacy(existing.frequency, existing.customDays));
+    setSchedule(
+      normalizeSchedule(existing.schedule) ??
+        scheduleFromLegacy(existing.frequency, existing.customDays)
+    );
     setTargetStreak(getClosestStreakTick(existing.targetStreak));
     setDailyTarget(existing.dailyTarget ?? 1);
     setTags(existing.tags ?? []);

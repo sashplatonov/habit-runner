@@ -1,4 +1,4 @@
-import { scheduleFromLegacy } from '@habbit-runner/shared';
+import { normalizeSchedule, scheduleFromLegacy } from '@habbit-runner/shared';
 import type { Habit, HabitSchedule } from '@/types/habit';
 
 const DAY_KEY_FORMAT = (date: Date) => date.toISOString().split('T')[0];
@@ -95,7 +95,7 @@ export function countCompletedDaysInRange(
 export type ScheduleDayStatus = 'scheduled' | 'unscheduled';
 
 export function resolveHabitSchedule(habit: Habit): HabitSchedule {
-  return habit.schedule ?? scheduleFromLegacy(habit.frequency, habit.customDays);
+  return normalizeSchedule(habit.schedule) ?? scheduleFromLegacy(habit.frequency, habit.customDays);
 }
 
 export function getScheduleStatusForDate(habit: Habit, date: Date): ScheduleDayStatus {
@@ -112,10 +112,7 @@ export function getMonthRange(date: Date): { start: Date; end: Date } {
 }
 
 export function getPeriodProgress(habit: Habit, date: Date) {
-  const schedule = habit.schedule;
-  if (!schedule) {
-    return null;
-  }
+  const schedule = resolveHabitSchedule(habit);
   const dailyTarget = Math.max(1, habit.dailyTarget ?? 1);
   if (schedule.type === 'weekly_quota') {
     const { start, end } = getWeekRange(date);
@@ -226,12 +223,14 @@ function calculateMonthlyQuotaStreak(
 ) {
   const dailyTarget = Math.max(1, habit.dailyTarget ?? 1);
   const schedule = resolveHabitSchedule(habit);
+  if (schedule.type !== 'monthly_quota') {
+    return { current: 0, longest: 0, metCount: 0 };
+  }
   const meetsTarget: boolean[] = [];
   for (let offset = 0; offset < MONTH_LOOKBACK; offset += 1) {
     const { start, end } = buildMonthBoundaries(referenceDate, offset);
     const completed = countCompletedDaysInRange(completions, start, end, dailyTarget, schedule);
-    const scheduleDef = habit.schedule as Extract<HabitSchedule, { type: 'monthly_quota' }>;
-    meetsTarget.push(completed >= scheduleDef.timesPerMonth);
+    meetsTarget.push(completed >= schedule.timesPerMonth);
   }
   let current = 0;
   for (let i = 0; i < meetsTarget.length; i += 1) {

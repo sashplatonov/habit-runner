@@ -3,7 +3,7 @@ import Dexie from 'dexie';
 import type { Habit } from '@/types/habit';
 import type { PullResponseDto } from '@/types/sync';
 import type { HabitSchedule, SyncEntity, SyncOpType } from '@habbit-runner/shared';
-import { scheduleFromLegacy } from '@habbit-runner/shared';
+import { normalizeSchedule, scheduleFromLegacy } from '@habbit-runner/shared';
 import { DEFAULT_USER_ID } from '@/lib/core/config';
 import { generateId } from '@/lib/core/id';
 
@@ -186,7 +186,7 @@ export function habitEntityToDomain(entity: HabitEntity): Habit {
       version: entity.version,
       archived: entity.archived,
       schedule:
-        entity.schedule ??
+        normalizeSchedule(entity.schedule) ??
         scheduleFromLegacy(entity.frequency as Habit['frequency'], entity.customDays)
     };
   }
