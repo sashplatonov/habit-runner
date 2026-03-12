@@ -6,7 +6,7 @@ import {
   Navigate,
   useLocation
 } from '@/lib/router';
-import { Nav } from '@/components/Nav';
+import { AppLayout } from '@/components/AppLayout';
 import { Dashboard } from '@/pages/Dashboard';
 import { HabitDetail } from '@/pages/HabitDetail';
 import { AddEditHabit } from '@/pages/AddEditHabit';
@@ -38,7 +38,7 @@ type AuthCallbackPageProps = {
 
 function AuthCallbackPage({ message }: AuthCallbackPageProps) {
   return (
-    <div className="min-h-screen pt-14 bg-bg-primary flex items-center justify-center">
+    <div className="min-h-screen bg-bg-primary flex items-center justify-center">
       <div className="text-sm font-mono text-muted">{message ?? 'Finishing login…'}</div>
     </div>
   );
@@ -158,35 +158,24 @@ export function App() {
             isRefreshing={syncState.status === 'syncing'}
             onRefresh={syncState.syncNow}
           >
-            <div className="min-h-screen bg-bg-primary">
-              <a
-                href="#main-content"
-                className="sr-only focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:z-[60] focus:rounded-md focus:border focus:border-accent focus:bg-bg-card focus:px-3 focus:py-2 focus:text-xs focus:text-foreground"
-              >
-                Skip to main content
-              </a>
-              <Nav onLogout={logout} theme={theme} onThemeChange={setTheme} />
+            <a
+              href="#main-content"
+              className="sr-only focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:z-[60] focus:rounded-md focus:border focus:border-accent focus:bg-bg-card focus:px-3 focus:py-2 focus:text-xs focus:text-foreground"
+            >
+              Skip to main content
+            </a>
+            <AppLayout theme={theme} onThemeChange={setTheme} onLogout={logout}>
               <RouteFocusManager />
-              <main id="main-content" tabIndex={-1} className="pt-14 focus:outline-none">
-                <Routes>
-                  <Route path="/" element={<Dashboard />} />
-                  <Route path="/habit/new" element={<AddEditHabit />} />
-                  <Route path="/habit/:id" element={<HabitDetail />} />
-                  <Route path="/habit/:id/edit" element={<AddEditHabit />} />
-                  <Route path="/stats" element={<Stats />} />
-                  <Route path="/auth/callback" element={<AuthCallbackPage />} />
-                  <Route path="*" element={<Navigate to="/" replace />} />
-                </Routes>
-              </main>
-              <footer className="py-4 text-center">
-                <span className="text-[11px] font-mono text-muted/30 select-none">
-                  {new Date(__BUILD_TIME__).toLocaleString('en-GB', {
-                    day: 'numeric', month: 'short', year: 'numeric',
-                    hour: '2-digit', minute: '2-digit', timeZoneName: 'short'
-                  })}
-                </span>
-              </footer>
-            </div>
+              <Routes>
+                <Route path="/" element={<Dashboard />} />
+                <Route path="/habit/new" element={<AddEditHabit />} />
+                <Route path="/habit/:id" element={<HabitDetail />} />
+                <Route path="/habit/:id/edit" element={<AddEditHabit />} />
+                <Route path="/stats" element={<Stats />} />
+                <Route path="/auth/callback" element={<AuthCallbackPage />} />
+                <Route path="*" element={<Navigate to="/" replace />} />
+              </Routes>
+            </AppLayout>
           </PullToRefresh>
         </BrowserRouter>
       ) : (
