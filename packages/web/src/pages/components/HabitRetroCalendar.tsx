@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import type { Habit, HabitSchedule } from '@/types/habit';
 import type { HabitColorTheme } from '@/lib/theme/habit-colors';
-import { DAY_LABELS } from '../add-edit-habit.constants';
+import { DAY_LABELS } from './add-edit-habit.constants';
 import { formatDate } from '@/lib/habits/habitStats';
 import { describeSchedule } from '@habbit-runner/shared';
 import { isScheduledForDate, resolveHabitSchedule } from '@/lib/habits/schedule';
