@@ -225,7 +225,7 @@ function HabitRowCard({
         style={{ background: accent.hex }}
         aria-hidden
       />
-      <div className="flex-1 flex items-center gap-3 px-3 py-3">
+      <div className="flex-1 flex items-center gap-3 px-3 py-3 min-w-0 overflow-hidden">
         <div className="hidden sm:flex items-center">
           <GripVerticalIcon size={14} className="text-muted" aria-hidden />
         </div>
@@ -291,7 +291,7 @@ function HabitRowInfoPane({
       <button
         type="button"
         onClick={onDetail}
-        className="flex-1 min-w-0 text-left"
+        className="flex flex-col flex-1 min-w-0 text-left gap-1 overflow-hidden"
       >
         <div className={`text-sm font-semibold ${completed ? 'text-muted line-through' : 'text-foreground'} truncate`}>
           {habit.name}

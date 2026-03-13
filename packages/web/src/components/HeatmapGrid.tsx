@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { DEFAULT_HABIT_COLOR, HABIT_COLOR_THEMES } from '@/lib/theme/habit-colors';
 import type { HabitColor } from '@/types/habit';
+import { formatDate } from '@/lib/habits/habitStats';
 
 interface HeatmapGridProps {
   completions: Record<string, number>;
@@ -14,10 +15,6 @@ type HeatmapCell = {
   completed: boolean;
   isToday: boolean;
 };
-
-function formatDate(date: Date): string {
-  return date.toISOString().split('T')[0];
-}
 
 function getIntensity(completed: boolean | undefined): number {
   return completed ? 4 : 0;

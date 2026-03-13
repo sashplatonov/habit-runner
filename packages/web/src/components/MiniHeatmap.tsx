@@ -1,15 +1,12 @@
 import React from 'react';
 import { HABIT_COLOR_THEMES } from '@/lib/theme/habit-colors';
 import type { HabitColor } from '@/types/habit';
+import { formatDate } from '@/lib/habits/habitStats';
 
 interface MiniHeatmapProps {
   completions: Record<string, number>;
   dailyTarget?: number;
   color: HabitColor;
-}
-
-function formatDate(date: Date): string {
-  return date.toISOString().split('T')[0];
 }
 
 export function MiniHeatmap({ completions, dailyTarget = 1, color }: MiniHeatmapProps) {

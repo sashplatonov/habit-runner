@@ -14,8 +14,15 @@ const MONTH_NAMES = [
   'Dec'
 ];
 
+function padDateSegment(value: number) {
+  return value.toString().padStart(2, '0');
+}
+
 export function formatDate(date: Date): string {
-  return date.toISOString().split('T')[0];
+  const year = date.getFullYear();
+  const month = padDateSegment(date.getMonth() + 1);
+  const day = padDateSegment(date.getDate());
+  return `${year}-${month}-${day}`;
 }
 
 function buildCompletedDates(
