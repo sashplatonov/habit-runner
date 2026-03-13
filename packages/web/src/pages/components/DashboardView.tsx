@@ -5,6 +5,7 @@ import { CompletionRing } from '@/components/CompletionRing';
 import { HabitRow, DropIndicator } from './DashboardView.helpers';
 import { invokeIfFunction } from '@/lib/callback';
 import { isScheduledForDate, resolveHabitSchedule } from '@/lib/habits/schedule';
+import type { Habit } from '@/types/habit';
 
 type Reminder = {
   habitId: string;
@@ -66,6 +67,16 @@ function DashboardHero({
   | 'reorderMode'
   | 'toggleReorderMode'
 >) {
+  const remaining = totalActive - completedToday;
+  const motivationText =
+    todayRate >= 100
+      ? null // handled by banner below
+      : todayRate >= 50
+        ? `Almost there — ${remaining} left!`
+        : todayRate > 0
+          ? `Keep going — ${remaining} to go`
+          : 'Start your streak';
+
   return (
     <>
       <div
@@ -81,7 +92,13 @@ function DashboardHero({
       <div className="max-w-2xl mx-auto">
         <div className="flex items-center gap-5 mb-3">
           <CompletionRing size={88} strokeWidth={7} percentage={todayRate} />
-          <div className="flex-1">
+          <div className="flex-1 flex flex-col gap-2">
+            {/* Motivational label */}
+            {motivationText && (
+              <p className={`text-xs font-mono ${todayRate >= 50 ? 'text-accent-secondary' : 'text-muted'} tracking-wide`}>
+                {motivationText}
+              </p>
+            )}
             <div className="grid grid-cols-3 gap-2">
               <div className="bg-bg-card border border-border rounded-xl px-3 py-2">
                 <div className="flex items-center gap-1.5 mb-1">
@@ -107,16 +124,29 @@ function DashboardHero({
             </div>
           </div>
         </div>
+        {/* Progress bar */}
         <div className="h-[3px] bg-border rounded-full overflow-hidden mb-3">
           <div
-            className="h-full rounded-full transition-all duration-700"
+            className={`h-full rounded-full transition-all duration-700 ${todayRate >= 100 ? 'animate-progress-glow' : ''}`}
             style={{
-              width: `${todayRate}%`,
-              background: 'linear-gradient(90deg, var(--accent), var(--accent-secondary))',
+              width: `${Math.min(todayRate, 100)}%`,
+              background: todayRate >= 100
+                ? 'linear-gradient(90deg, var(--accent-secondary), var(--accent))'
+                : 'linear-gradient(90deg, var(--accent), var(--accent-secondary))',
               boxShadow: '0 0 8px var(--glow)'
             }}
           />
         </div>
+        {/* Celebration banner at 100% */}
+        {todayRate >= 100 && (
+          <div className="animate-slide-down-fade mb-3 rounded-xl border border-accent-secondary/30 bg-accent-secondary/5 px-4 py-2.5 flex items-center gap-3">
+            <span className="text-lg" role="img" aria-label="celebration">🎉</span>
+            <div>
+              <p className="text-sm font-semibold text-foreground">Perfect day!</p>
+              <p className="text-[11px] font-mono text-muted">All habits completed. Keep the streak alive!</p>
+            </div>
+          </div>
+        )}
         <div className="flex items-center justify-between gap-3">
           <div className="text-[10px] font-mono uppercase tracking-[0.4em] text-muted">Filters</div>
           <div className="flex items-center gap-2">
@@ -146,6 +176,7 @@ function DashboardHero({
     </>
   );
 }
+
 
 function RemindersPanel({
   reminders,

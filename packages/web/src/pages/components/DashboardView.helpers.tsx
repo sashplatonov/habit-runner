@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useRef, useCallback } from 'react';
 import { ArrowDownIcon, ArrowUpIcon, CheckIcon, FlameIcon, GripVerticalIcon } from 'lucide-react';
 import { CompletionRing } from '@/components/CompletionRing';
 import { MiniHeatmap } from '@/components/MiniHeatmap';
@@ -33,6 +33,11 @@ type HabitRowProps = {
   isDropTarget?: boolean;
   isDragging?: boolean;
   dropHintPosition?: DropHintPosition;
+  reorderMode?: boolean;
+  onMoveUp?: () => void;
+  onMoveDown?: () => void;
+  disableMoveUp?: boolean;
+  disableMoveDown?: boolean;
 };
 
 function HabitRowMetrics({
@@ -364,6 +369,8 @@ type HabitRowToggleButtonProps = {
   onToggle: () => void;
 };
 
+const CONFETTI_COLORS = ['var(--accent)', 'var(--accent-secondary)', '#fff', 'var(--glow)'];
+
 function HabitRowToggleButton({
   completed,
   accent,
@@ -371,20 +378,66 @@ function HabitRowToggleButton({
   toggleButtonTitle,
   onToggle
 }: HabitRowToggleButtonProps) {
+  const [animating, setAnimating] = useState(false);
+  const [particles, setParticles] = useState<{ id: number; tx: number; ty: number; color: string }[]>([]);
+  const particleIdRef = useRef(0);
+
+  const handleClick = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    // Fire animation only when going unchecked → checked
+    if (!completed) {
+      setAnimating(true);
+      // Spawn confetti particles
+      const newParticles = Array.from({ length: 8 }, (_, i) => {
+        const angle = (i / 8) * 2 * Math.PI;
+        const dist = 20 + Math.random() * 18;
+        return {
+          id: ++particleIdRef.current,
+          tx: Math.cos(angle) * dist,
+          ty: Math.sin(angle) * dist - 10,
+          color: CONFETTI_COLORS[i % CONFETTI_COLORS.length]
+        };
+      });
+      setParticles(newParticles);
+      setTimeout(() => {
+        setAnimating(false);
+        setParticles([]);
+      }, 650);
+    }
+    onToggle();
+  }, [completed, onToggle]);
+
   return (
-    <button
-      type="button"
-      onClick={(e) => {
-        e.stopPropagation();
-        onToggle();
-      }}
-      className={`flex-shrink-0 w-9 h-9 rounded-xl border-[1.5px] flex items-center justify-center transition-all duration-200 ${toggleButtonClass}`}
-      style={completed ? { boxShadow: `0 0 12px ${accent.glow}` } : undefined}
-      aria-label={toggleButtonTitle}
-      title={toggleButtonTitle}
-    >
-      {completed && <CheckIcon size={14} className={accent.textClass} strokeWidth={3} />}
-    </button>
+    <div className="relative flex-shrink-0">
+      {/* Confetti particles */}
+      {particles.map((p) => (
+        <span
+          key={p.id}
+          className="confetti-particle"
+          style={{
+            '--tx': `${p.tx}px`,
+            '--ty': `${p.ty}px`,
+            background: p.color,
+            left: '50%',
+            top: '50%',
+            marginLeft: '-3px',
+            marginTop: '-3px'
+          } as React.CSSProperties}
+        />
+      ))}
+      <button
+        type="button"
+        onClick={handleClick}
+        className={`w-9 h-9 rounded-xl border-[1.5px] flex items-center justify-center transition-all duration-200 ${toggleButtonClass} ${
+          animating ? 'animate-check-pulse animate-glow-burst' : ''
+        }`}
+        style={completed ? { boxShadow: `0 0 12px ${accent.glow}` } : undefined}
+        aria-label={toggleButtonTitle}
+        title={toggleButtonTitle}
+      >
+        {completed && <CheckIcon size={14} className={accent.textClass} strokeWidth={3} />}
+      </button>
+    </div>
   );
 }
 

@@ -1,6 +1,6 @@
 import React from 'react';
 import { DEFAULT_HABIT_COLOR, HABIT_COLOR_THEMES } from '@/lib/theme/habit-colors';
-import type { HabitColor } from '@/types/habit';
+import type { HabitColor } from '@habbit-runner/shared';
 interface CompletionRingProps {
   percentage: number;
   size?: number;
@@ -19,12 +19,13 @@ export function CompletionRing({
 }: CompletionRingProps) {
   const radius = (size - strokeWidth * 2) / 2;
   const circumference = radius * 2 * Math.PI;
-  const offset =
-  circumference - Math.min(percentage, 100) / 100 * circumference;
+  const offset = circumference - Math.min(percentage, 100) / 100 * circumference;
   const { hex, glow } = HABIT_COLOR_THEMES[color];
+  const isFull = percentage >= 100;
+
   return (
     <div
-      className={`relative inline-flex items-center justify-center ${className}`}>
+      className={`relative inline-flex items-center justify-center ${isFull ? 'animate-ring-celebrate' : ''} ${className}`}>
 
       <svg width={size} height={size} className="-rotate-90">
         {/* Track */}
@@ -42,14 +43,16 @@ export function CompletionRing({
           cy={size / 2}
           r={radius}
           fill="none"
-          stroke={hex}
+          stroke={isFull ? 'var(--accent-secondary)' : hex}
           strokeWidth={strokeWidth}
           strokeDasharray={circumference}
           strokeDashoffset={offset}
           strokeLinecap="round"
           style={{
-            filter: percentage > 0 ? `drop-shadow(0 0 4px ${glow})` : 'none',
-            transition: 'stroke-dashoffset 0.5s ease'
+            filter: percentage > 0
+              ? `drop-shadow(0 0 ${isFull ? 8 : 4}px ${isFull ? 'var(--glow-secondary)' : glow})`
+              : 'none',
+            transition: 'stroke-dashoffset 0.6s ease, stroke 0.4s ease'
           }} />
 
       </svg>
@@ -57,7 +60,7 @@ export function CompletionRing({
       <span
         className="absolute text-[10px] font-mono font-bold"
         style={{
-          color: hex
+          color: isFull ? 'var(--accent-secondary)' : hex
         }}>
 
           {Math.round(percentage)}
