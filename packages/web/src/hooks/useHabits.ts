@@ -8,18 +8,18 @@ import {
   addTombstone,
   upsertCheckinInDb,
   deleteCheckinInDb,
-  enqueueOutboxEntry,
   createOutboxEntry,
   getCurrentUserId
 } from '@/lib/storage/db';
+import { syncEntriesWithFallback } from '@/lib/sync/writeThrough';
 import { createHabitId } from '@/lib/core/habit-id';
 import {
   buildMonthlyCompletionRates,
   buildWeeklyCompletionData,
-  calculateStreak,
   countCompletedDays,
   formatDate
 } from '@/lib/habits/habitStats';
+import { calculateScheduledCompletionRate, calculateScheduledStreak } from '@/lib/habits/schedule';
 import { useLiveQuery } from '@/hooks/useLiveQuery';
 import { buildCompletionsByHabitId } from '@/hooks/useHabits.helpers';
 
@@ -78,14 +78,14 @@ function sortHabitsByOrder(habits: Habit[]) {
   });
 }
 
-async function persistHabitWithOutbox(habit: Habit, action: 'upsert' | 'delete') {
+async function persistHabitWithSyncFallback(habit: Habit, action: 'upsert' | 'delete') {
   if (action === 'delete') {
     await removeHabitFromDb(habit.id);
   } else {
     await persistHabitInDb(habit);
   }
   const entry = createOutboxEntry('habit', action, habit);
-  await enqueueOutboxEntry(entry);
+  await syncEntriesWithFallback([entry]);
 }
 
 // Handles both single and multi-target completion toggles with shared persistence logic.
@@ -132,7 +132,7 @@ async function toggleCompletionImpl(
         version: entity?.version ?? 1
       };
   const entry = createOutboxEntry('checkin', nextCount === 0 ? 'delete' : 'upsert', payload);
-  await enqueueOutboxEntry(entry);
+  await syncEntriesWithFallback([entry]);
 
   return { habitId, date: key, count: nextCount };
 }
@@ -153,7 +153,7 @@ async function addHabitImpl(data: HabitUpsertInput) {
     archived: data.archived ?? false,
     freezeDays: data.freezeDays ?? []
   };
-  await persistHabitWithOutbox(newHabit, 'upsert');
+  await persistHabitWithSyncFallback(newHabit, 'upsert');
   return newHabit.id;
 }
 
@@ -169,7 +169,7 @@ async function updateHabitImpl(id: string, data: Partial<Habit>) {
     updatedAt: new Date().toISOString(),
     version: (entity.version ?? 0) + 1
   };
-  await persistHabitWithOutbox(updatedHabit, 'upsert');
+  await persistHabitWithSyncFallback(updatedHabit, 'upsert');
 }
 
 async function deleteHabitImpl(id: string, allHabits: Habit[]) {
@@ -182,25 +182,25 @@ async function deleteHabitImpl(id: string, allHabits: Habit[]) {
   await addTombstone('habit', id, version);
   await removeHabitFromDb(id);
   const entry = createOutboxEntry('habit', 'delete', { id, version });
-  await enqueueOutboxEntry(entry);
+  await syncEntriesWithFallback([entry]);
   return backup;
 }
 
 async function restoreHabitImpl(habit: Habit) {
   await persistHabitInDb(habit);
   await db.tombstones.where({ entity: 'habit', entityId: habit.id }).delete();
-  await enqueueOutboxEntry(createOutboxEntry('habit', 'upsert', habit));
+  const entries = [createOutboxEntry('habit', 'upsert', habit)];
   const completionEntries = Object.entries(habit.completions).filter(([, count]) => count > 0);
   for (const [date, count] of completionEntries) {
     await upsertCheckinInDb(habit.id, date, true, count);
-    const entry = createOutboxEntry('checkin', 'upsert', {
+    entries.push(createOutboxEntry('checkin', 'upsert', {
       habitId: habit.id,
       date,
       done: true,
       count
-    });
-    await enqueueOutboxEntry(entry);
+    }));
   }
+  await syncEntriesWithFallback(entries);
 }
 
 async function setCompletionCountImpl(
@@ -234,7 +234,7 @@ async function setCompletionCountImpl(
     ? { habitId, date }
     : { habitId, date, done: true, count: clampedCount };
   const entry = createOutboxEntry('checkin', clampedCount === 0 ? 'delete' : 'upsert', payload);
-  await enqueueOutboxEntry(entry);
+  await syncEntriesWithFallback([entry]);
   return { habitId, date, count: clampedCount };
 }
 
@@ -261,7 +261,8 @@ function getHabitStatsImpl(habitId: string, allHabits: Habit[]): HabitStats {
     };
   }
   const dailyTarget = Math.max(1, habit.dailyTarget ?? 1);
-  const { current, longest } = calculateStreak(habit.completions, new Date(), dailyTarget);
+  const { current, longest } = calculateScheduledStreak(habit, habit.completions, new Date());
+  const completionRate = calculateScheduledCompletionRate(habit, habit.completions, new Date());
   const completedDays = countCompletedDays(habit.completions, dailyTarget);
   const totalDays = Math.max(
     1,
@@ -272,7 +273,7 @@ function getHabitStatsImpl(habitId: string, allHabits: Habit[]): HabitStats {
     completedDays,
     currentStreak: current,
     longestStreak: longest,
-    completionRate: Math.round((completedDays / totalDays) * 100),
+    completionRate,
     weeklyData: buildWeeklyCompletionData(habit.completions, 12, new Date(), dailyTarget),
     monthlyData: buildMonthlyCompletionRates(habit.completions, 6, new Date(), dailyTarget)
   };

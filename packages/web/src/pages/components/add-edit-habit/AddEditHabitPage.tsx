@@ -1,8 +1,10 @@
 import React from 'react';
-import { ArrowLeftIcon, PlusIcon, XIcon } from 'lucide-react';
-import { COLORS, DAILY_TARGET_OPTIONS, DAY_LABELS, FREQUENCIES, ICONS, SUGGESTED_TAGS, TARGET_STREAK_OPTIONS } from '../add-edit-habit.constants';
+import { PlusIcon, XIcon } from 'lucide-react';
+import { COLORS, DAILY_TARGET_OPTIONS, ICONS, SUGGESTED_TAGS, TARGET_STREAK_OPTIONS } from '../add-edit-habit.constants';
 import type { AddEditHabitModel } from '@/pages/hooks/useAddEditHabitModel';
 import { invokeIfFunction } from '@/lib/callback';
+import { HeaderSection } from './AddEditHabitHeader';
+import { ScheduleSection } from './AddEditHabitSchedule';
 
 export function AddEditHabitPage({ model }: { model: AddEditHabitModel }) {
   const {
@@ -15,10 +17,6 @@ export function AddEditHabitPage({ model }: { model: AddEditHabitModel }) {
     setIcon,
     color,
     setColor,
-    frequency,
-    setFrequency,
-    customDays,
-    toggleCustomDay,
     targetStreak,
     canDecreaseStreak,
     canIncreaseStreak,
@@ -38,11 +36,13 @@ export function AddEditHabitPage({ model }: { model: AddEditHabitModel }) {
     errors,
     addTag,
     removeTag,
+    schedule,
+    setSchedule,
     handleSubmit,
     handleBack
   } = model;
   return (
-    <div className="min-h-screen bg-bg-primary pt-14">
+    <div className="min-h-screen bg-bg-primary">
       <HeaderSection
         isEdit={isEdit}
         selectedColor={selectedColor}
@@ -60,15 +60,8 @@ export function AddEditHabitPage({ model }: { model: AddEditHabitModel }) {
           selectedColor={selectedColor}
           nameError={errors.name}
         />
-        <ColorFrequencySection
-          color={color}
-          setColor={setColor}
-          frequency={frequency}
-          setFrequency={setFrequency}
-          customDays={customDays}
-          toggleCustomDay={toggleCustomDay}
-          customDaysError={errors.customDays}
-        />
+        <ColorSection color={color} setColor={setColor} />
+        <ScheduleSection schedule={schedule} setSchedule={setSchedule} />
         <TargetSection
           targetStreak={targetStreak}
           canDecreaseStreak={canDecreaseStreak}
@@ -94,41 +87,6 @@ export function AddEditHabitPage({ model }: { model: AddEditHabitModel }) {
           reminderTime={reminderTime}
           setReminderTime={setReminderTime}
         />
-      </div>
-    </div>
-  );
-}
-function HeaderSection({
-  isEdit,
-  selectedColor,
-  onBack,
-  onSubmit
-}: {
-  isEdit: boolean;
-  selectedColor: AddEditHabitModel['selectedColor'];
-  onBack: () => void;
-  onSubmit: () => Promise<void>;
-}) {
-  return (
-    <div className="border-b border-border bg-bg-primary px-4 py-4 sticky top-14 z-10">
-      <div className="max-w-lg mx-auto flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <button type="button" onClick={onBack} className="text-muted hover:text-foreground transition-colors">
-            <ArrowLeftIcon size={16} />
-          </button>
-          <h1 className="text-base font-semibold text-foreground">{isEdit ? 'Edit Habit' : 'New Habit'}</h1>
-        </div>
-        <button
-          type="button"
-          onClick={onSubmit}
-          className="px-4 py-1.5 rounded text-xs font-mono font-bold text-bg-primary transition-all duration-200"
-          style={{
-            backgroundColor: selectedColor.hex,
-            boxShadow: `0 0 16px ${selectedColor.hex}40`
-          }}
-        >
-          {isEdit ? 'Save' : 'Create'}
-        </button>
       </div>
     </div>
   );
@@ -201,22 +159,12 @@ function IconNameSection({
     </div>
   );
 }
-function ColorFrequencySection({
+function ColorSection({
   color,
-  setColor,
-  frequency,
-  setFrequency,
-  customDays,
-  toggleCustomDay,
-  customDaysError
+  setColor
 }: {
   color: AddEditHabitModel['color'];
   setColor: AddEditHabitModel['setColor'];
-  frequency: AddEditHabitModel['frequency'];
-  setFrequency: AddEditHabitModel['setFrequency'];
-  customDays: AddEditHabitModel['customDays'];
-  toggleCustomDay: AddEditHabitModel['toggleCustomDay'];
-  customDaysError?: string;
 }) {
   return (
     <div>
@@ -239,45 +187,6 @@ function ColorFrequencySection({
           </button>
         ))}
       </div>
-      <label className="block text-[10px] font-mono text-muted uppercase tracking-wider mb-2 mt-4">Frequency</label>
-      <div className="grid grid-cols-4 gap-1.5">
-        {FREQUENCIES.map((option) => (
-          <button
-            key={option.value}
-            type="button"
-            onClick={() => setFrequency(option.value)}
-            className={`px-2 py-2.5 rounded-lg border text-center transition-all duration-200 ${
-              frequency === option.value ? 'border-accent/50 bg-accent/10' : 'border-border bg-bg-secondary hover:border-border-hover'
-            }`}
-          >
-            <div className={`text-xs font-mono font-medium ${frequency === option.value ? 'text-accent' : 'text-foreground'}`}>
-              {option.label}
-            </div>
-            <div className="text-[9px] font-mono text-muted mt-0.5">{option.desc}</div>
-          </button>
-        ))}
-      </div>
-      {frequency === 'custom' && (
-        <div className="mt-3">
-          <div className="flex gap-1.5">
-            {DAY_LABELS.map((day, index) => (
-              <button
-                key={day}
-                type="button"
-                onClick={() => toggleCustomDay(index)}
-                className={`flex-1 py-2 rounded text-[10px] font-mono font-medium border transition-all duration-200 ${
-                  customDays.includes(index)
-                    ? 'border-accent/50 bg-accent/10 text-accent'
-                    : 'border-border bg-bg-secondary text-muted'
-                }`}
-              >
-                {day[0]}
-              </button>
-            ))}
-          </div>
-          {customDaysError && <p className="text-[10px] font-mono text-accent-secondary mt-1">{customDaysError}</p>}
-        </div>
-      )}
     </div>
   );
 }

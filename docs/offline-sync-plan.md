@@ -1,6 +1,6 @@
 # 🔄 Offline Sync Plan
 
-This document describes the offline-first sync model and operational contract.
+This document describes the sync model and operational contract.
 
 ## 📑 Table of Contents
 
@@ -65,21 +65,24 @@ This document describes the offline-first sync model and operational contract.
 
 - `sync_meta` tracks:
   - `lastCursor`
-  - `lastSuccessAt`
+  - `lastSyncedAt`
   - `lastError`
-  - `status` (`offline`, `syncing`, `synced`, `error`)
-- `outbox` tracks pending operations and retry metadata.
+  - `status` (`idle`, `syncing`, `offline`, `error`)
+- `outbox` tracks operations that could not be delivered immediately and need retry metadata.
 - Sync triggers:
+  - user mutations while browser is online
   - app startup
   - browser `online` event
   - manual retry actions
 - Execution order:
-  - Pull → Push → Pull confirmation
+  - Immediate path: Local write → Pull → Push → Pull confirmation
+  - Fallback path: Local write → Outbox enqueue → retry on next sync trigger
 
 ## 🚨 Failure Handling
 
 - Failed sync attempts increment server error metrics.
-- Client keeps operations in outbox for retry instead of dropping data.
+- Client first tries to deliver the new operation to the server immediately when the browser is online.
+- If the network is unavailable, auth refresh fails, or the sync request is rejected, the client keeps the operation in `outbox` for retry instead of dropping data.
 - UI should expose:
   - offline status
   - pending outbox count

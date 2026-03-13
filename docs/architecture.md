@@ -63,10 +63,10 @@ PostgreSQL
 ## 🔄 Data and Sync Flow
 
 1. User action writes to local store.
-2. Operation enters outbox.
-3. Client performs `pull` then `push`.
-4. Server applies operations transactionally.
-5. Client updates cursor and local state from server response.
+2. If the browser is online, the client immediately runs `pull` then `push` for the new change.
+3. If immediate sync cannot complete, the operation is stored in `outbox`.
+4. Server applies accepted operations transactionally.
+5. Client refreshes cursor and local state from server response.
 
 For full details, see [🔄 Offline Sync Plan](./offline-sync-plan.md).
 

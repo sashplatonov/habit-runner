@@ -11,6 +11,7 @@ import {
   ArchiveRestoreIcon
 } from 'lucide-react';
 import { HeatmapGrid } from '@/components/HeatmapGrid';
+import { HabitRetroCalendar } from './HabitRetroCalendar';
 import { CompletionRing } from '@/components/CompletionRing';
 import {
   LineChart,
@@ -23,6 +24,7 @@ import {
 } from 'recharts';
 import type { Habit } from '@/types/habit';
 import type { HabitColorTheme } from '@/lib/theme/habit-colors';
+import { DEFAULT_HABIT_COLOR, HABIT_COLOR_THEMES } from '@/lib/theme/habit-colors';
 
 type HabitStats = {
   currentStreak: number;
@@ -49,6 +51,7 @@ type HabitDetailViewProps = {
   handleDecrementCompletion: () => Promise<void>;
   toggleFreezeToday: () => Promise<void>;
   handleDelete: () => Promise<void>;
+  setCompletionCount: (habitId: string, date: string, count: number) => Promise<unknown>;
 };
 
 function CustomTooltip({
@@ -102,7 +105,14 @@ function HabitDetailHeader({
   | 'toggleFreezeToday'
 > & { canIncrement: boolean; isTodayFrozen: boolean }) {
   return (
-    <div className="border-b border-border bg-bg-primary px-4 py-4 sticky top-14 z-10">
+    <div
+      className="border-b border-border bg-bg-primary px-4 sticky top-0 z-10"
+      style={{
+        top: 'var(--safe-area-inset-top, 0px)',
+        paddingTop: 'calc(var(--safe-area-inset-top, 0px) + 1rem)',
+        paddingBottom: '1rem'
+      }}
+    >
       <div className="max-w-2xl mx-auto flex flex-col gap-3 sm:flex-row sm:items-center">
         <div className="flex items-center gap-3 min-w-0 flex-1">
           <button onClick={() => navigate('/')} className="text-muted hover:text-foreground transition-colors p-1 -ml-1 flex-shrink-0">
@@ -271,11 +281,26 @@ function HeatmapSection({
   habit,
   dailyTarget
 }: Pick<HabitDetailViewProps, 'habit'> & { dailyTarget: number }) {
+  const theme = HABIT_COLOR_THEMES[habit.color] ?? HABIT_COLOR_THEMES[DEFAULT_HABIT_COLOR];
+  const highlight = theme.heatmapLevels[4];
+  const completedCount = habit.completions ? Object.keys(habit.completions).length : 0;
+
   return (
-    <div className="bg-bg-secondary border border-border rounded-lg p-4">
-      <div className="flex items-center justify-between mb-3">
+    <div className="bg-bg-secondary border border-border rounded-lg p-3 space-y-3">
+      <div className="flex items-center justify-between">
         <h2 className="text-xs font-mono text-muted uppercase tracking-wider">Activity - 26 weeks</h2>
-        <span className="text-[10px] font-mono text-muted">{habit.completions ? Object.keys(habit.completions).length : 0} completions</span>
+        <span className="text-[10px] font-mono text-muted">{completedCount} completions</span>
+      </div>
+      <div className="flex flex-wrap gap-3 text-[10px] text-muted">
+        <span className="flex items-center gap-1">
+          <span className="w-2 h-2 rounded" style={{ backgroundColor: highlight }} />
+          Hit daily target
+        </span>
+        <span className="flex items-center gap-1">
+          <span className="w-2 h-2 rounded border border-border" />
+          Missed day
+        </span>
+        <span className="uppercase tracking-[0.3em]">Sun-Sat</span>
       </div>
       <div className="overflow-x-auto">
         <HeatmapGrid completions={habit.completions} dailyTarget={dailyTarget} color={habit.color} weeks={26} />
@@ -413,13 +438,14 @@ export function HabitDetailView({
   handleIncrementCompletion,
   handleDecrementCompletion,
   toggleFreezeToday,
-  handleDelete
+  handleDelete,
+  setCompletionCount
 }: HabitDetailViewProps) {
   const dailyTarget = Math.max(1, habit.dailyTarget ?? 1);
   const canIncrement = todayCompletionCount < dailyTarget;
 
   return (
-    <div className="min-h-screen bg-bg-primary pt-14">
+    <div className="min-h-screen bg-bg-primary">
       <HabitDetailHeader
         habit={habit}
         habitId={habitId}
@@ -437,10 +463,11 @@ export function HabitDetailView({
       <div className="max-w-2xl mx-auto px-4 py-4 space-y-4">
         <StatCardGrid stats={stats} accent={accent} />
         <TodayBlock dailyTarget={dailyTarget} todayCompletionCount={todayCompletionCount} accent={accent} />
-        <TargetRingSection stats={stats} habit={habit} accent={accent} />
         <HeatmapSection habit={habit} dailyTarget={dailyTarget} />
+        <TargetRingSection stats={stats} habit={habit} accent={accent} />
         <MonthlyRateSection stats={stats} accent={accent} />
         <WeeklyCompletionsSection stats={stats} accent={accent} />
+        <HabitRetroCalendar habit={habit} dailyTarget={dailyTarget} accent={accent} setCompletionCount={setCompletionCount} />
         <DangerZone confirmDelete={confirmDelete} setConfirmDelete={setConfirmDelete} handleDelete={handleDelete} />
       </div>
     </div>

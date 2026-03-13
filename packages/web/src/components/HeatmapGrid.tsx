@@ -23,6 +23,10 @@ function getIntensity(completed: boolean | undefined): number {
   return completed ? 4 : 0;
 }
 
+const CELL_SIZE = 10;
+const CELL_GAP = 2;
+const COLUMN_WIDTH = CELL_SIZE + CELL_GAP;
+
 function buildHeatmapCells(
   completions: Record<string, number>,
   dailyTarget: number,
@@ -75,7 +79,9 @@ function DayLabels() {
       {dayLabels.map((day, index) => (
         <div
           key={index}
-          className="h-[11px] text-[9px] font-mono text-muted flex items-center">
+          className="text-[9px] font-mono text-muted flex items-center"
+          style={{ height: CELL_SIZE }}
+        >
           {index % 2 === 1 ? day : ''}
         </div>
       ))}
@@ -85,11 +91,13 @@ function DayLabels() {
 
 function MonthLabels({ labels }: { labels: { label: string; col: number }[] }) {
   return (
-    <div className="flex mb-1 ml-6">
-      {labels.map((label, index) => (
+    <div className="relative mb-1 ml-[18px] h-4">
+      {labels.map((label) => (
         <div
-          key={index}
-          className="w-[11px] mr-[2px] text-[9px] font-mono text-muted overflow-visible whitespace-nowrap">
+          key={`${label.label}-${label.col}`}
+          className="absolute text-[9px] font-mono text-muted whitespace-nowrap -translate-y-1"
+          style={{ left: label.col * COLUMN_WIDTH }}
+        >
           {label.label}
         </div>
       ))}
@@ -123,9 +131,11 @@ function HeatmapCells({
             return (
               <div
                 key={di}
-                className="w-[11px] h-[11px] rounded-[2px] cursor-pointer transition-transform hover:scale-125"
+                className="rounded-[2px] cursor-pointer transition-transform hover:scale-110"
                 style={{
-                  backgroundColor: isFuture ? 'var(--bg-secondary)' : bg,
+                  width: CELL_SIZE,
+                  height: CELL_SIZE,
+                  backgroundColor: isFuture ? 'var(--bg-secondary)' : intensity === 0 ? 'var(--border)' : bg,
                   opacity: isFuture ? 0.3 : 1,
                   boxShadow:
                     cell.completed && !isFuture ? `0 0 4px ${glow}` : 'none',

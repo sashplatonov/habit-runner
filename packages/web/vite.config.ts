@@ -7,6 +7,9 @@ import { shouldCacheAppShell } from './src/lib/pwa/runtimeCaching'
 
 // https://vitejs.dev/config/
 export default defineConfig({
+  define: {
+    __BUILD_TIME__: JSON.stringify(new Date().toISOString())
+  },
   server: {
     proxy: {
       '/api': {
@@ -52,23 +55,44 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
+      injectRegister: 'auto',
       manifest: {
-        name: 'Habit Runner',
+        name: 'Habbit Runner',
         short_name: 'HabitRunner',
         description: 'Offline-first habit tracking with sync',
+        id: '/',
+        start_url: '/',
         theme_color: '#080810',
         background_color: '#080810',
         display: 'standalone',
+        display_override: ['window-controls-overlay', 'standalone'],
+        orientation: 'portrait',
+        lang: 'en',
+        categories: ['productivity', 'lifestyle'],
         icons: [
           {
-            src: 'android-chrome-192x192.png',
+            src: 'icon-192.png',
             sizes: '192x192',
-            type: 'image/png'
+            type: 'image/png',
+            purpose: 'any'
           },
           {
-            src: 'android-chrome-512x512.png',
+            src: 'icon-192.png',
+            sizes: '192x192',
+            type: 'image/png',
+            purpose: 'maskable'
+          },
+          {
+            src: 'icon-512.png',
             sizes: '512x512',
-            type: 'image/png'
+            type: 'image/png',
+            purpose: 'any'
+          },
+          {
+            src: 'icon-512.png',
+            sizes: '512x512',
+            type: 'image/png',
+            purpose: 'maskable'
           }
         ]
       },

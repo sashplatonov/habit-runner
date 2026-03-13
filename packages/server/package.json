@@ -3,6 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "prebuild": "npm run build -w @habbit-runner/shared",
+    "prestart": "npm run build -w @habbit-runner/shared",
     "dev": "tsx watch src/main.ts",
     "start": "node dist/main.js",
     "build": "tsc -p tsconfig.build.json",

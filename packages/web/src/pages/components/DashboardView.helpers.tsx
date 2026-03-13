@@ -1,31 +1,18 @@
 import React from 'react';
 import {
   CheckIcon,
-  ChevronRightIcon,
   FlameIcon,
-  GripVerticalIcon
+  GripVerticalIcon,
 } from 'lucide-react';
 import { CompletionRing } from '@/components/CompletionRing';
 import { MiniHeatmap } from '@/components/MiniHeatmap';
 import { HABIT_COLOR_THEMES } from '@/lib/theme/habit-colors';
+import type { HabitColorTheme } from '@/lib/theme/habit-colors';
+import { calculateScheduledCompletionRate, calculateScheduledStreak, getScheduleStatusForDate } from '@/lib/habits/schedule';
 import type { Habit } from '@/types/habit';
 
 function getDateKey(date: Date) {
   return date.toISOString().split('T')[0];
-}
-
-function calculateStreak(completions: Record<string, number>, target: number) {
-  const cursor = new Date();
-  let count = 0;
-  while (count < 366) {
-    const key = getDateKey(cursor);
-    if ((completions[key] ?? 0) < target) {
-      break;
-    }
-    count++;
-    cursor.setDate(cursor.getDate() - 1);
-  }
-  return count;
 }
 
 function buildLastWeek(completions: Record<string, number>, target: number) {
@@ -35,19 +22,6 @@ function buildLastWeek(completions: Record<string, number>, target: number) {
     const key = getDateKey(cursor);
     return (completions[key] ?? 0) >= target;
   });
-}
-
-function calculate30DayRate(completions: Record<string, number>, target: number) {
-  let count = 0;
-  for (let i = 0; i < 30; i++) {
-    const cursor = new Date();
-    cursor.setDate(cursor.getDate() - i);
-    const key = getDateKey(cursor);
-    if ((completions[key] ?? 0) >= target) {
-      count++;
-    }
-  }
-  return Math.round((count / 30) * 100);
 }
 
 type HabitRowProps = {
@@ -96,7 +70,7 @@ function HabitRowMetrics({
         ))}
       </div>
 
-      <div className="hidden sm:flex items-center gap-1 w-12 sm:w-16 justify-end">
+      <div className="flex items-center gap-1 w-12 sm:w-16 justify-end">
         {streak > 0 && (
           <>
             <FlameIcon size={11} className="text-accent-secondary" />
@@ -112,6 +86,25 @@ function HabitRowMetrics({
   );
 }
 
+
+function MiniBars({ last7, accentHex }: { last7: boolean[]; accentHex: string }) {
+  return (
+    <div className="flex items-end gap-[2px] h-[13px]" aria-hidden>
+      {last7.map((done, i) => (
+        <span
+          key={i}
+          className="w-[3px] rounded-sm transition-all"
+          style={{
+            height: done ? '100%' : '40%',
+            backgroundColor: done ? accentHex : 'var(--border)',
+            opacity: done ? 1 : 0.4 + i * 0.07
+          }}
+        />
+      ))}
+    </div>
+  );
+}
+
 export function HabitRow({
   habit,
   onToggle,
@@ -123,14 +116,85 @@ export function HabitRow({
   isDropTarget
 }: HabitRowProps) {
   const todayKey = getDateKey(new Date());
+  const todayDate = new Date();
+  todayDate.setHours(0, 0, 0, 0);
+  const status = getScheduleStatusForDate(habit, todayDate);
+  const scheduledToday = status === 'scheduled';
   const target = Math.max(1, habit.dailyTarget ?? 1);
   const todayCount = habit.completions[todayKey] ?? 0;
   const completed = todayCount >= target;
   const accent = HABIT_COLOR_THEMES[habit.color];
-  const streak = calculateStreak(habit.completions, target);
+  const { current: streak } = calculateScheduledStreak(habit, habit.completions);
   const last7 = buildLastWeek(habit.completions, target);
-  const completionRate = calculate30DayRate(habit.completions, target);
+  const completionRate = calculateScheduledCompletionRate(habit, habit.completions);
+  const toggleButtonClass = completed
+    ? `${accent.bgClass} ${accent.borderClass}`
+    : scheduledToday
+      ? 'border-border-hover hover:border-muted'
+      : 'border border-dashed border-border/40 text-muted hover:border-border';
+  const toggleButtonTitle = scheduledToday
+    ? `Mark ${habit.name} as ${completed ? 'incomplete' : 'complete'}`
+    : `Manual completion for ${habit.name}`;
 
+  return (
+    <HabitRowCard
+      habit={habit}
+      onToggle={onToggle}
+      onDetail={onDetail}
+      onDragStart={onDragStart}
+      onDragOver={onDragOver}
+      onDrop={onDrop}
+      onDragEnd={onDragEnd}
+      isDropTarget={isDropTarget}
+      completed={completed}
+      scheduledToday={scheduledToday}
+      accent={accent}
+      streak={streak}
+      last7={last7}
+      completionRate={completionRate}
+      toggleButtonClass={toggleButtonClass}
+      toggleButtonTitle={toggleButtonTitle}
+    />
+  );
+}
+
+type HabitRowCardProps = {
+  habit: Habit;
+  completed: boolean;
+  scheduledToday: boolean;
+  accent: HabitColorTheme;
+  streak: number;
+  last7: boolean[];
+  completionRate: number;
+  toggleButtonClass: string;
+  toggleButtonTitle: string;
+  onToggle: () => void;
+  onDetail: () => void;
+  onDragStart?: (event: React.DragEvent<HTMLDivElement>) => void;
+  onDragOver?: (event: React.DragEvent<HTMLDivElement>) => void;
+  onDrop?: (event: React.DragEvent<HTMLDivElement>) => void;
+  onDragEnd?: () => void;
+  isDropTarget?: boolean;
+};
+
+function HabitRowCard({
+  habit,
+  completed,
+  scheduledToday,
+  accent,
+  streak,
+  last7,
+  completionRate,
+  toggleButtonClass,
+  toggleButtonTitle,
+  onToggle,
+  onDetail,
+  onDragStart,
+  onDragOver,
+  onDrop,
+  onDragEnd,
+  isDropTarget
+}: HabitRowCardProps) {
   return (
     <div
       draggable={Boolean(onDragStart)}
@@ -152,70 +216,132 @@ export function HabitRow({
           onToggle();
         }
       }}
-      className={`group flex items-center gap-3 px-4 py-3 border-b border-border hover:bg-bg-secondary transition-colors cursor-pointer ${
-        completed ? 'opacity-100' : 'opacity-90'
-      } ${isDropTarget ? 'border-accent/60 bg-accent/5' : ''}`}
+      className={`group flex items-stretch bg-bg-secondary border border-border rounded-xl overflow-hidden hover:border-border-hover transition-colors cursor-pointer ${
+        isDropTarget ? 'border-accent/60 bg-accent/5' : ''
+      }`}
     >
-      <div className="hidden sm:flex items-center gap-2 pr-1">
-        <GripVerticalIcon size={14} className="text-muted" aria-hidden />
-      </div>
-
-      <button
-        type="button"
-        onClick={(e) => {
-          e.stopPropagation();
-          onToggle();
-        }}
-        className={`flex-shrink-0 w-5 h-5 rounded border-2 flex items-center justify-center transition-all duration-200 ${
-          completed
-            ? `${accent.bgClass} ${accent.borderClass} ${accent.shadowClass}`
-            : 'border-border-hover hover:border-muted'
-        }`}
-        aria-label={`Mark ${habit.name} as ${completed ? 'incomplete' : 'complete'}`}
-      >
-        {completed && <CheckIcon size={11} className={accent.textClass} strokeWidth={3} />}
-      </button>
-
-      <button type="button" onClick={onDetail} className="flex items-center gap-2.5 flex-1 min-w-0 text-left">
-        <span className="flex-shrink-0 text-base leading-none">{habit.icon}</span>
-        <div className="min-w-0 flex-1">
-          <div className={`text-sm font-medium ${completed ? 'text-muted line-through' : 'text-foreground'} truncate`}>
-            {habit.name}
-          </div>
-          <div className="text-[10px] font-mono text-muted mt-0.5">
-            {todayCount}/{target} today
-          </div>
-          <div className="hidden sm:flex items-center gap-2 mt-0.5">
-            {habit.tags.slice(0, 2).map((tag) => (
-              <span
-                key={tag}
-                className="inline-flex items-center gap-1 text-[10px] font-mono text-foreground bg-bg-card border border-border rounded px-1.5 py-0.5"
-              >
-                <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: accent.hex }} />
-                {tag}
-              </span>
-            ))}
-          </div>
-        </div>
-      </button>
-
-      <HabitRowMetrics
-        habit={habit}
-        target={target}
-        streak={streak}
-        last7={last7}
-        completionRate={completionRate}
+      <div
+        className="w-1 self-stretch flex-shrink-0 rounded-l-xl"
+        style={{ background: accent.hex }}
+        aria-hidden
       />
+      <div className="flex-1 flex items-center gap-3 px-3 py-3">
+        <div className="hidden sm:flex items-center">
+          <GripVerticalIcon size={14} className="text-muted" aria-hidden />
+        </div>
+        <HabitRowInfoPane
+          habit={habit}
+          accent={accent}
+          completed={completed}
+          scheduledToday={scheduledToday}
+          streak={streak}
+          last7={last7}
+          onDetail={onDetail}
+        />
+        <HabitRowMetrics
+          habit={habit}
+          target={Math.max(1, habit.dailyTarget ?? 1)}
+          streak={streak}
+          last7={last7}
+          completionRate={completionRate}
+        />
+        <HabitRowToggleButton
+          completed={completed}
+          accent={accent}
+          toggleButtonClass={toggleButtonClass}
+          toggleButtonTitle={toggleButtonTitle}
+          onToggle={onToggle}
+        />
+      </div>
+    </div>
+  );
+}
 
+type HabitRowInfoPaneProps = {
+  habit: Habit;
+  accent: HabitColorTheme;
+  completed: boolean;
+  scheduledToday: boolean;
+  streak: number;
+  last7: boolean[];
+  onDetail: () => void;
+};
+
+function HabitRowInfoPane({
+  habit,
+  accent,
+  completed,
+  scheduledToday,
+  streak,
+  last7,
+  onDetail
+}: HabitRowInfoPaneProps) {
+  return (
+    <>
       <button
         type="button"
         onClick={onDetail}
-        aria-label={`Open details for ${habit.name}`}
-        className="hidden sm:block text-border-hover group-hover:text-muted transition-colors"
+        className="flex-shrink-0 w-9 h-9 rounded-xl flex items-center justify-center text-lg"
+        style={{ background: accent.dim }}
+        tabIndex={-1}
+        aria-hidden
       >
-        <ChevronRightIcon size={14} />
+        {habit.icon}
       </button>
-    </div>
+      <button
+        type="button"
+        onClick={onDetail}
+        className="flex-1 min-w-0 text-left"
+      >
+        <div className={`text-sm font-semibold ${completed ? 'text-muted line-through' : 'text-foreground'} truncate`}>
+          {habit.name}
+        </div>
+        <div className="flex items-center gap-2 mt-1">
+          {streak > 0 && (
+            <div className="flex items-center gap-1 text-[11px] font-mono font-medium" style={{ color: accent.hex }}>
+              <FlameIcon size={10} />
+              {streak}d
+            </div>
+          )}
+          <MiniBars last7={last7} accentHex={accent.hex} />
+          {!scheduledToday && (
+            <span className="text-[10px] font-mono uppercase tracking-[0.3em] text-muted">Not scheduled today</span>
+          )}
+        </div>
+      </button>
+    </>
+  );
+}
+
+type HabitRowToggleButtonProps = {
+  completed: boolean;
+  accent: HabitColorTheme;
+  toggleButtonClass: string;
+  toggleButtonTitle: string;
+  onToggle: () => void;
+};
+
+function HabitRowToggleButton({
+  completed,
+  accent,
+  toggleButtonClass,
+  toggleButtonTitle,
+  onToggle
+}: HabitRowToggleButtonProps) {
+  return (
+    <button
+      type="button"
+      onClick={(e) => {
+        e.stopPropagation();
+        onToggle();
+      }}
+      className={`flex-shrink-0 w-9 h-9 rounded-xl border-[1.5px] flex items-center justify-center transition-all duration-200 ${toggleButtonClass}`}
+      style={completed ? { boxShadow: `0 0 12px ${accent.glow}` } : undefined}
+      aria-label={toggleButtonTitle}
+      title={toggleButtonTitle}
+    >
+      {completed && <CheckIcon size={14} className={accent.textClass} strokeWidth={3} />}
+    </button>
   );
 }
 

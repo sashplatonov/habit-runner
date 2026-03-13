@@ -55,3 +55,6 @@ The root `.codexignore`/`.claudeignore` lists the directories that agents should
 - Cache/temp layers: `.turbo/`, `.cache/`, `.vite/`, `tmp/`, `packages/*/.turbo/`, `packages/*/.cache/`, `packages/*/.vite/`, and `packages/*/tmp/`
 - Environment/secrets: `.env`, `.env.*`, `packages/*/.env*`, `packages/server/.env`, `secrets/`, and `backups/`
 - Ignore tooling scaffolds that already dress these directories (e.g., `.claude/`, `.codex/`, `.dokploy/`) unless the task explicitly targets them.
+
+## Communication Guidelines
+- Final summaries and high-level recap bullets when responding should be written in Russian, even if other sections of the message use English for commands or file references.

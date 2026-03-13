@@ -19,7 +19,7 @@ export default {
       },
       fontFamily: {
         mono: ['JetBrains Mono', 'Fira Code', 'monospace'],
-        sans: ['Inter', 'system-ui', 'sans-serif']
+        sans: ['Sora', 'sans-serif']
       },
       boxShadow: {
         'glow-blue': '0 0 20px rgba(0, 212, 255, 0.3)',

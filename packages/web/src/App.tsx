@@ -6,7 +6,7 @@ import {
   Navigate,
   useLocation
 } from '@/lib/router';
-import { Nav } from '@/components/Nav';
+import { AppLayout } from '@/components/AppLayout';
 import { Dashboard } from '@/pages/Dashboard';
 import { HabitDetail } from '@/pages/HabitDetail';
 import { AddEditHabit } from '@/pages/AddEditHabit';
@@ -30,6 +30,7 @@ import { setCurrentUserId } from '@/lib/storage/db';
 import { useTheme } from '@/hooks/useTheme';
 import { UndoProvider } from '@/lib/undo';
 import { installGlobalClientLogging } from '@/lib/logging/clientLogger';
+import { PullToRefresh } from '@/components/PullToRefresh';
 
 type AuthCallbackPageProps = {
   message?: string;
@@ -37,7 +38,7 @@ type AuthCallbackPageProps = {
 
 function AuthCallbackPage({ message }: AuthCallbackPageProps) {
   return (
-    <div className="min-h-screen pt-14 bg-bg-primary flex items-center justify-center">
+    <div className="min-h-screen bg-bg-primary flex items-center justify-center">
       <div className="text-sm font-mono text-muted">{message ?? 'Finishing login…'}</div>
     </div>
   );
@@ -80,7 +81,7 @@ export function App() {
   });
   const { theme, setTheme } = useTheme(Boolean(authSession));
   const [authError, setAuthError] = useState<string | undefined>();
-  useSyncEngine(Boolean(authSession));
+  const syncState = useSyncEngine(Boolean(authSession));
 
   useEffect(() => {
     setCurrentUserId(getSessionUserId(authSession));
@@ -152,16 +153,19 @@ export function App() {
       <ErrorBoundary>
       {authSession ? (
         <BrowserRouter>
-          <div className="min-h-screen bg-bg-primary">
+          <PullToRefresh
+            enabled={Boolean(authSession)}
+            isRefreshing={syncState.status === 'syncing'}
+            onRefresh={syncState.syncNow}
+          >
             <a
               href="#main-content"
               className="sr-only focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:z-[60] focus:rounded-md focus:border focus:border-accent focus:bg-bg-card focus:px-3 focus:py-2 focus:text-xs focus:text-foreground"
             >
               Skip to main content
             </a>
-            <Nav onLogout={logout} theme={theme} onThemeChange={setTheme} />
-            <RouteFocusManager />
-            <main id="main-content" tabIndex={-1} className="pt-14 focus:outline-none">
+            <AppLayout theme={theme} onThemeChange={setTheme} onLogout={logout}>
+              <RouteFocusManager />
               <Routes>
                 <Route path="/" element={<Dashboard />} />
                 <Route path="/habit/new" element={<AddEditHabit />} />
@@ -171,8 +175,8 @@ export function App() {
                 <Route path="/auth/callback" element={<AuthCallbackPage />} />
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
-            </main>
-          </div>
+            </AppLayout>
+          </PullToRefresh>
         </BrowserRouter>
       ) : (
         <>

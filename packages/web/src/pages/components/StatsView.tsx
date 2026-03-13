@@ -402,7 +402,7 @@ function WeeklyBreakdown({ allStats }: Pick<StatsViewProps, 'allStats'>) {
 
 export function StatsView(props: StatsViewProps) {
   return (
-    <div className="min-h-screen bg-bg-primary pt-14">
+    <div className="min-h-screen bg-bg-primary">
       <StatsHeader />
       <div className="max-w-2xl mx-auto px-4 py-4 space-y-4">
         <OverviewGrid
