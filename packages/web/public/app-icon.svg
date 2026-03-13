@@ -13,11 +13,11 @@
       <stop offset="0" stop-color="#FDE047"/>
       <stop offset="1" stop-color="#22C55E"/>
     </linearGradient>
-    <filter id="shadow" x="53" y="33" width="406" height="446" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+    <filter id="shadow" x="53" y="33" width="406" height="460" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
       <feFlood flood-opacity="0" result="BackgroundImageFix"/>
       <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
-      <feOffset dy="18"/>
-      <feGaussianBlur stdDeviation="22"/>
+      <feOffset dy="8"/>
+      <feGaussianBlur stdDeviation="14"/>
       <feComposite in2="hardAlpha" operator="out"/>
       <feColorMatrix type="matrix" values="0 0 0 0 0.0313726 0 0 0 0 0.0901961 0 0 0 0 0.2 0 0 0 0.35 0"/>
       <feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_1_2"/>

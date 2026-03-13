@@ -429,6 +429,7 @@ export async function applyPullResponse(
       customDays: Array.isArray(habit.customDays) ?
       habit.customDays.filter((day): day is number => typeof day === 'number') :
       undefined,
+      schedule: habit.schedule,
       archived: habit.archived,
       createdAt: habit.createdAt,
       updatedAt: habit.updatedAt,
@@ -438,7 +439,9 @@ export async function applyPullResponse(
           ? habit.sortOrder
           : Date.parse(habit.createdAt) || Date.now(),
       reminderTime:
-        typeof habit.reminderTime === 'string' ? habit.reminderTime : null
+        typeof habit.reminderTime === 'string' ? habit.reminderTime : null,
+      reminderEnabled: habit.reminderEnabled ?? true,
+      freezeDays: []
     });
   });
 

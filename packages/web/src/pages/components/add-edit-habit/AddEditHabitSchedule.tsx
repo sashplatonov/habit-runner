@@ -92,39 +92,32 @@ function WeekdayGrid({
 
 function WeeklyQuotaControls({
   schedule,
-  onQuotaChange,
-  onToggleDay
+  onQuotaChange
 }: {
   schedule: Extract<HabitSchedule, { type: 'weekly_quota' }>;
   onQuotaChange: (value: number) => void;
-  onToggleDay: (day: number) => void;
 }) {
   return (
-    <div className="space-y-2">
-      <div className="flex items-center gap-3">
-        <input
-          type="number"
-          min={1}
-          max={7}
-          value={schedule.timesPerWeek}
-          onChange={(event) => onQuotaChange(Number(event.target.value))}
-          className="w-16 rounded-lg border border-border bg-bg-secondary px-3 py-2 text-sm font-mono focus:border-accent/60 focus:outline-none"
-        />
-        <span className="text-sm font-semibold text-foreground">{`${schedule.timesPerWeek} times per week`}</span>
-      </div>
-      <WeekdayGrid selected={schedule.weekdays ?? []} onToggle={onToggleDay} />
+    <div className="flex items-center gap-3">
+      <input
+        type="number"
+        min={1}
+        max={7}
+        value={schedule.timesPerWeek}
+        onChange={(event) => onQuotaChange(Number(event.target.value))}
+        className="w-16 rounded-lg border border-border bg-bg-secondary px-3 py-2 text-sm font-mono focus:border-accent/60 focus:outline-none"
+      />
+      <span className="text-sm font-semibold text-foreground">{`${schedule.timesPerWeek} times per week`}</span>
     </div>
   );
 }
 
 function MonthlyWeeksControls({
   schedule,
-  onToggleWeek,
-  onToggleDay
+  onToggleWeek
 }: {
   schedule: Extract<HabitSchedule, { type: 'monthly_weeks' }>;
   onToggleWeek: (week: WeekOfMonth) => void;
-  onToggleDay: (day: number) => void;
 }) {
   return (
     <div className="space-y-2">
@@ -145,34 +138,28 @@ function MonthlyWeeksControls({
           </button>
         ))}
       </div>
-      <WeekdayGrid selected={schedule.weekdays} onToggle={onToggleDay} />
     </div>
   );
 }
 
 function MonthlyQuotaControls({
   schedule,
-  onQuotaChange,
-  onToggleDay
+  onQuotaChange
 }: {
   schedule: Extract<HabitSchedule, { type: 'monthly_quota' }>;
   onQuotaChange: (value: number) => void;
-  onToggleDay: (day: number) => void;
 }) {
   return (
-    <div className="space-y-2">
-      <div className="flex items-center gap-3">
-        <input
-          type="number"
-          min={1}
-          max={31}
-          value={schedule.timesPerMonth}
-          onChange={(event) => onQuotaChange(Number(event.target.value))}
-          className="w-20 rounded-lg border border-border bg-bg-secondary px-3 py-2 text-sm font-mono focus:border-accent/60 focus:outline-none"
-        />
-        <span className="text-sm font-semibold text-foreground">{`${schedule.timesPerMonth} times per month`}</span>
-      </div>
-      <WeekdayGrid selected={schedule.weekdays ?? []} onToggle={onToggleDay} />
+    <div className="flex items-center gap-3">
+      <input
+        type="number"
+        min={1}
+        max={31}
+        value={schedule.timesPerMonth}
+        onChange={(event) => onQuotaChange(Number(event.target.value))}
+        className="w-20 rounded-lg border border-border bg-bg-secondary px-3 py-2 text-sm font-mono focus:border-accent/60 focus:outline-none"
+      />
+      <span className="text-sm font-semibold text-foreground">{`${schedule.timesPerMonth} times per month`}</span>
     </div>
   );
 }
@@ -253,17 +240,13 @@ export function ScheduleSection({
       <div className="mt-3 space-y-3">
         {schedule.type === 'weekly_days' && <WeekdayGrid selected={activeWeekdays} onToggle={toggleWeekday} />}
         {schedule.type === 'weekly_quota' && (
-          <WeeklyQuotaControls schedule={schedule} onQuotaChange={setWeekQuota} onToggleDay={toggleWeekday} />
+          <WeeklyQuotaControls schedule={schedule} onQuotaChange={setWeekQuota} />
         )}
         {schedule.type === 'monthly_weeks' && (
-          <MonthlyWeeksControls
-            schedule={schedule}
-            onToggleWeek={toggleWeekOfMonth}
-            onToggleDay={toggleWeekday}
-          />
+          <MonthlyWeeksControls schedule={schedule} onToggleWeek={toggleWeekOfMonth} />
         )}
         {schedule.type === 'monthly_quota' && (
-          <MonthlyQuotaControls schedule={schedule} onQuotaChange={setMonthQuota} onToggleDay={toggleWeekday} />
+          <MonthlyQuotaControls schedule={schedule} onQuotaChange={setMonthQuota} />
         )}
       </div>
       <p className="text-[11px] font-mono text-muted mt-2">{describeSchedule(schedule)}</p>
