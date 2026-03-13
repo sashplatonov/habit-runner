@@ -1,9 +1,5 @@
 import React from 'react';
-import {
-  CheckIcon,
-  FlameIcon,
-  GripVerticalIcon,
-} from 'lucide-react';
+import { ArrowDownIcon, ArrowUpIcon, CheckIcon, FlameIcon, GripVerticalIcon } from 'lucide-react';
 import { CompletionRing } from '@/components/CompletionRing';
 import { MiniHeatmap } from '@/components/MiniHeatmap';
 import { HABIT_COLOR_THEMES } from '@/lib/theme/habit-colors';
@@ -24,6 +20,8 @@ function buildLastWeek(completions: Record<string, number>, target: number) {
   });
 }
 
+type DropHintPosition = 'above' | 'below' | null;
+
 type HabitRowProps = {
   habit: Habit;
   onToggle: () => void;
@@ -33,6 +31,8 @@ type HabitRowProps = {
   onDrop?: (event: React.DragEvent<HTMLDivElement>) => void;
   onDragEnd?: () => void;
   isDropTarget?: boolean;
+  isDragging?: boolean;
+  dropHintPosition?: DropHintPosition;
 };
 
 function HabitRowMetrics({
@@ -113,7 +113,14 @@ export function HabitRow({
   onDragOver,
   onDrop,
   onDragEnd,
-  isDropTarget
+  isDropTarget,
+  isDragging = false,
+  dropHintPosition,
+  reorderMode,
+  onMoveUp,
+  onMoveDown,
+  disableMoveUp,
+  disableMoveDown
 }: HabitRowProps) {
   const todayKey = getDateKey(new Date());
   const todayDate = new Date();
@@ -146,6 +153,8 @@ export function HabitRow({
       onDrop={onDrop}
       onDragEnd={onDragEnd}
       isDropTarget={isDropTarget}
+      isDragging={isDragging}
+      dropHintPosition={dropHintPosition}
       completed={completed}
       scheduledToday={scheduledToday}
       accent={accent}
@@ -154,6 +163,11 @@ export function HabitRow({
       completionRate={completionRate}
       toggleButtonClass={toggleButtonClass}
       toggleButtonTitle={toggleButtonTitle}
+      reorderMode={reorderMode}
+      onMoveUp={onMoveUp}
+      onMoveDown={onMoveDown}
+      disableMoveUp={disableMoveUp}
+      disableMoveDown={disableMoveDown}
     />
   );
 }
@@ -175,6 +189,13 @@ type HabitRowCardProps = {
   onDrop?: (event: React.DragEvent<HTMLDivElement>) => void;
   onDragEnd?: () => void;
   isDropTarget?: boolean;
+  isDragging?: boolean;
+  dropHintPosition?: DropHintPosition;
+  reorderMode?: boolean;
+  onMoveUp?: () => void;
+  onMoveDown?: () => void;
+  disableMoveUp?: boolean;
+  disableMoveDown?: boolean;
 };
 
 function HabitRowCard({
@@ -193,8 +214,22 @@ function HabitRowCard({
   onDragOver,
   onDrop,
   onDragEnd,
-  isDropTarget
+  isDropTarget,
+  isDragging,
+  dropHintPosition,
+  reorderMode = false,
+  onMoveUp,
+  onMoveDown,
+  disableMoveUp,
+  disableMoveDown
 }: HabitRowCardProps) {
+  const dropTransformClass =
+    dropHintPosition === 'above'
+      ? '-translate-y-2'
+      : dropHintPosition === 'below'
+        ? 'translate-y-2'
+        : '';
+  const dragTransformClass = isDragging ? 'opacity-70 scale-[0.97] shadow-2xl' : '';
   return (
     <div
       draggable={Boolean(onDragStart)}
@@ -216,7 +251,7 @@ function HabitRowCard({
           onToggle();
         }
       }}
-      className={`group flex items-stretch bg-bg-secondary border border-border rounded-xl overflow-hidden hover:border-border-hover transition-colors cursor-pointer ${
+      className={`group flex items-stretch bg-bg-secondary border border-border rounded-xl overflow-hidden hover:border-border-hover transition-all duration-200 cursor-pointer transform ${dropTransformClass} ${dragTransformClass} ${
         isDropTarget ? 'border-accent/60 bg-accent/5' : ''
       }`}
     >
@@ -245,6 +280,14 @@ function HabitRowCard({
           last7={last7}
           completionRate={completionRate}
         />
+        {reorderMode && (
+          <HabitRowReorderControls
+            onMoveUp={onMoveUp}
+            onMoveDown={onMoveDown}
+            disableMoveUp={disableMoveUp}
+            disableMoveDown={disableMoveDown}
+          />
+        )}
         <HabitRowToggleButton
           completed={completed}
           accent={accent}
@@ -342,6 +385,57 @@ function HabitRowToggleButton({
     >
       {completed && <CheckIcon size={14} className={accent.textClass} strokeWidth={3} />}
     </button>
+  );
+}
+
+type HabitRowReorderControlsProps = {
+  onMoveUp?: () => void;
+  onMoveDown?: () => void;
+  disableMoveUp?: boolean;
+  disableMoveDown?: boolean;
+};
+
+function HabitRowReorderControls({
+  onMoveUp,
+  onMoveDown,
+  disableMoveUp,
+  disableMoveDown
+}: HabitRowReorderControlsProps) {
+  return (
+    <div className="flex flex-col gap-1 sm:hidden">
+      <button
+        type="button"
+        onClick={(event) => {
+          event.stopPropagation();
+          if (!disableMoveUp) {
+            void onMoveUp?.();
+          }
+        }}
+        disabled={disableMoveUp}
+        aria-label="Move habit up"
+        className={`w-8 h-8 rounded-xl border border-border/60 flex items-center justify-center transition ${
+          disableMoveUp ? 'cursor-not-allowed text-muted/50' : 'hover:border-accent hover:text-accent text-foreground'
+        }`}
+      >
+        <ArrowUpIcon size={16} />
+      </button>
+      <button
+        type="button"
+        onClick={(event) => {
+          event.stopPropagation();
+          if (!disableMoveDown) {
+            void onMoveDown?.();
+          }
+        }}
+        disabled={disableMoveDown}
+        aria-label="Move habit down"
+        className={`w-8 h-8 rounded-xl border border-border/60 flex items-center justify-center transition ${
+          disableMoveDown ? 'cursor-not-allowed text-muted/50' : 'hover:border-accent hover:text-accent text-foreground'
+        }`}
+      >
+        <ArrowDownIcon size={16} />
+      </button>
+    </div>
   );
 }
 

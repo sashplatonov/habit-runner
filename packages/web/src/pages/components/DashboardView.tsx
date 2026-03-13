@@ -2,7 +2,6 @@ import React from 'react';
 import { BellRingIcon, FlameIcon, TrendingUpIcon, ZapIcon } from 'lucide-react';
 import { Onboarding, type OnboardingTemplate } from '@/components/Onboarding';
 import { CompletionRing } from '@/components/CompletionRing';
-import type { Habit } from '@/types/habit';
 import { HabitRow, DropIndicator } from './DashboardView.helpers';
 import { invokeIfFunction } from '@/lib/callback';
 import { isScheduledForDate, resolveHabitSchedule } from '@/lib/habits/schedule';
@@ -19,6 +18,7 @@ type DashboardViewProps = {
   reminders: Reminder[];
   dropHint: { habitId: string; position: 'above' | 'below' } | null;
   dragOverHabitId: string | null;
+  draggedHabitId: string | null;
   filter: 'all' | 'pending' | 'done';
   allTags: string[];
   selectedTags: string[];
@@ -41,6 +41,9 @@ type DashboardViewProps = {
   handleDragOver: (event: React.DragEvent<HTMLDivElement>, habitId: string) => void;
   handleDrop: (event: React.DragEvent<HTMLDivElement>, habitId: string) => Promise<void>;
   handleDragEnd: () => void;
+  reorderMode: boolean;
+  toggleReorderMode: () => void;
+  moveHabit: (habitId: string, direction: 'up' | 'down') => Promise<void>;
 };
 
 function DashboardHero({
@@ -49,8 +52,20 @@ function DashboardHero({
   completedToday,
   totalActive,
   overallStreak,
-  handleExport
-}: Pick<DashboardViewProps, 'dateStr' | 'todayRate' | 'completedToday' | 'totalActive' | 'overallStreak' | 'handleExport'>) {
+  handleExport,
+  reorderMode,
+  toggleReorderMode
+}: Pick<
+  DashboardViewProps,
+  | 'dateStr'
+  | 'todayRate'
+  | 'completedToday'
+  | 'totalActive'
+  | 'overallStreak'
+  | 'handleExport'
+  | 'reorderMode'
+  | 'toggleReorderMode'
+>) {
   return (
     <>
       <div
@@ -104,13 +119,27 @@ function DashboardHero({
         </div>
         <div className="flex items-center justify-between gap-3">
           <div className="text-[10px] font-mono uppercase tracking-[0.4em] text-muted">Filters</div>
-          <button
-            type="button"
-            onClick={handleExport}
-            className="text-[10px] font-mono uppercase tracking-[0.3em] border border-border px-3 py-1 rounded-full transition hover:border-accent hover:text-accent"
-          >
-            Export CSV
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={toggleReorderMode}
+              aria-pressed={reorderMode}
+              className={`text-[10px] font-mono uppercase tracking-[0.3em] border px-3 py-1 rounded-full transition ${
+                reorderMode
+                  ? 'border-accent text-accent bg-accent/10'
+                  : 'border-border hover:border-accent hover:text-accent'
+              }`}
+            >
+              {reorderMode ? 'Done' : 'Reorder'}
+            </button>
+            <button
+              type="button"
+              onClick={handleExport}
+              className="text-[10px] font-mono uppercase tracking-[0.3em] border border-border px-3 py-1 rounded-full transition hover:border-accent hover:text-accent"
+            >
+              Export CSV
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -255,23 +284,29 @@ function HabitListSection({
   filtered,
   dropHint,
   dragOverHabitId,
+  draggedHabitId,
   handleToggle,
   handleDrop,
   handleDragStart,
   handleDragOver,
   handleDragEnd,
-  navigate
+  navigate,
+  reorderMode,
+  moveHabit
 }: Pick<
   DashboardViewProps,
   | 'filtered'
   | 'dropHint'
   | 'dragOverHabitId'
+  | 'draggedHabitId'
   | 'handleToggle'
   | 'handleDrop'
   | 'handleDragStart'
   | 'handleDragOver'
   | 'handleDragEnd'
   | 'navigate'
+  | 'reorderMode'
+  | 'moveHabit'
 >) {
   if (filtered.length === 0) {
     return (
@@ -284,27 +319,95 @@ function HabitListSection({
 
   return (
     <div className="max-w-2xl mx-auto py-3 flex flex-col gap-2 px-4" role="list" aria-label="Habit list">
-      {filtered.map((habit) => (
-        <React.Fragment key={habit.id}>
-          {dropHint?.habitId === habit.id && dropHint.position === 'above' && <DropIndicator />}
-          <HabitRow
-            habit={habit}
-            onToggle={() => {
-              void handleToggle(habit);
-            }}
-            onDetail={() => navigate(`/habit/${habit.id}`)}
-            onDragStart={(event) => handleDragStart(event, habit.id)}
-            onDragOver={(event) => handleDragOver(event, habit.id)}
-            onDrop={(event) => {
-              void handleDrop(event, habit.id);
-            }}
-            onDragEnd={handleDragEnd}
-            isDropTarget={dragOverHabitId === habit.id}
-          />
-          {dropHint?.habitId === habit.id && dropHint.position === 'below' && <DropIndicator />}
-        </React.Fragment>
+      {filtered.map((habit, index) => (
+        <HabitRowEntry
+          key={habit.id}
+          habit={habit}
+          index={index}
+          filteredLength={filtered.length}
+          dropHint={dropHint}
+          dragOverHabitId={dragOverHabitId}
+          draggedHabitId={draggedHabitId}
+          handleToggle={handleToggle}
+          handleDrop={handleDrop}
+          handleDragStart={handleDragStart}
+          handleDragOver={handleDragOver}
+          handleDragEnd={handleDragEnd}
+          navigate={navigate}
+          reorderMode={reorderMode}
+          moveHabit={moveHabit}
+        />
       ))}
     </div>
+  );
+}
+
+type HabitRowEntryProps = {
+  habit: Habit;
+  index: number;
+  filteredLength: number;
+  dropHint: { habitId: string; position: 'above' | 'below' } | null;
+  dragOverHabitId: string | null;
+  draggedHabitId: string | null;
+  handleToggle: (habit: Habit) => Promise<void>;
+  handleDrop: (event: React.DragEvent<HTMLDivElement>, habitId: string) => Promise<void>;
+  handleDragStart: (event: React.DragEvent<HTMLDivElement>, habitId: string) => void;
+  handleDragOver: (event: React.DragEvent<HTMLDivElement>, habitId: string) => void;
+  handleDragEnd: () => void;
+  navigate: (to: string) => void;
+  reorderMode: boolean;
+  moveHabit: (habitId: string, direction: 'up' | 'down') => Promise<void>;
+};
+
+function HabitRowEntry({
+  habit,
+  index,
+  filteredLength,
+  dropHint,
+  dragOverHabitId,
+  draggedHabitId,
+  handleToggle,
+  handleDrop,
+  handleDragStart,
+  handleDragOver,
+  handleDragEnd,
+  navigate,
+  reorderMode,
+  moveHabit
+}: HabitRowEntryProps) {
+  const dropHintPosition = dropHint?.habitId === habit.id ? dropHint.position : null;
+  const isDragging = draggedHabitId === habit.id;
+  const canMoveUp = reorderMode && index > 0;
+  const canMoveDown = reorderMode && index < filteredLength - 1;
+  const showDropAbove = dropHintPosition === 'above';
+  const showDropBelow = dropHintPosition === 'below';
+
+  return (
+    <React.Fragment>
+      {showDropAbove && <DropIndicator />}
+      <HabitRow
+        habit={habit}
+        onToggle={() => {
+          void handleToggle(habit);
+        }}
+        onDetail={() => navigate(`/habit/${habit.id}`)}
+        onDragStart={(event) => handleDragStart(event, habit.id)}
+        onDragOver={(event) => handleDragOver(event, habit.id)}
+        onDrop={(event) => {
+          void handleDrop(event, habit.id);
+        }}
+        onDragEnd={handleDragEnd}
+        isDropTarget={dragOverHabitId === habit.id}
+        isDragging={isDragging}
+        dropHintPosition={dropHintPosition}
+        reorderMode={reorderMode}
+        onMoveUp={canMoveUp ? () => void moveHabit(habit.id, 'up') : undefined}
+        onMoveDown={canMoveDown ? () => void moveHabit(habit.id, 'down') : undefined}
+        disableMoveUp={!canMoveUp}
+        disableMoveDown={!canMoveDown}
+      />
+      {showDropBelow && <DropIndicator />}
+    </React.Fragment>
   );
 }
 
@@ -330,6 +433,8 @@ export function DashboardView(props: DashboardViewProps) {
         totalActive={props.totalActive}
         overallStreak={props.overallStreak}
         handleExport={props.handleExport}
+        reorderMode={props.reorderMode}
+        toggleReorderMode={props.toggleReorderMode}
       />
       <RemindersPanel
         reminders={props.reminders}
@@ -351,11 +456,14 @@ export function DashboardView(props: DashboardViewProps) {
         filtered={props.filtered}
         dropHint={props.dropHint}
         dragOverHabitId={props.dragOverHabitId}
+        draggedHabitId={props.draggedHabitId}
         handleToggle={props.handleToggle}
         handleDrop={props.handleDrop}
         handleDragStart={props.handleDragStart}
         handleDragOver={props.handleDragOver}
         handleDragEnd={props.handleDragEnd}
+        reorderMode={props.reorderMode}
+        moveHabit={props.moveHabit}
         navigate={props.navigate}
       />
     </div>
