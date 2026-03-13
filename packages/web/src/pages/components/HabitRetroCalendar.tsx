@@ -274,25 +274,58 @@ function getDayButtonClasses(day: RetroCalendarDay) {
   return classes.join(' ');
 }
 
-function getDayButtonStyle(
-  day: RetroCalendarDay,
-  maxValue: number,
-  accent: HabitColorTheme,
-  bg: string,
-  monthOpacity?: number
-) {
-  const completed = day.count >= maxValue;
-  const borderColor = day.scheduled ? accent.hex : 'var(--border)';
-  const borderStyle = day.scheduled ? 'solid' : 'dashed';
-  const boxShadowParts: string[] = [];
+type MonthHighlight = 'current' | 'previous' | null;
+
+type DayStyleOptions = {
+  day: RetroCalendarDay;
+  maxValue: number;
+  accent: HabitColorTheme;
+  bg: string;
+  monthOpacity?: number;
+  monthHighlight: MonthHighlight;
+};
+
+type BoxShadowParams = {
+  completed: boolean;
+  accent: HabitColorTheme;
+  weekendHighlight: boolean;
+  monthHighlight: MonthHighlight;
+};
+
+function buildDayBoxShadow({ completed, accent, weekendHighlight, monthHighlight }: BoxShadowParams) {
+  const parts: string[] = [];
   if (completed) {
-    boxShadowParts.push(`0 0 10px ${accent.glow}`);
+    parts.push(`0 0 10px ${accent.glow}`);
   }
-  const weekendHighlight = day.isWeekend && !day.isFuture && !day.isEmpty;
   if (weekendHighlight) {
-    boxShadowParts.push(`0 0 0 1px ${accent.hex}40`);
+    parts.push(`0 0 0 1px ${accent.hex}40`);
   }
-  const boxShadow = boxShadowParts.length ? boxShadowParts.join(', ') : undefined;
+  if (monthHighlight) {
+    parts.push(
+      `0 0 ${monthHighlight === 'current' ? 6 : 4}px ${accent.hex}${monthHighlight === 'current' ? '80' : '50'}`
+    );
+  }
+  return parts.length ? parts.join(', ') : undefined;
+}
+
+function getDayButtonStyle({
+  day,
+  maxValue,
+  accent,
+  bg,
+  monthOpacity,
+  monthHighlight
+}: DayStyleOptions) {
+  const completed = day.count >= maxValue;
+  const baseBorderColor = day.scheduled ? accent.hex : 'var(--border)';
+  const borderStyle = day.scheduled ? 'solid' : 'dashed';
+  const weekendHighlight = day.isWeekend && !day.isFuture && !day.isEmpty;
+  const boxShadow = buildDayBoxShadow({
+    completed,
+    accent,
+    weekendHighlight,
+    monthHighlight
+  });
   const weekendTint: React.CSSProperties = weekendHighlight
     ? {
         backgroundImage: `linear-gradient(135deg, ${accent.dim}, transparent)`,
@@ -301,7 +334,8 @@ function getDayButtonStyle(
     : {};
   const style: React.CSSProperties = {
     backgroundColor: bg,
-    borderColor,
+    borderColor:
+      weekendHighlight || monthHighlight ? accent.hex : baseBorderColor,
     borderStyle,
     boxShadow,
     ...(monthOpacity ? { opacity: monthOpacity } : {}),
@@ -323,6 +357,23 @@ function getDayLabelClass(day: RetroCalendarDay, completed: boolean) {
   return classes.join(' ');
 }
 
+function getMonthMeta(day: RetroCalendarDay, monthCount: number) {
+  const monthSlot = Math.min(Math.max(day.monthIndex ?? 0, 0), Math.max(monthCount - 1, 0));
+  const currentMonthIndex = Math.max(monthCount - 1, 0);
+  const previousMonthIndex = monthCount > 1 ? monthCount - 2 : null;
+  const isCurrentMonth = !day.isFuture && monthSlot === currentMonthIndex;
+  const isPreviousMonth = previousMonthIndex !== null && !day.isFuture && monthSlot === previousMonthIndex;
+  const monthHighlight: MonthHighlight = isCurrentMonth ? 'current' : isPreviousMonth ? 'previous' : null;
+  const monthOpacity = !day.isFuture
+    ? monthHighlight === 'current'
+      ? 1
+      : monthHighlight === 'previous'
+        ? 0.78
+        : Math.max(0.5, 0.9 - monthSlot * 0.15)
+    : undefined;
+  return { monthOpacity, monthHighlight };
+}
+
 function RetroCalendarDayCell({ day, maxValue, accent, onDayClick, monthCount }: RetroCalendarDayCellProps) {
   if (day.isEmpty) {
     return <div className="aspect-square w-full" />;
@@ -330,9 +381,7 @@ function RetroCalendarDayCell({ day, maxValue, accent, onDayClick, monthCount }:
 
   const bg = getDayBackground(day, maxValue, accent);
   const completed = day.count >= maxValue;
-  const monthSlot = Math.min(Math.max(day.monthIndex ?? 0, 0), Math.max(monthCount - 1, 0));
-  const monthOpacity =
-    monthCount > 1 && !day.isFuture ? 1 - monthSlot * 0.18 : undefined;
+  const { monthOpacity, monthHighlight } = getMonthMeta(day, monthCount);
 
   return (
     <button
@@ -340,7 +389,7 @@ function RetroCalendarDayCell({ day, maxValue, accent, onDayClick, monthCount }:
       onClick={(event) => onDayClick(day, event)}
       disabled={day.isFuture}
       className={getDayButtonClasses(day)}
-      style={getDayButtonStyle(day, maxValue, accent, bg, monthOpacity)}
+      style={getDayButtonStyle({ day, maxValue, accent, bg, monthOpacity, monthHighlight })}
       aria-label={`${day.date} ${day.scheduled ? 'scheduled' : 'manual'} ${day.count}/${maxValue}`}
     >
       <span className={getDayLabelClass(day, completed)} style={day.isToday && !completed ? { color: accent.hex } : undefined}>
