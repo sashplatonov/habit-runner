@@ -1,0 +1,9 @@
+services:
+  api:
+    networks:
+      - backend
+      - edge
+
+  web:
+    ports:
+      - "5137:80"

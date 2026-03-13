@@ -369,6 +369,7 @@ function buildHabitPayload({
   tags,
   frequency,
   customDays,
+  schedule,
   targetStreak,
   dailyTarget,
   existing,
@@ -388,7 +389,6 @@ function buildHabitPayload({
   existing?: Habit;
   reminderTime: string;
   reminderEnabled: boolean;
-  schedule?: HabitSchedule;
 }): HabitUpsertInput {
   return {
     name: name.trim(),

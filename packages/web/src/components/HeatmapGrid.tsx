@@ -23,6 +23,8 @@ function getIntensity(completed: boolean | undefined): number {
   return completed ? 4 : 0;
 }
 
+const DAY_LABEL_WIDTH = 16;
+
 function buildHeatmapCells(
   completions: Record<string, number>,
   dailyTarget: number,
@@ -31,7 +33,8 @@ function buildHeatmapCells(
   const today = new Date();
   const cells: HeatmapCell[][] = [];
   const startDate = new Date(today);
-  startDate.setDate(startDate.getDate() - startDate.getDay() - (weeks - 1) * 7);
+  const weekStartOffset = (startDate.getDay() + 6) % 7;
+  startDate.setDate(startDate.getDate() - weekStartOffset - (weeks - 1) * 7);
 
   for (let w = 0; w < weeks; w++) {
     const week: HeatmapCell[] = [];
@@ -69,27 +72,30 @@ function buildMonthLabels(cells: HeatmapCell[][]): { label: string; col: number 
 }
 
 function DayLabels() {
-  const dayLabels = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+  const dayLabels = ['M', 'W', 'F'];
   return (
-    <div className="flex flex-col gap-[2px] mr-1.5">
-      {dayLabels.map((day, index) => (
+    <div className="grid shrink-0 gap-1 sm:gap-1.5 mr-1.5" style={{ width: DAY_LABEL_WIDTH, gridTemplateRows: 'repeat(7, minmax(0, 1fr))' }}>
+      {Array.from({ length: 7 }, (_, index) => (
         <div
           key={index}
-          className="h-[11px] text-[9px] font-mono text-muted flex items-center">
-          {index % 2 === 1 ? day : ''}
+          className="text-[9px] font-mono text-muted flex items-center"
+        >
+          {index === 0 ? dayLabels[0] : index === 2 ? dayLabels[1] : index === 4 ? dayLabels[2] : ''}
         </div>
       ))}
     </div>
   );
 }
 
-function MonthLabels({ labels }: { labels: { label: string; col: number }[] }) {
+function MonthLabels({ labels, weeks }: { labels: { label: string; col: number }[]; weeks: number }) {
   return (
-    <div className="flex mb-1 ml-6">
-      {labels.map((label, index) => (
+    <div className="relative mb-1 ml-[18px] h-4">
+      {labels.map((label) => (
         <div
-          key={index}
-          className="w-[11px] mr-[2px] text-[9px] font-mono text-muted overflow-visible whitespace-nowrap">
+          key={`${label.label}-${label.col}`}
+          className="absolute text-[9px] font-mono text-muted whitespace-nowrap -translate-y-1"
+          style={{ left: `${(label.col / weeks) * 100}%` }}
+        >
           {label.label}
         </div>
       ))}
@@ -113,9 +119,9 @@ function HeatmapCells({
   onLeave: () => void;
 }) {
   return (
-    <div className="flex gap-[2px]">
+    <div className="grid flex-1 gap-1 sm:gap-1.5" style={{ gridTemplateColumns: `repeat(${cells.length}, minmax(0, 1fr))` }}>
       {cells.map((week, wi) => (
-        <div key={wi} className="flex flex-col gap-[2px]">
+        <div key={wi} className="grid gap-1 sm:gap-1.5" style={{ gridTemplateRows: 'repeat(7, minmax(0, 1fr))' }}>
           {week.map((cell, di) => {
             const intensity = getIntensity(cell.completed);
             const bg = levels[intensity];
@@ -123,9 +129,9 @@ function HeatmapCells({
             return (
               <div
                 key={di}
-                className="w-[11px] h-[11px] rounded-[2px] cursor-pointer transition-transform hover:scale-125"
+                className="aspect-square w-full rounded-[2px] cursor-pointer transition-transform hover:scale-110"
                 style={{
-                  backgroundColor: isFuture ? 'var(--bg-secondary)' : bg,
+                  backgroundColor: isFuture ? 'var(--bg-secondary)' : intensity === 0 ? 'var(--border)' : bg,
                   opacity: isFuture ? 0.3 : 1,
                   boxShadow:
                     cell.completed && !isFuture ? `0 0 4px ${glow}` : 'none',
@@ -191,8 +197,8 @@ export function HeatmapGrid({
 
   return (
     <div className="relative select-none">
-      <MonthLabels labels={monthLabels} />
-      <div className="flex gap-0">
+      <MonthLabels labels={monthLabels} weeks={weeks} />
+      <div className="flex w-full gap-0">
         <DayLabels />
         <HeatmapCells
           cells={cells}

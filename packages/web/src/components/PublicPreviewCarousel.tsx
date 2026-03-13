@@ -6,7 +6,7 @@ import { AddEditHabitPage } from '@/pages/components/add-edit-habit/AddEditHabit
 import { COLORS } from '@/pages/components/add-edit-habit.constants';
 import type { AddEditHabitModel } from '@/pages/hooks/useAddEditHabitModel';
 import { BrowserRouter } from '@/lib/router';
-import type { Habit } from '@/types/habit';
+import type { Habit, HabitSchedule } from '@/types/habit';
 
 function isoDate(offsetDays = 0) {
   const date = new Date();
@@ -91,6 +91,7 @@ function buildDemoEditModel(): AddEditHabitModel {
   const setNumber = noopSetter<number>();
   const setColor = noopSetter<Habit['color']>();
   const setFrequency = noopSetter<Habit['frequency']>();
+  const setSchedule = noopSetter<HabitSchedule>();
 
   return {
     habitId: 'demo-read',
@@ -107,6 +108,8 @@ function buildDemoEditModel(): AddEditHabitModel {
     setIcon: setString,
     frequency: 'daily',
     setFrequency,
+    schedule: { type: 'daily' },
+    setSchedule,
     customDays: [1, 2, 3, 4, 5],
     toggleCustomDay: () => undefined,
     targetStreak: 30,

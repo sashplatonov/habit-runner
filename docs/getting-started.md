@@ -84,6 +84,10 @@ Used only by local API runs (`npm run dev:server` / `npm run dev`), not by Docke
    - Ensure `.env` defines a reachable `DATABASE_URL`, because the stack will not start Postgres unless you enable the `db` profile; otherwise `api` will fail waiting for a local database.
 3. Start the stack with the Postgres database included (profile `db` must be enabled):
    - `docker compose --profile db up --build`
+   - Or run the local override command:
+     ```
+     docker compose -f docker-compose.yml -f docker-compose.local.yml --profile db up --build
+     ```
 
 ## ✅ Verification Checklist
 

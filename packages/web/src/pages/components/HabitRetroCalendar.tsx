@@ -1,21 +1,24 @@
 import React, { useMemo, useState } from 'react';
-import type { Habit, HabitSchedule } from '@/types/habit';
+import type { Habit } from '@/types/habit';
 import type { HabitColorTheme } from '@/lib/theme/habit-colors';
-import { DAY_LABELS } from './add-edit-habit.constants';
 import { formatDate } from '@/lib/habits/habitStats';
 import { describeSchedule } from '@habbit-runner/shared';
 import { isScheduledForDate, resolveHabitSchedule } from '@/lib/habits/schedule';
-
-const RETRO_WEEK_COUNT = 6;
 const POPOVER_WIDTH = 200;
 const POPOVER_HEIGHT = 120;
+const DAY_HEADERS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
 type RetroCalendarDay = {
   date: string;
+  dayOfMonth: number;
   scheduled: boolean;
   count: number;
   isToday: boolean;
   isFuture: boolean;
+  isEmpty: boolean; // padding cell before first day
+  dayOfWeek: number;
+  isWeekend: boolean;
+  monthIndex?: number;
 };
 
 type RetroCalendarEditor = {
@@ -29,30 +32,73 @@ function clampValue(value: number, min: number, max: number) {
   return Math.max(min, Math.min(max, Math.trunc(value)));
 }
 
-function buildRetroWeeks(habit: Habit, schedule: HabitSchedule) {
-  const weeks: RetroCalendarDay[][] = [];
+function buildRetroGrid(habit: Habit, schedule: ReturnType<typeof resolveHabitSchedule>) {
   const now = new Date();
   const todayKey = formatDate(now);
-  const start = new Date(now);
-  start.setDate(start.getDate() - start.getDay() - (RETRO_WEEK_COUNT - 1) * 7);
 
-  for (let weekIndex = 0; weekIndex < RETRO_WEEK_COUNT; weekIndex++) {
-    const week: RetroCalendarDay[] = [];
-    for (let dayIndex = 0; dayIndex < 7; dayIndex++) {
-      const date = new Date(start);
-      date.setDate(start.getDate() + weekIndex * 7 + dayIndex);
-      const dateKey = formatDate(date);
-      week.push({
-        date: dateKey,
-        scheduled: isScheduledForDate(schedule, date),
-        count: habit.completions[dateKey] ?? 0,
-        isToday: dateKey === todayKey,
-        isFuture: date > now
-      });
-    }
-    weeks.push(week);
+  // Start from 30 days ago
+  const startDate = new Date(now);
+  startDate.setDate(startDate.getDate() - 29);
+
+  // Pad to beginning of that week (Monday)
+  const weekStartOffset = (startDate.getDay() + 6) % 7;
+  const paddedStart = new Date(startDate);
+  paddedStart.setDate(paddedStart.getDate() - weekStartOffset);
+
+  const days: RetroCalendarDay[] = [];
+
+  // Add padding cells before startDate
+  const paddingCount = weekStartOffset;
+  for (let i = 0; i < paddingCount; i++) {
+    const date = new Date(paddedStart);
+    date.setDate(paddedStart.getDate() + i);
+    days.push({
+      date: formatDate(date),
+      dayOfMonth: date.getDate(),
+      scheduled: false,
+      count: 0,
+      isToday: false,
+      isFuture: false,
+      isEmpty: true,
+      dayOfWeek: date.getDay(),
+      isWeekend: date.getDay() === 0 || date.getDay() === 6
+    });
   }
-  return weeks;
+
+  const monthIndexMap = new Map<number, number>();
+  const registerMonthIndex = (month: number) => {
+    if (!monthIndexMap.has(month)) {
+      monthIndexMap.set(month, monthIndexMap.size);
+    }
+    return monthIndexMap.get(month)!;
+  };
+
+  // Add actual 30 days
+  for (let i = 0; i < 30; i++) {
+    const date = new Date(startDate);
+    date.setDate(startDate.getDate() + i);
+    const dateKey = formatDate(date);
+    const weekDay = date.getDay();
+    days.push({
+      date: dateKey,
+      dayOfMonth: date.getDate(),
+      scheduled: isScheduledForDate(schedule, date),
+      count: habit.completions[dateKey] ?? 0,
+      isToday: dateKey === todayKey,
+      isFuture: date > now,
+      isEmpty: false,
+      dayOfWeek: weekDay,
+      isWeekend: weekDay === 0 || weekDay === 6,
+      monthIndex: registerMonthIndex(date.getMonth())
+    });
+  }
+
+  // Chunk into weeks
+  const weeks: RetroCalendarDay[][] = [];
+  for (let i = 0; i < days.length; i += 7) {
+    weeks.push(days.slice(i, i + 7));
+  }
+  return { weeks, monthCount: monthIndexMap.size };
 }
 
 function clampPopoverX(anchorX: number) {
@@ -82,7 +128,7 @@ type HabitRetroCalendarProps = {
 
 export function HabitRetroCalendar({ habit, dailyTarget, accent, setCompletionCount }: HabitRetroCalendarProps) {
   const schedule = useMemo(() => resolveHabitSchedule(habit), [habit]);
-  const weeks = useMemo(() => buildRetroWeeks(habit, schedule), [habit, schedule]);
+  const { weeks, monthCount } = useMemo(() => buildRetroGrid(habit, schedule), [habit, schedule]);
   const maxValue = Math.max(1, dailyTarget);
   const scheduleLabel = describeSchedule(schedule);
   const [editor, setEditor] = useState<RetroCalendarEditor | null>(null);
@@ -103,7 +149,7 @@ export function HabitRetroCalendar({ habit, dailyTarget, accent, setCompletionCo
   };
 
   const handleDayClick = (day: RetroCalendarDay, event: React.MouseEvent<HTMLButtonElement>) => {
-    if (day.isFuture) {
+    if (day.isFuture || day.isEmpty) {
       return;
     }
     if (maxValue > 1) {
@@ -118,10 +164,7 @@ export function HabitRetroCalendar({ habit, dailyTarget, accent, setCompletionCo
       if (!prev) {
         return prev;
       }
-      return {
-        ...prev,
-        pendingValue: clampValue(prev.pendingValue + delta, 0, maxValue)
-      };
+      return { ...prev, pendingValue: clampValue(prev.pendingValue + delta, 0, maxValue) };
     });
   };
 
@@ -144,30 +187,44 @@ export function HabitRetroCalendar({ habit, dailyTarget, accent, setCompletionCo
   const closeEditor = () => setEditor(null);
 
   return (
-    <div className="bg-bg-secondary border border-border rounded-2xl p-4 space-y-3">
+    <div className="bg-bg-secondary border border-border rounded-2xl p-3 space-y-2">
       <div className="flex items-center justify-between gap-2">
         <div>
           <h2 className="text-[11px] font-mono text-muted uppercase tracking-[0.5em]">Retro calendar</h2>
-          <p className="text-[10px] text-muted mt-1">{scheduleLabel}</p>
-          <p className="text-[10px] text-muted mt-1">Tap to edit past days, future dates are locked.</p>
+          <p className="text-[10px] text-muted mt-0.5">{scheduleLabel}</p>
         </div>
-        <span className="text-[11px] font-mono text-muted">{RETRO_WEEK_COUNT}w</span>
+        <span className="text-[11px] font-mono text-muted">30d</span>
       </div>
-      <RetroCalendarGrid weeks={weeks} maxValue={maxValue} accent={accent} onDayClick={handleDayClick} />
-      <div className="flex flex-wrap gap-3 text-[10px] font-mono text-muted">
-        <span className="flex items-center gap-2">
-          <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: accent.heatmapLevels[4] }} />
-          Completed day
-        </span>
-        <span className="flex items-center gap-2">
-          <span className="w-2.5 h-2.5 rounded-full border border-border" />
-          Scheduled day
-        </span>
-        <span className="flex items-center gap-2">
-          <span className="w-2.5 h-2.5 rounded-full border border-dashed border-border/40" />
-          Manual day
-        </span>
+
+      <div className="w-full mx-auto lg:max-w-[248px]">
+        {/* Day-of-week headers */}
+        <div className="grid grid-cols-7 gap-1.5 sm:gap-2">
+          {DAY_HEADERS.map((d) => (
+            <div key={d} className="text-center text-[9px] font-mono text-muted uppercase tracking-wider py-0.5">
+              {d}
+            </div>
+          ))}
+        </div>
+
+        {/* Calendar grid */}
+        <div className="space-y-1.5 sm:space-y-2">
+          {weeks.map((week, wi) => (
+            <div key={wi} className="grid grid-cols-7 gap-1.5 sm:gap-2">
+              {week.map((day, di) => (
+                <RetroCalendarDayCell
+                  key={day.date + di}
+                  day={day}
+                  maxValue={maxValue}
+                  accent={accent}
+                  onDayClick={handleDayClick}
+                  monthCount={monthCount}
+                />
+              ))}
+            </div>
+          ))}
+        </div>
       </div>
+
       {editor && (
         <RetroCalendarEditorPopover
           editor={editor}
@@ -183,52 +240,17 @@ export function HabitRetroCalendar({ habit, dailyTarget, accent, setCompletionCo
   );
 }
 
-type RetroCalendarGridProps = {
-  weeks: RetroCalendarDay[][];
-  maxValue: number;
-  accent: HabitColorTheme;
-  onDayClick: (day: RetroCalendarDay, event: React.MouseEvent<HTMLButtonElement>) => void;
-};
-
-function RetroCalendarGrid({ weeks, maxValue, accent, onDayClick }: RetroCalendarGridProps) {
-  return (
-    <div className="flex gap-2">
-      <div className="flex flex-col gap-1 mt-[2px]">
-        {DAY_LABELS.map((day) => (
-          <span key={day} className="text-[9px] font-mono text-muted uppercase tracking-[0.25em]">
-            {day[0]}
-          </span>
-        ))}
-      </div>
-      <div className="flex gap-[6px] overflow-x-auto pb-1">
-        {weeks.map((week, weekIndex) => (
-          <div key={weekIndex} className="flex flex-col gap-[6px]">
-            {week.map((day) => (
-              <RetroCalendarDayCell
-                key={day.date}
-                day={day}
-                maxValue={maxValue}
-                accent={accent}
-                onDayClick={onDayClick}
-              />
-            ))}
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
 type RetroCalendarDayCellProps = {
   day: RetroCalendarDay;
   maxValue: number;
   accent: HabitColorTheme;
   onDayClick: (day: RetroCalendarDay, event: React.MouseEvent<HTMLButtonElement>) => void;
+  monthCount: number;
 };
 
-function getDayBackgroundColor(day: RetroCalendarDay, maxValue: number, accent: HabitColorTheme) {
-  if (day.isFuture) {
-    return 'var(--bg-card)';
+function getDayBackground(day: RetroCalendarDay, maxValue: number, accent: HabitColorTheme) {
+  if (day.isEmpty || day.isFuture) {
+    return 'transparent';
   }
   if (day.count >= maxValue) {
     return accent.heatmapLevels[4];
@@ -239,40 +261,93 @@ function getDayBackgroundColor(day: RetroCalendarDay, maxValue: number, accent: 
   return 'var(--bg-card)';
 }
 
-function getDayBoxShadow(day: RetroCalendarDay, maxValue: number, accent: HabitColorTheme) {
-  if (day.count >= maxValue) {
-    return `0 0 12px ${accent.glow}`;
+function getDayButtonClasses(day: RetroCalendarDay) {
+  const classes = ['aspect-square', 'w-full', 'rounded-md', 'border', 'flex', 'flex-col', 'items-center', 'justify-center', 'transition-all', 'duration-150', 'relative', 'overflow-hidden'];
+  if (day.isFuture) {
+    classes.push('opacity-30', 'cursor-not-allowed');
+  } else {
+    classes.push('hover:brightness-110');
   }
   if (day.isToday) {
-    return `0 0 0 2px ${accent.hex}`;
+    classes.push('ring-1');
   }
-  return undefined;
+  return classes.join(' ');
 }
 
-function RetroCalendarDayCell({ day, maxValue, accent, onDayClick }: RetroCalendarDayCellProps) {
-  const backgroundColor = getDayBackgroundColor(day, maxValue, accent);
-  const boxShadow = getDayBoxShadow(day, maxValue, accent);
+function getDayButtonStyle(
+  day: RetroCalendarDay,
+  maxValue: number,
+  accent: HabitColorTheme,
+  bg: string,
+  monthOpacity?: number
+) {
+  const completed = day.count >= maxValue;
   const borderColor = day.scheduled ? accent.hex : 'var(--border)';
   const borderStyle = day.scheduled ? 'solid' : 'dashed';
+  const boxShadowParts: string[] = [];
+  if (completed) {
+    boxShadowParts.push(`0 0 10px ${accent.glow}`);
+  }
+  const weekendHighlight = day.isWeekend && !day.isFuture && !day.isEmpty;
+  if (weekendHighlight) {
+    boxShadowParts.push(`0 0 0 1px ${accent.hex}40`);
+  }
+  const boxShadow = boxShadowParts.length ? boxShadowParts.join(', ') : undefined;
+  const weekendTint: React.CSSProperties = weekendHighlight
+    ? {
+        backgroundImage: `linear-gradient(135deg, ${accent.dim}, transparent)`,
+        filter: 'saturate(1.08)'
+      }
+    : {};
+  const style: React.CSSProperties = {
+    backgroundColor: bg,
+    borderColor,
+    borderStyle,
+    boxShadow,
+    ...(monthOpacity ? { opacity: monthOpacity } : {}),
+    ...weekendTint,
+    ...(day.isToday ? { '--tw-ring-color': accent.hex } as React.CSSProperties : {})
+  };
+  return style;
+}
+
+function getDayLabelClass(day: RetroCalendarDay, completed: boolean) {
+  const classes = ['text-[9px]', 'font-mono', 'leading-none'];
+  if (completed) {
+    classes.push('font-bold', 'text-foreground');
+  } else if (day.isToday) {
+    classes.push('font-semibold');
+  } else {
+    classes.push('text-muted');
+  }
+  return classes.join(' ');
+}
+
+function RetroCalendarDayCell({ day, maxValue, accent, onDayClick, monthCount }: RetroCalendarDayCellProps) {
+  if (day.isEmpty) {
+    return <div className="aspect-square w-full" />;
+  }
+
+  const bg = getDayBackground(day, maxValue, accent);
+  const completed = day.count >= maxValue;
+  const monthSlot = Math.min(Math.max(day.monthIndex ?? 0, 0), Math.max(monthCount - 1, 0));
+  const monthOpacity =
+    monthCount > 1 && !day.isFuture ? 1 - monthSlot * 0.18 : undefined;
 
   return (
     <button
       type="button"
       onClick={(event) => onDayClick(day, event)}
       disabled={day.isFuture}
-      className={`w-10 h-10 rounded-xl border transition-all duration-150 flex items-center justify-center text-[10px] font-mono ${day.isFuture ? 'cursor-not-allowed opacity-40' : 'hover:-translate-y-0.5 hover:shadow-[0_6px_16px_rgba(0,0,0,0.12)]'}`}
-      style={{
-        backgroundColor,
-        borderColor,
-        borderStyle,
-        boxShadow
-      }}
-      aria-label={`${day.date} ${day.scheduled ? 'scheduled' : 'manual'} day ${day.count}/${maxValue}`}
+      className={getDayButtonClasses(day)}
+      style={getDayButtonStyle(day, maxValue, accent, bg, monthOpacity)}
+      aria-label={`${day.date} ${day.scheduled ? 'scheduled' : 'manual'} ${day.count}/${maxValue}`}
     >
-      {day.count > 0 ? (
-        <span className="text-[11px] font-semibold text-foreground">{day.count}</span>
-      ) : (
-        <span className="text-[10px] text-muted">{day.isToday ? 'Today' : ''}</span>
+      <span className={getDayLabelClass(day, completed)} style={day.isToday && !completed ? { color: accent.hex } : undefined}>
+        {day.dayOfMonth}
+      </span>
+      {day.count > 0 && maxValue > 1 && (
+        <span className="text-[7px] font-mono text-foreground/60 leading-none">{day.count}/{maxValue}</span>
       )}
     </button>
   );
@@ -308,12 +383,10 @@ function RetroCalendarEditorPopover({
         style={{ left, top }}
       >
         <div className="flex items-center justify-between">
-          <p className="text-[10px] font-mono text-muted" style={{ color: accent.hex }}>
+          <p className="text-[10px] font-mono" style={{ color: accent.hex }}>
             {editor.date}
           </p>
-          <button onClick={onClose} className="text-[12px] font-bold text-muted">
-            ×
-          </button>
+          <button onClick={onClose} className="text-[12px] font-bold text-muted">×</button>
         </div>
         <div className="mt-3 flex items-center justify-between gap-4">
           <button
@@ -321,41 +394,27 @@ function RetroCalendarEditorPopover({
             onClick={() => onAdjust(-1)}
             disabled={editor.pendingValue <= 0}
             className="w-9 h-9 rounded-full border border-border text-sm leading-none disabled:text-muted"
-          >
-            –
-          </button>
-          <span className="text-sm font-semibold text-foreground">
-            {editor.pendingValue}/{maxValue}
-          </span>
+          >–</button>
+          <span className="text-sm font-semibold text-foreground">{editor.pendingValue}/{maxValue}</span>
           <button
             type="button"
             onClick={() => onAdjust(1)}
             disabled={editor.pendingValue >= maxValue}
             className="w-9 h-9 rounded-full border border-border text-sm leading-none disabled:text-muted"
-          >
-            +
-          </button>
+          >+</button>
         </div>
         <div className="mt-3 flex gap-2">
           <button
             type="button"
-            onClick={() => {
-              void onSave();
-            }}
+            onClick={() => { void onSave(); }}
             className="flex-1 rounded-lg border border-border bg-accent/10 px-3 py-2 text-[10px] font-mono font-semibold uppercase tracking-[0.3em] text-accent transition hover:bg-accent/20"
             style={{ boxShadow: `0 0 8px ${accent.glow}` }}
-          >
-            Save
-          </button>
+          >Save</button>
           <button
             type="button"
-            onClick={() => {
-              void onReset();
-            }}
+            onClick={() => { void onReset(); }}
             className="flex-1 rounded-lg border border-border px-3 py-2 text-[10px] font-mono uppercase tracking-[0.3em] text-muted transition hover:border-border-hover"
-          >
-            Reset
-          </button>
+          >Reset</button>
         </div>
       </div>
     </>
