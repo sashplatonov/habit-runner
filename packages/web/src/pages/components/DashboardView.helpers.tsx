@@ -6,17 +6,14 @@ import { MiniHeatmap } from '@/components/MiniHeatmap';
 import { HABIT_COLOR_THEMES } from '@/lib/theme/habit-colors';
 import type { HabitColorTheme } from '@/lib/theme/habit-colors';
 import { calculateScheduledCompletionRate, calculateScheduledStreak, getScheduleStatusForDate } from '@/lib/habits/schedule';
+import { formatDate } from '@/lib/habits/habitStats';
 import type { Habit } from '@/types/habit';
-
-function getDateKey(date: Date) {
-  return date.toISOString().split('T')[0];
-}
 
 function buildLastWeek(completions: Record<string, number>, target: number) {
   return Array.from({ length: 7 }, (_, index) => {
     const cursor = new Date();
     cursor.setDate(cursor.getDate() - (6 - index));
-    const key = getDateKey(cursor);
+    const key = formatDate(cursor);
     return (completions[key] ?? 0) >= target;
   });
 }
@@ -137,7 +134,7 @@ export function HabitRow({
   disableMoveUp,
   disableMoveDown
 }: HabitRowProps) {
-  const todayKey = getDateKey(new Date());
+  const todayKey = formatDate(new Date());
   const todayDate = new Date();
   todayDate.setHours(0, 0, 0, 0);
   const status = getScheduleStatusForDate(habit, todayDate);

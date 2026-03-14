@@ -279,7 +279,7 @@ function FilterBar({
     <div className="border-b border-border px-4">
       <div className="max-w-2xl mx-auto">
         <div className="flex gap-0">
-          {(['all', 'pending', 'done'] as const).map((value) => (
+          {(['pending', 'all', 'done'] as const).map((value) => (
             <button
               key={value}
               type="button"
