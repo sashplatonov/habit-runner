@@ -1,11 +1,11 @@
-import React from 'react';
 import {
   ActivityIcon,
   CheckCircle2Icon,
   SparklesIcon,
-  PlusCircleIcon
+  PlusCircleIcon,
+  LucideIcon
 } from 'lucide-react';
-import type { HabitColor, HabitFrequency } from '@/types/habit';
+import type { HabitColor, HabitFrequency } from '@habbit-runner/shared';
 
 export type OnboardingTemplate = {
   name: string;
@@ -21,7 +21,7 @@ export type OnboardingTemplate = {
 type Step = {
   title: string;
   description: string;
-  icon: React.ComponentType<React.SVGProps<SVGSVGElement>>;
+  icon: LucideIcon;
 };
 
 const STEPS: Step[] = [
@@ -91,8 +91,8 @@ export function Onboarding({
           <SparklesIcon className="mx-auto text-accent" size={32} />
           <h1 className="text-3xl font-semibold text-foreground">Habbit Runner is ready</h1>
           <p className="text-sm text-muted">
-            Build your first habits so the empty dashboard stops feeling like a mystery. Choose
-            templates that fit your routine.
+            Research shows starting with <span className="text-accent font-bold">3 habits</span> is optimal for success. 
+            Choose templates that fit your routine.
           </p>
           <button
             type="button"

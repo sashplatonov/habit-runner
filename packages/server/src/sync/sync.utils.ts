@@ -4,7 +4,7 @@ import type {
   TombstoneDto
 } from './dto/pull-response.dto';
 import type { Cursor } from './sync.types';
-import { HabitFrequency, normalizeSchedule, scheduleFromLegacy } from '@habbit-runner/shared';
+import { HabitFrequency, normalizeSchedule, scheduleFromLegacy, toSyncISO } from '@habbit-runner/shared';
 
 export const parseCursor = (cursor?: string): Cursor | undefined => {
   if (!cursor) {return undefined;}
@@ -39,7 +39,7 @@ export const calculateNextCursor = (
     if (current.updatedAt.getTime() < max.updatedAt.getTime()) {return max;}
     return current.id > max.id ? current : max;
   });
-  return JSON.stringify({ updatedAt: latest.updatedAt.toISOString(), id: latest.id });
+  return JSON.stringify({ updatedAt: toSyncISO(latest.updatedAt), id: latest.id });
 };
 
 export const serializeHabit = (habit: {
@@ -61,6 +61,8 @@ export const serializeHabit = (habit: {
   createdAt: Date;
   updatedAt: Date;
   version: number;
+  difficulty?: number;
+  type?: string;
 }): HabitDto => ({
   id: habit.id,
   name: habit.name,
@@ -82,9 +84,11 @@ export const serializeHabit = (habit: {
       habit.frequency as HabitFrequency,
       Array.isArray(habit.customDays) ? habit.customDays.map((day) => Number(day)).filter((day) => Number.isFinite(day)) as number[] : undefined
     ),
-  createdAt: habit.createdAt.toISOString(),
-  updatedAt: habit.updatedAt.toISOString(),
-  version: habit.version
+  createdAt: toSyncISO(habit.createdAt),
+  updatedAt: toSyncISO(habit.updatedAt),
+  version: habit.version,
+  difficulty: habit.difficulty,
+  type: habit.type
 });
 
 export const serializeCheckin = (checkin: {
@@ -98,10 +102,10 @@ export const serializeCheckin = (checkin: {
 }): CheckinDto => ({
   id: checkin.id,
   habitId: checkin.habitId,
-  date: checkin.date.toISOString(),
+  date: toSyncISO(checkin.date),
   done: checkin.done,
   count: checkin.count,
-  updatedAt: checkin.updatedAt.toISOString(),
+  updatedAt: toSyncISO(checkin.updatedAt),
   version: checkin.version
 });
 
@@ -115,7 +119,7 @@ export const serializeTombstone = (tombstone: {
   id: tombstone.id,
   entity: tombstone.entity,
   entityId: tombstone.entityId,
-  deletedAt: tombstone.deletedAt.toISOString(),
+  deletedAt: toSyncISO(tombstone.deletedAt),
   version: tombstone.version
 });
 

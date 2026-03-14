@@ -31,7 +31,7 @@ import {
   serializeHabit,
   serializeTombstone
 } from './sync.utils';
-import { HABIT_FREQUENCIES, HabitFrequency, HabitSchedule, normalizeSchedule, scheduleFromLegacy } from '@habbit-runner/shared';
+import { HABIT_FREQUENCIES, HabitFrequency, HabitSchedule, normalizeSchedule, scheduleFromLegacy, nowSyncISO } from '@habbit-runner/shared';
 
 @Injectable()
 export class SyncService {
@@ -97,7 +97,7 @@ export class SyncService {
       ];
 
       const nextCursor = calculateNextCursor(cursorCandidates);
-      const serverTime = new Date().toISOString();
+      const serverTime = nowSyncISO();
 
       this.metrics.recordPull(
         Date.now() - pullStart,
@@ -125,7 +125,7 @@ export class SyncService {
     const pushStart = Date.now();
     const applied: string[] = [];
     const conflicts: PushConflict[] = [];
-    const serverTime = new Date().toISOString();
+    const serverTime = nowSyncISO();
 
     try {
       const client = await this.prisma.getClient();
@@ -255,6 +255,8 @@ export class SyncService {
         sortOrder: writeValues.sortOrder,
         reminderTime: writeValues.reminderTime,
         reminderEnabled: writeValues.reminderEnabled,
+        difficulty: writeValues.difficulty,
+        type: writeValues.type,
         updatedAt: timestamp,
         version: writeValues.nextVersion
       },
@@ -273,6 +275,8 @@ export class SyncService {
         sortOrder: writeValues.sortOrder,
         reminderTime: writeValues.reminderTime,
         reminderEnabled: writeValues.reminderEnabled,
+        difficulty: writeValues.difficulty,
+        type: writeValues.type,
         updatedAt: timestamp,
         version: writeValues.nextVersion
       }
@@ -291,6 +295,8 @@ export class SyncService {
     tags: unknown;
     customDays: number[] | undefined;
     schedule: HabitSchedule;
+    difficulty: number;
+    type: string;
   } {
     return {
       nextVersion: this.resolveHabitVersion(existing, payload.version),
@@ -300,7 +306,9 @@ export class SyncService {
       reminderEnabled: this.resolveHabitReminderEnabled(existing, payload.reminderEnabled),
       tags: normalizeTags(payload.tags),
       customDays: normalizeCustomDays(payload.customDays),
-      schedule: this.resolveHabitSchedule(existing, payload)
+      schedule: this.resolveHabitSchedule(existing, payload),
+      difficulty: this.resolveHabitDifficulty(existing, payload.difficulty),
+      type: this.resolveHabitType(existing, payload.type)
     };
   }
 
@@ -466,11 +474,15 @@ export class SyncService {
     payload: CheckinPayload,
     date: Date
   ): Promise<void> {
+    const existing = await tx.checkin.findFirst({
+      where: { habitId: payload.habitId, date, userId }
+    }) as { id: string } | null;
+
     await tx.tombstone.create({
       data: {
         userId,
         entity: 'checkin',
-        entityId: payload.id ?? `${payload.habitId}:${payload.date}`,
+        entityId: payload.id ?? existing?.id ?? `${payload.habitId}:${payload.date}`,
         version: payload.version ?? 1
       }
     });
@@ -498,6 +510,20 @@ export class SyncService {
       }
     });
     return true;
+  }
+
+  private resolveHabitDifficulty(existing: ExistingHabitRecord | null, payloadValue?: number): number {
+    if (typeof payloadValue === 'number') {
+      return Math.max(1, Math.min(5, Math.trunc(payloadValue)));
+    }
+    return existing?.difficulty ?? 1;
+  }
+
+  private resolveHabitType(existing: ExistingHabitRecord | null, payloadValue?: string): string {
+    if (typeof payloadValue === 'string') {
+      return payloadValue === 'negative' ? 'negative' : 'positive';
+    }
+    return existing?.type ?? 'positive';
   }
 
   private async tryCreateLog(

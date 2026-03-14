@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from '@/lib/router';
 import { useHabits } from '@/hooks/useHabits';
-import type { Habit, HabitColor, HabitFrequency, HabitSchedule } from '@/types/habit';
+import type { Habit } from '@/types/habit';
+import type { HabitColor, HabitFrequency, HabitSchedule } from '@habbit-runner/shared';
 import { COLORS } from '../components/add-edit-habit.constants';
 import { normalizeSchedule, scheduleFromLegacy } from '@habbit-runner/shared';
+import { calculateScheduledStreak } from '@/lib/habits/schedule';
 import { invokeIfFunction } from '@/lib/callback';
 
 const TARGET_STREAK_OPTIONS = [7, 14, 21, 30, 60, 90, 180, 365];
@@ -20,6 +22,8 @@ export type AddEditHabitModel = {
   isEdit: boolean;
   hasExisting: boolean;
   shouldShowLoading: boolean;
+  showSoftLimitWarning: boolean;
+  acknowledgeSoftLimit: () => void;
   name: string;
   setName: React.Dispatch<React.SetStateAction<string>>;
   description: string;
@@ -40,6 +44,10 @@ export type AddEditHabitModel = {
   increaseTargetStreak: () => void;
   dailyTarget: number;
   setDailyTarget: React.Dispatch<React.SetStateAction<number>>;
+  difficulty: 1 | 2 | 3 | 4 | 5;
+  setDifficulty: React.Dispatch<React.SetStateAction<1 | 2 | 3 | 4 | 5>>;
+  type: 'positive' | 'negative';
+  setType: React.Dispatch<React.SetStateAction<'positive' | 'negative'>>;
   tags: string[];
   tagInput: string;
   setTagInput: React.Dispatch<React.SetStateAction<string>>;
@@ -59,7 +67,7 @@ export type AddEditHabitModel = {
 
 export function useAddEditHabitModel(): AddEditHabitModel {
   const navigate = useNavigate();
-  const params = useParams<{ id?: string }>();
+  const params = useParams();
   const habitId = params.id;
   const { allHabits, addHabit, updateHabit } = useHabits();
   const isEdit = Boolean(habitId);
@@ -77,11 +85,18 @@ export function useAddEditHabitModel(): AddEditHabitModel {
     navigate
   });
 
+  const [hasAcknowledgedLimit, setHasAcknowledgedLimit] = useState(false);
+  const isOverLimitCheck = !isEdit && allHabits.length >= 3 && !allHabits.some(h => calculateScheduledStreak(h, h.completions).current >= 14);
+  const showSoftLimitWarning = isOverLimitCheck && !hasAcknowledgedLimit;
+  const acknowledgeSoftLimit = useCallback(() => setHasAcknowledgedLimit(true), []);
+
   return {
     habitId,
     isEdit,
     hasExisting,
     shouldShowLoading: shouldShowEditLoading(isEdit, hasExisting),
+    showSoftLimitWarning,
+    acknowledgeSoftLimit,
     ...formState,
     ...handlers
   };
@@ -102,6 +117,8 @@ function useHabitFormState(existing?: Habit, isEdit?: boolean) {
   );
   const [targetStreak, setTargetStreak] = useState(getClosestStreakTick(existing?.targetStreak ?? 21));
   const [dailyTarget, setDailyTarget] = useState(existing?.dailyTarget ?? 1);
+  const [difficulty, setDifficulty] = useState<1 | 2 | 3 | 4 | 5>((existing?.difficulty as any) || 1);
+  const [type, setType] = useState<'positive' | 'negative'>(existing?.type || 'positive');
   const [tags, setTags] = useState<string[]>(existing?.tags || []);
   const [tagInput, setTagInput] = useState('');
   const [reminderTime, setReminderTime] = useState(existing?.reminderTime || '');
@@ -124,6 +141,8 @@ function useHabitFormState(existing?: Habit, isEdit?: boolean) {
     );
     setTargetStreak(getClosestStreakTick(existing.targetStreak));
     setDailyTarget(existing.dailyTarget ?? 1);
+    setDifficulty((existing.difficulty as any) || 1);
+    setType(existing.type || 'positive');
     setTags(existing.tags ?? []);
     setTagInput('');
     setReminderTime(existing.reminderTime ?? '');
@@ -168,6 +187,10 @@ function useHabitFormState(existing?: Habit, isEdit?: boolean) {
     setCustomDays,
     targetStreak,
     setTargetStreak,
+    difficulty,
+    setDifficulty,
+    type,
+    setType,
     canDecreaseStreak,
     canIncreaseStreak,
     decreaseTargetStreak,
@@ -204,6 +227,8 @@ function useHabitHandlers({
   tagInput,
   reminderTime,
   reminderEnabled,
+  difficulty,
+  type,
   setErrors,
   setTags,
   setTagInput,
@@ -245,7 +270,9 @@ function useHabitHandlers({
       dailyTarget,
       existing,
       reminderTime,
-      reminderEnabled
+      reminderEnabled,
+      difficulty,
+      type
     });
     if (isEdit && habitId) {
       await updateHabit(habitId, payload);
@@ -374,7 +401,9 @@ function buildHabitPayload({
   dailyTarget,
   existing,
   reminderTime,
-  reminderEnabled
+  reminderEnabled,
+  difficulty,
+  type
 }: {
   name: string;
   description: string;
@@ -389,6 +418,8 @@ function buildHabitPayload({
   existing?: Habit;
   reminderTime: string;
   reminderEnabled: boolean;
+  difficulty: 1 | 2 | 3 | 4 | 5;
+  type: 'positive' | 'negative';
 }): HabitUpsertInput {
   return {
     name: name.trim(),
@@ -400,9 +431,13 @@ function buildHabitPayload({
     customDays,
     targetStreak,
     dailyTarget: Math.max(1, Math.trunc(dailyTarget)),
+    difficulty,
+    type,
     archived: existing?.archived ?? false,
     schedule: schedule ?? scheduleFromLegacy(frequency, customDays),
     reminderTime: reminderTime || undefined,
-    reminderEnabled
+    reminderEnabled,
+    freezeDays: existing?.freezeDays ?? [],
+    sortOrder: existing?.sortOrder ?? 0
   };
 }

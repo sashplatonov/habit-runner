@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useHabits } from '@/hooks/useHabits';
 import { formatAppDate } from '@/lib/i18n';
 import { useNavigate } from '@/lib/router';
@@ -13,7 +13,7 @@ export function Stats() {
 
   const allTags = useMemo(() => {
     const tags = new Set<string>();
-    allHabits.forEach((h) => h.tags.forEach((t) => tags.add(t)));
+    allHabits.forEach((h) => (h.tags || []).forEach((t) => tags.add(t)));
     return Array.from(tags).sort();
   }, [allHabits]);
 
@@ -27,7 +27,7 @@ export function Stats() {
           return false;
         }
       }
-      if (selectedTags.length > 0 && !selectedTags.some((t) => h.tags.includes(t))) {
+      if (selectedTags.length > 0 && !(h.tags || []).some((t) => selectedTags.includes(t))) {
         return false;
       }
       return true;
@@ -87,6 +87,56 @@ export function Stats() {
   const bestStreak = Math.max(...allStats.map(({ stats }) => stats.longestStreak), 0);
   const currentStreaks = allStats.reduce((sum, { stats }) => sum + (stats.currentStreak > 0 ? 1 : 0), 0);
 
+  // Best/Worst Weekday & Investment
+  const weekdayStats = useMemo(() => {
+    const counts = Array(7).fill(0);
+    const allUniqueActiveDays = new Set<string>();
+
+    allHabits.forEach(h => {
+      Object.keys(h.completions).forEach(dateStr => {
+        if ((h.completions[dateStr] ?? 0) >= Math.max(1, h.dailyTarget ?? 1)) {
+          const d = new Date(dateStr);
+          const day = d.getDay(); // 0 = Sun
+          counts[day]++;
+          allUniqueActiveDays.add(dateStr);
+        }
+      });
+    });
+
+    const weekdayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    let best = 1;
+    let worst = 1;
+    for (let i = 0; i < 7; i++) {
+        if (counts[i] > counts[best]) {best = i;}
+        if (counts[i] < counts[worst] && counts[i] > 0) {worst = i;}
+    }
+
+    const yearStart = new Date(new Date().getFullYear(), 0, 1);
+    const daysSinceYearStart = Math.ceil((new Date().getTime() - yearStart.getTime()) / (1000 * 60 * 60 * 24));
+    const investmentPercent = Math.round((allUniqueActiveDays.size / Math.max(1, daysSinceYearStart)) * 100);
+
+    return {
+      bestWeekday: counts[best] > 0 ? weekdayNames[best] : 'N/A',
+      worstWeekday: counts[worst] > 0 ? weekdayNames[worst] : 'N/A',
+      investmentPercent,
+      totalActiveDays: allUniqueActiveDays.size
+    };
+  }, [allHabits]);
+
+  const globalActivityData = useMemo(() => {
+    const data: Array<{ date: string; intensity: number }> = [];
+    const now = new Date();
+    // 12 weeks back (84 days)
+    for (let i = 83; i >= 0; i--) {
+      const d = new Date(now);
+      d.setDate(d.getDate() - i);
+      const key = d.toISOString().split('T')[0];
+      const intensity = allHabits.filter(h => (h.completions[key] ?? 0) >= Math.max(1, h.dailyTarget ?? 1)).length;
+      data.push({ date: key, intensity });
+    }
+    return data;
+  }, [allHabits]);
+
   const toggleTag = (tag: string) => {
     setSelectedTags((prev) => (prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]));
   };
@@ -110,6 +160,11 @@ export function Stats() {
       filteredHabits={filteredHabits}
       sorted={sorted}
       allStats={allStats}
+      bestWeekday={weekdayStats.bestWeekday}
+      worstWeekday={weekdayStats.worstWeekday}
+      investmentPercent={weekdayStats.investmentPercent}
+      totalActiveDays={weekdayStats.totalActiveDays}
+      globalActivityData={globalActivityData}
     />
   );
 }

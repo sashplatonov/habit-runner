@@ -1,4 +1,3 @@
-import React from 'react';
 import {
   ArrowLeftIcon,
   EditIcon,
@@ -30,6 +29,7 @@ type HabitStats = {
   currentStreak: number;
   longestStreak: number;
   completionRate: number;
+  automatismScore: number;
   completedDays: number;
   monthlyData: Array<{ month: string; rate: number }>;
   weeklyData: Array<{ count: number }>;
@@ -228,6 +228,51 @@ function StatCardGrid({ stats, accent }: Pick<HabitDetailViewProps, 'stats' | 'a
   );
 }
 
+
+function AutomatismSection({ score, accent }: { score: number; accent: HabitColorTheme }) {
+  const getLevel = (s: number) => {
+    if (s >= 85) return { label: 'Infallible', color: accent.hex };
+    if (s >= 66) return { label: 'Established', color: accent.hex };
+    if (s >= 40) return { label: 'Growing', color: 'var(--text-foreground)' };
+    return { label: 'Fragile', color: 'var(--text-muted)' };
+  };
+
+  const level = getLevel(score);
+
+  return (
+    <div className="bg-bg-secondary border border-border rounded-xl p-4">
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex flex-col">
+          <span className="text-[10px] font-mono text-muted uppercase tracking-widest">Habit Strength</span>
+          <span className="text-lg font-bold text-foreground">Automatism: {score}%</span>
+        </div>
+        <div 
+          className="px-2 py-0.5 rounded text-[10px] font-mono uppercase font-bold border"
+          style={{ borderColor: level.color, color: level.color }}
+        >
+          {level.label}
+        </div>
+      </div>
+      <div className="h-2 bg-border rounded-full overflow-hidden">
+        <div 
+          className="h-full transition-all duration-1000 ease-out"
+          style={{ 
+            width: `${score}%`, 
+            backgroundColor: accent.hex,
+            boxShadow: `0 0 10px ${accent.glow}`
+          }}
+        />
+      </div>
+      <div className="mt-2 text-[10px] text-muted leading-relaxed font-mono">
+        {score < 66 
+          ? `Approx. ${Math.max(1, 66 - Math.round(score * 0.66))} days more to reach "automatic" state.`
+          : "Habit is deeply ingrained in your routine."
+        }
+      </div>
+    </div>
+  );
+}
+
 function TodayBlock({ dailyTarget, todayCompletionCount, accent }: { dailyTarget: number; todayCompletionCount: number; accent: HabitColorTheme }) {
   return (
     <div className="bg-bg-secondary border border-border rounded-2xl p-4">
@@ -300,9 +345,9 @@ function HeatmapSection({
           <span className="w-2 h-2 rounded border border-border" />
           Missed day
         </span>
-        <span className="uppercase tracking-[0.3em]">Sun-Sat</span>
+        <span className="uppercase tracking-[0.3em]">Mon-Sun</span>
       </div>
-      <div className="overflow-x-auto">
+      <div className="w-full mx-auto lg:max-w-[560px]">
         <HeatmapGrid completions={habit.completions} dailyTarget={dailyTarget} color={habit.color} weeks={26} />
       </div>
     </div>
@@ -462,6 +507,7 @@ export function HabitDetailView({
       />
       <div className="max-w-2xl mx-auto px-4 py-4 space-y-4">
         <StatCardGrid stats={stats} accent={accent} />
+        <AutomatismSection score={stats.automatismScore} accent={accent} />
         <TodayBlock dailyTarget={dailyTarget} todayCompletionCount={todayCompletionCount} accent={accent} />
         <HeatmapSection habit={habit} dailyTarget={dailyTarget} />
         <TargetRingSection stats={stats} habit={habit} accent={accent} />

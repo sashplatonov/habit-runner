@@ -19,6 +19,8 @@ export interface Habit {
   version?: number;
   archived: boolean;
   sortOrder: number;
+  difficulty: 1 | 2 | 3 | 4 | 5;
+  type: 'positive' | 'negative';
   reminderTime?: string;
   reminderEnabled?: boolean;
 }
@@ -29,6 +31,7 @@ export interface HabitStats {
   currentStreak: number;
   longestStreak: number;
   completionRate: number;
+  automatismScore: number;
   weeklyData: { week: string; count: number }[];
   monthlyData: { month: string; rate: number }[];
 }

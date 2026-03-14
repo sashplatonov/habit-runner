@@ -1,4 +1,3 @@
-import React from 'react';
 import {
   TrendingUpIcon,
   ZapIcon,
@@ -61,6 +60,11 @@ type StatsViewProps = {
   filteredHabits: Habit[];
   sorted: HabitStatEntry[];
   allStats: HabitStatEntry[];
+  bestWeekday: string;
+  worstWeekday: string;
+  investmentPercent: number;
+  totalActiveDays: number;
+  globalActivityData: Array<{ date: string; intensity: number }>;
 };
 
 function CustomTooltip({
@@ -169,6 +173,57 @@ function OverviewGrid({
   );
 }
 
+function InvestmentSection({
+  percent,
+  totalDays,
+  bestDay,
+  worstDay
+}: {
+  percent: number;
+  totalDays: number;
+  bestDay: string;
+  worstDay: string;
+}) {
+  return (
+    <div className="bg-bg-secondary border border-border rounded-lg p-4 space-y-4">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-xs font-mono text-muted uppercase tracking-wider">Your Investment</h2>
+          <p className="text-[10px] text-muted mt-1 italic">
+            Cumulative progress across all habits
+          </p>
+        </div>
+        <div className="text-2xl font-mono font-bold text-accent">{percent}%</div>
+      </div>
+      
+      <div className="grid grid-cols-3 gap-2">
+        <div className="p-2 bg-bg-card border border-border rounded-lg text-center">
+            <p className="text-[8px] font-mono text-muted uppercase">Best Day</p>
+            <p className="text-xs font-mono font-bold text-accent-secondary">{bestDay}</p>
+        </div>
+        <div className="p-2 bg-bg-card border border-border rounded-lg text-center">
+            <p className="text-[8px] font-mono text-muted uppercase">Worst Day</p>
+            <p className="text-xs font-mono font-bold text-muted">{worstDay}</p>
+        </div>
+        <div className="p-2 bg-bg-card border border-border rounded-lg text-center">
+            <p className="text-[8px] font-mono text-muted uppercase">Total Active</p>
+            <p className="text-xs font-mono font-bold text-foreground">{totalDays}d</p>
+        </div>
+      </div>
+
+      <div className="h-1.5 bg-border rounded-full overflow-hidden">
+        <div 
+          className="h-full bg-accent transition-all duration-1000" 
+          style={{ width: `${percent}%`, boxShadow: `0 0 10px var(--glow)` }} 
+        />
+      </div>
+      <p className="text-[10px] font-mono text-muted text-center">
+        You were active on {percent}% of days this year. Keep it up!
+      </p>
+    </div>
+  );
+}
+
 function FiltersPanel({
   searchQuery,
   setSearchQuery,
@@ -212,14 +267,14 @@ function FiltersPanel({
 
       <div className="flex items-start gap-2">
         <TagIcon size={14} className="text-muted mt-1 flex-shrink-0" />
-        {allTags.length > 0 ? (
+        {(allTags || []).length > 0 ? (
           <div className="flex flex-wrap gap-1.5">
-            {allTags.map((tag) => (
+            {(allTags || []).map((tag) => (
               <button
                 key={tag}
                 onClick={() => invokeIfFunction(toggleTag, tag)}
                 className={`px-2 py-1 rounded border text-[10px] font-mono transition-colors ${
-                  selectedTags.includes(tag)
+                  (selectedTags || []).includes(tag)
                     ? 'bg-accent/10 border-accent/30 text-accent'
                     : 'bg-bg-card border-border text-muted hover:border-border-hover hover:text-foreground'
                 }`}
@@ -321,7 +376,7 @@ function HabitPerformanceList({
   return (
     <div className="bg-bg-secondary border border-border rounded-lg p-4">
       <h2 className="text-xs font-mono text-muted uppercase tracking-wider mb-3">Habit performance</h2>
-      {sorted.length === 0 ? (
+      {(!sorted || sorted.length === 0) ? (
         <div className="text-center py-8 text-sm text-muted font-mono">No habits match the current filters.</div>
       ) : (
         <div className="space-y-2">
@@ -372,7 +427,7 @@ function WeeklyBreakdown({ allStats }: Pick<StatsViewProps, 'allStats'>) {
     <div className="bg-bg-secondary border border-border rounded-lg p-4">
       <h2 className="text-xs font-mono text-muted uppercase tracking-wider mb-3">Weekly breakdown - last 12 weeks</h2>
       <div className="space-y-2">
-        {allStats.map(({ habit, stats }) => (
+        {(allStats || []).map(({ habit, stats }) => (
           <div key={habit.id} className="flex items-center gap-3">
             <span className="text-sm w-5">{habit.icon}</span>
             <span className="text-[11px] text-muted w-20 truncate font-mono">{habit.name}</span>
@@ -411,6 +466,12 @@ export function StatsView(props: StatsViewProps) {
           totalCompletions={props.totalCompletions}
           currentStreaks={props.currentStreaks}
         />
+        <InvestmentSection
+          percent={props.investmentPercent}
+          totalDays={props.totalActiveDays}
+          bestDay={props.bestWeekday}
+          worstDay={props.worstWeekday}
+        />
         <FiltersPanel
           searchQuery={props.searchQuery}
           setSearchQuery={props.setSearchQuery}
@@ -421,9 +482,42 @@ export function StatsView(props: StatsViewProps) {
           toggleTag={props.toggleTag}
         />
         <DailyRateChart avgRate={props.avgRate} dailyData={props.dailyData} />
+        <GlobalActivityMap data={props.globalActivityData} />
         <MonthlyRateChart habitMonthlyData={props.habitMonthlyData} filteredHabits={props.filteredHabits} />
         <HabitPerformanceList sorted={props.sorted} navigate={props.navigate} />
         <WeeklyBreakdown allStats={props.allStats} />
+      </div>
+    </div>
+  );
+}
+
+function GlobalActivityMap({ data }: { data: Array<{ date: string; intensity: number }> }) {
+  // Simple Intensity Heatmap (GitHub style)
+  return (
+    <div className="bg-bg-secondary border border-border rounded-lg p-4">
+      <h2 className="text-xs font-mono text-muted uppercase tracking-wider mb-4">Focus intensity (last 12 weeks)</h2>
+      <div className="flex flex-wrap gap-1">
+        {(data || []).map((d, i) => {
+          let opacity = 0.05;
+          if (d.intensity > 0) {opacity = 0.2 + (d.intensity * 0.2);}
+          return (
+            <div
+              key={i}
+              title={`${d.date}: ${d.intensity} habits done`}
+              className="w-2.5 h-2.5 rounded-sm bg-accent transition-all duration-300"
+              style={{ opacity: Math.min(1, opacity) }}
+            />
+          );
+        })}
+      </div>
+      <div className="flex items-center justify-between mt-3">
+        <span className="text-[10px] font-mono text-muted">Less focus</span>
+        <div className="flex gap-1">
+          {[0.1, 0.4, 0.7, 1.0].map(o => (
+            <div key={o} className="w-2 h-2 rounded-sm bg-accent" style={{ opacity: o }} />
+          ))}
+        </div>
+        <span className="text-[10px] font-mono text-muted">More focus</span>
       </div>
     </div>
   );

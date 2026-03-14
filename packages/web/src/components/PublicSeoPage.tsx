@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 import { ArrowRightIcon, CheckCircle2Icon } from 'lucide-react';
 import { startOAuthLogin } from '@/lib/auth/oauth';
 import { applyPublicSeo } from '@/lib/seo/publicSeo';
@@ -115,7 +115,10 @@ export function PublicSeoPage({ intent }: PublicSeoPageProps) {
     <div className="min-h-screen bg-white text-slate-900">
       <header className="border-b border-slate-200 bg-white">
         <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-4 py-4 sm:px-6">
-          <a href="/" className="text-sm font-semibold text-slate-900">Habbit Runner</a>
+          <a href="/" className="flex items-center gap-2.5 text-sm font-semibold text-slate-900">
+            <img src="/app-icon.svg" alt="Habbit Runner" className="w-8 h-8 rounded-lg flex-shrink-0 object-contain" />
+            Habbit Runner
+          </a>
           <button
             type="button"
             onClick={startOAuthLogin}

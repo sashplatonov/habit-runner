@@ -6,6 +6,7 @@ import type { HabitSchedule, SyncEntity, SyncOpType } from '@habbit-runner/share
 import { normalizeSchedule, scheduleFromLegacy } from '@habbit-runner/shared';
 import { DEFAULT_USER_ID } from '@/lib/core/config';
 import { generateId } from '@/lib/core/id';
+import { nowSyncISO } from '@habbit-runner/shared';
 
 export type OutboxStatus = 'pending' | 'inflight' | 'failed';
 
@@ -42,6 +43,8 @@ export interface HabitEntity {
   reminderTime?: string | null;
   reminderEnabled: boolean;
   freezeDays: string[];
+  difficulty: 1 | 2 | 3 | 4 | 5;
+  type: 'positive' | 'negative';
 }
 
 export interface CheckinEntity {
@@ -159,6 +162,26 @@ export class HabbitRunnerDb extends Dexie {
           }
         })
       );
+
+    this.version(5)
+      .stores({
+        habits: 'id, userId, updatedAt, version, sortOrder',
+        checkins: 'id, userId, habitId, date, updatedAt, version',
+        tombstones: 'id, userId, entity, entityId, deletedAt',
+        sync_meta: 'id, status',
+        outbox: 'id, userId, entity, type, status'
+      })
+      .upgrade(async (transaction) => {
+        await (transaction as any).checkins.toCollection().modify((record: any) => {
+          if (record.date && record.date.length === 10) {
+            record.date = `${record.date}T00:00:00.000Z`;
+          }
+        });
+        await (transaction as any).habits.toCollection().modify((record: any) => {
+          if (record.difficulty === undefined) {record.difficulty = 1;}
+          if (record.type === undefined) {record.type = 'positive';}
+        });
+      });
   }
 }
 
@@ -185,6 +208,8 @@ export function habitEntityToDomain(entity: HabitEntity): Habit {
       updatedAt: entity.updatedAt,
       version: entity.version,
       archived: entity.archived,
+      difficulty: entity.difficulty ?? 1,
+      type: entity.type ?? 'positive',
       schedule:
         normalizeSchedule(entity.schedule) ??
         scheduleFromLegacy(entity.frequency as Habit['frequency'], entity.customDays)
@@ -214,7 +239,9 @@ export function domainToHabitEntity(habit: Habit): HabitEntity {
     sortOrder: habit.sortOrder ?? Date.parse(habit.createdAt),
     reminderTime: habit.reminderTime ?? null,
     reminderEnabled: habit.reminderEnabled ?? true,
-    freezeDays: habit.freezeDays ?? []
+    freezeDays: habit.freezeDays ?? [],
+    difficulty: habit.difficulty ?? 1,
+    type: habit.type ?? 'positive'
   };
 }
 
@@ -243,7 +270,7 @@ export async function addTombstone(
     entity,
     entityId,
     version,
-    deletedAt: new Date().toISOString()
+    deletedAt: nowSyncISO()
   });
 }
 
@@ -251,10 +278,12 @@ export async function upsertCheckinInDb(
   habitId: string,
   date: string,
   done: boolean,
-  count = 1
-): Promise<void> {
+  count = 1,
+  updatedAt?: string
+): Promise<string> {
   const userId = getCurrentUserId();
   const normalized = date;
+  const ts = updatedAt ?? nowSyncISO();
   const existing = await db.checkins
     .where('habitId')
     .equals(habitId)
@@ -267,19 +296,19 @@ export async function upsertCheckinInDb(
   if (existing) {
     if (!done) {
       await db.checkins.delete(existing.id);
-      return;
+      return ts;
     }
     const normalizedCount = Math.max(1, Math.trunc(count));
     await db.checkins.update(existing.id, {
       done,
       count: normalizedCount,
-      updatedAt: new Date().toISOString(),
+      updatedAt: ts,
       version: Math.max(existing.version, 1) + 1
     });
-    return;
+    return ts;
   }
 
-  if (!done) {return;}
+  if (!done) {return ts;}
   const normalizedCount = Math.max(1, Math.trunc(count));
   await db.checkins.add({
     id: generateId(),
@@ -288,12 +317,13 @@ export async function upsertCheckinInDb(
     date: normalized,
     done,
     count: normalizedCount,
-    updatedAt: new Date().toISOString(),
+    updatedAt: ts,
     version: 1
   });
+  return ts;
 }
 
-export async function deleteCheckinInDb(habitId: string, date: string): Promise<void> {
+export async function deleteCheckinInDb(habitId: string, date: string): Promise<CheckinEntity | undefined> {
   const userId = getCurrentUserId();
   const normalized = date;
   const existing = await db.checkins
@@ -306,7 +336,9 @@ export async function deleteCheckinInDb(habitId: string, date: string): Promise<
     .first();
   if (existing) {
     await db.checkins.delete(existing.id);
+    return existing;
   }
+  return undefined;
 }
 
 export async function enqueueOutboxEntry(entry: OutboxEntry): Promise<void> {
@@ -325,11 +357,11 @@ export function createOutboxEntry(
     entity,
     type,
     payload,
-    clientTime: new Date().toISOString(),
+    clientTime: nowSyncISO(),
     status: 'pending',
     retryCount: 0,
     nextRetryAt: null,
-    createdAt: new Date().toISOString()
+    createdAt: nowSyncISO()
   };
 }
 
@@ -441,17 +473,22 @@ export async function applyPullResponse(
       reminderTime:
         typeof habit.reminderTime === 'string' ? habit.reminderTime : null,
       reminderEnabled: habit.reminderEnabled ?? true,
-      freezeDays: []
+      freezeDays: [],
+      completions: {},
+      difficulty: (habit as any).difficulty ?? 1,
+      type: (habit as any).type ?? 'positive'
     });
   });
 
   const checkinPromises = response.checkins.map(async (checkin) => {
+    const datePart = checkin.date.split('T')[0];
+    const normalizedDate = `${datePart}T00:00:00.000Z`;
     await db.checkins
       .where('habitId')
       .equals(checkin.habitId)
       .filter(
         (record) =>
-          record.date === checkin.date &&
+          record.date === normalizedDate &&
           record.userId === userId &&
           record.id !== checkin.id
       )
@@ -460,7 +497,7 @@ export async function applyPullResponse(
       id: checkin.id,
       userId,
       habitId: checkin.habitId,
-      date: checkin.date,
+      date: normalizedDate,
       done: checkin.done,
       count: Math.max(1, Math.trunc(checkin.count ?? 1)),
       updatedAt: checkin.updatedAt,
@@ -472,7 +509,14 @@ export async function applyPullResponse(
     if (tombstone.entity === 'habit') {
       await removeHabitFromDb(tombstone.entityId);
     } else if (tombstone.entity === 'checkin') {
-      await db.checkins.delete(tombstone.entityId);
+      if (!tombstone.entityId.includes(':')) {
+        await db.checkins.delete(tombstone.entityId);
+      } else {
+        const [habitId, date] = tombstone.entityId.split(':');
+        if (habitId && date) {
+          await deleteCheckinInDb(habitId, date);
+        }
+      }
     }
   });
 

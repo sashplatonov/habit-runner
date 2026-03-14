@@ -1,4 +1,3 @@
-import React from 'react';
 import { PlusIcon, XIcon } from 'lucide-react';
 import { COLORS, DAILY_TARGET_OPTIONS, ICONS, SUGGESTED_TAGS, TARGET_STREAK_OPTIONS } from '../add-edit-habit.constants';
 import type { AddEditHabitModel } from '@/pages/hooks/useAddEditHabitModel';
@@ -25,6 +24,10 @@ export function AddEditHabitPage({ model }: { model: AddEditHabitModel }) {
     setTargetStreak,
     dailyTarget,
     setDailyTarget,
+    difficulty,
+    setDifficulty,
+    type,
+    setType,
     tags,
     tagInput,
     setTagInput,
@@ -39,7 +42,9 @@ export function AddEditHabitPage({ model }: { model: AddEditHabitModel }) {
     schedule,
     setSchedule,
     handleSubmit,
-    handleBack
+    handleBack,
+    showSoftLimitWarning,
+    acknowledgeSoftLimit
   } = model;
   return (
     <div className="min-h-screen bg-bg-primary">
@@ -73,6 +78,16 @@ export function AddEditHabitPage({ model }: { model: AddEditHabitModel }) {
           setDailyTarget={setDailyTarget}
           selectedColor={selectedColor}
         />
+        <DifficultySection
+          difficulty={difficulty}
+          setDifficulty={setDifficulty}
+          selectedColor={selectedColor}
+        />
+        <TypeSection
+          type={type}
+          setType={setType}
+          selectedColor={selectedColor}
+        />
         <TagsSection
           tags={tags}
           tagInput={tagInput}
@@ -88,6 +103,38 @@ export function AddEditHabitPage({ model }: { model: AddEditHabitModel }) {
           setReminderTime={setReminderTime}
         />
       </div>
+
+      {showSoftLimitWarning && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-bg-primary/80 backdrop-blur-sm animate-in fade-in duration-300">
+          <div className="w-full max-w-sm bg-bg-secondary border border-border rounded-3xl p-6 shadow-2xl animate-in zoom-in-95 duration-300">
+            <div className="w-12 h-12 rounded-2xl bg-accent/10 flex items-center justify-center mb-4">
+              <PlusIcon className="text-accent" size={24} />
+            </div>
+            <h3 className="text-xl font-bold text-foreground mb-2">Focus is key</h3>
+            <p className="text-sm text-muted mb-6 leading-relaxed">
+              Research shows that starting with more than 3 habits simultaneously reduces the success rate by 80%. 
+              <br /><br />
+              We recommend reaching a <span className="text-accent font-bold">14-day streak</span> with your current habits before adding more. 
+            </p>
+            <div className="flex flex-col gap-2">
+              <button
+                type="button"
+                onClick={handleBack}
+                className="w-full py-3 rounded-2xl bg-bg-primary border border-border text-sm font-semibold hover:bg-bg-card transition"
+              >
+                Go back & focus
+              </button>
+              <button
+                type="button"
+                onClick={acknowledgeSoftLimit}
+                className="w-full py-3 rounded-2xl text-[10px] font-mono uppercase tracking-widest text-muted hover:text-foreground transition"
+              >
+                I understand, add anyway
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -123,11 +170,26 @@ function IconNameSection({
               className={`w-8 h-8 rounded flex items-center justify-center text-base transition-all ${
                 icon === option ? 'bg-border ring-1' : 'hover:bg-border'
               }`}
-              style={icon === option ? { ringColor: selectedColor.hex } : undefined}
+              style={icon === option ? { boxShadow: `0 0 0 1px ${selectedColor.hex}` } : undefined}
             >
               {option}
             </button>
           ))}
+        </div>
+        <div className="mt-2">
+          <input
+            type="text"
+            value={ICONS.includes(icon) ? '' : icon}
+            onChange={(event) => {
+              const val = event.target.value;
+              // Allow only 1 character/emoji for icon
+              const char = Array.from(val).pop() || '';
+              setIcon(char);
+            }}
+            placeholder="Own..."
+            className="w-full bg-bg-secondary border border-border rounded-lg px-2 py-1.5 text-xs text-center placeholder:text-[10px] focus:outline-none focus:border-accent/50 transition-all font-mono"
+            style={!ICONS.includes(icon) && icon ? { borderColor: selectedColor.hex, boxShadow: `0 0 8px ${selectedColor.hex}40` } : undefined}
+          />
         </div>
       </div>
       <div className="flex-1 space-y-3">
@@ -280,6 +342,86 @@ function TargetSection({
     </>
   );
 }
+
+function DifficultySection({
+  difficulty,
+  setDifficulty,
+  selectedColor
+}: {
+  difficulty: number;
+  setDifficulty: AddEditHabitModel['setDifficulty'];
+  selectedColor: AddEditHabitModel['selectedColor'];
+}) {
+  return (
+    <div>
+      <label className="block text-[10px] font-mono text-muted uppercase tracking-wider mb-2">
+        Difficulty
+      </label>
+      <div className="flex gap-2">
+        {[1, 2, 3, 4, 5].map((val) => (
+          <button
+            key={val}
+            type="button"
+            onClick={() => setDifficulty(val as any)}
+            className={`flex-1 py-2 rounded-xl border text-xs font-mono transition-all duration-200 ${
+              difficulty === val
+                ? 'border-accent/50 bg-accent/10 text-accent ring-1 ring-accent/30'
+                : 'border-border bg-bg-secondary text-muted hover:border-border-hover'
+            }`}
+            style={difficulty === val ? { borderColor: selectedColor.hex, color: selectedColor.hex, backgroundColor: `${selectedColor.hex}15` } : undefined}
+          >
+            {val === 1 ? 'Easy' : val === 5 ? 'Hard' : val}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function TypeSection({
+  type,
+  setType,
+  selectedColor
+}: {
+  type: 'positive' | 'negative';
+  setType: AddEditHabitModel['setType'];
+  selectedColor: AddEditHabitModel['selectedColor'];
+}) {
+  return (
+    <div>
+      <label className="block text-[10px] font-mono text-muted uppercase tracking-wider mb-2">
+        Habit Type
+      </label>
+      <div className="flex gap-2 p-1 bg-bg-secondary rounded-xl border border-border">
+        <button
+          type="button"
+          onClick={() => setType('positive')}
+          className={`flex-1 py-2.5 rounded-lg text-xs font-semibold transition-all duration-200 ${
+            type === 'positive'
+              ? 'bg-bg-primary shadow-sm text-foreground'
+              : 'text-muted hover:text-foreground'
+          }`}
+          style={type === 'positive' ? { borderLeft: `2px solid ${selectedColor.hex}` } : undefined}
+        >
+          I want to <span className="text-accent" style={{ color: selectedColor.hex }}>DO</span> this
+        </button>
+        <button
+          type="button"
+          onClick={() => setType('negative')}
+          className={`flex-1 py-2.5 rounded-lg text-xs font-semibold transition-all duration-200 ${
+            type === 'negative'
+              ? 'bg-bg-primary shadow-sm text-foreground'
+              : 'text-muted hover:text-foreground'
+          }`}
+          style={type === 'negative' ? { borderLeft: `2px solid ${selectedColor.hex}` } : undefined}
+        >
+          I want to <span className="text-red-500">STOP</span> this
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function TagsSection({
   tags,
   tagInput,

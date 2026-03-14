@@ -68,10 +68,17 @@ export function useSyncEngine(enabled = true): SyncEngineState {
     }
     syncNow();
     const interval = window.setInterval(syncNow, 30_000);
+    const onVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        syncNow();
+      }
+    };
     window.addEventListener('online', syncNow);
+    window.addEventListener('visibilitychange', onVisibilityChange);
     return () => {
       window.clearInterval(interval);
       window.removeEventListener('online', syncNow);
+      window.removeEventListener('visibilitychange', onVisibilityChange);
     };
   }, [enabled, syncNow]);
 

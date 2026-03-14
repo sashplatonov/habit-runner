@@ -8,6 +8,7 @@ import type { Habit } from '@/types/habit';
 import type { OnboardingTemplate } from '@/components/Onboarding';
 import type { HabitUpsertInput } from '@/pages/hooks/useAddEditHabitModel';
 import { isScheduledForDate, resolveHabitSchedule } from '@/lib/habits/schedule';
+import { formatDate as formatHabitDate, getDaysSinceLastCompletion } from '@/lib/habits/habitStats';
 
 type UndoPushAction = {
   message: string;
@@ -15,17 +16,29 @@ type UndoPushAction = {
   onUndo: () => void | Promise<void>;
 };
 
+const FILTER_STORAGE_KEY = 'hr_dashboard_filter_v1';
+
 export function useDashboardModel() {
   const navigate = useNavigate();
   const { habits, setCompletionCount, addHabit, updateHabit, getTodayCompletionRate, formatDate } = useHabits();
   const { push } = useUndo();
   const [addingTemplate, setAddingTemplate] = useState<string | null>(null);
-  const [filter, setFilter] = useState<'all' | 'pending' | 'done'>('all');
+  const [filter, setFilter] = useState<'all' | 'pending' | 'done'>(() => {
+    if (typeof window === 'undefined') {
+      return 'pending';
+    }
+    const stored = localStorage.getItem(FILTER_STORAGE_KEY);
+    return (stored === 'all' || stored === 'pending' || stored === 'done') ? stored : 'pending';
+  });
+
+  useEffect(() => {
+    localStorage.setItem(FILTER_STORAGE_KEY, filter);
+  }, [filter]);
+
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const todayDate = new Date();
   todayDate.setHours(0, 0, 0, 0);
   const today = formatDate(todayDate);
-  const todayKey = today;
   const todayRate = getTodayCompletionRate();
   const completedToday = habits.filter((habit) => (habit.completions[today] ?? 0) >= Math.max(1, habit.dailyTarget ?? 1)).length;
   const totalActive = habits.length;
@@ -45,8 +58,8 @@ export function useDashboardModel() {
     }
   });
 
-  const dragHandlers = useDragHandlers(habits, updateHabit);
-  const data = useDashboardData(habits, filter, selectedTags, todayDate, todayKey);
+  const [sortMode, setSortMode] = useState<'custom' | 'smart'>('custom');
+  const data = useDashboardData(habits, filter, selectedTags, todayDate, sortMode);
   const handlers = useDashboardHandlers({
     addHabit,
     navigate,
@@ -63,6 +76,13 @@ export function useDashboardModel() {
   const allTags = data.allTags;
   const filtered = data.filtered;
   const overallStreak = data.overallStreak;
+  const daysSinceLastCompletion = getDaysSinceLastCompletion(habits, todayDate);
+  const [reorderMode, setReorderMode] = useState(false);
+  const toggleReorderMode = useCallback(() => {
+    setReorderMode((prev) => !prev);
+  }, []);
+  const { applyHabitsOrder, moveHabit } = useHabitOrderingCallbacks(habits, filtered, updateHabit);
+  const dragHandlers = useDragHandlers(habits, applyHabitsOrder);
 
   return {
     habits,
@@ -70,6 +90,7 @@ export function useDashboardModel() {
     reminders: remindersHook.reminders,
     dropHint: dragHandlers.dropHint,
     dragOverHabitId: dragHandlers.dragOverHabitId,
+    draggedHabitId: dragHandlers.draggedHabitId,
     filter,
     allTags,
     selectedTags,
@@ -91,7 +112,13 @@ export function useDashboardModel() {
     handleDragStart: dragHandlers.handleDragStart,
     handleDragOver: dragHandlers.handleDragOver,
     handleDrop: dragHandlers.handleDrop,
-    handleDragEnd: dragHandlers.handleDragEnd
+    handleDragEnd: dragHandlers.handleDragEnd,
+    reorderMode,
+    toggleReorderMode,
+    moveHabit,
+    sortMode,
+    setSortMode,
+    daysSinceLastCompletion
   };
 }
 
@@ -100,18 +127,20 @@ function useDashboardData(
   filter: 'all' | 'pending' | 'done',
   selectedTags: string[],
   today: Date,
-  todayKey: string
+  sortMode: 'custom' | 'smart'
 ) {
   const allTags = useMemo(() => {
     const tags = new Set<string>();
-    habits.forEach((habit) => habit.tags.forEach((tag) => tags.add(tag)));
+    habits.forEach((habit) => (habit.tags || []).forEach((tag) => tags.add(tag)));
     return Array.from(tags).sort();
   }, [habits]);
+
+  const todayKey = formatHabitDate(today);
 
   const filtered = useMemo(
     () =>
       habits.filter((habit) => {
-        if (selectedTags.length > 0 && !selectedTags.some((tag) => habit.tags.includes(tag))) {
+        if (selectedTags.length > 0 && !(habit.tags || []).some((tag) => selectedTags.includes(tag))) {
           return false;
         }
         const schedule = resolveHabitSchedule(habit);
@@ -124,8 +153,18 @@ function useDashboardData(
           return scheduledToday && completedToday;
         }
         return true;
+      }).sort((a, b) => {
+        if (sortMode === 'custom') {
+          return (a.sortOrder ?? 0) - (b.sortOrder ?? 0);
+        }
+        // Smart Sort: lower difficulty first (Task 4)
+        // Secondary criteria: completions (not strictly defined but good for focus)
+        if (a.difficulty !== b.difficulty) {
+          return (a.difficulty ?? 1) - (b.difficulty ?? 1);
+        }
+        return (a.sortOrder ?? 0) - (b.sortOrder ?? 0);
       }),
-    [habits, filter, selectedTags, today, todayKey]
+    [habits, filter, selectedTags, today, todayKey, sortMode]
   );
 
   const overallStreak = useMemo(() => {
@@ -171,7 +210,7 @@ function useDashboardHandlers({
   addHabit: (input: HabitUpsertInput) => Promise<string>;
   navigate: (to: string) => void;
   push: (action: UndoPushAction) => void;
-  setCompletionCount: (habitId: string, date: string, count: number) => Promise<void>;
+  setCompletionCount: (habitId: string, date: string, count: number) => Promise<unknown>;
   setSelectedTags: Dispatch<SetStateAction<string[]>>;
   habits: Habit[];
   setAddingTemplate: Dispatch<SetStateAction<string | null>>;
@@ -199,7 +238,12 @@ function useDashboardHandlers({
           frequency: template.frequency,
           customDays: template.customDays,
           targetStreak: template.targetStreak,
-          dailyTarget: 1
+          dailyTarget: 1,
+          difficulty: 1,
+          type: 'positive',
+          freezeDays: [],
+          archived: false,
+          sortOrder: habits.length > 0 ? Math.max(...habits.map((h) => h.sortOrder)) + 1 : 0
         });
         navigate(`/habit/${newId}`);
       } finally {
@@ -235,18 +279,15 @@ function useDashboardHandlers({
       return;
     }
     const escape = (value: string) => `"${value.replace(/"/g, '""')}"`;
-    const rows = habits.map((habit) => {
-      const completionDates = Object.entries(habit.completions)
-        .filter(([, count]) => count > 0)
-        .map(([date, count]) => ({ date, count }));
-      return [
-        escape(habit.name),
-        escape(habit.description),
-        escape(habit.tags.join('|')),
-        escape(JSON.stringify(completionDates))
-      ].join(',');
+    const rows: string[] = [];
+    habits.forEach((habit) => {
+      Object.entries(habit.completions).forEach(([date, count]) => {
+        if (count > 0) {
+          rows.push([date, escape(habit.name), '1'].join(','));
+        }
+      });
     });
-    const csv = ['name,description,tags,completions', ...rows].join('\n');
+    const csv = ['Date,Habit Name,Completed', ...rows].join('\n');
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
@@ -268,25 +309,10 @@ function useDashboardHandlers({
   };
 }
 
-function useDragHandlers(habits: Habit[], updateHabit: (id: string, data: Partial<Habit>) => Promise<void>) {
+function useDragHandlers(habits: Habit[], applyOrder: (orderedHabits: Habit[]) => Promise<void>) {
   const [draggedHabitId, setDraggedHabitId] = useState<string | null>(null);
   const [dragOverHabitId, setDragOverHabitId] = useState<string | null>(null);
   const [dropHint, setDropHint] = useState<{ habitId: string; position: 'above' | 'below' } | null>(null);
-
-  const applySortOrder = useCallback(
-    async (orderedHabits: Habit[]) => {
-      await Promise.all(
-        orderedHabits.map((habit, index) => {
-          const targetOrder = index;
-          if (habit.sortOrder === targetOrder) {
-            return Promise.resolve();
-          }
-          return updateHabit(habit.id, { sortOrder: targetOrder });
-        })
-      );
-    },
-    [updateHabit]
-  );
 
   const handleDragStart = useCallback((event: DragEvent<HTMLDivElement>, habitId: string) => {
     event.dataTransfer?.setData('text/plain', habitId);
@@ -347,13 +373,13 @@ function useDragHandlers(habits: Habit[], updateHabit: (id: string, data: Partia
       }
       insertIndex = Math.max(0, Math.min(ordered.length, insertIndex));
       ordered.splice(insertIndex, 0, moved);
-      await applySortOrder(ordered);
+      await applyOrder(ordered);
 
       setDragOverHabitId(null);
       setDraggedHabitId(null);
       setDropHint(null);
     },
-    [applySortOrder, draggedHabitId, habits, dropHint]
+    [applyOrder, draggedHabitId, habits, dropHint]
   );
 
   const handleDragEnd = useCallback(() => {
@@ -368,8 +394,59 @@ function useDragHandlers(habits: Habit[], updateHabit: (id: string, data: Partia
     handleDragStart,
     handleDragOver,
     handleDrop,
-    handleDragEnd
+    handleDragEnd,
+    draggedHabitId
   };
+}
+
+function useHabitOrderingCallbacks(
+  habits: Habit[],
+  filtered: Habit[],
+  updateHabit: (id: string, data: Partial<Habit>) => Promise<void>
+) {
+  const applyHabitsOrder = useCallback(
+    async (orderedHabits: Habit[]) => {
+      await Promise.all(
+        orderedHabits.map((habit, index) => {
+          const targetOrder = index;
+          if (habit.sortOrder === targetOrder) {
+            return Promise.resolve();
+          }
+          return updateHabit(habit.id, { sortOrder: targetOrder });
+        })
+      );
+    },
+    [updateHabit]
+  );
+
+  const moveHabit = useCallback(
+    async (habitId: string, direction: 'up' | 'down') => {
+      const currentIndex = filtered.findIndex((habit) => habit.id === habitId);
+      if (currentIndex === -1) {
+        return;
+      }
+      const neighbor = filtered[direction === 'up' ? currentIndex - 1 : currentIndex + 1];
+      if (!neighbor) {
+        return;
+      }
+      const ordered = [...habits];
+      const sourceIndex = ordered.findIndex((habit) => habit.id === habitId);
+      const targetIndex = ordered.findIndex((habit) => habit.id === neighbor.id);
+      if (sourceIndex === -1 || targetIndex === -1) {
+        return;
+      }
+      const [moved] = ordered.splice(sourceIndex, 1);
+      let insertIndex = direction === 'down' ? targetIndex + 1 : targetIndex;
+      if (sourceIndex < insertIndex) {
+        insertIndex = Math.max(0, insertIndex - 1);
+      }
+      ordered.splice(insertIndex, 0, moved);
+      await applyHabitsOrder(ordered);
+    },
+    [applyHabitsOrder, filtered, habits]
+  );
+
+  return { applyHabitsOrder, moveHabit };
 }
 
 function useReminderTracker(
@@ -431,7 +508,7 @@ function useReminderTracker(
                 ...prev,
                 {
                   habitId: habit.id,
-                  time: habit.reminderTime,
+                  time: habit.reminderTime!,
                   message: `Reminder: ${habit.name} (${habit.reminderTime})`
                 }
               ]

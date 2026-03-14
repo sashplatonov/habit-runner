@@ -20,6 +20,8 @@
   "dependencies": {
     "@habbit-runner/shared": "*",
     "@sindresorhus/slugify": "^3.0.0",
+    "@types/canvas-confetti": "^1.9.0",
+    "canvas-confetti": "^1.9.4",
     "dexie": "^4.3.0",
     "lucide-react": "0.577.0",
     "nanoid": "^5.1.6",
@@ -28,8 +30,8 @@
     "recharts": "^3.8.0"
   },
   "optionalDependencies": {
-    "@rollup/rollup-linux-x64-musl": "4.59.0",
-    "@rollup/rollup-linux-arm64-musl": "4.59.0"
+    "@rollup/rollup-linux-arm64-musl": "4.59.0",
+    "@rollup/rollup-linux-x64-musl": "4.59.0"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.1",
