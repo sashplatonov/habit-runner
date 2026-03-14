@@ -9,7 +9,7 @@ import {
   SunIcon,
   LogOutIcon
 } from 'lucide-react';
-import { Link, useLocation } from '@/lib/router';
+import { Link, useLocation, useNavigate } from '@/lib/router';
 import { THEMES, type ThemeId } from '@/hooks/useTheme';
 
 interface BottomNavProps {
@@ -83,6 +83,7 @@ function ThemePanel({ theme, onThemeChange, onLogout, onClose }: ThemePanelProps
 export function BottomNav({ theme, onThemeChange, onLogout }: BottomNavProps) {
   const [isThemeOpen, setIsThemeOpen] = useState(false);
   const themeRef = useRef<HTMLDivElement>(null);
+  const navigate = useNavigate();
   const location = useLocation();
   const isHome = location.pathname === '/';
   const isStats = location.pathname === '/stats';
@@ -139,9 +140,16 @@ export function BottomNav({ theme, onThemeChange, onLogout }: BottomNavProps) {
 
       <button
         type="button"
-        disabled
-        className="flex-1 flex flex-col items-center justify-center gap-1 text-muted opacity-40"
-        aria-label="Search (coming soon)"
+        onClick={() => {
+          if (location.pathname !== '/') {
+            navigate('/#habit-search');
+          }
+          setTimeout(() => {
+            document.getElementById('habit-search')?.focus();
+          }, 100);
+        }}
+        className="flex-1 flex flex-col items-center justify-center gap-1 text-muted hover:text-accent transition-colors"
+        aria-label="Search habits"
       >
         <div className="w-8 h-8 flex items-center justify-center rounded-[10px]">
           <SearchIcon size={18} />
