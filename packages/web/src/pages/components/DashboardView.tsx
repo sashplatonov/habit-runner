@@ -317,15 +317,15 @@ function FilterBar({
           </span>
         </div>
         <div className="py-2.5 flex items-center gap-1.5 overflow-x-auto no-scrollbar">
-          {allTags.length > 0 ? (
+          {(allTags || []).length > 0 ? (
             <>
-              {allTags.map((tag) => (
+              {(allTags || []).map((tag) => (
                 <button
                   key={tag}
                   type="button"
                   onClick={() => invokeIfFunction(toggleTag, tag)}
                   className={`text-[10px] font-mono px-2 py-1 rounded border whitespace-nowrap transition-colors ${
-                    selectedTags.includes(tag)
+                    (selectedTags || []).includes(tag)
                       ? 'bg-accent/10 border-accent/30 text-accent'
                       : 'bg-bg-secondary border-border text-muted hover:text-foreground hover:border-border-hover'
                   }`}

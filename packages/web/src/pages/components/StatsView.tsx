@@ -267,14 +267,14 @@ function FiltersPanel({
 
       <div className="flex items-start gap-2">
         <TagIcon size={14} className="text-muted mt-1 flex-shrink-0" />
-        {allTags.length > 0 ? (
+        {(allTags || []).length > 0 ? (
           <div className="flex flex-wrap gap-1.5">
-            {allTags.map((tag) => (
+            {(allTags || []).map((tag) => (
               <button
                 key={tag}
                 onClick={() => invokeIfFunction(toggleTag, tag)}
                 className={`px-2 py-1 rounded border text-[10px] font-mono transition-colors ${
-                  selectedTags.includes(tag)
+                  (selectedTags || []).includes(tag)
                     ? 'bg-accent/10 border-accent/30 text-accent'
                     : 'bg-bg-card border-border text-muted hover:border-border-hover hover:text-foreground'
                 }`}
@@ -376,7 +376,7 @@ function HabitPerformanceList({
   return (
     <div className="bg-bg-secondary border border-border rounded-lg p-4">
       <h2 className="text-xs font-mono text-muted uppercase tracking-wider mb-3">Habit performance</h2>
-      {sorted.length === 0 ? (
+      {(!sorted || sorted.length === 0) ? (
         <div className="text-center py-8 text-sm text-muted font-mono">No habits match the current filters.</div>
       ) : (
         <div className="space-y-2">
@@ -427,7 +427,7 @@ function WeeklyBreakdown({ allStats }: Pick<StatsViewProps, 'allStats'>) {
     <div className="bg-bg-secondary border border-border rounded-lg p-4">
       <h2 className="text-xs font-mono text-muted uppercase tracking-wider mb-3">Weekly breakdown - last 12 weeks</h2>
       <div className="space-y-2">
-        {allStats.map(({ habit, stats }) => (
+        {(allStats || []).map(({ habit, stats }) => (
           <div key={habit.id} className="flex items-center gap-3">
             <span className="text-sm w-5">{habit.icon}</span>
             <span className="text-[11px] text-muted w-20 truncate font-mono">{habit.name}</span>
@@ -497,7 +497,7 @@ function GlobalActivityMap({ data }: { data: Array<{ date: string; intensity: nu
     <div className="bg-bg-secondary border border-border rounded-lg p-4">
       <h2 className="text-xs font-mono text-muted uppercase tracking-wider mb-4">Focus intensity (last 12 weeks)</h2>
       <div className="flex flex-wrap gap-1">
-        {data.map((d, i) => {
+        {(data || []).map((d, i) => {
           let opacity = 0.05;
           if (d.intensity > 0) {opacity = 0.2 + (d.intensity * 0.2);}
           return (

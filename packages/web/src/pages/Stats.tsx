@@ -13,7 +13,7 @@ export function Stats() {
 
   const allTags = useMemo(() => {
     const tags = new Set<string>();
-    allHabits.forEach((h) => h.tags.forEach((t) => tags.add(t)));
+    allHabits.forEach((h) => (h.tags || []).forEach((t) => tags.add(t)));
     return Array.from(tags).sort();
   }, [allHabits]);
 
@@ -27,7 +27,7 @@ export function Stats() {
           return false;
         }
       }
-      if (selectedTags.length > 0 && !selectedTags.some((t) => h.tags.includes(t))) {
+      if (selectedTags.length > 0 && !(h.tags || []).some((t) => selectedTags.includes(t))) {
         return false;
       }
       return true;

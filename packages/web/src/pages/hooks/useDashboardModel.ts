@@ -118,7 +118,7 @@ function useDashboardData(
 ) {
   const allTags = useMemo(() => {
     const tags = new Set<string>();
-    habits.forEach((habit) => habit.tags.forEach((tag) => tags.add(tag)));
+    habits.forEach((habit) => (habit.tags || []).forEach((tag) => tags.add(tag)));
     return Array.from(tags).sort();
   }, [habits]);
 
@@ -127,7 +127,7 @@ function useDashboardData(
   const filtered = useMemo(
     () =>
       habits.filter((habit) => {
-        if (selectedTags.length > 0 && !selectedTags.some((tag) => habit.tags.includes(tag))) {
+        if (selectedTags.length > 0 && !(habit.tags || []).some((tag) => selectedTags.includes(tag))) {
           return false;
         }
         const schedule = resolveHabitSchedule(habit);
