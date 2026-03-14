@@ -1,5 +1,6 @@
 import { normalizeSchedule, scheduleFromLegacy } from '@habbit-runner/shared';
-import type { Habit, HabitSchedule } from '@/types/habit';
+import type { HabitSchedule } from '@habbit-runner/shared';
+import type { Habit } from '@/types/habit';
 
 const DAY_KEY_FORMAT = (date: Date) => date.toISOString().split('T')[0];
 
@@ -92,13 +93,16 @@ export function countCompletedDaysInRange(
   return count;
 }
 
-export type ScheduleDayStatus = 'scheduled' | 'unscheduled';
+export type ScheduleDayStatus = 'scheduled' | 'unscheduled' | 'frozen';
 
 export function resolveHabitSchedule(habit: Habit): HabitSchedule {
   return normalizeSchedule(habit.schedule) ?? scheduleFromLegacy(habit.frequency, habit.customDays);
 }
 
 export function getScheduleStatusForDate(habit: Habit, date: Date): ScheduleDayStatus {
+  if (habit.freezeDays?.includes(DAY_KEY_FORMAT(date))) {
+    return 'frozen';
+  }
   const schedule = resolveHabitSchedule(habit);
   return isScheduledForDate(schedule, date) ? 'scheduled' : 'unscheduled';
 }
@@ -268,11 +272,11 @@ function calculateDailyStreak(
   let running = 0;
   const iterator = new Date(start);
   while (iterator <= cursor) {
-    if (!isScheduledForDate(schedule, iterator)) {
+    const key = DAY_KEY_FORMAT(iterator);
+    if (!isScheduledForDate(schedule, iterator) || habit.freezeDays?.includes(key)) {
       iterator.setDate(iterator.getDate() + 1);
       continue;
     }
-    const key = DAY_KEY_FORMAT(iterator);
     if ((completions[key] ?? 0) >= dailyTarget) {
       running += 1;
     } else {
@@ -285,11 +289,11 @@ function calculateDailyStreak(
   let current = 0;
   const backward = new Date(cursor);
   while (backward >= start) {
-    if (!isScheduledForDate(schedule, backward)) {
+    const key = DAY_KEY_FORMAT(backward);
+    if (!isScheduledForDate(schedule, backward) || habit.freezeDays?.includes(key)) {
       backward.setDate(backward.getDate() - 1);
       continue;
     }
-    const key = DAY_KEY_FORMAT(backward);
     if ((completions[key] ?? 0) >= dailyTarget) {
       current += 1;
       backward.setDate(backward.getDate() - 1);

@@ -156,3 +156,41 @@ export function buildMonthlyCompletionRates(
 
   return data;
 }
+
+export function getDaysSinceLastCompletion(
+  habits: { completions: Record<string, number>; dailyTarget: number }[],
+  referenceDate = new Date()
+): number {
+  if (habits.length === 0) return 0;
+
+  const todayStr = formatDate(referenceDate);
+  const allCompletions: Set<string> = new Set();
+  
+  habits.forEach((h) => {
+    const target = Math.max(1, h.dailyTarget ?? 1);
+    Object.keys(h.completions).forEach((dateKey) => {
+      if ((h.completions[dateKey] ?? 0) >= target && dateKey < todayStr) {
+        allCompletions.add(dateKey);
+      }
+    });
+  });
+
+  if (allCompletions.size === 0) {
+    // There are no past completions - don't show "comeback" banner for totally new users
+    return 0;
+  }
+
+  const sortedDates = Array.from(allCompletions).sort((a, b) => b.localeCompare(a));
+  const mostRecentStr = sortedDates[0];
+  
+  const mostRecentDate = new Date(mostRecentStr);
+  mostRecentDate.setHours(0, 0, 0, 0);
+  const refDate = new Date(referenceDate);
+  refDate.setHours(0, 0, 0, 0);
+  
+  const diffTime = Math.abs(refDate.getTime() - mostRecentDate.getTime());
+  const diffDays = Math.floor(diffTime / MS_PER_DAY);
+  
+  return diffDays;
+}
+

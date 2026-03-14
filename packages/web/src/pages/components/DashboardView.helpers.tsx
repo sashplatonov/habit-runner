@@ -139,14 +139,19 @@ export function HabitRow({
   const { current: streak } = calculateScheduledStreak(habit, habit.completions);
   const last7 = buildLastWeek(habit.completions, target);
   const completionRate = calculateScheduledCompletionRate(habit, habit.completions);
+  const isFrozen = status === 'frozen';
   const toggleButtonClass = completed
     ? `${accent.bgClass} ${accent.borderClass}`
     : scheduledToday
       ? 'border-border-hover hover:border-muted'
-      : 'border border-dashed border-border/40 text-muted hover:border-border';
+      : isFrozen
+        ? 'border-border bg-bg-secondary text-muted'
+        : 'border border-dashed border-border/40 text-muted hover:border-border';
   const toggleButtonTitle = scheduledToday
     ? `Mark ${habit.name} as ${completed ? 'incomplete' : 'complete'}`
-    : `Manual completion for ${habit.name}`;
+    : isFrozen
+      ? `Frozen today`
+      : `Manual completion for ${habit.name}`;
 
   return (
     <HabitRowCard
@@ -162,6 +167,7 @@ export function HabitRow({
       dropHintPosition={dropHintPosition}
       completed={completed}
       scheduledToday={scheduledToday}
+      isFrozen={isFrozen}
       accent={accent}
       streak={streak}
       last7={last7}
@@ -181,6 +187,7 @@ type HabitRowCardProps = {
   habit: Habit;
   completed: boolean;
   scheduledToday: boolean;
+  isFrozen: boolean;
   accent: HabitColorTheme;
   streak: number;
   last7: boolean[];
@@ -207,6 +214,7 @@ function HabitRowCard({
   habit,
   completed,
   scheduledToday,
+  isFrozen,
   accent,
   streak,
   last7,
@@ -256,9 +264,9 @@ function HabitRowCard({
           onToggle();
         }
       }}
-      className={`group flex items-stretch bg-bg-secondary border border-border rounded-xl overflow-hidden hover:border-border-hover transition-all duration-200 cursor-pointer transform ${dropTransformClass} ${dragTransformClass} ${
+      className={`group flex items-stretch border rounded-xl overflow-hidden hover:border-border-hover transition-all duration-200 cursor-pointer transform ${dropTransformClass} ${dragTransformClass} ${
         isDropTarget ? 'border-accent/60 bg-accent/5' : ''
-      }`}
+      } ${isFrozen ? 'bg-bg-card opacity-80 border-border/50' : 'bg-bg-secondary border-border'}`}
     >
       <div
         className="w-1 self-stretch flex-shrink-0 rounded-l-xl"
@@ -274,6 +282,7 @@ function HabitRowCard({
           accent={accent}
           completed={completed}
           scheduledToday={scheduledToday}
+          isFrozen={isFrozen}
           streak={streak}
           last7={last7}
           onDetail={onDetail}
@@ -295,6 +304,7 @@ function HabitRowCard({
         )}
         <HabitRowToggleButton
           completed={completed}
+          isFrozen={isFrozen}
           accent={accent}
           toggleButtonClass={toggleButtonClass}
           toggleButtonTitle={toggleButtonTitle}
@@ -310,6 +320,7 @@ type HabitRowInfoPaneProps = {
   accent: HabitColorTheme;
   completed: boolean;
   scheduledToday: boolean;
+  isFrozen: boolean;
   streak: number;
   last7: boolean[];
   onDetail: () => void;
@@ -320,6 +331,7 @@ function HabitRowInfoPane({
   accent,
   completed,
   scheduledToday,
+  isFrozen,
   streak,
   last7,
   onDetail
@@ -341,8 +353,9 @@ function HabitRowInfoPane({
         onClick={onDetail}
         className="flex flex-col flex-1 min-w-0 text-left gap-1 overflow-hidden"
       >
-        <div className={`text-sm font-semibold ${completed ? 'text-muted line-through' : 'text-foreground'} truncate`}>
+        <div className={`text-sm font-semibold ${completed ? 'text-muted line-through' : 'text-foreground'} truncate flex items-center gap-2`}>
           {habit.name}
+          {isFrozen && <span title="Frozen today" className="text-[10px] opacity-70">🧊</span>}
         </div>
         <div className="flex items-center gap-2 mt-1">
           {streak > 0 && (
@@ -352,8 +365,11 @@ function HabitRowInfoPane({
             </div>
           )}
           <MiniBars last7={last7} accentHex={accent.hex} />
-          {!scheduledToday && (
+          {!scheduledToday && !isFrozen && (
             <span className="text-[10px] font-mono uppercase tracking-[0.3em] text-muted">Not scheduled today</span>
+          )}
+          {isFrozen && (
+            <span className="text-[10px] font-mono uppercase tracking-[0.3em] text-accent-secondary">Frozen</span>
           )}
         </div>
       </button>
@@ -363,6 +379,7 @@ function HabitRowInfoPane({
 
 type HabitRowToggleButtonProps = {
   completed: boolean;
+  isFrozen: boolean;
   accent: HabitColorTheme;
   toggleButtonClass: string;
   toggleButtonTitle: string;
@@ -373,6 +390,7 @@ const CONFETTI_COLORS = ['var(--accent)', 'var(--accent-secondary)', '#fff', 'va
 
 function HabitRowToggleButton({
   completed,
+  isFrozen,
   accent,
   toggleButtonClass,
   toggleButtonTitle,
@@ -428,14 +446,19 @@ function HabitRowToggleButton({
       <button
         type="button"
         onClick={handleClick}
+        disabled={isFrozen}
         className={`w-9 h-9 rounded-xl border-[1.5px] flex items-center justify-center transition-all duration-200 ${toggleButtonClass} ${
           animating ? 'animate-check-pulse animate-glow-burst' : ''
-        }`}
-        style={completed ? { boxShadow: `0 0 12px ${accent.glow}` } : undefined}
+        } ${isFrozen ? 'cursor-not-allowed opacity-60' : ''}`}
+        style={completed && !isFrozen ? { boxShadow: `0 0 12px ${accent.glow}` } : undefined}
         aria-label={toggleButtonTitle}
         title={toggleButtonTitle}
       >
-        {completed && <CheckIcon size={14} className={accent.textClass} strokeWidth={3} />}
+        {isFrozen ? (
+          <span className="text-[12px] opacity-80" aria-label="Frozen">🧊</span>
+        ) : (
+          completed && <CheckIcon size={14} className={accent.textClass} strokeWidth={3} />
+        )}
       </button>
     </div>
   );

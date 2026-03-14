@@ -30,6 +30,7 @@ type DashboardViewProps = {
   totalActive: number;
   dateStr: string;
   overallStreak: number;
+  daysSinceLastCompletion: number;
   setFilter: (value: 'all' | 'pending' | 'done') => void;
   setSelectedTags: (tags: string[]) => void;
   toggleTag: (tag: string) => void;
@@ -53,6 +54,7 @@ function DashboardHero({
   completedToday,
   totalActive,
   overallStreak,
+  daysSinceLastCompletion,
   handleExport,
   reorderMode,
   toggleReorderMode
@@ -63,6 +65,7 @@ function DashboardHero({
   | 'completedToday'
   | 'totalActive'
   | 'overallStreak'
+  | 'daysSinceLastCompletion'
   | 'handleExport'
   | 'reorderMode'
   | 'toggleReorderMode'
@@ -76,6 +79,7 @@ function DashboardHero({
         : todayRate > 0
           ? `Keep going — ${remaining} to go`
           : 'Start your streak';
+  const showComebackBanner = daysSinceLastCompletion >= 2 && todayRate < 100;
 
   return (
     <>
@@ -137,6 +141,16 @@ function DashboardHero({
             }}
           />
         </div>
+        {/* Comeback banner (Task 11) */}
+        {showComebackBanner && (
+          <div className="animate-comeback-slide mb-3 rounded-xl border border-accent/30 bg-accent/5 px-4 py-2.5 flex items-center gap-3">
+            <span className="text-lg" role="img" aria-label="welcome back">👋</span>
+            <div>
+              <p className="text-sm font-semibold text-foreground">Welcome back!</p>
+              <p className="text-[11px] font-mono text-muted">You've been away for {daysSinceLastCompletion} days. Let's start fresh today!</p>
+            </div>
+          </div>
+        )}
         {/* Celebration banner at 100% */}
         {todayRate >= 100 && (
           <div className="animate-slide-down-fade mb-3 rounded-xl border border-accent-secondary/30 bg-accent-secondary/5 px-4 py-2.5 flex items-center gap-3">
@@ -463,6 +477,7 @@ export function DashboardView(props: DashboardViewProps) {
         completedToday={props.completedToday}
         totalActive={props.totalActive}
         overallStreak={props.overallStreak}
+        daysSinceLastCompletion={props.daysSinceLastCompletion}
         handleExport={props.handleExport}
         reorderMode={props.reorderMode}
         toggleReorderMode={props.toggleReorderMode}

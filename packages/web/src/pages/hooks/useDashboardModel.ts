@@ -8,7 +8,7 @@ import type { Habit } from '@/types/habit';
 import type { OnboardingTemplate } from '@/components/Onboarding';
 import type { HabitUpsertInput } from '@/pages/hooks/useAddEditHabitModel';
 import { isScheduledForDate, resolveHabitSchedule } from '@/lib/habits/schedule';
-import { formatDate as formatHabitDate } from '@/lib/habits/habitStats';
+import { formatDate as formatHabitDate, getDaysSinceLastCompletion } from '@/lib/habits/habitStats';
 
 type UndoPushAction = {
   message: string;
@@ -62,6 +62,7 @@ export function useDashboardModel() {
   const allTags = data.allTags;
   const filtered = data.filtered;
   const overallStreak = data.overallStreak;
+  const daysSinceLastCompletion = getDaysSinceLastCompletion(habits, todayDate);
   const [reorderMode, setReorderMode] = useState(false);
   const toggleReorderMode = useCallback(() => {
     setReorderMode((prev) => !prev);
@@ -100,7 +101,8 @@ export function useDashboardModel() {
     handleDragEnd: dragHandlers.handleDragEnd,
     reorderMode,
     toggleReorderMode,
-    moveHabit
+    moveHabit,
+    daysSinceLastCompletion
   };
 }
 
@@ -181,7 +183,7 @@ function useDashboardHandlers({
   addHabit: (input: HabitUpsertInput) => Promise<string>;
   navigate: (to: string) => void;
   push: (action: UndoPushAction) => void;
-  setCompletionCount: (habitId: string, date: string, count: number) => Promise<void>;
+  setCompletionCount: (habitId: string, date: string, count: number) => Promise<unknown>;
   setSelectedTags: Dispatch<SetStateAction<string[]>>;
   habits: Habit[];
   setAddingTemplate: Dispatch<SetStateAction<string | null>>;
@@ -209,7 +211,10 @@ function useDashboardHandlers({
           frequency: template.frequency,
           customDays: template.customDays,
           targetStreak: template.targetStreak,
-          dailyTarget: 1
+          dailyTarget: 1,
+          freezeDays: [],
+          archived: false,
+          sortOrder: habits.length > 0 ? Math.max(...habits.map((h) => h.sortOrder)) + 1 : 0
         });
         navigate(`/habit/${newId}`);
       } finally {
@@ -477,7 +482,7 @@ function useReminderTracker(
                 ...prev,
                 {
                   habitId: habit.id,
-                  time: habit.reminderTime,
+                  time: habit.reminderTime!,
                   message: `Reminder: ${habit.name} (${habit.reminderTime})`
                 }
               ]

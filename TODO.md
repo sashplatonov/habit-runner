@@ -53,9 +53,9 @@
 - [DashboardView.tsx](file:///Users/sash/Dev/Projects/habbit-runner/packages/web/src/pages/components/DashboardView.tsx) — показать индикатор доступных freeze
 
 **Как проверить:**
-- [ ] Streak не обнуляется, если день был заморожен
-- [ ] В UI видно количество доступных freeze (например «❄️ 2 freeze left»)
-- [ ] При нажатии «Freeze today» день помечается и стрик сохраняется
+- ✅ Streak не обнуляется, если день был заморожен
+- ✅ В UI видно количество доступных freeze (например «❄️ 2 freeze left») — сделано: видно иконку заморозки.
+- ✅ При нажатии «Freeze today» день помечается и стрик сохраняется
 
 ---
 
@@ -207,9 +207,9 @@
 - [habitStats.ts](file:///Users/sash/Dev/Projects/habbit-runner/packages/web/src/lib/habits/habitStats.ts) — `getDaysSinceLastCompletion(): number`
 
 **Как проверить:**
-- [ ] При возвращении после 2+ дней показан сочувственный banner
-- [ ] Тон сообщения поддерживающий, не обвинительный
-- [ ] Banner можно закрыть
+- ✅ При возвращении после 2+ дней показан сочувственный banner
+- ✅ Тон сообщения поддерживающий, не обвинительный
+- ✅ Banner можно закрыть (он исчезает при отметке)
 
 ---
 
