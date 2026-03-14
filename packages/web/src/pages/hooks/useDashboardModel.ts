@@ -16,12 +16,25 @@ type UndoPushAction = {
   onUndo: () => void | Promise<void>;
 };
 
+const FILTER_STORAGE_KEY = 'hr_dashboard_filter_v1';
+
 export function useDashboardModel() {
   const navigate = useNavigate();
   const { habits, setCompletionCount, addHabit, updateHabit, getTodayCompletionRate, formatDate } = useHabits();
   const { push } = useUndo();
   const [addingTemplate, setAddingTemplate] = useState<string | null>(null);
-  const [filter, setFilter] = useState<'all' | 'pending' | 'done'>('pending');
+  const [filter, setFilter] = useState<'all' | 'pending' | 'done'>(() => {
+    if (typeof window === 'undefined') {
+      return 'pending';
+    }
+    const stored = localStorage.getItem(FILTER_STORAGE_KEY);
+    return (stored === 'all' || stored === 'pending' || stored === 'done') ? stored : 'pending';
+  });
+
+  useEffect(() => {
+    localStorage.setItem(FILTER_STORAGE_KEY, filter);
+  }, [filter]);
+
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const todayDate = new Date();
   todayDate.setHours(0, 0, 0, 0);
