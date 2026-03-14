@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import {
   LayoutDashboardIcon,
   BarChart2Icon,
@@ -59,7 +59,7 @@ export function SidebarNav({ theme, onThemeChange, onLogout }: SidebarNavProps) 
   const [isThemeOpen, setIsThemeOpen] = useState(false);
   const themeRef = useRef<HTMLDivElement>(null);
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (!isThemeOpen) { return; }
     const handleClick = (e: MouseEvent) => {
       if (themeRef.current && !themeRef.current.contains(e.target as Node)) {
@@ -77,9 +77,7 @@ export function SidebarNav({ theme, onThemeChange, onLogout }: SidebarNavProps) 
       aria-label="Sidebar navigation"
     >
       <Link to="/" className="flex items-center gap-2.5 px-2 mb-5">
-        <div className="w-8 h-8 rounded-lg bg-accent/10 border border-accent/30 flex items-center justify-center flex-shrink-0">
-          <span className="text-accent text-xs font-mono font-bold">HR</span>
-        </div>
+        <img src="/app-icon.svg" alt="Habbit Runner" className="w-8 h-8 rounded-lg flex-shrink-0 object-contain" />
         <span className="text-sm font-bold tracking-tight">Habbit Runner</span>
       </Link>
 

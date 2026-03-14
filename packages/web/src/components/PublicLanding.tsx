@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 import { ArrowRightIcon, CheckCircle2Icon, SparklesIcon } from 'lucide-react';
 import { startOAuthLogin } from '@/lib/auth/oauth';
 import { PublicPreviewCarousel } from '@/components/PublicPreviewCarousel';
@@ -27,9 +27,7 @@ function PublicLandingHeader() {
     <header className="sticky top-0 z-20 border-b border-slate-200/90 bg-white/95 backdrop-blur">
       <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-4 py-4 sm:px-6">
         <div className="flex items-center gap-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-cyan-300 bg-cyan-50">
-            <span className="font-mono text-xs font-bold text-cyan-700">HR</span>
-          </div>
+          <img src="/app-icon.svg" alt="Habbit Runner" className="w-9 h-9 rounded-xl flex-shrink-0 object-contain" />
           <div>
             <p className="text-sm font-semibold text-slate-900">Habbit Runner</p>
             <p className="text-xs text-slate-500">Habit tracking with real progress analytics</p>
