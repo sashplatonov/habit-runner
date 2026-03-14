@@ -6,6 +6,7 @@ import type { HabitSchedule, SyncEntity, SyncOpType } from '@habbit-runner/share
 import { normalizeSchedule, scheduleFromLegacy } from '@habbit-runner/shared';
 import { DEFAULT_USER_ID } from '@/lib/core/config';
 import { generateId } from '@/lib/core/id';
+import { nowSyncISO } from '@habbit-runner/shared';
 
 export type OutboxStatus = 'pending' | 'inflight' | 'failed';
 
@@ -269,7 +270,7 @@ export async function addTombstone(
     entity,
     entityId,
     version,
-    deletedAt: new Date().toISOString()
+    deletedAt: nowSyncISO()
   });
 }
 
@@ -277,10 +278,12 @@ export async function upsertCheckinInDb(
   habitId: string,
   date: string,
   done: boolean,
-  count = 1
-): Promise<void> {
+  count = 1,
+  updatedAt?: string
+): Promise<string> {
   const userId = getCurrentUserId();
   const normalized = date;
+  const ts = updatedAt ?? nowSyncISO();
   const existing = await db.checkins
     .where('habitId')
     .equals(habitId)
@@ -293,19 +296,19 @@ export async function upsertCheckinInDb(
   if (existing) {
     if (!done) {
       await db.checkins.delete(existing.id);
-      return;
+      return ts;
     }
     const normalizedCount = Math.max(1, Math.trunc(count));
     await db.checkins.update(existing.id, {
       done,
       count: normalizedCount,
-      updatedAt: new Date().toISOString(),
+      updatedAt: ts,
       version: Math.max(existing.version, 1) + 1
     });
-    return;
+    return ts;
   }
 
-  if (!done) {return;}
+  if (!done) {return ts;}
   const normalizedCount = Math.max(1, Math.trunc(count));
   await db.checkins.add({
     id: generateId(),
@@ -314,9 +317,10 @@ export async function upsertCheckinInDb(
     date: normalized,
     done,
     count: normalizedCount,
-    updatedAt: new Date().toISOString(),
+    updatedAt: ts,
     version: 1
   });
+  return ts;
 }
 
 export async function deleteCheckinInDb(habitId: string, date: string): Promise<void> {
@@ -351,11 +355,11 @@ export function createOutboxEntry(
     entity,
     type,
     payload,
-    clientTime: new Date().toISOString(),
+    clientTime: nowSyncISO(),
     status: 'pending',
     retryCount: 0,
     nextRetryAt: null,
-    createdAt: new Date().toISOString()
+    createdAt: nowSyncISO()
   };
 }
 

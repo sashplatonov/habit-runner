@@ -31,7 +31,7 @@ import {
   serializeHabit,
   serializeTombstone
 } from './sync.utils';
-import { HABIT_FREQUENCIES, HabitFrequency, HabitSchedule, normalizeSchedule, scheduleFromLegacy } from '@habbit-runner/shared';
+import { HABIT_FREQUENCIES, HabitFrequency, HabitSchedule, normalizeSchedule, scheduleFromLegacy, nowSyncISO } from '@habbit-runner/shared';
 
 @Injectable()
 export class SyncService {
@@ -97,7 +97,7 @@ export class SyncService {
       ];
 
       const nextCursor = calculateNextCursor(cursorCandidates);
-      const serverTime = new Date().toISOString();
+      const serverTime = nowSyncISO();
 
       this.metrics.recordPull(
         Date.now() - pullStart,
@@ -125,7 +125,7 @@ export class SyncService {
     const pushStart = Date.now();
     const applied: string[] = [];
     const conflicts: PushConflict[] = [];
-    const serverTime = new Date().toISOString();
+    const serverTime = nowSyncISO();
 
     try {
       const client = await this.prisma.getClient();
