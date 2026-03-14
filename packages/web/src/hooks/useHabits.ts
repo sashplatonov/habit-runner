@@ -108,10 +108,11 @@ async function toggleCompletionImpl(
   const nextCount = currentCount > 0 ? 0 : 1;
 
   let ts = nowSyncISO();
+  let deletedEntity;
   if (nextCount > 0) {
     ts = await upsertCheckinInDb(habitId, key, true, nextCount);
   } else {
-    await deleteCheckinInDb(habitId, key);
+    deletedEntity = await deleteCheckinInDb(habitId, key);
   }
 
   const entity = await db.habits.get(habitId);
@@ -125,7 +126,7 @@ async function toggleCompletionImpl(
   }
 
   const payload = nextCount === 0
-    ? { habitId, date: key, updatedAt: ts }
+    ? { habitId, date: key, updatedAt: ts, id: deletedEntity?.id }
     : {
         habitId,
         date: key,
@@ -220,10 +221,11 @@ async function setCompletionCountImpl(
   const clampedCount = Math.min(normalizedCount, maxCount);
 
   let ts = nowSyncISO();
+  let deletedEntity;
   if (clampedCount > 0) {
     ts = await upsertCheckinInDb(habitId, date, true, clampedCount);
   } else {
-    await deleteCheckinInDb(habitId, date);
+    deletedEntity = await deleteCheckinInDb(habitId, date);
   }
 
   const entity = await db.habits.get(habitId);
@@ -238,7 +240,7 @@ async function setCompletionCountImpl(
 
   const nextVersion = entity ? (entity.version ?? 0) + 1 : 1;
   const payload = clampedCount === 0
-    ? { habitId, date, updatedAt: ts }
+    ? { habitId, date, updatedAt: ts, id: deletedEntity?.id }
     : { habitId, date, done: true, count: clampedCount, updatedAt: ts, version: nextVersion };
   const entry = createOutboxEntry('checkin', clampedCount === 0 ? 'delete' : 'upsert', payload);
   await syncEntriesWithFallback([entry]);

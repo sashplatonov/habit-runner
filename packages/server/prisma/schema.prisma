@@ -39,8 +39,8 @@ model Habit {
   reminderEnabled Boolean @default(true)
   difficulty  Int       @default(1)
   type        String    @default("positive")
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @default(now()) @updatedAt
+  createdAt   DateTime  @default(now()) @db.Timestamptz(0)
+  updatedAt   DateTime  @default(now()) @db.Timestamptz(0)
   version     Int       @default(1)
   checkins    Checkin[]
 
@@ -51,11 +51,11 @@ model Checkin {
   id        String   @id @default(cuid())
   habitId   String
   userId    String
-  date      DateTime
+  date      DateTime @db.Date
   done      Boolean
   count     Int      @default(1)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @default(now()) @updatedAt
+  createdAt DateTime @default(now()) @db.Timestamptz(0)
+  updatedAt DateTime @default(now()) @db.Timestamptz(0)
   version   Int      @default(1)
 
   habit     Habit    @relation(fields: [habitId], references: [id])
@@ -71,7 +71,7 @@ model Tombstone {
   entity    String
   entityId  String
   version   Int
-  deletedAt DateTime @default(now())
+  deletedAt DateTime @default(now()) @db.Timestamptz(0)
   user      User     @relation(fields: [userId], references: [id])
 
   @@map("tombstones")

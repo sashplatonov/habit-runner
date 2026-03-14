@@ -474,11 +474,15 @@ export class SyncService {
     payload: CheckinPayload,
     date: Date
   ): Promise<void> {
+    const existing = await tx.checkin.findFirst({
+      where: { habitId: payload.habitId, date, userId }
+    }) as { id: string } | null;
+
     await tx.tombstone.create({
       data: {
         userId,
         entity: 'checkin',
-        entityId: payload.id ?? `${payload.habitId}:${payload.date}`,
+        entityId: payload.id ?? existing?.id ?? `${payload.habitId}:${payload.date}`,
         version: payload.version ?? 1
       }
     });

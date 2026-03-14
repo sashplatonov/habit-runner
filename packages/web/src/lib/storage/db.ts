@@ -323,7 +323,7 @@ export async function upsertCheckinInDb(
   return ts;
 }
 
-export async function deleteCheckinInDb(habitId: string, date: string): Promise<void> {
+export async function deleteCheckinInDb(habitId: string, date: string): Promise<CheckinEntity | undefined> {
   const userId = getCurrentUserId();
   const normalized = date;
   const existing = await db.checkins
@@ -336,7 +336,9 @@ export async function deleteCheckinInDb(habitId: string, date: string): Promise<
     .first();
   if (existing) {
     await db.checkins.delete(existing.id);
+    return existing;
   }
+  return undefined;
 }
 
 export async function enqueueOutboxEntry(entry: OutboxEntry): Promise<void> {
@@ -507,7 +509,14 @@ export async function applyPullResponse(
     if (tombstone.entity === 'habit') {
       await removeHabitFromDb(tombstone.entityId);
     } else if (tombstone.entity === 'checkin') {
-      await db.checkins.delete(tombstone.entityId);
+      if (!tombstone.entityId.includes(':')) {
+        await db.checkins.delete(tombstone.entityId);
+      } else {
+        const [habitId, date] = tombstone.entityId.split(':');
+        if (habitId && date) {
+          await deleteCheckinInDb(habitId, date);
+        }
+      }
     }
   });
 
