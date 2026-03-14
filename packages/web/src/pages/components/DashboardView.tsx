@@ -46,6 +46,8 @@ type DashboardViewProps = {
   reorderMode: boolean;
   toggleReorderMode: () => void;
   moveHabit: (habitId: string, direction: 'up' | 'down') => Promise<void>;
+  sortMode: 'custom' | 'smart';
+  setSortMode: (mode: 'custom' | 'smart') => void;
 };
 
 function DashboardHero({
@@ -248,7 +250,9 @@ function FilterBar({
   toggleTag,
   setSelectedTags,
   habits,
-  today
+  today,
+  sortMode,
+  setSortMode
 }: Pick<
   DashboardViewProps,
   | 'filter'
@@ -259,6 +263,8 @@ function FilterBar({
   | 'setSelectedTags'
   | 'habits'
   | 'today'
+  | 'sortMode'
+  | 'setSortMode'
 >) {
   const todayDate = new Date(today);
   todayDate.setHours(0, 0, 0, 0);
@@ -289,7 +295,28 @@ function FilterBar({
             </button>
           ))}
         </div>
-        <div className="py-2.5 flex items-center gap-1.5 overflow-x-auto">
+        <div className="flex items-center justify-between py-1">
+          <div className="flex items-center gap-1.5 p-0.5 bg-bg-secondary rounded-lg border border-border/50">
+            {(['custom', 'smart'] as const).map((mode) => (
+              <button
+                key={mode}
+                type="button"
+                onClick={() => setSortMode(mode)}
+                className={`px-3 py-1 rounded-md text-[10px] font-mono uppercase tracking-wider transition-all duration-200 ${
+                  sortMode === mode
+                    ? 'bg-bg-primary text-accent shadow-sm ring-1 ring-border'
+                    : 'text-muted hover:text-foreground'
+                }`}
+              >
+                {mode}
+              </button>
+            ))}
+          </div>
+          <span className="text-[10px] font-mono text-muted/50 hidden sm:inline">
+            {sortMode === 'smart' ? 'Auto-ordered by efficiency' : 'Manual order'}
+          </span>
+        </div>
+        <div className="py-2.5 flex items-center gap-1.5 overflow-x-auto no-scrollbar">
           {allTags.length > 0 ? (
             <>
               {allTags.map((tag) => (
@@ -337,7 +364,8 @@ function HabitListSection({
   handleDragEnd,
   navigate,
   reorderMode,
-  moveHabit
+  moveHabit,
+  selectedTags
 }: Pick<
   DashboardViewProps,
   | 'filtered'
@@ -352,6 +380,7 @@ function HabitListSection({
   | 'navigate'
   | 'reorderMode'
   | 'moveHabit'
+  | 'selectedTags'
 >) {
   if (filtered.length === 0) {
     return (
@@ -361,28 +390,61 @@ function HabitListSection({
       </div>
     );
   }
-
   return (
     <div className="max-w-2xl mx-auto py-3 flex flex-col gap-2 px-4" role="list" aria-label="Habit list">
-      {filtered.map((habit, index) => (
-        <HabitRowEntry
-          key={habit.id}
-          habit={habit}
-          index={index}
-          filteredLength={filtered.length}
-          dropHint={dropHint}
-          dragOverHabitId={dragOverHabitId}
-          draggedHabitId={draggedHabitId}
-          handleToggle={handleToggle}
-          handleDrop={handleDrop}
-          handleDragStart={handleDragStart}
-          handleDragOver={handleDragOver}
-          handleDragEnd={handleDragEnd}
-          navigate={navigate}
-          reorderMode={reorderMode}
-          moveHabit={moveHabit}
-        />
-      ))}
+      {selectedTags.length > 0 ? (
+        selectedTags.map((tag) => {
+          const habitsInTag = filtered.filter((h) => h.tags.includes(tag));
+          if (habitsInTag.length === 0) {return null;}
+          return (
+            <div key={tag} className="space-y-2 mb-4">
+              <div className="flex items-center gap-2 px-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-accent" />
+                <h3 className="text-[10px] font-mono font-bold uppercase tracking-widest text-muted">{tag}</h3>
+              </div>
+              {habitsInTag.map((habit, index) => (
+                <HabitRowEntry
+                  key={`${tag}-${habit.id}`}
+                  habit={habit}
+                  index={index}
+                  filteredLength={habitsInTag.length}
+                  dropHint={dropHint}
+                  dragOverHabitId={dragOverHabitId}
+                  draggedHabitId={draggedHabitId}
+                  handleToggle={handleToggle}
+                  handleDrop={handleDrop}
+                  handleDragStart={handleDragStart}
+                  handleDragOver={handleDragOver}
+                  handleDragEnd={handleDragEnd}
+                  navigate={navigate}
+                  reorderMode={reorderMode}
+                  moveHabit={moveHabit}
+                />
+              ))}
+            </div>
+          );
+        })
+      ) : (
+        filtered.map((habit, index) => (
+          <HabitRowEntry
+            key={habit.id}
+            habit={habit}
+            index={index}
+            filteredLength={filtered.length}
+            dropHint={dropHint}
+            dragOverHabitId={dragOverHabitId}
+            draggedHabitId={draggedHabitId}
+            handleToggle={handleToggle}
+            handleDrop={handleDrop}
+            handleDragStart={handleDragStart}
+            handleDragOver={handleDragOver}
+            handleDragEnd={handleDragEnd}
+            navigate={navigate}
+            reorderMode={reorderMode}
+            moveHabit={moveHabit}
+          />
+        ))
+      )}
     </div>
   );
 }
@@ -497,6 +559,8 @@ export function DashboardView(props: DashboardViewProps) {
         setSelectedTags={props.setSelectedTags}
         habits={props.habits}
         today={props.today}
+        sortMode={props.sortMode}
+        setSortMode={props.setSortMode}
       />
       <HabitListSection
         filtered={props.filtered}
@@ -511,6 +575,7 @@ export function DashboardView(props: DashboardViewProps) {
         reorderMode={props.reorderMode}
         moveHabit={props.moveHabit}
         navigate={props.navigate}
+        selectedTags={props.selectedTags}
       />
     </div>
   );

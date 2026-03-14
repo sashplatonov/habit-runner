@@ -62,7 +62,7 @@ export function isScheduledForDate(schedule: HabitSchedule | undefined | null, d
         return false;
       }
       const { week, isLast } = getWeekOfMonth(date);
-      return schedule.weeksOfMonth.includes(isLast ? 'last' : week);
+      return schedule.weeksOfMonth.includes((isLast ? 'last' : week) as any);
     }
     case 'monthly_quota':
       return schedule.weekdays ? schedule.weekdays.includes(weekday) : true;
@@ -277,7 +277,11 @@ function calculateDailyStreak(
       iterator.setDate(iterator.getDate() + 1);
       continue;
     }
-    if ((completions[key] ?? 0) >= dailyTarget) {
+    const success = habit.type === 'negative' 
+      ? (completions[key] ?? 0) === 0
+      : (completions[key] ?? 0) >= dailyTarget;
+
+    if (success) {
       running += 1;
     } else {
       longest = Math.max(longest, running);
@@ -294,7 +298,11 @@ function calculateDailyStreak(
       backward.setDate(backward.getDate() - 1);
       continue;
     }
-    if ((completions[key] ?? 0) >= dailyTarget) {
+    const success = habit.type === 'negative'
+      ? (completions[key] ?? 0) === 0
+      : (completions[key] ?? 0) >= dailyTarget;
+
+    if (success) {
       current += 1;
       backward.setDate(backward.getDate() - 1);
       continue;
@@ -346,3 +354,25 @@ export function calculateScheduledCompletionRate(
   const completed = countCompletedDaysInRange(completions, start, end, Math.max(1, habit.dailyTarget ?? 1), schedule);
   return Math.round((completed / scheduledDays) * 100);
 }
+
+export function calculateAutomatismScore(
+  habit: Habit,
+  completions: Record<string, number>,
+  referenceDate = new Date()
+): number {
+  const consistency30d = calculateScheduledCompletionRate(habit, completions, referenceDate) / 100;
+  const { current: streak } = calculateScheduledStreak(habit, completions, referenceDate);
+  
+  // Total completed days count
+  const totalCompleted = Object.values(completions).filter(
+    (count) => (count ?? 0) >= Math.max(1, habit.dailyTarget ?? 1)
+  ).length;
+
+  const streakFactor = Math.min(streak / 66, 1);
+  const totalFactor = Math.min(totalCompleted / 100, 1);
+
+  // Formula: 50% consistency + 30% streak + 20% total volume
+  const score = (consistency30d * 0.5 + streakFactor * 0.3 + totalFactor * 0.2) * 100;
+  return Math.min(100, Math.round(score));
+}
+

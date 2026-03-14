@@ -1,5 +1,6 @@
-import React, { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import { ArrowDownIcon, ArrowUpIcon, CheckIcon, FlameIcon, GripVerticalIcon } from 'lucide-react';
+import confetti from 'canvas-confetti';
 import { CompletionRing } from '@/components/CompletionRing';
 import { MiniHeatmap } from '@/components/MiniHeatmap';
 import { HABIT_COLOR_THEMES } from '@/lib/theme/habit-colors';
@@ -75,11 +76,20 @@ function HabitRowMetrics({
         ))}
       </div>
 
-      <div className="flex items-center gap-1 w-12 sm:w-16 justify-end">
+      <div className="flex items-center gap-1 w-20 sm:w-24 justify-end">
         {streak > 0 && (
           <>
-            <FlameIcon size={11} className="text-accent-secondary" />
-            <span className="text-[11px] font-mono text-accent-secondary">{streak}</span>
+            {habit.type === 'negative' ? (
+              <>
+                <span className="text-[10px] font-mono text-accent-secondary whitespace-nowrap">{streak} days free</span>
+                <span className="text-[10px]" role="img" aria-label="trophy">🏆</span>
+              </>
+            ) : (
+              <>
+                <FlameIcon size={11} className="text-accent-secondary" />
+                <span className="text-[11px] font-mono text-accent-secondary">{streak}</span>
+              </>
+            )}
           </>
         )}
       </div>
@@ -309,6 +319,8 @@ function HabitRowCard({
           toggleButtonClass={toggleButtonClass}
           toggleButtonTitle={toggleButtonTitle}
           onToggle={onToggle}
+          streak={streak}
+          targetStreak={habit.targetStreak}
         />
       </div>
     </div>
@@ -384,6 +396,8 @@ type HabitRowToggleButtonProps = {
   toggleButtonClass: string;
   toggleButtonTitle: string;
   onToggle: () => void;
+  streak: number;
+  targetStreak: number;
 };
 
 const CONFETTI_COLORS = ['var(--accent)', 'var(--accent-secondary)', '#fff', 'var(--glow)'];
@@ -394,7 +408,9 @@ function HabitRowToggleButton({
   accent,
   toggleButtonClass,
   toggleButtonTitle,
-  onToggle
+  onToggle,
+  streak,
+  targetStreak
 }: HabitRowToggleButtonProps) {
   const [animating, setAnimating] = useState(false);
   const [particles, setParticles] = useState<{ id: number; tx: number; ty: number; color: string }[]>([]);
@@ -417,18 +433,32 @@ function HabitRowToggleButton({
         };
       });
       setParticles(newParticles);
+
+      // Task 1: Big celebration on Target Streak
+      if (streak + 1 === targetStreak) {
+        setTimeout(() => {
+          confetti({
+            particleCount: 150,
+            spread: 160,
+            origin: { y: 0.6 },
+            colors: ['#FFD700', '#FFA500', accent.hex],
+            zIndex: 1000
+          });
+        }, 300);
+      }
+
       setTimeout(() => {
         setAnimating(false);
         setParticles([]);
       }, 650);
     }
     onToggle();
-  }, [completed, onToggle]);
+  }, [completed, onToggle, streak, targetStreak, accent.hex]);
 
   return (
     <div className="relative flex-shrink-0">
       {/* Confetti particles */}
-      {particles.map((p) => (
+      {particles.map((p: any) => (
         <span
           key={p.id}
           className="confetti-particle"

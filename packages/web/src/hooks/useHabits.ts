@@ -19,7 +19,7 @@ import {
   countCompletedDays,
   formatDate
 } from '@/lib/habits/habitStats';
-import { calculateScheduledCompletionRate, calculateScheduledStreak } from '@/lib/habits/schedule';
+import { calculateScheduledCompletionRate, calculateScheduledStreak, calculateAutomatismScore } from '@/lib/habits/schedule';
 import { useLiveQuery } from '@/hooks/useLiveQuery';
 import { buildCompletionsByHabitId } from '@/hooks/useHabits.helpers';
 
@@ -84,7 +84,7 @@ async function persistHabitWithSyncFallback(habit: Habit, action: 'upsert' | 'de
   } else {
     await persistHabitInDb(habit);
   }
-  const entry = createOutboxEntry('habit', action, habit);
+  const entry = createOutboxEntry('habit', action, habit as unknown as Record<string, unknown>);
   await syncEntriesWithFallback([entry]);
 }
 
@@ -189,7 +189,7 @@ async function deleteHabitImpl(id: string, allHabits: Habit[]) {
 async function restoreHabitImpl(habit: Habit) {
   await persistHabitInDb(habit);
   await db.tombstones.where({ entity: 'habit', entityId: habit.id }).delete();
-  const entries = [createOutboxEntry('habit', 'upsert', habit)];
+  const entries = [createOutboxEntry('habit', 'upsert', habit as unknown as Record<string, unknown>)];
   const completionEntries = Object.entries(habit.completions).filter(([, count]) => count > 0);
   for (const [date, count] of completionEntries) {
     await upsertCheckinInDb(habit.id, date, true, count);
@@ -256,6 +256,7 @@ function getHabitStatsImpl(habitId: string, allHabits: Habit[]): HabitStats {
       currentStreak: 0,
       longestStreak: 0,
       completionRate: 0,
+      automatismScore: 0,
       weeklyData: [],
       monthlyData: []
     };
@@ -274,6 +275,7 @@ function getHabitStatsImpl(habitId: string, allHabits: Habit[]): HabitStats {
     currentStreak: current,
     longestStreak: longest,
     completionRate,
+    automatismScore: calculateAutomatismScore(habit, habit.completions, new Date()),
     weeklyData: buildWeeklyCompletionData(habit.completions, 12, new Date(), dailyTarget),
     monthlyData: buildMonthlyCompletionRates(habit.completions, 6, new Date(), dailyTarget)
   };

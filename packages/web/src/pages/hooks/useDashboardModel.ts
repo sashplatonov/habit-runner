@@ -45,7 +45,8 @@ export function useDashboardModel() {
     }
   });
 
-  const data = useDashboardData(habits, filter, selectedTags, todayDate);
+  const [sortMode, setSortMode] = useState<'custom' | 'smart'>('custom');
+  const data = useDashboardData(habits, filter, selectedTags, todayDate, sortMode);
   const handlers = useDashboardHandlers({
     addHabit,
     navigate,
@@ -102,6 +103,8 @@ export function useDashboardModel() {
     reorderMode,
     toggleReorderMode,
     moveHabit,
+    sortMode,
+    setSortMode,
     daysSinceLastCompletion
   };
 }
@@ -110,7 +113,8 @@ function useDashboardData(
   habits: Habit[],
   filter: 'all' | 'pending' | 'done',
   selectedTags: string[],
-  today: Date
+  today: Date,
+  sortMode: 'custom' | 'smart'
 ) {
   const allTags = useMemo(() => {
     const tags = new Set<string>();
@@ -136,8 +140,18 @@ function useDashboardData(
           return scheduledToday && completedToday;
         }
         return true;
+      }).sort((a, b) => {
+        if (sortMode === 'custom') {
+          return (a.sortOrder ?? 0) - (b.sortOrder ?? 0);
+        }
+        // Smart Sort: lower difficulty first (Task 4)
+        // Secondary criteria: completions (not strictly defined but good for focus)
+        if (a.difficulty !== b.difficulty) {
+          return (a.difficulty ?? 1) - (b.difficulty ?? 1);
+        }
+        return (a.sortOrder ?? 0) - (b.sortOrder ?? 0);
       }),
-    [habits, filter, selectedTags, today, todayKey]
+    [habits, filter, selectedTags, today, todayKey, sortMode]
   );
 
   const overallStreak = useMemo(() => {
@@ -212,6 +226,8 @@ function useDashboardHandlers({
           customDays: template.customDays,
           targetStreak: template.targetStreak,
           dailyTarget: 1,
+          difficulty: 1,
+          type: 'positive',
           freezeDays: [],
           archived: false,
           sortOrder: habits.length > 0 ? Math.max(...habits.map((h) => h.sortOrder)) + 1 : 0
@@ -250,18 +266,15 @@ function useDashboardHandlers({
       return;
     }
     const escape = (value: string) => `"${value.replace(/"/g, '""')}"`;
-    const rows = habits.map((habit) => {
-      const completionDates = Object.entries(habit.completions)
-        .filter(([, count]) => count > 0)
-        .map(([date, count]) => ({ date, count }));
-      return [
-        escape(habit.name),
-        escape(habit.description),
-        escape(habit.tags.join('|')),
-        escape(JSON.stringify(completionDates))
-      ].join(',');
+    const rows: string[] = [];
+    habits.forEach((habit) => {
+      Object.entries(habit.completions).forEach(([date, count]) => {
+        if (count > 0) {
+          rows.push([date, escape(habit.name), '1'].join(','));
+        }
+      });
     });
-    const csv = ['name,description,tags,completions', ...rows].join('\n');
+    const csv = ['Date,Habit Name,Completed', ...rows].join('\n');
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
