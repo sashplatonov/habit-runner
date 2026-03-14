@@ -61,6 +61,8 @@ export const serializeHabit = (habit: {
   createdAt: Date;
   updatedAt: Date;
   version: number;
+  difficulty: number;
+  type: string;
 }): HabitDto => ({
   id: habit.id,
   name: habit.name,
@@ -84,7 +86,9 @@ export const serializeHabit = (habit: {
     ),
   createdAt: habit.createdAt.toISOString(),
   updatedAt: habit.updatedAt.toISOString(),
-  version: habit.version
+  version: habit.version,
+  difficulty: habit.difficulty,
+  type: habit.type
 });
 
 export const serializeCheckin = (checkin: {

@@ -255,6 +255,8 @@ export class SyncService {
         sortOrder: writeValues.sortOrder,
         reminderTime: writeValues.reminderTime,
         reminderEnabled: writeValues.reminderEnabled,
+        difficulty: writeValues.difficulty,
+        type: writeValues.type,
         updatedAt: timestamp,
         version: writeValues.nextVersion
       },
@@ -273,6 +275,8 @@ export class SyncService {
         sortOrder: writeValues.sortOrder,
         reminderTime: writeValues.reminderTime,
         reminderEnabled: writeValues.reminderEnabled,
+        difficulty: writeValues.difficulty,
+        type: writeValues.type,
         updatedAt: timestamp,
         version: writeValues.nextVersion
       }
@@ -291,6 +295,8 @@ export class SyncService {
     tags: unknown;
     customDays: number[] | undefined;
     schedule: HabitSchedule;
+    difficulty: number;
+    type: string;
   } {
     return {
       nextVersion: this.resolveHabitVersion(existing, payload.version),
@@ -300,7 +306,9 @@ export class SyncService {
       reminderEnabled: this.resolveHabitReminderEnabled(existing, payload.reminderEnabled),
       tags: normalizeTags(payload.tags),
       customDays: normalizeCustomDays(payload.customDays),
-      schedule: this.resolveHabitSchedule(existing, payload)
+      schedule: this.resolveHabitSchedule(existing, payload),
+      difficulty: this.resolveHabitDifficulty(existing, payload.difficulty),
+      type: this.resolveHabitType(existing, payload.type)
     };
   }
 
@@ -498,6 +506,20 @@ export class SyncService {
       }
     });
     return true;
+  }
+
+  private resolveHabitDifficulty(existing: ExistingHabitRecord | null, payloadValue?: number): number {
+    if (typeof payloadValue === 'number') {
+      return Math.max(1, Math.min(5, Math.trunc(payloadValue)));
+    }
+    return existing?.difficulty ?? 1;
+  }
+
+  private resolveHabitType(existing: ExistingHabitRecord | null, payloadValue?: string): string {
+    if (typeof payloadValue === 'string') {
+      return payloadValue === 'negative' ? 'negative' : 'positive';
+    }
+    return existing?.type ?? 'positive';
   }
 
   private async tryCreateLog(

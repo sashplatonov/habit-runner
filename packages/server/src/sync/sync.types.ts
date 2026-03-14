@@ -22,6 +22,8 @@ export interface HabitPayload {
   sortOrder?: number;
   reminderTime?: string | null;
   reminderEnabled?: boolean;
+  difficulty?: number;
+  type?: string;
 }
 
 export interface CheckinPayload {
@@ -43,6 +45,8 @@ export interface ExistingHabitRecord {
   reminderTime: string | null;
   reminderEnabled: boolean;
   schedule?: unknown;
+  difficulty: number;
+  type: string;
 }
 
 export interface ParentHabitRecord {

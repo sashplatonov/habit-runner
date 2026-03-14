@@ -22,7 +22,7 @@ export function formatDate(date: Date): string {
   const year = date.getFullYear();
   const month = padDateSegment(date.getMonth() + 1);
   const day = padDateSegment(date.getDate());
-  return `${year}-${month}-${day}`;
+  return `${year}-${month}-${day}T00:00:00.000Z`;
 }
 
 function buildCompletedDates(
