@@ -176,6 +176,21 @@ function IconNameSection({
             </button>
           ))}
         </div>
+        <div className="mt-2">
+          <input
+            type="text"
+            value={ICONS.includes(icon) ? '' : icon}
+            onChange={(event) => {
+              const val = event.target.value;
+              // Allow only 1 character/emoji for icon
+              const char = Array.from(val).pop() || '';
+              setIcon(char);
+            }}
+            placeholder="Own..."
+            className="w-full bg-bg-secondary border border-border rounded-lg px-2 py-1.5 text-xs text-center placeholder:text-[10px] focus:outline-none focus:border-accent/50 transition-all font-mono"
+            style={!ICONS.includes(icon) && icon ? { borderColor: selectedColor.hex, boxShadow: `0 0 8px ${selectedColor.hex}40` } : undefined}
+          />
+        </div>
       </div>
       <div className="flex-1 space-y-3">
         <div>

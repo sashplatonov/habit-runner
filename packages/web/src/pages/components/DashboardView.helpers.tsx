@@ -55,25 +55,7 @@ function HabitRowMetrics({
 
   return (
     <>
-      <div className="hidden lg:flex items-center justify-end mr-1" aria-hidden>
-        <MiniHeatmap completions={habit.completions} dailyTarget={target} color={habit.color} />
-      </div>
-
-      <div className="hidden md:flex items-end gap-[1px] h-4 sm:h-5" aria-hidden>
-        {last7.map((done, i) => (
-          <div
-            key={i}
-            className="w-[4px] rounded-sm transition-all"
-            style={{
-              height: done ? '100%' : '30%',
-              backgroundColor: done ? accent.hex : 'var(--border)',
-              opacity: i === 6 ? 1 : 0.5 + i * 0.07
-            }}
-          />
-        ))}
-      </div>
-
-      <div className="flex items-center gap-1 w-20 sm:w-24 justify-end">
+      <div className="hidden sm:flex items-center gap-1 w-20 sm:w-24 justify-end">
         {streak > 0 && (
           <>
             {habit.type === 'negative' ? (
@@ -91,8 +73,26 @@ function HabitRowMetrics({
         )}
       </div>
 
-      <div className="hidden md:block">
+      <div className="hidden sm:block">
         <CompletionRing percentage={completionRate} size={32} strokeWidth={2.5} color={habit.color} showText={false} />
+      </div>
+
+      <div className="hidden md:flex items-end gap-[1px] h-4 sm:h-5 ml-1" aria-hidden>
+        {last7.map((done, i) => (
+          <div
+            key={i}
+            className="w-[4px] rounded-sm transition-all"
+            style={{
+              height: done ? '100%' : '30%',
+              backgroundColor: done ? accent.hex : 'var(--border)',
+              opacity: i === 6 ? 1 : 0.5 + i * 0.07
+            }}
+          />
+        ))}
+      </div>
+
+      <div className="hidden lg:flex items-center justify-end ml-2" aria-hidden>
+        <MiniHeatmap completions={habit.completions} dailyTarget={target} color={habit.color} />
       </div>
     </>
   );
@@ -292,6 +292,7 @@ function HabitRowCard({
           isFrozen={isFrozen}
           streak={streak}
           last7={last7}
+          completionRate={completionRate}
           onDetail={onDetail}
         />
         <HabitRowMetrics
@@ -332,6 +333,7 @@ type HabitRowInfoPaneProps = {
   isFrozen: boolean;
   streak: number;
   last7: boolean[];
+  completionRate: number;
   onDetail: () => void;
 };
 
@@ -343,6 +345,7 @@ function HabitRowInfoPane({
   isFrozen,
   streak,
   last7,
+  completionRate,
   onDetail
 }: HabitRowInfoPaneProps) {
   return (
@@ -366,16 +369,29 @@ function HabitRowInfoPane({
           {habit.name}
           {isFrozen && <span title="Frozen today" className="text-[10px] opacity-70">🧊</span>}
         </div>
-        <div className="flex items-center gap-2 mt-1">
-          {streak > 0 && (
-            <div className="flex items-center gap-1 text-[11px] font-mono font-medium" style={{ color: accent.hex }}>
-              <FlameIcon size={10} />
-              {streak}d
-            </div>
-          )}
-          <MiniBars last7={last7} accentHex={accent.hex} />
+        {habit.description && (
+          <div className="text-[10px] text-muted truncate hidden sm:block opacity-60">
+            {habit.description}
+          </div>
+        )}
+        <div className="flex items-center gap-2 mt-0.5">
+          {/* Mobile only stats */}
+          <div className="flex sm:hidden items-center gap-2">
+            <CompletionRing percentage={completionRate} size={18} strokeWidth={2} color={habit.color} showText={false} />
+            {streak > 0 && (
+              <div className="flex items-center gap-1 text-[10px] font-mono font-medium text-accent-secondary">
+                <FlameIcon size={10} />
+                {streak}
+              </div>
+            )}
+          </div>
+
+          <div className="sm:hidden">
+            <MiniBars last7={last7} accentHex={accent.hex} />
+          </div>
+
           {!scheduledToday && !isFrozen && (
-            <span className="text-[10px] font-mono uppercase tracking-[0.3em] text-muted">Not scheduled today</span>
+            <span className="text-[10px] font-mono uppercase tracking-[0.3em] text-muted">Not today</span>
           )}
           {isFrozen && (
             <span className="text-[10px] font-mono uppercase tracking-[0.3em] text-accent-secondary">Frozen</span>
