@@ -63,6 +63,7 @@ export const serializeHabit = (habit: {
   version: number;
   difficulty?: number;
   type?: string;
+  freezeDays?: unknown;
 }): HabitDto => ({
   id: habit.id,
   name: habit.name,
@@ -88,7 +89,8 @@ export const serializeHabit = (habit: {
   updatedAt: toSyncISO(habit.updatedAt),
   version: habit.version,
   difficulty: habit.difficulty,
-  type: habit.type
+  type: habit.type,
+  freezeDays: (habit.freezeDays as string[]) ?? []
 });
 
 export const serializeCheckin = (checkin: {
@@ -189,4 +191,15 @@ export const normalizeReminderTime = (value?: string | null): string | null => {
     return null;
   }
   return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+};
+
+export const normalizeFreezeDays = (value: unknown): string[] | undefined => {
+  if (!Array.isArray(value)) {
+    return undefined;
+  }
+  // Filter for valid YYYY-MM-DD date strings
+  const dates = value
+    .filter((day) => typeof day === 'string')
+    .filter((day) => /^\d{4}-\d{2}-\d{2}$/.test(day));
+  return dates.length > 0 ? dates : undefined;
 };

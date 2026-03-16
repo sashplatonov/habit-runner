@@ -14,6 +14,7 @@ model User {
   checkins  Checkin[]
   tombstones Tombstone[]
   refreshTokens RefreshToken[]
+  pushSubscriptions PushSubscription[]
   createdAt DateTime @default(now())
 
   @@map("users")
@@ -39,6 +40,7 @@ model Habit {
   reminderEnabled Boolean @default(true)
   difficulty  Int       @default(1)
   type        String    @default("positive")
+  freezeDays  Json?     @default("[]")
   createdAt   DateTime  @default(now()) @db.Timestamptz(0)
   updatedAt   DateTime  @default(now()) @db.Timestamptz(0)
   version     Int       @default(1)
@@ -103,4 +105,16 @@ model RefreshToken {
   expiresAt DateTime
 
   @@map("refresh_tokens")
+}
+
+model PushSubscription {
+  id        String   @id @default(cuid())
+  userId    String
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  createdAt DateTime @default(now()) @db.Timestamptz(0)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("push_subscriptions")
 }

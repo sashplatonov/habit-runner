@@ -5,7 +5,7 @@ import { CompletionRing } from '@/components/CompletionRing';
 import { MiniHeatmap } from '@/components/MiniHeatmap';
 import { HABIT_COLOR_THEMES } from '@/lib/theme/habit-colors';
 import type { HabitColorTheme } from '@/lib/theme/habit-colors';
-import { calculateScheduledCompletionRate, calculateScheduledStreak, getScheduleStatusForDate } from '@/lib/habits/schedule';
+import { calculateScheduledCompletionRate, calculateScheduledStreak, getScheduleStatusForDate, isMandatoryToday } from '@/lib/habits/schedule';
 import { formatDate } from '@/lib/habits/habitStats';
 import type { Habit } from '@/types/habit';
 
@@ -138,7 +138,7 @@ export function HabitRow({
   const todayDate = new Date();
   todayDate.setHours(0, 0, 0, 0);
   const status = getScheduleStatusForDate(habit, todayDate);
-  const scheduledToday = status === 'scheduled';
+  const scheduledToday = status === 'scheduled' && isMandatoryToday(habit, todayDate);
   const target = Math.max(1, habit.dailyTarget ?? 1);
   const todayCount = habit.completions[todayKey] ?? 0;
   const completed = todayCount >= target;

@@ -1,104 +1,200 @@
-# 🚀 Getting Started
+# Getting Started
 
-Set up Habbit Runner locally for frontend and backend development.
+<a name="top"></a>
 
-## 📑 Table of Contents
+## 📋 Table of Contents
 
-1. [Prerequisites](#-prerequisites)
-2. [Initial Setup](#-initial-setup)
-3. [Run in Development](#-run-in-development)
-4. [Environment Variables](#-environment-variables)
-5. [Docker Workflow](#-docker-workflow)
-6. [Verification Checklist](#-verification-checklist)
-7. [Navigation](#-navigation)
+- [Prerequisites](#prerequisites)
+- [Local development](#local-development)
+- [Docker Compose](#docker-compose)
+- [Google OAuth setup](#google-oauth-setup)
+- [Web Push setup](#web-push-setup)
+- [Env variable reference](#env-reference)
 
-## 🧰 Prerequisites
+---
 
-- Node.js 20+ and npm
-- Docker + Docker Compose (optional)
-- PostgreSQL (if running backend without Docker)
+## ✅ Prerequisites <a name="prerequisites"></a>
 
-## ⚙️ Initial Setup
+- Node.js 22+
+- npm 10+
+- Docker + Docker Compose (for full stack or DB only)
+- A Google Cloud project with OAuth credentials ([see below](#google-oauth-setup))
 
-1. Install dependencies from the repository root:
-   - `npm install`
-2. Configure frontend environment:
-   - Create `packages/web/.env` with required `VITE_*` variables
-3. Configure Docker Compose environment (only if you run Docker):
-   - Copy `.env.example` to `.env`
-4. Configure backend environment (for local non-Docker server runs):
-   - Create `packages/server/.env` with database/auth/OAuth variables
-5. Generate Prisma client:
-   - `cd packages/server && npx prisma generate`
+[↑ Back to top](#top)
 
-## 💻 Run in Development
+---
 
-- Full workspace: `npm run dev`
-- Frontend only: `npm run dev:web`
-- Backend only: `npm run dev:server`
+## 💻 Local development <a name="local-development"></a>
 
-## 🔐 Environment Variables
+### 1. Install dependencies
 
-### Frontend (`packages/web/.env`)
+```bash
+npm install
+```
 
-- `VITE_API_BASE_URL` (default `http://localhost:3000` for local dev; use `/api` in Docker Compose)
-- `VITE_SYNC_ENABLED` (`true` or `false`)
-- `VITE_DEFAULT_USER_ID` seeds Dexie records for offline demos
-- For Docker Compose, frontend requests are proxied by nginx, so use `/api` as the client base URL.
+### 2. Start a local PostgreSQL
 
-### Root (`.env`)
+Easiest with Docker:
 
-- Docker source of truth for all container env:
-  - published port: `WEB_PORT` (frontend entrypoint)
-  - DB container credentials: `HR_DB_NAME`, `HR_DB_USER`, `HR_DB_PASSWORD`
-  - API container settings: `DATABASE_URL`, `DEFAULT_DB_SCHEMA`, `AUTH_SECRET`, token TTLs, Google OAuth credentials (`api` runs on internal `3000`)
-  - `api` and `db` are internal-only in Docker Compose (no published host ports)
-  - OAuth URLs are derived in Compose from `WEB_PORT` by default:
-    - `API_PUBLIC_URL` -> `http://localhost:${WEB_PORT}/api`
-    - `OAUTH_DEFAULT_RETURN_TO` -> `http://localhost:${WEB_PORT}`
+```bash
+docker compose up db
+```
 
-### Backend (`packages/server/.env`)
+Or use any local Postgres and set `DATABASE_URL` accordingly.
 
-Used only by local API runs (`npm run dev:server` / `npm run dev`), not by Docker Compose.
+### 3. Configure the server
 
-- Database and auth:
-  - `DATABASE_URL`
-  - `AUTH_SECRET`
-  - `ACCESS_TOKEN_EXPIRES_IN`
-  - `ACCESS_TOKEN_TTL_SECONDS`
-  - `REFRESH_TOKEN_EXPIRES_DAYS`
-  - `DEFAULT_DB_SCHEMA` (default `public`) controls which Postgres schema hosts the Prisma tables.
-  - Prisma will run `CREATE SCHEMA IF NOT EXISTS` before the first connection, but you still need to apply the Prisma migrations/seeds inside that schema before relying on the tables.
-- Google OAuth:
-  - `GOOGLE_OAUTH_CLIENT_ID`
-  - `GOOGLE_OAUTH_CLIENT_SECRET`
-  - `API_PUBLIC_URL`
-  - `OAUTH_DEFAULT_RETURN_TO`
+```bash
+cp packages/server/.env.example packages/server/.env
+```
 
-## 🐳 Docker Workflow
+Edit `packages/server/.env`:
 
-1. Set Docker host (Colima):
-   - `export DOCKER_HOST=unix:///Users/sash/.colima/default/docker.sock`
-2. Start the default stack (no database container):
-   - `docker compose up --build`
-   - Ensure `.env` defines a reachable `DATABASE_URL`, because the stack will not start Postgres unless you enable the `db` profile; otherwise `api` will fail waiting for a local database.
-3. Start the stack with the Postgres database included (profile `db` must be enabled):
-   - `docker compose --profile db up --build`
-   - Or run the local override command:
-     ```
-     docker compose -f docker-compose.yml -f docker-compose.local.yml --profile db up --build
-     ```
+```env
+DATABASE_URL=postgresql://habbit:password@localhost:5432/habbit_runner
+AUTH_SECRET=any-local-secret
+ACCESS_TOKEN_EXPIRES_IN=1h
+ACCESS_TOKEN_TTL_SECONDS=3600
+REFRESH_TOKEN_EXPIRES_DAYS=30
+GOOGLE_OAUTH_CLIENT_ID=<your-id>
+GOOGLE_OAUTH_CLIENT_SECRET=<your-secret>
+API_PUBLIC_URL=http://localhost:3000
+OAUTH_DEFAULT_RETURN_TO=http://localhost:5173
+CORS_ORIGINS=http://localhost:5173
+```
 
-## ✅ Verification Checklist
+### 4. Run migrations
 
-Run these checks before shipping changes:
+```bash
+cd packages/server && npx prisma migrate dev
+```
 
-1. `npm run lint`
-2. `npm run build`
-3. `cd packages/server && npm run build`
+### 5. Configure the web client
 
-## ↕️ Navigation
+Create `packages/web/.env`:
 
-- Back to docs index: [⬅️ Documentation Home](./README.md)
-- Next: [🏗️ Architecture Overview](./architecture.md)
-- Back to repository root: [⬅️ Root README](../README.md)
+```env
+VITE_API_BASE_URL=http://localhost:3000
+VITE_SYNC_ENABLED=true
+VITE_DEFAULT_USER_ID=demo-user
+```
+
+### 6. Start everything
+
+```bash
+npm run dev          # web + server in parallel (Turbo)
+# or individually:
+npm run dev:web      # Vite on http://localhost:5173
+npm run dev:server   # NestJS on http://localhost:3000
+```
+
+[↑ Back to top](#top)
+
+---
+
+## 🐳 Docker Compose <a name="docker-compose"></a>
+
+### 1. Copy env file
+
+```bash
+cp .env.example .env
+```
+
+### 2. Fill in required values
+
+Minimum required in root `.env`:
+
+```env
+AUTH_SECRET=<strong-random-string>
+GOOGLE_OAUTH_CLIENT_ID=<your-id>
+GOOGLE_OAUTH_CLIENT_SECRET=<your-secret>
+# Optional: change default port 80
+WEB_PORT=8080
+```
+
+### 3. Start
+
+```bash
+docker compose up --build
+```
+
+App is available at `http://localhost` (or `http://localhost:${WEB_PORT}`).
+
+The `api` and `db` services have no published host ports — all external traffic goes through the `web` nginx proxy at `/api`.
+
+### Useful commands
+
+```bash
+docker compose logs -f api           # Stream API logs
+docker compose exec api npx prisma studio   # Open Prisma Studio
+docker compose down -v               # Remove containers + volumes
+```
+
+[↑ Back to top](#top)
+
+---
+
+## 🔐 Google OAuth setup <a name="google-oauth-setup"></a>
+
+1. Open [Google Cloud Console](https://console.cloud.google.com) → **APIs & Services → OAuth consent screen**
+   - Type: **External** (or Internal for org-only)
+   - Scopes: `email`, `profile`, `openid`
+
+2. **Credentials → Create credentials → OAuth client ID**
+   - Type: **Web application**
+   - Authorized JavaScript origins: `http://localhost:5173` (local dev)
+   - Authorized redirect URIs:
+     - Local: `http://localhost:3000/auth/google/callback`
+     - Docker default: `http://localhost/api/auth/google/callback`
+
+3. Copy **Client ID** and **Client Secret** into your `.env`.
+
+⚠️ When deploying to a real domain, add `https://yourdomain.com/api/auth/google/callback` to the authorized redirect URIs.
+
+[↑ Back to top](#top)
+
+---
+
+## 🔔 Web Push setup <a name="web-push-setup"></a>
+
+See [WEB_PUSH_SETUP.md](./WEB_PUSH_SETUP.md) for VAPID key generation and configuration.
+
+[↑ Back to top](#top)
+
+---
+
+## ⚙️ Env variable reference <a name="env-reference"></a>
+
+### Root `.env` (Docker)
+
+| Variable | Required | Default | Description |
+|---|---|---|---|
+| `WEB_PORT` | No | `80` | Host port for the web service |
+| `HR_DB_NAME` | No | `habbit_runner` | PostgreSQL database name |
+| `HR_DB_USER` | No | `habbit` | PostgreSQL user |
+| `HR_DB_PASSWORD` | No | `password` | PostgreSQL password |
+| `DATABASE_URL` | Yes | — | Full Postgres connection string |
+| `AUTH_SECRET` | Yes | — | JWT signing secret |
+| `ACCESS_TOKEN_EXPIRES_IN` | No | `1h` | JWT expiry |
+| `REFRESH_TOKEN_EXPIRES_DAYS` | No | `30` | Refresh token lifetime |
+| `GOOGLE_OAUTH_CLIENT_ID` | Yes | — | Google OAuth client ID |
+| `GOOGLE_OAUTH_CLIENT_SECRET` | Yes | — | Google OAuth secret |
+| `API_PUBLIC_URL` | Yes | derived | Public URL of the API (used in OAuth redirect) |
+| `OAUTH_DEFAULT_RETURN_TO` | Yes | derived | Frontend origin for OAuth return |
+| `CORS_ORIGINS` | No | derived | Comma-separated allowed origins |
+| `VAPID_PUBLIC_KEY` | No | — | VAPID key for Web Push |
+| `VAPID_PRIVATE_KEY` | No | — | VAPID private key |
+| `VAPID_SUBJECT` | No | — | `mailto:admin@yourdomain.com` |
+| `SYNC_OP_LOG_RETENTION_DAYS` | No | `30` | Days to keep sync op log |
+| `THROTTLE_TTL_SECONDS` | No | `60` | Rate limit window |
+| `THROTTLE_LIMIT` | No | `120` | Max requests per window |
+
+### `packages/web/.env` (local dev)
+
+| Variable | Default | Description |
+|---|---|---|
+| `VITE_API_BASE_URL` | `http://localhost:3000` | API origin; use `/api` in Docker |
+| `VITE_SYNC_ENABLED` | `true` | Set to `false` to disable sync |
+| `VITE_DEFAULT_USER_ID` | — | Pre-set user ID for offline demos |
+
+[↑ Back to top](#top)

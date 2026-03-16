@@ -1,95 +1,85 @@
-# 🔄 Offline Sync Plan
+# Offline Sync
 
-This document describes the sync model and operational contract.
+<a name="top"></a>
 
-## 📑 Table of Contents
+Detailed notes on the outbox pattern and conflict handling.
 
-1. [Stack and Storage](#-stack-and-storage)
-2. [Domain Model and Versioning](#-domain-model-and-versioning)
-3. [Sync API Contract](#-sync-api-contract)
-4. [Client Metadata and Triggers](#-client-metadata-and-triggers)
-5. [Failure Handling](#-failure-handling)
-6. [Navigation](#-navigation)
+## 📋 Table of Contents
 
-## 🧱 Stack and Storage
+- [Outbox pattern](#outbox-pattern)
+- [Conflict resolution](#conflict-resolution)
+- [Failure modes](#failure-modes)
 
-- Frontend: React + TypeScript + Vite (PWA-capable setup)
-- Local storage: IndexedDB repositories for:
-  - `habits`
-  - `checkins`
-  - `tombstones`
-  - `sync_meta`
-  - `outbox`
-- Backend: NestJS + Prisma + PostgreSQL
-- Auth: JWT access/refresh tokens
+---
 
-## 🧬 Domain Model and Versioning
+## 📤 Outbox pattern <a name="outbox-pattern"></a>
 
-- Every synced `habit` and `checkin` includes:
-  - `created_at`
-  - `updated_at`
-  - `version`
-  - `user_id`
-- Deletions propagate through `tombstones` so deleted entities are not recreated.
-- Cursor format uses stable ordering by `(updated_at, id)` for deterministic paging.
-- Conflict policy:
-  - Habits: last-write-wins using `updated_at/version`
-  - Checkins: idempotent upsert semantics
+Every mutation (create, update, delete) follows this flow:
 
-## 📡 Sync API Contract
+```
+1. Write to IndexedDB immediately     ← UI is unblocked
+2. Write to outbox table              ← pending for push
+3. Sync engine picks up outbox        ← next cycle
+4. POST /sync/push                    ← server processes
+5. On success: delete from outbox
+6. On conflict: mark failed, schedule retry
+```
 
-### Pull
+**Outbox entry shape:**
 
-- Endpoint: `GET /sync/pull?since=<cursor>`
-- Response:
-  - `{ habits, checkins, tombstones, nextCursor }`
-- Behavior:
-  - Returns all server-side changes after the cursor
-  - Provides `nextCursor` for incremental sync
+```typescript
+{
+  id: string           // local UUID
+  opId: string         // server-facing unique ID (idempotency key)
+  entity: 'habit' | 'checkin'
+  type: 'upsert' | 'delete'
+  payload: object      // full entity snapshot
+  clientTime: string   // ISO timestamp of mutation
+  status: 'pending' | 'failed'
+  retryCount: number
+  nextRetryAt: number  // ms timestamp
+  lastError?: string
+}
+```
 
-### Push
+[↑ Back to top](#top)
 
-- Endpoint: `POST /sync/push`
-- Request:
-  - `{ ops: SyncOpDTO[] }`
-- Typical operation shape:
-  - `{ id, type, entity, payload, clientTime }`
-- Response:
-  - `{ applied, conflicts, serverTime }`
-- Behavior:
-  - Transactional application
-  - Idempotency by operation ID
-  - Explicit conflict reporting
+---
 
-## ⏱️ Client Metadata and Triggers
+## ⚖️ Conflict resolution <a name="conflict-resolution"></a>
 
-- `sync_meta` tracks:
-  - `lastCursor`
-  - `lastSyncedAt`
-  - `lastError`
-  - `status` (`idle`, `syncing`, `offline`, `error`)
-- `outbox` tracks operations that could not be delivered immediately and need retry metadata.
-- Sync triggers:
-  - user mutations while browser is online
-  - app startup
-  - browser `online` event
-  - manual retry actions
-- Execution order:
-  - Immediate path: Local write → Pull → Push → Pull confirmation
-  - Fallback path: Local write → Outbox enqueue → retry on next sync trigger
+**Strategy**: Last-write-wins on `updatedAt`.
 
-## 🚨 Failure Handling
+When the server receives a push op:
+1. Compare `payload.updatedAt` with the server record's `updatedAt`
+2. If payload is newer → apply, mark `applied`
+3. If server is newer → reject, return in `conflicts[]`
 
-- Failed sync attempts increment server error metrics.
-- Client first tries to deliver the new operation to the server immediately when the browser is online.
-- If the network is unavailable, auth refresh fails, or the sync request is rejected, the client keeps the operation in `outbox` for retry instead of dropping data.
-- UI should expose:
-  - offline status
-  - pending outbox count
-  - last error details
+Conflicted entries are retried from the client after re-pulling the latest server state. After re-pull the client has the newer server version, so the conflict loop terminates.
 
-## ↕️ Navigation
+**Version field**: each entity has a monotonically incrementing `version` for optimistic concurrency. The server bumps `version` on every write.
 
-- Previous: [🏗️ Architecture Overview](./architecture.md)
-- Back to docs index: [⬅️ Documentation Home](./README.md)
-- Next: [🛡️ Reliability and Rollout](./reliability-rollout.md)
+[↑ Back to top](#top)
+
+---
+
+## ⚠️ Failure modes <a name="failure-modes"></a>
+
+| Scenario | Behaviour |
+|---|---|
+| Network offline | Sync skipped, status = `offline`. Resumes on `online` event. |
+| Server 5xx | Sync cycle aborted, status = `error`. Retried next cycle (30s). |
+| Push conflict | Op marked `failed`, retried with exponential backoff. |
+| Duplicate push | `opId` deduplicated by `SyncOpLog`. Server returns `applied` for known opIds. |
+| Deleted entity on client, updated on server | Tombstone wins — server records the delete in `Tombstone` table; pull distributes it to other clients. |
+| Stale op log | `SyncOpLog` entries older than `SYNC_OP_LOG_RETENTION_DAYS` (default 30) are pruned by a nightly cron. |
+
+**Retry backoff:**
+
+```
+delay = min((retryCount + 1) * 1000ms, 7000ms)
+```
+
+After 6 retries the entry stays in `failed` state and is not retried automatically. A full re-sync (pull) on next app open usually resolves stale conflicts.
+
+[↑ Back to top](#top)

@@ -54,6 +54,7 @@ export default defineConfig({
   plugins: [
     react(),
     VitePWA({
+      strategies: 'generateSW',
       registerType: 'autoUpdate',
       injectRegister: 'auto',
       manifest: {
@@ -93,42 +94,6 @@ export default defineConfig({
             sizes: '512x512',
             type: 'image/png',
             purpose: 'maskable'
-          }
-        ]
-      },
-      workbox: {
-        navigateFallbackDenylist: [/^\/api\//],
-        runtimeCaching: [
-          {
-            urlPattern: /^https?:\/\/.*\/sync\/pull/,
-            handler: 'NetworkFirst',
-            options: {
-              cacheName: 'sync-pull',
-              networkTimeoutSeconds: 5,
-              backgroundSync: {
-                name: 'sync-pull-queue',
-                options: {
-                  maxRetentionTime: 60
-                }
-              }
-            }
-          },
-          {
-            urlPattern: /^https?:\/\/.*\/sync\/push/,
-            handler: 'NetworkOnly',
-            options: {
-              cacheName: 'sync-push'
-            }
-          },
-          {
-            urlPattern: ({ request, url }) => shouldCacheAppShell(request, url),
-            handler: 'StaleWhileRevalidate',
-            options: {
-              cacheName: 'app-shell',
-              expiration: {
-                maxEntries: 100
-              }
-            }
           }
         ]
       }
