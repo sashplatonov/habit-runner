@@ -27,6 +27,7 @@ export interface HabitDto {
   reminderEnabled?: boolean;
   difficulty?: number;
   type?: string;
+  freezeDays?: string[];
 }
 
 export interface CheckinDto {

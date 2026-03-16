@@ -65,6 +65,7 @@ type StatsViewProps = {
   investmentPercent: number;
   totalActiveDays: number;
   globalActivityData: Array<{ date: string; intensity: number }>;
+  frozenDates: Set<string>;
 };
 
 function CustomTooltip({
@@ -482,7 +483,7 @@ export function StatsView(props: StatsViewProps) {
           toggleTag={props.toggleTag}
         />
         <DailyRateChart avgRate={props.avgRate} dailyData={props.dailyData} />
-        <GlobalActivityMap data={props.globalActivityData} />
+        <GlobalActivityMap data={props.globalActivityData} frozenDates={props.frozenDates} />
         <MonthlyRateChart habitMonthlyData={props.habitMonthlyData} filteredHabits={props.filteredHabits} />
         <HabitPerformanceList sorted={props.sorted} navigate={props.navigate} />
         <WeeklyBreakdown allStats={props.allStats} />
@@ -491,21 +492,24 @@ export function StatsView(props: StatsViewProps) {
   );
 }
 
-function GlobalActivityMap({ data }: { data: Array<{ date: string; intensity: number }> }) {
-  // Simple Intensity Heatmap (GitHub style)
+function GlobalActivityMap({ data, frozenDates }: { data: Array<{ date: string; intensity: number }>; frozenDates: Set<string> }) {
+  // Simple Intensity Heatmap (GitHub style) with frozen days indicator
   return (
     <div className="bg-bg-secondary border border-border rounded-lg p-4">
       <h2 className="text-xs font-mono text-muted uppercase tracking-wider mb-4">Focus intensity (last 12 weeks)</h2>
       <div className="flex flex-wrap gap-1">
         {(data || []).map((d, i) => {
+          const isFrozen = frozenDates.has(d.date);
           let opacity = 0.05;
-          if (d.intensity > 0) {opacity = 0.2 + (d.intensity * 0.2);}
+          if (!isFrozen && d.intensity > 0) {
+            opacity = 0.2 + (d.intensity * 0.2);
+          }
           return (
             <div
               key={i}
-              title={`${d.date}: ${d.intensity} habits done`}
-              className="w-2.5 h-2.5 rounded-sm bg-accent transition-all duration-300"
-              style={{ opacity: Math.min(1, opacity) }}
+              title={`${d.date}: ${isFrozen ? 'frozen' : d.intensity + ' habits done'}`}
+              className={`w-2.5 h-2.5 rounded-sm transition-all duration-300 ${isFrozen ? 'bg-blue-400 opacity-40' : 'bg-accent'}`}
+              style={!isFrozen ? { opacity: Math.min(1, opacity) } : undefined}
             />
           );
         })}
@@ -516,8 +520,9 @@ function GlobalActivityMap({ data }: { data: Array<{ date: string; intensity: nu
           {[0.1, 0.4, 0.7, 1.0].map(o => (
             <div key={o} className="w-2 h-2 rounded-sm bg-accent" style={{ opacity: o }} />
           ))}
+          <div className="w-2 h-2 rounded-sm bg-blue-400 opacity-40" title="frozen" />
         </div>
-        <span className="text-[10px] font-mono text-muted">More focus</span>
+        <span className="text-[10px] font-mono text-muted">More focus / Frozen</span>
       </div>
     </div>
   );

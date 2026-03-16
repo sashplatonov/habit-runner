@@ -473,7 +473,7 @@ export async function applyPullResponse(
       reminderTime:
         typeof habit.reminderTime === 'string' ? habit.reminderTime : null,
       reminderEnabled: habit.reminderEnabled ?? true,
-      freezeDays: [],
+      freezeDays: (habit.freezeDays as string[]) ?? [],
       completions: {},
       difficulty: (habit as any).difficulty ?? 1,
       type: (habit as any).type ?? 'positive'
