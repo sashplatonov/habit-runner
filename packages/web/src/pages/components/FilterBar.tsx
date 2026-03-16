@@ -1,5 +1,5 @@
 import { invokeIfFunction } from '@/lib/callback';
-import { isScheduledForDate, resolveHabitSchedule } from '@/lib/habits/schedule';
+import { isMandatoryToday } from '@/lib/habits/schedule';
 import type { DashboardViewProps } from './DashboardHero';
 
 function SearchBar({ searchQuery, setSearchQuery }: { searchQuery: string; setSearchQuery: (v: string) => void }) {
@@ -80,8 +80,7 @@ export function FilterBar({
   const todayDate = new Date(today);
   todayDate.setHours(0, 0, 0, 0);
   const pendingCount = habits.filter((habit) => {
-    const schedule = resolveHabitSchedule(habit);
-    if (!isScheduledForDate(schedule, todayDate)) {
+    if (!isMandatoryToday(habit, todayDate)) {
       return false;
     }
     return (habit.completions[today] ?? 0) < Math.max(1, habit.dailyTarget ?? 1);

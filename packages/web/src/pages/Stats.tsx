@@ -137,6 +137,16 @@ export function Stats() {
     return data;
   }, [allHabits]);
 
+  const frozenDates = useMemo(() => {
+    const frozen = new Set<string>();
+    allHabits.forEach(h => {
+      (h.freezeDays ?? []).forEach(dateStr => {
+        frozen.add(dateStr);
+      });
+    });
+    return frozen;
+  }, [allHabits]);
+
   const toggleTag = (tag: string) => {
     setSelectedTags((prev) => (prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]));
   };
@@ -165,6 +175,7 @@ export function Stats() {
       investmentPercent={weekdayStats.investmentPercent}
       totalActiveDays={weekdayStats.totalActiveDays}
       globalActivityData={globalActivityData}
+      frozenDates={frozenDates}
     />
   );
 }

@@ -22,6 +22,7 @@ import {
   calculateNextCursor,
   normalizeCustomDays,
   normalizeDate,
+  normalizeFreezeDays,
   normalizeReminderEnabled,
   normalizeReminderTime,
   normalizeSortOrder,
@@ -53,8 +54,7 @@ export class SyncService {
         ? { AND: [buildCursorClause(cursor, 'deletedAt')] }
         : undefined;
 
-      const client = await this.prisma.getClient();
-      const habits = await client.habit.findMany({
+      const habits = await this.prisma.habit.findMany({
         where: {
           userId,
           ...updatedFilter
@@ -66,7 +66,7 @@ export class SyncService {
         take: 200
       });
 
-      const checkins = await client.checkin.findMany({
+      const checkins = await this.prisma.checkin.findMany({
         where: {
           userId,
           ...updatedFilter
@@ -78,7 +78,7 @@ export class SyncService {
         take: 200
       });
 
-      const tombstones = await client.tombstone.findMany({
+      const tombstones = await this.prisma.tombstone.findMany({
         where: {
           userId,
           ...deletedFilter
@@ -128,8 +128,7 @@ export class SyncService {
     const serverTime = nowSyncISO();
 
     try {
-      const client = await this.prisma.getClient();
-      await client.$transaction(async (tx) => {
+      await this.prisma.$transaction(async (tx) => {
         const txClient = tx as unknown as TxClient;
         for (const op of ops) {
           if (!op.id) {continue;}
@@ -257,6 +256,7 @@ export class SyncService {
         reminderEnabled: writeValues.reminderEnabled,
         difficulty: writeValues.difficulty,
         type: writeValues.type,
+        freezeDays: (writeValues.freezeDays ?? []) as never,
         updatedAt: timestamp,
         version: writeValues.nextVersion
       },
@@ -277,6 +277,7 @@ export class SyncService {
         reminderEnabled: writeValues.reminderEnabled,
         difficulty: writeValues.difficulty,
         type: writeValues.type,
+        freezeDays: (writeValues.freezeDays ?? []) as never,
         updatedAt: timestamp,
         version: writeValues.nextVersion
       }
@@ -297,6 +298,7 @@ export class SyncService {
     schedule: HabitSchedule;
     difficulty: number;
     type: string;
+    freezeDays: string[] | undefined;
   } {
     return {
       nextVersion: this.resolveHabitVersion(existing, payload.version),
@@ -308,7 +310,8 @@ export class SyncService {
       customDays: normalizeCustomDays(payload.customDays),
       schedule: this.resolveHabitSchedule(existing, payload),
       difficulty: this.resolveHabitDifficulty(existing, payload.difficulty),
-      type: this.resolveHabitType(existing, payload.type)
+      type: this.resolveHabitType(existing, payload.type),
+      freezeDays: this.resolveHabitFreezeDays(existing, payload.freezeDays)
     };
   }
 
@@ -524,6 +527,20 @@ export class SyncService {
       return payloadValue === 'negative' ? 'negative' : 'positive';
     }
     return existing?.type ?? 'positive';
+  }
+
+  private resolveHabitFreezeDays(existing: ExistingHabitRecord | null, payloadValue?: string[]): string[] | undefined {
+    const normalized = normalizeFreezeDays(payloadValue);
+    if (normalized) {
+      return normalized;
+    }
+    if (existing?.freezeDays) {
+      const inheritedFreeze = normalizeFreezeDays(existing.freezeDays);
+      if (inheritedFreeze) {
+        return inheritedFreeze;
+      }
+    }
+    return undefined;
   }
 
   private async tryCreateLog(

@@ -1,9 +1,11 @@
-import { PlusIcon, XIcon } from 'lucide-react';
+import { useState } from 'react';
+import { PlusIcon, XIcon, BellIcon } from 'lucide-react';
 import { COLORS, DAILY_TARGET_OPTIONS, ICONS, SUGGESTED_TAGS, TARGET_STREAK_OPTIONS } from '../add-edit-habit.constants';
 import type { AddEditHabitModel } from '@/pages/hooks/useAddEditHabitModel';
 import { invokeIfFunction } from '@/lib/callback';
 import { HeaderSection } from './AddEditHabitHeader';
 import { ScheduleSection } from './AddEditHabitSchedule';
+import { subscribeToPush, unsubscribeFromPush, isPushSubscribed, getPushNotificationPermission } from '@/lib/pwa/pushSubscription';
 
 export function AddEditHabitPage({ model }: { model: AddEditHabitModel }) {
   const {
@@ -102,6 +104,7 @@ export function AddEditHabitPage({ model }: { model: AddEditHabitModel }) {
           reminderTime={reminderTime}
           setReminderTime={setReminderTime}
         />
+        <PushNotificationSection />
       </div>
 
       {showSoftLimitWarning && (
@@ -541,6 +544,73 @@ function ReminderSection({
         {reminderEnabled
           ? 'Reminder calls appear on the dashboard when the app is open.'
           : 'Notifications are disabled. Enable them to receive reminders.'}
+      </p>
+    </div>
+  );
+}
+
+function PushNotificationSection() {
+  const [isSubscribed, setIsSubscribed] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleTogglePush = async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      if (isSubscribed) {
+        await unsubscribeFromPush();
+        setIsSubscribed(false);
+      } else {
+        const success = await subscribeToPush();
+        if (success) {
+          setIsSubscribed(true);
+        } else {
+          setError('Failed to enable push notifications');
+        }
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to update push notifications');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const permission = getPushNotificationPermission();
+  const isPushSupported = typeof window !== 'undefined' && 'serviceWorker' in navigator && 'PushManager' in window;
+
+  if (!isPushSupported) {
+    return null;
+  }
+
+  return (
+    <div>
+      <label className="block text-[10px] font-mono text-muted uppercase tracking-wider mb-2">Push Notifications</label>
+      <div className="flex flex-wrap items-center gap-3">
+        <button
+          type="button"
+          onClick={handleTogglePush}
+          disabled={isLoading}
+          className={`px-3 py-1.5 rounded-lg border text-[9px] font-mono uppercase tracking-wider transition flex items-center gap-2 ${
+            isSubscribed
+              ? 'border-accent/40 bg-accent/10 text-accent'
+              : 'border-border bg-bg-secondary text-muted hover:border-border-hover'
+          } ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+        >
+          <BellIcon size={12} />
+          {isLoading ? 'Updating...' : isSubscribed ? 'Enabled' : 'Disabled'}
+        </button>
+        {permission === 'denied' && (
+          <span className="text-[11px] font-mono text-accent-secondary">Permission denied by browser</span>
+        )}
+        {error && (
+          <span className="text-[11px] font-mono text-accent-secondary">{error}</span>
+        )}
+      </div>
+      <p className="text-[9px] font-mono text-muted mt-1">
+        {isSubscribed
+          ? "Background notifications enabled. You'll receive reminders even when the app is closed."
+          : 'Enable push notifications to receive reminders in background.'}
       </p>
     </div>
   );

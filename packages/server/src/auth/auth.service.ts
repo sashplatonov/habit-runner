@@ -66,8 +66,7 @@ export class AuthService {
   constructor(private readonly prisma: PrismaService) {}
 
   async login(email: string) {
-    const client = await this.prisma.getClient();
-    const user = await client.user.findUnique({ where: { email } });
+    const user = await this.prisma.user.findUnique({ where: { email } });
     if (!user) {
       throw new UnauthorizedException('Unknown user');
     }
@@ -115,14 +114,13 @@ export class AuthService {
   }
 
   async refreshToken(token: string) {
-    const client = await this.prisma.getClient();
-    const record = await client.refreshToken.findUnique({
+    const record = await this.prisma.refreshToken.findUnique({
       where: { token }
     });
     if (!record || record.revoked || record.expiresAt < new Date()) {
       throw new UnauthorizedException('Refresh token expired or revoked');
     }
-    const user = await client.user.findUnique({ where: { id: record.userId } });
+    const user = await this.prisma.user.findUnique({ where: { id: record.userId } });
     if (!user) {
       throw new UnauthorizedException('User no longer exists');
     }
@@ -136,8 +134,7 @@ export class AuthService {
   }
 
   async getUserTheme(userId: string): Promise<ThemeId> {
-    const client = await this.prisma.getClient();
-    const user = await client.user.findUnique({
+    const user = await this.prisma.user.findUnique({
       where: { id: userId },
       select: { theme: true }
     });
@@ -152,8 +149,7 @@ export class AuthService {
   async updateUserTheme(userId: string, theme: string): Promise<ThemeId> {
     const normalizedTheme = this.normalizeTheme(theme);
 
-    const client = await this.prisma.getClient();
-    const user = await client.user.update({
+    const user = await this.prisma.user.update({
       where: { id: userId },
       data: { theme: normalizedTheme },
       select: { theme: true }
@@ -184,8 +180,7 @@ export class AuthService {
     const token = randomBytes(32).toString('hex');
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + this.refreshTokenDays);
-    const client = await this.prisma.getClient();
-    await client.refreshToken.create({
+    await this.prisma.refreshToken.create({
       data: {
         token,
         userId,
@@ -207,8 +202,7 @@ export class AuthService {
   }
 
   async revokeToken(token: string): Promise<void> {
-    const client = await this.prisma.getClient();
-    await client.refreshToken.updateMany({
+    await this.prisma.refreshToken.updateMany({
       where: { token },
       data: { revoked: true }
     });
@@ -298,13 +292,12 @@ export class AuthService {
 
   private async getOrCreateOAuthUser(claims: OAuthIdTokenPayload): Promise<SessionUser> {
     const email = claims.email ?? `google-${claims.sub}@oauth.habbit-runner.local`;
-    const client = await this.prisma.getClient();
-    const existing = await client.user.findUnique({ where: { email } });
+    const existing = await this.prisma.user.findUnique({ where: { email } });
     if (existing) {
       return existing;
     }
 
-    return client.user.create({
+    return this.prisma.user.create({
       data: {
         email
       },
@@ -316,8 +309,7 @@ export class AuthService {
   }
 
   private async storeOAuthState(state: string, payload: OAuthStartPayload): Promise<void> {
-    const client = await this.prisma.getClient();
-    await client.oAuthState.create({
+    await this.prisma.oAuthState.create({
       data: {
         state,
         returnTo: payload.returnTo,
@@ -327,9 +319,8 @@ export class AuthService {
   }
 
   private async consumeOAuthState(state: string): Promise<OAuthStartPayload> {
-    const client = await this.prisma.getClient();
-    const record = await client.oAuthState.findUnique({ where: { state } });
-    await client.oAuthState.deleteMany({ where: { state } });
+    const record = await this.prisma.oAuthState.findUnique({ where: { state } });
+    await this.prisma.oAuthState.deleteMany({ where: { state } });
     if (!record || record.expiresAt.getTime() < Date.now()) {
       throw new UnauthorizedException('Invalid OAuth state');
     }

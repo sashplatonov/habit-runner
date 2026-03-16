@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import type { Habit } from '@/types/habit';
-import { resolveHabitSchedule, isScheduledForDate } from '@/lib/habits/schedule';
+import { resolveHabitSchedule, isScheduledForDate, isMandatoryToday, getWeekRange, getMonthRange, countCompletedDaysInRange } from '@/lib/habits/schedule';
 import { formatDate as formatHabitDate } from '@/lib/habits/habitStats';
 
 export type DashboardFilter = 'all' | 'pending' | 'done' | 'archived';
@@ -44,15 +44,15 @@ export function useDashboardData({
         }
 
         // Dashboard specific filters (pending/done)
-        const schedule = resolveHabitSchedule(habit);
-        const scheduledToday = isScheduledForDate(schedule, today);
+        // Use isMandatoryToday to exclude habits with met quotas
+        const mandatoryToday = isMandatoryToday(habit, today);
         const completedToday = (habit.completions[todayKey] ?? 0) >= Math.max(1, habit.dailyTarget ?? 1);
 
         if (filter === 'pending') {
-          return scheduledToday && !completedToday;
+          return mandatoryToday && !completedToday;
         }
         if (filter === 'done') {
-          return scheduledToday && completedToday;
+          return mandatoryToday && completedToday;
         }
         return true;
       })
@@ -106,15 +106,17 @@ function CalculateOverallStreak(habits: Habit[]): number {
   let streak = 0;
   const cursor = new Date();
   cursor.setDate(cursor.getDate() - 1);
+  cursor.setHours(0, 0, 0, 0);
 
   for (let i = 0; i < 30; i += 1) {
-    const key = cursor.toISOString().split('T')[0];
-    const keyDate = new Date(cursor);
-    keyDate.setHours(0, 0, 0, 0);
+    const year = cursor.getFullYear();
+    const month = String(cursor.getMonth() + 1).padStart(2, '0');
+    const day = String(cursor.getDate()).padStart(2, '0');
+    const key = `${year}-${month}-${day}T00:00:00.000Z`;
 
     const allDone = habits.every((habit) => {
-      const schedule = resolveHabitSchedule(habit);
-      if (!isScheduledForDate(schedule, keyDate)) {
+      // Check if habit is mandatory for this date (scheduled AND quota not met)
+      if (!isMandatoryToday(habit, cursor)) {
         return true;
       }
       return (habit.completions[key] ?? 0) >= Math.max(1, habit.dailyTarget ?? 1);
