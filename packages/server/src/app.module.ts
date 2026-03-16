@@ -6,6 +6,7 @@ import { SyncModule } from './sync/sync.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { AuthModule } from './auth/auth.module';
 import { MetricsModule } from './metrics/metrics.module';
+import { NotificationModule } from './notification/notification.module';
 import { THROTTLE_LIMIT, THROTTLE_TTL_SECONDS } from './common/config';
 import { OpenApiController } from './docs/openapi.controller';
 
@@ -24,7 +25,8 @@ import { OpenApiController } from './docs/openapi.controller';
     PrismaModule,
     AuthModule,
     MetricsModule,
-    SyncModule
+    SyncModule,
+    NotificationModule
   ],
   providers: [
     {

@@ -24,6 +24,7 @@ export interface HabitPayload {
   reminderEnabled?: boolean;
   difficulty?: number;
   type?: string;
+  freezeDays?: string[];
 }
 
 export interface CheckinPayload {
@@ -47,6 +48,7 @@ export interface ExistingHabitRecord {
   schedule?: unknown;
   difficulty: number;
   type: string;
+  freezeDays?: unknown;
 }
 
 export interface ParentHabitRecord {

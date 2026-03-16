@@ -22,8 +22,7 @@ export class SyncOpLogCleanupService implements OnModuleInit {
     const cutoff = new Date(
       Date.now() - SYNC_OP_LOG_RETENTION_DAYS * 24 * 60 * 60 * 1000
     );
-    const client = await this.prisma.getClient();
-    const deleted = await client.syncOpLog.deleteMany({
+    const deleted = await this.prisma.syncOpLog.deleteMany({
       where: { createdAt: { lt: cutoff } }
     });
     if (deleted.count > 0) {

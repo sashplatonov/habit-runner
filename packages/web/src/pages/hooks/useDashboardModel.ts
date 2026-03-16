@@ -4,6 +4,7 @@ import { useUndo } from '@/lib/undo';
 import { useHabits } from '@/hooks/useHabits';
 import { formatAppDate } from '@/lib/i18n';
 import { getDaysSinceLastCompletion } from '@/lib/habits/habitStats';
+import { isMandatoryToday } from '@/lib/habits/schedule';
 
 import { useDashboardData } from './dashboard/useDashboardData';
 import { useDashboardHandlers } from './dashboard/useDashboardHandlers';
@@ -45,13 +46,19 @@ export function useDashboardModel() {
   }, []);
 
   const today = formatDate(todayDate);
-  const todayRate = getTodayCompletionRate();
   const activeHabits = useMemo(() => allHabits.filter(h => !h.archived), [allHabits]);
-  const completedToday = activeHabits.filter((habit) => (habit.completions[today] ?? 0) >= Math.max(1, habit.dailyTarget ?? 1)).length;
-  const totalActive = activeHabits.length;
+
+  // Only count habits mandatory for today (scheduled AND quota not met)
+  const scheduledTodayHabits = useMemo(() => {
+    return activeHabits.filter((habit) => isMandatoryToday(habit, todayDate));
+  }, [activeHabits, todayDate]);
+
+  const completedToday = scheduledTodayHabits.filter((habit) => (habit.completions[today] ?? 0) >= Math.max(1, habit.dailyTarget ?? 1)).length;
+  const totalActive = scheduledTodayHabits.length;
+  const todayRate = totalActive > 0 ? Math.round((completedToday / totalActive) * 100) : 0;
   const dateStr = formatAppDate(new Date(), { weekday: 'long', month: 'short', day: 'numeric' });
 
-  const remindersHook = useReminderTracker(activeHabits, formatDate, (habit) => {
+  const remindersHook = useReminderTracker(scheduledTodayHabits, formatDate, (habit) => {
     if (typeof window === 'undefined' || !('Notification' in window) || Notification.permission !== 'granted') {
       return;
     }
