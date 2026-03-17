@@ -54,7 +54,9 @@ export default defineConfig({
   plugins: [
     react(),
     VitePWA({
-      strategies: 'generateSW',
+      strategies: 'injectManifest',
+      srcDir: 'src',
+      filename: 'sw-custom.ts',
       registerType: 'autoUpdate',
       injectRegister: 'auto',
       manifest: {
