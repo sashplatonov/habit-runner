@@ -31,6 +31,7 @@ import { useTheme } from '@/hooks/useTheme';
 import { UndoProvider } from '@/lib/undo';
 import { installGlobalClientLogging } from '@/lib/logging/clientLogger';
 import { PullToRefresh } from '@/components/PullToRefresh';
+import { subscribeToPush, isPushNotificationSupported } from '@/lib/pwa/pushSubscription';
 
 type AuthCallbackPageProps = {
   message?: string;
@@ -103,6 +104,13 @@ export function App() {
   useEffect(() => {
     return installGlobalClientLogging();
   }, []);
+
+  // Auto-subscribe to push if permission already granted and user is logged in
+  useEffect(() => {
+    if (!authSession || !isPushNotificationSupported()) return;
+    if (Notification.permission !== 'granted') return;
+    subscribeToPush().catch(() => {/* silent — push is best-effort */});
+  }, [authSession]);
 
   useEffect(() => {
     const url = new URL(window.location.href);
