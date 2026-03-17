@@ -108,8 +108,17 @@ export function FilterBar({
         </div>
         <div className="flex flex-col sm:flex-row sm:items-center gap-3 py-3 border-t border-border/40">
           <SearchBar searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
-          <div className="flex items-center justify-between gap-3">
+          <div className="flex flex-col items-end gap-1.5">
             <SortToggle sortMode={sortMode} setSortMode={setSortMode} />
+            {sortMode === 'smart' && (
+              <div className="flex items-center gap-2 text-[9px] font-mono text-muted">
+                <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-accent/60 inline-block" />easy first</span>
+                <span className="text-border">·</span>
+                <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-accent-secondary/60 inline-block" />hard last</span>
+                <span className="text-border">·</span>
+                <span>custom order within</span>
+              </div>
+            )}
           </div>
         </div>
         <div className="py-2.5 flex items-center gap-1.5 overflow-x-auto no-scrollbar">
