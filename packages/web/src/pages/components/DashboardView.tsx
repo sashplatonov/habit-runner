@@ -62,6 +62,7 @@ export function DashboardView(props: DashboardViewProps) {
         handleDragStart={props.handleDragStart}
         handleDragOver={props.handleDragOver}
         handleDragEnd={props.handleDragEnd}
+        handleTouchStart={props.handleTouchStart}
         reorderMode={props.reorderMode}
         moveHabit={props.moveHabit}
         navigate={props.navigate}

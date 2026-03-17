@@ -28,6 +28,7 @@ type HabitRowProps = {
   onDragOver?: (event: React.DragEvent<HTMLDivElement>) => void;
   onDrop?: (event: React.DragEvent<HTMLDivElement>) => void;
   onDragEnd?: () => void;
+  onTouchStart?: (event: React.TouchEvent) => void;
   isDropTarget?: boolean;
   isDragging?: boolean;
   dropHintPosition?: DropHintPosition;
@@ -125,6 +126,7 @@ export function HabitRow({
   onDragOver,
   onDrop,
   onDragEnd,
+  onTouchStart,
   isDropTarget,
   isDragging = false,
   dropHintPosition,
@@ -169,6 +171,7 @@ export function HabitRow({
       onDragOver={onDragOver}
       onDrop={onDrop}
       onDragEnd={onDragEnd}
+      onTouchStart={onTouchStart}
       isDropTarget={isDropTarget}
       isDragging={isDragging}
       dropHintPosition={dropHintPosition}
@@ -207,6 +210,7 @@ type HabitRowCardProps = {
   onDragOver?: (event: React.DragEvent<HTMLDivElement>) => void;
   onDrop?: (event: React.DragEvent<HTMLDivElement>) => void;
   onDragEnd?: () => void;
+  onTouchStart?: (event: React.TouchEvent) => void;
   isDropTarget?: boolean;
   isDragging?: boolean;
   dropHintPosition?: DropHintPosition;
@@ -234,6 +238,7 @@ function HabitRowCard({
   onDragOver,
   onDrop,
   onDragEnd,
+  onTouchStart,
   isDropTarget,
   isDragging,
   dropHintPosition,
@@ -249,9 +254,10 @@ function HabitRowCard({
       : dropHintPosition === 'below'
         ? 'translate-y-2'
         : '';
-  const dragTransformClass = isDragging ? 'opacity-70 scale-[0.97] shadow-2xl' : '';
+  const dragTransformClass = isDragging ? 'opacity-50 scale-[0.97] shadow-2xl ring-2 ring-accent/40' : '';
   return (
     <div
+      data-habit-id={habit.id}
       draggable={Boolean(onDragStart)}
       onDragStart={onDragStart}
       onDragOver={onDragOver}
@@ -281,8 +287,13 @@ function HabitRowCard({
         aria-hidden
       />
       <div className="flex-1 flex items-center gap-3 px-3 py-3 min-w-0 overflow-hidden">
-        <div className="hidden sm:flex items-center">
-          <GripVerticalIcon size={14} className="text-muted" aria-hidden />
+        {/* Grip handle — visible on all screen sizes, touch-draggable on mobile */}
+        <div
+          className="flex items-center touch-none cursor-grab active:cursor-grabbing"
+          onTouchStart={onTouchStart}
+          aria-hidden
+        >
+          <GripVerticalIcon size={14} className="text-muted/60 group-hover:text-muted transition-colors" aria-hidden />
         </div>
         <HabitRowInfoPane
           habit={habit}

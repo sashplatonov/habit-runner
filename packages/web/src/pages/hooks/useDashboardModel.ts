@@ -134,6 +134,7 @@ export function useDashboardModel() {
     handleDragOver: dragHandlers.handleDragOver,
     handleDrop: dragHandlers.handleDrop,
     handleDragEnd: dragHandlers.handleDragEnd,
+    handleTouchStart: dragHandlers.handleTouchStart,
     reorderMode,
     toggleReorderMode,
     moveHabit,
