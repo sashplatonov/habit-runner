@@ -93,8 +93,14 @@ export function useDashboardModel() {
     handleDismissReminder: remindersHook.handleDismissReminder
   });
 
-  const { applyHabitsOrder } = useHabitOrderingCallbacks(allHabits, data.filtered, updateHabit);
-  const dragHandlers = useDragHandlers(allHabits, applyHabitsOrder);
+  // Sort by sortOrder so drag indices match the visual order on screen
+  const habitsSortedByOrder = useMemo(
+    () => [...allHabits].sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0)),
+    [allHabits]
+  );
+
+  const { applyHabitsOrder } = useHabitOrderingCallbacks(updateHabit);
+  const dragHandlers = useDragHandlers(habitsSortedByOrder, applyHabitsOrder);
 
   const daysSinceLastCompletion = getDaysSinceLastCompletion(activeHabits, todayDate);
 
