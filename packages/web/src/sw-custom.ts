@@ -24,11 +24,12 @@ self.addEventListener('push', (event: PushEvent) => {
     };
   }
 
+  const origin = self.location.origin;
   event.waitUntil(
     self.registration.showNotification(notificationData.title, {
       body: notificationData.body,
-      icon: '/icon-192.png',
-      badge: '/icon-192.png',
+      icon: `${origin}/icon-192.png`,
+      badge: `${origin}/icon-192.png`,
       tag: 'habbit-reminder',
       requireInteraction: false
     })
