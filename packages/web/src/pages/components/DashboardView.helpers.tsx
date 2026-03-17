@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback } from 'react';
-import { ArrowDownIcon, ArrowUpIcon, CheckIcon, FlameIcon, GripVerticalIcon } from 'lucide-react';
+import { CheckIcon, FlameIcon, GripVerticalIcon } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { CompletionRing } from '@/components/CompletionRing';
 import { MiniHeatmap } from '@/components/MiniHeatmap';
@@ -32,11 +32,6 @@ type HabitRowProps = {
   isDropTarget?: boolean;
   isDragging?: boolean;
   dropHintPosition?: DropHintPosition;
-  reorderMode?: boolean;
-  onMoveUp?: () => void;
-  onMoveDown?: () => void;
-  disableMoveUp?: boolean;
-  disableMoveDown?: boolean;
 };
 
 function HabitRowMetrics({
@@ -129,12 +124,7 @@ export function HabitRow({
   onTouchStart,
   isDropTarget,
   isDragging = false,
-  dropHintPosition,
-  reorderMode,
-  onMoveUp,
-  onMoveDown,
-  disableMoveUp,
-  disableMoveDown
+  dropHintPosition
 }: HabitRowProps) {
   const todayKey = formatDate(new Date());
   const todayDate = new Date();
@@ -184,11 +174,6 @@ export function HabitRow({
       completionRate={completionRate}
       toggleButtonClass={toggleButtonClass}
       toggleButtonTitle={toggleButtonTitle}
-      reorderMode={reorderMode}
-      onMoveUp={onMoveUp}
-      onMoveDown={onMoveDown}
-      disableMoveUp={disableMoveUp}
-      disableMoveDown={disableMoveDown}
     />
   );
 }
@@ -214,11 +199,6 @@ type HabitRowCardProps = {
   isDropTarget?: boolean;
   isDragging?: boolean;
   dropHintPosition?: DropHintPosition;
-  reorderMode?: boolean;
-  onMoveUp?: () => void;
-  onMoveDown?: () => void;
-  disableMoveUp?: boolean;
-  disableMoveDown?: boolean;
 };
 
 function HabitRowCard({
@@ -241,12 +221,7 @@ function HabitRowCard({
   onTouchStart,
   isDropTarget,
   isDragging,
-  dropHintPosition,
-  reorderMode = false,
-  onMoveUp,
-  onMoveDown,
-  disableMoveUp,
-  disableMoveDown
+  dropHintPosition
 }: HabitRowCardProps) {
   const dropTransformClass =
     dropHintPosition === 'above'
@@ -287,9 +262,9 @@ function HabitRowCard({
         aria-hidden
       />
       <div className="flex-1 flex items-center gap-3 px-3 py-3 min-w-0 overflow-hidden">
-        {/* Grip handle — visible on all screen sizes, touch-draggable on mobile */}
+        {/* Grip handle — touch-draggable on mobile, visible always */}
         <div
-          className="flex items-center touch-none cursor-grab active:cursor-grabbing"
+          className="flex items-center p-1 -mx-1 touch-none cursor-grab active:cursor-grabbing"
           onTouchStart={onTouchStart}
           aria-hidden
         >
@@ -313,14 +288,6 @@ function HabitRowCard({
           last7={last7}
           completionRate={completionRate}
         />
-        {reorderMode && (
-          <HabitRowReorderControls
-            onMoveUp={onMoveUp}
-            onMoveDown={onMoveDown}
-            disableMoveUp={disableMoveUp}
-            disableMoveDown={disableMoveDown}
-          />
-        )}
         <HabitRowToggleButton
           completed={completed}
           isFrozen={isFrozen}
@@ -518,56 +485,6 @@ function HabitRowToggleButton({
   );
 }
 
-type HabitRowReorderControlsProps = {
-  onMoveUp?: () => void;
-  onMoveDown?: () => void;
-  disableMoveUp?: boolean;
-  disableMoveDown?: boolean;
-};
-
-function HabitRowReorderControls({
-  onMoveUp,
-  onMoveDown,
-  disableMoveUp,
-  disableMoveDown
-}: HabitRowReorderControlsProps) {
-  return (
-    <div className="flex flex-col gap-1 sm:hidden">
-      <button
-        type="button"
-        onClick={(event) => {
-          event.stopPropagation();
-          if (!disableMoveUp) {
-            void onMoveUp?.();
-          }
-        }}
-        disabled={disableMoveUp}
-        aria-label="Move habit up"
-        className={`w-8 h-8 rounded-xl border border-border/60 flex items-center justify-center transition ${
-          disableMoveUp ? 'cursor-not-allowed text-muted/50' : 'hover:border-accent hover:text-accent text-foreground'
-        }`}
-      >
-        <ArrowUpIcon size={16} />
-      </button>
-      <button
-        type="button"
-        onClick={(event) => {
-          event.stopPropagation();
-          if (!disableMoveDown) {
-            void onMoveDown?.();
-          }
-        }}
-        disabled={disableMoveDown}
-        aria-label="Move habit down"
-        className={`w-8 h-8 rounded-xl border border-border/60 flex items-center justify-center transition ${
-          disableMoveDown ? 'cursor-not-allowed text-muted/50' : 'hover:border-accent hover:text-accent text-foreground'
-        }`}
-      >
-        <ArrowDownIcon size={16} />
-      </button>
-    </div>
-  );
-}
 
 export function DropIndicator() {
   return (

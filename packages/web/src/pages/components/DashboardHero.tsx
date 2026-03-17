@@ -42,9 +42,6 @@ export type DashboardViewProps = {
   handleDrop: (event: React.DragEvent<HTMLDivElement>, habitId: string) => Promise<void>;
   handleDragEnd: () => void;
   handleTouchStart: (event: React.TouchEvent, habitId: string) => void;
-  reorderMode: boolean;
-  toggleReorderMode: () => void;
-  moveHabit: (habitId: string, direction: 'up' | 'down') => Promise<void>;
   sortMode: 'custom' | 'smart';
   setSortMode: (mode: 'custom' | 'smart') => void;
 };
@@ -109,9 +106,7 @@ export function DashboardHero({
   totalActive,
   overallStreak,
   daysSinceLastCompletion,
-  handleExport,
-  reorderMode,
-  toggleReorderMode
+  handleExport
 }: Pick<
   DashboardViewProps,
   | 'dateStr'
@@ -121,8 +116,6 @@ export function DashboardHero({
   | 'overallStreak'
   | 'daysSinceLastCompletion'
   | 'handleExport'
-  | 'reorderMode'
-  | 'toggleReorderMode'
 >) {
   const remaining = totalActive - completedToday;
   const motivationText =
@@ -172,15 +165,6 @@ export function DashboardHero({
           <div className="flex items-center justify-between gap-3">
             <div className="text-[10px] font-mono uppercase tracking-[0.4em] text-muted">Filters</div>
             <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={toggleReorderMode}
-                className={`text-[10px] font-mono uppercase tracking-[0.3em] border px-3 py-1 rounded-full transition ${
-                  reorderMode ? 'border-accent text-accent bg-accent/10' : 'border-border hover:border-accent hover:text-accent'
-                }`}
-              >
-                {reorderMode ? 'Done' : 'Reorder'}
-              </button>
               <button
                 type="button"
                 onClick={handleExport}

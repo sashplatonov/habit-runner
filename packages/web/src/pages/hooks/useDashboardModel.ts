@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from '@/lib/router';
 import { useUndo } from '@/lib/undo';
 import { useHabits } from '@/hooks/useHabits';
@@ -17,14 +17,13 @@ const FILTER_STORAGE_KEY = 'hr_dashboard_filter_v1';
 
 export function useDashboardModel() {
   const navigate = useNavigate();
-  const { allHabits, setCompletionCount, addHabit, updateHabit, getTodayCompletionRate, formatDate } = useHabits();
+  const { allHabits, setCompletionCount, addHabit, updateHabit, formatDate } = useHabits();
   const { push } = useUndo();
 
   const [addingTemplate, setAddingTemplate] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [sortMode, setSortMode] = useState<'custom' | 'smart'>('custom');
-  const [reorderMode, setReorderMode] = useState(false);
 
   const [filter, setFilter] = useState<DashboardFilter>(() => {
     if (typeof window === 'undefined') {
@@ -94,12 +93,8 @@ export function useDashboardModel() {
     handleDismissReminder: remindersHook.handleDismissReminder
   });
 
-  const { applyHabitsOrder, moveHabit } = useHabitOrderingCallbacks(allHabits, data.filtered, updateHabit);
+  const { applyHabitsOrder } = useHabitOrderingCallbacks(allHabits, data.filtered, updateHabit);
   const dragHandlers = useDragHandlers(allHabits, applyHabitsOrder);
-
-  const toggleReorderMode = useCallback(() => {
-    setReorderMode((prev) => !prev);
-  }, []);
 
   const daysSinceLastCompletion = getDaysSinceLastCompletion(activeHabits, todayDate);
 
@@ -135,9 +130,6 @@ export function useDashboardModel() {
     handleDrop: dragHandlers.handleDrop,
     handleDragEnd: dragHandlers.handleDragEnd,
     handleTouchStart: dragHandlers.handleTouchStart,
-    reorderMode,
-    toggleReorderMode,
-    moveHabit,
     sortMode,
     setSortMode,
     daysSinceLastCompletion
