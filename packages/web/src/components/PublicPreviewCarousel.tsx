@@ -283,6 +283,7 @@ export function PublicPreviewCarousel() {
                 handleDragOver={() => undefined}
                 handleDrop={async () => undefined}
                 handleDragEnd={() => undefined}
+                handleTouchStart={() => undefined}
               />
             </BrowserRouter>
           </PreviewSlide>

@@ -13,6 +13,7 @@ export function HabitListSection({
   handleDragStart,
   handleDragOver,
   handleDragEnd,
+  handleTouchStart,
   navigate,
   reorderMode,
   moveHabit,
@@ -28,6 +29,7 @@ export function HabitListSection({
   | 'handleDragStart'
   | 'handleDragOver'
   | 'handleDragEnd'
+  | 'handleTouchStart'
   | 'navigate'
   | 'reorderMode'
   | 'moveHabit'
@@ -67,6 +69,7 @@ export function HabitListSection({
                   handleDragStart={handleDragStart}
                   handleDragOver={handleDragOver}
                   handleDragEnd={handleDragEnd}
+                  handleTouchStart={handleTouchStart}
                   navigate={navigate}
                   reorderMode={reorderMode}
                   moveHabit={moveHabit}
@@ -90,6 +93,7 @@ export function HabitListSection({
             handleDragStart={handleDragStart}
             handleDragOver={handleDragOver}
             handleDragEnd={handleDragEnd}
+            handleTouchStart={handleTouchStart}
             navigate={navigate}
             reorderMode={reorderMode}
             moveHabit={moveHabit}
@@ -112,6 +116,7 @@ type HabitRowEntryProps = {
   handleDragStart: (event: React.DragEvent<HTMLDivElement>, habitId: string) => void;
   handleDragOver: (event: React.DragEvent<HTMLDivElement>, habitId: string) => void;
   handleDragEnd: () => void;
+  handleTouchStart: (event: React.TouchEvent, habitId: string) => void;
   navigate: (to: string) => void;
   reorderMode: boolean;
   moveHabit: (habitId: string, direction: 'up' | 'down') => Promise<void>;
@@ -129,6 +134,7 @@ function HabitRowEntry({
   handleDragStart,
   handleDragOver,
   handleDragEnd,
+  handleTouchStart,
   navigate,
   reorderMode,
   moveHabit
@@ -155,6 +161,7 @@ function HabitRowEntry({
           void handleDrop(event, habit.id);
         }}
         onDragEnd={handleDragEnd}
+        onTouchStart={(event) => handleTouchStart(event, habit.id)}
         isDropTarget={dragOverHabitId === habit.id}
         isDragging={isDragging}
         dropHintPosition={dropHintPosition}

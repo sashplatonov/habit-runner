@@ -41,6 +41,7 @@ export type DashboardViewProps = {
   handleDragOver: (event: React.DragEvent<HTMLDivElement>, habitId: string) => void;
   handleDrop: (event: React.DragEvent<HTMLDivElement>, habitId: string) => Promise<void>;
   handleDragEnd: () => void;
+  handleTouchStart: (event: React.TouchEvent, habitId: string) => void;
   reorderMode: boolean;
   toggleReorderMode: () => void;
   moveHabit: (habitId: string, direction: 'up' | 'down') => Promise<void>;
