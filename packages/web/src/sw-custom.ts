@@ -1,9 +1,10 @@
 /// <reference lib="webworker" />
+import { precacheAndRoute } from 'workbox-precaching';
+
 declare const self: ServiceWorkerGlobalScope;
 
-// Manifest placeholder for vite-plugin-pwa to inject
-declare const __WB_MANIFEST: any;
-self.__WB_MANIFEST;
+// Precache app shell — list injected by vite-plugin-pwa at build time
+precacheAndRoute(self.__WB_MANIFEST);
 
 // Handle push events in the service worker
 self.addEventListener('push', (event: PushEvent) => {
