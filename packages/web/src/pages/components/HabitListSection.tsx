@@ -15,8 +15,6 @@ export function HabitListSection({
   handleDragEnd,
   handleTouchStart,
   navigate,
-  reorderMode,
-  moveHabit,
   selectedTags
 }: Pick<
   DashboardViewProps,
@@ -31,8 +29,6 @@ export function HabitListSection({
   | 'handleDragEnd'
   | 'handleTouchStart'
   | 'navigate'
-  | 'reorderMode'
-  | 'moveHabit'
   | 'selectedTags'
 >) {
   if (filtered.length === 0) {
@@ -55,12 +51,10 @@ export function HabitListSection({
                 <span className="w-1.5 h-1.5 rounded-full bg-accent" />
                 <h3 className="text-[10px] font-mono font-bold uppercase tracking-widest text-muted">{tag}</h3>
               </div>
-              {habitsInTag.map((habit, index) => (
+              {habitsInTag.map((habit) => (
                 <HabitRowEntry
                   key={`${tag}-${habit.id}`}
                   habit={habit}
-                  index={index}
-                  filteredLength={habitsInTag.length}
                   dropHint={dropHint}
                   dragOverHabitId={dragOverHabitId}
                   draggedHabitId={draggedHabitId}
@@ -71,20 +65,16 @@ export function HabitListSection({
                   handleDragEnd={handleDragEnd}
                   handleTouchStart={handleTouchStart}
                   navigate={navigate}
-                  reorderMode={reorderMode}
-                  moveHabit={moveHabit}
                 />
               ))}
             </div>
           );
         })
       ) : (
-        filtered.map((habit, index) => (
+        filtered.map((habit) => (
           <HabitRowEntry
             key={habit.id}
             habit={habit}
-            index={index}
-            filteredLength={filtered.length}
             dropHint={dropHint}
             dragOverHabitId={dragOverHabitId}
             draggedHabitId={draggedHabitId}
@@ -95,8 +85,6 @@ export function HabitListSection({
             handleDragEnd={handleDragEnd}
             handleTouchStart={handleTouchStart}
             navigate={navigate}
-            reorderMode={reorderMode}
-            moveHabit={moveHabit}
           />
         ))
       )}
@@ -106,8 +94,6 @@ export function HabitListSection({
 
 type HabitRowEntryProps = {
   habit: Habit;
-  index: number;
-  filteredLength: number;
   dropHint: { habitId: string; position: 'above' | 'below' } | null;
   dragOverHabitId: string | null;
   draggedHabitId: string | null;
@@ -118,14 +104,10 @@ type HabitRowEntryProps = {
   handleDragEnd: () => void;
   handleTouchStart: (event: React.TouchEvent, habitId: string) => void;
   navigate: (to: string) => void;
-  reorderMode: boolean;
-  moveHabit: (habitId: string, direction: 'up' | 'down') => Promise<void>;
 };
 
 function HabitRowEntry({
   habit,
-  index,
-  filteredLength,
   dropHint,
   dragOverHabitId,
   draggedHabitId,
@@ -135,14 +117,10 @@ function HabitRowEntry({
   handleDragOver,
   handleDragEnd,
   handleTouchStart,
-  navigate,
-  reorderMode,
-  moveHabit
+  navigate
 }: HabitRowEntryProps) {
   const dropHintPosition = dropHint?.habitId === habit.id ? dropHint.position : null;
   const isDragging = draggedHabitId === habit.id;
-  const canMoveUp = reorderMode && index > 0;
-  const canMoveDown = reorderMode && index < filteredLength - 1;
   const showDropAbove = dropHintPosition === 'above';
   const showDropBelow = dropHintPosition === 'below';
 
@@ -165,11 +143,6 @@ function HabitRowEntry({
         isDropTarget={dragOverHabitId === habit.id}
         isDragging={isDragging}
         dropHintPosition={dropHintPosition}
-        reorderMode={reorderMode}
-        onMoveUp={canMoveUp ? () => void moveHabit(habit.id, 'up') : undefined}
-        onMoveDown={canMoveDown ? () => void moveHabit(habit.id, 'down') : undefined}
-        disableMoveUp={!canMoveUp}
-        disableMoveDown={!canMoveDown}
       />
       {showDropBelow && <DropIndicator />}
     </React.Fragment>

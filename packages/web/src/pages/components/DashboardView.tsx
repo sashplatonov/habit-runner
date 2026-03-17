@@ -29,8 +29,6 @@ export function DashboardView(props: DashboardViewProps) {
         overallStreak={props.overallStreak}
         daysSinceLastCompletion={props.daysSinceLastCompletion}
         handleExport={props.handleExport}
-        reorderMode={props.reorderMode}
-        toggleReorderMode={props.toggleReorderMode}
       />
       <RemindersPanel
         reminders={props.reminders}
@@ -63,8 +61,6 @@ export function DashboardView(props: DashboardViewProps) {
         handleDragOver={props.handleDragOver}
         handleDragEnd={props.handleDragEnd}
         handleTouchStart={props.handleTouchStart}
-        reorderMode={props.reorderMode}
-        moveHabit={props.moveHabit}
         navigate={props.navigate}
         selectedTags={props.selectedTags}
       />
