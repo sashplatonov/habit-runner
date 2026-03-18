@@ -5,8 +5,9 @@ export function RemindersPanel({
   reminders,
   habits,
   handleToggle,
-  handleDismissReminder
-}: Pick<DashboardViewProps, 'reminders' | 'habits' | 'handleToggle' | 'handleDismissReminder'>) {
+  handleDismissReminder,
+  handleDisableReminder
+}: Pick<DashboardViewProps, 'reminders' | 'habits' | 'handleToggle' | 'handleDismissReminder' | 'handleDisableReminder'>) {
   if (!reminders.length) {
     return null;
   }
@@ -41,6 +42,13 @@ export function RemindersPanel({
                 className="flex-1 rounded-full border border-border px-3 py-1.5 text-[10px] font-mono uppercase tracking-[0.3em] text-muted hover:text-foreground hover:border-border-hover transition-colors"
               >
                 Dismiss
+              </button>
+              <button
+                type="button"
+                onClick={() => void handleDisableReminder(habit)}
+                className="flex-1 rounded-full border border-destructive px-3 py-1.5 text-[10px] font-mono uppercase tracking-[0.3em] text-destructive hover:bg-destructive/10 transition-colors"
+              >
+                Disable
               </button>
             </div>
           </div>
