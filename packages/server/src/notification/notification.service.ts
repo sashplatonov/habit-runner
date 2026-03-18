@@ -59,10 +59,11 @@ export class NotificationService implements OnModuleInit {
       });
     } catch (error) {
       // Ignore not found errors
-      if ((error as any).code !== 'P2025') {
-        this.logger.error(`Failed to delete subscription: ${error}`);
-        throw error;
+      if (this.isP2025Error(error)) {
+        return;
       }
+      this.logger.error(`Failed to delete subscription: ${error}`);
+      throw error;
     }
   }
 
@@ -153,5 +154,13 @@ export class NotificationService implements OnModuleInit {
       throw new Error('VAPID_PUBLIC_KEY not configured');
     }
     return key;
+  }
+
+  private isP2025Error(error: unknown): error is { code?: string } {
+    if (typeof error !== 'object' || error === null) {
+      return false;
+    }
+    const maybeRecord = error as Record<string, unknown>;
+    return typeof maybeRecord.code === 'string' && maybeRecord.code === 'P2025';
   }
 }

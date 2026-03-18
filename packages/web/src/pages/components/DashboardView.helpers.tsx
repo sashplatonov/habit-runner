@@ -1,13 +1,15 @@
 import { useState, useRef, useCallback } from 'react';
-import { CheckIcon, FlameIcon, GripVerticalIcon } from 'lucide-react';
+import { CheckIcon, FlameIcon, GripVerticalIcon, SnowflakeIcon } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { CompletionRing } from '@/components/CompletionRing';
 import { MiniHeatmap } from '@/components/MiniHeatmap';
 import { HABIT_COLOR_THEMES } from '@/lib/theme/habit-colors';
 import type { HabitColorTheme } from '@/lib/theme/habit-colors';
+import { useSwipeGesture } from '@/hooks/useSwipeGesture';
 import { calculateScheduledCompletionRate, calculateScheduledStreak, getScheduleStatusForDate, isMandatoryToday } from '@/lib/habits/schedule';
 import { formatDate } from '@/lib/habits/habitStats';
 import type { Habit } from '@/types/habit';
+import type { ViewDensity } from './DashboardHero';
 
 function buildLastWeek(completions: Record<string, number>, target: number) {
   return Array.from({ length: 7 }, (_, index) => {
@@ -32,6 +34,8 @@ type HabitRowProps = {
   isDropTarget?: boolean;
   isDragging?: boolean;
   dropHintPosition?: DropHintPosition;
+  viewDensity: ViewDensity;
+  appearanceIndex?: number;
 };
 
 function HabitRowMetrics({
@@ -50,30 +54,32 @@ function HabitRowMetrics({
   const accent = HABIT_COLOR_THEMES[habit.color];
 
   return (
-    <>
-      <div className="hidden sm:flex items-center gap-1 w-20 sm:w-24 justify-end">
+    <div className="flex items-center gap-1.5 flex-shrink-0">
+      {/* Streak — always visible, size scales up on sm+ */}
+      <div className="flex items-center gap-0.5 w-10 sm:w-20 justify-end">
         {streak > 0 && (
-          <>
-            {habit.type === 'negative' ? (
-              <>
-                <span className="text-[10px] font-mono text-accent-secondary whitespace-nowrap">{streak} days free</span>
-                <span className="text-[10px]" role="img" aria-label="trophy">🏆</span>
-              </>
-            ) : (
-              <>
-                <FlameIcon size={11} className="text-accent-secondary" />
-                <span className="text-[11px] font-mono text-accent-secondary">{streak}</span>
-              </>
-            )}
-          </>
+          habit.type === 'negative' ? (
+            <span className="hidden sm:inline text-[10px] font-mono text-accent-secondary whitespace-nowrap">{streak}d 🏆</span>
+          ) : (
+            <>
+              <FlameIcon size={10} className="text-accent-secondary flex-shrink-0" />
+              <span className="text-[10px] font-mono text-accent-secondary">{streak}</span>
+            </>
+          )
         )}
       </div>
 
-      <div className="hidden sm:block">
-        <CompletionRing percentage={completionRate} size={32} strokeWidth={2.5} color={habit.color} showText={false} />
-      </div>
+      {/* Ring — always visible */}
+      <CompletionRing
+        percentage={completionRate}
+        size={28}
+        strokeWidth={2.5}
+        color={habit.color}
+        showText={false}
+      />
 
-      <div className="hidden md:flex items-end gap-[1px] h-4 sm:h-5 ml-1" aria-hidden>
+      {/* Weekly bars — hidden on mobile */}
+      <div className="hidden sm:flex items-end gap-[1px] h-4 ml-0.5" aria-hidden>
         {last7.map((done, i) => (
           <div
             key={i}
@@ -87,25 +93,27 @@ function HabitRowMetrics({
         ))}
       </div>
 
-      <div className="hidden lg:flex items-center justify-end ml-2" aria-hidden>
+      {/* Heatmap — lg only */}
+      <div className="hidden lg:flex items-center justify-end ml-1" aria-hidden>
         <MiniHeatmap completions={habit.completions} dailyTarget={target} color={habit.color} />
       </div>
-    </>
+    </div>
   );
 }
 
 
 function MiniBars({ last7, accentHex }: { last7: boolean[]; accentHex: string }) {
   return (
-    <div className="flex items-end gap-[2px] h-[13px]" aria-hidden>
+    <div className="flex items-end gap-[2px] h-[13px] progress-shimmer" aria-hidden>
       {last7.map((done, i) => (
         <span
           key={i}
-          className="w-[3px] rounded-sm transition-all"
+          className="w-[3px] rounded-sm transition-all progress-shimmer-bar"
           style={{
             height: done ? '100%' : '40%',
             backgroundColor: done ? accentHex : 'var(--border)',
-            opacity: done ? 1 : 0.4 + i * 0.07
+            opacity: done ? 1 : 0.4 + i * 0.07,
+            animationDelay: `${i * 0.08}s`
           }}
         />
       ))}
@@ -124,7 +132,9 @@ export function HabitRow({
   onTouchStart,
   isDropTarget,
   isDragging = false,
-  dropHintPosition
+  dropHintPosition,
+  viewDensity,
+  appearanceIndex
 }: HabitRowProps) {
   const todayKey = formatDate(new Date());
   const todayDate = new Date();
@@ -165,6 +175,8 @@ export function HabitRow({
       isDropTarget={isDropTarget}
       isDragging={isDragging}
       dropHintPosition={dropHintPosition}
+      viewDensity={viewDensity}
+      appearanceIndex={appearanceIndex}
       completed={completed}
       scheduledToday={scheduledToday}
       isFrozen={isFrozen}
@@ -189,6 +201,8 @@ type HabitRowCardProps = {
   completionRate: number;
   toggleButtonClass: string;
   toggleButtonTitle: string;
+  viewDensity: ViewDensity;
+  appearanceIndex?: number;
   onToggle: () => void;
   onDetail: () => void;
   onDragStart?: (event: React.DragEvent<HTMLDivElement>) => void;
@@ -221,8 +235,14 @@ function HabitRowCard({
   onTouchStart,
   isDropTarget,
   isDragging,
-  dropHintPosition
+  dropHintPosition,
+  viewDensity,
+  appearanceIndex
 }: HabitRowCardProps) {
+  const outerPaddingClass = 'px-2 py-1.5';
+  const innerGapClass = 'gap-2';
+  const innerPaddingClass = 'px-2 py-2';
+  const gripHandleClass = 'flex items-center p-0.5 -mx-0.5 touch-none cursor-grab active:cursor-grabbing';
   const dropTransformClass =
     dropHintPosition === 'above'
       ? '-translate-y-2'
@@ -230,6 +250,40 @@ function HabitRowCard({
         ? 'translate-y-2'
         : '';
   const dragTransformClass = isDragging ? 'opacity-50 scale-[0.97] shadow-2xl ring-2 ring-accent/40' : '';
+
+  const {
+    handlers: swipeHandlers,
+    offset: swipeOffset,
+    direction: swipeDirection,
+    isSwiping: isSwipingGesture
+  } = useSwipeGesture({
+    threshold: 60,
+    onSwipeLeft: onDetail,
+    onSwipeRight: () => {
+      if (!isFrozen) {
+        onToggle();
+      }
+    }
+  });
+
+  const animationDelayValue = Math.min(Math.max(appearanceIndex ?? 0, 0), 12) * 0.05;
+  const cardStyle: React.CSSProperties = {
+    animationDelay: `${animationDelayValue}s`,
+    transform: `translateX(${swipeOffset}px)`,
+    transition: isSwipingGesture ? 'none' : 'transform 0.2s ease-out',
+    touchAction: 'pan-y',
+    willChange: 'transform',
+    width: '100%'
+  };
+
+  const indicatorOpacity = Math.min(1, Math.abs(swipeOffset) / 120);
+  const indicatorColor =
+    swipeDirection === 'right'
+      ? 'rgba(16, 185, 129, 0.25)'
+      : swipeDirection === 'left'
+        ? 'rgba(59, 130, 246, 0.25)'
+        : 'transparent';
+
   return (
     <div
       data-habit-id={habit.id}
@@ -252,52 +306,70 @@ function HabitRowCard({
           onToggle();
         }
       }}
-      className={`group flex items-stretch border rounded-xl overflow-hidden hover:border-border-hover transition-all duration-200 cursor-pointer transform ${dropTransformClass} ${dragTransformClass} ${
-        isDropTarget ? 'border-accent/60 bg-accent/5' : ''
-      } ${isFrozen ? 'bg-bg-card opacity-80 border-border/50' : 'bg-bg-secondary border-border'}`}
+      className={`relative flex items-stretch w-full transform ${outerPaddingClass} ${dropTransformClass} ${dragTransformClass}`}
     >
       <div
-        className="w-1 self-stretch flex-shrink-0 rounded-l-xl"
-        style={{ background: accent.hex }}
-        aria-hidden
-      />
-      <div className="flex-1 flex items-center gap-3 px-3 py-3 min-w-0 overflow-hidden">
-        {/* Grip handle — touch-draggable on mobile, visible always */}
-        <div
-          className="flex items-center p-1 -mx-1 touch-none cursor-grab active:cursor-grabbing"
-          onTouchStart={onTouchStart}
-          aria-hidden
-        >
-          <GripVerticalIcon size={14} className="text-muted/60 group-hover:text-muted transition-colors" aria-hidden />
+        className={`habit-card-inner group z-0 flex items-stretch border rounded-xl overflow-hidden transition-all duration-200 cursor-pointer ${
+          isDropTarget ? 'border-accent/60 bg-accent/5' : ''
+        } ${isFrozen ? 'bg-bg-card opacity-80 border-border/50' : 'bg-bg-secondary border-border hover:border-border-hover'} animate-fade-slide-up active:scale-[0.98] active:shadow-sm`}
+        style={cardStyle}
+        onClick={onDetail}
+        {...swipeHandlers}
+      >
+        <span
+          className="habit-card-swipe-indicator"
+          style={{
+            opacity: indicatorOpacity,
+            backgroundColor: indicatorColor
+          }}
+        />
+        <div className="relative z-10 flex items-center min-w-0 overflow-hidden flex-1">
+          <div
+            className="w-1 self-stretch flex-shrink-0 rounded-l-xl"
+            style={{ background: accent.hex }}
+            aria-hidden
+          />
+          <div className={`flex-1 flex items-center justify-between w-full ${innerPaddingClass}`}>
+            {/* Left side: grip + info */}
+            <div className="flex items-center min-w-0 gap-2">
+              {/* Grip handle — touch-draggable on mobile, visible always */}
+              <div
+                className={gripHandleClass}
+                onTouchStart={onTouchStart}
+                aria-hidden
+              >
+                <GripVerticalIcon size={14} className="text-muted/60 group-hover:text-muted transition-colors" aria-hidden />
+              </div>
+              <HabitRowInfoPane
+                habit={habit}
+                accent={accent}
+                completed={completed}
+                scheduledToday={scheduledToday}
+                isFrozen={isFrozen}
+              />
+            </div>
+            {/* Right side: metrics + toggle — pinned to right edge via justify-between */}
+            <div className="flex items-center gap-2 flex-shrink-0">
+              <HabitRowMetrics
+                habit={habit}
+                target={Math.max(1, habit.dailyTarget ?? 1)}
+                streak={streak}
+                last7={last7}
+                completionRate={completionRate}
+              />
+              <HabitRowToggleButton
+                completed={completed}
+                isFrozen={isFrozen}
+                accent={accent}
+                toggleButtonClass={toggleButtonClass}
+                toggleButtonTitle={toggleButtonTitle}
+                onToggle={onToggle}
+                streak={streak}
+                targetStreak={habit.targetStreak}
+              />
+            </div>
+          </div>
         </div>
-        <HabitRowInfoPane
-          habit={habit}
-          accent={accent}
-          completed={completed}
-          scheduledToday={scheduledToday}
-          isFrozen={isFrozen}
-          streak={streak}
-          last7={last7}
-          completionRate={completionRate}
-          onDetail={onDetail}
-        />
-        <HabitRowMetrics
-          habit={habit}
-          target={Math.max(1, habit.dailyTarget ?? 1)}
-          streak={streak}
-          last7={last7}
-          completionRate={completionRate}
-        />
-        <HabitRowToggleButton
-          completed={completed}
-          isFrozen={isFrozen}
-          accent={accent}
-          toggleButtonClass={toggleButtonClass}
-          toggleButtonTitle={toggleButtonTitle}
-          onToggle={onToggle}
-          streak={streak}
-          targetStreak={habit.targetStreak}
-        />
       </div>
     </div>
   );
@@ -309,10 +381,6 @@ type HabitRowInfoPaneProps = {
   completed: boolean;
   scheduledToday: boolean;
   isFrozen: boolean;
-  streak: number;
-  last7: boolean[];
-  completionRate: number;
-  onDetail: () => void;
 };
 
 function HabitRowInfoPane({
@@ -320,76 +388,72 @@ function HabitRowInfoPane({
   accent,
   completed,
   scheduledToday,
-  isFrozen,
-  streak,
-  last7,
-  completionRate,
-  onDetail
+  isFrozen
 }: HabitRowInfoPaneProps) {
+  const inlineTags = habit.tags.slice(0, 3);
+  const extraTagCount = Math.max(0, habit.tags.length - inlineTags.length);
+  const statusBadge = isFrozen
+    ? { label: 'Frozen', tone: 'text-accent-secondary', title: 'Frozen today' }
+    : !scheduledToday
+      ? { label: 'Not today', tone: 'text-muted', title: 'Not scheduled today' }
+      : null;
+
+  const nameClasses = `text-sm font-semibold ${completed ? 'text-muted line-through' : 'text-foreground'} truncate`;
   return (
     <>
-      <button
-        type="button"
-        onClick={onDetail}
-        className="flex-shrink-0 w-9 h-9 rounded-xl flex items-center justify-center text-lg"
+      <div
+        className="flex-shrink-0 w-8 h-8 rounded-xl flex items-center justify-center text-base"
         style={{ background: accent.dim }}
-        tabIndex={-1}
         aria-hidden
       >
         {habit.icon}
-      </button>
-      <button
-        type="button"
-        onClick={onDetail}
-        className="flex flex-col flex-1 min-w-0 text-left gap-1 overflow-hidden"
+      </div>
+      <div
+        className="flex flex-col min-w-0 text-left overflow-hidden justify-center"
       >
-        <div className={`text-sm font-semibold ${completed ? 'text-muted line-through' : 'text-foreground'} truncate flex items-center gap-2`}>
-          {habit.name}
+        <div className="flex items-center gap-1.5 min-w-0">
+          <span className={nameClasses}>
+            {habit.name}
+          </span>
           {habit.dailyTarget && habit.dailyTarget > 1 && (
-            <span className="text-[11px] font-mono font-medium px-1.5 py-0.5 rounded bg-accent/10 text-accent-secondary whitespace-nowrap">
+            <span className="flex-shrink-0 text-[10px] font-mono font-medium px-1 py-0.5 rounded bg-accent/10 text-accent-secondary">
               ×{habit.dailyTarget}
             </span>
           )}
-          {isFrozen && <span title="Frozen today" className="text-[10px] opacity-70">🧊</span>}
+          {inlineTags.length > 0 && (
+            <div className="hidden sm:flex items-center gap-1 flex-shrink-0">
+              {inlineTags.map((tag) => (
+                <span key={tag} className="text-[10px] font-mono px-1 py-0.5 rounded bg-accent/10 text-accent-secondary whitespace-nowrap">
+                  #{tag}
+                </span>
+              ))}
+              {extraTagCount > 0 && (
+                <span className="text-[10px] font-mono px-1 py-0.5 rounded bg-accent/10 text-accent-secondary">
+                  +{extraTagCount}
+                </span>
+              )}
+            </div>
+          )}
         </div>
-        {habit.description && (
-          <div className="text-[10px] text-muted truncate hidden sm:block opacity-60">
-            {habit.description}
-          </div>
-        )}
-        {habit.tags.length > 0 && (
-          <div className="flex items-center gap-1 mt-1 flex-wrap">
-            {habit.tags.map((tag) => (
-              <span key={tag} className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-accent/10 text-accent-secondary whitespace-nowrap">
-                #{tag}
+        {(habit.description || statusBadge) && (
+          <div className="flex items-center gap-2 mt-0.5">
+            {habit.description && (
+              <span className="text-[10px] text-muted truncate opacity-60">{habit.description}</span>
+            )}
+            {statusBadge && (
+              <span
+                className={`flex items-center gap-1 flex-shrink-0 text-[10px] font-mono uppercase tracking-[0.3em] ${statusBadge.tone}`}
+                aria-label={statusBadge.title}
+              >
+                {isFrozen && (
+                  <SnowflakeIcon size={10} className="text-current" aria-hidden />
+                )}
+                {statusBadge.label}
               </span>
-            ))}
-          </div>
-        )}
-        <div className="flex items-center gap-2 mt-0.5">
-          {/* Mobile only stats */}
-          <div className="flex sm:hidden items-center gap-2">
-            <CompletionRing percentage={completionRate} size={18} strokeWidth={2} color={habit.color} showText={false} />
-            {streak > 0 && (
-              <div className="flex items-center gap-1 text-[10px] font-mono font-medium text-accent-secondary">
-                <FlameIcon size={10} />
-                {streak}
-              </div>
             )}
           </div>
-
-          <div className="sm:hidden">
-            <MiniBars last7={last7} accentHex={accent.hex} />
-          </div>
-
-          {!scheduledToday && !isFrozen && (
-            <span className="text-[10px] font-mono uppercase tracking-[0.3em] text-muted">Not today</span>
-          )}
-          {isFrozen && (
-            <span className="text-[10px] font-mono uppercase tracking-[0.3em] text-accent-secondary">Frozen</span>
-          )}
-        </div>
-      </button>
+        )}
+      </div>
     </>
   );
 }
@@ -403,6 +467,7 @@ type HabitRowToggleButtonProps = {
   onToggle: () => void;
   streak: number;
   targetStreak: number;
+  sizeClass?: string;
 };
 
 const CONFETTI_COLORS = ['var(--accent)', 'var(--accent-secondary)', '#fff', 'var(--glow)'];
@@ -415,7 +480,8 @@ function HabitRowToggleButton({
   toggleButtonTitle,
   onToggle,
   streak,
-  targetStreak
+  targetStreak,
+  sizeClass = 'w-8 h-8'
 }: HabitRowToggleButtonProps) {
   const [animating, setAnimating] = useState(false);
   const [particles, setParticles] = useState<{ id: number; tx: number; ty: number; color: string }[]>([]);
@@ -482,7 +548,7 @@ function HabitRowToggleButton({
         type="button"
         onClick={handleClick}
         disabled={isFrozen}
-        className={`w-9 h-9 rounded-xl border-[1.5px] flex items-center justify-center transition-all duration-200 ${toggleButtonClass} ${
+      className={`${sizeClass} rounded-xl border-[1.5px] flex items-center justify-center transition-all duration-200 ${toggleButtonClass} ${
           animating ? 'animate-check-pulse animate-glow-burst' : ''
         } ${isFrozen ? 'cursor-not-allowed opacity-60' : ''}`}
         style={completed && !isFrozen ? { boxShadow: `0 0 12px ${accent.glow}` } : undefined}
@@ -499,6 +565,118 @@ function HabitRowToggleButton({
   );
 }
 
+
+export function HabitTile({
+  habit,
+  onToggle,
+  onDetail,
+  appearanceIndex
+}: Pick<HabitRowProps, 'habit' | 'onToggle' | 'onDetail' | 'appearanceIndex'>) {
+  const todayKey = formatDate(new Date());
+  const todayDate = new Date();
+  todayDate.setHours(0, 0, 0, 0);
+  const status = getScheduleStatusForDate(habit, todayDate);
+  const scheduledToday = status === 'scheduled' && isMandatoryToday(habit, todayDate);
+  const target = Math.max(1, habit.dailyTarget ?? 1);
+  const todayCount = habit.completions[todayKey] ?? 0;
+  const completed = todayCount >= target;
+  const accent = HABIT_COLOR_THEMES[habit.color];
+  const { current: streak } = calculateScheduledStreak(habit, habit.completions);
+  const last7 = buildLastWeek(habit.completions, target);
+  const completionRate = calculateScheduledCompletionRate(habit, habit.completions);
+  const isFrozen = status === 'frozen';
+
+  const toggleButtonClass = completed
+    ? `${accent.bgClass} ${accent.borderClass}`
+    : scheduledToday
+      ? 'border-border-hover hover:border-muted'
+      : isFrozen
+        ? 'border-border bg-bg-secondary text-muted'
+        : 'border border-dashed border-border/40 text-muted hover:border-border';
+
+  const toggleButtonTitle = scheduledToday
+    ? `Mark ${habit.name} as ${completed ? 'incomplete' : 'complete'}`
+    : isFrozen
+      ? 'Frozen today'
+      : `Manual completion for ${habit.name}`;
+
+  const animationDelayValue = Math.min(Math.max(appearanceIndex ?? 0, 0), 12) * 0.05;
+
+  return (
+    <div
+      role="listitem"
+      tabIndex={0}
+      aria-label={`${habit.name}, ${completed ? 'completed' : 'not completed'}`}
+      className={`relative bg-bg-secondary border rounded-2xl overflow-hidden cursor-pointer transition-all duration-200 hover:border-border-hover active:scale-[0.97] animate-fade-slide-up ${
+        isFrozen ? 'opacity-75 border-border/50' : 'border-border'
+      }`}
+      style={{ animationDelay: `${animationDelayValue}s` }}
+      onClick={onDetail}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter') { e.preventDefault(); onDetail(); }
+        if (e.key === ' ') { e.preventDefault(); onToggle(); }
+      }}
+    >
+      <div className="h-[3px] w-full" style={{ background: accent.hex }} />
+      <div className="p-3 flex flex-col" style={{ minHeight: '120px' }}>
+        {/* Top: icon + ring — fixed */}
+        <div className="flex items-center justify-between mb-2">
+          <div
+            className="w-9 h-9 rounded-xl flex items-center justify-center text-lg flex-shrink-0"
+            style={{ background: accent.dim }}
+          >
+            {habit.icon}
+          </div>
+          <CompletionRing percentage={completionRate} size={26} strokeWidth={2.5} color={habit.color} showText={false} />
+        </div>
+
+        {/* Middle: name + meta — grows to fill space */}
+        <div className="flex-1 min-w-0">
+          <div className={`text-sm font-semibold truncate leading-tight ${completed ? 'text-muted line-through' : 'text-foreground'}`}>
+            {habit.name}
+            {habit.dailyTarget && habit.dailyTarget > 1 && (
+              <span className="ml-1 text-[10px] font-mono font-medium px-1 py-0.5 rounded bg-accent/10 text-accent-secondary">
+                ×{habit.dailyTarget}
+              </span>
+            )}
+          </div>
+          <div className="mt-0.5 h-4">
+            {streak > 0 && !isFrozen && scheduledToday ? (
+              habit.type === 'negative' ? (
+                <span className="text-[10px] font-mono text-accent-secondary">{streak}d 🏆</span>
+              ) : (
+                <div className="flex items-center gap-0.5">
+                  <FlameIcon size={9} className="text-accent-secondary flex-shrink-0" />
+                  <span className="text-[10px] font-mono text-accent-secondary">{streak}</span>
+                </div>
+              )
+            ) : isFrozen ? (
+              <span className="text-[10px] font-mono text-muted">🧊</span>
+            ) : !scheduledToday ? (
+              <span className="text-[10px] font-mono text-muted">🌙</span>
+            ) : null}
+          </div>
+        </div>
+
+        {/* Bottom: mini bars + toggle — always pinned */}
+        <div className="flex items-center justify-between mt-2 pt-1 border-t border-border/30">
+          <MiniBars last7={last7} accentHex={accent.hex} />
+          <HabitRowToggleButton
+            completed={completed}
+            isFrozen={isFrozen}
+            accent={accent}
+            toggleButtonClass={toggleButtonClass}
+            toggleButtonTitle={toggleButtonTitle}
+            onToggle={onToggle}
+            streak={streak}
+            targetStreak={habit.targetStreak}
+            sizeClass="w-8 h-8"
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export function DropIndicator() {
   return (

@@ -74,6 +74,7 @@ export type TxClient = {
         entity: string;
         entityId: string;
         version: number;
+        deletedAt?: Date;
       };
     }): Promise<unknown>;
   };

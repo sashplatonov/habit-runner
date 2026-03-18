@@ -14,6 +14,8 @@ import { useReminderTracker } from './dashboard/useReminderTracker';
 import type { DashboardFilter } from './dashboard/useDashboardData';
 
 const FILTER_STORAGE_KEY = 'hr_dashboard_filter_v1';
+const DENSITY_STORAGE_KEY = 'hr_dashboard_density_v1';
+const HERO_COLLAPSED_STORAGE_KEY = 'hr_dashboard_hero_collapsed_v1';
 
 export function useDashboardModel() {
   const navigate = useNavigate();
@@ -34,9 +36,32 @@ export function useDashboardModel() {
     return (valid as string[]).includes(stored || '') ? (stored as DashboardFilter) : 'pending';
   });
 
+  const [viewDensity, setViewDensity] = useState<'comfortable' | 'compact'>(() => {
+    if (typeof window === 'undefined') {
+      return 'comfortable';
+    }
+    const stored = localStorage.getItem(DENSITY_STORAGE_KEY);
+    return stored === 'compact' ? 'compact' : 'comfortable';
+  });
+
+  const [heroCollapsed, setHeroCollapsed] = useState(() => {
+    if (typeof window === 'undefined') {
+      return false;
+    }
+    return localStorage.getItem(HERO_COLLAPSED_STORAGE_KEY) === '1';
+  });
+
   useEffect(() => {
     localStorage.setItem(FILTER_STORAGE_KEY, filter);
   }, [filter]);
+
+  useEffect(() => {
+    localStorage.setItem(DENSITY_STORAGE_KEY, viewDensity);
+  }, [viewDensity]);
+
+  useEffect(() => {
+    localStorage.setItem(HERO_COLLAPSED_STORAGE_KEY, heroCollapsed ? '1' : '0');
+  }, [heroCollapsed]);
 
   const todayDate = useMemo(() => {
     const d = new Date();
@@ -52,7 +77,11 @@ export function useDashboardModel() {
     return activeHabits.filter((habit) => isMandatoryToday(habit, todayDate));
   }, [activeHabits, todayDate]);
 
-  const completedToday = scheduledTodayHabits.filter((habit) => (habit.completions[today] ?? 0) >= Math.max(1, habit.dailyTarget ?? 1)).length;
+  const completedToday = scheduledTodayHabits.filter((habit) =>
+    habit.type === 'negative'
+      ? (habit.completions[today] ?? 0) === 0
+      : (habit.completions[today] ?? 0) >= Math.max(1, habit.dailyTarget ?? 1)
+  ).length;
   const totalActive = scheduledTodayHabits.length;
   const todayRate = totalActive > 0 ? Math.round((completedToday / totalActive) * 100) : 0;
   const dateStr = formatAppDate(new Date(), { weekday: 'long', month: 'short', day: 'numeric' });
@@ -140,6 +169,10 @@ export function useDashboardModel() {
     handleTouchStart: dragHandlers.handleTouchStart,
     sortMode,
     setSortMode,
+    viewDensity,
+    setViewDensity,
+    heroCollapsed,
+    setHeroCollapsed,
     daysSinceLastCompletion
   };
 }

@@ -7,7 +7,8 @@ import {
   TargetIcon,
   TrashIcon,
   ArchiveIcon,
-  ArchiveRestoreIcon
+  ArchiveRestoreIcon,
+  SnowflakeIcon
 } from 'lucide-react';
 import { HeatmapGrid } from '@/components/HeatmapGrid';
 import { HabitRetroCalendar } from './HabitRetroCalendar';
@@ -177,9 +178,15 @@ function HabitDetailHeader({
             onClick={() => {
               void toggleFreezeToday();
             }}
-            className="px-3 py-1 rounded-full text-[10px] font-mono uppercase tracking-[0.3em] border border-border text-muted hover:border-accent hover:text-accent transition"
+            className={`inline-flex h-[34px] w-[34px] flex-none items-center justify-center rounded border transition-colors ${
+              isTodayFrozen
+                ? 'border-accent text-accent bg-accent/15 shadow-[0_0_12px_rgba(255,255,255,0.08)]'
+                : 'border-border text-muted hover:text-foreground hover:border-border-hover'
+            }`}
+            aria-label={isTodayFrozen ? 'Unfreeze today' : 'Freeze today'}
+            title={isTodayFrozen ? 'Unfreeze today' : 'Freeze today'}
           >
-            {isTodayFrozen ? 'Unfreeze today' : 'Freeze today'}
+            <SnowflakeIcon size={11} strokeWidth={2.2} aria-hidden />
           </button>
         </div>
       </div>

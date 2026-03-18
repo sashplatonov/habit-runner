@@ -59,7 +59,8 @@ export function useDashboardData({
       .sort((a, b) => SortHabits(a, b, sortMode));
   }, [habits, filter, selectedTags, today, todayKey, sortMode, searchQuery]);
 
-  const overallStreak = useMemo(() => CalculateOverallStreak(habits), [habits]);
+  const activeHabits = useMemo(() => habits.filter((h) => !h.archived), [habits]);
+  const overallStreak = useMemo(() => CalculateOverallStreak(activeHabits), [activeHabits]);
 
   return { allTags, filtered, overallStreak };
 }
@@ -115,9 +116,17 @@ function CalculateOverallStreak(habits: Habit[]): number {
     const key = `${year}-${month}-${day}T00:00:00.000Z`;
 
     const allDone = habits.every((habit) => {
+      // Frozen days don't count against the streak
+      if (habit.freezeDays?.includes(key.split('T')[0])) {
+        return true;
+      }
       // Check if habit is mandatory for this date (scheduled AND quota not met)
       if (!isMandatoryToday(habit, cursor)) {
         return true;
+      }
+      // Negative habits succeed when there are zero completions
+      if (habit.type === 'negative') {
+        return (habit.completions[key] ?? 0) === 0;
       }
       return (habit.completions[key] ?? 0) >= Math.max(1, habit.dailyTarget ?? 1);
     });

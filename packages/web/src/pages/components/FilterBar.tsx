@@ -1,6 +1,8 @@
+import { useEffect, useRef, useState } from 'react';
 import { invokeIfFunction } from '@/lib/callback';
 import { isMandatoryToday } from '@/lib/habits/schedule';
-import type { DashboardViewProps } from './DashboardHero';
+import { LayoutGridIcon, ListIcon, type LucideIcon } from 'lucide-react';
+import type { DashboardViewProps, ViewDensity } from './DashboardHero';
 
 function SearchBar({ searchQuery, setSearchQuery }: { searchQuery: string; setSearchQuery: (v: string) => void }) {
   return (
@@ -60,6 +62,8 @@ export function FilterBar({
   today,
   sortMode,
   setSortMode,
+  viewDensity,
+  setViewDensity,
   searchQuery,
   setSearchQuery
 }: Pick<
@@ -74,6 +78,8 @@ export function FilterBar({
   | 'today'
   | 'sortMode'
   | 'setSortMode'
+  | 'viewDensity'
+  | 'setViewDensity'
   | 'searchQuery'
   | 'setSearchQuery'
 >) {
@@ -85,10 +91,33 @@ export function FilterBar({
     }
     return (habit.completions[today] ?? 0) < Math.max(1, habit.dailyTarget ?? 1);
   }).length;
+  const [isSticky, setIsSticky] = useState(false);
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    const sentinel = sentinelRef.current;
+    if (!sentinel) return undefined;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setIsSticky(entry.boundingClientRect.top < 0);
+      },
+      { threshold: [1] }
+    );
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, []);
+
   return (
-    <div className="border-b border-border px-4">
-      <div className="max-w-2xl mx-auto">
-        <div className="flex gap-0 overflow-x-auto no-scrollbar">
+    <div className="relative">
+      <div ref={sentinelRef} className="absolute top-0 left-0 w-full h-px pointer-events-none" aria-hidden />
+      <div
+        className={`sticky top-[calc(var(--safe-area-inset-top, 0px))] z-30 transition-shadow duration-200 ${
+          isSticky ? 'shadow-[0_16px_30px_-24px_rgba(15,23,42,0.75)]' : ''
+        }`}
+      >
+        <div className="border-b border-border bg-bg-primary/95 backdrop-blur-sm px-4">
+          <div className="max-w-2xl mx-auto">
+            <div className="flex gap-0 overflow-x-auto no-scrollbar">
           {(['pending', 'all', 'done', 'archived'] as const).map((value) => (
             <button
               key={value}
@@ -106,20 +135,10 @@ export function FilterBar({
             </button>
           ))}
         </div>
-        <div className="flex flex-col sm:flex-row sm:items-center gap-3 py-3 border-t border-border/40">
+        <div className="flex items-center gap-2 py-3 border-t border-border/40">
           <SearchBar searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
-          <div className="flex flex-col items-end gap-1.5">
-            <SortToggle sortMode={sortMode} setSortMode={setSortMode} />
-            {sortMode === 'smart' && (
-              <div className="flex items-center gap-2 text-[9px] font-mono text-muted">
-                <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-accent/60 inline-block" />easy first</span>
-                <span className="text-border">·</span>
-                <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-accent-secondary/60 inline-block" />hard last</span>
-                <span className="text-border">·</span>
-                <span>custom order within</span>
-              </div>
-            )}
-          </div>
+          <SortToggle sortMode={sortMode} setSortMode={setSortMode} />
+          <DensityToggle viewDensity={viewDensity} setViewDensity={setViewDensity} />
         </div>
         <div className="py-2.5 flex items-center gap-1.5 overflow-x-auto no-scrollbar">
           {(allTags || []).length > 0 ? (
@@ -153,6 +172,35 @@ export function FilterBar({
           )}
         </div>
       </div>
+    </div>
+  </div>
+</div>
+);
+}
+
+function DensityToggle({ viewDensity, setViewDensity }: { viewDensity: ViewDensity; setViewDensity: (density: ViewDensity) => void }) {
+  const options: { value: ViewDensity; Icon: LucideIcon; label: string }[] = [
+    { value: 'comfortable', Icon: LayoutGridIcon, label: 'Grid view' },
+    { value: 'compact', Icon: ListIcon, label: 'List view' }
+  ];
+  return (
+    <div className="flex items-center gap-1 bg-bg-secondary border border-border/50 rounded-lg p-0.5">
+      {options.map(({ value, Icon, label }) => (
+        <button
+          key={value}
+          type="button"
+          onClick={() => setViewDensity(value)}
+          aria-pressed={viewDensity === value}
+          aria-label={label}
+          className={`w-8 h-8 flex items-center justify-center rounded-md transition-colors ${
+            viewDensity === value
+              ? 'bg-bg-primary border border-border/50 text-foreground shadow-sm'
+              : 'text-muted hover:text-foreground'
+          }`}
+        >
+          <Icon size={16} />
+        </button>
+      ))}
     </div>
   );
 }

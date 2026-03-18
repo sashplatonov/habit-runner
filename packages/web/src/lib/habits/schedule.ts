@@ -2,11 +2,18 @@ import { normalizeSchedule, scheduleFromLegacy } from '@habbit-runner/shared';
 import type { HabitSchedule } from '@habbit-runner/shared';
 import type { Habit } from '@/types/habit';
 
-const DAY_KEY_FORMAT = (date: Date) => {
+const COMPLETION_KEY_FORMAT = (date: Date) => {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, '0');
   const day = String(date.getDate()).padStart(2, '0');
   return `${year}-${month}-${day}T00:00:00.000Z`;
+};
+
+const FREEZE_DAY_KEY_FORMAT = (date: Date) => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
 };
 
 function startOfWeek(date: Date): Date {
@@ -47,7 +54,7 @@ function getWeekOfMonth(date: Date): { week: number; isLast: boolean } {
 }
 
 function dayIsCompleted(completions: Record<string, number>, date: Date, dailyTarget: number): boolean {
-  return (completions[DAY_KEY_FORMAT(date)] ?? 0) >= Math.max(1, dailyTarget ?? 1);
+  return (completions[COMPLETION_KEY_FORMAT(date)] ?? 0) >= Math.max(1, dailyTarget ?? 1);
 }
 
 export function isScheduledForDate(schedule: HabitSchedule | undefined | null, date: Date): boolean {
@@ -146,7 +153,7 @@ export function resolveHabitSchedule(habit: Habit): HabitSchedule {
 }
 
 export function getScheduleStatusForDate(habit: Habit, date: Date): ScheduleDayStatus {
-  if (habit.freezeDays?.includes(DAY_KEY_FORMAT(date))) {
+  if (habit.freezeDays?.includes(FREEZE_DAY_KEY_FORMAT(date))) {
     return 'frozen';
   }
   const schedule = resolveHabitSchedule(habit);
@@ -254,7 +261,7 @@ function calculateQuotaStreak(
     let frozenCount = 0;
     const cursor = new Date(start);
     while (cursor <= end) {
-      const dateKey = DAY_KEY_FORMAT(cursor);
+      const dateKey = FREEZE_DAY_KEY_FORMAT(cursor);
       if (isScheduledForDate(schedule, cursor) && habit.freezeDays?.includes(dateKey)) {
         frozenCount += 1;
       }
@@ -316,7 +323,7 @@ function calculateMonthlyQuotaStreak(
     let frozenCount = 0;
     const cursor = new Date(start);
     while (cursor <= end) {
-      const dateKey = DAY_KEY_FORMAT(cursor);
+      const dateKey = FREEZE_DAY_KEY_FORMAT(cursor);
       if (isScheduledForDate(schedule, cursor) && habit.freezeDays?.includes(dateKey)) {
         frozenCount += 1;
       }
@@ -365,9 +372,10 @@ function calculateDailyStreak(
 
   // Check if referenceDate is today, is scheduled, and not yet completed
   const today = ensureStartOfDay(new Date());
-  const todayKey = DAY_KEY_FORMAT(today);
-  const isToday = DAY_KEY_FORMAT(cursor) === todayKey;
-  const isTodayScheduled = isScheduledForDate(schedule, today) && !habit.freezeDays?.includes(todayKey);
+  const todayKey = COMPLETION_KEY_FORMAT(today);
+  const todayFreezeKey = FREEZE_DAY_KEY_FORMAT(today);
+  const isToday = COMPLETION_KEY_FORMAT(cursor) === todayKey;
+  const isTodayScheduled = isScheduledForDate(schedule, today) && !habit.freezeDays?.includes(todayFreezeKey);
   const isTodayCompleted =
     habit.type === 'negative'
       ? (completions[todayKey] ?? 0) === 0
@@ -386,8 +394,9 @@ function calculateDailyStreak(
   let running = 0;
   const iterator = new Date(start);
   while (iterator <= streakStartDate) {
-    const key = DAY_KEY_FORMAT(iterator);
-    if (!isScheduledForDate(schedule, iterator) || habit.freezeDays?.includes(key)) {
+    const key = COMPLETION_KEY_FORMAT(iterator);
+    const freezeKey = FREEZE_DAY_KEY_FORMAT(iterator);
+    if (!isScheduledForDate(schedule, iterator) || habit.freezeDays?.includes(freezeKey)) {
       iterator.setDate(iterator.getDate() + 1);
       continue;
     }
@@ -408,8 +417,9 @@ function calculateDailyStreak(
   let current = 0;
   const backward = new Date(streakStartDate);
   while (backward >= start) {
-    const key = DAY_KEY_FORMAT(backward);
-    if (!isScheduledForDate(schedule, backward) || habit.freezeDays?.includes(key)) {
+    const key = COMPLETION_KEY_FORMAT(backward);
+    const freezeKey = FREEZE_DAY_KEY_FORMAT(backward);
+    if (!isScheduledForDate(schedule, backward) || habit.freezeDays?.includes(freezeKey)) {
       backward.setDate(backward.getDate() - 1);
       continue;
     }
@@ -490,4 +500,3 @@ export function calculateAutomatismScore(
   const score = (consistency30d * 0.5 + streakFactor * 0.3 + totalFactor * 0.2) * 100;
   return Math.min(100, Math.round(score));
 }
-
