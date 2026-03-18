@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react';
+import { ChevronLeftIcon, ChevronRightIcon } from 'lucide-react';
 import type { Habit } from '@/types/habit';
 import type { HabitColorTheme } from '@/lib/theme/habit-colors';
 import { formatDate } from '@/lib/habits/habitStats';
@@ -32,12 +33,12 @@ function clampValue(value: number, min: number, max: number) {
   return Math.max(min, Math.min(max, Math.trunc(value)));
 }
 
-function buildRetroGrid(habit: Habit, schedule: ReturnType<typeof resolveHabitSchedule>) {
+function buildRetroGrid(habit: Habit, schedule: ReturnType<typeof resolveHabitSchedule>, displayDate: Date = new Date()) {
   const now = new Date();
   const todayKey = formatDate(now);
 
-  // Start from 30 days ago
-  const startDate = new Date(now);
+  // Start from 30 days before displayDate
+  const startDate = new Date(displayDate);
   startDate.setDate(startDate.getDate() - 29);
 
   // Pad to beginning of that week (Monday)
@@ -128,10 +129,31 @@ type HabitRetroCalendarProps = {
 
 export function HabitRetroCalendar({ habit, dailyTarget, accent, setCompletionCount }: HabitRetroCalendarProps) {
   const schedule = useMemo(() => resolveHabitSchedule(habit), [habit]);
-  const { weeks, monthCount } = useMemo(() => buildRetroGrid(habit, schedule), [habit, schedule]);
+  const [displayDate, setDisplayDate] = useState(new Date());
+  const { weeks, monthCount } = useMemo(() => buildRetroGrid(habit, schedule, displayDate), [habit, schedule, displayDate]);
   const maxValue = Math.max(1, dailyTarget);
   const scheduleLabel = describeSchedule(schedule);
   const [editor, setEditor] = useState<RetroCalendarEditor | null>(null);
+
+  const monthYearLabel = displayDate.toLocaleString('en-US', { month: 'short', year: 'numeric' });
+  const isCurrentMonth = displayDate.toDateString() === new Date().toDateString() ||
+    (displayDate.getMonth() === new Date().getMonth() && displayDate.getFullYear() === new Date().getFullYear());
+
+  const handlePrevMonth = () => {
+    const prev = new Date(displayDate);
+    prev.setMonth(prev.getMonth() - 1);
+    setDisplayDate(prev);
+  };
+
+  const handleNextMonth = () => {
+    const next = new Date(displayDate);
+    next.setMonth(next.getMonth() + 1);
+    setDisplayDate(next);
+  };
+
+  const handleToday = () => {
+    setDisplayDate(new Date());
+  };
 
   const openMultiTargetEditor = (day: RetroCalendarDay, event: React.MouseEvent<HTMLButtonElement>) => {
     const rect = event.currentTarget.getBoundingClientRect();
@@ -194,6 +216,40 @@ export function HabitRetroCalendar({ habit, dailyTarget, accent, setCompletionCo
           <p className="text-[10px] text-muted mt-0.5">{scheduleLabel}</p>
         </div>
         <span className="text-[11px] font-mono text-muted">30d</span>
+      </div>
+
+      {/* Month navigation */}
+      <div className="flex items-center justify-between gap-2 pt-1">
+        <button
+          onClick={handlePrevMonth}
+          className="flex items-center justify-center w-7 h-7 rounded border border-border hover:border-border-hover text-muted hover:text-foreground transition-colors"
+          title="Previous month"
+        >
+          <ChevronLeftIcon size={16} />
+        </button>
+
+        <div className="flex-1 text-center">
+          <button
+            onClick={handleToday}
+            className={`text-xs font-mono uppercase tracking-wider transition-colors ${
+              isCurrentMonth
+                ? 'text-foreground font-semibold'
+                : 'text-muted hover:text-foreground'
+            }`}
+            title="Jump to current month"
+          >
+            {monthYearLabel}
+          </button>
+        </div>
+
+        <button
+          onClick={handleNextMonth}
+          className="flex items-center justify-center w-7 h-7 rounded border border-border hover:border-border-hover text-muted hover:text-foreground transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+          disabled={displayDate.getFullYear() > new Date().getFullYear() || (displayDate.getFullYear() === new Date().getFullYear() && displayDate.getMonth() >= new Date().getMonth())}
+          title="Next month"
+        >
+          <ChevronRightIcon size={16} />
+        </button>
       </div>
 
       <div className="w-full mx-auto lg:max-w-[248px]">
