@@ -30,6 +30,7 @@ self.addEventListener('push', (event: PushEvent) => {
       body: notificationData.body,
       icon: `${origin}/icon-192.png`,
       badge: `${origin}/icon-192.png`,
+      image: `${origin}/icon-512.png`,
       tag: 'habbit-reminder',
       requireInteraction: false
     })
