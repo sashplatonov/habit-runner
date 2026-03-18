@@ -357,6 +357,15 @@ function HabitRowInfoPane({
             {habit.description}
           </div>
         )}
+        {habit.tags.length > 0 && (
+          <div className="flex items-center gap-1 mt-1 flex-wrap">
+            {habit.tags.map((tag) => (
+              <span key={tag} className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-accent/10 text-accent-secondary whitespace-nowrap">
+                #{tag}
+              </span>
+            ))}
+          </div>
+        )}
         <div className="flex items-center gap-2 mt-0.5">
           {/* Mobile only stats */}
           <div className="flex sm:hidden items-center gap-2">
