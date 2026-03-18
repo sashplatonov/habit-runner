@@ -25,15 +25,26 @@ self.addEventListener('push', (event: PushEvent) => {
   }
 
   const origin = self.location.origin;
+  const iconUrl = `${origin}/icon-192.png`;
+
   event.waitUntil(
-    self.registration.showNotification(notificationData.title, {
-      body: notificationData.body,
-      icon: `${origin}/icon-192.png`,
-      badge: `${origin}/icon-192.png`,
-      image: `${origin}/icon-512.png`,
-      tag: 'habbit-reminder',
-      requireInteraction: false
-    })
+    (async () => {
+      // Pre-fetch icon to ensure it's in cache before Firefox tries to load it
+      try {
+        await fetch(iconUrl);
+      } catch {
+        // ignore — proceed without icon cache guarantee
+      }
+
+      await self.registration.showNotification(notificationData.title, {
+        body: notificationData.body,
+        icon: iconUrl,
+        badge: iconUrl,
+        image: `${origin}/icon-512.png`,
+        tag: 'habbit-reminder',
+        requireInteraction: false
+      });
+    })()
   );
 });
 
