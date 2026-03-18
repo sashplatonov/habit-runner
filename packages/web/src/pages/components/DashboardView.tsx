@@ -35,6 +35,7 @@ export function DashboardView(props: DashboardViewProps) {
         habits={props.habits}
         handleToggle={props.handleToggle}
         handleDismissReminder={props.handleDismissReminder}
+        handleDisableReminder={props.handleDisableReminder}
       />
       <FilterBar
         filter={props.filter}

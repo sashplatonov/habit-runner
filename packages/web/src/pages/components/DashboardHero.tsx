@@ -4,6 +4,7 @@ import type { OnboardingTemplate } from '@/components/Onboarding';
 import type { Habit } from '@/types/habit';
 
 type Reminder = {
+  id: string;
   habitId: string;
   time: string;
   message: string;
@@ -36,7 +37,8 @@ export type DashboardViewProps = {
   handleExport: () => void;
   handleTemplateSelect: (template: OnboardingTemplate) => Promise<void>;
   handleToggle: (habit: Habit) => Promise<void>;
-  handleDismissReminder: (habitId: string) => void;
+  handleDismissReminder: (reminderId: string) => void;
+  handleDisableReminder: (habit: Habit) => Promise<void>;
   handleDragStart: (event: React.DragEvent<HTMLDivElement>, habitId: string) => void;
   handleDragOver: (event: React.DragEvent<HTMLDivElement>, habitId: string) => void;
   handleDrop: (event: React.DragEvent<HTMLDivElement>, habitId: string) => Promise<void>;

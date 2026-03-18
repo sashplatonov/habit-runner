@@ -20,7 +20,8 @@ export interface DashboardHandlersOptions {
   setAddingTemplate: Dispatch<SetStateAction<string | null>>;
   setFilter: Dispatch<SetStateAction<'all' | 'pending' | 'done' | 'archived'>>;
   today: string;
-  handleDismissReminder: (habitId: string) => void;
+  handleDismissReminder: (reminderId: string) => void;
+  updateHabit: (habit: Habit) => Promise<void>;
 }
 
 export function useDashboardHandlers({
@@ -33,13 +34,34 @@ export function useDashboardHandlers({
   setAddingTemplate,
   setFilter,
   today,
-  handleDismissReminder
+  handleDismissReminder,
+  updateHabit
 }: DashboardHandlersOptions) {
   const toggleTag = useCallback(
     (tag: string) => {
       setSelectedTags((prev) => (prev.includes(tag) ? prev.filter((item) => item !== tag) : [...prev, tag]));
     },
     [setSelectedTags]
+  );
+
+  const handleDisableReminder = useCallback(
+    async (habit: Habit) => {
+      await updateHabit({
+        ...habit,
+        reminderEnabled: false
+      });
+      push({
+        message: `Reminders disabled: ${habit.name}`,
+        actionLabel: 'Undo',
+        onUndo: async () => {
+          await updateHabit({
+            ...habit,
+            reminderEnabled: true
+          });
+        }
+      });
+    },
+    [updateHabit, push]
   );
 
   const handleTemplateSelect = useCallback(
@@ -122,6 +144,7 @@ export function useDashboardHandlers({
     handleExport,
     toggleTag,
     setFilter,
-    setSelectedTags
+    setSelectedTags,
+    handleDisableReminder
   };
 }

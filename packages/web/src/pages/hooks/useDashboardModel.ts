@@ -90,7 +90,8 @@ export function useDashboardModel() {
     setAddingTemplate,
     setFilter,
     today,
-    handleDismissReminder: remindersHook.handleDismissReminder
+    handleDismissReminder: remindersHook.handleDismissReminder,
+    updateHabit
   });
 
   // Sort by sortOrder so drag indices match the visual order on screen
@@ -131,6 +132,7 @@ export function useDashboardModel() {
     handleTemplateSelect: handlers.handleTemplateSelect,
     handleToggle: handlers.handleToggle,
     handleDismissReminder: remindersHook.handleDismissReminder,
+    handleDisableReminder: handlers.handleDisableReminder,
     handleDragStart: dragHandlers.handleDragStart,
     handleDragOver: dragHandlers.handleDragOver,
     handleDrop: dragHandlers.handleDrop,
