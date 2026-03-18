@@ -38,6 +38,7 @@ model Habit {
   sortOrder   BigInt    @default(0)
   reminderTime String?
   reminderEnabled Boolean @default(true)
+  lastReminderSentAt DateTime?
   difficulty  Int       @default(1)
   type        String    @default("positive")
   freezeDays  Json?     @default("[]")

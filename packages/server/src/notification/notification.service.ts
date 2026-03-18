@@ -110,6 +110,8 @@ export class NotificationService implements OnModuleInit {
   async sendReminderNotifications(): Promise<void> {
     const now = new Date();
     const currentTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+    const today = new Date(now);
+    today.setHours(0, 0, 0, 0);
 
     try {
       const habits = await this.prisma.habit.findMany({
@@ -124,9 +126,20 @@ export class NotificationService implements OnModuleInit {
       });
 
       for (const habit of habits) {
+        // Skip if notification already sent today
+        if (habit.lastReminderSentAt && new Date(habit.lastReminderSentAt) >= today) {
+          continue;
+        }
+
         await this.sendPush(habit.user.id, {
           title: `Reminder: ${habit.name}`,
           body: habit.description || `Time to complete your habit!`
+        });
+
+        // Mark as sent
+        await this.prisma.habit.update({
+          where: { id: habit.id },
+          data: { lastReminderSentAt: now }
         });
       }
     } catch (error) {
