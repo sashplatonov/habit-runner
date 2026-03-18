@@ -89,12 +89,22 @@ export interface OutboxEntry {
   lastError?: string;
 }
 
+export interface PendingReminder {
+  id: string;
+  userId: string;
+  habitId: string;
+  habitName: string;
+  reminderTime: string;
+  createdAt: string;
+}
+
 export class HabbitRunnerDb extends Dexie {
   habits!: Table<HabitEntity>;
   checkins!: Table<CheckinEntity>;
   tombstones!: Table<TombstoneEntity>;
   sync_meta!: Table<SyncMeta>;
   outbox!: Table<OutboxEntry>;
+  pending_reminders!: Table<PendingReminder>;
 
   constructor() {
     super('habbitRunner');
@@ -169,7 +179,8 @@ export class HabbitRunnerDb extends Dexie {
         checkins: 'id, userId, habitId, date, updatedAt, version',
         tombstones: 'id, userId, entity, entityId, deletedAt',
         sync_meta: 'id, status',
-        outbox: 'id, userId, entity, type, status'
+        outbox: 'id, userId, entity, type, status',
+        pending_reminders: 'id, userId, habitId, createdAt'
       })
       .upgrade(async (transaction) => {
         await (transaction as any).checkins.toCollection().modify((record: any) => {
@@ -526,4 +537,38 @@ export async function applyPullResponse(
 export function getBackoffMs(retries: number): number {
   const attempt = Math.min(retries, 6);
   return (attempt + 1) * 1000;
+}
+
+export async function addPendingReminder(
+  habitId: string,
+  habitName: string,
+  reminderTime: string
+): Promise<string> {
+  const userId = getCurrentUserId();
+  const id = generateId();
+  await db.pending_reminders.add({
+    id,
+    userId,
+    habitId,
+    habitName,
+    reminderTime,
+    createdAt: nowSyncISO()
+  });
+  return id;
+}
+
+export async function removePendingReminder(id: string): Promise<void> {
+  const userId = getCurrentUserId();
+  const reminder = await db.pending_reminders.get(id);
+  if (reminder?.userId === userId) {
+    await db.pending_reminders.delete(id);
+  }
+}
+
+export async function getPendingReminders(): Promise<PendingReminder[]> {
+  const userId = getCurrentUserId();
+  return await db.pending_reminders
+    .where('userId')
+    .equals(userId)
+    .toArray();
 }
