@@ -345,6 +345,11 @@ function HabitRowInfoPane({
       >
         <div className={`text-sm font-semibold ${completed ? 'text-muted line-through' : 'text-foreground'} truncate flex items-center gap-2`}>
           {habit.name}
+          {habit.dailyTarget && habit.dailyTarget > 1 && (
+            <span className="text-[11px] font-mono font-medium px-1.5 py-0.5 rounded bg-accent/10 text-accent-secondary whitespace-nowrap">
+              ×{habit.dailyTarget}
+            </span>
+          )}
           {isFrozen && <span title="Frozen today" className="text-[10px] opacity-70">🧊</span>}
         </div>
         {habit.description && (
