@@ -9,15 +9,15 @@ export function HabitDetail() {
   const navigate = useNavigate();
   const params = useParams();
   const habitId = params.id;
-  const { allHabits, setCompletionCount, getHabitStats, deleteHabit, restoreHabit, updateHabit, formatDate } = useHabits();
+  const { allHabits, setCompletionCount, getHabitStats, deleteHabit, restoreHabit, updateHabit, toggleFreezeDay, formatDate } = useHabits();
   const { push } = useUndo();
   const habit = habitId ? allHabits.find((h) => h.id === habitId) : undefined;
 
   const [confirmDelete, setConfirmDelete] = useState(false);
 
   const todayFormatted = formatDate(new Date());
-  const todayDateKey = todayFormatted.split('T')[0]; // Convert to YYYY-MM-DD format for server
-  const isTodayFrozen = habit ? habit.freezeDays.includes(todayDateKey) : false;
+  const todayFreezeKey = todayFormatted.split('T')[0];
+  const isTodayFrozen = habit ? habit.freezeDays.includes(todayFreezeKey) : false;
 
   const handleDelete = useCallback(async () => {
     if (!habitId) {
@@ -47,11 +47,14 @@ export function HabitDetail() {
     if (!habitId || !habit) {
       return;
     }
-    const nextFreezeDays = isTodayFrozen
-      ? habit.freezeDays.filter((date) => date !== todayDateKey)
-      : [...habit.freezeDays, todayDateKey];
-    await updateHabit(habitId, { freezeDays: nextFreezeDays });
-  }, [habit, habitId, isTodayFrozen, todayDateKey, updateHabit]);
+    const nextFrozenState = await toggleFreezeDay(habitId, todayFreezeKey);
+    if (nextFrozenState === undefined) {
+      return;
+    }
+    push({
+      message: nextFrozenState ? 'Habit frozen for today' : 'Habit unfrozen for today'
+    });
+  }, [habit, habitId, push, todayFreezeKey, toggleFreezeDay]);
 
   const handleIncrementCompletion = useCallback(async () => {
     if (!habitId || !habit) {

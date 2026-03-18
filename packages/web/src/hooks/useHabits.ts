@@ -35,14 +35,19 @@ type HabitUpsertInput = Omit<Habit, 'id' | 'completions' | 'createdAt'> & {
   reminderTime?: string | null;
 };
 
+function normalizeFreezeDayKey(date: string): string {
+  return date.includes('T') ? date.split('T')[0] : date;
+}
+
 function applyFreezeDays(
   baseCompletions: Record<string, number>,
   freezeDays: string[] | undefined,
   dailyTarget: number
 ) {
   (freezeDays ?? []).forEach((date) => {
-    const existing = baseCompletions[date] ?? 0;
-    baseCompletions[date] = Math.max(dailyTarget, existing);
+    const completionKey = date.includes('T') ? date : `${date}T00:00:00.000Z`;
+    const existing = baseCompletions[completionKey] ?? 0;
+    baseCompletions[completionKey] = Math.max(dailyTarget, existing);
   });
 }
 
@@ -174,6 +179,30 @@ async function updateHabitImpl(id: string, data: Partial<Habit>) {
     version: (entity.version ?? 0) + 1
   };
   await persistHabitWithSyncFallback(updatedHabit, 'upsert');
+}
+
+async function toggleFreezeDayImpl(id: string, date: string): Promise<boolean | undefined> {
+  const entity = await db.habits.get(id);
+  if (!entity) {
+    return undefined;
+  }
+  const existing = habitEntityToDomain(entity);
+  const freezeKey = normalizeFreezeDayKey(date);
+  const nextFreezeDays = new Set(existing.freezeDays ?? []);
+  const willBeFrozen = !nextFreezeDays.has(freezeKey);
+  if (willBeFrozen) {
+    nextFreezeDays.add(freezeKey);
+  } else {
+    nextFreezeDays.delete(freezeKey);
+  }
+  const updatedHabit: Habit = {
+    ...existing,
+    freezeDays: Array.from(nextFreezeDays).sort(),
+    updatedAt: nowSyncISO(),
+    version: (entity.version ?? 0) + 1
+  };
+  await persistHabitWithSyncFallback(updatedHabit, 'upsert');
+  return willBeFrozen;
 }
 
 async function deleteHabitImpl(id: string, allHabits: Habit[]) {
@@ -321,6 +350,7 @@ export function useHabits() {
 
   const addHabit = useCallback((data: HabitUpsertInput) => addHabitImpl(data), []);
   const updateHabit = useCallback((id: string, data: Partial<Habit>) => updateHabitImpl(id, data), []);
+  const toggleFreezeDay = useCallback((id: string, date: string) => toggleFreezeDayImpl(id, date), []);
   const deleteHabit = useCallback((id: string) => deleteHabitImpl(id, allHabits), [allHabits]);
   const restoreHabit = useCallback((habit: Habit) => restoreHabitImpl(habit), []);
   const getHabitStats = useCallback((habitId: string) => getHabitStatsImpl(habitId, allHabits), [allHabits]);
@@ -337,6 +367,7 @@ export function useHabits() {
     setCompletionCount,
     addHabit,
     updateHabit,
+    toggleFreezeDay,
     deleteHabit,
     restoreHabit,
     getHabitStats,

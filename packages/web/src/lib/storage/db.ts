@@ -453,11 +453,31 @@ export async function updateOutboxEntryFailure(
   });
 }
 
+function shouldApplyRemoteRecord(
+  existing: { updatedAt: string; version: number } | undefined,
+  incomingUpdatedAt: string,
+  incomingVersion: number
+): boolean {
+  if (!existing) {
+    return true;
+  }
+  const existingTs = Date.parse(existing.updatedAt);
+  const incomingTs = Date.parse(incomingUpdatedAt);
+  if (!Number.isNaN(existingTs) && !Number.isNaN(incomingTs) && existingTs !== incomingTs) {
+    return incomingTs > existingTs;
+  }
+  return incomingVersion >= existing.version;
+}
+
 export async function applyPullResponse(
   response: PullResponseDto
 ): Promise<void> {
   const userId = getCurrentUserId();
   const habitPromises = response.habits.map(async (habit) => {
+    const existingHabit = await db.habits.get(habit.id);
+    if (!shouldApplyRemoteRecord(existingHabit, habit.updatedAt, habit.version)) {
+      return;
+    }
     await db.habits.put({
       id: habit.id,
       userId,
@@ -494,6 +514,10 @@ export async function applyPullResponse(
   const checkinPromises = response.checkins.map(async (checkin) => {
     const datePart = checkin.date.split('T')[0];
     const normalizedDate = `${datePart}T00:00:00.000Z`;
+    const existingCheckin = await db.checkins.get(checkin.id);
+    if (!shouldApplyRemoteRecord(existingCheckin, checkin.updatedAt, checkin.version)) {
+      return;
+    }
     await db.checkins
       .where('habitId')
       .equals(checkin.habitId)
@@ -518,13 +542,51 @@ export async function applyPullResponse(
 
   const tombstonePromises = response.tombstones.map(async (tombstone) => {
     if (tombstone.entity === 'habit') {
+      const existingHabit = await db.habits.get(tombstone.entityId);
+      if (
+        existingHabit &&
+        !shouldApplyRemoteRecord(
+          existingHabit,
+          tombstone.deletedAt,
+          Math.max(tombstone.version, existingHabit.version)
+        )
+      ) {
+        return;
+      }
       await removeHabitFromDb(tombstone.entityId);
     } else if (tombstone.entity === 'checkin') {
       if (!tombstone.entityId.includes(':')) {
+        const existingCheckin = await db.checkins.get(tombstone.entityId);
+        if (
+          existingCheckin &&
+          !shouldApplyRemoteRecord(
+            existingCheckin,
+            tombstone.deletedAt,
+            Math.max(tombstone.version, existingCheckin.version)
+          )
+        ) {
+          return;
+        }
         await db.checkins.delete(tombstone.entityId);
       } else {
         const [habitId, date] = tombstone.entityId.split(':');
         if (habitId && date) {
+          const normalizedDate = date.includes('T') ? date : `${date}T00:00:00.000Z`;
+          const existingCheckin = await db.checkins
+            .where('habitId')
+            .equals(habitId)
+            .filter((record) => record.date === normalizedDate && record.userId === userId)
+            .first();
+          if (
+            existingCheckin &&
+            !shouldApplyRemoteRecord(
+              existingCheckin,
+              tombstone.deletedAt,
+              Math.max(tombstone.version, existingCheckin.version)
+            )
+          ) {
+            return;
+          }
           await deleteCheckinInDb(habitId, date);
         }
       }

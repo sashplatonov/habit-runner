@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { ChevronLeftIcon, ChevronRightIcon } from 'lucide-react';
+import { ChevronLeftIcon, ChevronRightIcon, SnowflakeIcon } from 'lucide-react';
 import type { Habit } from '@/types/habit';
 import type { HabitColorTheme } from '@/lib/theme/habit-colors';
 import { formatDate } from '@/lib/habits/habitStats';
@@ -20,6 +20,7 @@ type RetroCalendarDay = {
   dayOfWeek: number;
   isWeekend: boolean;
   monthIndex?: number;
+  isFrozen: boolean;
 };
 
 type RetroCalendarEditor = {
@@ -62,7 +63,8 @@ function buildRetroGrid(habit: Habit, schedule: ReturnType<typeof resolveHabitSc
       isFuture: false,
       isEmpty: true,
       dayOfWeek: date.getDay(),
-      isWeekend: date.getDay() === 0 || date.getDay() === 6
+      isWeekend: date.getDay() === 0 || date.getDay() === 6,
+      isFrozen: false
     });
   }
 
@@ -79,7 +81,9 @@ function buildRetroGrid(habit: Habit, schedule: ReturnType<typeof resolveHabitSc
     const date = new Date(startDate);
     date.setDate(startDate.getDate() + i);
     const dateKey = formatDate(date);
+    const freezeKey = dateKey.split('T')[0];
     const weekDay = date.getDay();
+    const isFrozen = (habit.freezeDays ?? []).includes(freezeKey);
     days.push({
       date: dateKey,
       dayOfMonth: date.getDate(),
@@ -90,7 +94,8 @@ function buildRetroGrid(habit: Habit, schedule: ReturnType<typeof resolveHabitSc
       isEmpty: false,
       dayOfWeek: weekDay,
       isWeekend: weekDay === 0 || weekDay === 6,
-      monthIndex: registerMonthIndex(date.getMonth())
+      monthIndex: registerMonthIndex(date.getMonth()),
+      isFrozen
     });
   }
 
@@ -446,13 +451,18 @@ function RetroCalendarDayCell({ day, maxValue, accent, onDayClick, monthCount }:
       disabled={day.isFuture}
       className={getDayButtonClasses(day)}
       style={getDayButtonStyle({ day, maxValue, accent, bg, monthOpacity, monthHighlight })}
-      aria-label={`${day.date} ${day.scheduled ? 'scheduled' : 'manual'} ${day.count}/${maxValue}`}
+      aria-label={`${day.date} ${day.scheduled ? 'scheduled' : 'manual'} ${day.count}/${maxValue}${day.isFrozen ? ' frozen' : ''}`}
     >
       <span className={getDayLabelClass(day, completed)} style={day.isToday && !completed ? { color: accent.hex } : undefined}>
         {day.dayOfMonth}
       </span>
       {day.count > 0 && maxValue > 1 && (
         <span className="text-[7px] font-mono text-foreground/60 leading-none">{day.count}/{maxValue}</span>
+      )}
+      {day.isFrozen && (
+        <span className="absolute top-1 right-1 text-[8px] text-accent-secondary" aria-hidden>
+          <SnowflakeIcon size={10} strokeWidth={2} />
+        </span>
       )}
     </button>
   );
