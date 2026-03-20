@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, Injectable, UnauthorizedException } from '@nestjs/common';
 import jwt from 'jsonwebtoken';
 import { PrismaService } from '../prisma/prisma.service';
 import { randomBytes } from 'crypto';
@@ -12,6 +12,8 @@ import {
   OAUTH_DEFAULT_RETURN_TO,
   REFRESH_TOKEN_EXPIRES_DAYS
 } from '../common/config';
+import type { UserPreferences } from '@habbit-runner/shared';
+import { normalizeTimeZone } from '@habbit-runner/shared';
 
 interface AuthPayload {
   sub: string;
@@ -134,28 +136,55 @@ export class AuthService {
   }
 
   async getUserTheme(userId: string): Promise<ThemeId> {
+    const preferences = await this.getUserPreferences(userId);
+    return this.normalizeTheme(preferences.theme);
+  }
+
+  async updateUserTheme(userId: string, theme: string): Promise<ThemeId> {
+    const preferences = await this.updateUserPreferences(userId, { theme });
+    return this.normalizeTheme(preferences.theme);
+  }
+
+  async getUserPreferences(userId: string): Promise<UserPreferences> {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
-      select: { theme: true }
+      select: { theme: true, timezone: true }
     });
 
     if (!user) {
       throw new UnauthorizedException('User no longer exists');
     }
 
-    return this.normalizeTheme(user.theme);
+    return {
+      theme: this.normalizeTheme(user.theme),
+      timezone: user.timezone ?? null
+    };
   }
 
-  async updateUserTheme(userId: string, theme: string): Promise<ThemeId> {
-    const normalizedTheme = this.normalizeTheme(theme);
+  async updateUserPreferences(
+    userId: string,
+    input: { theme: string; timezone?: string | null }
+  ): Promise<UserPreferences> {
+    const normalizedTheme = this.normalizeTheme(input.theme);
+    const hasTimezone = Object.prototype.hasOwnProperty.call(input, 'timezone');
+    const normalizedTimezone = hasTimezone ? normalizeTimeZone(input.timezone ?? null, '') : undefined;
+    if (hasTimezone && input.timezone && !normalizedTimezone) {
+      throw new BadRequestException('Invalid timezone');
+    }
 
     const user = await this.prisma.user.update({
       where: { id: userId },
-      data: { theme: normalizedTheme },
-      select: { theme: true }
+      data: {
+        theme: normalizedTheme,
+        ...(hasTimezone ? { timezone: normalizedTimezone || null } : {})
+      },
+      select: { theme: true, timezone: true }
     });
 
-    return this.normalizeTheme(user.theme);
+    return {
+      theme: this.normalizeTheme(user.theme),
+      timezone: user.timezone ?? null
+    };
   }
 
   verifyAccessToken(token: string): AuthPayload {

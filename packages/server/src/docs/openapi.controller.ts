@@ -133,6 +133,32 @@ const OPEN_API_SPEC = {
         }
       }
     },
+    '/auth/preferences': {
+      get: {
+        tags: ['Auth'],
+        summary: 'Read current user preferences',
+        security: [{ bearerAuth: [] }],
+        responses: {
+          '200': { description: 'Theme and timezone preferences' }
+        }
+      },
+      put: {
+        tags: ['Auth'],
+        summary: 'Update current user preferences',
+        security: [{ bearerAuth: [] }],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: { $ref: '#/components/schemas/UpdatePreferencesRequest' }
+            }
+          }
+        },
+        responses: {
+          '200': { description: 'Updated preferences' }
+        }
+      }
+    },
     '/sync/pull': {
       get: {
         tags: ['Sync'],
@@ -214,6 +240,14 @@ const OPEN_API_SPEC = {
         required: ['theme'],
         properties: {
           theme: { type: 'string' }
+        }
+      },
+      UpdatePreferencesRequest: {
+        type: 'object',
+        required: ['theme'],
+        properties: {
+          theme: { type: 'string' },
+          timezone: { type: 'string' }
         }
       },
       PushRequest: {

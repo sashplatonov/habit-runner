@@ -16,6 +16,7 @@ import {
   LoginRequest,
   OAuthStartQuery,
   RefreshRequest,
+  UpdatePreferencesRequest,
   UpdateThemeRequest
 } from './dto/auth.dto';
 import { AuthGuard } from './auth.guard';
@@ -63,6 +64,26 @@ export class AuthController {
   async logout(@Body() body: RefreshRequest) {
     await this.authService.revokeToken(body.refreshToken);
     return { success: true };
+  }
+
+  @UseGuards(AuthGuard)
+  @Throttle({ default: { limit: 20, ttl: 60 } })
+  @Get('preferences')
+  async getPreferences(@Req() req: RequestWithUser) {
+    const userId = req.user?.id;
+    if (!userId) {throw new UnauthorizedException('Authentication required');}
+
+    return this.authService.getUserPreferences(userId);
+  }
+
+  @UseGuards(AuthGuard)
+  @Throttle({ default: { limit: 20, ttl: 60 } })
+  @Put('preferences')
+  async updatePreferences(@Req() req: RequestWithUser, @Body() body: UpdatePreferencesRequest) {
+    const userId = req.user?.id;
+    if (!userId) {throw new UnauthorizedException('Authentication required');}
+
+    return this.authService.updateUserPreferences(userId, body);
   }
 
   @UseGuards(AuthGuard)

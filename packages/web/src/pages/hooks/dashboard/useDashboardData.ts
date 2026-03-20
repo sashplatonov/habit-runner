@@ -110,10 +110,7 @@ function CalculateOverallStreak(habits: Habit[]): number {
   cursor.setHours(0, 0, 0, 0);
 
   for (let i = 0; i < 30; i += 1) {
-    const year = cursor.getFullYear();
-    const month = String(cursor.getMonth() + 1).padStart(2, '0');
-    const day = String(cursor.getDate()).padStart(2, '0');
-    const key = `${year}-${month}-${day}T00:00:00.000Z`;
+    const key = formatHabitDate(cursor);
 
     const allDone = habits.every((habit) => {
       // Frozen days don't count against the streak

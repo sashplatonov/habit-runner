@@ -2,7 +2,7 @@ import type { Table } from 'dexie';
 import Dexie from 'dexie';
 import type { Habit } from '@/types/habit';
 import type { HabitSchedule, SyncEntity, SyncOpType } from '@habbit-runner/shared';
-import { normalizeSchedule, scheduleFromLegacy } from '@habbit-runner/shared';
+import { extractCalendarDate, normalizeSchedule, scheduleFromLegacy } from '@habbit-runner/shared';
 import { DEFAULT_USER_ID } from '@/lib/core/config';
 import { generateId } from '@/lib/core/id';
 import { nowSyncISO } from '@habbit-runner/shared';
@@ -100,6 +100,11 @@ export interface PendingReminder {
 type LegacyCheckinRecord = Partial<CheckinEntity> & { date?: string };
 type LegacyHabitRecord = Partial<HabitEntity>;
 
+function normalizeCheckinDateKey(date: string): string {
+  const calendarDate = extractCalendarDate(date);
+  return calendarDate ? `${calendarDate}T00:00:00Z` : date;
+}
+
 export class HabbitRunnerDb extends Dexie {
   habits!: Table<HabitEntity>;
   checkins!: Table<CheckinEntity>;
@@ -190,13 +195,32 @@ export class HabbitRunnerDb extends Dexie {
 
         await checkinsTable.toCollection().modify((record) => {
           if (record.date && record.date.length === 10) {
-            record.date = `${record.date}T00:00:00.000Z`;
+            record.date = `${record.date}T00:00:00Z`;
           }
         });
 
         await habitsTable.toCollection().modify((record) => {
           if (record.difficulty === undefined) {record.difficulty = 1;}
           if (record.type === undefined) {record.type = 'positive';}
+        });
+      });
+
+    this.version(6)
+      .stores({
+        habits: 'id, userId, updatedAt, version, sortOrder',
+        checkins: 'id, userId, habitId, date, updatedAt, version',
+        tombstones: 'id, userId, entity, entityId, deletedAt',
+        sync_meta: 'id, status',
+        outbox: 'id, userId, entity, type, status',
+        pending_reminders: 'id, userId, habitId, createdAt'
+      })
+      .upgrade(async (transaction) => {
+        const checkinsTable = transaction.table('checkins') as Table<LegacyCheckinRecord, string>;
+
+        await checkinsTable.toCollection().modify((record) => {
+          if (record.date) {
+            record.date = normalizeCheckinDateKey(record.date);
+          }
         });
       });
   }
@@ -299,7 +323,7 @@ export async function upsertCheckinInDb(
   updatedAt?: string
 ): Promise<string> {
   const userId = getCurrentUserId();
-  const normalized = date;
+  const normalized = normalizeCheckinDateKey(date);
   const ts = updatedAt ?? nowSyncISO();
   const existing = await db.checkins
     .where('habitId')
@@ -342,7 +366,7 @@ export async function upsertCheckinInDb(
 
 export async function deleteCheckinInDb(habitId: string, date: string): Promise<CheckinEntity | undefined> {
   const userId = getCurrentUserId();
-  const normalized = date;
+  const normalized = normalizeCheckinDateKey(date);
   const existing = await db.checkins
     .where('habitId')
     .equals(habitId)
