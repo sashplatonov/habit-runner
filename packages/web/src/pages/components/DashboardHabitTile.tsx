@@ -172,19 +172,50 @@ export function HabitRowToggleButton({
   );
 }
 
+type TileHint = { text: string; type: 'good' | 'warn' | 'tip' };
+
+function computeTileHint(habit: Habit, completionRate: number, streak: number): TileHint | null {
+  const target = Math.max(1, habit.dailyTarget ?? 1);
+  const today = new Date();
+  let recent7 = 0;
+  let prev7 = 0;
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(today);
+    d.setDate(d.getDate() - i);
+    const key = d.toISOString().split('T')[0];
+    if ((habit.completions[key] ?? 0) >= target) recent7++;
+  }
+  for (let i = 7; i < 14; i++) {
+    const d = new Date(today);
+    d.setDate(d.getDate() - i);
+    const key = d.toISOString().split('T')[0];
+    if ((habit.completions[key] ?? 0) >= target) prev7++;
+  }
+  const weekTrend = recent7 - prev7;
+  if (completionRate >= 80 && streak >= 5) return { text: 'On track — great consistency', type: 'good' };
+  if (weekTrend >= 3) return { text: 'Trending up this week', type: 'good' };
+  if (streak === 0 && completionRate > 20) return { text: 'Restart your streak today', type: 'warn' };
+  if (weekTrend <= -3 && recent7 < 3) return { text: 'Losing momentum — stay consistent', type: 'warn' };
+  if (completionRate < 40) return { text: 'Try adjusting schedule or goal', type: 'tip' };
+  return null;
+}
+
 function HabitTileMeta({
   habit,
   completed,
   streak,
   isFrozen,
-  scheduledToday
+  scheduledToday,
+  hint
 }: {
   habit: Habit;
   completed: boolean;
   streak: number;
   isFrozen: boolean;
   scheduledToday: boolean;
+  hint: TileHint | null;
 }) {
+  const hintColor = hint?.type === 'good' ? 'text-accent' : hint?.type === 'warn' ? 'text-accent-secondary' : 'text-muted';
   return (
     <div className="flex-1 min-w-0">
       <div className={`text-sm font-semibold truncate leading-tight ${completed ? 'text-muted line-through' : 'text-foreground'}`}>
@@ -211,6 +242,9 @@ function HabitTileMeta({
           <span className="text-[10px] font-mono text-muted">🌙</span>
         ) : null}
       </div>
+      {hint && (
+        <p className={`text-[9px] font-mono mt-1 truncate ${hintColor}`}>{hint.text}</p>
+      )}
     </div>
   );
 }
@@ -241,10 +275,13 @@ function buildTilePresentation(habit: Habit) {
       ? 'Frozen today'
       : `Manual completion for ${habit.name}`;
 
+  const hint = computeTileHint(habit, completionRate, streak);
+
   return {
     accent,
     completed,
     completionRate,
+    hint,
     isFrozen,
     scheduledToday,
     streak,
@@ -302,6 +339,7 @@ export function HabitTile({
           streak={presentation.streak}
           isFrozen={presentation.isFrozen}
           scheduledToday={presentation.scheduledToday}
+          hint={presentation.hint}
         />
 
         <div className="flex items-center justify-between mt-2 pt-1 border-t border-border/30">

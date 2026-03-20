@@ -170,7 +170,25 @@ export function InsightsRow({ insights }: { insights: Insight[] }) {
   );
 }
 
+function buildDailyChartInsight(avgRate: number, dailyData: { day: string; rate: number }[]): { text: string; color: string } {
+  if (dailyData.length < 3) return { text: 'Add more data to see insights.', color: 'text-muted' };
+  const recent = dailyData.slice(-3).map(d => d.rate);
+  const earlier = dailyData.slice(-6, -3).map(d => d.rate);
+  const recentAvg = recent.reduce((s, v) => s + v, 0) / recent.length;
+  const earlierAvg = earlier.length > 0 ? earlier.reduce((s, v) => s + v, 0) / earlier.length : recentAvg;
+  const trend = recentAvg - earlierAvg;
+  const bestDay = dailyData.reduce((best, d) => d.rate > best.rate ? d : best, dailyData[0]);
+
+  if (avgRate >= 75 && trend >= 0) return { text: `Strong performance — ${avgRate}% avg and trending up.`, color: 'text-accent' };
+  if (trend >= 15) return { text: `Big improvement recently. Keep the momentum going.`, color: 'text-accent' };
+  if (trend <= -20) return { text: `Completion dropped in the last few days. Try starting with just one habit.`, color: 'text-accent-secondary' };
+  if (avgRate < 40) return { text: `Low avg — check if your habit schedule matches your routine.`, color: 'text-accent-secondary' };
+  if (bestDay.rate === 100) return { text: `You hit 100% on ${bestDay.day}. Replicate that day's conditions.`, color: 'text-muted' };
+  return { text: `${avgRate}% avg. Aim for at least 70% daily consistency.`, color: 'text-muted' };
+}
+
 export function DailyRateChart({ avgRate, dailyData }: Pick<StatsViewProps, 'avgRate' | 'dailyData'>) {
+  const insight = buildDailyChartInsight(avgRate, dailyData);
   return (
     <div className="bg-bg-secondary border border-border rounded-lg p-4">
       <div className="flex items-center justify-between mb-4">
@@ -186,6 +204,7 @@ export function DailyRateChart({ avgRate, dailyData }: Pick<StatsViewProps, 'avg
           <Bar dataKey="rate" fill="var(--accent)" radius={[4, 4, 0, 0]} style={{ filter: 'drop-shadow(0 0 6px var(--glow))' }} />
         </BarChart>
       </ResponsiveContainer>
+      <p className={`text-[10px] font-mono mt-3 ${insight.color}`}>{insight.text}</p>
     </div>
   );
 }
@@ -249,12 +268,21 @@ export function PeriodTrendChart({
   );
 }
 
+function habitStatusLabel(completionRate: number, currentStreak: number, longestStreak: number): { label: string; color: string } {
+  if (completionRate >= 75 && currentStreak >= 3) return { label: 'strong', color: 'text-accent' };
+  if (currentStreak === 0 && longestStreak >= 7) return { label: 'lost streak', color: 'text-accent-secondary' };
+  if (completionRate < 40) return { label: 'needs focus', color: 'text-accent-secondary' };
+  if (completionRate >= 50) return { label: 'steady', color: 'text-muted' };
+  return { label: 'struggling', color: 'text-accent-secondary' };
+}
+
 export function HabitPerformanceList({ sorted, navigate }: Pick<StatsViewProps, 'sorted' | 'navigate'>) {
   return (
     <div className="bg-bg-secondary border border-border rounded-lg p-4 space-y-2">
       <div className="space-y-2">
         {sorted.map(({ habit, stats }, i) => {
           const color = HABIT_COLOR_THEMES[habit.color].hex;
+          const status = habitStatusLabel(stats.completionRate, stats.currentStreak, stats.longestStreak);
           return (
             <button
               key={habit.id}
@@ -264,11 +292,14 @@ export function HabitPerformanceList({ sorted, navigate }: Pick<StatsViewProps, 
               <span className="text-[10px] font-mono text-muted w-4">{i + 1}</span>
               <span className="text-base">{habit.icon}</span>
               <div className="flex-1 min-w-0 space-y-1">
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between gap-2">
                   <span className="text-xs font-medium text-foreground truncate">{habit.name}</span>
-                  <span className="text-[10px] font-mono" style={{ color }}>
-                    {stats.completionRate}%
-                  </span>
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    <span className={`text-[9px] font-mono ${status.color}`}>{status.label}</span>
+                    <span className="text-[10px] font-mono" style={{ color }}>
+                      {stats.completionRate}%
+                    </span>
+                  </div>
                 </div>
                 <div className="h-1 bg-border rounded-full overflow-hidden">
                   <div className="h-full rounded-full" style={{ width: `${stats.completionRate}%`, backgroundColor: color, boxShadow: `0 0 6px ${color}60` }} />
