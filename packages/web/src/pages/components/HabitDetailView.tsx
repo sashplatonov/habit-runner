@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { HeatmapGrid } from '@/components/HeatmapGrid';
 import { HabitRetroCalendar } from './HabitRetroCalendar';
+import { TodayBlock } from './HabitDetailTodayBlock';
 import { CompletionRing } from '@/components/CompletionRing';
 import {
   LineChart,
@@ -238,9 +239,9 @@ function StatCardGrid({ stats, accent }: Pick<HabitDetailViewProps, 'stats' | 'a
 
 function AutomatismSection({ score, accent }: { score: number; accent: HabitColorTheme }) {
   const getLevel = (s: number) => {
-    if (s >= 85) return { label: 'Infallible', color: accent.hex };
-    if (s >= 66) return { label: 'Established', color: accent.hex };
-    if (s >= 40) return { label: 'Growing', color: 'var(--text-foreground)' };
+    if (s >= 85) {return { label: 'Infallible', color: accent.hex };}
+    if (s >= 66) {return { label: 'Established', color: accent.hex };}
+    if (s >= 40) {return { label: 'Growing', color: 'var(--text-foreground)' };}
     return { label: 'Fragile', color: 'var(--text-muted)' };
   };
 
@@ -276,18 +277,6 @@ function AutomatismSection({ score, accent }: { score: number; accent: HabitColo
           : "Habit is deeply ingrained in your routine."
         }
       </div>
-    </div>
-  );
-}
-
-function TodayBlock({ dailyTarget, todayCompletionCount, accent }: { dailyTarget: number; todayCompletionCount: number; accent: HabitColorTheme }) {
-  return (
-    <div className="bg-bg-secondary border border-border rounded-2xl p-4">
-      <div className="text-[11px] font-mono text-muted uppercase tracking-[0.5em] mb-2">Today</div>
-      <p className="text-sm text-foreground">
-        Completed <span className="font-mono font-bold" style={{ color: accent.hex }}>{todayCompletionCount}</span> / {dailyTarget} today.
-      </p>
-      <p className="text-[11px] text-muted mt-1">Reminder settings are available on the edit screen.</p>
     </div>
   );
 }

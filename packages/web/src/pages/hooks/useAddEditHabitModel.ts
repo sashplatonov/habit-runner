@@ -9,6 +9,7 @@ import { calculateScheduledStreak } from '@/lib/habits/schedule';
 import { invokeIfFunction } from '@/lib/callback';
 
 const TARGET_STREAK_OPTIONS = [7, 14, 21, 30, 60, 90, 180, 365];
+const DIFFICULTY_LEVELS = [1, 2, 3, 4, 5] as const;
 
 export type HabitUpsertInput = Omit<Habit, 'id' | 'completions' | 'createdAt'> & {
   sortOrder?: number;
@@ -117,7 +118,7 @@ function useHabitFormState(existing?: Habit, isEdit?: boolean) {
   );
   const [targetStreak, setTargetStreak] = useState(getClosestStreakTick(existing?.targetStreak ?? 21));
   const [dailyTarget, setDailyTarget] = useState(existing?.dailyTarget ?? 1);
-  const [difficulty, setDifficulty] = useState<1 | 2 | 3 | 4 | 5>((existing?.difficulty as any) || 1);
+  const [difficulty, setDifficulty] = useState<1 | 2 | 3 | 4 | 5>(normalizeDifficulty(existing?.difficulty));
   const [type, setType] = useState<'positive' | 'negative'>(existing?.type || 'positive');
   const [tags, setTags] = useState<string[]>(existing?.tags || []);
   const [tagInput, setTagInput] = useState('');
@@ -141,7 +142,7 @@ function useHabitFormState(existing?: Habit, isEdit?: boolean) {
     );
     setTargetStreak(getClosestStreakTick(existing.targetStreak));
     setDailyTarget(existing.dailyTarget ?? 1);
-    setDifficulty((existing.difficulty as any) || 1);
+    setDifficulty(normalizeDifficulty(existing.difficulty));
     setType(existing.type || 'positive');
     setTags(existing.tags ?? []);
     setTagInput('');
@@ -286,6 +287,7 @@ function useHabitHandlers({
     color,
     customDays,
     dailyTarget,
+    difficulty,
     description,
     existing,
     frequency,
@@ -298,6 +300,7 @@ function useHabitHandlers({
     reminderTime,
     tags,
     targetStreak,
+    type,
     updateHabit,
     validate,
     schedule,
@@ -354,6 +357,13 @@ function shouldShowEditLoading(isEdit: boolean, hasExisting: boolean): boolean {
     return false;
   }
   return !hasExisting;
+}
+
+function normalizeDifficulty(value?: number): 1 | 2 | 3 | 4 | 5 {
+  if (value !== undefined && DIFFICULTY_LEVELS.includes(value as (typeof DIFFICULTY_LEVELS)[number])) {
+    return value as 1 | 2 | 3 | 4 | 5;
+  }
+  return 1;
 }
 
 function getClosestStreakTick(value: number): number {

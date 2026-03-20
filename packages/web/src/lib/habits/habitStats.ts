@@ -161,7 +161,7 @@ export function getDaysSinceLastCompletion(
   habits: { completions: Record<string, number>; dailyTarget: number }[],
   referenceDate = new Date()
 ): number {
-  if (habits.length === 0) return 0;
+  if (habits.length === 0) {return 0;}
 
   const todayStr = formatDate(referenceDate);
   const allCompletions: Set<string> = new Set();

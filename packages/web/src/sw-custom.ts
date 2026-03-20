@@ -9,7 +9,6 @@ precacheAndRoute(self.__WB_MANIFEST);
 // Handle push events in the service worker
 self.addEventListener('push', (event: PushEvent) => {
   if (!event.data) {
-    console.log('Push event received with no data');
     return;
   }
 

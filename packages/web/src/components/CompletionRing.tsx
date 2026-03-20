@@ -9,6 +9,14 @@ interface CompletionRingProps {
   showText?: boolean;
   className?: string;
 }
+
+function getProgressGlow(percentage: number, isFull: boolean, glow: string): string {
+  if (percentage <= 0) {
+    return 'none';
+  }
+  return `drop-shadow(0 0 ${isFull ? 8 : 4}px ${isFull ? 'var(--glow-secondary)' : glow})`;
+}
+
 export function CompletionRing({
   percentage,
   size = 40,
@@ -17,18 +25,20 @@ export function CompletionRing({
   showText = false,
   className = ''
 }: CompletionRingProps) {
+  const clampedPercentage = Math.min(percentage, 100);
   const radius = (size - strokeWidth * 2) / 2;
   const circumference = radius * 2 * Math.PI;
-  const offset = circumference - Math.min(percentage, 100) / 100 * circumference;
+  const offset = circumference - clampedPercentage / 100 * circumference;
   const { hex, glow } = HABIT_COLOR_THEMES[color];
   const isFull = percentage >= 100;
+  const ringStroke = isFull ? 'var(--accent-secondary)' : hex;
+  const ringFilter = getProgressGlow(percentage, isFull, glow);
+  const textColor = isFull ? 'var(--accent-secondary)' : hex;
+  const wrapperClassName = `relative inline-flex items-center justify-center ${isFull ? 'animate-ring-celebrate' : ''} ${className}`;
 
   return (
-    <div
-      className={`relative inline-flex items-center justify-center ${isFull ? 'animate-ring-celebrate' : ''} ${className}`}>
-
+    <div className={wrapperClassName}>
       <svg width={size} height={size} className="-rotate-90">
-        {/* Track */}
         <circle
           cx={size / 2}
           cy={size / 2}
@@ -37,35 +47,26 @@ export function CompletionRing({
           stroke="var(--border)"
           strokeWidth={strokeWidth} />
 
-        {/* Progress */}
         <circle
           cx={size / 2}
           cy={size / 2}
           r={radius}
           fill="none"
-          stroke={isFull ? 'var(--accent-secondary)' : hex}
+          stroke={ringStroke}
           strokeWidth={strokeWidth}
           strokeDasharray={circumference}
           strokeDashoffset={offset}
           strokeLinecap="round"
           style={{
-            filter: percentage > 0
-              ? `drop-shadow(0 0 ${isFull ? 8 : 4}px ${isFull ? 'var(--glow-secondary)' : glow})`
-              : 'none',
+            filter: ringFilter,
             transition: 'stroke-dashoffset 0.6s ease, stroke 0.4s ease'
           }} />
-
       </svg>
-      {showText &&
-      <span
-        className="absolute text-[10px] font-mono font-bold"
-        style={{
-          color: isFull ? 'var(--accent-secondary)' : hex
-        }}>
-
+      {showText ? (
+        <span className="absolute text-[10px] font-mono font-bold" style={{ color: textColor }}>
           {Math.round(percentage)}
         </span>
-      }
-    </div>);
-
+      ) : null}
+    </div>
+  );
 }

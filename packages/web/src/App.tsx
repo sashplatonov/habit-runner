@@ -107,8 +107,8 @@ export function App() {
 
   // Auto-subscribe to push if permission already granted and user is logged in
   useEffect(() => {
-    if (!authSession || !isPushNotificationSupported()) return;
-    if (Notification.permission !== 'granted') return;
+    if (!authSession || !isPushNotificationSupported()) {return;}
+    if (Notification.permission !== 'granted') {return;}
     subscribeToPush().catch(() => {/* silent — push is best-effort */});
   }, [authSession]);
 

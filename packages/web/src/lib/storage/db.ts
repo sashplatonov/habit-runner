@@ -1,7 +1,6 @@
 import type { Table } from 'dexie';
 import Dexie from 'dexie';
 import type { Habit } from '@/types/habit';
-import type { PullResponseDto } from '@/types/sync';
 import type { HabitSchedule, SyncEntity, SyncOpType } from '@habbit-runner/shared';
 import { normalizeSchedule, scheduleFromLegacy } from '@habbit-runner/shared';
 import { DEFAULT_USER_ID } from '@/lib/core/config';
@@ -98,6 +97,9 @@ export interface PendingReminder {
   createdAt: string;
 }
 
+type LegacyCheckinRecord = Partial<CheckinEntity> & { date?: string };
+type LegacyHabitRecord = Partial<HabitEntity>;
+
 export class HabbitRunnerDb extends Dexie {
   habits!: Table<HabitEntity>;
   checkins!: Table<CheckinEntity>;
@@ -183,12 +185,16 @@ export class HabbitRunnerDb extends Dexie {
         pending_reminders: 'id, userId, habitId, createdAt'
       })
       .upgrade(async (transaction) => {
-        await (transaction as any).checkins.toCollection().modify((record: any) => {
+        const checkinsTable = transaction.table('checkins') as Table<LegacyCheckinRecord, string>;
+        const habitsTable = transaction.table('habits') as Table<LegacyHabitRecord, string>;
+
+        await checkinsTable.toCollection().modify((record) => {
           if (record.date && record.date.length === 10) {
             record.date = `${record.date}T00:00:00.000Z`;
           }
         });
-        await (transaction as any).habits.toCollection().modify((record: any) => {
+
+        await habitsTable.toCollection().modify((record) => {
           if (record.difficulty === undefined) {record.difficulty = 1;}
           if (record.type === undefined) {record.type = 'positive';}
         });
@@ -453,154 +459,6 @@ export async function updateOutboxEntryFailure(
   });
 }
 
-function shouldApplyRemoteRecord(
-  existing: { updatedAt: string; version: number } | undefined,
-  incomingUpdatedAt: string,
-  incomingVersion: number
-): boolean {
-  if (!existing) {
-    return true;
-  }
-  const existingTs = Date.parse(existing.updatedAt);
-  const incomingTs = Date.parse(incomingUpdatedAt);
-  if (!Number.isNaN(existingTs) && !Number.isNaN(incomingTs) && existingTs !== incomingTs) {
-    return incomingTs > existingTs;
-  }
-  return incomingVersion >= existing.version;
-}
-
-export async function applyPullResponse(
-  response: PullResponseDto
-): Promise<void> {
-  const userId = getCurrentUserId();
-  const habitPromises = response.habits.map(async (habit) => {
-    const existingHabit = await db.habits.get(habit.id);
-    if (!shouldApplyRemoteRecord(existingHabit, habit.updatedAt, habit.version)) {
-      return;
-    }
-    await db.habits.put({
-      id: habit.id,
-      userId,
-      name: habit.name,
-      description: habit.description ?? null,
-      color: habit.color,
-      icon: habit.icon,
-      frequency: habit.frequency,
-      targetStreak: habit.targetStreak,
-      dailyTarget: Math.max(1, Math.trunc(habit.dailyTarget ?? 1)),
-      tags: (habit.tags as string[]) ?? [],
-      customDays: Array.isArray(habit.customDays) ?
-      habit.customDays.filter((day): day is number => typeof day === 'number') :
-      undefined,
-      schedule: habit.schedule,
-      archived: habit.archived,
-      createdAt: habit.createdAt,
-      updatedAt: habit.updatedAt,
-      version: habit.version,
-      sortOrder:
-        typeof habit.sortOrder === 'number'
-          ? habit.sortOrder
-          : Date.parse(habit.createdAt) || Date.now(),
-      reminderTime:
-        typeof habit.reminderTime === 'string' ? habit.reminderTime : null,
-      reminderEnabled: habit.reminderEnabled ?? true,
-      freezeDays: (habit.freezeDays as string[]) ?? [],
-      completions: {},
-      difficulty: (habit as any).difficulty ?? 1,
-      type: (habit as any).type ?? 'positive'
-    });
-  });
-
-  const checkinPromises = response.checkins.map(async (checkin) => {
-    const datePart = checkin.date.split('T')[0];
-    const normalizedDate = `${datePart}T00:00:00.000Z`;
-    const existingCheckin = await db.checkins.get(checkin.id);
-    if (!shouldApplyRemoteRecord(existingCheckin, checkin.updatedAt, checkin.version)) {
-      return;
-    }
-    await db.checkins
-      .where('habitId')
-      .equals(checkin.habitId)
-      .filter(
-        (record) =>
-          record.date === normalizedDate &&
-          record.userId === userId &&
-          record.id !== checkin.id
-      )
-      .delete();
-    await db.checkins.put({
-      id: checkin.id,
-      userId,
-      habitId: checkin.habitId,
-      date: normalizedDate,
-      done: checkin.done,
-      count: Math.max(1, Math.trunc(checkin.count ?? 1)),
-      updatedAt: checkin.updatedAt,
-      version: checkin.version
-    });
-  });
-
-  const tombstonePromises = response.tombstones.map(async (tombstone) => {
-    if (tombstone.entity === 'habit') {
-      const existingHabit = await db.habits.get(tombstone.entityId);
-      if (
-        existingHabit &&
-        !shouldApplyRemoteRecord(
-          existingHabit,
-          tombstone.deletedAt,
-          Math.max(tombstone.version, existingHabit.version)
-        )
-      ) {
-        return;
-      }
-      await removeHabitFromDb(tombstone.entityId);
-    } else if (tombstone.entity === 'checkin') {
-      if (!tombstone.entityId.includes(':')) {
-        const existingCheckin = await db.checkins.get(tombstone.entityId);
-        if (
-          existingCheckin &&
-          !shouldApplyRemoteRecord(
-            existingCheckin,
-            tombstone.deletedAt,
-            Math.max(tombstone.version, existingCheckin.version)
-          )
-        ) {
-          return;
-        }
-        await db.checkins.delete(tombstone.entityId);
-      } else {
-        const [habitId, date] = tombstone.entityId.split(':');
-        if (habitId && date) {
-          const normalizedDate = date.includes('T') ? date : `${date}T00:00:00.000Z`;
-          const existingCheckin = await db.checkins
-            .where('habitId')
-            .equals(habitId)
-            .filter((record) => record.date === normalizedDate && record.userId === userId)
-            .first();
-          if (
-            existingCheckin &&
-            !shouldApplyRemoteRecord(
-              existingCheckin,
-              tombstone.deletedAt,
-              Math.max(tombstone.version, existingCheckin.version)
-            )
-          ) {
-            return;
-          }
-          await deleteCheckinInDb(habitId, date);
-        }
-      }
-    }
-  });
-
-  await Promise.all([...habitPromises, ...checkinPromises, ...tombstonePromises]);
-}
-
-export function getBackoffMs(retries: number): number {
-  const attempt = Math.min(retries, 6);
-  return (attempt + 1) * 1000;
-}
-
 export async function addPendingReminder(
   habitId: string,
   habitName: string,
@@ -634,3 +492,5 @@ export async function getPendingReminders(): Promise<PendingReminder[]> {
     .equals(userId)
     .toArray();
 }
+
+export { applyPullResponse, getBackoffMs } from './dbSync';

@@ -5,6 +5,7 @@ import { useHabits } from '@/hooks/useHabits';
 import { formatAppDate } from '@/lib/i18n';
 import { getDaysSinceLastCompletion } from '@/lib/habits/habitStats';
 import { isMandatoryToday } from '@/lib/habits/schedule';
+import type { Habit } from '@/types/habit';
 
 import { useDashboardData } from './dashboard/useDashboardData';
 import { useDashboardHandlers } from './dashboard/useDashboardHandlers';
@@ -17,6 +18,45 @@ const FILTER_STORAGE_KEY = 'hr_dashboard_filter_v1';
 const DENSITY_STORAGE_KEY = 'hr_dashboard_density_v1';
 const HERO_COLLAPSED_STORAGE_KEY = 'hr_dashboard_hero_collapsed_v1';
 
+function readStoredFilter(): DashboardFilter {
+  if (typeof window === 'undefined') {
+    return 'pending';
+  }
+  const stored = localStorage.getItem(FILTER_STORAGE_KEY);
+  const valid: DashboardFilter[] = ['all', 'pending', 'done', 'archived'];
+  return (valid as string[]).includes(stored || '') ? (stored as DashboardFilter) : 'pending';
+}
+
+function readStoredViewDensity(): 'comfortable' | 'compact' {
+  if (typeof window === 'undefined') {
+    return 'comfortable';
+  }
+  return localStorage.getItem(DENSITY_STORAGE_KEY) === 'compact' ? 'compact' : 'comfortable';
+}
+
+function readStoredHeroCollapsed(): boolean {
+  if (typeof window === 'undefined') {
+    return false;
+  }
+  return localStorage.getItem(HERO_COLLAPSED_STORAGE_KEY) === '1';
+}
+
+function buildDashboardSummary(activeHabits: Habit[], todayDate: Date, today: string) {
+  const scheduledTodayHabits = activeHabits.filter((habit) => isMandatoryToday(habit, todayDate));
+  const completedToday = scheduledTodayHabits.filter((habit) =>
+    habit.type === 'negative'
+      ? (habit.completions[today] ?? 0) === 0
+      : (habit.completions[today] ?? 0) >= Math.max(1, habit.dailyTarget ?? 1)
+  ).length;
+  const totalActive = scheduledTodayHabits.length;
+  return {
+    scheduledTodayHabits,
+    completedToday,
+    totalActive,
+    todayRate: totalActive > 0 ? Math.round((completedToday / totalActive) * 100) : 0
+  };
+}
+
 export function useDashboardModel() {
   const navigate = useNavigate();
   const { allHabits, setCompletionCount, addHabit, updateHabit, formatDate } = useHabits();
@@ -27,29 +67,9 @@ export function useDashboardModel() {
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [sortMode, setSortMode] = useState<'custom' | 'smart'>('custom');
 
-  const [filter, setFilter] = useState<DashboardFilter>(() => {
-    if (typeof window === 'undefined') {
-      return 'pending';
-    }
-    const stored = localStorage.getItem(FILTER_STORAGE_KEY);
-    const valid: DashboardFilter[] = ['all', 'pending', 'done', 'archived'];
-    return (valid as string[]).includes(stored || '') ? (stored as DashboardFilter) : 'pending';
-  });
-
-  const [viewDensity, setViewDensity] = useState<'comfortable' | 'compact'>(() => {
-    if (typeof window === 'undefined') {
-      return 'comfortable';
-    }
-    const stored = localStorage.getItem(DENSITY_STORAGE_KEY);
-    return stored === 'compact' ? 'compact' : 'comfortable';
-  });
-
-  const [heroCollapsed, setHeroCollapsed] = useState(() => {
-    if (typeof window === 'undefined') {
-      return false;
-    }
-    return localStorage.getItem(HERO_COLLAPSED_STORAGE_KEY) === '1';
-  });
+  const [filter, setFilter] = useState<DashboardFilter>(readStoredFilter);
+  const [viewDensity, setViewDensity] = useState<'comfortable' | 'compact'>(readStoredViewDensity);
+  const [heroCollapsed, setHeroCollapsed] = useState(readStoredHeroCollapsed);
 
   useEffect(() => {
     localStorage.setItem(FILTER_STORAGE_KEY, filter);
@@ -71,22 +91,13 @@ export function useDashboardModel() {
 
   const today = formatDate(todayDate);
   const activeHabits = useMemo(() => allHabits.filter(h => !h.archived), [allHabits]);
-
-  // Only count habits mandatory for today (scheduled AND quota not met)
-  const scheduledTodayHabits = useMemo(() => {
-    return activeHabits.filter((habit) => isMandatoryToday(habit, todayDate));
-  }, [activeHabits, todayDate]);
-
-  const completedToday = scheduledTodayHabits.filter((habit) =>
-    habit.type === 'negative'
-      ? (habit.completions[today] ?? 0) === 0
-      : (habit.completions[today] ?? 0) >= Math.max(1, habit.dailyTarget ?? 1)
-  ).length;
-  const totalActive = scheduledTodayHabits.length;
-  const todayRate = totalActive > 0 ? Math.round((completedToday / totalActive) * 100) : 0;
+  const summary = useMemo(
+    () => buildDashboardSummary(activeHabits, todayDate, today),
+    [activeHabits, todayDate, today]
+  );
   const dateStr = formatAppDate(new Date(), { weekday: 'long', month: 'short', day: 'numeric' });
 
-  const remindersHook = useReminderTracker(scheduledTodayHabits, formatDate, (habit) => {
+  const remindersHook = useReminderTracker(summary.scheduledTodayHabits, formatDate, (habit) => {
     if (typeof window === 'undefined' || !('Notification' in window) || Notification.permission !== 'granted') {
       return;
     }
@@ -146,9 +157,9 @@ export function useDashboardModel() {
     selectedTags,
     addingTemplate,
     today,
-    todayRate,
-    completedToday,
-    totalActive,
+    todayRate: summary.todayRate,
+    completedToday: summary.completedToday,
+    totalActive: summary.totalActive,
     dateStr,
     overallStreak: data.overallStreak,
     searchQuery,

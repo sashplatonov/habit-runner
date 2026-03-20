@@ -1,10 +1,11 @@
 import React, { useMemo, useState } from 'react';
-import { ChevronLeftIcon, ChevronRightIcon, SnowflakeIcon } from 'lucide-react';
+import { SnowflakeIcon } from 'lucide-react';
 import type { Habit } from '@/types/habit';
 import type { HabitColorTheme } from '@/lib/theme/habit-colors';
 import { formatDate } from '@/lib/habits/habitStats';
 import { describeSchedule } from '@habbit-runner/shared';
 import { isScheduledForDate, resolveHabitSchedule } from '@/lib/habits/schedule';
+import { MonthNavigation } from './HabitRetroCalendarNavigation';
 const POPOVER_WIDTH = 200;
 const POPOVER_HEIGHT = 120;
 const DAY_HEADERS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
@@ -125,6 +126,48 @@ function clampPopoverY(anchorY: number) {
   return Math.min(Math.max(anchorY - POPOVER_HEIGHT - 16, min), Math.max(min, max));
 }
 
+function RetroCalendarGrid({
+  weeks,
+  monthCount,
+  maxValue,
+  accent,
+  onDayClick
+}: {
+  weeks: RetroCalendarDay[][];
+  monthCount: number;
+  maxValue: number;
+  accent: HabitColorTheme;
+  onDayClick: (day: RetroCalendarDay, event: React.MouseEvent<HTMLButtonElement>) => void;
+}) {
+  return (
+    <div className="w-full mx-auto lg:max-w-[248px]">
+      <div className="grid grid-cols-7 gap-1.5 sm:gap-2">
+        {DAY_HEADERS.map((d) => (
+          <div key={d} className="text-center text-[9px] font-mono text-muted uppercase tracking-wider py-0.5">
+            {d}
+          </div>
+        ))}
+      </div>
+      <div className="space-y-1.5 sm:space-y-2">
+        {weeks.map((week, wi) => (
+          <div key={wi} className="grid grid-cols-7 gap-1.5 sm:gap-2">
+            {week.map((day, di) => (
+              <RetroCalendarDayCell
+                key={day.date + di}
+                day={day}
+                maxValue={maxValue}
+                accent={accent}
+                onDayClick={onDayClick}
+                monthCount={monthCount}
+              />
+            ))}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 type HabitRetroCalendarProps = {
   habit: Habit;
   dailyTarget: number;
@@ -143,6 +186,8 @@ export function HabitRetroCalendar({ habit, dailyTarget, accent, setCompletionCo
   const monthYearLabel = displayDate.toLocaleString('en-US', { month: 'short', year: 'numeric' });
   const isCurrentMonth = displayDate.toDateString() === new Date().toDateString() ||
     (displayDate.getMonth() === new Date().getMonth() && displayDate.getFullYear() === new Date().getFullYear());
+  const disableNextMonth = displayDate.getFullYear() > new Date().getFullYear() ||
+    (displayDate.getFullYear() === new Date().getFullYear() && displayDate.getMonth() >= new Date().getMonth());
 
   const handlePrevMonth = () => {
     const prev = new Date(displayDate);
@@ -223,68 +268,22 @@ export function HabitRetroCalendar({ habit, dailyTarget, accent, setCompletionCo
         <span className="text-[11px] font-mono text-muted">30d</span>
       </div>
 
-      {/* Month navigation */}
-      <div className="flex items-center justify-between gap-2 pt-1">
-        <button
-          onClick={handlePrevMonth}
-          className="flex items-center justify-center w-7 h-7 rounded border border-border hover:border-border-hover text-muted hover:text-foreground transition-colors"
-          title="Previous month"
-        >
-          <ChevronLeftIcon size={16} />
-        </button>
+      <MonthNavigation
+        monthYearLabel={monthYearLabel}
+        isCurrentMonth={isCurrentMonth}
+        onPrev={handlePrevMonth}
+        onNext={handleNextMonth}
+        onToday={handleToday}
+        disableNext={disableNextMonth}
+      />
 
-        <div className="flex-1 text-center">
-          <button
-            onClick={handleToday}
-            className={`text-xs font-mono uppercase tracking-wider transition-colors ${
-              isCurrentMonth
-                ? 'text-foreground font-semibold'
-                : 'text-muted hover:text-foreground'
-            }`}
-            title="Jump to current month"
-          >
-            {monthYearLabel}
-          </button>
-        </div>
-
-        <button
-          onClick={handleNextMonth}
-          className="flex items-center justify-center w-7 h-7 rounded border border-border hover:border-border-hover text-muted hover:text-foreground transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-          disabled={displayDate.getFullYear() > new Date().getFullYear() || (displayDate.getFullYear() === new Date().getFullYear() && displayDate.getMonth() >= new Date().getMonth())}
-          title="Next month"
-        >
-          <ChevronRightIcon size={16} />
-        </button>
-      </div>
-
-      <div className="w-full mx-auto lg:max-w-[248px]">
-        {/* Day-of-week headers */}
-        <div className="grid grid-cols-7 gap-1.5 sm:gap-2">
-          {DAY_HEADERS.map((d) => (
-            <div key={d} className="text-center text-[9px] font-mono text-muted uppercase tracking-wider py-0.5">
-              {d}
-            </div>
-          ))}
-        </div>
-
-        {/* Calendar grid */}
-        <div className="space-y-1.5 sm:space-y-2">
-          {weeks.map((week, wi) => (
-            <div key={wi} className="grid grid-cols-7 gap-1.5 sm:gap-2">
-              {week.map((day, di) => (
-                <RetroCalendarDayCell
-                  key={day.date + di}
-                  day={day}
-                  maxValue={maxValue}
-                  accent={accent}
-                  onDayClick={handleDayClick}
-                  monthCount={monthCount}
-                />
-              ))}
-            </div>
-          ))}
-        </div>
-      </div>
+      <RetroCalendarGrid
+        weeks={weeks}
+        monthCount={monthCount}
+        maxValue={maxValue}
+        accent={accent}
+        onDayClick={handleDayClick}
+      />
 
       {editor && (
         <RetroCalendarEditorPopover

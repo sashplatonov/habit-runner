@@ -21,6 +21,106 @@ const PERIOD_DISPLAY_NAMES: Record<Period, string> = {
   year: 'year'
 };
 
+type HabitStatsEntry = {
+  habit: Habit;
+  stats: ReturnType<ReturnType<typeof useHabits>['getHabitStats']>;
+};
+
+function filterStatsHabits(
+  habits: Habit[],
+  statusFilter: 'all' | 'active' | 'archived',
+  searchQuery: string,
+  selectedTags: string[]
+) {
+  return habits.filter((habit) => {
+    if (statusFilter === 'active' && habit.archived) {
+      return false;
+    }
+    if (statusFilter === 'archived' && !habit.archived) {
+      return false;
+    }
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      if (!habit.name.toLowerCase().includes(query) && !habit.description.toLowerCase().includes(query)) {
+        return false;
+      }
+    }
+    if (selectedTags.length > 0 && !(habit.tags || []).some((tag) => selectedTags.includes(tag))) {
+      return false;
+    }
+    return true;
+  });
+}
+
+function buildStatsSummary(allStats: HabitStatsEntry[]) {
+  const sorted = [...allStats].sort((a, b) => b.stats.completionRate - a.stats.completionRate);
+  const totalCompletions = allStats.reduce((sum, { stats }) => sum + stats.completedDays, 0);
+  const avgRate =
+    allStats.length > 0
+      ? Math.round(allStats.reduce((sum, { stats }) => sum + stats.completionRate, 0) / allStats.length)
+      : 0;
+
+  return {
+    sorted,
+    totalCompletions,
+    avgRate,
+    bestStreak: Math.max(...allStats.map(({ stats }) => stats.longestStreak), 0),
+    currentStreaks: allStats.reduce((sum, { stats }) => sum + (stats.currentStreak > 0 ? 1 : 0), 0)
+  };
+}
+
+function buildStatsInsights(
+  allStats: HabitStatsEntry[],
+  weekdayStats: WeekdayStats,
+  habitPeriodData: Array<Record<string, string | number>>,
+  filteredHabits: Habit[],
+  period: Period
+) {
+  const streakLeader =
+    allStats.length > 0
+      ? allStats.reduce((best, next) =>
+          next.stats.longestStreak > best.stats.longestStreak ? next : best,
+        allStats[0])
+      : null;
+  const bestCount = weekdayStats.counts[weekdayStats.bestIndex] ?? 0;
+  const worstCount = weekdayStats.counts[weekdayStats.worstIndex] ?? 0;
+  const weekdayDiffPercent =
+    worstCount === 0 ? bestCount * 100 : Math.round(((bestCount - worstCount) / Math.max(1, worstCount)) * 100);
+  const hasWeekdayShift = weekdayStats.bestWeekday !== 'N/A' && weekdayStats.worstWeekday !== 'N/A';
+  const improvedCount =
+    habitPeriodData.length > 1
+      ? filteredHabits.reduce((sum, habit) => {
+          const lastEntry = habitPeriodData[habitPeriodData.length - 1];
+          const prevEntry = habitPeriodData[habitPeriodData.length - 2];
+          const current = Number(lastEntry?.[habit.name] ?? 0);
+          const previous = Number(prevEntry?.[habit.name] ?? 0);
+          return current > previous ? sum + 1 : sum;
+        }, 0)
+      : 0;
+
+  return [
+    {
+      id: 'streak',
+      title: 'Best streak',
+      body: streakLeader
+        ? `Your best streak is ${streakLeader.stats.longestStreak} days on ${streakLeader.habit.name}.`
+        : 'No streaks registered yet.'
+    },
+    {
+      id: 'weekday',
+      title: 'Weekday shift',
+      body: hasWeekdayShift
+        ? `${weekdayDiffPercent}% more habits on ${weekdayStats.bestWeekday} vs ${weekdayStats.worstWeekday}.`
+        : 'Weekly trend data will appear once there is enough activity.'
+    },
+    {
+      id: 'momentum',
+      title: 'Momentum',
+      body: `${improvedCount} ${improvedCount === 1 ? 'habit improved' : 'habits improved'} this ${PERIOD_DISPLAY_NAMES[period]}.`
+    }
+  ];
+}
+
 export function Stats() {
   const navigate = useNavigate();
   const { allHabits, getHabitStats } = useHabits();
@@ -35,22 +135,10 @@ export function Stats() {
     return Array.from(tags).sort();
   }, [allHabits]);
 
-  const filteredHabits = useMemo(() => {
-    return allHabits.filter((h) => {
-      if (statusFilter === 'active' && h.archived) {return false;}
-      if (statusFilter === 'archived' && !h.archived) {return false;}
-      if (searchQuery) {
-        const query = searchQuery.toLowerCase();
-        if (!h.name.toLowerCase().includes(query) && !h.description.toLowerCase().includes(query)) {
-          return false;
-        }
-      }
-      if (selectedTags.length > 0 && !(h.tags || []).some((t) => selectedTags.includes(t))) {
-        return false;
-      }
-      return true;
-    });
-  }, [allHabits, statusFilter, searchQuery, selectedTags]);
+  const filteredHabits = useMemo(
+    () => filterStatsHabits(allHabits, statusFilter, searchQuery, selectedTags),
+    [allHabits, statusFilter, searchQuery, selectedTags]
+  );
 
   const windowRange = useMemo(() => getWindowRange(period), [period]);
   const periodSegments = useMemo(() => buildPeriodSegments(period, 6), [period]);
@@ -70,14 +158,7 @@ export function Stats() {
     [filteredHabits, periodSegments]
   );
 
-  const sorted = [...allStats].sort((a, b) => b.stats.completionRate - a.stats.completionRate);
-  const totalCompletions = allStats.reduce((sum, { stats }) => sum + stats.completedDays, 0);
-  const avgRate =
-    allStats.length > 0
-      ? Math.round(allStats.reduce((sum, { stats }) => sum + stats.completionRate, 0) / allStats.length)
-      : 0;
-  const bestStreak = Math.max(...allStats.map(({ stats }) => stats.longestStreak), 0);
-  const currentStreaks = allStats.reduce((sum, { stats }) => sum + (stats.currentStreak > 0 ? 1 : 0), 0);
+  const summary = useMemo(() => buildStatsSummary(allStats), [allStats]);
 
   const weekdayStats = useMemo(
     () => buildWeekdayStats(filteredHabits, windowRange.start, windowRange.end),
@@ -99,51 +180,10 @@ export function Stats() {
     [filteredHabits, frozenDates, windowRange]
   );
 
-  const streakLeader =
-    allStats.length > 0
-      ? allStats.reduce((best, next) =>
-          next.stats.longestStreak > best.stats.longestStreak ? next : best,
-        allStats[0])
-      : null;
-
-  const bestCount = weekdayStats.counts[weekdayStats.bestIndex] ?? 0;
-  const worstCount = weekdayStats.counts[weekdayStats.worstIndex] ?? 0;
-  const weekdayDiffPercent =
-    worstCount === 0 ? bestCount * 100 : Math.round(((bestCount - worstCount) / Math.max(1, worstCount)) * 100);
-  const hasWeekdayShift = weekdayStats.bestWeekday !== 'N/A' && weekdayStats.worstWeekday !== 'N/A';
-
-  const improvedCount =
-    habitPeriodData.length > 1
-      ? filteredHabits.reduce((sum, habit) => {
-          const lastEntry = habitPeriodData[habitPeriodData.length - 1];
-          const prevEntry = habitPeriodData[habitPeriodData.length - 2];
-          const current = Number(lastEntry?.[habit.name] ?? 0);
-          const previous = Number(prevEntry?.[habit.name] ?? 0);
-          return current > previous ? sum + 1 : sum;
-        }, 0)
-      : 0;
-
-  const insights = [
-    {
-      id: 'streak',
-      title: 'Best streak',
-      body: streakLeader
-        ? `Your best streak is ${streakLeader.stats.longestStreak} days on ${streakLeader.habit.name}.`
-        : 'No streaks registered yet.'
-    },
-    {
-      id: 'weekday',
-      title: 'Weekday shift',
-      body: hasWeekdayShift
-        ? `${weekdayDiffPercent}% more habits on ${weekdayStats.bestWeekday} vs ${weekdayStats.worstWeekday}.`
-        : 'Weekly trend data will appear once there is enough activity.'
-    },
-    {
-      id: 'momentum',
-      title: 'Momentum',
-      body: `${improvedCount} ${improvedCount === 1 ? 'habit improved' : 'habits improved'} this ${PERIOD_DISPLAY_NAMES[period]}.`
-    }
-  ];
+  const insights = useMemo(
+    () => buildStatsInsights(allStats, weekdayStats, habitPeriodData, filteredHabits, period),
+    [allStats, weekdayStats, habitPeriodData, filteredHabits, period]
+  );
 
   const toggleTag = (tag: string) => {
     setSelectedTags((prev) => (prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]));
@@ -152,10 +192,10 @@ export function Stats() {
   return (
     <StatsView
       navigate={navigate}
-      avgRate={avgRate}
-      bestStreak={bestStreak}
-      totalCompletions={totalCompletions}
-      currentStreaks={currentStreaks}
+      avgRate={summary.avgRate}
+      bestStreak={summary.bestStreak}
+      totalCompletions={summary.totalCompletions}
+      currentStreaks={summary.currentStreaks}
       searchQuery={searchQuery}
       setSearchQuery={setSearchQuery}
       statusFilter={statusFilter}
@@ -166,7 +206,7 @@ export function Stats() {
       dailyData={dailyData}
       habitPeriodData={habitPeriodData}
       filteredHabits={filteredHabits}
-      sorted={sorted}
+      sorted={summary.sorted}
       allStats={allStats}
       bestWeekday={weekdayStats.bestWeekday}
       worstWeekday={weekdayStats.worstWeekday}

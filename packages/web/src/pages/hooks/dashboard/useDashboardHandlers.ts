@@ -21,7 +21,7 @@ export interface DashboardHandlersOptions {
   setFilter: Dispatch<SetStateAction<'all' | 'pending' | 'done' | 'archived'>>;
   today: string;
   handleDismissReminder: (reminderId: string) => void;
-  updateHabit: (habit: Habit) => Promise<void>;
+  updateHabit: (id: string, data: Partial<Habit>) => Promise<void>;
 }
 
 export function useDashboardHandlers({
@@ -46,18 +46,12 @@ export function useDashboardHandlers({
 
   const handleDisableReminder = useCallback(
     async (habit: Habit) => {
-      await updateHabit({
-        ...habit,
-        reminderEnabled: false
-      });
+      await updateHabit(habit.id, { reminderEnabled: false });
       push({
         message: `Reminders disabled: ${habit.name}`,
         actionLabel: 'Undo',
         onUndo: async () => {
-          await updateHabit({
-            ...habit,
-            reminderEnabled: true
-          });
+          await updateHabit(habit.id, { reminderEnabled: true });
         }
       });
     },

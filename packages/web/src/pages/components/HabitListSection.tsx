@@ -29,6 +29,70 @@ const FILTER_EMPTY_STATES: Record<
   }
 };
 
+function EmptyHabitState({
+  filter,
+  selectedTags,
+  navigate
+}: Pick<DashboardViewProps, 'filter' | 'selectedTags' | 'navigate'>) {
+  const emptyState = FILTER_EMPTY_STATES[filter];
+  const message = selectedTags.length > 0
+    ? `No habits match ${selectedTags.join(', ')} under this filter.`
+    : emptyState.subtitle;
+
+  return (
+    <div className="max-w-2xl mx-auto py-16 flex flex-col items-center justify-center gap-3 text-center text-muted">
+      <div className="text-4xl">{emptyState.emoji}</div>
+      <h2 className="text-2xl font-semibold text-foreground">{emptyState.title}</h2>
+      <p className="text-sm text-muted max-w-md">{message}</p>
+      <button
+        type="button"
+        onClick={() => navigate('/habit/new')}
+        className="px-5 py-2 rounded-2xl bg-accent text-white text-sm font-semibold uppercase tracking-widest transition hover:opacity-90"
+      >
+        Add a habit
+      </button>
+    </div>
+  );
+}
+
+function GroupedHabitItems({
+  selectedTags,
+  filtered,
+  renderHabitItem,
+  listClassName,
+  headingClassName
+}: {
+  selectedTags: string[];
+  filtered: Habit[];
+  renderHabitItem: (habit: Habit, key: string) => React.ReactNode;
+  listClassName: string;
+  headingClassName: string;
+}) {
+  if (selectedTags.length === 0) {
+    return <>{filtered.map((habit) => renderHabitItem(habit, habit.id))}</>;
+  }
+
+  return (
+    <>
+      {selectedTags.map((tag) => {
+        const habitsInTag = filtered.filter((habit) => habit.tags.includes(tag));
+        if (habitsInTag.length === 0) {
+          return null;
+        }
+        return (
+          <div key={tag} className={listClassName}>
+            <div className={headingClassName}>
+              <span className="w-1.5 h-1.5 rounded-full bg-accent" />
+              <h3 className="text-[10px] font-mono font-bold uppercase tracking-widest text-muted">{tag}</h3>
+            </div>
+            {habitsInTag.map((habit) => renderHabitItem(habit, `${tag}-${habit.id}`))}
+          </div>
+        );
+      })}
+    </>
+  );
+}
+
 export function HabitListSection({
   filtered,
   dropHint,
@@ -62,24 +126,7 @@ export function HabitListSection({
   | 'filter'
 >) {
   if (filtered.length === 0) {
-    const emptyState = FILTER_EMPTY_STATES[filter];
-    const message = selectedTags.length > 0
-      ? `No habits match ${selectedTags.join(', ')} under this filter.`
-      : emptyState.subtitle;
-    return (
-      <div className="max-w-2xl mx-auto py-16 flex flex-col items-center justify-center gap-3 text-center text-muted">
-        <div className="text-4xl">{emptyState.emoji}</div>
-        <h2 className="text-2xl font-semibold text-foreground">{emptyState.title}</h2>
-        <p className="text-sm text-muted max-w-md">{message}</p>
-        <button
-          type="button"
-          onClick={() => navigate('/habit/new')}
-          className="px-5 py-2 rounded-2xl bg-accent text-white text-sm font-semibold uppercase tracking-widest transition hover:opacity-90"
-        >
-          Add a habit
-        </button>
-      </div>
-    );
+    return <EmptyHabitState filter={filter} selectedTags={selectedTags} navigate={navigate} />;
   }
   const isGrid = viewDensity === 'comfortable';
   let animationIndex = 0;
@@ -124,23 +171,13 @@ export function HabitListSection({
         role="list"
         aria-label="Habit list"
       >
-        {selectedTags.length > 0 ? (
-          selectedTags.map((tag) => {
-            const habitsInTag = filtered.filter((h) => h.tags.includes(tag));
-            if (habitsInTag.length === 0) return null;
-            return (
-              <React.Fragment key={tag}>
-                <div className="col-span-full flex items-center gap-2 px-1 mt-2 first:mt-0">
-                  <span className="w-1.5 h-1.5 rounded-full bg-accent" />
-                  <h3 className="text-[10px] font-mono font-bold uppercase tracking-widest text-muted">{tag}</h3>
-                </div>
-                {habitsInTag.map((habit) => renderHabitItem(habit, `${tag}-${habit.id}`))}
-              </React.Fragment>
-            );
-          })
-        ) : (
-          filtered.map((habit) => renderHabitItem(habit, habit.id))
-        )}
+        <GroupedHabitItems
+          selectedTags={selectedTags}
+          filtered={filtered}
+          renderHabitItem={renderHabitItem}
+          listClassName="col-span-full"
+          headingClassName="flex items-center gap-2 px-1 mt-2 first:mt-0"
+        />
       </div>
     );
   }
@@ -152,25 +189,13 @@ export function HabitListSection({
       role="list"
       aria-label="Habit list"
     >
-      {selectedTags.length > 0 ? (
-        selectedTags.map((tag) => {
-          const habitsInTag = filtered.filter((h) => h.tags.includes(tag));
-          if (habitsInTag.length === 0) {
-            return null;
-          }
-          return (
-            <div key={tag} className="space-y-1 mb-3">
-              <div className="flex items-center gap-2 px-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-accent" />
-                <h3 className="text-[10px] font-mono font-bold uppercase tracking-widest text-muted">{tag}</h3>
-              </div>
-              {habitsInTag.map((habit) => renderHabitItem(habit, `${tag}-${habit.id}`))}
-            </div>
-          );
-        })
-      ) : (
-        filtered.map((habit) => renderHabitItem(habit, habit.id))
-      )}
+      <GroupedHabitItems
+        selectedTags={selectedTags}
+        filtered={filtered}
+        renderHabitItem={renderHabitItem}
+        listClassName="space-y-1 mb-3"
+        headingClassName="flex items-center gap-2 px-1"
+      />
     </div>
   );
 }

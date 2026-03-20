@@ -14,6 +14,30 @@ type UseSwipeGestureOptions = {
   onSwipeRight?: () => void;
 };
 
+function detectHorizontalSwipe(dx: number, dy: number): boolean | null {
+  if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 8) {
+    return true;
+  }
+  if (Math.abs(dy) > Math.abs(dx) && Math.abs(dy) > 8) {
+    return false;
+  }
+  return null;
+}
+
+function clampSwipeOffset(dx: number): number {
+  return Math.max(-160, Math.min(160, dx));
+}
+
+function getSwipeDirection(offset: number): SwipeDirection {
+  if (offset > 0) {
+    return 'right';
+  }
+  if (offset < 0) {
+    return 'left';
+  }
+  return 'none';
+}
+
 export function useSwipeGesture({
   threshold = 60,
   onSwipeLeft,
@@ -51,13 +75,13 @@ export function useSwipeGesture({
       const dy = clientY - startYRef.current;
 
       if (horizontalRef.current === null) {
-        if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 8) {
-          horizontalRef.current = true;
-        } else if (Math.abs(dy) > Math.abs(dx) && Math.abs(dy) > 8) {
+        horizontalRef.current = detectHorizontalSwipe(dx, dy);
+        if (horizontalRef.current === false) {
           horizontalRef.current = false;
           resetSwipe();
           return;
-        } else {
+        }
+        if (horizontalRef.current === null) {
           return;
         }
       }
@@ -66,8 +90,8 @@ export function useSwipeGesture({
         return;
       }
 
-      const clamped = Math.max(-160, Math.min(160, dx));
-      const direction: SwipeDirection = clamped > 0 ? 'right' : clamped < 0 ? 'left' : 'none';
+      const clamped = clampSwipeOffset(dx);
+      const direction = getSwipeDirection(clamped);
       setState({ offset: clamped, direction, isSwiping: true });
 
       if (!triggeredRef.current && Math.abs(clamped) >= threshold) {
