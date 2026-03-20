@@ -103,39 +103,39 @@ function buildStatsInsights(
   if (streakLeader) {
     const days = streakLeader.stats.longestStreak;
     if (days >= 21) {
-      streakBody = `${streakLeader.habit.name} has ${days} days — this habit is becoming automatic.`;
+      streakBody = `🔥 ${streakLeader.habit.name} has ${days} days — this habit is becoming automatic.`;
     } else if (days >= 7) {
-      streakBody = `${days} days on ${streakLeader.habit.name}. Aim for 21+ to build lasting automatism.`;
+      streakBody = `💪 ${days} days on ${streakLeader.habit.name}. Aim for 21+ to build lasting automatism.`;
     } else if (days > 0) {
-      streakBody = `Best streak is ${days} days. Complete any habit 7 days in a row to build momentum.`;
+      streakBody = `🌱 Best streak is ${days} days. Complete any habit 7 days in a row to build momentum.`;
     } else {
-      streakBody = 'No streaks yet. Complete any habit 3 days in a row to start building a chain.';
+      streakBody = '💡 No streaks yet. Complete any habit 3 days in a row to start building a chain.';
     }
   } else {
-    streakBody = 'No streaks registered yet.';
+    streakBody = '💡 No streaks registered yet.';
   }
 
   let weekdayBody: string;
   if (hasWeekdayShift) {
     if (weekdayDiffPercent > 50) {
-      weekdayBody = `${weekdayStats.worstWeekday} is your weakest day — try a shorter goal or reminder that day.`;
+      weekdayBody = `⚠️ ${weekdayStats.worstWeekday} is your weakest day — try a shorter goal or reminder that day.`;
     } else {
-      weekdayBody = `${weekdayDiffPercent}% more completions on ${weekdayStats.bestWeekday} vs ${weekdayStats.worstWeekday}.`;
+      weekdayBody = `📊 ${weekdayDiffPercent}% more completions on ${weekdayStats.bestWeekday} vs ${weekdayStats.worstWeekday}.`;
     }
   } else {
-    weekdayBody = 'Check back after a few active days to see your weekday patterns.';
+    weekdayBody = '📊 Check back after a few active days to see your weekday patterns.';
   }
 
   const total = filteredHabits.length;
   let momentumBody: string;
   if (total === 0) {
-    momentumBody = 'No habits to measure yet.';
+    momentumBody = '💡 No habits to measure yet.';
   } else if (improvedCount === total) {
-    momentumBody = `All ${total} habits improving this ${PERIOD_DISPLAY_NAMES[period]} — excellent momentum!`;
+    momentumBody = `🚀 All ${total} habits improving this ${PERIOD_DISPLAY_NAMES[period]} — excellent momentum!`;
   } else if (improvedCount === 0) {
-    momentumBody = `No habits improved this ${PERIOD_DISPLAY_NAMES[period]}. Focus on one habit to break the trend.`;
+    momentumBody = `📉 No habits improved this ${PERIOD_DISPLAY_NAMES[period]}. Focus on one habit to break the trend.`;
   } else {
-    momentumBody = `${improvedCount} of ${total} habits improved. Push the other ${total - improvedCount} forward.`;
+    momentumBody = `📈 ${improvedCount} of ${total} habits improved. Push the other ${total - improvedCount} forward.`;
   }
 
   return [

@@ -179,12 +179,12 @@ function buildDailyChartInsight(avgRate: number, dailyData: { day: string; rate:
   const trend = recentAvg - earlierAvg;
   const bestDay = dailyData.reduce((best, d) => d.rate > best.rate ? d : best, dailyData[0]);
 
-  if (avgRate >= 75 && trend >= 0) return { text: `Strong performance — ${avgRate}% avg and trending up.`, color: 'text-accent' };
-  if (trend >= 15) return { text: `Big improvement recently. Keep the momentum going.`, color: 'text-accent' };
-  if (trend <= -20) return { text: `Completion dropped in the last few days. Try starting with just one habit.`, color: 'text-accent-secondary' };
-  if (avgRate < 40) return { text: `Low avg — check if your habit schedule matches your routine.`, color: 'text-accent-secondary' };
-  if (bestDay.rate === 100) return { text: `You hit 100% on ${bestDay.day}. Replicate that day's conditions.`, color: 'text-muted' };
-  return { text: `${avgRate}% avg. Aim for at least 70% daily consistency.`, color: 'text-muted' };
+  if (avgRate >= 75 && trend >= 0) return { text: `✅ Strong performance — ${avgRate}% avg and trending up.`, color: 'text-accent' };
+  if (trend >= 15) return { text: `📈 Big improvement recently. Keep the momentum going.`, color: 'text-accent' };
+  if (trend <= -20) return { text: `📉 Completion dropped in the last few days. Try starting with just one habit.`, color: 'text-accent-secondary' };
+  if (avgRate < 40) return { text: `⚠️ Low avg — check if your habit schedule matches your routine.`, color: 'text-accent-secondary' };
+  if (bestDay.rate === 100) return { text: `🔥 You hit 100% on ${bestDay.day}. Replicate that day's conditions.`, color: 'text-muted' };
+  return { text: `💡 ${avgRate}% avg. Aim for at least 70% daily consistency.`, color: 'text-muted' };
 }
 
 export function DailyRateChart({ avgRate, dailyData }: Pick<StatsViewProps, 'avgRate' | 'dailyData'>) {
