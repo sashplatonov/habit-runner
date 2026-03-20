@@ -2,6 +2,7 @@ import { useCallback, useRef, useState } from 'react';
 import { CheckIcon, FlameIcon } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { CompletionRing } from '@/components/CompletionRing';
+import { HabitHeatmap } from '@/components/HabitHeatmap';
 import { HABIT_COLOR_THEMES } from '@/lib/theme/habit-colors';
 import type { HabitColorTheme } from '@/lib/theme/habit-colors';
 import { calculateScheduledCompletionRate, calculateScheduledStreak, getScheduleStatusForDate, isMandatoryToday } from '@/lib/habits/schedule';
@@ -9,34 +10,6 @@ import { formatDate } from '@/lib/habits/habitStats';
 import type { Habit } from '@/types/habit';
 
 const CONFETTI_COLORS = ['var(--accent)', 'var(--accent-secondary)', '#fff', 'var(--glow)'];
-
-function buildLastWeek(completions: Record<string, number>, target: number) {
-  return Array.from({ length: 7 }, (_, index) => {
-    const cursor = new Date();
-    cursor.setDate(cursor.getDate() - (6 - index));
-    const key = formatDate(cursor);
-    return (completions[key] ?? 0) >= target;
-  });
-}
-
-function MiniBars({ last7, accentHex }: { last7: boolean[]; accentHex: string }) {
-  return (
-    <div className="flex items-end gap-[2px] h-[13px] progress-shimmer" aria-hidden>
-      {last7.map((done, i) => (
-        <span
-          key={i}
-          className="w-[3px] rounded-sm transition-all progress-shimmer-bar"
-          style={{
-            height: done ? '100%' : '40%',
-            backgroundColor: done ? accentHex : 'var(--border)',
-            opacity: done ? 1 : 0.4 + i * 0.07,
-            animationDelay: `${i * 0.08}s`
-          }}
-        />
-      ))}
-    </div>
-  );
-}
 
 function MultiTargetProgress({
   accentHex,
@@ -273,7 +246,6 @@ function buildTilePresentation(habit: Habit) {
     completed,
     completionRate,
     isFrozen,
-    last7: buildLastWeek(habit.completions, target),
     scheduledToday,
     streak,
     target,
@@ -333,7 +305,12 @@ export function HabitTile({
         />
 
         <div className="flex items-center justify-between mt-2 pt-1 border-t border-border/30">
-          <MiniBars last7={presentation.last7} accentHex={presentation.accent.hex} />
+          <HabitHeatmap
+            completions={habit.completions}
+            dailyTarget={presentation.target}
+            color={habit.color}
+            compact
+          />
           <HabitRowToggleButton
             completed={presentation.completed}
             isFrozen={presentation.isFrozen}
