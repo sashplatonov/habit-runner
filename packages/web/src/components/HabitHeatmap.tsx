@@ -139,7 +139,7 @@ export function HabitHeatmap({
   const markers = buildMonthMarkers(weeks);
 
   return (
-    <div className="relative select-none">
+    <div className="relative select-none sm:max-w-[320px] sm:mx-auto">
       <div className="flex w-full gap-0">
         {/* Day labels */}
         <div
