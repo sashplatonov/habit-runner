@@ -3,10 +3,10 @@ import {
   calendarDateToDate,
   diffCalendarDays,
   extractCalendarDate,
-  formatCalendarDateInTimeZone,
-  toCalendarDateKey
+  formatCalendarDateInTimeZone
 } from '@habbit-runner/shared';
 import { getCurrentUserTimeZone } from '@/lib/time/userTimezone';
+import { toCompletionKey, calendarDateToCompletionKey } from '@/lib/completionKey';
 
 const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
@@ -32,8 +32,9 @@ function getDaysInCalendarMonth(value: string): number {
   return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth() + 1, 0)).getUTCDate();
 }
 
+/** @deprecated Import toCompletionKey from @/lib/completionKey instead */
 export function formatDate(date: Date, timeZone = getCurrentUserTimeZone()): string {
-  return toCalendarDateKey(date, timeZone);
+  return toCompletionKey(date, timeZone);
 }
 
 function buildCompletedDates(
@@ -115,7 +116,7 @@ export function buildWeeklyCompletionData(
     let count = 0;
     for (let dayOffset = 0; dayOffset < 7; dayOffset += 1) {
       const cursor = addDaysToCalendarDate(today, -(weekOffset * 7 + dayOffset));
-      const key = `${cursor}T00:00:00Z`;
+      const key = calendarDateToCompletionKey(cursor);
       if ((completions[key] ?? 0) >= dailyTarget) {
         count += 1;
       }
@@ -152,7 +153,7 @@ export function buildMonthlyCompletionRates(
       if (cursor > today) {
         break;
       }
-      const key = `${cursor}T00:00:00Z`;
+      const key = calendarDateToCompletionKey(cursor);
       if ((completions[key] ?? 0) >= dailyTarget) {
         completed += 1;
       }

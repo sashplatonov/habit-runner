@@ -6,7 +6,7 @@ import { HabitHeatmap } from '@/components/HabitHeatmap';
 import { HABIT_COLOR_THEMES } from '@/lib/theme/habit-colors';
 import type { HabitColorTheme } from '@/lib/theme/habit-colors';
 import { calculateScheduledCompletionRate, calculateScheduledStreak, getScheduleStatusForDate, isMandatoryToday } from '@/lib/habits/schedule';
-import { formatDate } from '@/lib/habits/habitStats';
+import { toCompletionKey } from '@/lib/completionKey';
 import type { Habit } from '@/types/habit';
 
 const CONFETTI_COLORS = ['var(--accent)', 'var(--accent-secondary)', '#fff', 'var(--glow)'];
@@ -190,7 +190,7 @@ function computeTileHint(habit: Habit, completionRate: number, streak: number): 
   for (let i = 0; i < 7; i++) {
     const d = new Date(today);
     d.setDate(d.getDate() - i);
-    const key = d.toISOString().split('T')[0];
+    const key = toCompletionKey(d);
     if ((habit.completions[key] ?? 0) >= target) recent7++;
   }
 
@@ -200,7 +200,7 @@ function computeTileHint(habit: Habit, completionRate: number, streak: number): 
     for (let i = 7; i < 14; i++) {
       const d = new Date(today);
       d.setDate(d.getDate() - i);
-      const key = d.toISOString().split('T')[0];
+      const key = toCompletionKey(d);
       if ((habit.completions[key] ?? 0) >= target) prev7++;
     }
   }
@@ -264,7 +264,7 @@ function HabitTileMeta({
 }
 
 function buildTilePresentation(habit: Habit) {
-  const todayKey = formatDate(new Date());
+  const todayKey = toCompletionKey(new Date());
   const todayDate = new Date();
   todayDate.setHours(0, 0, 0, 0);
   const status = getScheduleStatusForDate(habit, todayDate);

@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useHabits } from '@/hooks/useHabits';
 import { formatAppDate } from '@/lib/i18n';
+import { toCompletionKey } from '@/lib/completionKey';
 import { useNavigate } from '@/lib/router';
 import { StatsView } from './components/StatsView';
 import type { Habit } from '@/types/habit';
@@ -363,6 +364,7 @@ function differenceInDays(later: Date, earlier: Date) {
   return Math.round((later.getTime() - earlier.getTime()) / msPerDay);
 }
 
+
 function getCompletionThreshold(habit: Habit) {
   return Math.max(1, habit.dailyTarget ?? 1);
 }
@@ -373,7 +375,7 @@ function generateDailyCompletionData(habits: Habit[], start: Date, end: Date) {
   return Array.from({ length }, (_, index) => {
     const date = new Date(start);
     date.setDate(start.getDate() + index);
-    const key = date.toISOString().split('T')[0];
+    const key = toCompletionKey(date);
     const completed = habits.filter((h) => (h.completions[key] ?? 0) >= getCompletionThreshold(h)).length;
     return {
       day: formatAppDate(date, { month: 'short', day: 'numeric' }),
@@ -391,7 +393,7 @@ function generateHabitPeriodData(habits: Habit[], segments: PeriodSegment[]) {
     habits.forEach((habit) => {
       let completed = 0;
       for (let cursor = new Date(segment.start); cursor < segment.end; cursor.setDate(cursor.getDate() + 1)) {
-        const key = cursor.toISOString().split('T')[0];
+        const key = toCompletionKey(cursor);
         if ((habit.completions[key] ?? 0) >= getCompletionThreshold(habit)) {
           completed++;
         }
@@ -409,32 +411,31 @@ function buildWeekdayStats(habits: Habit[], start: Date, end: Date): WeekdayStat
   for (let offset = 0; offset < spanDays; offset++) {
     const date = new Date(start);
     date.setDate(start.getDate() + offset);
-    const key = date.toISOString().split('T')[0];
-    const completed = habits.some((habit) => (habit.completions[key] ?? 0) >= getCompletionThreshold(habit))
-      ? 1
-      : 0;
-    if (completed) {
+    const key = toCompletionKey(date);
+    const isCompleted = habits.some((habit) => (habit.completions[key] ?? 0) >= getCompletionThreshold(habit));
+    if (isCompleted) {
       counts[date.getDay()] += 1;
       activeDays.add(key);
     }
   }
-  let bestIndex = 1;
-  let worstIndex = 1;
+  let bestIndex = 0;
+  let worstIndex = -1;
   for (let i = 0; i < 7; i++) {
     if (counts[i] > counts[bestIndex]) {
       bestIndex = i;
     }
-    if (counts[i] < counts[worstIndex] && counts[i] > 0) {
+    if (counts[i] > 0 && (worstIndex === -1 || counts[i] < counts[worstIndex])) {
       worstIndex = i;
     }
   }
   const totalActiveDays = activeDays.size;
   const investmentPercent = Math.round((totalActiveDays / Math.max(1, spanDays)) * 100);
+  const resolvedWorstIndex = worstIndex >= 0 ? worstIndex : bestIndex;
   return {
     bestWeekday: counts[bestIndex] > 0 ? WEEKDAY_NAMES[bestIndex] : 'N/A',
-    worstWeekday: counts[worstIndex] > 0 ? WEEKDAY_NAMES[worstIndex] : 'N/A',
+    worstWeekday: worstIndex >= 0 ? WEEKDAY_NAMES[worstIndex] : 'N/A',
     bestIndex,
-    worstIndex,
+    worstIndex: resolvedWorstIndex,
     counts,
     investmentPercent,
     totalActiveDays
@@ -460,7 +461,7 @@ function buildActivityWeeks(
       const index = col * 7 + row;
       const date = new Date(start);
       date.setDate(start.getDate() + index);
-      const key = date.toISOString().split('T')[0];
+      const key = toCompletionKey(date);
       const inWindow = date >= rangeStart && date <= rangeEnd;
       const intensity = inWindow
         ? habits.filter((habit) => (habit.completions[key] ?? 0) >= getCompletionThreshold(habit)).length

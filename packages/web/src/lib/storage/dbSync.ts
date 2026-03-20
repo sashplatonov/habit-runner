@@ -1,6 +1,7 @@
 import type { PullResponseDto } from '@/types/sync';
 import type { HabitEntity } from './db';
 import { db, deleteCheckinInDb, getCurrentUserId, removeHabitFromDb } from './db';
+import { normalizeToCompletionKey } from '@/lib/completionKey';
 
 function shouldApplyRemoteRecord(
   existing: { updatedAt: string; version: number } | undefined,
@@ -63,8 +64,7 @@ function mapRemoteHabitToEntity(habit: PullResponseDto['habits'][number], userId
 }
 
 async function applyCheckinUpsert(checkin: PullResponseDto['checkins'][number], userId: string): Promise<void> {
-  const datePart = checkin.date.split('T')[0];
-  const normalizedDate = `${datePart}T00:00:00Z`;
+  const normalizedDate = normalizeToCompletionKey(checkin.date);
   const existingCheckin = await db.checkins.get(checkin.id);
   if (!shouldApplyRemoteRecord(existingCheckin, checkin.updatedAt, checkin.version)) {
     return;
@@ -132,7 +132,7 @@ async function applyDatedCheckinTombstone(
     return;
   }
 
-  const normalizedDate = date.includes('T') ? date : `${date}T00:00:00Z`;
+  const normalizedDate = normalizeToCompletionKey(date);
   const existingCheckin = await db.checkins
     .where('habitId')
     .equals(habitId)

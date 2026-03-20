@@ -25,6 +25,7 @@ import {
 import { calculateScheduledCompletionRate, calculateScheduledStreak, calculateAutomatismScore } from '@/lib/habits/schedule';
 import { useLiveQuery } from '@/hooks/useLiveQuery';
 import { buildCompletionsByHabitId } from '@/hooks/useHabits.helpers';
+import { completionKeyToCalendarDate } from '@/lib/completionKey';
 
 type ToggleCompletionResult = {
   habitId: string;
@@ -44,9 +45,7 @@ type HabitUpsertInput = Omit<Habit, 'id' | 'completions' | 'createdAt'> & {
 
 const completionMutationQueue = new Map<string, Promise<unknown>>();
 
-function normalizeFreezeDayKey(date: string): string {
-  return date.includes('T') ? date.split('T')[0] : date;
-}
+const normalizeFreezeDayKey = completionKeyToCalendarDate;
 
 function applyFreezeDays(
   baseCompletions: Record<string, number>,
