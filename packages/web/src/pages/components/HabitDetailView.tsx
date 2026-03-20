@@ -195,6 +195,30 @@ function HabitDetailHeader({
 }
 
 function StatCardGrid({ stats, accent }: Pick<HabitDetailViewProps, 'stats' | 'accent'>) {
+  const streakHint =
+    stats.currentStreak === 0
+      ? 'Start today'
+      : stats.currentStreak >= stats.longestStreak && stats.longestStreak > 0
+        ? 'Personal best!'
+        : `${stats.longestStreak - stats.currentStreak}d to record`;
+
+  const bestHint =
+    stats.longestStreak >= 21 ? 'Habit established' : stats.longestStreak >= 7 ? 'Good foundation' : 'Target: 7 days';
+
+  const rateHint =
+    stats.completionRate >= 80
+      ? 'Excellent'
+      : stats.completionRate >= 60
+        ? 'Aim for 80%+'
+        : stats.completionRate >= 40
+          ? 'Room to grow'
+          : 'Needs focus';
+
+  const totalHint = stats.completedDays >= 100 ? '100+ milestone!' : `${100 - stats.completedDays} to 100`;
+
+  const rateColor =
+    stats.completionRate >= 80 ? 'text-accent' : stats.completionRate >= 50 ? 'text-accent-secondary' : 'text-muted';
+
   return (
     <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
       <div className="bg-bg-secondary border border-border rounded-lg p-3">
@@ -204,6 +228,9 @@ function StatCardGrid({ stats, accent }: Pick<HabitDetailViewProps, 'stats' | 'a
         </div>
         <div className="text-xl font-mono font-bold text-accent-secondary">{stats.currentStreak}</div>
         <div className="text-[9px] font-mono text-muted">days</div>
+        <p className={`text-[9px] font-mono mt-1 ${stats.currentStreak === 0 ? 'text-accent-secondary' : stats.currentStreak >= stats.longestStreak ? 'text-accent' : 'text-muted'}`}>
+          {streakHint}
+        </p>
       </div>
       <div className="bg-bg-secondary border border-border rounded-lg p-3">
         <div className="flex items-center gap-1 mb-2">
@@ -214,6 +241,9 @@ function StatCardGrid({ stats, accent }: Pick<HabitDetailViewProps, 'stats' | 'a
           {stats.longestStreak}
         </div>
         <div className="text-[9px] font-mono text-muted">days</div>
+        <p className={`text-[9px] font-mono mt-1 ${stats.longestStreak >= 21 ? 'text-accent' : stats.longestStreak >= 7 ? 'text-accent-secondary' : 'text-muted'}`}>
+          {bestHint}
+        </p>
       </div>
       <div className="bg-bg-secondary border border-border rounded-lg p-3">
         <div className="flex items-center gap-1 mb-2">
@@ -222,6 +252,7 @@ function StatCardGrid({ stats, accent }: Pick<HabitDetailViewProps, 'stats' | 'a
         </div>
         <div className="text-xl font-mono font-bold text-accent-secondary">{stats.completionRate}%</div>
         <div className="text-[9px] font-mono text-muted">30 days</div>
+        <p className={`text-[9px] font-mono mt-1 ${rateColor}`}>{rateHint}</p>
       </div>
       <div className="bg-bg-secondary border border-border rounded-lg p-3">
         <div className="flex items-center gap-1 mb-2">
@@ -230,6 +261,9 @@ function StatCardGrid({ stats, accent }: Pick<HabitDetailViewProps, 'stats' | 'a
         </div>
         <div className="text-xl font-mono font-bold text-foreground">{stats.completedDays}</div>
         <div className="text-[9px] font-mono text-muted">days</div>
+        <p className={`text-[9px] font-mono mt-1 ${stats.completedDays >= 100 ? 'text-accent' : 'text-muted'}`}>
+          {totalHint}
+        </p>
       </div>
     </div>
   );
@@ -268,17 +302,35 @@ function AutomatismSection({ score, accent }: { score: number; accent: HabitColo
           }}
         />
       </div>
-      <div className="mt-2 text-[10px] text-muted leading-relaxed font-mono">
-        {score < 66 
-          ? `Approx. ${Math.max(1, 66 - Math.round(score * 0.66))} days more to reach "automatic" state.`
-          : "Habit is deeply ingrained in your routine."
-        }
+      <div className="mt-2 text-[10px] leading-relaxed font-mono" style={{ color: score >= 66 ? 'var(--accent)' : score >= 40 ? 'var(--accent-secondary)' : 'var(--text-muted)' }}>
+        {score >= 85
+          ? 'This habit runs on autopilot — your routine is locked in.'
+          : score >= 66
+            ? 'Habit is established. Keep consistent to push it further.'
+            : score >= 40
+              ? `${Math.max(1, 66 - Math.round(score * 0.66))} more active days to reach "automatic" state.`
+              : 'Habit is still fragile. Daily repetition is critical right now.'}
       </div>
     </div>
   );
 }
 
 function TargetRingSection({ stats, habit, accent }: Pick<HabitDetailViewProps, 'stats' | 'habit' | 'accent'>) {
+  const remaining = habit.targetStreak - stats.currentStreak;
+  const streakHint =
+    stats.currentStreak >= habit.targetStreak
+      ? `Target reached! Set a new challenge.`
+      : stats.currentStreak === 0
+        ? `Start today — ${habit.targetStreak} days to reach your target.`
+        : `${remaining} more day${remaining === 1 ? '' : 's'} to hit your ${habit.targetStreak}-day target.`;
+
+  const hintColor =
+    stats.currentStreak >= habit.targetStreak
+      ? 'text-accent'
+      : stats.currentStreak > habit.targetStreak * 0.5
+        ? 'text-accent-secondary'
+        : 'text-muted';
+
   return (
     <div className="bg-bg-secondary border border-border rounded-lg p-4 flex items-center gap-4">
       <CompletionRing percentage={stats.completionRate} size={72} strokeWidth={5} color={habit.color} showText />
@@ -289,7 +341,7 @@ function TargetRingSection({ stats, habit, accent }: Pick<HabitDetailViewProps, 
             {stats.currentStreak}/{habit.targetStreak}d
           </span>
         </div>
-        <div className="h-1.5 bg-border rounded-full overflow-hidden mb-3">
+        <div className="h-1.5 bg-border rounded-full overflow-hidden mb-2">
           <div
             className="h-full rounded-full transition-all duration-700"
             style={{
@@ -299,6 +351,7 @@ function TargetRingSection({ stats, habit, accent }: Pick<HabitDetailViewProps, 
             }}
           />
         </div>
+        <p className={`text-[9px] font-mono mb-2 ${hintColor}`}>{streakHint}</p>
         <div className="flex gap-2 flex-wrap">
           {habit.tags.map((tag) => (
             <span
@@ -333,7 +386,20 @@ function HeatmapSection({
   );
 }
 
+function buildMonthlyInsight(monthlyData: Array<{ month: string; rate: number }>): { text: string; color: string } {
+  if (monthlyData.length < 2) return { text: 'Complete a full month to see trends.', color: 'var(--text-muted)' };
+  const last = monthlyData[monthlyData.length - 1].rate;
+  const prev = monthlyData[monthlyData.length - 2].rate;
+  const trend = last - prev;
+  if (last >= 80 && trend >= 0) return { text: `${last}% last month — excellent, keep this up.`, color: 'var(--accent)' };
+  if (trend >= 15) return { text: `Up ${trend}% from last month — great momentum!`, color: 'var(--accent)' };
+  if (trend <= -15) return { text: `Down ${Math.abs(trend)}% this month. What changed in your routine?`, color: 'var(--accent-secondary)' };
+  if (last < 40) return { text: 'Low rate. Try habit stacking or reduce the daily target.', color: 'var(--accent-secondary)' };
+  return { text: `${last}% this month. Consistent effort adds up over time.`, color: 'var(--text-muted)' };
+}
+
 function MonthlyRateSection({ stats, accent }: Pick<HabitDetailViewProps, 'stats' | 'accent'>) {
+  const insight = buildMonthlyInsight(stats.monthlyData);
   return (
     <div className="bg-bg-secondary border border-border rounded-lg p-4">
       <h2 className="text-xs font-mono text-muted uppercase tracking-wider mb-4">Monthly completion rate</h2>
@@ -360,22 +426,31 @@ function MonthlyRateSection({ stats, accent }: Pick<HabitDetailViewProps, 'stats
             stroke={accent.hex}
             strokeWidth={2}
             dot={{ fill: accent.hex, r: 3, strokeWidth: 0 }}
-            activeDot={{
-              r: 5,
-              fill: accent.hex,
-              style: {
-                filter: `drop-shadow(0 0 6px ${accent.glow})`
-              }
-            }}
+            activeDot={{ r: 5, fill: accent.hex, style: { filter: `drop-shadow(0 0 6px ${accent.glow})` } }}
             style={{ filter: `drop-shadow(0 0 4px ${accent.glow})` }}
           />
         </LineChart>
       </ResponsiveContainer>
+      <p className="text-[10px] font-mono mt-3" style={{ color: insight.color }}>{insight.text}</p>
     </div>
   );
 }
 
+function buildWeeklyInsight(weeklyData: Array<{ count: number }>): { text: string; color: string } {
+  if (weeklyData.length < 4) return { text: '', color: '' };
+  const lastWeek = weeklyData[weeklyData.length - 1].count;
+  const recentAvg = (weeklyData.slice(-3).reduce((s, w) => s + w.count, 0)) / 3;
+  const earlierAvg = (weeklyData.slice(-6, -3).reduce((s, w) => s + w.count, 0)) / 3;
+  const trend = recentAvg - earlierAvg;
+  if (lastWeek === 7) return { text: 'Perfect last week — all 7 days completed!', color: 'var(--accent)' };
+  if (trend > 1.5) return { text: 'Weekly completions trending up — great momentum.', color: 'var(--accent)' };
+  if (trend < -1.5) return { text: 'Completions dropping recently. Try pairing with an existing habit.', color: 'var(--accent-secondary)' };
+  if (lastWeek === 0) return { text: 'No completions last week. Start fresh today.', color: 'var(--accent-secondary)' };
+  return { text: `${lastWeek}/7 days last week. Aim for one more next week.`, color: 'var(--text-muted)' };
+}
+
 function WeeklyCompletionsSection({ stats, accent }: Pick<HabitDetailViewProps, 'stats' | 'accent'>) {
+  const insight = buildWeeklyInsight(stats.weeklyData);
   return (
     <div className="bg-bg-secondary border border-border rounded-lg p-4">
       <h2 className="text-xs font-mono text-muted uppercase tracking-wider mb-3">Weekly completions</h2>
@@ -395,10 +470,13 @@ function WeeklyCompletionsSection({ stats, accent }: Pick<HabitDetailViewProps, 
           </div>
         ))}
       </div>
-      <div className="flex justify-between mt-1">
+      <div className="flex justify-between mt-1 mb-2">
         <span className="text-[9px] font-mono text-muted">12w ago</span>
         <span className="text-[9px] font-mono text-muted">this week</span>
       </div>
+      {insight.text && (
+        <p className="text-[10px] font-mono" style={{ color: insight.color }}>{insight.text}</p>
+      )}
     </div>
   );
 }

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { CalendarIcon, FilterIcon, FlameIcon, TrendingUpIcon, ZapIcon } from 'lucide-react';
 import type { Habit } from '@/types/habit';
 import { PeriodSelector, FiltersPanel, InsightsRow, DailyRateChart, PeriodTrendChart, HabitPerformanceList, WeeklyBreakdown, HabitSortControls } from './StatsViewPanels';
@@ -44,12 +44,14 @@ export type ActivityWeek = {
   days: ActivityDay[];
 };
 
-const SECTION_CONFIGS = [
+const TABS = [
   { id: 'overview', label: 'Overview' },
   { id: 'charts', label: 'Charts' },
   { id: 'habits', label: 'Habits' },
   { id: 'activity', label: 'Activity' }
-];
+] as const;
+
+type TabId = (typeof TABS)[number]['id'];
 
 export type StatsViewProps = {
   navigate: (to: string) => void;
@@ -191,16 +193,22 @@ function InvestmentSection({
           style={{ width: `${percent}%`, boxShadow: `0 0 10px var(--glow)` }}
         />
       </div>
-      <p className="text-[10px] font-mono text-muted text-center">
-        You were active on {percent}% of days this window. Keep it up!
+      <p className="text-[10px] font-mono text-center" style={{ color: percent >= 70 ? 'var(--accent)' : percent >= 40 ? 'var(--accent-secondary)' : 'var(--text-muted)' }}>
+        {percent >= 80
+          ? `Active ${percent}% of days — excellent consistency!`
+          : percent >= 60
+            ? `Active ${percent}% of days. Try filling the gaps on ${worstDay !== 'N/A' ? worstDay : 'your slow days'}.`
+            : percent >= 30
+              ? `Active ${percent}% of days — build a daily routine to improve this.`
+              : `Only ${percent}% active. Start with completing just one habit per day.`}
       </p>
     </div>
   );
 }
 
-function StatsToolbar({
-  activeSection,
-  scrollToSection,
+function StatsTabBar({
+  activeTab,
+  setActiveTab,
   period,
   setPeriod,
   filtersOpen,
@@ -213,8 +221,8 @@ function StatsToolbar({
   selectedTags,
   toggleTag
 }: {
-  activeSection: string;
-  scrollToSection: (id: string) => void;
+  activeTab: TabId;
+  setActiveTab: (id: TabId) => void;
   filtersOpen: boolean;
   setFiltersOpen: React.Dispatch<React.SetStateAction<boolean>>;
 } & Pick<
@@ -223,33 +231,53 @@ function StatsToolbar({
 >) {
   return (
     <div className="sticky top-0 z-30 border-b border-border bg-bg-primary/95 backdrop-blur-sm">
-      <div className="max-w-6xl mx-auto px-4 py-3 flex flex-wrap items-center gap-3">
-        <div className="flex flex-wrap gap-2">
-          {SECTION_CONFIGS.map((section) => (
+      <div className="max-w-6xl mx-auto px-4">
+        <div className="flex items-center gap-1">
+          {/* Tabs */}
+          <div className="flex flex-1 min-w-0">
+            {TABS.map((tab) => {
+              const isActive = activeTab === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`relative px-4 py-3 text-xs font-mono transition-colors whitespace-nowrap ${
+                    isActive
+                      ? 'text-foreground'
+                      : 'text-muted hover:text-foreground/70'
+                  }`}
+                >
+                  {tab.label}
+                  {isActive && (
+                    <span
+                      className="absolute bottom-0 left-0 right-0 h-[2px] rounded-t-full bg-accent"
+                      style={{ boxShadow: '0 0 6px var(--glow)' }}
+                    />
+                  )}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Right controls */}
+          <div className="flex items-center gap-2 py-2 pl-2">
+            <PeriodSelector period={period} setPeriod={setPeriod} />
             <button
-              key={section.id}
-              onClick={() => scrollToSection(section.id)}
-              className={`rounded-full px-3 py-1 text-[11px] font-mono transition-colors ${
-                activeSection === section.id ? 'bg-bg-card text-foreground' : 'text-muted hover:text-foreground'
+              onClick={() => setFiltersOpen((prev) => !prev)}
+              className={`rounded-full border px-3 py-1 text-xs font-mono flex items-center gap-1.5 transition-colors ${
+                filtersOpen
+                  ? 'border-accent text-accent'
+                  : 'border-border text-muted hover:text-foreground'
               }`}
             >
-              {section.label}
+              <FilterIcon size={12} />
+              Filters
             </button>
-          ))}
-        </div>
-        <div className="ml-auto flex items-center gap-2">
-          <PeriodSelector period={period} setPeriod={setPeriod} />
-          <button
-            onClick={() => setFiltersOpen((prev) => !prev)}
-            className="rounded-full border border-border px-3 py-1 text-xs font-mono flex items-center gap-2 text-muted hover:text-foreground"
-          >
-            <FilterIcon size={14} />
-            Filters
-          </button>
+          </div>
         </div>
       </div>
       {filtersOpen && (
-        <div className="px-4 pb-4">
+        <div className="border-t border-border px-4 py-3 max-w-6xl mx-auto">
           <FiltersPanel
             searchQuery={searchQuery}
             setSearchQuery={setSearchQuery}
@@ -265,8 +293,7 @@ function StatsToolbar({
   );
 }
 
-function StatsOverviewSection({
-  sectionRef,
+function TabOverview({
   avgRate,
   bestStreak,
   totalCompletions,
@@ -276,59 +303,45 @@ function StatsOverviewSection({
   bestWeekday,
   worstWeekday,
   insights
-}: {
-  sectionRef: (el: HTMLElement | null) => void;
-} & Pick<
+}: Pick<
   StatsViewProps,
   'avgRate' | 'bestStreak' | 'totalCompletions' | 'currentStreaks' | 'investmentPercent' | 'totalActiveDays' | 'bestWeekday' | 'worstWeekday' | 'insights'
 >) {
   return (
-    <section id="overview" ref={sectionRef} className="space-y-4">
+    <div className="space-y-4">
       <div className="grid gap-4 md:grid-cols-[2fr,1fr]">
         <OverviewGrid avgRate={avgRate} bestStreak={bestStreak} totalCompletions={totalCompletions} currentStreaks={currentStreaks} />
         <InvestmentSection percent={investmentPercent} totalDays={totalActiveDays} bestDay={bestWeekday} worstDay={worstWeekday} />
       </div>
       <InsightsRow insights={insights} />
-    </section>
+    </div>
   );
 }
 
-function StatsChartsSection({
-  sectionRef,
+function TabCharts({
   avgRate,
   dailyData,
   habitPeriodData,
   filteredHabits
-}: {
-  sectionRef: (el: HTMLElement | null) => void;
-} & Pick<StatsViewProps, 'avgRate' | 'dailyData' | 'habitPeriodData' | 'filteredHabits'>) {
+}: Pick<StatsViewProps, 'avgRate' | 'dailyData' | 'habitPeriodData' | 'filteredHabits'>) {
   const [hiddenHabits, setHiddenHabits] = useState<string[]>([]);
   const toggleHabitVisibility = (name: string) => {
     setHiddenHabits((prev) => (prev.includes(name) ? prev.filter((item) => item !== name) : [...prev, name]));
   };
   return (
-    <section id="charts" ref={sectionRef} className="space-y-4">
-      <div className="grid gap-4 md:grid-cols-2">
-        <DailyRateChart avgRate={avgRate} dailyData={dailyData} />
-        <PeriodTrendChart
-          habitPeriodData={habitPeriodData}
-          filteredHabits={filteredHabits}
-          hiddenHabits={hiddenHabits}
-          toggleHabitVisibility={toggleHabitVisibility}
-        />
-      </div>
-    </section>
+    <div className="grid gap-4 md:grid-cols-2">
+      <DailyRateChart avgRate={avgRate} dailyData={dailyData} />
+      <PeriodTrendChart
+        habitPeriodData={habitPeriodData}
+        filteredHabits={filteredHabits}
+        hiddenHabits={hiddenHabits}
+        toggleHabitVisibility={toggleHabitVisibility}
+      />
+    </div>
   );
 }
 
-function StatsHabitsSection({
-  sectionRef,
-  navigate,
-  allStats,
-  sorted
-}: {
-  sectionRef: (el: HTMLElement | null) => void;
-} & Pick<StatsViewProps, 'navigate' | 'allStats' | 'sorted'>) {
+function TabHabits({ navigate, allStats, sorted }: Pick<StatsViewProps, 'navigate' | 'allStats' | 'sorted'>) {
   const [habitSort, setHabitSort] = useState<'rate' | 'streak' | 'name'>('rate');
   const [habitSortDir, setHabitSortDir] = useState<'desc' | 'asc'>('desc');
   const sortedStats = useMemo(() => {
@@ -346,7 +359,7 @@ function StatsHabitsSection({
     else { setHabitSort(key); setHabitSortDir('desc'); }
   };
   return (
-    <section id="habits" ref={sectionRef} className="space-y-4">
+    <div className="space-y-4">
       <div className="flex items-center justify-between gap-4">
         <h2 className="text-xs font-mono text-muted uppercase tracking-wider">Habit performance</h2>
         <HabitSortControls habitSort={habitSort} handleSortChange={handleSortChange} />
@@ -355,16 +368,11 @@ function StatsHabitsSection({
         <HabitPerformanceList sorted={sortedStats} navigate={navigate} />
         <WeeklyBreakdown allStats={allStats} />
       </div>
-    </section>
+    </div>
   );
 }
 
-function StatsActivitySection({
-  sectionRef,
-  filteredHabits
-}: {
-  sectionRef: (el: HTMLElement | null) => void;
-} & Pick<StatsViewProps, 'filteredHabits'>) {
+function TabActivity({ filteredHabits }: Pick<StatsViewProps, 'filteredHabits'>) {
   const mergedCompletions = useMemo(() => {
     const merged: Record<string, number> = {};
     for (const habit of filteredHabits) {
@@ -381,63 +389,26 @@ function StatsActivitySection({
   );
 
   return (
-    <section id="activity" ref={sectionRef} className="space-y-4">
-      <div className="bg-bg-secondary border border-border rounded-lg p-3 space-y-3">
-        <div className="flex items-center justify-between">
-          <h2 className="text-xs font-mono text-muted uppercase tracking-wider">Activity - 90 days</h2>
-          <span className="text-[10px] font-mono text-muted">{filteredHabits.length} habits</span>
-        </div>
-        <HabitHeatmap completions={mergedCompletions} dailyTarget={aggregateTarget} />
+    <div className="bg-bg-secondary border border-border rounded-lg p-3 space-y-3">
+      <div className="flex items-center justify-between">
+        <h2 className="text-xs font-mono text-muted uppercase tracking-wider">Activity — 90 days</h2>
+        <span className="text-[10px] font-mono text-muted">{filteredHabits.length} habits</span>
       </div>
-    </section>
+      <HabitHeatmap completions={mergedCompletions} dailyTarget={aggregateTarget} />
+    </div>
   );
 }
 
 export function StatsView(props: StatsViewProps) {
-  const sectionRefs = useRef<Record<string, HTMLElement | null>>({});
-  const [activeSection, setActiveSection] = useState(SECTION_CONFIGS[0].id);
+  const [activeTab, setActiveTab] = useState<TabId>('overview');
   const [filtersOpen, setFiltersOpen] = useState(false);
-
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const visible = entries.filter((entry) => entry.isIntersecting);
-        if (visible.length > 0) {
-          const topEntry = visible.reduce((prev, curr) =>
-            prev.boundingClientRect.top < curr.boundingClientRect.top ? prev : curr
-          );
-          setActiveSection(topEntry.target.id);
-        }
-      },
-      { threshold: 0.4, rootMargin: '-40% 0px -60% 0px' }
-    );
-
-    SECTION_CONFIGS.forEach((section) => {
-      const ref = sectionRefs.current[section.id];
-      if (ref) {
-        observer.observe(ref);
-      }
-    });
-
-    return () => observer.disconnect();
-  }, []);
-
-  const scrollToSection = (id: string) => {
-    const el = sectionRefs.current[id];
-    if (el) {
-      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
-  };
-  const setSectionRef = (id: string) => (el: HTMLElement | null) => {
-    sectionRefs.current[id] = el;
-  };
 
   return (
     <div className="min-h-screen bg-bg-primary">
       <StatsHeader />
-      <StatsToolbar
-        activeSection={activeSection}
-        scrollToSection={scrollToSection}
+      <StatsTabBar
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
         period={props.period}
         setPeriod={props.setPeriod}
         filtersOpen={filtersOpen}
@@ -450,36 +421,38 @@ export function StatsView(props: StatsViewProps) {
         selectedTags={props.selectedTags}
         toggleTag={props.toggleTag}
       />
-      <div className="max-w-6xl mx-auto px-4 py-4 space-y-8">
-        <StatsOverviewSection
-          sectionRef={setSectionRef('overview')}
-          avgRate={props.avgRate}
-          bestStreak={props.bestStreak}
-          totalCompletions={props.totalCompletions}
-          currentStreaks={props.currentStreaks}
-          investmentPercent={props.investmentPercent}
-          totalActiveDays={props.totalActiveDays}
-          bestWeekday={props.bestWeekday}
-          worstWeekday={props.worstWeekday}
-          insights={props.insights}
-        />
-        <StatsChartsSection
-          sectionRef={setSectionRef('charts')}
-          avgRate={props.avgRate}
-          dailyData={props.dailyData}
-          habitPeriodData={props.habitPeriodData}
-          filteredHabits={props.filteredHabits}
-        />
-        <StatsHabitsSection
-          sectionRef={setSectionRef('habits')}
-          navigate={props.navigate}
-          allStats={props.allStats}
-          sorted={props.sorted}
-        />
-        <StatsActivitySection
-          sectionRef={setSectionRef('activity')}
-          filteredHabits={props.filteredHabits}
-        />
+      <div className="max-w-6xl mx-auto px-4 py-4">
+        {activeTab === 'overview' && (
+          <TabOverview
+            avgRate={props.avgRate}
+            bestStreak={props.bestStreak}
+            totalCompletions={props.totalCompletions}
+            currentStreaks={props.currentStreaks}
+            investmentPercent={props.investmentPercent}
+            totalActiveDays={props.totalActiveDays}
+            bestWeekday={props.bestWeekday}
+            worstWeekday={props.worstWeekday}
+            insights={props.insights}
+          />
+        )}
+        {activeTab === 'charts' && (
+          <TabCharts
+            avgRate={props.avgRate}
+            dailyData={props.dailyData}
+            habitPeriodData={props.habitPeriodData}
+            filteredHabits={props.filteredHabits}
+          />
+        )}
+        {activeTab === 'habits' && (
+          <TabHabits
+            navigate={props.navigate}
+            allStats={props.allStats}
+            sorted={props.sorted}
+          />
+        )}
+        {activeTab === 'activity' && (
+          <TabActivity filteredHabits={props.filteredHabits} />
+        )}
       </div>
     </div>
   );
