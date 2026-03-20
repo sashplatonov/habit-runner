@@ -2,7 +2,8 @@ import type { Table } from 'dexie';
 import Dexie from 'dexie';
 import type { Habit } from '@/types/habit';
 import type { HabitSchedule, SyncEntity, SyncOpType } from '@habbit-runner/shared';
-import { extractCalendarDate, normalizeSchedule, scheduleFromLegacy } from '@habbit-runner/shared';
+import { normalizeSchedule, scheduleFromLegacy } from '@habbit-runner/shared';
+import { normalizeToCompletionKey } from '@/lib/completionKey';
 import { DEFAULT_USER_ID } from '@/lib/core/config';
 import { generateId } from '@/lib/core/id';
 import { nowSyncISO } from '@habbit-runner/shared';
@@ -100,10 +101,7 @@ export interface PendingReminder {
 type LegacyCheckinRecord = Partial<CheckinEntity> & { date?: string };
 type LegacyHabitRecord = Partial<HabitEntity>;
 
-function normalizeCheckinDateKey(date: string): string {
-  const calendarDate = extractCalendarDate(date);
-  return calendarDate ? `${calendarDate}T00:00:00Z` : date;
-}
+const normalizeCheckinDateKey = normalizeToCompletionKey;
 
 export class HabbitRunnerDb extends Dexie {
   habits!: Table<HabitEntity>;

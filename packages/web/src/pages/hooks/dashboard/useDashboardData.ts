@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import type { Habit } from '@/types/habit';
 import { isMandatoryToday } from '@/lib/habits/schedule';
 import { formatDate as formatHabitDate } from '@/lib/habits/habitStats';
+import { completionKeyToCalendarDate } from '@/lib/completionKey';
 
 export type DashboardFilter = 'all' | 'pending' | 'done' | 'archived';
 
@@ -114,7 +115,7 @@ function CalculateOverallStreak(habits: Habit[]): number {
 
     const allDone = habits.every((habit) => {
       // Frozen days don't count against the streak
-      if (habit.freezeDays?.includes(key.split('T')[0])) {
+      if (habit.freezeDays?.includes(completionKeyToCalendarDate(key))) {
         return true;
       }
       // Check if habit is mandatory for this date (scheduled AND quota not met)

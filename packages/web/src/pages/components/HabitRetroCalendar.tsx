@@ -3,6 +3,7 @@ import { SnowflakeIcon } from 'lucide-react';
 import type { Habit } from '@/types/habit';
 import type { HabitColorTheme } from '@/lib/theme/habit-colors';
 import { formatDate } from '@/lib/habits/habitStats';
+import { completionKeyToCalendarDate } from '@/lib/completionKey';
 import { describeSchedule } from '@habbit-runner/shared';
 import { isScheduledForDate, resolveHabitSchedule } from '@/lib/habits/schedule';
 import { MonthNavigation } from './HabitRetroCalendarNavigation';
@@ -82,7 +83,7 @@ function buildRetroGrid(habit: Habit, schedule: ReturnType<typeof resolveHabitSc
     const date = new Date(startDate);
     date.setDate(startDate.getDate() + i);
     const dateKey = formatDate(date);
-    const freezeKey = dateKey.split('T')[0];
+    const freezeKey = completionKeyToCalendarDate(dateKey);
     const weekDay = date.getDay();
     const isFrozen = (habit.freezeDays ?? []).includes(freezeKey);
     days.push({

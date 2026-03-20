@@ -4,6 +4,7 @@ import { HABIT_COLOR_THEMES } from '@/lib/theme/habit-colors';
 import { useNavigate, useParams } from '@/lib/router';
 import { useUndo } from '@/lib/undo';
 import { HabitDetailView } from './components/HabitDetailView';
+import { completionKeyToCalendarDate } from '@/lib/completionKey';
 
 export function HabitDetail() {
   const navigate = useNavigate();
@@ -16,7 +17,7 @@ export function HabitDetail() {
   const [confirmDelete, setConfirmDelete] = useState(false);
 
   const todayFormatted = formatDate(new Date());
-  const todayFreezeKey = todayFormatted.split('T')[0];
+  const todayFreezeKey = completionKeyToCalendarDate(todayFormatted);
   const isTodayFrozen = habit ? habit.freezeDays.includes(todayFreezeKey) : false;
 
   const handleDelete = useCallback(async () => {

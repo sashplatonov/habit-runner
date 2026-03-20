@@ -209,8 +209,6 @@ function InvestmentSection({
 function StatsTabBar({
   activeTab,
   setActiveTab,
-  period,
-  setPeriod,
   filtersOpen,
   setFiltersOpen,
   searchQuery,
@@ -227,7 +225,7 @@ function StatsTabBar({
   setFiltersOpen: React.Dispatch<React.SetStateAction<boolean>>;
 } & Pick<
   StatsViewProps,
-  'period' | 'setPeriod' | 'searchQuery' | 'setSearchQuery' | 'statusFilter' | 'setStatusFilter' | 'allTags' | 'selectedTags' | 'toggleTag'
+  'searchQuery' | 'setSearchQuery' | 'statusFilter' | 'setStatusFilter' | 'allTags' | 'selectedTags' | 'toggleTag'
 >) {
   return (
     <div className="sticky top-0 z-30 border-b border-border bg-bg-primary/95 backdrop-blur-sm">
@@ -261,7 +259,6 @@ function StatsTabBar({
 
           {/* Right controls */}
           <div className="flex items-center gap-2 py-2 pl-2">
-            <PeriodSelector period={period} setPeriod={setPeriod} />
             <button
               onClick={() => setFiltersOpen((prev) => !prev)}
               className={`rounded-full border px-3 py-1 text-xs font-mono flex items-center gap-1.5 transition-colors ${
@@ -322,21 +319,28 @@ function TabCharts({
   avgRate,
   dailyData,
   habitPeriodData,
-  filteredHabits
-}: Pick<StatsViewProps, 'avgRate' | 'dailyData' | 'habitPeriodData' | 'filteredHabits'>) {
+  filteredHabits,
+  period,
+  setPeriod
+}: Pick<StatsViewProps, 'avgRate' | 'dailyData' | 'habitPeriodData' | 'filteredHabits' | 'period' | 'setPeriod'>) {
   const [hiddenHabits, setHiddenHabits] = useState<string[]>([]);
   const toggleHabitVisibility = (name: string) => {
     setHiddenHabits((prev) => (prev.includes(name) ? prev.filter((item) => item !== name) : [...prev, name]));
   };
   return (
-    <div className="grid gap-4 md:grid-cols-2">
-      <DailyRateChart avgRate={avgRate} dailyData={dailyData} />
-      <PeriodTrendChart
-        habitPeriodData={habitPeriodData}
-        filteredHabits={filteredHabits}
-        hiddenHabits={hiddenHabits}
-        toggleHabitVisibility={toggleHabitVisibility}
-      />
+    <div className="space-y-4">
+      <div className="flex justify-end">
+        <PeriodSelector period={period} setPeriod={setPeriod} />
+      </div>
+      <div className="grid gap-4 md:grid-cols-2">
+        <DailyRateChart avgRate={avgRate} dailyData={dailyData} />
+        <PeriodTrendChart
+          habitPeriodData={habitPeriodData}
+          filteredHabits={filteredHabits}
+          hiddenHabits={hiddenHabits}
+          toggleHabitVisibility={toggleHabitVisibility}
+        />
+      </div>
     </div>
   );
 }
@@ -409,8 +413,6 @@ export function StatsView(props: StatsViewProps) {
       <StatsTabBar
         activeTab={activeTab}
         setActiveTab={setActiveTab}
-        period={props.period}
-        setPeriod={props.setPeriod}
         filtersOpen={filtersOpen}
         setFiltersOpen={setFiltersOpen}
         searchQuery={props.searchQuery}
@@ -441,6 +443,8 @@ export function StatsView(props: StatsViewProps) {
             dailyData={props.dailyData}
             habitPeriodData={props.habitPeriodData}
             filteredHabits={props.filteredHabits}
+            period={props.period}
+            setPeriod={props.setPeriod}
           />
         )}
         {activeTab === 'habits' && (
