@@ -1,12 +1,13 @@
 import React, { useMemo, useRef } from 'react';
 import { ChevronLeftIcon, ChevronRightIcon } from 'lucide-react';
 import { DashboardView } from '@/pages/components/DashboardView';
-import { StatsView } from '@/pages/components/StatsView';
+import { StatsView, type ActivityWeek, type Insight, type PeriodOption } from '@/pages/components/StatsView';
 import { AddEditHabitPage } from '@/pages/components/add-edit-habit/AddEditHabitPage';
 import { COLORS } from '@/pages/components/add-edit-habit.constants';
 import type { AddEditHabitModel } from '@/pages/hooks/useAddEditHabitModel';
 import { BrowserRouter } from '@/lib/router';
-import type { Habit, HabitSchedule } from '@/types/habit';
+import type { Habit } from '@/types/habit';
+import type { HabitSchedule } from '@habbit-runner/shared';
 
 function isoDate(offsetDays = 0) {
   const date = new Date();
@@ -39,6 +40,8 @@ function buildDemoHabits(): Habit[] {
       createdAt: isoDate(-45),
       archived: false,
       sortOrder: 0,
+      difficulty: 2,
+      type: 'positive',
       reminderTime: '07:30',
       reminderEnabled: true
     },
@@ -57,6 +60,8 @@ function buildDemoHabits(): Habit[] {
       createdAt: isoDate(-30),
       archived: false,
       sortOrder: 1,
+      difficulty: 2,
+      type: 'positive',
       reminderTime: '21:00',
       reminderEnabled: true
     },
@@ -75,6 +80,8 @@ function buildDemoHabits(): Habit[] {
       createdAt: isoDate(-20),
       archived: false,
       sortOrder: 2,
+      difficulty: 3,
+      type: 'negative',
       reminderTime: '18:05',
       reminderEnabled: true
     }
@@ -92,12 +99,16 @@ function buildDemoEditModel(): AddEditHabitModel {
   const setColor = noopSetter<Habit['color']>();
   const setFrequency = noopSetter<Habit['frequency']>();
   const setSchedule = noopSetter<HabitSchedule>();
+  const setDifficulty = noopSetter<1 | 2 | 3 | 4 | 5>();
+  const setType = noopSetter<'positive' | 'negative'>();
 
   return {
     habitId: 'demo-read',
     isEdit: true,
     hasExisting: true,
     shouldShowLoading: false,
+    showSoftLimitWarning: false,
+    acknowledgeSoftLimit: () => undefined,
     name: 'Read 20 pages',
     setName: setString,
     description: 'Build a consistent nightly reading routine.',
@@ -120,6 +131,10 @@ function buildDemoEditModel(): AddEditHabitModel {
     increaseTargetStreak: () => undefined,
     dailyTarget: 1,
     setDailyTarget: setNumber,
+    difficulty: 2,
+    setDifficulty,
+    type: 'positive',
+    setType,
     tags: ['learning', 'focus'],
     tagInput: '',
     setTagInput: setString,
@@ -148,6 +163,35 @@ function buildDemoStatsModel(habits: Habit[]) {
     }
   }));
 
+  const habitPeriodData = [
+    { period: 'Oct', 'Morning Run': 74, 'Read 20 pages': 62, 'No sugar after 18:00': 58 },
+    { period: 'Nov', 'Morning Run': 78, 'Read 20 pages': 68, 'No sugar after 18:00': 61 },
+    { period: 'Dec', 'Morning Run': 82, 'Read 20 pages': 70, 'No sugar after 18:00': 65 },
+    { period: 'Jan', 'Morning Run': 86, 'Read 20 pages': 72, 'No sugar after 18:00': 66 },
+    { period: 'Feb', 'Morning Run': 88, 'Read 20 pages': 75, 'No sugar after 18:00': 68 },
+    { period: 'Mar', 'Morning Run': 90, 'Read 20 pages': 76, 'No sugar after 18:00': 69 }
+  ];
+  const insights: Insight[] = [
+    { id: 'streak', title: 'Best streak', body: 'Morning Run leads with a 21-day streak.' },
+    { id: 'weekday', title: 'Weekday shift', body: 'Wednesday is your strongest day this month.' },
+    { id: 'momentum', title: 'Momentum', body: '2 habits improved versus the previous period.' }
+  ];
+  const activityWeeks: ActivityWeek[] = [
+    {
+      label: 'Week 1',
+      days: [
+        { date: '2026-03-01', intensity: 2, isFrozen: false, inWindow: true },
+        { date: '2026-03-02', intensity: 3, isFrozen: false, inWindow: true },
+        { date: '2026-03-03', intensity: 2, isFrozen: false, inWindow: true },
+        { date: '2026-03-04', intensity: 1, isFrozen: false, inWindow: true },
+        { date: '2026-03-05', intensity: 3, isFrozen: false, inWindow: true },
+        { date: '2026-03-06', intensity: 2, isFrozen: false, inWindow: true },
+        { date: '2026-03-07', intensity: 0, isFrozen: true, inWindow: true }
+      ]
+    }
+  ];
+  const period: PeriodOption = 'month';
+
   return {
     navigate: () => undefined,
     avgRate: 78,
@@ -172,17 +216,18 @@ function buildDemoStatsModel(habits: Habit[]) {
       { day: 'Mar 08', completed: 2, total: 3, rate: 67 },
       { day: 'Mar 09', completed: 2, total: 3, rate: 67 }
     ],
-    habitMonthlyData: [
-      { month: 'Oct', 'Morning Run': 74, 'Read 20 pages': 62, 'No sugar after 18:00': 58 },
-      { month: 'Nov', 'Morning Run': 78, 'Read 20 pages': 68, 'No sugar after 18:00': 61 },
-      { month: 'Dec', 'Morning Run': 82, 'Read 20 pages': 70, 'No sugar after 18:00': 65 },
-      { month: 'Jan', 'Morning Run': 86, 'Read 20 pages': 72, 'No sugar after 18:00': 66 },
-      { month: 'Feb', 'Morning Run': 88, 'Read 20 pages': 75, 'No sugar after 18:00': 68 },
-      { month: 'Mar', 'Morning Run': 90, 'Read 20 pages': 76, 'No sugar after 18:00': 69 }
-    ],
+    habitPeriodData,
     filteredHabits: habits,
     sorted: [...allStats].sort((a, b) => b.stats.completionRate - a.stats.completionRate),
-    allStats
+    allStats,
+    bestWeekday: 'Wednesday',
+    worstWeekday: 'Sunday',
+    investmentPercent: 78,
+    totalActiveDays: 26,
+    period,
+    setPeriod: () => undefined,
+    insights,
+    activityWeeks
   };
 }
 
@@ -257,6 +302,9 @@ export function PublicPreviewCarousel() {
                 reminders={[]}
                 dropHint={null}
                 dragOverHabitId={null}
+                draggedHabitId={null}
+                searchQuery=""
+                setSearchQuery={() => undefined}
                 filter="all"
                 allTags={allTags}
                 selectedTags={[]}
@@ -271,6 +319,7 @@ export function PublicPreviewCarousel() {
                   day: 'numeric'
                 })}
                 overallStreak={15}
+                daysSinceLastCompletion={0}
                 setFilter={() => undefined}
                 setSelectedTags={() => undefined}
                 toggleTag={() => undefined}
@@ -279,11 +328,18 @@ export function PublicPreviewCarousel() {
                 handleTemplateSelect={async () => undefined}
                 handleToggle={async () => undefined}
                 handleDismissReminder={() => undefined}
+                handleDisableReminder={async () => undefined}
                 handleDragStart={() => undefined}
                 handleDragOver={() => undefined}
                 handleDrop={async () => undefined}
                 handleDragEnd={() => undefined}
                 handleTouchStart={() => undefined}
+                sortMode="custom"
+                setSortMode={() => undefined}
+                viewDensity="comfortable"
+                setViewDensity={() => undefined}
+                heroCollapsed={false}
+                setHeroCollapsed={() => undefined}
               />
             </BrowserRouter>
           </PreviewSlide>

@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import type { Habit } from '@/types/habit';
-import { resolveHabitSchedule, isScheduledForDate, isMandatoryToday, getWeekRange, getMonthRange, countCompletedDaysInRange } from '@/lib/habits/schedule';
+import { isMandatoryToday } from '@/lib/habits/schedule';
 import { formatDate as formatHabitDate } from '@/lib/habits/habitStats';
 
 export type DashboardFilter = 'all' | 'pending' | 'done' | 'archived';

@@ -51,6 +51,81 @@ function SortToggle({ sortMode, setSortMode }: { sortMode: 'custom' | 'smart'; s
   );
 }
 
+function FilterTabs({
+  filter,
+  setFilter,
+  pendingCount
+}: {
+  filter: DashboardViewProps['filter'];
+  setFilter: DashboardViewProps['setFilter'];
+  pendingCount: number;
+}) {
+  return (
+    <div className="flex gap-0 overflow-x-auto no-scrollbar">
+      {(['pending', 'all', 'done', 'archived'] as const).map((value) => (
+        <button
+          key={value}
+          type="button"
+          id={`filter-${value}`}
+          onClick={() => setFilter(value)}
+          className={`px-4 py-2.5 text-xs font-mono uppercase tracking-wider border-b-2 transition-colors whitespace-nowrap ${
+            filter === value ? 'border-accent text-accent' : 'border-transparent text-muted hover:text-foreground'
+          }`}
+        >
+          {value}
+          {value === 'pending' && (
+            <span className="ml-1.5 text-[9px] bg-border px-1 py-0.5 rounded font-mono">{pendingCount}</span>
+          )}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function TagFilterRow({
+  allTags,
+  selectedTags,
+  toggleTag,
+  setSelectedTags
+}: {
+  allTags: string[];
+  selectedTags: string[];
+  toggleTag: DashboardViewProps['toggleTag'];
+  setSelectedTags: DashboardViewProps['setSelectedTags'];
+}) {
+  if (allTags.length === 0) {
+    return <span className="text-[10px] font-mono text-muted">No tags yet</span>;
+  }
+
+  return (
+    <>
+      {allTags.map((tag) => (
+        <button
+          key={tag}
+          type="button"
+          onClick={() => invokeIfFunction(toggleTag, tag)}
+          className={`text-[10px] font-mono px-2 py-1 rounded border whitespace-nowrap transition-colors ${
+            selectedTags.includes(tag)
+              ? 'bg-accent/10 border-accent/30 text-accent'
+              : 'bg-bg-secondary border-border text-muted hover:text-foreground hover:border-border-hover'
+          }`}
+        >
+          #{tag}
+        </button>
+      ))}
+      {selectedTags.length > 0 && (
+        <button
+          type="button"
+          onClick={() => invokeIfFunction(setSelectedTags, [])}
+          className="text-[10px] font-mono px-2 py-1 rounded border whitespace-nowrap bg-bg-secondary border-accent/30 text-accent hover:bg-accent/10 transition-colors"
+        >
+          Clear tags
+        </button>
+      )}
+    </>
+  );
+}
+
 export function FilterBar({
   filter,
   setFilter,
@@ -96,7 +171,7 @@ export function FilterBar({
 
   useEffect(() => {
     const sentinel = sentinelRef.current;
-    if (!sentinel) return undefined;
+    if (!sentinel) {return undefined;}
     const observer = new IntersectionObserver(
       ([entry]) => {
         setIsSticky(entry.boundingClientRect.top < 0);
@@ -117,65 +192,25 @@ export function FilterBar({
       >
         <div className="border-b border-border bg-bg-primary/95 backdrop-blur-sm px-4">
           <div className="max-w-2xl mx-auto">
-            <div className="flex gap-0 overflow-x-auto no-scrollbar">
-          {(['pending', 'all', 'done', 'archived'] as const).map((value) => (
-            <button
-              key={value}
-              type="button"
-              id={`filter-${value}`}
-              onClick={() => setFilter(value)}
-              className={`px-4 py-2.5 text-xs font-mono uppercase tracking-wider border-b-2 transition-colors whitespace-nowrap ${
-                filter === value ? 'border-accent text-accent' : 'border-transparent text-muted hover:text-foreground'
-              }`}
-            >
-              {value}
-              {value === 'pending' && (
-                <span className="ml-1.5 text-[9px] bg-border px-1 py-0.5 rounded font-mono">{pendingCount}</span>
-              )}
-            </button>
-          ))}
-        </div>
-        <div className="flex items-center gap-2 py-3 border-t border-border/40">
-          <SearchBar searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
-          <SortToggle sortMode={sortMode} setSortMode={setSortMode} />
-          <DensityToggle viewDensity={viewDensity} setViewDensity={setViewDensity} />
-        </div>
-        <div className="py-2.5 flex items-center gap-1.5 overflow-x-auto no-scrollbar">
-          {(allTags || []).length > 0 ? (
-            <>
-              {(allTags || []).map((tag) => (
-                <button
-                  key={tag}
-                  type="button"
-                  onClick={() => invokeIfFunction(toggleTag, tag)}
-                  className={`text-[10px] font-mono px-2 py-1 rounded border whitespace-nowrap transition-colors ${
-                    (selectedTags || []).includes(tag)
-                      ? 'bg-accent/10 border-accent/30 text-accent'
-                      : 'bg-bg-secondary border-border text-muted hover:text-foreground hover:border-border-hover'
-                  }`}
-                >
-                  #{tag}
-                </button>
-              ))}
-              {selectedTags.length > 0 && (
-                <button
-                  type="button"
-                  onClick={() => invokeIfFunction(setSelectedTags, [])}
-                  className="text-[10px] font-mono px-2 py-1 rounded border whitespace-nowrap bg-bg-secondary border-accent/30 text-accent hover:bg-accent/10 transition-colors"
-                >
-                  Clear tags
-                </button>
-              )}
-            </>
-          ) : (
-            <span className="text-[10px] font-mono text-muted">No tags yet</span>
-          )}
+            <FilterTabs filter={filter} setFilter={setFilter} pendingCount={pendingCount} />
+            <div className="flex items-center gap-2 py-3 border-t border-border/40">
+              <SearchBar searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
+              <SortToggle sortMode={sortMode} setSortMode={setSortMode} />
+              <DensityToggle viewDensity={viewDensity} setViewDensity={setViewDensity} />
+            </div>
+            <div className="py-2.5 flex items-center gap-1.5 overflow-x-auto no-scrollbar">
+              <TagFilterRow
+                allTags={allTags || []}
+                selectedTags={selectedTags}
+                toggleTag={toggleTag}
+                setSelectedTags={setSelectedTags}
+              />
+            </div>
+          </div>
         </div>
       </div>
     </div>
-  </div>
-</div>
-);
+  );
 }
 
 function DensityToggle({ viewDensity, setViewDensity }: { viewDensity: ViewDensity; setViewDensity: (density: ViewDensity) => void }) {
