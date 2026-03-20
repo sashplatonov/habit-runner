@@ -32,6 +32,7 @@ import { UndoProvider } from '@/lib/undo';
 import { installGlobalClientLogging } from '@/lib/logging/clientLogger';
 import { PullToRefresh } from '@/components/PullToRefresh';
 import { subscribeToPush, isPushNotificationSupported } from '@/lib/pwa/pushSubscription';
+import { clearCurrentUserTimeZone } from '@/lib/time/userTimezone';
 
 type AuthCallbackPageProps = {
   message?: string;
@@ -91,6 +92,7 @@ export function App() {
   useEffect(() => {
     const onSessionCleared = () => {
       setCurrentUserId(null);
+      clearCurrentUserTimeZone();
       setAuthSession(null);
       setAuthError('Session expired. Please log in again.');
     };
@@ -134,6 +136,7 @@ export function App() {
     const refreshToken = authSession?.refreshToken;
     clearAuthSession();
     setCurrentUserId(null);
+    clearCurrentUserTimeZone();
     setAuthSession(null);
     if (typeof window !== 'undefined') {
       window.history.replaceState({}, '', '/');

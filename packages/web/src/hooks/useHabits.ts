@@ -54,7 +54,7 @@ function applyFreezeDays(
   dailyTarget: number
 ) {
   (freezeDays ?? []).forEach((date) => {
-    const completionKey = date.includes('T') ? date : `${date}T00:00:00.000Z`;
+    const completionKey = date.includes('T') ? date : `${date}T00:00:00Z`;
     const existing = baseCompletions[completionKey] ?? 0;
     baseCompletions[completionKey] = Math.max(dailyTarget, existing);
   });

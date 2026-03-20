@@ -4,3 +4,8 @@ export interface AuthTokenResponse {
   expiresIn: number;
   tokenType: string;
 }
+
+export interface UserPreferences {
+  theme: string;
+  timezone: string | null;
+}

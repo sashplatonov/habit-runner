@@ -6,7 +6,7 @@ const baseCheckin = (overrides: Partial<CheckinEntity> = {}): CheckinEntity => (
   id: 'checkin-1',
   habitId: 'habit-1',
   userId: 'user-1',
-  date: '2026-03-01',
+  date: '2026-03-01T00:00:00Z',
   done: true,
   updatedAt: '2026-03-01T00:00:00.000Z',
   version: 1,
@@ -16,15 +16,15 @@ const baseCheckin = (overrides: Partial<CheckinEntity> = {}): CheckinEntity => (
 test('buildCompletionsByHabitId groups only completed checkins', () => {
   const checkins: CheckinEntity[] = [
     baseCheckin(),
-    baseCheckin({ id: 'checkin-2', date: '2026-03-02', done: false }),
-    baseCheckin({ id: 'checkin-3', habitId: 'habit-2', date: '2026-03-01' })
+    baseCheckin({ id: 'checkin-2', date: '2026-03-02T00:00:00Z', done: false }),
+    baseCheckin({ id: 'checkin-3', habitId: 'habit-2', date: '2026-03-01T00:00:00Z' })
   ];
 
   const result = buildCompletionsByHabitId(checkins);
 
-  expect(result['habit-1']).toEqual({ '2026-03-01': 1 });
-  expect(result['habit-2']).toEqual({ '2026-03-01': 1 });
-  expect(result['habit-1']['2026-03-02']).toBeUndefined();
+  expect(result['habit-1']).toEqual({ '2026-03-01T00:00:00Z': 1 });
+  expect(result['habit-2']).toEqual({ '2026-03-01T00:00:00Z': 1 });
+  expect(result['habit-1']['2026-03-02T00:00:00Z']).toBeUndefined();
 });
 
 test('buildCompletionsByHabitId sums counts per date', () => {
@@ -35,7 +35,16 @@ test('buildCompletionsByHabitId sums counts per date', () => {
 
   const result = buildCompletionsByHabitId(checkins);
 
-  expect(result['habit-1']).toEqual({ '2026-03-01': 5 });
+  expect(result['habit-1']).toEqual({ '2026-03-01T00:00:00Z': 5 });
+});
+
+test('buildCompletionsByHabitId normalizes legacy checkin date formats', () => {
+  const result = buildCompletionsByHabitId([
+    baseCheckin({ id: 'checkin-1', date: '2026-03-01', count: 1 }),
+    baseCheckin({ id: 'checkin-2', date: '2026-03-01T00:00:00.000Z', count: 2 })
+  ]);
+
+  expect(result['habit-1']).toEqual({ '2026-03-01T00:00:00Z': 3 });
 });
 
 test('buildCompletionsByHabitId returns empty map when no completed checkins', () => {
