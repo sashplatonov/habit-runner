@@ -194,30 +194,40 @@ function HabitDetailHeader({
   );
 }
 
-function StatCardGrid({ stats, accent }: Pick<HabitDetailViewProps, 'stats' | 'accent'>) {
+function StatCardGrid({ stats, accent, habitCreatedAt }: Pick<HabitDetailViewProps, 'stats' | 'accent'> & { habitCreatedAt: string }) {
+  const habitAgeDays = Math.floor((Date.now() - new Date(habitCreatedAt).getTime()) / (1000 * 60 * 60 * 24));
+  const rateWindowDays = Math.min(30, habitAgeDays);
+  const rateWindowLabel = rateWindowDays < 30 ? `${rateWindowDays}d` : '30 days';
+
   const streakHint =
     stats.currentStreak === 0
       ? 'Start today'
       : stats.currentStreak >= stats.longestStreak && stats.longestStreak > 0
-        ? 'Personal best!'
+        ? '🏆 Personal best!'
         : `${stats.longestStreak - stats.currentStreak}d to record`;
 
   const bestHint =
-    stats.longestStreak >= 21 ? 'Habit established' : stats.longestStreak >= 7 ? 'Good foundation' : 'Target: 7 days';
+    stats.longestStreak >= 21 ? '✅ Habit established' : stats.longestStreak >= 7 ? '💪 Good foundation' : 'Target: 7 days';
 
   const rateHint =
-    stats.completionRate >= 80
-      ? 'Excellent'
-      : stats.completionRate >= 60
-        ? 'Aim for 80%+'
-        : stats.completionRate >= 40
-          ? 'Room to grow'
-          : 'Needs focus';
+    habitAgeDays < 7
+      ? '🌱 Just started'
+      : habitAgeDays < 14
+        ? stats.completionRate >= 60 ? '✅ Strong start!' : '💪 Keep building'
+        : stats.completionRate >= 80
+          ? '✅ Excellent'
+          : stats.completionRate >= 60
+            ? '💡 Aim for 80%+'
+            : stats.completionRate >= 40
+              ? '📈 Room to grow'
+              : '⚠️ Needs focus';
 
-  const totalHint = stats.completedDays >= 100 ? '100+ milestone!' : `${100 - stats.completedDays} to 100`;
+  const totalHint = stats.completedDays >= 100 ? '🏆 100+ milestone!' : `${100 - stats.completedDays} to 100`;
 
   const rateColor =
-    stats.completionRate >= 80 ? 'text-accent' : stats.completionRate >= 50 ? 'text-accent-secondary' : 'text-muted';
+    habitAgeDays < 14
+      ? stats.completionRate >= 60 ? 'text-accent' : 'text-accent-secondary'
+      : stats.completionRate >= 80 ? 'text-accent' : stats.completionRate >= 50 ? 'text-accent-secondary' : 'text-muted';
 
   return (
     <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
@@ -251,7 +261,7 @@ function StatCardGrid({ stats, accent }: Pick<HabitDetailViewProps, 'stats' | 'a
           <span className="text-[9px] font-mono text-muted uppercase tracking-wider">Rate</span>
         </div>
         <div className="text-xl font-mono font-bold text-accent-secondary">{stats.completionRate}%</div>
-        <div className="text-[9px] font-mono text-muted">30 days</div>
+        <div className="text-[9px] font-mono text-muted">{rateWindowLabel}</div>
         <p className={`text-[9px] font-mono mt-1 ${rateColor}`}>{rateHint}</p>
       </div>
       <div className="bg-bg-secondary border border-border rounded-lg p-3">
@@ -386,20 +396,21 @@ function HeatmapSection({
   );
 }
 
-function buildMonthlyInsight(monthlyData: Array<{ month: string; rate: number }>): { text: string; color: string } {
-  if (monthlyData.length < 2) return { text: 'Complete a full month to see trends.', color: 'var(--text-muted)' };
+function buildMonthlyInsight(monthlyData: Array<{ month: string; rate: number }>, habitCreatedAt: string): { text: string; color: string } {
+  const habitAgeDays = Math.floor((Date.now() - new Date(habitCreatedAt).getTime()) / (1000 * 60 * 60 * 24));
+  if (monthlyData.length < 2 || habitAgeDays < 14) return { text: '📊 Complete more weeks to see monthly trends.', color: 'var(--text-muted)' };
   const last = monthlyData[monthlyData.length - 1].rate;
   const prev = monthlyData[monthlyData.length - 2].rate;
   const trend = last - prev;
-  if (last >= 80 && trend >= 0) return { text: `${last}% last month — excellent, keep this up.`, color: 'var(--accent)' };
-  if (trend >= 15) return { text: `Up ${trend}% from last month — great momentum!`, color: 'var(--accent)' };
-  if (trend <= -15) return { text: `Down ${Math.abs(trend)}% this month. What changed in your routine?`, color: 'var(--accent-secondary)' };
-  if (last < 40) return { text: 'Low rate. Try habit stacking or reduce the daily target.', color: 'var(--accent-secondary)' };
-  return { text: `${last}% this month. Consistent effort adds up over time.`, color: 'var(--text-muted)' };
+  if (last >= 80 && trend >= 0) return { text: `✅ ${last}% last month — excellent, keep this up.`, color: 'var(--accent)' };
+  if (trend >= 15) return { text: `📈 Up ${trend}% from last month — great momentum!`, color: 'var(--accent)' };
+  if (trend <= -15) return { text: `📉 Down ${Math.abs(trend)}% this month. What changed in your routine?`, color: 'var(--accent-secondary)' };
+  if (last < 40) return { text: '⚠️ Low rate. Try habit stacking or reduce the daily target.', color: 'var(--accent-secondary)' };
+  return { text: `💡 ${last}% this month. Consistent effort adds up over time.`, color: 'var(--text-muted)' };
 }
 
-function MonthlyRateSection({ stats, accent }: Pick<HabitDetailViewProps, 'stats' | 'accent'>) {
-  const insight = buildMonthlyInsight(stats.monthlyData);
+function MonthlyRateSection({ stats, accent, habit }: Pick<HabitDetailViewProps, 'stats' | 'accent' | 'habit'>) {
+  const insight = buildMonthlyInsight(stats.monthlyData, habit.createdAt);
   return (
     <div className="bg-bg-secondary border border-border rounded-lg p-4">
       <h2 className="text-xs font-mono text-muted uppercase tracking-wider mb-4">Monthly completion rate</h2>
@@ -436,21 +447,22 @@ function MonthlyRateSection({ stats, accent }: Pick<HabitDetailViewProps, 'stats
   );
 }
 
-function buildWeeklyInsight(weeklyData: Array<{ count: number }>): { text: string; color: string } {
-  if (weeklyData.length < 4) return { text: '', color: '' };
+function buildWeeklyInsight(weeklyData: Array<{ count: number }>, habitCreatedAt: string): { text: string; color: string } {
+  const habitAgeDays = Math.floor((Date.now() - new Date(habitCreatedAt).getTime()) / (1000 * 60 * 60 * 24));
+  if (weeklyData.length < 4 || habitAgeDays < 14) return { text: '', color: '' };
   const lastWeek = weeklyData[weeklyData.length - 1].count;
   const recentAvg = (weeklyData.slice(-3).reduce((s, w) => s + w.count, 0)) / 3;
   const earlierAvg = (weeklyData.slice(-6, -3).reduce((s, w) => s + w.count, 0)) / 3;
   const trend = recentAvg - earlierAvg;
-  if (lastWeek === 7) return { text: 'Perfect last week — all 7 days completed!', color: 'var(--accent)' };
-  if (trend > 1.5) return { text: 'Weekly completions trending up — great momentum.', color: 'var(--accent)' };
-  if (trend < -1.5) return { text: 'Completions dropping recently. Try pairing with an existing habit.', color: 'var(--accent-secondary)' };
-  if (lastWeek === 0) return { text: 'No completions last week. Start fresh today.', color: 'var(--accent-secondary)' };
-  return { text: `${lastWeek}/7 days last week. Aim for one more next week.`, color: 'var(--text-muted)' };
+  if (lastWeek === 7) return { text: '🔥 Perfect last week — all 7 days completed!', color: 'var(--accent)' };
+  if (trend > 1.5) return { text: '📈 Weekly completions trending up — great momentum.', color: 'var(--accent)' };
+  if (trend < -1.5) return { text: '📉 Completions dropping recently. Try pairing with an existing habit.', color: 'var(--accent-secondary)' };
+  if (lastWeek === 0) return { text: '⚠️ No completions last week. Start fresh today.', color: 'var(--accent-secondary)' };
+  return { text: `💡 ${lastWeek}/7 days last week. Aim for one more next week.`, color: 'var(--text-muted)' };
 }
 
-function WeeklyCompletionsSection({ stats, accent }: Pick<HabitDetailViewProps, 'stats' | 'accent'>) {
-  const insight = buildWeeklyInsight(stats.weeklyData);
+function WeeklyCompletionsSection({ stats, accent, habit }: Pick<HabitDetailViewProps, 'stats' | 'accent' | 'habit'>) {
+  const insight = buildWeeklyInsight(stats.weeklyData, habit.createdAt);
   return (
     <div className="bg-bg-secondary border border-border rounded-lg p-4">
       <h2 className="text-xs font-mono text-muted uppercase tracking-wider mb-3">Weekly completions</h2>
@@ -563,13 +575,13 @@ export function HabitDetailView({
         toggleFreezeToday={toggleFreezeToday}
       />
       <div className="max-w-2xl mx-auto px-4 py-4 space-y-4">
-        <StatCardGrid stats={stats} accent={accent} />
+        <StatCardGrid stats={stats} accent={accent} habitCreatedAt={habit.createdAt} />
         <AutomatismSection score={stats.automatismScore} accent={accent} />
         <TodayBlock dailyTarget={dailyTarget} todayCompletionCount={todayCompletionCount} accent={accent} />
         <HeatmapSection habit={habit} dailyTarget={dailyTarget} />
         <TargetRingSection stats={stats} habit={habit} accent={accent} />
-        <MonthlyRateSection stats={stats} accent={accent} />
-        <WeeklyCompletionsSection stats={stats} accent={accent} />
+        <MonthlyRateSection stats={stats} accent={accent} habit={habit} />
+        <WeeklyCompletionsSection stats={stats} accent={accent} habit={habit} />
         <HabitRetroCalendar habit={habit} dailyTarget={dailyTarget} accent={accent} setCompletionCount={setCompletionCount} />
         <DangerZone confirmDelete={confirmDelete} setConfirmDelete={setConfirmDelete} handleDelete={handleDelete} />
       </div>

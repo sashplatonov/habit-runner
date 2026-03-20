@@ -177,6 +177,14 @@ type TileHint = { text: string; type: 'good' | 'warn' | 'tip' };
 function computeTileHint(habit: Habit, completionRate: number, streak: number): TileHint | null {
   const target = Math.max(1, habit.dailyTarget ?? 1);
   const today = new Date();
+  const habitAgeDays = Math.floor((today.getTime() - new Date(habit.createdAt).getTime()) / (1000 * 60 * 60 * 24));
+
+  // New habit — encourage, skip long-period comparisons
+  if (habitAgeDays < 7) {
+    if (streak > 0) return { text: `🌱 Day ${streak} — great start!`, type: 'good' };
+    return { text: '🌱 New habit — start today!', type: 'tip' };
+  }
+
   let recent7 = 0;
   let prev7 = 0;
   for (let i = 0; i < 7; i++) {
@@ -185,18 +193,24 @@ function computeTileHint(habit: Habit, completionRate: number, streak: number): 
     const key = d.toISOString().split('T')[0];
     if ((habit.completions[key] ?? 0) >= target) recent7++;
   }
-  for (let i = 7; i < 14; i++) {
-    const d = new Date(today);
-    d.setDate(d.getDate() - i);
-    const key = d.toISOString().split('T')[0];
-    if ((habit.completions[key] ?? 0) >= target) prev7++;
+
+  // Only compare prev7 if the habit existed during that window
+  const canComparePrev = habitAgeDays >= 14;
+  if (canComparePrev) {
+    for (let i = 7; i < 14; i++) {
+      const d = new Date(today);
+      d.setDate(d.getDate() - i);
+      const key = d.toISOString().split('T')[0];
+      if ((habit.completions[key] ?? 0) >= target) prev7++;
+    }
   }
-  const weekTrend = recent7 - prev7;
-  if (completionRate >= 80 && streak >= 5) return { text: 'On track — great consistency', type: 'good' };
-  if (weekTrend >= 3) return { text: 'Trending up this week', type: 'good' };
-  if (streak === 0 && completionRate > 20) return { text: 'Restart your streak today', type: 'warn' };
-  if (weekTrend <= -3 && recent7 < 3) return { text: 'Losing momentum — stay consistent', type: 'warn' };
-  if (completionRate < 40) return { text: 'Try adjusting schedule or goal', type: 'tip' };
+
+  const weekTrend = canComparePrev ? recent7 - prev7 : 0;
+  if (completionRate >= 80 && streak >= 5) return { text: '✅ On track — great consistency', type: 'good' };
+  if (weekTrend >= 3) return { text: '📈 Trending up this week', type: 'good' };
+  if (streak === 0 && completionRate > 20) return { text: '⚠️ Restart your streak today', type: 'warn' };
+  if (canComparePrev && weekTrend <= -3 && recent7 < 3) return { text: '📉 Losing momentum — stay consistent', type: 'warn' };
+  if (habitAgeDays >= 30 && completionRate < 40) return { text: '💡 Try adjusting schedule or goal', type: 'tip' };
   return null;
 }
 
