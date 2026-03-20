@@ -350,24 +350,26 @@ function HabitRowCard({
             </div>
             {/* Right side: metrics + toggle — pinned to right edge via justify-between */}
             <div className="flex items-center gap-2 flex-shrink-0">
-              <HabitRowMetrics
-                habit={habit}
-                target={Math.max(1, habit.dailyTarget ?? 1)}
-                streak={streak}
-                last7={last7}
-                completionRate={completionRate}
-              />
-              <HabitRowToggleButton
-                completed={completed}
-                isFrozen={isFrozen}
-                accent={accent}
-                toggleButtonClass={toggleButtonClass}
-                toggleButtonTitle={toggleButtonTitle}
-                onToggle={onToggle}
-                streak={streak}
-                targetStreak={habit.targetStreak}
-              />
-            </div>
+            <HabitRowMetrics
+              habit={habit}
+              target={Math.max(1, habit.dailyTarget ?? 1)}
+              streak={streak}
+              last7={last7}
+              completionRate={completionRate}
+            />
+            <HabitRowToggleButton
+              completed={completed}
+              isFrozen={isFrozen}
+              accent={accent}
+              toggleButtonClass={toggleButtonClass}
+              toggleButtonTitle={toggleButtonTitle}
+              onToggle={onToggle}
+              streak={streak}
+              targetStreak={habit.targetStreak}
+              todayCount={todayCount}
+              dailyTarget={target}
+            />
+          </div>
           </div>
         </div>
       </div>
@@ -468,6 +470,8 @@ type HabitRowToggleButtonProps = {
   streak: number;
   targetStreak: number;
   sizeClass?: string;
+  todayCount: number;
+  dailyTarget: number;
 };
 
 const CONFETTI_COLORS = ['var(--accent)', 'var(--accent-secondary)', '#fff', 'var(--glow)'];
@@ -481,11 +485,19 @@ function HabitRowToggleButton({
   onToggle,
   streak,
   targetStreak,
-  sizeClass = 'w-8 h-8'
+  sizeClass = 'w-8 h-8',
+  todayCount,
+  dailyTarget
 }: HabitRowToggleButtonProps) {
   const [animating, setAnimating] = useState(false);
   const [particles, setParticles] = useState<{ id: number; tx: number; ty: number; color: string }[]>([]);
   const particleIdRef = useRef(0);
+  const safeDailyTarget = Math.max(1, dailyTarget);
+  const cappedTodayCount = Math.min(Math.max(todayCount, 0), safeDailyTarget);
+  const remaining = Math.max(safeDailyTarget - cappedTodayCount, 0);
+  const showProgress = safeDailyTarget > 1;
+  const completeLabel = `${cappedTodayCount}/${safeDailyTarget}`;
+  const remainingLabel = remaining > 0 ? `${remaining} left` : 'Done';
 
   const handleClick = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
@@ -548,7 +560,7 @@ function HabitRowToggleButton({
         type="button"
         onClick={handleClick}
         disabled={isFrozen}
-      className={`${sizeClass} rounded-xl border-[1.5px] flex items-center justify-center transition-all duration-200 ${toggleButtonClass} ${
+        className={`${sizeClass} rounded-xl border-[1.5px] flex items-center justify-center transition-all duration-200 relative ${toggleButtonClass} ${
           animating ? 'animate-check-pulse animate-glow-burst' : ''
         } ${isFrozen ? 'cursor-not-allowed opacity-60' : ''}`}
         style={completed && !isFrozen ? { boxShadow: `0 0 12px ${accent.glow}` } : undefined}
@@ -558,7 +570,17 @@ function HabitRowToggleButton({
         {isFrozen ? (
           <span className="text-[12px] opacity-80" aria-label="Frozen">🧊</span>
         ) : (
-          completed && <CheckIcon size={14} className={accent.textClass} strokeWidth={3} />
+          completed && <CheckIcon size={14} className={`${accent.textClass} relative z-10`} strokeWidth={3} />
+        )}
+        {showProgress && (
+          <>
+            <span className="absolute left-1/2 top-1 text-[8px] font-mono tracking-[0.1em] text-foreground/70 -translate-x-1/2 z-0 pointer-events-none">
+              {completeLabel}
+            </span>
+            <span className="absolute left-1/2 bottom-0.5 text-[7px] uppercase tracking-[0.2em] text-foreground/50 -translate-x-1/2 z-0 pointer-events-none">
+              {remainingLabel}
+            </span>
+          </>
         )}
       </button>
     </div>
@@ -671,6 +693,8 @@ export function HabitTile({
             streak={streak}
             targetStreak={habit.targetStreak}
             sizeClass="w-8 h-8"
+            todayCount={todayCount}
+            dailyTarget={target}
           />
         </div>
       </div>
