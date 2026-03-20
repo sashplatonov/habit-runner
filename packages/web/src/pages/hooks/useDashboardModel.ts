@@ -59,7 +59,7 @@ function buildDashboardSummary(activeHabits: Habit[], todayDate: Date, today: st
 
 export function useDashboardModel() {
   const navigate = useNavigate();
-  const { allHabits, setCompletionCount, addHabit, updateHabit, formatDate } = useHabits();
+  const { allHabits, setCompletionCount, advanceCompletionCount, addHabit, updateHabit, formatDate } = useHabits();
   const { push } = useUndo();
 
   const [addingTemplate, setAddingTemplate] = useState<string | null>(null);
@@ -125,6 +125,7 @@ export function useDashboardModel() {
     navigate,
     push,
     setCompletionCount,
+    advanceCompletionCount,
     setSelectedTags,
     habits: allHabits,
     setAddingTemplate,

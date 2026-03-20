@@ -20,7 +20,11 @@ async function fetchJson(
     headers.set('Content-Type', 'application/json');
   }
 
-  const response = await fetch(url, { ...init, headers });
+  const response = await fetch(url, {
+    ...init,
+    headers,
+    cache: 'no-store'
+  });
   if (!response.ok) {
     throw new Error(
       `Sync request failed: ${response.status} ${response.statusText}`
@@ -35,7 +39,7 @@ export async function pullChanges(
   const url = new URL(buildUrl('/sync/pull'));
   if (since) {url.searchParams.set('since', since);}
   const response = await fetchJson(url.toString(), { method: 'GET' });
-  return response.json();
+  return await response.json() as PullResponseDto;
 }
 
 export async function pushChanges(
@@ -54,5 +58,5 @@ export async function pushChanges(
     method: 'POST',
     body: JSON.stringify(payload)
   });
-  return response.json();
+  return await response.json() as PushResponseDto;
 }

@@ -38,6 +38,50 @@ function MiniBars({ last7, accentHex }: { last7: boolean[]; accentHex: string })
   );
 }
 
+function MultiTargetProgress({
+  accentHex,
+  progressRatio,
+  cappedTodayCount,
+  safeDailyTarget
+}: {
+  accentHex: string;
+  progressRatio: number;
+  cappedTodayCount: number;
+  safeDailyTarget: number;
+}) {
+  return (
+    <>
+      <span
+        className="absolute inset-[2px] rounded-[10px] pointer-events-none overflow-hidden"
+        aria-hidden
+      >
+        <span
+          className="absolute inset-y-0 left-0 rounded-[8px] transition-all duration-200"
+          style={{
+            width: `${progressRatio * 100}%`,
+            background: `linear-gradient(90deg, ${accentHex}88, ${accentHex})`
+          }}
+        />
+      </span>
+      <span className="absolute inset-[5px] flex items-end gap-[2px] pointer-events-none z-0" aria-hidden>
+        {Array.from({ length: safeDailyTarget }, (_, index) => {
+          const isFilled = index < cappedTodayCount;
+          return (
+            <span
+              key={index}
+              className="h-full flex-1 rounded-full transition-colors duration-200"
+              style={{
+                backgroundColor: isFilled ? 'rgba(255, 255, 255, 0.75)' : 'rgba(255, 255, 255, 0.18)',
+                opacity: isFilled ? 1 : 0.6
+              }}
+            />
+          );
+        })}
+      </span>
+    </>
+  );
+}
+
 type HabitRowToggleButtonProps = {
   completed: boolean;
   isFrozen: boolean;
@@ -70,8 +114,8 @@ export function HabitRowToggleButton({
   const particleIdRef = useRef(0);
   const safeDailyTarget = Math.max(1, dailyTarget);
   const cappedTodayCount = Math.min(Math.max(todayCount, 0), safeDailyTarget);
-  const remaining = Math.max(safeDailyTarget - cappedTodayCount, 0);
   const showProgress = safeDailyTarget > 1;
+  const progressRatio = cappedTodayCount / safeDailyTarget;
 
   const handleClick = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
@@ -137,20 +181,18 @@ export function HabitRowToggleButton({
         aria-label={toggleButtonTitle}
         title={toggleButtonTitle}
       >
+        {showProgress && (
+          <MultiTargetProgress
+            accentHex={accent.hex}
+            progressRatio={progressRatio}
+            cappedTodayCount={cappedTodayCount}
+            safeDailyTarget={safeDailyTarget}
+          />
+        )}
         {isFrozen ? (
           <span className="text-[12px] opacity-80" aria-label="Frozen">🧊</span>
         ) : (
           completed && <CheckIcon size={14} className={`${accent.textClass} relative z-10`} strokeWidth={3} />
-        )}
-        {showProgress && (
-          <>
-            <span className="absolute left-1/2 top-1 text-[8px] font-mono tracking-[0.1em] text-foreground/70 -translate-x-1/2 z-0 pointer-events-none">
-              {`${cappedTodayCount}/${safeDailyTarget}`}
-            </span>
-            <span className="absolute left-1/2 bottom-0.5 text-[7px] uppercase tracking-[0.2em] text-foreground/50 -translate-x-1/2 z-0 pointer-events-none">
-              {remaining > 0 ? `${remaining} left` : 'Done'}
-            </span>
-          </>
         )}
       </button>
     </div>

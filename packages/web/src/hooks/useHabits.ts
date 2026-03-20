@@ -9,10 +9,12 @@ import {
   upsertCheckinInDb,
   deleteCheckinInDb,
   createOutboxEntry,
+  enqueueOutboxEntry,
   getCurrentUserId
 } from '@/lib/storage/db';
 import { nowSyncISO } from '@habbit-runner/shared';
 import { syncEntriesWithFallback } from '@/lib/sync/writeThrough';
+import { scheduleSyncCycle } from '@/lib/sync/syncEngine';
 import { createHabitId } from '@/lib/core/habit-id';
 import {
   buildMonthlyCompletionRates,
@@ -30,10 +32,17 @@ type ToggleCompletionResult = {
   count: number;
 };
 
+type AdvanceCompletionResult = ToggleCompletionResult & {
+  previousCount: number;
+  target: number;
+};
+
 type HabitUpsertInput = Omit<Habit, 'id' | 'completions' | 'createdAt'> & {
   sortOrder?: number;
   reminderTime?: string | null;
 };
+
+const completionMutationQueue = new Map<string, Promise<unknown>>();
 
 function normalizeFreezeDayKey(date: string): string {
   return date.includes('T') ? date.split('T')[0] : date;
@@ -82,6 +91,96 @@ function sortHabitsByOrder(habits: Habit[]) {
     }
     return a.createdAt.localeCompare(b.createdAt);
   });
+}
+
+function getCompletionMutationKey(habitId: string, userId: string): string {
+  return `${userId}:${habitId}`;
+}
+
+export async function runSerializedCompletionMutation<T>(
+  habitId: string,
+  userId: string,
+  task: () => Promise<T>
+): Promise<T> {
+  const key = getCompletionMutationKey(habitId, userId);
+  const previous = completionMutationQueue.get(key);
+  const run = (previous ?? Promise.resolve())
+    .catch(() => undefined)
+    .then(task);
+  completionMutationQueue.set(key, run);
+  try {
+    return await run;
+  } finally {
+    if (completionMutationQueue.get(key) === run) {
+      completionMutationQueue.delete(key);
+    }
+  }
+}
+
+async function getPersistedCompletionCount(
+  habitId: string,
+  date: string,
+  userId: string
+): Promise<number> {
+  const existingCheckin = await db.checkins
+    .where('habitId')
+    .equals(habitId)
+    .filter((record) => record.date === date && record.userId === userId && record.done)
+    .first();
+  if (!existingCheckin?.done) {
+    return 0;
+  }
+  return Math.max(1, Math.trunc(existingCheckin.count ?? 1));
+}
+
+async function resolveHabitDailyTarget(
+  habitId: string,
+  allHabits: Habit[]
+): Promise<number> {
+  const entity = await db.habits.get(habitId);
+  if (entity) {
+    return Math.max(1, Math.trunc(entity.dailyTarget ?? 1));
+  }
+  const habit = allHabits.find((item) => item.id === habitId);
+  return Math.max(1, Math.trunc(habit?.dailyTarget ?? 1));
+}
+
+async function applyCompletionCountChange(
+  habitId: string,
+  date: string,
+  count: number
+): Promise<ToggleCompletionResult> {
+  const normalizedCount = Math.max(0, Math.trunc(count));
+  let ts = nowSyncISO();
+  let nextVersion = 1;
+  let deletedEntity;
+
+  await db.transaction('rw', db.checkins, db.habits, db.outbox, async () => {
+    if (normalizedCount > 0) {
+      ts = await upsertCheckinInDb(habitId, date, true, normalizedCount);
+    } else {
+      deletedEntity = await deleteCheckinInDb(habitId, date);
+    }
+
+    const entity = await db.habits.get(habitId);
+    nextVersion = entity ? (entity.version ?? 0) + 1 : 1;
+    if (entity) {
+      const updatedHabit: Habit = {
+        ...habitEntityToDomain(entity),
+        updatedAt: ts,
+        version: nextVersion
+      };
+      await persistHabitInDb(updatedHabit);
+    }
+
+    const payload = normalizedCount === 0
+      ? { habitId, date, updatedAt: ts, id: deletedEntity?.id }
+      : { habitId, date, done: true, count: normalizedCount, updatedAt: ts, version: nextVersion };
+    const entry = createOutboxEntry('checkin', normalizedCount === 0 ? 'delete' : 'upsert', payload);
+    await enqueueOutboxEntry(entry);
+  });
+  scheduleSyncCycle();
+  return { habitId, date, count: normalizedCount };
 }
 
 async function persistHabitWithSyncFallback(habit: Habit, action: 'upsert' | 'delete') {
@@ -244,36 +343,32 @@ async function setCompletionCountImpl(
   count: number,
   allHabits: Habit[]
 ): Promise<ToggleCompletionResult> {
-  const normalizedCount = Math.max(0, Math.trunc(count));
-  const habit = allHabits.find((item) => item.id === habitId);
-  const maxCount = Math.max(1, habit?.dailyTarget ?? 1);
-  const clampedCount = Math.min(normalizedCount, maxCount);
+  const userId = getCurrentUserId();
+  return runSerializedCompletionMutation(habitId, userId, async () => {
+    const normalizedCount = Math.max(0, Math.trunc(count));
+    const maxCount = await resolveHabitDailyTarget(habitId, allHabits);
+    const clampedCount = Math.min(normalizedCount, maxCount);
+    return applyCompletionCountChange(habitId, date, clampedCount);
+  });
+}
 
-  let ts = nowSyncISO();
-  let deletedEntity;
-  if (clampedCount > 0) {
-    ts = await upsertCheckinInDb(habitId, date, true, clampedCount);
-  } else {
-    deletedEntity = await deleteCheckinInDb(habitId, date);
-  }
-
-  const entity = await db.habits.get(habitId);
-  if (entity) {
-    const updatedHabit: Habit = {
-      ...habitEntityToDomain(entity),
-      updatedAt: ts,
-      version: (entity.version ?? 0) + 1
+async function advanceCompletionCountImpl(
+  habitId: string,
+  date: string,
+  allHabits: Habit[]
+): Promise<AdvanceCompletionResult> {
+  const userId = getCurrentUserId();
+  return runSerializedCompletionMutation(habitId, userId, async () => {
+    const target = await resolveHabitDailyTarget(habitId, allHabits);
+    const previousCount = await getPersistedCompletionCount(habitId, date, userId);
+    const nextCount = previousCount >= target ? 0 : previousCount + 1;
+    const result = await applyCompletionCountChange(habitId, date, nextCount);
+    return {
+      ...result,
+      previousCount,
+      target
     };
-    await persistHabitInDb(updatedHabit);
-  }
-
-  const nextVersion = entity ? (entity.version ?? 0) + 1 : 1;
-  const payload = clampedCount === 0
-    ? { habitId, date, updatedAt: ts, id: deletedEntity?.id }
-    : { habitId, date, done: true, count: clampedCount, updatedAt: ts, version: nextVersion };
-  const entry = createOutboxEntry('checkin', clampedCount === 0 ? 'delete' : 'upsert', payload);
-  await syncEntriesWithFallback([entry]);
-  return { habitId, date, count: clampedCount };
+  });
 }
 
 function getTodayCompletionRateImpl(habits: Habit[]): number {
@@ -359,12 +454,17 @@ export function useHabits() {
     (habitId: string, date: string, count: number) => setCompletionCountImpl(habitId, date, count, allHabits),
     [allHabits]
   );
+  const advanceCompletionCount = useCallback(
+    (habitId: string, date: string) => advanceCompletionCountImpl(habitId, date, allHabits),
+    [allHabits]
+  );
 
   return {
     habits,
     allHabits,
     toggleCompletion,
     setCompletionCount,
+    advanceCompletionCount,
     addHabit,
     updateHabit,
     toggleFreezeDay,
