@@ -4,17 +4,18 @@ import { formatAppDate } from '@/lib/i18n';
 import { useNavigate } from '@/lib/router';
 import { StatsView } from './components/StatsView';
 import type { Habit } from '@/types/habit';
+import type { PeriodOption } from './components/StatsView';
 
-type Period = 'week' | 'month' | 'quarter' | 'year';
+type Period = PeriodOption;
 
-const PERIOD_DAY_RANGES: Record<Period, number> = {
+const PERIOD_DAY_RANGES: Record<PeriodOption, number> = {
   week: 7,
   month: 30,
   quarter: 90,
   year: 365
 };
 
-const PERIOD_DISPLAY_NAMES: Record<Period, string> = {
+const PERIOD_DISPLAY_NAMES: Record<PeriodOption, string> = {
   week: 'week',
   month: 'month',
   quarter: 'quarter',
@@ -74,7 +75,7 @@ function buildStatsInsights(
   weekdayStats: WeekdayStats,
   habitPeriodData: Array<Record<string, string | number>>,
   filteredHabits: Habit[],
-  period: Period
+  period: PeriodOption
 ) {
   const streakLeader =
     allStats.length > 0
@@ -127,7 +128,7 @@ export function Stats() {
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'archived'>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
-  const [period, setPeriod] = useState<Period>('month');
+  const [period, setPeriod] = useState<PeriodOption>('month');
 
   const allTags = useMemo(() => {
     const tags = new Set<string>();

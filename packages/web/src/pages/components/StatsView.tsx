@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { CalendarIcon, FilterIcon, FlameIcon, TrendingUpIcon, ZapIcon } from 'lucide-react';
 import type { Habit } from '@/types/habit';
 import { PeriodSelector, FiltersPanel, InsightsRow, DailyRateChart, PeriodTrendChart, HabitPerformanceList, WeeklyBreakdown, HabitSortControls } from './StatsViewPanels';
-import { ActivityHeatmap } from './StatsViewHeatmap';
+import { HabitHeatmap } from '@/components/HabitHeatmap';
 
 export type HabitStats = {
   completionRate: number;
@@ -298,14 +298,14 @@ function StatsChartsSection({
   avgRate,
   dailyData,
   habitPeriodData,
-  filteredHabits,
-  hiddenHabits,
-  toggleHabitVisibility
+  filteredHabits
 }: {
   sectionRef: (el: HTMLElement | null) => void;
-  hiddenHabits: string[];
-  toggleHabitVisibility: (name: string) => void;
 } & Pick<StatsViewProps, 'avgRate' | 'dailyData' | 'habitPeriodData' | 'filteredHabits'>) {
+  const [hiddenHabits, setHiddenHabits] = useState<string[]>([]);
+  const toggleHabitVisibility = (name: string) => {
+    setHiddenHabits((prev) => (prev.includes(name) ? prev.filter((item) => item !== name) : [...prev, name]));
+  };
   return (
     <section id="charts" ref={sectionRef} className="space-y-4">
       <div className="grid gap-4 md:grid-cols-2">
@@ -323,17 +323,28 @@ function StatsChartsSection({
 
 function StatsHabitsSection({
   sectionRef,
-  habitSort,
-  handleSortChange,
-  sortedStats,
   navigate,
-  allStats
+  allStats,
+  sorted
 }: {
   sectionRef: (el: HTMLElement | null) => void;
-  habitSort: 'rate' | 'streak' | 'name';
-  handleSortChange: (key: 'rate' | 'streak' | 'name') => void;
-  sortedStats: HabitStatEntry[];
-} & Pick<StatsViewProps, 'navigate' | 'allStats'>) {
+} & Pick<StatsViewProps, 'navigate' | 'allStats' | 'sorted'>) {
+  const [habitSort, setHabitSort] = useState<'rate' | 'streak' | 'name'>('rate');
+  const [habitSortDir, setHabitSortDir] = useState<'desc' | 'asc'>('desc');
+  const sortedStats = useMemo(() => {
+    const entries = [...sorted];
+    if (habitSort === 'name') {
+      entries.sort((a, b) => habitSortDir === 'asc' ? a.habit.name.localeCompare(b.habit.name) : b.habit.name.localeCompare(a.habit.name));
+    } else {
+      const metric = habitSort === 'rate' ? 'completionRate' : 'longestStreak';
+      entries.sort((a, b) => habitSortDir === 'asc' ? a.stats[metric] - b.stats[metric] : b.stats[metric] - a.stats[metric]);
+    }
+    return entries;
+  }, [sorted, habitSort, habitSortDir]);
+  const handleSortChange = (key: 'rate' | 'streak' | 'name') => {
+    if (habitSort === key) { setHabitSortDir((prev) => (prev === 'desc' ? 'asc' : 'desc')); }
+    else { setHabitSort(key); setHabitSortDir('desc'); }
+  };
   return (
     <section id="habits" ref={sectionRef} className="space-y-4">
       <div className="flex items-center justify-between gap-4">
@@ -348,13 +359,44 @@ function StatsHabitsSection({
   );
 }
 
+function StatsActivitySection({
+  sectionRef,
+  filteredHabits
+}: {
+  sectionRef: (el: HTMLElement | null) => void;
+} & Pick<StatsViewProps, 'filteredHabits'>) {
+  const mergedCompletions = useMemo(() => {
+    const merged: Record<string, number> = {};
+    for (const habit of filteredHabits) {
+      for (const [date, count] of Object.entries(habit.completions)) {
+        merged[date] = (merged[date] ?? 0) + count;
+      }
+    }
+    return merged;
+  }, [filteredHabits]);
+
+  const aggregateTarget = Math.max(
+    1,
+    filteredHabits.reduce((sum, habit) => sum + Math.max(1, habit.dailyTarget ?? 1), 0)
+  );
+
+  return (
+    <section id="activity" ref={sectionRef} className="space-y-4">
+      <div className="bg-bg-secondary border border-border rounded-lg p-3 space-y-3">
+        <div className="flex items-center justify-between">
+          <h2 className="text-xs font-mono text-muted uppercase tracking-wider">Activity - 90 days</h2>
+          <span className="text-[10px] font-mono text-muted">{filteredHabits.length} habits</span>
+        </div>
+        <HabitHeatmap completions={mergedCompletions} dailyTarget={aggregateTarget} />
+      </div>
+    </section>
+  );
+}
+
 export function StatsView(props: StatsViewProps) {
   const sectionRefs = useRef<Record<string, HTMLElement | null>>({});
   const [activeSection, setActiveSection] = useState(SECTION_CONFIGS[0].id);
   const [filtersOpen, setFiltersOpen] = useState(false);
-  const [hiddenHabits, setHiddenHabits] = useState<string[]>([]);
-  const [habitSort, setHabitSort] = useState<'rate' | 'streak' | 'name'>('rate');
-  const [habitSortDir, setHabitSortDir] = useState<'desc' | 'asc'>('desc');
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -379,37 +421,6 @@ export function StatsView(props: StatsViewProps) {
 
     return () => observer.disconnect();
   }, []);
-
-  const sortedStats = useMemo(() => {
-    const entries = [...props.sorted];
-    if (habitSort === 'name') {
-      entries.sort((a, b) =>
-        habitSortDir === 'asc'
-          ? a.habit.name.localeCompare(b.habit.name)
-          : b.habit.name.localeCompare(a.habit.name)
-      );
-    } else {
-      const metric = habitSort === 'rate' ? 'completionRate' : 'longestStreak';
-      entries.sort((a, b) => {
-        const diff = b.stats[metric] - a.stats[metric];
-        return habitSortDir === 'asc' ? -diff : diff;
-      });
-    }
-    return entries;
-  }, [props.sorted, habitSort, habitSortDir]);
-
-  const toggleHabitVisibility = (name: string) => {
-    setHiddenHabits((prev) => (prev.includes(name) ? prev.filter((item) => item !== name) : [...prev, name]));
-  };
-
-  const handleSortChange = (key: 'rate' | 'streak' | 'name') => {
-    if (habitSort === key) {
-      setHabitSortDir((prev) => (prev === 'desc' ? 'asc' : 'desc'));
-    } else {
-      setHabitSort(key);
-      setHabitSortDir('desc');
-    }
-  };
 
   const scrollToSection = (id: string) => {
     const el = sectionRefs.current[id];
@@ -458,20 +469,17 @@ export function StatsView(props: StatsViewProps) {
           dailyData={props.dailyData}
           habitPeriodData={props.habitPeriodData}
           filteredHabits={props.filteredHabits}
-          hiddenHabits={hiddenHabits}
-          toggleHabitVisibility={toggleHabitVisibility}
         />
         <StatsHabitsSection
           sectionRef={setSectionRef('habits')}
-          habitSort={habitSort}
-          handleSortChange={handleSortChange}
-          sortedStats={sortedStats}
           navigate={props.navigate}
           allStats={props.allStats}
+          sorted={props.sorted}
         />
-        <section id="activity" ref={setSectionRef('activity')} className="space-y-4">
-          <ActivityHeatmap weeks={props.activityWeeks} period={props.period} />
-        </section>
+        <StatsActivitySection
+          sectionRef={setSectionRef('activity')}
+          filteredHabits={props.filteredHabits}
+        />
       </div>
     </div>
   );

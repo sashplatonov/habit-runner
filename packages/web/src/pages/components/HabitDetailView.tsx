@@ -10,7 +10,7 @@ import {
   ArchiveRestoreIcon,
   SnowflakeIcon
 } from 'lucide-react';
-import { HeatmapGrid } from '@/components/HeatmapGrid';
+import { HabitHeatmap } from '@/components/HabitHeatmap';
 import { HabitRetroCalendar } from './HabitRetroCalendar';
 import { TodayBlock } from './HabitDetailTodayBlock';
 import { CompletionRing } from '@/components/CompletionRing';
@@ -25,7 +25,6 @@ import {
 } from 'recharts';
 import type { Habit } from '@/types/habit';
 import type { HabitColorTheme } from '@/lib/theme/habit-colors';
-import { DEFAULT_HABIT_COLOR, HABIT_COLOR_THEMES } from '@/lib/theme/habit-colors';
 
 type HabitStats = {
   currentStreak: number;
@@ -236,7 +235,6 @@ function StatCardGrid({ stats, accent }: Pick<HabitDetailViewProps, 'stats' | 'a
   );
 }
 
-
 function AutomatismSection({ score, accent }: { score: number; accent: HabitColorTheme }) {
   const getLevel = (s: number) => {
     if (s >= 85) {return { label: 'Infallible', color: accent.hex };}
@@ -246,7 +244,6 @@ function AutomatismSection({ score, accent }: { score: number; accent: HabitColo
   };
 
   const level = getLevel(score);
-
   return (
     <div className="bg-bg-secondary border border-border rounded-xl p-4">
       <div className="flex items-center justify-between mb-3">
@@ -322,29 +319,15 @@ function HeatmapSection({
   habit,
   dailyTarget
 }: Pick<HabitDetailViewProps, 'habit'> & { dailyTarget: number }) {
-  const theme = HABIT_COLOR_THEMES[habit.color] ?? HABIT_COLOR_THEMES[DEFAULT_HABIT_COLOR];
-  const highlight = theme.heatmapLevels[4];
   const completedCount = habit.completions ? Object.keys(habit.completions).length : 0;
-
   return (
     <div className="bg-bg-secondary border border-border rounded-lg p-3 space-y-3">
       <div className="flex items-center justify-between">
-        <h2 className="text-xs font-mono text-muted uppercase tracking-wider">Activity - 26 weeks</h2>
+        <h2 className="text-xs font-mono text-muted uppercase tracking-wider">Activity - 90 days</h2>
         <span className="text-[10px] font-mono text-muted">{completedCount} completions</span>
       </div>
-      <div className="flex flex-wrap gap-3 text-[10px] text-muted">
-        <span className="flex items-center gap-1">
-          <span className="w-2 h-2 rounded" style={{ backgroundColor: highlight }} />
-          Hit daily target
-        </span>
-        <span className="flex items-center gap-1">
-          <span className="w-2 h-2 rounded border border-border" />
-          Missed day
-        </span>
-        <span className="uppercase tracking-[0.3em]">Mon-Sun</span>
-      </div>
       <div className="w-full mx-auto lg:max-w-[560px]">
-        <HeatmapGrid completions={habit.completions} dailyTarget={dailyTarget} color={habit.color} weeks={26} />
+        <HabitHeatmap completions={habit.completions} dailyTarget={dailyTarget} color={habit.color} />
       </div>
     </div>
   );
