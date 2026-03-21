@@ -1,4 +1,4 @@
-yeimport { test, expect, describe } from 'vitest';
+import { test, expect, describe } from 'vitest';
 import {
   toCompletionKey,
   calendarDateToCompletionKey,

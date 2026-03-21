@@ -1,4 +1,5 @@
-import { ArrowUpDownIcon, FlameIcon, SearchIcon, SparklesIcon, TagIcon, TrendingUpIcon, ZapIcon } from 'lucide-react';
+import { AlertTriangleIcon, ArrowUpDownIcon, CheckCircle2Icon, FlameIcon, LightbulbIcon, SearchIcon, SparklesIcon, TagIcon, TrendingDownIcon, TrendingUpIcon } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 import { CompletionRing } from '@/components/CompletionRing';
 import { HABIT_COLOR_THEMES } from '@/lib/theme/habit-colors';
@@ -50,13 +51,14 @@ function DailyTooltip({
   label
 }: {
   active?: boolean;
-  payload?: { value: number }[];
+  payload?: ({ value: number } & { payload?: { day?: string } })[];
   label?: string;
 }) {
   if (active && payload && payload.length) {
+    const dayLabel = payload[0]?.payload?.day ?? label ?? '';
     return (
       <div className="bg-bg-card border border-border rounded px-2 py-1.5">
-        <p className="text-[10px] font-mono text-muted">{label}</p>
+        <p className="text-[10px] font-mono text-muted">{dayLabel}</p>
         <p className="text-xs font-mono font-bold text-accent">{payload[0].value}%</p>
       </div>
     );
@@ -154,28 +156,26 @@ export function FiltersPanel({
 }
 
 export function InsightsRow({ insights }: { insights: Insight[] }) {
-  const iconMap: Record<string, JSX.Element> = {
-    streak: <FlameIcon size={16} className="text-accent" />,
-    weekday: <ZapIcon size={16} className="text-accent-secondary" />,
-    momentum: <TrendingUpIcon size={16} className="text-accent-secondary" />
-  };
   return (
     <div className="grid gap-4 md:grid-cols-3">
-      {insights.map((insight) => (
-        <div key={insight.id} className="bg-bg-secondary border border-border rounded-lg p-4 space-y-2">
-          <div className="flex items-center gap-2">
-            {iconMap[insight.id] || <SparklesIcon size={16} className="text-accent" />}
-            <p className="text-[10px] font-mono text-muted uppercase tracking-[0.2em]">{insight.title}</p>
+      {insights.map((insight) => {
+        const Icon = insight.icon ?? SparklesIcon;
+        return (
+          <div key={insight.id} className="bg-bg-secondary border border-border rounded-lg p-4 space-y-2">
+            <div className="flex items-center gap-2">
+              <Icon size={16} className="text-accent flex-shrink-0" />
+              <p className="text-[10px] font-mono text-muted uppercase tracking-[0.2em]">{insight.title}</p>
+            </div>
+            <p className="text-sm text-foreground">{insight.body}</p>
           </div>
-          <p className="text-sm text-foreground">{insight.body}</p>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }
 
-function buildDailyChartInsight(avgRate: number, dailyData: { day: string; rate: number }[]): { text: string; color: string } {
-  if (dailyData.length < 3) return { text: 'Add more data to see insights.', color: 'text-muted' };
+function buildDailyChartInsight(avgRate: number, dailyData: { day: string; rate: number }[]): { icon: LucideIcon; text: string; color: string } {
+  if (dailyData.length < 3) return { icon: LightbulbIcon, text: 'Add more data to see insights.', color: 'text-muted' };
   const recent = dailyData.slice(-3).map(d => d.rate);
   const earlier = dailyData.slice(-6, -3).map(d => d.rate);
   const recentAvg = recent.reduce((s, v) => s + v, 0) / recent.length;
@@ -183,12 +183,12 @@ function buildDailyChartInsight(avgRate: number, dailyData: { day: string; rate:
   const trend = recentAvg - earlierAvg;
   const bestDay = dailyData.reduce((best, d) => d.rate > best.rate ? d : best, dailyData[0]);
 
-  if (avgRate >= 75 && trend >= 0) return { text: `✅ Strong performance — ${avgRate}% avg and trending up.`, color: 'text-accent' };
-  if (trend >= 15) return { text: `📈 Big improvement recently. Keep the momentum going.`, color: 'text-accent' };
-  if (trend <= -20) return { text: `📉 Completion dropped in the last few days. Try starting with just one habit.`, color: 'text-accent-secondary' };
-  if (avgRate < 40) return { text: `⚠️ Low avg — check if your habit schedule matches your routine.`, color: 'text-accent-secondary' };
-  if (bestDay.rate === 100) return { text: `🔥 You hit 100% on ${bestDay.day}. Replicate that day's conditions.`, color: 'text-muted' };
-  return { text: `💡 ${avgRate}% avg. Aim for at least 70% daily consistency.`, color: 'text-muted' };
+  if (avgRate >= 75 && trend >= 0) return { icon: CheckCircle2Icon, text: `Strong performance — ${avgRate}% avg and trending up.`, color: 'text-accent' };
+  if (trend >= 15) return { icon: TrendingUpIcon, text: `Big improvement recently. Keep the momentum going.`, color: 'text-accent' };
+  if (trend <= -20) return { icon: TrendingDownIcon, text: `Completion dropped in the last few days. Try starting with just one habit.`, color: 'text-accent-secondary' };
+  if (avgRate < 40) return { icon: AlertTriangleIcon, text: `Low avg — check if your habit schedule matches your routine.`, color: 'text-accent-secondary' };
+  if (bestDay.rate === 100) return { icon: FlameIcon, text: `You hit 100% on ${bestDay.day}. Replicate that day's conditions.`, color: 'text-muted' };
+  return { icon: LightbulbIcon, text: `${avgRate}% avg. Aim for at least 70% daily consistency.`, color: 'text-muted' };
 }
 
 export function DailyRateChart({ avgRate, dailyData }: Pick<StatsViewProps, 'avgRate' | 'dailyData'>) {
@@ -200,15 +200,18 @@ export function DailyRateChart({ avgRate, dailyData }: Pick<StatsViewProps, 'avg
         <span className="text-[10px] font-mono text-accent">{avgRate}% avg</span>
       </div>
       <ResponsiveContainer width="100%" height={150}>
-        <BarChart data={dailyData} margin={{ top: 4, right: 4, bottom: 0, left: -10 }} barSize={7}>
-          <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
-          <XAxis dataKey="day" tick={{ fill: 'var(--text-muted)', fontSize: 9, fontFamily: 'JetBrains Mono' }} axisLine={false} tickLine={false} />
+          <BarChart data={dailyData} margin={{ top: 4, right: 4, bottom: 0, left: -10 }} barSize={7}>
+            <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
+          <XAxis dataKey="axisLabel" tick={{ fill: 'var(--text-muted)', fontSize: 9, fontFamily: 'JetBrains Mono' }} axisLine={false} tickLine={false} />
           <YAxis tick={{ fill: 'var(--text-muted)', fontSize: 9, fontFamily: 'JetBrains Mono' }} axisLine={false} tickLine={false} domain={[0, 100]} tickFormatter={(v) => `${v}%`} />
           <Tooltip content={<DailyTooltip />} />
           <Bar dataKey="rate" fill="var(--accent)" radius={[4, 4, 0, 0]} style={{ filter: 'drop-shadow(0 0 6px var(--glow))' }} />
         </BarChart>
       </ResponsiveContainer>
-      <p className={`text-[10px] font-mono mt-3 ${insight.color}`}>{insight.text}</p>
+      <div className={`flex items-center gap-1 mt-3 ${insight.color}`}>
+        <insight.icon size={10} className="flex-shrink-0" />
+        <p className="text-[10px] font-mono">{insight.text}</p>
+      </div>
     </div>
   );
 }

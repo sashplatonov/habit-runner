@@ -1,8 +1,16 @@
 import {
+  AlertTriangleIcon,
   ArrowLeftIcon,
+  BarChart2Icon,
+  CheckCircle2Icon,
+  DumbbellIcon,
   EditIcon,
   FlameIcon,
+  LightbulbIcon,
+  SproutIcon,
+  TrendingDownIcon,
   TrendingUpIcon,
+  TrophyIcon,
   CalendarIcon,
   TargetIcon,
   TrashIcon,
@@ -10,6 +18,7 @@ import {
   ArchiveRestoreIcon,
   SnowflakeIcon
 } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 import { HabitHeatmap } from '@/components/HabitHeatmap';
 import { HabitRetroCalendar } from './HabitRetroCalendar';
 import { TodayBlock } from './HabitDetailTodayBlock';
@@ -199,30 +208,41 @@ function StatCardGrid({ stats, accent, habitCreatedAt }: Pick<HabitDetailViewPro
   const rateWindowDays = Math.min(30, habitAgeDays);
   const rateWindowLabel = rateWindowDays < 30 ? `${rateWindowDays}d` : '30 days';
 
-  const streakHint =
+  type Hint = { icon: LucideIcon; text: string };
+
+  const streakHint: Hint =
     stats.currentStreak === 0
-      ? 'Start today'
+      ? { icon: FlameIcon, text: 'Start today' }
       : stats.currentStreak >= stats.longestStreak && stats.longestStreak > 0
-        ? '🏆 Personal best!'
-        : `${stats.longestStreak - stats.currentStreak}d to record`;
+        ? { icon: TrophyIcon, text: 'Personal best!' }
+        : { icon: FlameIcon, text: `${stats.longestStreak - stats.currentStreak}d to record` };
 
-  const bestHint =
-    stats.longestStreak >= 21 ? '✅ Habit established' : stats.longestStreak >= 7 ? '💪 Good foundation' : 'Target: 7 days';
+  const bestHint: Hint =
+    stats.longestStreak >= 21
+      ? { icon: CheckCircle2Icon, text: 'Habit established' }
+      : stats.longestStreak >= 7
+        ? { icon: DumbbellIcon, text: 'Good foundation' }
+        : { icon: TargetIcon, text: 'Target: 7 days' };
 
-  const rateHint =
+  const rateHint: Hint =
     habitAgeDays < 7
-      ? '🌱 Just started'
+      ? { icon: SproutIcon, text: 'Just started' }
       : habitAgeDays < 14
-        ? stats.completionRate >= 60 ? '✅ Strong start!' : '💪 Keep building'
+        ? stats.completionRate >= 60
+          ? { icon: CheckCircle2Icon, text: 'Strong start!' }
+          : { icon: DumbbellIcon, text: 'Keep building' }
         : stats.completionRate >= 80
-          ? '✅ Excellent'
+          ? { icon: CheckCircle2Icon, text: 'Excellent' }
           : stats.completionRate >= 60
-            ? '💡 Aim for 80%+'
+            ? { icon: LightbulbIcon, text: 'Aim for 80%+' }
             : stats.completionRate >= 40
-              ? '📈 Room to grow'
-              : '⚠️ Needs focus';
+              ? { icon: TrendingUpIcon, text: 'Room to grow' }
+              : { icon: AlertTriangleIcon, text: 'Needs focus' };
 
-  const totalHint = stats.completedDays >= 100 ? '🏆 100+ milestone!' : `${100 - stats.completedDays} to 100`;
+  const totalHint: Hint =
+    stats.completedDays >= 100
+      ? { icon: TrophyIcon, text: '100+ milestone!' }
+      : { icon: CalendarIcon, text: `${100 - stats.completedDays} to 100` };
 
   const rateColor =
     habitAgeDays < 14
@@ -238,9 +258,10 @@ function StatCardGrid({ stats, accent, habitCreatedAt }: Pick<HabitDetailViewPro
         </div>
         <div className="text-xl font-mono font-bold text-accent-secondary">{stats.currentStreak}</div>
         <div className="text-[9px] font-mono text-muted">days</div>
-        <p className={`text-[9px] font-mono mt-1 ${stats.currentStreak === 0 ? 'text-accent-secondary' : stats.currentStreak >= stats.longestStreak ? 'text-accent' : 'text-muted'}`}>
-          {streakHint}
-        </p>
+        <div className={`flex items-center gap-0.5 mt-1 ${stats.currentStreak === 0 ? 'text-accent-secondary' : stats.currentStreak >= stats.longestStreak ? 'text-accent' : 'text-muted'}`}>
+          <streakHint.icon size={8} className="flex-shrink-0" />
+          <span className="text-[9px] font-mono">{streakHint.text}</span>
+        </div>
       </div>
       <div className="bg-bg-secondary border border-border rounded-lg p-3">
         <div className="flex items-center gap-1 mb-2">
@@ -251,9 +272,10 @@ function StatCardGrid({ stats, accent, habitCreatedAt }: Pick<HabitDetailViewPro
           {stats.longestStreak}
         </div>
         <div className="text-[9px] font-mono text-muted">days</div>
-        <p className={`text-[9px] font-mono mt-1 ${stats.longestStreak >= 21 ? 'text-accent' : stats.longestStreak >= 7 ? 'text-accent-secondary' : 'text-muted'}`}>
-          {bestHint}
-        </p>
+        <div className={`flex items-center gap-0.5 mt-1 ${stats.longestStreak >= 21 ? 'text-accent' : stats.longestStreak >= 7 ? 'text-accent-secondary' : 'text-muted'}`}>
+          <bestHint.icon size={8} className="flex-shrink-0" />
+          <span className="text-[9px] font-mono">{bestHint.text}</span>
+        </div>
       </div>
       <div className="bg-bg-secondary border border-border rounded-lg p-3">
         <div className="flex items-center gap-1 mb-2">
@@ -262,7 +284,10 @@ function StatCardGrid({ stats, accent, habitCreatedAt }: Pick<HabitDetailViewPro
         </div>
         <div className="text-xl font-mono font-bold text-accent-secondary">{stats.completionRate}%</div>
         <div className="text-[9px] font-mono text-muted">{rateWindowLabel}</div>
-        <p className={`text-[9px] font-mono mt-1 ${rateColor}`}>{rateHint}</p>
+        <div className={`flex items-center gap-0.5 mt-1 ${rateColor}`}>
+          <rateHint.icon size={8} className="flex-shrink-0" />
+          <span className="text-[9px] font-mono">{rateHint.text}</span>
+        </div>
       </div>
       <div className="bg-bg-secondary border border-border rounded-lg p-3">
         <div className="flex items-center gap-1 mb-2">
@@ -271,9 +296,10 @@ function StatCardGrid({ stats, accent, habitCreatedAt }: Pick<HabitDetailViewPro
         </div>
         <div className="text-xl font-mono font-bold text-foreground">{stats.completedDays}</div>
         <div className="text-[9px] font-mono text-muted">days</div>
-        <p className={`text-[9px] font-mono mt-1 ${stats.completedDays >= 100 ? 'text-accent' : 'text-muted'}`}>
-          {totalHint}
-        </p>
+        <div className={`flex items-center gap-0.5 mt-1 ${stats.completedDays >= 100 ? 'text-accent' : 'text-muted'}`}>
+          <totalHint.icon size={8} className="flex-shrink-0" />
+          <span className="text-[9px] font-mono">{totalHint.text}</span>
+        </div>
       </div>
     </div>
   );
@@ -396,17 +422,17 @@ function HeatmapSection({
   );
 }
 
-function buildMonthlyInsight(monthlyData: Array<{ month: string; rate: number }>, habitCreatedAt: string): { text: string; color: string } {
+function buildMonthlyInsight(monthlyData: Array<{ month: string; rate: number }>, habitCreatedAt: string): { icon: LucideIcon; text: string; color: string } {
   const habitAgeDays = Math.floor((Date.now() - new Date(habitCreatedAt).getTime()) / (1000 * 60 * 60 * 24));
-  if (monthlyData.length < 2 || habitAgeDays < 14) return { text: '📊 Complete more weeks to see monthly trends.', color: 'var(--text-muted)' };
+  if (monthlyData.length < 2 || habitAgeDays < 14) return { icon: BarChart2Icon, text: 'Complete more weeks to see monthly trends.', color: 'var(--text-muted)' };
   const last = monthlyData[monthlyData.length - 1].rate;
   const prev = monthlyData[monthlyData.length - 2].rate;
   const trend = last - prev;
-  if (last >= 80 && trend >= 0) return { text: `✅ ${last}% last month — excellent, keep this up.`, color: 'var(--accent)' };
-  if (trend >= 15) return { text: `📈 Up ${trend}% from last month — great momentum!`, color: 'var(--accent)' };
-  if (trend <= -15) return { text: `📉 Down ${Math.abs(trend)}% this month. What changed in your routine?`, color: 'var(--accent-secondary)' };
-  if (last < 40) return { text: '⚠️ Low rate. Try habit stacking or reduce the daily target.', color: 'var(--accent-secondary)' };
-  return { text: `💡 ${last}% this month. Consistent effort adds up over time.`, color: 'var(--text-muted)' };
+  if (last >= 80 && trend >= 0) return { icon: CheckCircle2Icon, text: `${last}% last month — excellent, keep this up.`, color: 'var(--accent)' };
+  if (trend >= 15) return { icon: TrendingUpIcon, text: `Up ${trend}% from last month — great momentum!`, color: 'var(--accent)' };
+  if (trend <= -15) return { icon: TrendingDownIcon, text: `Down ${Math.abs(trend)}% this month. What changed in your routine?`, color: 'var(--accent-secondary)' };
+  if (last < 40) return { icon: AlertTriangleIcon, text: 'Low rate. Try habit stacking or reduce the daily target.', color: 'var(--accent-secondary)' };
+  return { icon: LightbulbIcon, text: `${last}% this month. Consistent effort adds up over time.`, color: 'var(--text-muted)' };
 }
 
 function MonthlyRateSection({ stats, accent, habit }: Pick<HabitDetailViewProps, 'stats' | 'accent' | 'habit'>) {
@@ -442,23 +468,26 @@ function MonthlyRateSection({ stats, accent, habit }: Pick<HabitDetailViewProps,
           />
         </LineChart>
       </ResponsiveContainer>
-      <p className="text-[10px] font-mono mt-3" style={{ color: insight.color }}>{insight.text}</p>
+      <div className="flex items-center gap-1 mt-3" style={{ color: insight.color }}>
+        <insight.icon size={10} className="flex-shrink-0" />
+        <p className="text-[10px] font-mono">{insight.text}</p>
+      </div>
     </div>
   );
 }
 
-function buildWeeklyInsight(weeklyData: Array<{ count: number }>, habitCreatedAt: string): { text: string; color: string } {
+function buildWeeklyInsight(weeklyData: Array<{ count: number }>, habitCreatedAt: string): { icon: LucideIcon; text: string; color: string } {
   const habitAgeDays = Math.floor((Date.now() - new Date(habitCreatedAt).getTime()) / (1000 * 60 * 60 * 24));
-  if (weeklyData.length < 4 || habitAgeDays < 14) return { text: '', color: '' };
+  if (weeklyData.length < 4 || habitAgeDays < 14) return { icon: LightbulbIcon, text: '', color: '' };
   const lastWeek = weeklyData[weeklyData.length - 1].count;
   const recentAvg = (weeklyData.slice(-3).reduce((s, w) => s + w.count, 0)) / 3;
   const earlierAvg = (weeklyData.slice(-6, -3).reduce((s, w) => s + w.count, 0)) / 3;
   const trend = recentAvg - earlierAvg;
-  if (lastWeek === 7) return { text: '🔥 Perfect last week — all 7 days completed!', color: 'var(--accent)' };
-  if (trend > 1.5) return { text: '📈 Weekly completions trending up — great momentum.', color: 'var(--accent)' };
-  if (trend < -1.5) return { text: '📉 Completions dropping recently. Try pairing with an existing habit.', color: 'var(--accent-secondary)' };
-  if (lastWeek === 0) return { text: '⚠️ No completions last week. Start fresh today.', color: 'var(--accent-secondary)' };
-  return { text: `💡 ${lastWeek}/7 days last week. Aim for one more next week.`, color: 'var(--text-muted)' };
+  if (lastWeek === 7) return { icon: FlameIcon, text: 'Perfect last week — all 7 days completed!', color: 'var(--accent)' };
+  if (trend > 1.5) return { icon: TrendingUpIcon, text: 'Weekly completions trending up — great momentum.', color: 'var(--accent)' };
+  if (trend < -1.5) return { icon: TrendingDownIcon, text: 'Completions dropping recently. Try pairing with an existing habit.', color: 'var(--accent-secondary)' };
+  if (lastWeek === 0) return { icon: AlertTriangleIcon, text: 'No completions last week. Start fresh today.', color: 'var(--accent-secondary)' };
+  return { icon: LightbulbIcon, text: `${lastWeek}/7 days last week. Aim for one more next week.`, color: 'var(--text-muted)' };
 }
 
 function WeeklyCompletionsSection({ stats, accent, habit }: Pick<HabitDetailViewProps, 'stats' | 'accent' | 'habit'>) {
@@ -487,7 +516,10 @@ function WeeklyCompletionsSection({ stats, accent, habit }: Pick<HabitDetailView
         <span className="text-[9px] font-mono text-muted">this week</span>
       </div>
       {insight.text && (
-        <p className="text-[10px] font-mono" style={{ color: insight.color }}>{insight.text}</p>
+        <div className="flex items-center gap-1" style={{ color: insight.color }}>
+          <insight.icon size={10} className="flex-shrink-0" />
+          <p className="text-[10px] font-mono">{insight.text}</p>
+        </div>
       )}
     </div>
   );

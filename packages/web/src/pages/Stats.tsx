@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { AlertTriangleIcon, BarChart2Icon, DumbbellIcon, FlameIcon, LightbulbIcon, SproutIcon, TrendingDownIcon, TrendingUpIcon, ZapIcon } from 'lucide-react';
 import { useHabits } from '@/hooks/useHabits';
 import { formatAppDate } from '@/lib/i18n';
 import { toCompletionKey } from '@/lib/completionKey';
@@ -105,48 +106,58 @@ function buildStatsInsights(
       : 0;
 
   let streakBody: string;
+  let streakIcon = LightbulbIcon;
   if (streakLeader) {
     const days = streakLeader.stats.longestStreak;
     if (days >= 21) {
-      streakBody = `🔥 ${formatHabitLabel(streakLeader.habit)} has ${days} days — this habit is becoming automatic.`;
+      streakIcon = FlameIcon;
+      streakBody = `${formatHabitLabel(streakLeader.habit)} has ${days} days — this habit is becoming automatic.`;
     } else if (days >= 7) {
-      streakBody = `💪 ${days} days on ${formatHabitLabel(streakLeader.habit)}. Aim for 21+ to build lasting automatism.`;
+      streakIcon = DumbbellIcon;
+      streakBody = `${days} days on ${formatHabitLabel(streakLeader.habit)}. Aim for 21+ to build lasting automatism.`;
     } else if (days > 0) {
-      streakBody = `🌱 Best streak is ${days} days. Complete any habit 7 days in a row to build momentum.`;
+      streakIcon = SproutIcon;
+      streakBody = `Best streak is ${days} days. Complete any habit 7 days in a row to build momentum.`;
     } else {
-      streakBody = '💡 No streaks yet. Complete any habit 3 days in a row to start building a chain.';
+      streakBody = 'No streaks yet. Complete any habit 3 days in a row to start building a chain.';
     }
   } else {
-    streakBody = '💡 No streaks registered yet.';
+    streakBody = 'No streaks registered yet.';
   }
 
   let weekdayBody: string;
+  let weekdayIcon = BarChart2Icon;
   if (hasWeekdayShift) {
     if (weekdayDiffPercent > 50) {
-      weekdayBody = `⚠️ ${weekdayStats.worstWeekday} is your weakest day — try a shorter goal or reminder that day.`;
+      weekdayIcon = AlertTriangleIcon;
+      weekdayBody = `${weekdayStats.worstWeekday} is your weakest day — try a shorter goal or reminder that day.`;
     } else {
-      weekdayBody = `📊 ${weekdayDiffPercent}% more completions on ${weekdayStats.bestWeekday} vs ${weekdayStats.worstWeekday}.`;
+      weekdayBody = `${weekdayDiffPercent}% more completions on ${weekdayStats.bestWeekday} vs ${weekdayStats.worstWeekday}.`;
     }
   } else {
-    weekdayBody = '📊 Check back after a few active days to see your weekday patterns.';
+    weekdayBody = 'Check back after a few active days to see your weekday patterns.';
   }
 
   const total = filteredHabits.length;
   let momentumBody: string;
+  let momentumIcon = LightbulbIcon;
   if (total === 0) {
-    momentumBody = '💡 No habits to measure yet.';
+    momentumBody = 'No habits to measure yet.';
   } else if (improvedCount === total) {
-    momentumBody = `🚀 All ${total} habits improving this ${PERIOD_DISPLAY_NAMES[period]} — excellent momentum!`;
+    momentumIcon = ZapIcon;
+    momentumBody = `All ${total} habits improving this ${PERIOD_DISPLAY_NAMES[period]} — excellent momentum!`;
   } else if (improvedCount === 0) {
-    momentumBody = `📉 No habits improved this ${PERIOD_DISPLAY_NAMES[period]}. Focus on one habit to break the trend.`;
+    momentumIcon = TrendingDownIcon;
+    momentumBody = `No habits improved this ${PERIOD_DISPLAY_NAMES[period]}. Focus on one habit to break the trend.`;
   } else {
-    momentumBody = `📈 ${improvedCount} of ${total} habits improved. Push the other ${total - improvedCount} forward.`;
+    momentumIcon = TrendingUpIcon;
+    momentumBody = `${improvedCount} of ${total} habits improved. Push the other ${total - improvedCount} forward.`;
   }
 
   return [
-    { id: 'streak', title: 'Best streak', body: streakBody },
-    { id: 'weekday', title: 'Weekday shift', body: weekdayBody },
-    { id: 'momentum', title: 'Momentum', body: momentumBody }
+    { id: 'streak', title: 'Best streak', body: streakBody, icon: streakIcon },
+    { id: 'weekday', title: 'Weekday shift', body: weekdayBody, icon: weekdayIcon },
+    { id: 'momentum', title: 'Momentum', body: momentumBody, icon: momentumIcon }
   ];
 }
 
@@ -170,7 +181,8 @@ export function Stats() {
   );
 
   const windowRange = useMemo(() => getWindowRange(period), [period]);
-  const periodSegments = useMemo(() => buildPeriodSegments(period, 6), [period]);
+  const periodDayCount = PERIOD_DAY_RANGES[period] ?? 30;
+  const periodSegments = useMemo(() => buildPeriodSegments(period, periodDayCount), [period, periodDayCount]);
 
   const allStats = useMemo(
     () => filteredHabits.map((h) => ({ habit: h, stats: getHabitStats(h.id) })),
@@ -306,72 +318,30 @@ function getWindowRange(period: Period) {
   return { start, end };
 }
 
-function alignPeriodStart(date: Date, period: Period) {
-  const copy = new Date(date);
-  copy.setHours(0, 0, 0, 0);
-  switch (period) {
-    case 'week': {
-      const offset = (copy.getDay() + 6) % 7;
-      copy.setDate(copy.getDate() - offset);
-      return copy;
-    }
-    case 'month':
-      return new Date(copy.getFullYear(), copy.getMonth(), 1);
-    case 'quarter': {
-      const quarterStart = Math.floor(copy.getMonth() / 3) * 3;
-      return new Date(copy.getFullYear(), quarterStart, 1);
-    }
-    case 'year':
-      return new Date(copy.getFullYear(), 0, 1);
-    default:
-      return copy;
-  }
-}
-
-function shiftPeriod(date: Date, period: Period, delta: number) {
-  const copy = new Date(date);
+function formatSegmentLabel(date: Date, period: Period) {
   switch (period) {
     case 'week':
-      copy.setDate(copy.getDate() + delta * 7);
-      break;
+      return formatAppDate(date, { weekday: 'short' });
     case 'month':
-      copy.setMonth(copy.getMonth() + delta);
-      break;
+      return formatAppDate(date, { month: 'short', day: 'numeric' });
     case 'quarter':
-      copy.setMonth(copy.getMonth() + delta * 3);
-      break;
+      return formatAppDate(date, { month: 'short', day: 'numeric' });
     case 'year':
-      copy.setFullYear(copy.getFullYear() + delta);
-      break;
-  }
-  return alignPeriodStart(copy, period);
-}
-
-function formatSegmentLabel(start: Date, period: Period) {
-  switch (period) {
-    case 'week':
-      return formatAppDate(start, { month: 'short', day: 'numeric' });
-    case 'month':
-      return formatAppDate(start, { month: 'short' });
-    case 'quarter': {
-      const quarter = Math.floor(start.getMonth() / 3) + 1;
-      return `Q${quarter} '${String(start.getFullYear()).slice(-2)}`;
-    }
-    case 'year':
-      return `${start.getFullYear()}`;
+      return formatAppDate(date, { month: 'short', day: 'numeric', year: '2-digit' });
     default:
-      return formatAppDate(start, { month: 'short', day: 'numeric' });
+      return formatAppDate(date, { month: 'short', day: 'numeric' });
   }
 }
 
-function buildPeriodSegments(period: Period, count: number): PeriodSegment[] {
+function buildPeriodSegments(period: Period, days: number): PeriodSegment[] {
   const segments: PeriodSegment[] = [];
-  const now = new Date();
-  const currentStart = alignPeriodStart(now, period);
-  for (let idx = 0; idx < count; idx++) {
-    const offset = idx - (count - 1);
-    const start = shiftPeriod(currentStart, period, offset);
-    const end = shiftPeriod(start, period, 1);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  for (let offset = days - 1; offset >= 0; offset--) {
+    const start = new Date(today);
+    start.setDate(start.getDate() - offset);
+    const end = new Date(start);
+    end.setDate(end.getDate() + 1);
     segments.push({
       start,
       end,
@@ -401,6 +371,7 @@ function generateDailyCompletionData(habits: Habit[], start: Date, end: Date) {
     const completed = habits.filter((h) => (h.completions[key] ?? 0) >= getCompletionThreshold(h)).length;
     return {
       day: formatAppDate(date, { month: 'short', day: 'numeric' }),
+      axisLabel: formatAppDate(date, { month: 'short', year: '2-digit' }),
       completed,
       total,
       rate: total > 0 ? Math.round((completed / total) * 100) : 0

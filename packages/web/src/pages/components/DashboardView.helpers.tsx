@@ -1,4 +1,4 @@
-import { GripVerticalIcon, SnowflakeIcon, FlameIcon } from 'lucide-react';
+import { GripVerticalIcon, SnowflakeIcon, FlameIcon, TrophyIcon } from 'lucide-react';
 import { CompletionRing } from '@/components/CompletionRing';
 import { MiniHeatmap } from '@/components/MiniHeatmap';
 import { HABIT_COLOR_THEMES } from '@/lib/theme/habit-colors';
@@ -58,7 +58,10 @@ function HabitRowMetrics({
       <div className="flex items-center gap-0.5 w-10 sm:w-20 justify-end">
         {streak > 0 && (
           habit.type === 'negative' ? (
-            <span className="hidden sm:inline text-[10px] font-mono text-accent-secondary whitespace-nowrap">{streak}d 🏆</span>
+            <span className="hidden sm:inline flex items-center gap-0.5 text-[10px] font-mono text-accent-secondary whitespace-nowrap">
+              <TrophyIcon size={9} className="inline-block flex-shrink-0" />
+              {streak}d
+            </span>
           ) : (
             <>
               <FlameIcon size={10} className="text-accent-secondary flex-shrink-0" />
