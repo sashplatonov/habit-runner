@@ -3,6 +3,7 @@ import type { CSSProperties } from 'react';
 import { HABIT_COLOR_THEMES, DEFAULT_HABIT_COLOR } from '@/lib/theme/habit-colors';
 import type { HabitColor } from '@/types/habit';
 import { formatDate } from '@/lib/habits/habitStats';
+import { formatAppDate } from '@/lib/i18n';
 
 // Opacity levels for intensity 0–4. Level 0 uses a neutral CSS var instead.
 const FILL_OPACITIES = [0, 0.22, 0.46, 0.72, 1.0] as const;
@@ -14,6 +15,7 @@ interface HabitHeatmapProps {
   dailyTarget?: number;
   color?: HabitColor;
   compact?: boolean;
+  dayDetails?: Record<string, string[]>;
 }
 
 type Cell = {
@@ -93,11 +95,23 @@ function cellStyle(cell: Cell, accentHex: string, glow: string): CSSProperties {
   };
 }
 
-const TOOLTIP_WIDTH = 80;
+const TOOLTIP_WIDTH = 200;
 
 function tooltipLeft(rectLeft: number): number {
   const max = window.innerWidth - TOOLTIP_WIDTH - 8;
   return Math.min(rectLeft + 8, max);
+}
+
+interface TooltipData {
+  x: number;
+  y: number;
+  date: string;
+  habits: string[];
+}
+
+function formatTooltipDate(date: string) {
+  const parsed = new Date(`${date}T00:00:00`);
+  return formatAppDate(parsed, { weekday: 'long', month: 'short', day: 'numeric' });
 }
 
 export function HabitHeatmap({
@@ -105,8 +119,9 @@ export function HabitHeatmap({
   dailyTarget = 1,
   color = DEFAULT_HABIT_COLOR,
   compact = false,
+  dayDetails,
 }: HabitHeatmapProps) {
-  const [tooltip, setTooltip] = useState<{ x: number; y: number; text: string } | null>(null);
+  const [tooltip, setTooltip] = useState<TooltipData | null>(null);
   const weeks = useMemo(() => buildWeeks(completions, dailyTarget), [completions, dailyTarget]);
   const { hex: accentHex, glow } = HABIT_COLOR_THEMES[color];
   const n = weeks.length;
@@ -173,7 +188,13 @@ export function HabitHeatmap({
                   onMouseEnter={(e) => {
                     if (cell.isOutOfRange) { return; }
                     const rect = e.currentTarget.getBoundingClientRect();
-                    setTooltip({ x: tooltipLeft(rect.left), y: rect.top - 28, text: cell.date.slice(0, 10) });
+                    const habits = dayDetails?.[cell.date] ?? [];
+                    setTooltip({
+                      x: tooltipLeft(rect.left),
+                      y: rect.top - 36,
+                      date: cell.date,
+                      habits
+                    });
                   }}
                   onMouseLeave={() => setTooltip(null)}
                 />
@@ -200,10 +221,19 @@ export function HabitHeatmap({
 
       {tooltip && (
         <div
-          className="fixed z-50 pointer-events-none px-2 py-1 rounded bg-bg-card border border-border text-[10px] font-mono text-foreground shadow-lg"
-          style={{ left: tooltip.x, top: tooltip.y }}
+          className="fixed z-50 pointer-events-none px-3 py-2 rounded bg-bg-card border border-border text-[10px] font-mono text-foreground shadow-lg"
+          style={{ left: tooltip.x, top: tooltip.y, maxWidth: `${TOOLTIP_WIDTH}px` }}
         >
-          {tooltip.text}
+          <p className="text-[10px] font-mono text-muted mb-1">{formatTooltipDate(tooltip.date)}</p>
+          {tooltip.habits.length > 0 ? (
+            tooltip.habits.map((habitLabel, index) => (
+              <p key={`${habitLabel}-${index}`} className="text-[11px] font-mono text-foreground">
+                {habitLabel}
+              </p>
+            ))
+          ) : (
+            <p className="text-[10px] font-mono text-muted">No habits finished that day.</p>
+          )}
         </div>
       )}
     </div>

@@ -200,6 +200,23 @@ export function Stats() {
     return frozen;
   }, [allHabits]);
 
+  const dailyHabitDetails = useMemo(() => {
+    const details: Record<string, string[]> = {};
+    filteredHabits.forEach((habit) => {
+      const threshold = getCompletionThreshold(habit);
+      Object.entries(habit.completions).forEach(([date, count]) => {
+        if (count >= threshold) {
+          if (!details[date]) {
+            details[date] = [];
+          }
+          const label = habit.icon ? `${habit.icon} ${habit.name}` : habit.name;
+          details[date].push(label);
+        }
+      });
+    });
+    return details;
+  }, [filteredHabits]);
+
   const activityWeeks = useMemo(
     () => buildActivityWeeks(filteredHabits, frozenDates, windowRange.start, windowRange.end),
     [filteredHabits, frozenDates, windowRange]
@@ -231,6 +248,7 @@ export function Stats() {
       dailyData={dailyData}
       habitPeriodData={habitPeriodData}
       filteredHabits={filteredHabits}
+      dailyHabitDetails={dailyHabitDetails}
       sorted={summary.sorted}
       allStats={allStats}
       bestWeekday={weekdayStats.bestWeekday}
