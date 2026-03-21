@@ -17,6 +17,7 @@ import type { DashboardFilter } from './dashboard/useDashboardData';
 const FILTER_STORAGE_KEY = 'hr_dashboard_filter_v1';
 const DENSITY_STORAGE_KEY = 'hr_dashboard_density_v1';
 const HERO_COLLAPSED_STORAGE_KEY = 'hr_dashboard_hero_collapsed_v1';
+const SORT_MODE_STORAGE_KEY = 'hr_dashboard_sort_mode_v1';
 
 function readStoredFilter(): DashboardFilter {
   if (typeof window === 'undefined') {
@@ -39,6 +40,13 @@ function readStoredHeroCollapsed(): boolean {
     return false;
   }
   return localStorage.getItem(HERO_COLLAPSED_STORAGE_KEY) === '1';
+}
+
+function readStoredSortMode(): 'custom' | 'smart' {
+  if (typeof window === 'undefined') {
+    return 'custom';
+  }
+  return localStorage.getItem(SORT_MODE_STORAGE_KEY) === 'smart' ? 'smart' : 'custom';
 }
 
 function buildDashboardSummary(activeHabits: Habit[], todayDate: Date, today: string) {
@@ -65,7 +73,7 @@ export function useDashboardModel() {
   const [addingTemplate, setAddingTemplate] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
-  const [sortMode, setSortMode] = useState<'custom' | 'smart'>('custom');
+  const [sortMode, setSortMode] = useState<'custom' | 'smart'>(readStoredSortMode);
 
   const [filter, setFilter] = useState<DashboardFilter>(readStoredFilter);
   const [viewDensity, setViewDensity] = useState<'comfortable' | 'compact'>(readStoredViewDensity);
@@ -82,6 +90,10 @@ export function useDashboardModel() {
   useEffect(() => {
     localStorage.setItem(HERO_COLLAPSED_STORAGE_KEY, heroCollapsed ? '1' : '0');
   }, [heroCollapsed]);
+
+  useEffect(() => {
+    localStorage.setItem(SORT_MODE_STORAGE_KEY, sortMode);
+  }, [sortMode]);
 
   const todayDate = useMemo(() => {
     const d = new Date();
