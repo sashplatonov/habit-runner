@@ -1,5 +1,5 @@
 import React, { useMemo, useRef } from 'react';
-import { ChevronLeftIcon, ChevronRightIcon } from 'lucide-react';
+import { ChevronLeftIcon, ChevronRightIcon, FlameIcon, BarChart2Icon, TrendingUpIcon } from 'lucide-react';
 import { DashboardView } from '@/pages/components/DashboardView';
 import { StatsView, type ActivityWeek, type Insight, type PeriodOption } from '@/pages/components/StatsView';
 import { AddEditHabitPage } from '@/pages/components/add-edit-habit/AddEditHabitPage';
@@ -192,9 +192,9 @@ function buildDemoStatsModel(habits: Habit[]) {
     { period: 'Mar', 'Morning Run': 90, 'Read 20 pages': 76, 'No sugar after 18:00': 69 }
   ];
   const insights: Insight[] = [
-    { id: 'streak', title: 'Best streak', body: 'Morning Run leads with a 21-day streak.' },
-    { id: 'weekday', title: 'Weekday shift', body: 'Wednesday is your strongest day this month.' },
-    { id: 'momentum', title: 'Momentum', body: '2 habits improved versus the previous period.' }
+    { id: 'streak', title: 'Best streak', body: 'Morning Run leads with a 21-day streak.', icon: FlameIcon },
+    { id: 'weekday', title: 'Weekday shift', body: 'Wednesday is your strongest day this month.', icon: BarChart2Icon },
+    { id: 'momentum', title: 'Momentum', body: '2 habits improved versus the previous period.', icon: TrendingUpIcon }
   ];
   const activityWeeks: ActivityWeek[] = [
     {
@@ -227,15 +227,15 @@ function buildDemoStatsModel(habits: Habit[]) {
     selectedTags: [],
     toggleTag: () => undefined,
     dailyData: [
-      { day: 'Mar 01', completed: 2, total: 3, rate: 67 },
-      { day: 'Mar 02', completed: 3, total: 3, rate: 100 },
-      { day: 'Mar 03', completed: 2, total: 3, rate: 67 },
-      { day: 'Mar 04', completed: 2, total: 3, rate: 67 },
-      { day: 'Mar 05', completed: 3, total: 3, rate: 100 },
-      { day: 'Mar 06', completed: 2, total: 3, rate: 67 },
-      { day: 'Mar 07', completed: 1, total: 3, rate: 33 },
-      { day: 'Mar 08', completed: 2, total: 3, rate: 67 },
-      { day: 'Mar 09', completed: 2, total: 3, rate: 67 }
+      { day: 'Mar 01', axisLabel: 'Mar 26', completed: 2, total: 3, rate: 67 },
+      { day: 'Mar 02', axisLabel: 'Mar 26', completed: 3, total: 3, rate: 100 },
+      { day: 'Mar 03', axisLabel: 'Mar 26', completed: 2, total: 3, rate: 67 },
+      { day: 'Mar 04', axisLabel: 'Mar 26', completed: 2, total: 3, rate: 67 },
+      { day: 'Mar 05', axisLabel: 'Mar 26', completed: 3, total: 3, rate: 100 },
+      { day: 'Mar 06', axisLabel: 'Mar 26', completed: 2, total: 3, rate: 67 },
+      { day: 'Mar 07', axisLabel: 'Mar 26', completed: 1, total: 3, rate: 33 },
+      { day: 'Mar 08', axisLabel: 'Mar 26', completed: 2, total: 3, rate: 67 },
+      { day: 'Mar 09', axisLabel: 'Mar 26', completed: 2, total: 3, rate: 67 }
     ],
     habitPeriodData,
     filteredHabits: habits,

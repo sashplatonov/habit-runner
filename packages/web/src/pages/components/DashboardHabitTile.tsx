@@ -1,5 +1,6 @@
 import { useCallback, useRef, useState } from 'react';
-import { CheckIcon, FlameIcon } from 'lucide-react';
+import { AlertTriangleIcon, CheckCircle2Icon, CheckIcon, FlameIcon, LightbulbIcon, MoonIcon, SnowflakeIcon, SproutIcon, TrendingDownIcon, TrendingUpIcon, TrophyIcon } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { CompletionRing } from '@/components/CompletionRing';
 import { HabitHeatmap } from '@/components/HabitHeatmap';
@@ -163,7 +164,7 @@ export function HabitRowToggleButton({
           />
         )}
         {isFrozen ? (
-          <span className="text-[12px] opacity-80" aria-label="Frozen">🧊</span>
+          <SnowflakeIcon size={12} className="opacity-70 text-muted" aria-label="Frozen" />
         ) : (
           completed && <CheckIcon size={14} className={`${accent.textClass} relative z-10`} strokeWidth={3} />
         )}
@@ -172,7 +173,7 @@ export function HabitRowToggleButton({
   );
 }
 
-type TileHint = { text: string; type: 'good' | 'warn' | 'tip' };
+type TileHint = { icon: LucideIcon; text: string; type: 'good' | 'warn' | 'tip' };
 
 function computeTileHint(habit: Habit, completionRate: number, streak: number): TileHint | null {
   const target = Math.max(1, habit.dailyTarget ?? 1);
@@ -181,8 +182,8 @@ function computeTileHint(habit: Habit, completionRate: number, streak: number): 
 
   // New habit — encourage, skip long-period comparisons
   if (habitAgeDays < 7) {
-    if (streak > 0) return { text: `🌱 Day ${streak} — great start!`, type: 'good' };
-    return { text: '🌱 New habit — start today!', type: 'tip' };
+    if (streak > 0) return { icon: SproutIcon, text: `Day ${streak} — great start!`, type: 'good' };
+    return { icon: SproutIcon, text: 'New habit — start today!', type: 'tip' };
   }
 
   let recent7 = 0;
@@ -206,11 +207,11 @@ function computeTileHint(habit: Habit, completionRate: number, streak: number): 
   }
 
   const weekTrend = canComparePrev ? recent7 - prev7 : 0;
-  if (completionRate >= 80 && streak >= 5) return { text: '✅ On track — great consistency', type: 'good' };
-  if (weekTrend >= 3) return { text: '📈 Trending up this week', type: 'good' };
-  if (streak === 0 && completionRate > 20) return { text: '⚠️ Restart your streak today', type: 'warn' };
-  if (canComparePrev && weekTrend <= -3 && recent7 < 3) return { text: '📉 Losing momentum — stay consistent', type: 'warn' };
-  if (habitAgeDays >= 30 && completionRate < 40) return { text: '💡 Try adjusting schedule or goal', type: 'tip' };
+  if (completionRate >= 80 && streak >= 5) return { icon: CheckCircle2Icon, text: 'On track — great consistency', type: 'good' };
+  if (weekTrend >= 3) return { icon: TrendingUpIcon, text: 'Trending up this week', type: 'good' };
+  if (streak === 0 && completionRate > 20) return { icon: AlertTriangleIcon, text: 'Restart your streak today', type: 'warn' };
+  if (canComparePrev && weekTrend <= -3 && recent7 < 3) return { icon: TrendingDownIcon, text: 'Losing momentum — stay consistent', type: 'warn' };
+  if (habitAgeDays >= 30 && completionRate < 40) return { icon: LightbulbIcon, text: 'Try adjusting schedule or goal', type: 'tip' };
   return null;
 }
 
@@ -243,7 +244,10 @@ function HabitTileMeta({
       <div className="mt-0.5 h-4">
         {streak > 0 && !isFrozen && scheduledToday ? (
           habit.type === 'negative' ? (
-            <span className="text-[10px] font-mono text-accent-secondary">{streak}d 🏆</span>
+            <div className="flex items-center gap-0.5 text-accent-secondary">
+              <TrophyIcon size={9} className="flex-shrink-0" />
+              <span className="text-[10px] font-mono">{streak}d</span>
+            </div>
           ) : (
             <div className="flex items-center gap-0.5">
               <FlameIcon size={9} className="text-accent-secondary flex-shrink-0" />
@@ -251,13 +255,16 @@ function HabitTileMeta({
             </div>
           )
         ) : isFrozen ? (
-          <span className="text-[10px] font-mono text-muted">🧊</span>
+          <SnowflakeIcon size={9} className="text-muted" />
         ) : !scheduledToday ? (
-          <span className="text-[10px] font-mono text-muted">🌙</span>
+          <MoonIcon size={9} className="text-muted" />
         ) : null}
       </div>
       {hint && (
-        <p className={`text-[9px] font-mono mt-1 truncate ${hintColor}`}>{hint.text}</p>
+        <div className={`flex items-center gap-0.5 mt-1 truncate ${hintColor}`}>
+          <hint.icon size={8} className="flex-shrink-0" />
+          <span className="text-[9px] font-mono truncate">{hint.text}</span>
+        </div>
       )}
     </div>
   );

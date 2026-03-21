@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { CalendarIcon, FilterIcon, FlameIcon, TrendingUpIcon, ZapIcon } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 import type { Habit } from '@/types/habit';
 import { PeriodSelector, FiltersPanel, InsightsRow, DailyRateChart, PeriodTrendChart, HabitPerformanceList, WeeklyBreakdown, HabitSortControls } from './StatsViewPanels';
 import { HabitHeatmap } from '@/components/HabitHeatmap';
@@ -19,6 +20,7 @@ type HabitStatEntry = {
 
 type DailyDataPoint = {
   day: string;
+  axisLabel: string;
   completed: number;
   total: number;
   rate: number;
@@ -30,6 +32,7 @@ export type Insight = {
   id: string;
   title: string;
   body: string;
+  icon: LucideIcon;
 };
 
 export type ActivityDay = {
@@ -262,6 +265,7 @@ function StatsTabBar({
           <div className="flex items-center gap-2 py-2 pl-2">
             <button
               onClick={() => setFiltersOpen((prev) => !prev)}
+              aria-label="Toggle filters"
               className={`rounded-full border px-3 py-1 text-xs font-mono flex items-center gap-1.5 transition-colors ${
                 filtersOpen
                   ? 'border-accent text-accent'
@@ -269,7 +273,7 @@ function StatsTabBar({
               }`}
             >
               <FilterIcon size={12} />
-              Filters
+              <span className="hidden md:inline">Filters</span>
             </button>
           </div>
         </div>
