@@ -19,6 +19,7 @@ import {
   SnowflakeIcon
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
+import { ChartGuideTooltip } from '@/components/ChartGuideTooltip';
 import { HabitHeatmap } from '@/components/HabitHeatmap';
 import { HabitRetroCalendar } from './HabitRetroCalendar';
 import { TodayBlock } from './HabitDetailTodayBlock';
@@ -412,7 +413,19 @@ function HeatmapSection({
   return (
     <div className="bg-bg-secondary border border-border rounded-lg p-3 space-y-3">
       <div className="flex items-center justify-between">
-        <h2 className="text-xs font-mono text-muted uppercase tracking-wider">Activity - 90 days</h2>
+        <div className="flex items-center gap-2">
+          <h2 className="text-xs font-mono text-muted uppercase tracking-wider">Activity - 90 days</h2>
+          <ChartGuideTooltip
+            title="Habit activity heatmap"
+            summary="This block shows how often this habit was completed over the last 90 days, making consistency and missed stretches easy to spot."
+            focusPoints={[
+              'Bright runs: streaks where the habit was part of your routine.',
+              'Sparse patches: periods where the habit slipped out of context.',
+              'Recent density: whether the habit is getting stronger right now.'
+            ]}
+            variant="grid"
+          />
+        </div>
         <span className="text-[10px] font-mono text-muted">{completedCount} completions</span>
       </div>
       <div className="w-full mx-auto lg:max-w-[560px]">
@@ -439,7 +452,19 @@ function MonthlyRateSection({ stats, accent, habit }: Pick<HabitDetailViewProps,
   const insight = buildMonthlyInsight(stats.monthlyData, habit.createdAt);
   return (
     <div className="bg-bg-secondary border border-border rounded-lg p-4">
-      <h2 className="text-xs font-mono text-muted uppercase tracking-wider mb-4">Monthly completion rate</h2>
+      <div className="mb-4 flex items-center gap-2">
+        <h2 className="text-xs font-mono text-muted uppercase tracking-wider">Monthly completion rate</h2>
+        <ChartGuideTooltip
+          title="Monthly completion rate"
+          summary="This line tracks the monthly success rate for one habit, helping you judge whether the habit is actually becoming stable over longer periods."
+          focusPoints={[
+            'Latest point: your current monthly baseline.',
+            'Month-over-month slope: whether consistency is compounding or slipping.',
+            'Repeated dips: a sign the habit may be too ambitious or poorly timed.'
+          ]}
+          variant="line"
+        />
+      </div>
       <ResponsiveContainer width="100%" height={120}>
         <LineChart data={stats.monthlyData} margin={{ top: 4, right: 4, bottom: 0, left: -20 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
@@ -494,7 +519,19 @@ function WeeklyCompletionsSection({ stats, accent, habit }: Pick<HabitDetailView
   const insight = buildWeeklyInsight(stats.weeklyData, habit.createdAt);
   return (
     <div className="bg-bg-secondary border border-border rounded-lg p-4">
-      <h2 className="text-xs font-mono text-muted uppercase tracking-wider mb-3">Weekly completions</h2>
+      <div className="mb-3 flex items-center gap-2">
+        <h2 className="text-xs font-mono text-muted uppercase tracking-wider">Weekly completions</h2>
+        <ChartGuideTooltip
+          title="Weekly completions"
+          summary="This mini chart compares week-by-week volume, which is useful for seeing whether the habit is holding steady in the short term."
+          focusPoints={[
+            'Taller recent bars: improving short-term follow-through.',
+            'Falling bars: momentum loss before it shows up in streaks.',
+            'Last week count: the clearest signal of current traction.'
+          ]}
+          variant="columns"
+        />
+      </div>
       <div className="flex items-end gap-1 h-16">
         {stats.weeklyData.map((w, i) => (
           <div key={i} className="flex-1 flex flex-col items-center gap-1">
