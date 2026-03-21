@@ -43,7 +43,6 @@ export interface HabitEntity {
   reminderTime?: string | null;
   reminderEnabled: boolean;
   freezeDays: string[];
-  difficulty: 1 | 2 | 3 | 4 | 5;
   type: 'positive' | 'negative';
 }
 
@@ -198,7 +197,6 @@ export class HabbitRunnerDb extends Dexie {
         });
 
         await habitsTable.toCollection().modify((record) => {
-          if (record.difficulty === undefined) {record.difficulty = 1;}
           if (record.type === undefined) {record.type = 'positive';}
         });
       });
@@ -247,7 +245,6 @@ export function habitEntityToDomain(entity: HabitEntity): Habit {
       updatedAt: entity.updatedAt,
       version: entity.version,
       archived: entity.archived,
-      difficulty: entity.difficulty ?? 1,
       type: entity.type ?? 'positive',
       schedule:
         normalizeSchedule(entity.schedule) ??
@@ -279,7 +276,6 @@ export function domainToHabitEntity(habit: Habit): HabitEntity {
     reminderTime: habit.reminderTime ?? null,
     reminderEnabled: habit.reminderEnabled ?? true,
     freezeDays: habit.freezeDays ?? [],
-    difficulty: habit.difficulty ?? 1,
     type: habit.type ?? 'positive'
   };
 }

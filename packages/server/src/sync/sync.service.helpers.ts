@@ -50,7 +50,6 @@ export function buildHabitWriteValues(
   tags: unknown;
   customDays: number[] | undefined;
   schedule: HabitSchedule;
-  difficulty: number;
   type: string;
   freezeDays: string[] | undefined;
 } {
@@ -63,7 +62,6 @@ export function buildHabitWriteValues(
     tags: normalizeTags(payload.tags),
     customDays: normalizeCustomDays(payload.customDays),
     schedule: resolveHabitSchedule(existing, payload),
-    difficulty: resolveHabitDifficulty(existing, payload.difficulty),
     type: resolveHabitType(existing, payload.type),
     freezeDays: resolveHabitFreezeDays(existing, payload.freezeDays)
   };
@@ -140,13 +138,6 @@ function normalizeHabitFrequency(value: unknown): HabitFrequency {
     return value as HabitFrequency;
   }
   return 'daily';
-}
-
-function resolveHabitDifficulty(existing: ExistingHabitRecord | null, payloadValue?: number): number {
-  if (typeof payloadValue === 'number') {
-    return Math.max(1, Math.min(5, Math.trunc(payloadValue)));
-  }
-  return existing?.difficulty ?? 1;
 }
 
 function resolveHabitType(existing: ExistingHabitRecord | null, payloadValue?: string): string {

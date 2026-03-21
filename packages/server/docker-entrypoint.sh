@@ -23,7 +23,7 @@ if [ "${RUN_DB_PUSH:-true}" = "true" ]; then
     fi
   fi
 
-  "$PRISMA_BIN" db push
+  "$PRISMA_BIN" db push --accept-data-loss
 fi
 
 exec "$@"

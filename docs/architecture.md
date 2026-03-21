@@ -195,7 +195,7 @@ Habit
   id, userId, name, description, color, icon
   frequency, schedule (JSON), customDays (JSON)
   dailyTarget, targetStreak, tags (JSON)
-  archived, sortOrder, difficulty, type (positive|negative)
+.  archived, sortOrder, type (positive|negative)
   reminderTime, reminderEnabled
   freezeDays (JSON []), createdAt, updatedAt, version
 

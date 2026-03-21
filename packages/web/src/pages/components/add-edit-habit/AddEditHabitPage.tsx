@@ -6,8 +6,6 @@ import { HeaderSection } from './AddEditHabitHeader';
 import { ScheduleSection } from './AddEditHabitSchedule';
 import { ReminderSection, SoftLimitWarningModal } from './AddEditHabitAuxSections';
 
-const DIFFICULTY_OPTIONS = [1, 2, 3, 4, 5] as const;
-
 export function AddEditHabitPage({ model }: { model: AddEditHabitModel }) {
   const {
     isEdit,
@@ -27,8 +25,6 @@ export function AddEditHabitPage({ model }: { model: AddEditHabitModel }) {
     setTargetStreak,
     dailyTarget,
     setDailyTarget,
-    difficulty,
-    setDifficulty,
     type,
     setType,
     tags,
@@ -79,11 +75,6 @@ export function AddEditHabitPage({ model }: { model: AddEditHabitModel }) {
           setTargetStreak={setTargetStreak}
           dailyTarget={dailyTarget}
           setDailyTarget={setDailyTarget}
-          selectedColor={selectedColor}
-        />
-        <DifficultySection
-          difficulty={difficulty}
-          setDifficulty={setDifficulty}
           selectedColor={selectedColor}
         />
         <TypeSection
@@ -317,51 +308,6 @@ function TargetSection({
         </p>
       </div>
     </>
-  );
-}
-
-function getDifficultyLabel(value: (typeof DIFFICULTY_OPTIONS)[number]): string | number {
-  if (value === 1) {
-    return 'Easy';
-  }
-  if (value === 5) {
-    return 'Hard';
-  }
-  return value;
-}
-
-function DifficultySection({
-  difficulty,
-  setDifficulty,
-  selectedColor
-}: {
-  difficulty: number;
-  setDifficulty: AddEditHabitModel['setDifficulty'];
-  selectedColor: AddEditHabitModel['selectedColor'];
-}) {
-  return (
-    <div>
-      <label className="block text-[10px] font-mono text-muted uppercase tracking-wider mb-2">
-        Difficulty
-      </label>
-      <div className="flex gap-2">
-        {DIFFICULTY_OPTIONS.map((val) => (
-          <button
-            key={val}
-            type="button"
-            onClick={() => setDifficulty(val)}
-            className={`flex-1 py-2 rounded-xl border text-xs font-mono transition-all duration-200 ${
-              difficulty === val
-                ? 'border-accent/50 bg-accent/10 text-accent ring-1 ring-accent/30'
-                : 'border-border bg-bg-secondary text-muted hover:border-border-hover'
-            }`}
-            style={difficulty === val ? { borderColor: selectedColor.hex, color: selectedColor.hex, backgroundColor: `${selectedColor.hex}15` } : undefined}
-          >
-            {getDifficultyLabel(val)}
-          </button>
-        ))}
-      </div>
-    </div>
   );
 }
 
