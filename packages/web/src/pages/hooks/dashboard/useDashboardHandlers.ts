@@ -102,7 +102,6 @@ export function useDashboardHandlers({
           customDays: template.customDays,
           targetStreak: template.targetStreak,
           dailyTarget: 1,
-          difficulty: 1,
           type: 'positive',
           freezeDays: [],
           archived: false,

@@ -40,7 +40,6 @@ model Habit {
   reminderTime String?
   reminderEnabled Boolean @default(true)
   lastReminderSentAt DateTime?
-  difficulty  Int       @default(1)
   type        String    @default("positive")
   freezeDays  Json?     @default("[]")
   createdAt   DateTime  @default(now()) @db.Timestamptz(0)

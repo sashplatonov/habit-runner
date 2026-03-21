@@ -98,9 +98,6 @@ function SortHabits(a: Habit, b: Habit, sortMode: 'custom' | 'smart'): number {
   }
 
   // Smart Sort
-  if (a.difficulty !== b.difficulty) {
-    return (a.difficulty ?? 1) - (b.difficulty ?? 1);
-  }
   return orderA - orderB;
 }
 

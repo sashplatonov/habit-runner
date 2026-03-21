@@ -19,13 +19,6 @@ function shouldApplyRemoteRecord(
   return incomingVersion >= existing.version;
 }
 
-function normalizeRemoteDifficulty(value?: number): HabitEntity['difficulty'] {
-  if (value === 1 || value === 2 || value === 3 || value === 4 || value === 5) {
-    return value;
-  }
-  return 1;
-}
-
 function normalizeRemoteType(value?: string): HabitEntity['type'] {
   return value === 'negative' ? 'negative' : 'positive';
 }
@@ -58,7 +51,6 @@ function mapRemoteHabitToEntity(habit: PullResponseDto['habits'][number], userId
     reminderEnabled: habit.reminderEnabled ?? true,
     freezeDays: Array.isArray(habit.freezeDays) ? habit.freezeDays : [],
     completions: {},
-    difficulty: normalizeRemoteDifficulty(habit.difficulty),
     type: normalizeRemoteType(habit.type)
   };
 }

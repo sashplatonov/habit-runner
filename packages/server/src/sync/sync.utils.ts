@@ -61,7 +61,6 @@ export const serializeHabit = (habit: {
   createdAt: Date;
   updatedAt: Date;
   version: number;
-  difficulty?: number;
   type?: string;
   freezeDays?: unknown;
 }): HabitDto => ({
@@ -88,7 +87,6 @@ export const serializeHabit = (habit: {
   createdAt: toSyncISO(habit.createdAt),
   updatedAt: toSyncISO(habit.updatedAt),
   version: habit.version,
-  difficulty: habit.difficulty,
   type: habit.type,
   freezeDays: (habit.freezeDays as string[]) ?? []
 });

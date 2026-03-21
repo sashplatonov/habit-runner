@@ -41,7 +41,6 @@ function buildDemoHabits(): Habit[] {
       createdAt: isoDate(-45),
       archived: false,
       sortOrder: 0,
-      difficulty: 2,
       type: 'positive',
       reminderTime: '07:30',
       reminderEnabled: true
@@ -61,7 +60,6 @@ function buildDemoHabits(): Habit[] {
       createdAt: isoDate(-30),
       archived: false,
       sortOrder: 1,
-      difficulty: 2,
       type: 'positive',
       reminderTime: '21:00',
       reminderEnabled: true
@@ -81,7 +79,6 @@ function buildDemoHabits(): Habit[] {
       createdAt: isoDate(-20),
       archived: false,
       sortOrder: 2,
-      difficulty: 3,
       type: 'negative',
       reminderTime: '18:05',
       reminderEnabled: true
@@ -100,7 +97,6 @@ function buildDemoEditModel(): AddEditHabitModel {
   const setColor = noopSetter<Habit['color']>();
   const setFrequency = noopSetter<Habit['frequency']>();
   const setSchedule = noopSetter<HabitSchedule>();
-  const setDifficulty = noopSetter<1 | 2 | 3 | 4 | 5>();
   const setType = noopSetter<'positive' | 'negative'>();
 
   return {
@@ -132,8 +128,6 @@ function buildDemoEditModel(): AddEditHabitModel {
     increaseTargetStreak: () => undefined,
     dailyTarget: 1,
     setDailyTarget: setNumber,
-    difficulty: 2,
-    setDifficulty,
     type: 'positive',
     setType,
     tags: ['learning', 'focus'],
