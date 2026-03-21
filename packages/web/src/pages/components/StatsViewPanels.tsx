@@ -66,6 +66,78 @@ function DailyTooltip({
   return null;
 }
 
+type QuarterTickMeta = {
+  weekLabel: string;
+  monthLabel?: string;
+};
+
+function parseQuarterPeriodLabel(label: string): { monthLabel: string; weekLabel: string } {
+  const [monthLabel = '', weekLabel = ''] = label.split(' · ');
+  return { monthLabel, weekLabel };
+}
+
+function formatQuarterWeekLabel(weekLabel: string): string {
+  const match = weekLabel.match(/week\s+(\d+)/i);
+  return match ? `w${match[1]}` : weekLabel;
+}
+
+function buildQuarterTickMeta(labels: string[]): Map<number, QuarterTickMeta> {
+  const meta = new Map<number, QuarterTickMeta>();
+  const parsed = labels.map(parseQuarterPeriodLabel);
+  let index = 0;
+
+  while (index < parsed.length) {
+    const monthLabel = parsed[index]?.monthLabel ?? '';
+    let end = index;
+    while (end + 1 < parsed.length && parsed[end + 1]?.monthLabel === monthLabel) {
+      end += 1;
+    }
+
+    const center = index + Math.floor((end - index) / 2);
+    for (let cursor = index; cursor <= end; cursor += 1) {
+      meta.set(cursor, {
+        weekLabel: parsed[cursor]?.weekLabel ?? '',
+        monthLabel: cursor === center ? monthLabel : undefined
+      });
+    }
+    index = end + 1;
+  }
+
+  return meta;
+}
+
+function QuarterXAxisTick({
+  x,
+  y,
+  payload,
+  tickMeta
+}: {
+  x?: number;
+  y?: number;
+  payload?: { value?: string | number; index?: number };
+  tickMeta: Map<number, QuarterTickMeta>;
+}) {
+  if (typeof x !== 'number' || typeof y !== 'number' || !payload || payload.value === null || payload.value === undefined) {
+    return null;
+  }
+  const entry = typeof payload.index === 'number' ? tickMeta.get(payload.index) : undefined;
+  const fallback = parseQuarterPeriodLabel(String(payload.value));
+  const weekLabel = formatQuarterWeekLabel(entry?.weekLabel ?? fallback.weekLabel);
+  const monthLabel = entry?.monthLabel;
+  return (
+    <g transform={`translate(${x},${y + 8})`}>
+      <text textAnchor="middle" fontFamily="JetBrains Mono" fontSize={10} fill="var(--text-muted)">
+        {weekLabel}
+        {monthLabel ? (
+          <tspan x="0" dy="12">
+            {monthLabel}
+          </tspan>
+        ) : null}
+      </text>
+    </g>
+  );
+}
+
 export function PeriodSelector({
   period,
   setPeriod
@@ -175,7 +247,9 @@ export function InsightsRow({ insights }: { insights: Insight[] }) {
 }
 
 function buildDailyChartInsight(avgRate: number, dailyData: { day: string; rate: number }[]): { icon: LucideIcon; text: string; color: string } {
-  if (dailyData.length < 3) return { icon: LightbulbIcon, text: 'Add more data to see insights.', color: 'text-muted' };
+  if (dailyData.length < 3) {
+    return { icon: LightbulbIcon, text: 'Add more data to see insights.', color: 'text-muted' };
+  }
   const recent = dailyData.slice(-3).map(d => d.rate);
   const earlier = dailyData.slice(-6, -3).map(d => d.rate);
   const recentAvg = recent.reduce((s, v) => s + v, 0) / recent.length;
@@ -183,26 +257,55 @@ function buildDailyChartInsight(avgRate: number, dailyData: { day: string; rate:
   const trend = recentAvg - earlierAvg;
   const bestDay = dailyData.reduce((best, d) => d.rate > best.rate ? d : best, dailyData[0]);
 
-  if (avgRate >= 75 && trend >= 0) return { icon: CheckCircle2Icon, text: `Strong performance — ${avgRate}% avg and trending up.`, color: 'text-accent' };
-  if (trend >= 15) return { icon: TrendingUpIcon, text: `Big improvement recently. Keep the momentum going.`, color: 'text-accent' };
-  if (trend <= -20) return { icon: TrendingDownIcon, text: `Completion dropped in the last few days. Try starting with just one habit.`, color: 'text-accent-secondary' };
-  if (avgRate < 40) return { icon: AlertTriangleIcon, text: `Low avg — check if your habit schedule matches your routine.`, color: 'text-accent-secondary' };
-  if (bestDay.rate === 100) return { icon: FlameIcon, text: `You hit 100% on ${bestDay.day}. Replicate that day's conditions.`, color: 'text-muted' };
+  if (avgRate >= 75 && trend >= 0) {
+    return { icon: CheckCircle2Icon, text: `Strong performance — ${avgRate}% avg and trending up.`, color: 'text-accent' };
+  }
+  if (trend >= 15) {
+    return { icon: TrendingUpIcon, text: 'Big improvement recently. Keep the momentum going.', color: 'text-accent' };
+  }
+  if (trend <= -20) {
+    return { icon: TrendingDownIcon, text: 'Completion dropped in the last few days. Try starting with just one habit.', color: 'text-accent-secondary' };
+  }
+  if (avgRate < 40) {
+    return { icon: AlertTriangleIcon, text: 'Low avg — check if your habit schedule matches your routine.', color: 'text-accent-secondary' };
+  }
+  if (bestDay.rate === 100) {
+    return { icon: FlameIcon, text: `You hit 100% on ${bestDay.day}. Replicate that day's conditions.`, color: 'text-muted' };
+  }
   return { icon: LightbulbIcon, text: `${avgRate}% avg. Aim for at least 70% daily consistency.`, color: 'text-muted' };
 }
 
-export function DailyRateChart({ avgRate, dailyData }: Pick<StatsViewProps, 'avgRate' | 'dailyData'>) {
+export function DailyRateChart({ avgRate, dailyData, period }: Pick<StatsViewProps, 'avgRate' | 'dailyData' | 'period'>) {
   const insight = buildDailyChartInsight(avgRate, dailyData);
+  const quarterTickMeta = period === 'quarter'
+    ? buildQuarterTickMeta(dailyData.map((entry) => String(entry.axisLabel ?? '')))
+    : undefined;
+  const dailyXAxisProps = period === 'quarter'
+    ? {
+        height: 44,
+        interval: 0 as const,
+        minTickGap: 0,
+        tick: <QuarterXAxisTick tickMeta={quarterTickMeta ?? new Map()} />
+      }
+    : {
+        tick: { fill: 'var(--text-muted)', fontSize: 10, fontFamily: 'JetBrains Mono' }
+      };
   return (
     <div className="bg-bg-secondary border border-border rounded-lg p-4">
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center justify-between mb-1">
         <h2 className="text-xs font-mono text-muted uppercase tracking-wider">Daily completion rate</h2>
         <span className="text-[10px] font-mono text-accent">{avgRate}% avg</span>
       </div>
+      <p className="text-[10px] font-mono text-muted mb-3">Tap to hide/show habits</p>
       <ResponsiveContainer width="100%" height={150}>
           <BarChart data={dailyData} margin={{ top: 4, right: 4, bottom: 0, left: -10 }} barSize={7}>
             <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
-          <XAxis dataKey="axisLabel" tick={{ fill: 'var(--text-muted)', fontSize: 9, fontFamily: 'JetBrains Mono' }} axisLine={false} tickLine={false} />
+          <XAxis
+            dataKey="axisLabel"
+            {...dailyXAxisProps}
+            axisLine={false}
+            tickLine={false}
+          />
           <YAxis tick={{ fill: 'var(--text-muted)', fontSize: 9, fontFamily: 'JetBrains Mono' }} axisLine={false} tickLine={false} domain={[0, 100]} tickFormatter={(v) => `${v}%`} />
           <Tooltip content={<DailyTooltip />} />
           <Bar dataKey="rate" fill="var(--accent)" radius={[4, 4, 0, 0]} style={{ filter: 'drop-shadow(0 0 6px var(--glow))' }} />
@@ -220,14 +323,29 @@ export function PeriodTrendChart({
   habitPeriodData,
   filteredHabits,
   hiddenHabits,
-  toggleHabitVisibility
+  toggleHabitVisibility,
+  period
 }: {
   habitPeriodData: Array<Record<string, string | number>>;
   filteredHabits: Habit[];
   hiddenHabits: string[];
   toggleHabitVisibility: (name: string) => void;
+  period: PeriodOption;
 }) {
   const visibleHabits = filteredHabits.filter((habit) => !hiddenHabits.includes(habit.name));
+  const quarterTickMeta = period === 'quarter'
+    ? buildQuarterTickMeta(habitPeriodData.map((entry) => String(entry.period ?? '')))
+    : undefined;
+  const trendXAxisProps = period === 'quarter'
+    ? {
+        height: 44,
+        interval: 0 as const,
+        minTickGap: 0,
+        tick: <QuarterXAxisTick tickMeta={quarterTickMeta ?? new Map()} />
+      }
+    : {
+        tick: { fill: 'var(--text-muted)', fontSize: 10, fontFamily: 'JetBrains Mono' }
+      };
   return (
     <div className="bg-bg-secondary border border-border rounded-lg p-4 space-y-4">
       <div className="flex items-center justify-between gap-3 flex-wrap">
@@ -254,7 +372,12 @@ export function PeriodTrendChart({
       <ResponsiveContainer width="100%" height={170}>
         <LineChart data={habitPeriodData} margin={{ top: 4, right: 4, left: -10 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
-          <XAxis dataKey="period" tick={{ fill: 'var(--text-muted)', fontSize: 10, fontFamily: 'JetBrains Mono' }} axisLine={false} tickLine={false} />
+          <XAxis
+            dataKey="period"
+            {...trendXAxisProps}
+            axisLine={false}
+            tickLine={false}
+          />
           <YAxis tick={{ fill: 'var(--text-muted)', fontSize: 10, fontFamily: 'JetBrains Mono' }} axisLine={false} tickLine={false} domain={[0, 100]} tickFormatter={(v) => `${v}%`} />
           <Tooltip content={<CustomTooltip />} />
           {visibleHabits.map((habit) => (
@@ -277,10 +400,18 @@ export function PeriodTrendChart({
 }
 
 function habitStatusLabel(completionRate: number, currentStreak: number, longestStreak: number): { label: string; color: string } {
-  if (completionRate >= 75 && currentStreak >= 3) return { label: 'strong', color: 'text-accent' };
-  if (currentStreak === 0 && longestStreak >= 7) return { label: 'lost streak', color: 'text-accent-secondary' };
-  if (completionRate < 40) return { label: 'needs focus', color: 'text-accent-secondary' };
-  if (completionRate >= 50) return { label: 'steady', color: 'text-muted' };
+  if (completionRate >= 75 && currentStreak >= 3) {
+    return { label: 'strong', color: 'text-accent' };
+  }
+  if (currentStreak === 0 && longestStreak >= 7) {
+    return { label: 'lost streak', color: 'text-accent-secondary' };
+  }
+  if (completionRate < 40) {
+    return { label: 'needs focus', color: 'text-accent-secondary' };
+  }
+  if (completionRate >= 50) {
+    return { label: 'steady', color: 'text-muted' };
+  }
   return { label: 'struggling', color: 'text-accent-secondary' };
 }
 

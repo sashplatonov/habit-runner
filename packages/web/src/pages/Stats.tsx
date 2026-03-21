@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { AlertTriangleIcon, BarChart2Icon, DumbbellIcon, FlameIcon, LightbulbIcon, SproutIcon, TrendingDownIcon, TrendingUpIcon, ZapIcon } from 'lucide-react';
 import { useHabits } from '@/hooks/useHabits';
 import { formatAppDate } from '@/lib/i18n';
@@ -180,6 +180,19 @@ export function Stats() {
     [allHabits, statusFilter, searchQuery, selectedTags]
   );
 
+  const [hiddenHabits, setHiddenHabits] = useState<string[]>([]);
+  const visibleHabits = useMemo(
+    () => filteredHabits.filter((habit) => !hiddenHabits.includes(habit.name)),
+    [filteredHabits, hiddenHabits]
+  );
+  useEffect(() => {
+    setHiddenHabits((prev) => {
+      const allowed = new Set(filteredHabits.map((habit) => habit.name));
+      const next = prev.filter((name) => allowed.has(name));
+      return next.length === prev.length ? prev : next;
+    });
+  }, [filteredHabits]);
+
   const windowRange = useMemo(() => getWindowRange(period), [period]);
   const periodDayCount = PERIOD_DAY_RANGES[period] ?? 30;
   const periodSegments = useMemo(() => buildPeriodSegments(period, periodDayCount), [period, periodDayCount]);
@@ -190,8 +203,8 @@ export function Stats() {
   );
 
   const dailyData = useMemo(
-    () => generateDailyCompletionData(filteredHabits, windowRange.start, windowRange.end),
-    [filteredHabits, windowRange]
+    () => generateDailyCompletionData(visibleHabits, windowRange.start, windowRange.end, period, periodSegments),
+    [visibleHabits, windowRange, period, periodSegments]
   );
 
   const habitPeriodData = useMemo(
@@ -247,6 +260,12 @@ export function Stats() {
     setSelectedTags((prev) => (prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]));
   };
 
+  const toggleHabitVisibility = (name: string) => {
+    setHiddenHabits((prev) =>
+      prev.includes(name) ? prev.filter((item) => item !== name) : [...prev, name]
+    );
+  };
+
   return (
     <StatsView
       navigate={navigate}
@@ -274,6 +293,8 @@ export function Stats() {
       period={period}
       setPeriod={setPeriod}
       insights={insights}
+      hiddenHabits={hiddenHabits}
+      toggleHabitVisibility={toggleHabitVisibility}
       activityWeeks={activityWeeks}
     />
   );
@@ -334,6 +355,20 @@ function formatSegmentLabel(date: Date, period: Period) {
 }
 
 function buildPeriodSegments(period: Period, days: number): PeriodSegment[] {
+  const dailySegments = buildDailySegments(period, days);
+
+  if (period === 'quarter') {
+    return groupSegmentsByWeekByMonth(dailySegments);
+  }
+
+  if (period === 'year') {
+    return groupSegmentsByMonth(dailySegments);
+  }
+
+  return dailySegments;
+}
+
+function buildDailySegments(period: Period, days: number): PeriodSegment[] {
   const segments: PeriodSegment[] = [];
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -351,6 +386,77 @@ function buildPeriodSegments(period: Period, days: number): PeriodSegment[] {
   return segments;
 }
 
+function groupSegmentsByMonth(segments: PeriodSegment[]): PeriodSegment[] {
+  if (segments.length === 0) {
+    return segments;
+  }
+  const grouped: PeriodSegment[] = [];
+  let cursor = 0;
+
+  while (cursor < segments.length) {
+    const { start } = segments[cursor];
+    const keyMonth = start.getMonth();
+    const keyYear = start.getFullYear();
+    let endIndex = cursor + 1;
+    while (endIndex < segments.length) {
+      const next = segments[endIndex].start;
+      if (next.getMonth() !== keyMonth || next.getFullYear() !== keyYear) {
+        break;
+      }
+      endIndex += 1;
+    }
+    const chunk = segments.slice(cursor, endIndex);
+    const last = chunk[chunk.length - 1];
+    grouped.push({
+      start,
+      end: last.end,
+      label: formatAppDate(start, { month: 'short', year: 'numeric' })
+    });
+    cursor = endIndex;
+  }
+
+  return grouped;
+}
+
+function groupSegmentsByWeekByMonth(segments: PeriodSegment[]): PeriodSegment[] {
+  if (segments.length === 0) {
+    return segments;
+  }
+  const grouped: PeriodSegment[] = [];
+  let cursor = 0;
+
+  while (cursor < segments.length) {
+    const { start } = segments[cursor];
+    const keyMonth = start.getMonth();
+    const keyYear = start.getFullYear();
+    const monthSegments: PeriodSegment[] = [];
+
+    while (cursor < segments.length) {
+      const current = segments[cursor];
+      if (current.start.getMonth() !== keyMonth || current.start.getFullYear() !== keyYear) {
+        break;
+      }
+      monthSegments.push(current);
+      cursor += 1;
+    }
+
+    const monthLabel = formatAppDate(monthSegments[0].start, { month: 'short', year: '2-digit' });
+    let weekNumber = 1;
+    for (let i = 0; i < monthSegments.length; i += 7) {
+      const chunk = monthSegments.slice(i, i + 7);
+      const last = chunk[chunk.length - 1];
+      grouped.push({
+        start: chunk[0].start,
+        end: last.end,
+        label: `${monthLabel} · Week ${weekNumber}`
+      });
+      weekNumber += 1;
+    }
+  }
+
+  return grouped;
+}
+
 function differenceInDays(later: Date, earlier: Date) {
   const msPerDay = 1000 * 60 * 60 * 24;
   return Math.round((later.getTime() - earlier.getTime()) / msPerDay);
@@ -361,17 +467,43 @@ function getCompletionThreshold(habit: Habit) {
   return Math.max(1, habit.dailyTarget ?? 1);
 }
 
-function generateDailyCompletionData(habits: Habit[], start: Date, end: Date) {
-  const total = habits.length;
-  const length = differenceInDays(end, start) + 1;
-  return Array.from({ length }, (_, index) => {
-    const date = new Date(start);
-    date.setDate(start.getDate() + index);
-    const key = toCompletionKey(date);
-    const completed = habits.filter((h) => (h.completions[key] ?? 0) >= getCompletionThreshold(h)).length;
+function generateDailyCompletionData(
+  habits: Habit[],
+  start: Date,
+  end: Date,
+  period: Period,
+  segments: PeriodSegment[]
+) {
+  if (period === 'week' || period === 'month') {
+    const total = habits.length;
+    const length = differenceInDays(end, start) + 1;
+    return Array.from({ length }, (_, index) => {
+      const date = new Date(start);
+      date.setDate(start.getDate() + index);
+      const key = toCompletionKey(date);
+      const completed = habits.filter((h) => (h.completions[key] ?? 0) >= getCompletionThreshold(h)).length;
+      return {
+        day: formatAppDate(date, { month: 'short', day: 'numeric' }),
+        axisLabel: period === 'week' ? formatAppDate(date, { weekday: 'short' }) : formatAppDate(date, { month: 'short', day: 'numeric' }),
+        completed,
+        total,
+        rate: total > 0 ? Math.round((completed / total) * 100) : 0
+      };
+    });
+  }
+
+  return segments.map((segment) => {
+    const spanDays = Math.max(1, differenceInDays(segment.end, segment.start));
+    let completed = 0;
+    for (let cursor = new Date(segment.start); cursor < segment.end; cursor.setDate(cursor.getDate() + 1)) {
+      const key = toCompletionKey(cursor);
+      const completedToday = habits.filter((h) => (h.completions[key] ?? 0) >= getCompletionThreshold(h)).length;
+      completed += completedToday;
+    }
+    const total = habits.length * spanDays;
     return {
-      day: formatAppDate(date, { month: 'short', day: 'numeric' }),
-      axisLabel: formatAppDate(date, { month: 'short', year: '2-digit' }),
+      day: segment.label,
+      axisLabel: segment.label,
       completed,
       total,
       rate: total > 0 ? Math.round((completed / total) * 100) : 0

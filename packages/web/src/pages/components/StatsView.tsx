@@ -82,6 +82,8 @@ export type StatsViewProps = {
   period: PeriodOption;
   setPeriod: (value: PeriodOption) => void;
   insights: Insight[];
+  hiddenHabits: string[];
+  toggleHabitVisibility: (name: string) => void;
   activityWeeks: ActivityWeek[];
 };
 
@@ -320,30 +322,37 @@ function TabOverview({
   );
 }
 
+type TabChartsProps = Pick<
+  StatsViewProps,
+  'avgRate' | 'dailyData' | 'habitPeriodData' | 'filteredHabits' | 'period' | 'setPeriod'
+> & {
+  hiddenHabits: string[];
+  toggleHabitVisibility: (name: string) => void;
+};
+
 function TabCharts({
   avgRate,
   dailyData,
   habitPeriodData,
   filteredHabits,
   period,
-  setPeriod
-}: Pick<StatsViewProps, 'avgRate' | 'dailyData' | 'habitPeriodData' | 'filteredHabits' | 'period' | 'setPeriod'>) {
-  const [hiddenHabits, setHiddenHabits] = useState<string[]>([]);
-  const toggleHabitVisibility = (name: string) => {
-    setHiddenHabits((prev) => (prev.includes(name) ? prev.filter((item) => item !== name) : [...prev, name]));
-  };
+  setPeriod,
+  hiddenHabits,
+  toggleHabitVisibility
+}: TabChartsProps) {
   return (
     <div className="space-y-4">
       <div className="flex justify-end">
         <PeriodSelector period={period} setPeriod={setPeriod} />
       </div>
       <div className="grid gap-4 md:grid-cols-2">
-        <DailyRateChart avgRate={avgRate} dailyData={dailyData} />
+        <DailyRateChart avgRate={avgRate} dailyData={dailyData} period={period} />
         <PeriodTrendChart
           habitPeriodData={habitPeriodData}
           filteredHabits={filteredHabits}
           hiddenHabits={hiddenHabits}
           toggleHabitVisibility={toggleHabitVisibility}
+          period={period}
         />
       </div>
     </div>
@@ -457,6 +466,8 @@ export function StatsView(props: StatsViewProps) {
             filteredHabits={props.filteredHabits}
             period={props.period}
             setPeriod={props.setPeriod}
+            hiddenHabits={props.hiddenHabits}
+            toggleHabitVisibility={props.toggleHabitVisibility}
           />
         )}
         {activeTab === 'habits' && (
