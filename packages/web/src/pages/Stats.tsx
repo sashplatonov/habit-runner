@@ -28,6 +28,10 @@ type HabitStatsEntry = {
   stats: ReturnType<ReturnType<typeof useHabits>['getHabitStats']>;
 };
 
+function formatHabitLabel(habit: Habit) {
+  return habit.icon ? `${habit.icon} ${habit.name}` : habit.name;
+}
+
 function filterStatsHabits(
   habits: Habit[],
   statusFilter: 'all' | 'active' | 'archived',
@@ -104,9 +108,9 @@ function buildStatsInsights(
   if (streakLeader) {
     const days = streakLeader.stats.longestStreak;
     if (days >= 21) {
-      streakBody = `🔥 ${streakLeader.habit.name} has ${days} days — this habit is becoming automatic.`;
+      streakBody = `🔥 ${formatHabitLabel(streakLeader.habit)} has ${days} days — this habit is becoming automatic.`;
     } else if (days >= 7) {
-      streakBody = `💪 ${days} days on ${streakLeader.habit.name}. Aim for 21+ to build lasting automatism.`;
+      streakBody = `💪 ${days} days on ${formatHabitLabel(streakLeader.habit)}. Aim for 21+ to build lasting automatism.`;
     } else if (days > 0) {
       streakBody = `🌱 Best streak is ${days} days. Complete any habit 7 days in a row to build momentum.`;
     } else {
@@ -209,7 +213,7 @@ export function Stats() {
           if (!details[date]) {
             details[date] = [];
           }
-          const label = habit.icon ? `${habit.icon} ${habit.name}` : habit.name;
+          const label = formatHabitLabel(habit);
           details[date].push(label);
         }
       });
