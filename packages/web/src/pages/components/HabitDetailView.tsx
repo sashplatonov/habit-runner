@@ -437,14 +437,14 @@ function HeatmapSection({
 
 function buildMonthlyInsight(monthlyData: Array<{ month: string; rate: number }>, habitCreatedAt: string): { icon: LucideIcon; text: string; color: string } {
   const habitAgeDays = Math.floor((Date.now() - new Date(habitCreatedAt).getTime()) / (1000 * 60 * 60 * 24));
-  if (monthlyData.length < 2 || habitAgeDays < 14) return { icon: BarChart2Icon, text: 'Complete more weeks to see monthly trends.', color: 'var(--text-muted)' };
+  if (monthlyData.length < 2 || habitAgeDays < 14) {return { icon: BarChart2Icon, text: 'Complete more weeks to see monthly trends.', color: 'var(--text-muted)' };}
   const last = monthlyData[monthlyData.length - 1].rate;
   const prev = monthlyData[monthlyData.length - 2].rate;
   const trend = last - prev;
-  if (last >= 80 && trend >= 0) return { icon: CheckCircle2Icon, text: `${last}% last month — excellent, keep this up.`, color: 'var(--accent)' };
-  if (trend >= 15) return { icon: TrendingUpIcon, text: `Up ${trend}% from last month — great momentum!`, color: 'var(--accent)' };
-  if (trend <= -15) return { icon: TrendingDownIcon, text: `Down ${Math.abs(trend)}% this month. What changed in your routine?`, color: 'var(--accent-secondary)' };
-  if (last < 40) return { icon: AlertTriangleIcon, text: 'Low rate. Try habit stacking or reduce the daily target.', color: 'var(--accent-secondary)' };
+  if (last >= 80 && trend >= 0) {return { icon: CheckCircle2Icon, text: `${last}% last month — excellent, keep this up.`, color: 'var(--accent)' };}
+  if (trend >= 15) {return { icon: TrendingUpIcon, text: `Up ${trend}% from last month — great momentum!`, color: 'var(--accent)' };}
+  if (trend <= -15) {return { icon: TrendingDownIcon, text: `Down ${Math.abs(trend)}% this month. What changed in your routine?`, color: 'var(--accent-secondary)' };}
+  if (last < 40) {return { icon: AlertTriangleIcon, text: 'Low rate. Try habit stacking or reduce the daily target.', color: 'var(--accent-secondary)' };}
   return { icon: LightbulbIcon, text: `${last}% this month. Consistent effort adds up over time.`, color: 'var(--text-muted)' };
 }
 
@@ -503,15 +503,15 @@ function MonthlyRateSection({ stats, accent, habit }: Pick<HabitDetailViewProps,
 
 function buildWeeklyInsight(weeklyData: Array<{ count: number }>, habitCreatedAt: string): { icon: LucideIcon; text: string; color: string } {
   const habitAgeDays = Math.floor((Date.now() - new Date(habitCreatedAt).getTime()) / (1000 * 60 * 60 * 24));
-  if (weeklyData.length < 4 || habitAgeDays < 14) return { icon: LightbulbIcon, text: '', color: '' };
+  if (weeklyData.length < 4 || habitAgeDays < 14) {return { icon: LightbulbIcon, text: '', color: '' };}
   const lastWeek = weeklyData[weeklyData.length - 1].count;
   const recentAvg = (weeklyData.slice(-3).reduce((s, w) => s + w.count, 0)) / 3;
   const earlierAvg = (weeklyData.slice(-6, -3).reduce((s, w) => s + w.count, 0)) / 3;
   const trend = recentAvg - earlierAvg;
-  if (lastWeek === 7) return { icon: FlameIcon, text: 'Perfect last week — all 7 days completed!', color: 'var(--accent)' };
-  if (trend > 1.5) return { icon: TrendingUpIcon, text: 'Weekly completions trending up — great momentum.', color: 'var(--accent)' };
-  if (trend < -1.5) return { icon: TrendingDownIcon, text: 'Completions dropping recently. Try pairing with an existing habit.', color: 'var(--accent-secondary)' };
-  if (lastWeek === 0) return { icon: AlertTriangleIcon, text: 'No completions last week. Start fresh today.', color: 'var(--accent-secondary)' };
+  if (lastWeek === 7) {return { icon: FlameIcon, text: 'Perfect last week — all 7 days completed!', color: 'var(--accent)' };}
+  if (trend > 1.5) {return { icon: TrendingUpIcon, text: 'Weekly completions trending up — great momentum.', color: 'var(--accent)' };}
+  if (trend < -1.5) {return { icon: TrendingDownIcon, text: 'Completions dropping recently. Try pairing with an existing habit.', color: 'var(--accent-secondary)' };}
+  if (lastWeek === 0) {return { icon: AlertTriangleIcon, text: 'No completions last week. Start fresh today.', color: 'var(--accent-secondary)' };}
   return { icon: LightbulbIcon, text: `${lastWeek}/7 days last week. Aim for one more next week.`, color: 'var(--text-muted)' };
 }
 

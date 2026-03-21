@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from 'react';
-import { AlertTriangleIcon, BarChart2Icon, DumbbellIcon, FlameIcon, LightbulbIcon, SproutIcon, TrendingDownIcon, TrendingUpIcon, ZapIcon } from 'lucide-react';
 import { useHabits } from '@/hooks/useHabits';
 import { formatAppDate } from '@/lib/i18n';
 import { toCompletionKey } from '@/lib/completionKey';
@@ -7,159 +6,9 @@ import { useNavigate } from '@/lib/router';
 import { StatsView } from './components/StatsView';
 import type { Habit } from '@/types/habit';
 import type { PeriodOption } from './components/StatsView';
-
+import { buildStatsSummary, buildStatsInsights, formatHabitLabel, filterStatsHabits } from './Stats.helpers';
+import { PERIOD_DAY_RANGES } from '@/lib/constants/stats';
 type Period = PeriodOption;
-
-const PERIOD_DAY_RANGES: Record<PeriodOption, number> = {
-  week: 7,
-  month: 30,
-  quarter: 90,
-  year: 365
-};
-
-const PERIOD_DISPLAY_NAMES: Record<PeriodOption, string> = {
-  week: 'week',
-  month: 'month',
-  quarter: 'quarter',
-  year: 'year'
-};
-
-type HabitStatsEntry = {
-  habit: Habit;
-  stats: ReturnType<ReturnType<typeof useHabits>['getHabitStats']>;
-};
-
-function formatHabitLabel(habit: Habit) {
-  return habit.icon ? `${habit.icon} ${habit.name}` : habit.name;
-}
-
-function filterStatsHabits(
-  habits: Habit[],
-  statusFilter: 'all' | 'active' | 'archived',
-  searchQuery: string,
-  selectedTags: string[]
-) {
-  return habits.filter((habit) => {
-    if (statusFilter === 'active' && habit.archived) {
-      return false;
-    }
-    if (statusFilter === 'archived' && !habit.archived) {
-      return false;
-    }
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase();
-      if (!habit.name.toLowerCase().includes(query) && !habit.description.toLowerCase().includes(query)) {
-        return false;
-      }
-    }
-    if (selectedTags.length > 0 && !(habit.tags || []).some((tag) => selectedTags.includes(tag))) {
-      return false;
-    }
-    return true;
-  });
-}
-
-function buildStatsSummary(allStats: HabitStatsEntry[]) {
-  const sorted = [...allStats].sort((a, b) => b.stats.completionRate - a.stats.completionRate);
-  const totalCompletions = allStats.reduce((sum, { stats }) => sum + stats.completedDays, 0);
-  const avgRate =
-    allStats.length > 0
-      ? Math.round(allStats.reduce((sum, { stats }) => sum + stats.completionRate, 0) / allStats.length)
-      : 0;
-
-  return {
-    sorted,
-    totalCompletions,
-    avgRate,
-    bestStreak: Math.max(...allStats.map(({ stats }) => stats.longestStreak), 0),
-    currentStreaks: allStats.reduce((sum, { stats }) => sum + (stats.currentStreak > 0 ? 1 : 0), 0)
-  };
-}
-
-function buildStatsInsights(
-  allStats: HabitStatsEntry[],
-  weekdayStats: WeekdayStats,
-  habitPeriodData: Array<Record<string, string | number>>,
-  filteredHabits: Habit[],
-  period: PeriodOption
-) {
-  const streakLeader =
-    allStats.length > 0
-      ? allStats.reduce((best, next) =>
-          next.stats.longestStreak > best.stats.longestStreak ? next : best,
-        allStats[0])
-      : null;
-  const bestCount = weekdayStats.counts[weekdayStats.bestIndex] ?? 0;
-  const worstCount = weekdayStats.counts[weekdayStats.worstIndex] ?? 0;
-  const weekdayDiffPercent =
-    worstCount === 0 ? bestCount * 100 : Math.round(((bestCount - worstCount) / Math.max(1, worstCount)) * 100);
-  const hasWeekdayShift = weekdayStats.bestWeekday !== 'N/A' && weekdayStats.worstWeekday !== 'N/A';
-  const improvedCount =
-    habitPeriodData.length > 1
-      ? filteredHabits.reduce((sum, habit) => {
-          const lastEntry = habitPeriodData[habitPeriodData.length - 1];
-          const prevEntry = habitPeriodData[habitPeriodData.length - 2];
-          const current = Number(lastEntry?.[habit.name] ?? 0);
-          const previous = Number(prevEntry?.[habit.name] ?? 0);
-          return current > previous ? sum + 1 : sum;
-        }, 0)
-      : 0;
-
-  let streakBody: string;
-  let streakIcon = LightbulbIcon;
-  if (streakLeader) {
-    const days = streakLeader.stats.longestStreak;
-    if (days >= 21) {
-      streakIcon = FlameIcon;
-      streakBody = `${formatHabitLabel(streakLeader.habit)} has ${days} days — this habit is becoming automatic.`;
-    } else if (days >= 7) {
-      streakIcon = DumbbellIcon;
-      streakBody = `${days} days on ${formatHabitLabel(streakLeader.habit)}. Aim for 21+ to build lasting automatism.`;
-    } else if (days > 0) {
-      streakIcon = SproutIcon;
-      streakBody = `Best streak is ${days} days. Complete any habit 7 days in a row to build momentum.`;
-    } else {
-      streakBody = 'No streaks yet. Complete any habit 3 days in a row to start building a chain.';
-    }
-  } else {
-    streakBody = 'No streaks registered yet.';
-  }
-
-  let weekdayBody: string;
-  let weekdayIcon = BarChart2Icon;
-  if (hasWeekdayShift) {
-    if (weekdayDiffPercent > 50) {
-      weekdayIcon = AlertTriangleIcon;
-      weekdayBody = `${weekdayStats.worstWeekday} is your weakest day — try a shorter goal or reminder that day.`;
-    } else {
-      weekdayBody = `${weekdayDiffPercent}% more completions on ${weekdayStats.bestWeekday} vs ${weekdayStats.worstWeekday}.`;
-    }
-  } else {
-    weekdayBody = 'Check back after a few active days to see your weekday patterns.';
-  }
-
-  const total = filteredHabits.length;
-  let momentumBody: string;
-  let momentumIcon = LightbulbIcon;
-  if (total === 0) {
-    momentumBody = 'No habits to measure yet.';
-  } else if (improvedCount === total) {
-    momentumIcon = ZapIcon;
-    momentumBody = `All ${total} habits improving this ${PERIOD_DISPLAY_NAMES[period]} — excellent momentum!`;
-  } else if (improvedCount === 0) {
-    momentumIcon = TrendingDownIcon;
-    momentumBody = `No habits improved this ${PERIOD_DISPLAY_NAMES[period]}. Focus on one habit to break the trend.`;
-  } else {
-    momentumIcon = TrendingUpIcon;
-    momentumBody = `${improvedCount} of ${total} habits improved. Push the other ${total - improvedCount} forward.`;
-  }
-
-  return [
-    { id: 'streak', title: 'Best streak', body: streakBody, icon: streakIcon },
-    { id: 'weekday', title: 'Weekday shift', body: weekdayBody, icon: weekdayIcon },
-    { id: 'momentum', title: 'Momentum', body: momentumBody, icon: momentumIcon }
-  ];
-}
 
 export function Stats() {
   const navigate = useNavigate();
@@ -181,10 +30,7 @@ export function Stats() {
   );
 
   const [hiddenHabits, setHiddenHabits] = useState<string[]>([]);
-  const visibleHabits = useMemo(
-    () => filteredHabits.filter((habit) => !hiddenHabits.includes(habit.name)),
-    [filteredHabits, hiddenHabits]
-  );
+  const visibleHabits = useMemo(() => filteredHabits.filter((habit) => !hiddenHabits.includes(habit.name)), [filteredHabits, hiddenHabits]);
   useEffect(() => {
     setHiddenHabits((prev) => {
       const allowed = new Set(filteredHabits.map((habit) => habit.name));
@@ -196,7 +42,6 @@ export function Stats() {
   const windowRange = useMemo(() => getWindowRange(period), [period]);
   const periodDayCount = PERIOD_DAY_RANGES[period] ?? 30;
   const periodSegments = useMemo(() => buildPeriodSegments(period, periodDayCount), [period, periodDayCount]);
-
   const allStats = useMemo(
     () => filteredHabits.map((h) => ({ habit: h, stats: getHabitStats(h.id) })),
     [filteredHabits, getHabitStats]
@@ -213,7 +58,6 @@ export function Stats() {
   );
 
   const summary = useMemo(() => buildStatsSummary(allStats), [allStats]);
-
   const weekdayStats = useMemo(
     () => buildWeekdayStats(filteredHabits, windowRange.start, windowRange.end),
     [filteredHabits, windowRange]
@@ -259,7 +103,6 @@ export function Stats() {
   const toggleTag = (tag: string) => {
     setSelectedTags((prev) => (prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]));
   };
-
   const toggleHabitVisibility = (name: string) => {
     setHiddenHabits((prev) =>
       prev.includes(name) ? prev.filter((item) => item !== name) : [...prev, name]

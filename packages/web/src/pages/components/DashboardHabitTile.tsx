@@ -1,6 +1,5 @@
 import { useCallback, useRef, useState } from 'react';
-import { AlertTriangleIcon, CheckCircle2Icon, CheckIcon, FlameIcon, LightbulbIcon, MoonIcon, SnowflakeIcon, SproutIcon, TrendingDownIcon, TrendingUpIcon, TrophyIcon } from 'lucide-react';
-import type { LucideIcon } from 'lucide-react';
+import { CheckIcon, FlameIcon, MoonIcon, SnowflakeIcon, TrophyIcon } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { CompletionRing } from '@/components/CompletionRing';
 import { HabitHeatmap } from '@/components/HabitHeatmap';
@@ -9,6 +8,7 @@ import type { HabitColorTheme } from '@/lib/theme/habit-colors';
 import { calculateScheduledCompletionRate, calculateScheduledStreak, getScheduleStatusForDate, isMandatoryToday } from '@/lib/habits/schedule';
 import { toCompletionKey } from '@/lib/completionKey';
 import type { Habit } from '@/types/habit';
+import { computeTileHint, type TileHint } from './DashboardHabitTile.helpers';
 
 const CONFETTI_COLORS = ['var(--accent)', 'var(--accent-secondary)', '#fff', 'var(--glow)'];
 
@@ -173,47 +173,6 @@ export function HabitRowToggleButton({
   );
 }
 
-type TileHint = { icon: LucideIcon; text: string; type: 'good' | 'warn' | 'tip' };
-
-function computeTileHint(habit: Habit, completionRate: number, streak: number): TileHint | null {
-  const target = Math.max(1, habit.dailyTarget ?? 1);
-  const today = new Date();
-  const habitAgeDays = Math.floor((today.getTime() - new Date(habit.createdAt).getTime()) / (1000 * 60 * 60 * 24));
-
-  // New habit — encourage, skip long-period comparisons
-  if (habitAgeDays < 7) {
-    if (streak > 0) return { icon: SproutIcon, text: `Day ${streak} — great start!`, type: 'good' };
-    return { icon: SproutIcon, text: 'New habit — start today!', type: 'tip' };
-  }
-
-  let recent7 = 0;
-  let prev7 = 0;
-  for (let i = 0; i < 7; i++) {
-    const d = new Date(today);
-    d.setDate(d.getDate() - i);
-    const key = toCompletionKey(d);
-    if ((habit.completions[key] ?? 0) >= target) recent7++;
-  }
-
-  // Only compare prev7 if the habit existed during that window
-  const canComparePrev = habitAgeDays >= 14;
-  if (canComparePrev) {
-    for (let i = 7; i < 14; i++) {
-      const d = new Date(today);
-      d.setDate(d.getDate() - i);
-      const key = toCompletionKey(d);
-      if ((habit.completions[key] ?? 0) >= target) prev7++;
-    }
-  }
-
-  const weekTrend = canComparePrev ? recent7 - prev7 : 0;
-  if (completionRate >= 80 && streak >= 5) return { icon: CheckCircle2Icon, text: 'On track — great consistency', type: 'good' };
-  if (weekTrend >= 3) return { icon: TrendingUpIcon, text: 'Trending up this week', type: 'good' };
-  if (streak === 0 && completionRate > 20) return { icon: AlertTriangleIcon, text: 'Restart your streak today', type: 'warn' };
-  if (canComparePrev && weekTrend <= -3 && recent7 < 3) return { icon: TrendingDownIcon, text: 'Losing momentum — stay consistent', type: 'warn' };
-  if (habitAgeDays >= 30 && completionRate < 40) return { icon: LightbulbIcon, text: 'Try adjusting schedule or goal', type: 'tip' };
-  return null;
-}
 
 function HabitTileMeta({
   habit,
