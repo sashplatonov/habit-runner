@@ -439,9 +439,9 @@ export function HabitPerformanceList({ sorted, navigate }: Pick<StatsViewProps, 
 
 export function WeeklyBreakdown({ allStats }: Pick<StatsViewProps, 'allStats'>) {
   return (
-    <div className="bg-bg-secondary border border-border rounded-lg p-4">
-      <div className="mb-3 flex items-center gap-2">
-        <h2 className="text-xs font-mono text-muted uppercase tracking-wider">Weekly breakdown</h2>
+    <div className="min-w-0 bg-bg-secondary border border-border rounded-lg p-4">
+      <div className="mb-3 flex min-w-0 items-center gap-2">
+        <h2 className="min-w-0 text-xs font-mono text-muted uppercase tracking-wider">Weekly breakdown</h2>
         <ChartGuideTooltip
           title="Weekly breakdown"
           summary="This compact view compares recent weekly volume for every habit so you can see which ones stay active and which ones fade out."
@@ -455,10 +455,10 @@ export function WeeklyBreakdown({ allStats }: Pick<StatsViewProps, 'allStats'>) 
       </div>
       <div className="space-y-3">
         {allStats.map(({ habit, stats }) => (
-          <div key={habit.id} className="flex items-center gap-3">
-            <span className="text-sm w-5">{habit.icon}</span>
-            <span className="text-[11px] text-muted w-20 truncate font-mono">{habit.name}</span>
-            <div className="flex-1 flex items-center gap-1 h-6">
+          <div key={habit.id} className="flex min-w-0 items-center gap-2 sm:gap-3">
+            <span className="w-5 flex-none text-sm">{habit.icon}</span>
+            <span className="min-w-0 w-16 sm:w-20 truncate text-[11px] font-mono text-muted">{habit.name}</span>
+            <div className="flex h-6 min-w-0 flex-1 items-center gap-1">
               {stats.weeklyData.map((week, index) => (
                 <div
                   key={index}
@@ -472,7 +472,7 @@ export function WeeklyBreakdown({ allStats }: Pick<StatsViewProps, 'allStats'>) 
                 />
               ))}
             </div>
-            <span className="text-[10px] font-mono w-8 text-right" style={{ color: HABIT_COLOR_THEMES[habit.color].hex }}>
+            <span className="w-8 flex-none text-right text-[10px] font-mono" style={{ color: HABIT_COLOR_THEMES[habit.color].hex }}>
               {stats.completionRate}%
             </span>
           </div>
@@ -490,8 +490,8 @@ export function HabitSortControls({
   handleSortChange: (key: 'rate' | 'streak' | 'name') => void;
 }) {
   return (
-    <div className="flex items-center gap-2 text-[11px] font-mono">
-      Sort by
+    <div className="flex flex-wrap items-center gap-2 text-[11px] font-mono">
+      <span className="text-muted">Sort by</span>
       {(['rate', 'streak', 'name'] as const).map((key) => (
         <button
           key={key}

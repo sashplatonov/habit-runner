@@ -1,5 +1,6 @@
-import { useState } from 'react';
-import { BarChart3Icon, CircleHelpIcon, Grid2x2Icon, TrendingUpIcon } from 'lucide-react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import type { RefObject } from 'react';
+import { BarChart3Icon, CircleHelpIcon, Grid2x2Icon, TrendingUpIcon, XIcon } from 'lucide-react';
 
 type ChartGuideVariant = 'bars' | 'line' | 'grid' | 'columns';
 
@@ -82,6 +83,137 @@ function renderVariantIcon(variant: ChartGuideVariant) {
   return <BarChart3Icon size={14} />;
 }
 
+function useTooltipOverlay(open: boolean, closeTooltip: () => void) {
+  const triggerRef = useRef<HTMLButtonElement | null>(null);
+  const panelRef = useRef<HTMLDivElement | null>(null);
+  const [position, setPosition] = useState({ left: 12, top: 12 });
+
+  useLayoutEffect(() => {
+    if (!open) {
+      return undefined;
+    }
+
+    const updatePosition = () => {
+      const trigger = triggerRef.current;
+      const panel = panelRef.current;
+      if (!trigger || !panel) {
+        return;
+      }
+
+      const viewportMargin = 12;
+      const triggerRect = trigger.getBoundingClientRect();
+      const panelRect = panel.getBoundingClientRect();
+      const maxLeft = Math.max(viewportMargin, window.innerWidth - panelRect.width - viewportMargin);
+      const preferredLeft = triggerRect.right - panelRect.width;
+      const left = Math.min(Math.max(viewportMargin, preferredLeft), maxLeft);
+
+      let top = triggerRect.bottom + 10;
+      if (top + panelRect.height > window.innerHeight - viewportMargin) {
+        top = Math.max(viewportMargin, triggerRect.top - panelRect.height - 10);
+      }
+
+      setPosition((current) => {
+        if (current.left === left && current.top === top) {
+          return current;
+        }
+        return { left, top };
+      });
+    };
+
+    updatePosition();
+    window.addEventListener('resize', updatePosition);
+    window.addEventListener('scroll', updatePosition, true);
+    return () => {
+      window.removeEventListener('resize', updatePosition);
+      window.removeEventListener('scroll', updatePosition, true);
+    };
+  }, [open]);
+
+  useEffect(() => {
+    if (!open) {
+      return undefined;
+    }
+
+    const handlePointerDown = (event: PointerEvent) => {
+      const target = event.target as Node | null;
+      if (triggerRef.current?.contains(target) || panelRef.current?.contains(target)) {
+        return;
+      }
+      closeTooltip();
+    };
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        closeTooltip();
+      }
+    };
+
+    window.addEventListener('pointerdown', handlePointerDown);
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('pointerdown', handlePointerDown);
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [open, closeTooltip]);
+
+  return { triggerRef, panelRef, position };
+}
+
+function TooltipPanel({
+  title,
+  summary,
+  focusPoints,
+  variant,
+  position,
+  panelRef,
+  closeTooltip
+}: ChartGuideTooltipProps & {
+  position: { left: number; top: number };
+  panelRef: RefObject<HTMLDivElement | null>;
+  closeTooltip: () => void;
+}) {
+  return (
+    <div
+      ref={panelRef}
+      className="fixed z-40 w-72 max-w-[calc(100vw-1.5rem)] rounded-3xl border border-border bg-bg-card/95 p-3 text-left shadow-[0_18px_60px_rgba(0,0,0,0.32)] backdrop-blur"
+      style={{ left: position.left, top: position.top }}
+    >
+      <div className="mb-3 flex items-center gap-2">
+        <div className="flex min-w-0 flex-1 items-center gap-2">
+          <div className="flex h-8 w-8 items-center justify-center rounded-2xl border border-accent/20 bg-accent/10 text-accent">
+            {renderVariantIcon(variant ?? 'bars')}
+          </div>
+          <div className="min-w-0">
+            <p className="text-[9px] font-mono uppercase tracking-[0.22em] text-muted">Why it matters</p>
+            <p className="truncate text-xs font-semibold text-foreground">{title}</p>
+          </div>
+        </div>
+        <button
+          type="button"
+          onClick={closeTooltip}
+          className="inline-flex h-8 w-8 flex-none items-center justify-center rounded-full border border-border bg-bg-primary/70 text-muted transition-colors hover:border-border-hover hover:text-foreground"
+          aria-label={`Close ${title} explanation`}
+        >
+          <XIcon size={14} />
+        </button>
+      </div>
+      <GuideVisual variant={variant ?? 'bars'} />
+      <p className="mt-3 text-[11px] leading-5 text-foreground">{summary}</p>
+      <div className="mt-3 rounded-2xl border border-border bg-bg-primary/60 px-3 py-2">
+        <p className="text-[9px] font-mono uppercase tracking-[0.22em] text-muted">Watch for</p>
+        <div className="mt-2 space-y-1.5">
+          {focusPoints.map((point) => (
+            <div key={point} className="flex items-start gap-2 text-[10px] font-mono text-muted">
+              <span className="mt-1 h-1.5 w-1.5 flex-none rounded-full bg-accent" />
+              <span>{point}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function ChartGuideTooltip({
   title,
   summary,
@@ -91,6 +223,11 @@ export function ChartGuideTooltip({
   const [isPinned, setIsPinned] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   const open = isPinned || isHovered;
+  const closeTooltip = useCallback(() => {
+    setIsPinned(false);
+    setIsHovered(false);
+  }, []);
+  const { triggerRef, panelRef, position } = useTooltipOverlay(open, closeTooltip);
 
   return (
     <div
@@ -99,17 +236,13 @@ export function ChartGuideTooltip({
       onMouseLeave={() => setIsHovered(false)}
     >
       <button
+        ref={triggerRef}
         type="button"
         aria-label={`Explain ${title}`}
         aria-expanded={open}
         onClick={() => setIsPinned((prev) => !prev)}
         onBlur={(event) => {
           if (!event.currentTarget.parentElement?.contains(event.relatedTarget as Node | null)) {
-            setIsPinned(false);
-          }
-        }}
-        onKeyDown={(event) => {
-          if (event.key === 'Escape') {
             setIsPinned(false);
           }
         }}
@@ -122,30 +255,15 @@ export function ChartGuideTooltip({
         <CircleHelpIcon size={14} strokeWidth={2.1} />
       </button>
       {open ? (
-        <div className="absolute right-0 top-full z-40 mt-2 w-72 max-w-[calc(100vw-2rem)] rounded-3xl border border-border bg-bg-card/95 p-3 text-left shadow-[0_18px_60px_rgba(0,0,0,0.32)] backdrop-blur">
-          <div className="mb-3 flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-2xl border border-accent/20 bg-accent/10 text-accent">
-              {renderVariantIcon(variant)}
-            </div>
-            <div className="min-w-0">
-              <p className="text-[9px] font-mono uppercase tracking-[0.22em] text-muted">Why it matters</p>
-              <p className="truncate text-xs font-semibold text-foreground">{title}</p>
-            </div>
-          </div>
-          <GuideVisual variant={variant} />
-          <p className="mt-3 text-[11px] leading-5 text-foreground">{summary}</p>
-          <div className="mt-3 rounded-2xl border border-border bg-bg-primary/60 px-3 py-2">
-            <p className="text-[9px] font-mono uppercase tracking-[0.22em] text-muted">Watch for</p>
-            <div className="mt-2 space-y-1.5">
-              {focusPoints.map((point) => (
-                <div key={point} className="flex items-start gap-2 text-[10px] font-mono text-muted">
-                  <span className="mt-1 h-1.5 w-1.5 flex-none rounded-full bg-accent" />
-                  <span>{point}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
+        <TooltipPanel
+          title={title}
+          summary={summary}
+          focusPoints={focusPoints}
+          variant={variant}
+          position={position}
+          panelRef={panelRef}
+          closeTooltip={closeTooltip}
+        />
       ) : null}
     </div>
   );
