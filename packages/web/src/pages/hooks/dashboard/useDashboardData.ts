@@ -175,28 +175,37 @@ function scoreMissFactor(habit: Habit, today: Date): number {
 }
 
 /**
- * Verplanken & Orbell, 2003 — high variance in completion gaps = unstable habit.
- * Returns stdDev of gaps between completions (capped at 3 → factor = 1).
+ * Verplanken & Orbell, 2003 — high variance in completion = unstable habit.
+ *
+ * Measures consistency ON SCHEDULED DAYS only (1 = done, 0 = miss).
+ * This way a 3×/week habit completed every scheduled day scores the same
+ * as a daily habit with perfect adherence — schedule is not penalised.
+ * Max binary variance is 0.25 (50/50 split), normalised to [0, 1].
  */
 function scoreVarianceFactor(habit: Habit, today: Date): number {
+  const schedule = resolveHabitSchedule(habit);
   const dailyTarget = Math.max(1, habit.dailyTarget ?? 1);
-  const completedDays: number[] = [];
+  const bits: number[] = [];
 
-  for (let i = 0; i < 60; i++) {
+  for (let i = 1; i <= 60; i++) {
     const date = new Date(today);
     date.setDate(date.getDate() - i);
     const key = toCompletionKey(date);
+    const calendarDate = completionKeyToCalendarDate(key);
+
+    if (!isScheduledForDate(schedule, calendarDate) || habit.freezeDays?.includes(calendarDate)) {
+      continue;
+    }
+
     const count = habit.completions[key] ?? 0;
-    const isSuccess = habit.type === 'negative' ? count === 0 : count >= dailyTarget;
-    if (isSuccess) { completedDays.push(i); }
+    bits.push(habit.type === 'negative' ? (count === 0 ? 1 : 0) : (count >= dailyTarget ? 1 : 0));
   }
 
-  if (completedDays.length < 3) { return 0.5; }
+  if (bits.length < 3) { return 0.5; }
 
-  const gaps = completedDays.slice(1).map((d, i) => d - completedDays[i]);
-  const mean = gaps.reduce((a, b) => a + b, 0) / gaps.length;
-  const stdDev = Math.sqrt(gaps.reduce((a, b) => a + (b - mean) ** 2, 0) / gaps.length);
-  return Math.min(stdDev / 3, 1);
+  const mean = bits.reduce((a, b) => a + b, 0) / bits.length;
+  const variance = bits.reduce((a, b) => a + (b - mean) ** 2, 0) / bits.length;
+  return Math.min(variance / 0.25, 1);
 }
 
 /**
