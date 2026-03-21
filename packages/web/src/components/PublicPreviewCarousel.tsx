@@ -5,6 +5,7 @@ import { StatsView, type ActivityWeek, type Insight, type PeriodOption } from '@
 import { AddEditHabitPage } from '@/pages/components/add-edit-habit/AddEditHabitPage';
 import { COLORS } from '@/pages/components/add-edit-habit.constants';
 import type { AddEditHabitModel } from '@/pages/hooks/useAddEditHabitModel';
+import { formatHabitLabel } from '@/lib/habits/formatHabitLabel';
 import { BrowserRouter } from '@/lib/router';
 import type { Habit } from '@/types/habit';
 import type { HabitSchedule } from '@habbit-runner/shared';
@@ -149,10 +150,6 @@ function buildDemoEditModel(): AddEditHabitModel {
     handleSubmit: async () => undefined,
     handleBack: () => undefined
   };
-}
-
-function formatHabitLabel(habit: Habit) {
-  return habit.icon ? `${habit.icon} ${habit.name}` : habit.name;
 }
 
 function buildDailyHabitDetails(habits: Habit[]) {

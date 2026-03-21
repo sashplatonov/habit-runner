@@ -6,8 +6,9 @@ import { useNavigate } from '@/lib/router';
 import { StatsView } from './components/StatsView';
 import type { Habit } from '@/types/habit';
 import type { PeriodOption } from './components/StatsView';
-import { buildStatsSummary, buildStatsInsights, formatHabitLabel, filterStatsHabits } from './Stats.helpers';
+import { buildStatsSummary, buildStatsInsights, filterStatsHabits } from './Stats.helpers';
 import { PERIOD_DAY_RANGES } from '@/lib/constants/stats';
+import { formatHabitLabel } from '@/lib/habits/formatHabitLabel';
 type Period = PeriodOption;
 
 export function Stats() {
