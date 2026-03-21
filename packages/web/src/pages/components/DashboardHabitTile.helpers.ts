@@ -1,7 +1,7 @@
 import type { LucideIcon } from 'lucide-react';
-import { AlertTriangleIcon, CheckCircle2Icon, LightbulbIcon, SproutIcon, TrendingDownIcon, TrendingUpIcon } from 'lucide-react';
 import { toCompletionKey } from '@/lib/completionKey';
 import type { Habit } from '@/types/habit';
+import { AlertTriangleIcon, CheckCircle2Icon, LightbulbIcon, SproutIcon, TrendingDownIcon, TrendingUpIcon } from 'lucide-react';
 
 export type TileHint = { icon: LucideIcon; text: string; type: 'good' | 'warn' | 'tip' };
 
@@ -66,7 +66,6 @@ export function computeTileHint(habit: Habit, completionRate: number, streak: nu
   const target = Math.max(1, habit.dailyTarget ?? 1);
   const habitAgeDays = getHabitAgeDays(habit);
 
-  // New habit — encourage, skip long-period comparisons
   if (habitAgeDays < 7) {
     return buildNewHabitHint(streak);
   }
@@ -76,7 +75,6 @@ export function computeTileHint(habit: Habit, completionRate: number, streak: nu
   const prev7 = canComparePrev ? getCompletionCount(habit, target, 7, 7) : 0;
   const weekTrend = canComparePrev ? recent7 - prev7 : 0;
 
-  // Check hints in order of priority
   const consistencyHint = buildConsistencyHint(completionRate, streak);
   if (consistencyHint) {
     return consistencyHint;
@@ -90,10 +88,6 @@ export function computeTileHint(habit: Habit, completionRate: number, streak: nu
   const restartHint = buildRestartHint(streak, completionRate);
   if (restartHint) {
     return restartHint;
-  }
-
-  if (canComparePrev && weekTrend <= -3 && recent7 < 3) {
-    return { icon: TrendingDownIcon, text: 'Losing momentum — stay consistent', type: 'warn' };
   }
 
   const adjustmentHint = buildAdjustmentHint(habitAgeDays, completionRate);

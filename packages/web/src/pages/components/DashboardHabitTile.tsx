@@ -174,6 +174,42 @@ export function HabitRowToggleButton({
 }
 
 
+function StreakIndicator({
+  streak,
+  isFrozen,
+  scheduledToday,
+  habitType
+}: {
+  streak: number;
+  isFrozen: boolean;
+  scheduledToday: boolean;
+  habitType: string;
+}) {
+  if (streak > 0 && !isFrozen && scheduledToday) {
+    if (habitType === 'negative') {
+      return (
+        <div className="flex items-center gap-0.5 text-accent-secondary">
+          <TrophyIcon size={9} className="flex-shrink-0" />
+          <span className="text-[10px] font-mono">{streak}d</span>
+        </div>
+      );
+    }
+    return (
+      <div className="flex items-center gap-0.5">
+        <FlameIcon size={9} className="text-accent-secondary flex-shrink-0" />
+        <span className="text-[10px] font-mono text-accent-secondary">{streak}</span>
+      </div>
+    );
+  }
+  if (isFrozen) {
+    return <SnowflakeIcon size={9} className="text-muted" />;
+  }
+  if (!scheduledToday) {
+    return <MoonIcon size={9} className="text-muted" />;
+  }
+  return null;
+}
+
 function HabitTileMeta({
   habit,
   completed,
@@ -201,23 +237,12 @@ function HabitTileMeta({
         )}
       </div>
       <div className="mt-0.5 h-4">
-        {streak > 0 && !isFrozen && scheduledToday ? (
-          habit.type === 'negative' ? (
-            <div className="flex items-center gap-0.5 text-accent-secondary">
-              <TrophyIcon size={9} className="flex-shrink-0" />
-              <span className="text-[10px] font-mono">{streak}d</span>
-            </div>
-          ) : (
-            <div className="flex items-center gap-0.5">
-              <FlameIcon size={9} className="text-accent-secondary flex-shrink-0" />
-              <span className="text-[10px] font-mono text-accent-secondary">{streak}</span>
-            </div>
-          )
-        ) : isFrozen ? (
-          <SnowflakeIcon size={9} className="text-muted" />
-        ) : !scheduledToday ? (
-          <MoonIcon size={9} className="text-muted" />
-        ) : null}
+        <StreakIndicator
+          streak={streak}
+          isFrozen={isFrozen}
+          scheduledToday={scheduledToday}
+          habitType={habit.type}
+        />
       </div>
       {hint && (
         <div className={`flex items-center gap-0.5 mt-1 truncate ${hintColor}`}>
