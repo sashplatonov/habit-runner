@@ -69,6 +69,7 @@ export type StatsViewProps = {
   dailyData: DailyDataPoint[];
   habitPeriodData: Array<Record<string, string | number>>;
   filteredHabits: Habit[];
+  dailyHabitDetails: Record<string, string[]>;
   sorted: HabitStatEntry[];
   allStats: HabitStatEntry[];
   bestWeekday: string;
@@ -376,7 +377,10 @@ function TabHabits({ navigate, allStats, sorted }: Pick<StatsViewProps, 'navigat
   );
 }
 
-function TabActivity({ filteredHabits }: Pick<StatsViewProps, 'filteredHabits'>) {
+function TabActivity({
+  filteredHabits,
+  dailyHabitDetails
+}: Pick<StatsViewProps, 'filteredHabits' | 'dailyHabitDetails'>) {
   const mergedCompletions = useMemo(() => {
     const merged: Record<string, number> = {};
     for (const habit of filteredHabits) {
@@ -398,7 +402,11 @@ function TabActivity({ filteredHabits }: Pick<StatsViewProps, 'filteredHabits'>)
         <h2 className="text-xs font-mono text-muted uppercase tracking-wider">Activity — 90 days</h2>
         <span className="text-[10px] font-mono text-muted">{filteredHabits.length} habits</span>
       </div>
-      <HabitHeatmap completions={mergedCompletions} dailyTarget={aggregateTarget} />
+      <HabitHeatmap
+        completions={mergedCompletions}
+        dailyTarget={aggregateTarget}
+        dayDetails={dailyHabitDetails}
+      />
     </div>
   );
 }
@@ -455,7 +463,7 @@ export function StatsView(props: StatsViewProps) {
           />
         )}
         {activeTab === 'activity' && (
-          <TabActivity filteredHabits={props.filteredHabits} />
+          <TabActivity filteredHabits={props.filteredHabits} dailyHabitDetails={props.dailyHabitDetails} />
         )}
       </div>
     </div>
