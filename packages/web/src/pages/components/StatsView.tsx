@@ -5,6 +5,7 @@ import { ChartGuideTooltip } from '@/components/ChartGuideTooltip';
 import type { Habit } from '@/types/habit';
 import { PeriodSelector, FiltersPanel, InsightsRow, DailyRateChart, PeriodTrendChart, HabitPerformanceList, WeeklyBreakdown, HabitSortControls } from './StatsViewPanels';
 import { HabitHeatmap } from '@/components/HabitHeatmap';
+import { OVERVIEW_SIGNALS_TOOLTIP, YOUR_INVESTMENT_TOOLTIP } from './blockGuideTooltips';
 import { getInvestmentColor, getInvestmentMessage } from './StatsView.helpers';
 
 export type HabitStats = {
@@ -107,41 +108,47 @@ function OverviewGrid({
   currentStreaks
 }: Pick<StatsViewProps, 'avgRate' | 'bestStreak' | 'totalCompletions' | 'currentStreaks'>) {
   return (
-    <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-      <div className="bg-bg-secondary border border-border rounded-lg p-3">
-        <div className="flex items-center gap-1 mb-2">
-          <ZapIcon size={10} className="text-accent" />
-          <span className="text-[9px] font-mono text-muted uppercase tracking-wider">Avg Rate</span>
-        </div>
-        <div className="text-2xl font-mono font-bold text-accent" style={{ textShadow: '0 0 12px var(--glow)' }}>
-          {avgRate}%
-        </div>
+    <div className="space-y-2">
+      <div className="flex items-center gap-2">
+        <h2 className="text-xs font-mono text-muted uppercase tracking-wider">Overview signals</h2>
+        <ChartGuideTooltip {...OVERVIEW_SIGNALS_TOOLTIP} triggerClassName="h-7 w-7" />
       </div>
-      <div className="bg-bg-secondary border border-border rounded-lg p-3">
-        <div className="flex items-center gap-1 mb-2">
-          <FlameIcon size={10} className="text-accent-secondary" />
-          <span className="text-[9px] font-mono text-muted uppercase tracking-wider">Best</span>
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+        <div className="bg-bg-secondary border border-border rounded-lg p-3">
+          <div className="flex items-center gap-1 mb-2">
+            <ZapIcon size={10} className="text-accent" />
+            <span className="text-[9px] font-mono text-muted uppercase tracking-wider">Avg Rate</span>
+          </div>
+          <div className="text-2xl font-mono font-bold text-accent" style={{ textShadow: '0 0 12px var(--glow)' }}>
+            {avgRate}%
+          </div>
         </div>
-        <div className="text-2xl font-mono font-bold text-accent-secondary">{bestStreak}d</div>
-      </div>
-      <div className="bg-bg-secondary border border-border rounded-lg p-3">
-        <div className="flex items-center gap-1 mb-2">
-          <TrendingUpIcon size={10} className="text-accent-secondary" />
-          <span className="text-[9px] font-mono text-muted uppercase tracking-wider">Total</span>
+        <div className="bg-bg-secondary border border-border rounded-lg p-3">
+          <div className="flex items-center gap-1 mb-2">
+            <FlameIcon size={10} className="text-accent-secondary" />
+            <span className="text-[9px] font-mono text-muted uppercase tracking-wider">Best</span>
+          </div>
+          <div className="text-2xl font-mono font-bold text-accent-secondary">{bestStreak}d</div>
         </div>
-        <div
-          className="text-2xl font-mono font-bold text-accent-secondary"
-          style={{ textShadow: '0 0 12px var(--glow-secondary)' }}
-        >
-          {totalCompletions}
+        <div className="bg-bg-secondary border border-border rounded-lg p-3">
+          <div className="flex items-center gap-1 mb-2">
+            <TrendingUpIcon size={10} className="text-accent-secondary" />
+            <span className="text-[9px] font-mono text-muted uppercase tracking-wider">Total</span>
+          </div>
+          <div
+            className="text-2xl font-mono font-bold text-accent-secondary"
+            style={{ textShadow: '0 0 12px var(--glow-secondary)' }}
+          >
+            {totalCompletions}
+          </div>
         </div>
-      </div>
-      <div className="bg-bg-secondary border border-border rounded-lg p-3">
-        <div className="flex items-center gap-1 mb-2">
-          <CalendarIcon size={10} className="text-muted" />
-          <span className="text-[9px] font-mono text-muted uppercase tracking-wider">Active</span>
+        <div className="bg-bg-secondary border border-border rounded-lg p-3">
+          <div className="flex items-center gap-1 mb-2">
+            <CalendarIcon size={10} className="text-muted" />
+            <span className="text-[9px] font-mono text-muted uppercase tracking-wider">Active</span>
+          </div>
+          <div className="text-2xl font-mono font-bold text-foreground">{currentStreaks}</div>
         </div>
-        <div className="text-2xl font-mono font-bold text-foreground">{currentStreaks}</div>
       </div>
     </div>
   );
@@ -168,7 +175,10 @@ function InvestmentSection({
     <div className="bg-bg-secondary border border-border rounded-lg p-4 space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-xs font-mono text-muted uppercase tracking-wider">Your Investment</h2>
+          <div className="flex items-center gap-2">
+            <h2 className="text-xs font-mono text-muted uppercase tracking-wider">Your Investment</h2>
+            <ChartGuideTooltip {...YOUR_INVESTMENT_TOOLTIP} triggerClassName="h-7 w-7" />
+          </div>
           <p className="text-[10px] text-muted mt-1 italic">Progress across habits this window</p>
         </div>
         <div className="text-2xl font-mono font-bold text-accent">{percent}%</div>

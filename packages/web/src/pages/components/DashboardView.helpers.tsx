@@ -1,4 +1,5 @@
 import { GripVerticalIcon, SnowflakeIcon, FlameIcon, TrophyIcon } from 'lucide-react';
+import { ChartGuideTooltip } from '@/components/ChartGuideTooltip';
 import { CompletionRing } from '@/components/CompletionRing';
 import { MiniHeatmap } from '@/components/MiniHeatmap';
 import { HABIT_COLOR_THEMES } from '@/lib/theme/habit-colors';
@@ -388,6 +389,17 @@ function HabitRowCardContent({
           />
         </div>
         <div className="flex items-center gap-2 flex-shrink-0">
+          <ChartGuideTooltip
+            title={`${habit.name} row`}
+            summary="This row condenses one habit into a fast scan: current status, short-term history, completion rate, and a direct action button."
+            focusPoints={[
+              'Status and tags: see whether the habit is due, frozen, or off-schedule today.',
+              'Right-side metrics: streak, rate ring, and recent bars reveal momentum.',
+              'Toggle button: update today without leaving the dashboard.'
+            ]}
+            variant="columns"
+            triggerClassName="hidden sm:inline-flex h-7 w-7"
+          />
           <HabitRowMetrics
             habit={habit}
             target={Math.max(1, habit.dailyTarget ?? 1)}

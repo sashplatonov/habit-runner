@@ -1,4 +1,5 @@
 import { BellRingIcon } from 'lucide-react';
+import { ChartGuideTooltip } from '@/components/ChartGuideTooltip';
 import type { DashboardViewProps } from './DashboardHero';
 
 export function RemindersPanel({
@@ -13,6 +14,20 @@ export function RemindersPanel({
   }
   return (
     <div className="max-w-2xl mx-auto px-4 py-3 space-y-2">
+      <div className="flex items-center gap-2">
+        <h2 className="text-xs font-mono text-muted uppercase tracking-wider">Reminders</h2>
+        <ChartGuideTooltip
+          title="Reminders"
+          summary="This block surfaces habits that need attention right now, so you can act without hunting through the full dashboard."
+          focusPoints={[
+            'Mark done: close the habit directly from the reminder.',
+            'Dismiss: hide the prompt for now without changing reminder settings.',
+            'Disable: stop future alerts if this reminder timing is no longer useful.'
+          ]}
+          variant="columns"
+          triggerClassName="h-7 w-7"
+        />
+      </div>
       {reminders.map((reminder) => {
         const habit = habits.find((item) => item.id === reminder.habitId);
         if (!habit) {

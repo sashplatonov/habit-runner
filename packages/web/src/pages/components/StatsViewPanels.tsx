@@ -5,6 +5,7 @@ import { ChartGuideTooltip } from '@/components/ChartGuideTooltip';
 import { HABIT_COLOR_THEMES } from '@/lib/theme/habit-colors';
 import { invokeIfFunction } from '@/lib/callback';
 import type { Habit, StatsViewProps, Insight, PeriodOption } from './StatsView';
+import { INSIGHTS_TOOLTIP } from './blockGuideTooltips';
 import { buildQuarterTickMeta, formatQuarterWeekLabel, buildDailyChartInsight, habitStatusLabel } from './StatsViewPanels.helpers';
 
 const PERIOD_OPTIONS: Array<{ id: PeriodOption; label: string }> = [
@@ -230,19 +231,25 @@ export function FiltersPanel({
 
 export function InsightsRow({ insights }: { insights: Insight[] }) {
   return (
-    <div className="grid gap-4 md:grid-cols-3">
-      {insights.map((insight) => {
-        const Icon = insight.icon ?? SparklesIcon;
-        return (
-          <div key={insight.id} className="bg-bg-secondary border border-border rounded-lg p-4 space-y-2">
-            <div className="flex items-center gap-2">
-              <Icon size={16} className="text-accent flex-shrink-0" />
-              <p className="text-[10px] font-mono text-muted uppercase tracking-[0.2em]">{insight.title}</p>
+    <div className="space-y-2">
+      <div className="flex items-center gap-2">
+        <h2 className="text-xs font-mono text-muted uppercase tracking-wider">Insights</h2>
+        <ChartGuideTooltip {...INSIGHTS_TOOLTIP} triggerClassName="h-7 w-7" />
+      </div>
+      <div className="grid gap-4 md:grid-cols-3">
+        {insights.map((insight) => {
+          const Icon = insight.icon ?? SparklesIcon;
+          return (
+            <div key={insight.id} className="bg-bg-secondary border border-border rounded-lg p-4 space-y-2">
+              <div className="flex items-center gap-2">
+                <Icon size={16} className="text-accent flex-shrink-0" />
+                <p className="text-[10px] font-mono text-muted uppercase tracking-[0.2em]">{insight.title}</p>
+              </div>
+              <p className="text-sm text-foreground">{insight.body}</p>
             </div>
-            <p className="text-sm text-foreground">{insight.body}</p>
-          </div>
-        );
-      })}
+          );
+        })}
+      </div>
     </div>
   );
 }
