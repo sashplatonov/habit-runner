@@ -3,16 +3,11 @@ import {
   ArrowLeftIcon,
   BarChart2Icon,
   CheckCircle2Icon,
-  DumbbellIcon,
   EditIcon,
   FlameIcon,
   LightbulbIcon,
-  SproutIcon,
   TrendingDownIcon,
   TrendingUpIcon,
-  TrophyIcon,
-  CalendarIcon,
-  TargetIcon,
   TrashIcon,
   ArchiveIcon,
   ArchiveRestoreIcon,
@@ -24,6 +19,8 @@ import { HabitHeatmap } from '@/components/HabitHeatmap';
 import { HabitRetroCalendar } from './HabitRetroCalendar';
 import { TodayBlock } from './HabitDetailTodayBlock';
 import { CompletionRing } from '@/components/CompletionRing';
+import { StatCardGrid } from './StatCardGrid';
+import { AutomatismSection } from './AutomatismSection';
 import {
   LineChart,
   Line,
@@ -204,153 +201,7 @@ function HabitDetailHeader({
   );
 }
 
-function StatCardGrid({ stats, accent, habitCreatedAt }: Pick<HabitDetailViewProps, 'stats' | 'accent'> & { habitCreatedAt: string }) {
-  const habitAgeDays = Math.floor((Date.now() - new Date(habitCreatedAt).getTime()) / (1000 * 60 * 60 * 24));
-  const rateWindowDays = Math.min(30, habitAgeDays);
-  const rateWindowLabel = rateWindowDays < 30 ? `${rateWindowDays}d` : '30 days';
 
-  type Hint = { icon: LucideIcon; text: string };
-
-  const streakHint: Hint =
-    stats.currentStreak === 0
-      ? { icon: FlameIcon, text: 'Start today' }
-      : stats.currentStreak >= stats.longestStreak && stats.longestStreak > 0
-        ? { icon: TrophyIcon, text: 'Personal best!' }
-        : { icon: FlameIcon, text: `${stats.longestStreak - stats.currentStreak}d to record` };
-
-  const bestHint: Hint =
-    stats.longestStreak >= 21
-      ? { icon: CheckCircle2Icon, text: 'Habit established' }
-      : stats.longestStreak >= 7
-        ? { icon: DumbbellIcon, text: 'Good foundation' }
-        : { icon: TargetIcon, text: 'Target: 7 days' };
-
-  const rateHint: Hint =
-    habitAgeDays < 7
-      ? { icon: SproutIcon, text: 'Just started' }
-      : habitAgeDays < 14
-        ? stats.completionRate >= 60
-          ? { icon: CheckCircle2Icon, text: 'Strong start!' }
-          : { icon: DumbbellIcon, text: 'Keep building' }
-        : stats.completionRate >= 80
-          ? { icon: CheckCircle2Icon, text: 'Excellent' }
-          : stats.completionRate >= 60
-            ? { icon: LightbulbIcon, text: 'Aim for 80%+' }
-            : stats.completionRate >= 40
-              ? { icon: TrendingUpIcon, text: 'Room to grow' }
-              : { icon: AlertTriangleIcon, text: 'Needs focus' };
-
-  const totalHint: Hint =
-    stats.completedDays >= 100
-      ? { icon: TrophyIcon, text: '100+ milestone!' }
-      : { icon: CalendarIcon, text: `${100 - stats.completedDays} to 100` };
-
-  const rateColor =
-    habitAgeDays < 14
-      ? stats.completionRate >= 60 ? 'text-accent' : 'text-accent-secondary'
-      : stats.completionRate >= 80 ? 'text-accent' : stats.completionRate >= 50 ? 'text-accent-secondary' : 'text-muted';
-
-  return (
-    <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-      <div className="bg-bg-secondary border border-border rounded-lg p-3">
-        <div className="flex items-center gap-1 mb-2">
-          <FlameIcon size={10} className="text-accent-secondary" />
-          <span className="text-[9px] font-mono text-muted uppercase tracking-wider">Streak</span>
-        </div>
-        <div className="text-xl font-mono font-bold text-accent-secondary">{stats.currentStreak}</div>
-        <div className="text-[9px] font-mono text-muted">days</div>
-        <div className={`flex items-center gap-0.5 mt-1 ${stats.currentStreak === 0 ? 'text-accent-secondary' : stats.currentStreak >= stats.longestStreak ? 'text-accent' : 'text-muted'}`}>
-          <streakHint.icon size={8} className="flex-shrink-0" />
-          <span className="text-[9px] font-mono">{streakHint.text}</span>
-        </div>
-      </div>
-      <div className="bg-bg-secondary border border-border rounded-lg p-3">
-        <div className="flex items-center gap-1 mb-2">
-          <TargetIcon size={10} style={{ color: accent.hex }} />
-          <span className="text-[9px] font-mono text-muted uppercase tracking-wider">Best</span>
-        </div>
-        <div className="text-xl font-mono font-bold" style={{ color: accent.hex }}>
-          {stats.longestStreak}
-        </div>
-        <div className="text-[9px] font-mono text-muted">days</div>
-        <div className={`flex items-center gap-0.5 mt-1 ${stats.longestStreak >= 21 ? 'text-accent' : stats.longestStreak >= 7 ? 'text-accent-secondary' : 'text-muted'}`}>
-          <bestHint.icon size={8} className="flex-shrink-0" />
-          <span className="text-[9px] font-mono">{bestHint.text}</span>
-        </div>
-      </div>
-      <div className="bg-bg-secondary border border-border rounded-lg p-3">
-        <div className="flex items-center gap-1 mb-2">
-          <TrendingUpIcon size={10} className="text-accent-secondary" />
-          <span className="text-[9px] font-mono text-muted uppercase tracking-wider">Rate</span>
-        </div>
-        <div className="text-xl font-mono font-bold text-accent-secondary">{stats.completionRate}%</div>
-        <div className="text-[9px] font-mono text-muted">{rateWindowLabel}</div>
-        <div className={`flex items-center gap-0.5 mt-1 ${rateColor}`}>
-          <rateHint.icon size={8} className="flex-shrink-0" />
-          <span className="text-[9px] font-mono">{rateHint.text}</span>
-        </div>
-      </div>
-      <div className="bg-bg-secondary border border-border rounded-lg p-3">
-        <div className="flex items-center gap-1 mb-2">
-          <CalendarIcon size={10} className="text-muted" />
-          <span className="text-[9px] font-mono text-muted uppercase tracking-wider">Total</span>
-        </div>
-        <div className="text-xl font-mono font-bold text-foreground">{stats.completedDays}</div>
-        <div className="text-[9px] font-mono text-muted">days</div>
-        <div className={`flex items-center gap-0.5 mt-1 ${stats.completedDays >= 100 ? 'text-accent' : 'text-muted'}`}>
-          <totalHint.icon size={8} className="flex-shrink-0" />
-          <span className="text-[9px] font-mono">{totalHint.text}</span>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function AutomatismSection({ score, accent }: { score: number; accent: HabitColorTheme }) {
-  const getLevel = (s: number) => {
-    if (s >= 85) {return { label: 'Infallible', color: accent.hex };}
-    if (s >= 66) {return { label: 'Established', color: accent.hex };}
-    if (s >= 40) {return { label: 'Growing', color: 'var(--text-foreground)' };}
-    return { label: 'Fragile', color: 'var(--text-muted)' };
-  };
-
-  const level = getLevel(score);
-  return (
-    <div className="bg-bg-secondary border border-border rounded-xl p-4">
-      <div className="flex items-center justify-between mb-3">
-        <div className="flex flex-col">
-          <span className="text-[10px] font-mono text-muted uppercase tracking-widest">Habit Strength</span>
-          <span className="text-lg font-bold text-foreground">Automatism: {score}%</span>
-        </div>
-        <div 
-          className="px-2 py-0.5 rounded text-[10px] font-mono uppercase font-bold border"
-          style={{ borderColor: level.color, color: level.color }}
-        >
-          {level.label}
-        </div>
-      </div>
-      <div className="h-2 bg-border rounded-full overflow-hidden">
-        <div 
-          className="h-full transition-all duration-1000 ease-out"
-          style={{ 
-            width: `${score}%`, 
-            backgroundColor: accent.hex,
-            boxShadow: `0 0 10px ${accent.glow}`
-          }}
-        />
-      </div>
-      <div className="mt-2 text-[10px] leading-relaxed font-mono" style={{ color: score >= 66 ? 'var(--accent)' : score >= 40 ? 'var(--accent-secondary)' : 'var(--text-muted)' }}>
-        {score >= 85
-          ? 'This habit runs on autopilot — your routine is locked in.'
-          : score >= 66
-            ? 'Habit is established. Keep consistent to push it further.'
-            : score >= 40
-              ? `${Math.max(1, 66 - Math.round(score * 0.66))} more active days to reach "automatic" state.`
-              : 'Habit is still fragile. Daily repetition is critical right now.'}
-      </div>
-    </div>
-  );
-}
 
 function TargetRingSection({ stats, habit, accent }: Pick<HabitDetailViewProps, 'stats' | 'habit' | 'accent'>) {
   const remaining = habit.targetStreak - stats.currentStreak;

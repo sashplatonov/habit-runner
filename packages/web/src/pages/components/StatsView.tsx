@@ -5,6 +5,7 @@ import { ChartGuideTooltip } from '@/components/ChartGuideTooltip';
 import type { Habit } from '@/types/habit';
 import { PeriodSelector, FiltersPanel, InsightsRow, DailyRateChart, PeriodTrendChart, HabitPerformanceList, WeeklyBreakdown, HabitSortControls } from './StatsViewPanels';
 import { HabitHeatmap } from '@/components/HabitHeatmap';
+import { getInvestmentColor, getInvestmentMessage } from './StatsView.helpers';
 
 export type HabitStats = {
   completionRate: number;
@@ -161,6 +162,8 @@ function InvestmentSection({
   const hasWorstDay = worstDay !== 'N/A';
   const displayBestDay = hasBestDay ? bestDay : '—';
   const displayWorstDay = hasWorstDay ? worstDay : '—';
+  const investmentColor = getInvestmentColor(percent);
+  const investmentMessage = getInvestmentMessage(percent, worstDay);
   return (
     <div className="bg-bg-secondary border border-border rounded-lg p-4 space-y-4">
       <div className="flex items-center justify-between">
@@ -170,7 +173,7 @@ function InvestmentSection({
         </div>
         <div className="text-2xl font-mono font-bold text-accent">{percent}%</div>
       </div>
-        <div className="grid grid-cols-3 gap-2">
+      <div className="grid grid-cols-3 gap-2">
         <div className="p-2 bg-bg-card border border-border rounded-lg text-center">
           <p className="text-[8px] font-mono text-muted uppercase">Best Day</p>
           <p
@@ -200,14 +203,8 @@ function InvestmentSection({
           style={{ width: `${percent}%`, boxShadow: `0 0 10px var(--glow)` }}
         />
       </div>
-      <p className="text-[10px] font-mono text-center" style={{ color: percent >= 70 ? 'var(--accent)' : percent >= 40 ? 'var(--accent-secondary)' : 'var(--text-muted)' }}>
-        {percent >= 80
-          ? `Active ${percent}% of days — excellent consistency!`
-          : percent >= 60
-            ? `Active ${percent}% of days. Try filling the gaps on ${worstDay !== 'N/A' ? worstDay : 'your slow days'}.`
-            : percent >= 30
-              ? `Active ${percent}% of days — build a daily routine to improve this.`
-              : `Only ${percent}% active. Start with completing just one habit per day.`}
+      <p className="text-[10px] font-mono text-center" style={{ color: investmentColor }}>
+        {investmentMessage}
       </p>
     </div>
   );

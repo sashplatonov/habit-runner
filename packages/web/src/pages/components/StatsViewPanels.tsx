@@ -1,11 +1,11 @@
-import { AlertTriangleIcon, ArrowUpDownIcon, CheckCircle2Icon, FlameIcon, LightbulbIcon, SearchIcon, SparklesIcon, TagIcon, TrendingDownIcon, TrendingUpIcon } from 'lucide-react';
-import type { LucideIcon } from 'lucide-react';
+import { ArrowUpDownIcon, FlameIcon, SearchIcon, SparklesIcon, TagIcon } from 'lucide-react';
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 import { CompletionRing } from '@/components/CompletionRing';
 import { ChartGuideTooltip } from '@/components/ChartGuideTooltip';
 import { HABIT_COLOR_THEMES } from '@/lib/theme/habit-colors';
 import { invokeIfFunction } from '@/lib/callback';
 import type { Habit, StatsViewProps, Insight, PeriodOption } from './StatsView';
+import { buildQuarterTickMeta, formatQuarterWeekLabel, buildDailyChartInsight, habitStatusLabel } from './StatsViewPanels.helpers';
 
 const PERIOD_OPTIONS: Array<{ id: PeriodOption; label: string }> = [
   { id: 'week', label: 'W' },
@@ -247,35 +247,6 @@ export function InsightsRow({ insights }: { insights: Insight[] }) {
   );
 }
 
-function buildDailyChartInsight(avgRate: number, dailyData: { day: string; rate: number }[]): { icon: LucideIcon; text: string; color: string } {
-  if (dailyData.length < 3) {
-    return { icon: LightbulbIcon, text: 'Add more data to see insights.', color: 'text-muted' };
-  }
-  const recent = dailyData.slice(-3).map(d => d.rate);
-  const earlier = dailyData.slice(-6, -3).map(d => d.rate);
-  const recentAvg = recent.reduce((s, v) => s + v, 0) / recent.length;
-  const earlierAvg = earlier.length > 0 ? earlier.reduce((s, v) => s + v, 0) / earlier.length : recentAvg;
-  const trend = recentAvg - earlierAvg;
-  const bestDay = dailyData.reduce((best, d) => d.rate > best.rate ? d : best, dailyData[0]);
-
-  if (avgRate >= 75 && trend >= 0) {
-    return { icon: CheckCircle2Icon, text: `Strong performance — ${avgRate}% avg and trending up.`, color: 'text-accent' };
-  }
-  if (trend >= 15) {
-    return { icon: TrendingUpIcon, text: 'Big improvement recently. Keep the momentum going.', color: 'text-accent' };
-  }
-  if (trend <= -20) {
-    return { icon: TrendingDownIcon, text: 'Completion dropped in the last few days. Try starting with just one habit.', color: 'text-accent-secondary' };
-  }
-  if (avgRate < 40) {
-    return { icon: AlertTriangleIcon, text: 'Low avg — check if your habit schedule matches your routine.', color: 'text-accent-secondary' };
-  }
-  if (bestDay.rate === 100) {
-    return { icon: FlameIcon, text: `You hit 100% on ${bestDay.day}. Replicate that day's conditions.`, color: 'text-muted' };
-  }
-  return { icon: LightbulbIcon, text: `${avgRate}% avg. Aim for at least 70% daily consistency.`, color: 'text-muted' };
-}
-
 export function DailyRateChart({ avgRate, dailyData, period }: Pick<StatsViewProps, 'avgRate' | 'dailyData' | 'period'>) {
   const insight = buildDailyChartInsight(avgRate, dailyData);
   const quarterTickMeta = period === 'quarter'
@@ -422,22 +393,6 @@ export function PeriodTrendChart({
       </ResponsiveContainer>
     </div>
   );
-}
-
-function habitStatusLabel(completionRate: number, currentStreak: number, longestStreak: number): { label: string; color: string } {
-  if (completionRate >= 75 && currentStreak >= 3) {
-    return { label: 'strong', color: 'text-accent' };
-  }
-  if (currentStreak === 0 && longestStreak >= 7) {
-    return { label: 'lost streak', color: 'text-accent-secondary' };
-  }
-  if (completionRate < 40) {
-    return { label: 'needs focus', color: 'text-accent-secondary' };
-  }
-  if (completionRate >= 50) {
-    return { label: 'steady', color: 'text-muted' };
-  }
-  return { label: 'struggling', color: 'text-accent-secondary' };
 }
 
 export function HabitPerformanceList({ sorted, navigate }: Pick<StatsViewProps, 'sorted' | 'navigate'>) {
