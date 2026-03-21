@@ -376,8 +376,8 @@ function TabHabits({ navigate, allStats, sorted }: Pick<StatsViewProps, 'navigat
   };
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between gap-4">
-        <div className="flex items-center gap-2">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex min-w-0 items-center gap-2">
           <h2 className="text-xs font-mono text-muted uppercase tracking-wider">Habit performance</h2>
           <ChartGuideTooltip
             title="Habit performance"
@@ -393,8 +393,12 @@ function TabHabits({ navigate, allStats, sorted }: Pick<StatsViewProps, 'navigat
         <HabitSortControls habitSort={habitSort} handleSortChange={handleSortChange} />
       </div>
       <div className="grid gap-4 md:grid-cols-[2fr,1fr]">
-        <HabitPerformanceList sorted={sortedStats} navigate={navigate} />
-        <WeeklyBreakdown allStats={allStats} />
+        <div className="min-w-0">
+          <HabitPerformanceList sorted={sortedStats} navigate={navigate} />
+        </div>
+        <div className="min-w-0">
+          <WeeklyBreakdown allStats={allStats} />
+        </div>
       </div>
     </div>
   );
