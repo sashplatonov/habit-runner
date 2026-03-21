@@ -40,6 +40,10 @@ function CustomTooltip({
   return null;
 }
 
+function formatHabitLabel(habit: Habit) {
+  return habit.icon ? `${habit.icon} ${habit.name}` : habit.name;
+}
+
 function DailyTooltip({
   active,
   payload,
@@ -239,7 +243,7 @@ export function PeriodTrendChart({
                   : 'border-accent/40 bg-accent/10 text-accent'
               }`}
             >
-              {habit.name}
+              {formatHabitLabel(habit)}
             </button>
           ))}
         </div>
@@ -255,6 +259,7 @@ export function PeriodTrendChart({
               key={habit.id}
               type="monotone"
               dataKey={habit.name}
+              name={formatHabitLabel(habit)}
               stroke={HABIT_COLOR_THEMES[habit.color].hex}
               strokeWidth={2}
               dot={{ r: 3, fill: HABIT_COLOR_THEMES[habit.color].hex, strokeWidth: 0 }}
