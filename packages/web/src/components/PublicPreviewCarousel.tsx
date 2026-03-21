@@ -151,6 +151,26 @@ function buildDemoEditModel(): AddEditHabitModel {
   };
 }
 
+function formatHabitLabel(habit: Habit) {
+  return habit.icon ? `${habit.icon} ${habit.name}` : habit.name;
+}
+
+function buildDailyHabitDetails(habits: Habit[]) {
+  const details: Record<string, string[]> = {};
+  habits.forEach((habit) => {
+    const threshold = Math.max(1, habit.dailyTarget ?? 1);
+    Object.entries(habit.completions).forEach(([date, count]) => {
+      if ((count ?? 0) >= threshold) {
+        if (!details[date]) {
+          details[date] = [];
+        }
+        details[date].push(formatHabitLabel(habit));
+      }
+    });
+  });
+  return details;
+}
+
 function buildDemoStatsModel(habits: Habit[]) {
   const allStats = habits.map((habit, idx) => ({
     habit,
@@ -191,6 +211,7 @@ function buildDemoStatsModel(habits: Habit[]) {
     }
   ];
   const period: PeriodOption = 'month';
+  const dailyHabitDetails = buildDailyHabitDetails(habits);
 
   return {
     navigate: () => undefined,
@@ -218,6 +239,7 @@ function buildDemoStatsModel(habits: Habit[]) {
     ],
     habitPeriodData,
     filteredHabits: habits,
+    dailyHabitDetails,
     sorted: [...allStats].sort((a, b) => b.stats.completionRate - a.stats.completionRate),
     allStats,
     bestWeekday: 'Wednesday',
