@@ -1,3 +1,4 @@
+import { ChartGuideTooltip } from '@/components/ChartGuideTooltip';
 import type { HabitColorTheme } from '@/lib/theme/habit-colors';
 
 function getLevel(score: number, accentHex: string) {
@@ -45,7 +46,20 @@ export function AutomatismSection({ score, accent }: { score: number; accent: Ha
     <div className="bg-bg-secondary border border-border rounded-xl p-4">
       <div className="flex items-center justify-between mb-3">
         <div className="flex flex-col">
-          <span className="text-[10px] font-mono text-muted uppercase tracking-widest">Habit Strength</span>
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] font-mono text-muted uppercase tracking-widest">Habit Strength</span>
+            <ChartGuideTooltip
+              title="Habit strength"
+              summary="Automatism estimates how embedded this habit already is, so you can judge whether the routine is fragile, growing, or close to autopilot."
+              focusPoints={[
+                'Higher score: less friction and more repeatable execution.',
+                'Level badge: quick read on the current maturity stage.',
+                'Use drops in this block as a signal to simplify timing or target.'
+              ]}
+              variant="line"
+              triggerClassName="h-7 w-7"
+            />
+          </div>
           <span className="text-lg font-bold text-foreground">Automatism: {score}%</span>
         </div>
         <div

@@ -1,6 +1,7 @@
 import { useCallback, useRef, useState } from 'react';
 import { CheckIcon, FlameIcon, MoonIcon, SnowflakeIcon, TrophyIcon } from 'lucide-react';
 import confetti from 'canvas-confetti';
+import { ChartGuideTooltip } from '@/components/ChartGuideTooltip';
 import { CompletionRing } from '@/components/CompletionRing';
 import { HabitHeatmap } from '@/components/HabitHeatmap';
 import { HABIT_COLOR_THEMES } from '@/lib/theme/habit-colors';
@@ -335,7 +336,20 @@ export function HabitTile({
           >
             {habit.icon}
           </div>
-          <CompletionRing percentage={presentation.completionRate} size={26} strokeWidth={2.5} color={habit.color} showText={false} />
+          <div className="flex items-center gap-1">
+            <ChartGuideTooltip
+              title={`${habit.name} card`}
+              summary="This card is your quick control surface for one habit: review today's status, recent consistency, and mark progress without opening details."
+              focusPoints={[
+                'Top-right ring: long-term completion rate for this habit.',
+                'Bottom heatmap: recent activity pattern and dead zones.',
+                'Action button: log today progress directly from the dashboard.'
+              ]}
+              variant="grid"
+              triggerClassName="h-7 w-7"
+            />
+            <CompletionRing percentage={presentation.completionRate} size={26} strokeWidth={2.5} color={habit.color} showText={false} />
+          </div>
         </div>
 
         <HabitTileMeta

@@ -1,3 +1,4 @@
+import { ChartGuideTooltip } from '@/components/ChartGuideTooltip';
 import type { ActivityDay, ActivityWeek, PeriodOption } from './StatsView';
 
 const HEATMAP_LEVELS = [0.18, 0.38, 0.62, 0.88];
@@ -195,7 +196,20 @@ export function ActivityHeatmap({ weeks, period }: { weeks: ActivityWeek[]; peri
   if (inWindow.length === 0) {
     return (
       <div className="bg-bg-secondary border border-border rounded-lg p-3">
-        <h2 className="text-xs font-mono text-muted uppercase tracking-wider mb-2">Focus intensity</h2>
+        <div className="mb-2 flex items-center gap-2">
+          <h2 className="text-xs font-mono text-muted uppercase tracking-wider">Focus intensity</h2>
+          <ChartGuideTooltip
+            title="Focus intensity"
+            summary="This heatmap spreads the selected period into a calendar grid, so you can see how concentrated or scattered your habit effort is."
+            focusPoints={[
+              'Brighter cells: more completions packed into that day.',
+              'Frozen cells: protected days that should not count as misses.',
+              'Use period switches to compare weekly rhythm versus long-window consistency.'
+            ]}
+            variant="grid"
+            triggerClassName="h-7 w-7"
+          />
+        </div>
         <p className="text-[11px] font-mono text-muted">Complete habits to see activity here.</p>
       </div>
     );
@@ -205,7 +219,20 @@ export function ActivityHeatmap({ weeks, period }: { weeks: ActivityWeek[]; peri
     <div className="bg-bg-secondary border border-border rounded-lg p-3 space-y-3">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
-          <h2 className="text-xs font-mono text-muted uppercase tracking-wider">Focus intensity</h2>
+          <div className="flex items-center gap-2">
+            <h2 className="text-xs font-mono text-muted uppercase tracking-wider">Focus intensity</h2>
+            <ChartGuideTooltip
+              title="Focus intensity"
+              summary="This heatmap spreads the selected period into a calendar grid, so you can see how concentrated or scattered your habit effort is."
+              focusPoints={[
+                'Brighter cells: more completions packed into that day.',
+                'Frozen cells: protected days that should not count as misses.',
+                'Use period switches to compare weekly rhythm versus long-window consistency.'
+              ]}
+              variant="grid"
+              triggerClassName="h-7 w-7"
+            />
+          </div>
           <p className="text-[10px] font-mono text-muted">{HEATMAP_SUMMARIES[period]}</p>
         </div>
         <div className="flex flex-wrap items-center gap-3 text-[10px] font-mono text-muted">

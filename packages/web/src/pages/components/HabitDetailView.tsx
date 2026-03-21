@@ -21,6 +21,7 @@ import { TodayBlock } from './HabitDetailTodayBlock';
 import { CompletionRing } from '@/components/CompletionRing';
 import { StatCardGrid } from './StatCardGrid';
 import { AutomatismSection } from './AutomatismSection';
+import { TARGET_STREAK_TOOLTIP } from './blockGuideTooltips';
 import {
   LineChart,
   Line,
@@ -224,7 +225,10 @@ function TargetRingSection({ stats, habit, accent }: Pick<HabitDetailViewProps, 
       <CompletionRing percentage={stats.completionRate} size={72} strokeWidth={5} color={habit.color} showText />
       <div className="flex-1">
         <div className="flex items-center justify-between mb-2">
-          <span className="text-xs font-mono text-muted">Target streak</span>
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-mono text-muted">Target streak</span>
+            <ChartGuideTooltip {...TARGET_STREAK_TOOLTIP} triggerClassName="h-7 w-7" />
+          </div>
           <span className="text-xs font-mono" style={{ color: accent.hex }}>
             {stats.currentStreak}/{habit.targetStreak}d
           </span>

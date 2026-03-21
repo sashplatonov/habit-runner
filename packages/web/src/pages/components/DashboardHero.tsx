@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { ChevronDownIcon, ChevronUpIcon, FlameIcon, MoreHorizontalIcon, TrendingUpIcon, ZapIcon } from 'lucide-react';
+import { ChartGuideTooltip } from '@/components/ChartGuideTooltip';
 import { CompletionRing } from '@/components/CompletionRing';
 import type { OnboardingTemplate } from '@/components/Onboarding';
 import type { Habit } from '@/types/habit';
@@ -136,7 +137,20 @@ function HeroSummaryBar({
 }) {
   return (
     <div>
-      <p className="text-[11px] font-mono text-muted uppercase tracking-widest mb-1">{dateStr}</p>
+      <div className="mb-1 flex items-center gap-2">
+        <p className="text-[11px] font-mono text-muted uppercase tracking-widest">{dateStr}</p>
+        <ChartGuideTooltip
+          title="Today snapshot"
+          summary="This dashboard summary gives you the fastest read on today: how many habits are scheduled, how much is already done, and whether your streak is still alive."
+          focusPoints={[
+            'Completion ring: today progress across habits due now.',
+            'Done count: how many scheduled habits are already closed.',
+            'Streak badge: whether daily consistency is still compounding.'
+          ]}
+          variant="bars"
+          triggerClassName="h-7 w-7"
+        />
+      </div>
       <div className="flex items-center gap-3">
         <CompletionRing size={28} strokeWidth={3.5} percentage={todayRate} />
         <div className="text-[12px] font-semibold text-foreground">{`${completedToday}/${totalActive || 0}`}</div>

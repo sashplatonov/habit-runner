@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { ChartGuideTooltip } from '@/components/ChartGuideTooltip';
 import { invokeIfFunction } from '@/lib/callback';
 import { isMandatoryToday } from '@/lib/habits/schedule';
 import { LayoutGridIcon, ListIcon, type LucideIcon } from 'lucide-react';
@@ -186,12 +187,26 @@ export function FilterBar({
     <div className="relative">
       <div ref={sentinelRef} className="absolute top-0 left-0 w-full h-px pointer-events-none" aria-hidden />
       <div
-        className={`sticky top-[calc(var(--safe-area-inset-top, 0px))] z-30 transition-shadow duration-200 ${
+        className={`sticky top-[calc(var(--safe-area-inset-top, 0px))] z-[70] transition-shadow duration-200 ${
           isSticky ? 'shadow-[0_16px_30px_-24px_rgba(15,23,42,0.75)]' : ''
         }`}
       >
         <div className="border-b border-border bg-bg-primary/95 backdrop-blur-sm px-4">
           <div className="max-w-2xl mx-auto">
+            <div className="flex items-center gap-2 pt-3">
+              <span className="text-[10px] font-mono text-muted uppercase tracking-wider">Dashboard filters</span>
+              <ChartGuideTooltip
+                title="Dashboard filters"
+                summary="Use this control bar to narrow the dashboard to the habits that need attention, then switch sort and layout to review them faster."
+                focusPoints={[
+                  'Tabs: split today into pending, done, all, and archived views.',
+                  'Search and tags: isolate one habit or one context quickly.',
+                  'Sort and density: change scan order and switch between list and card views.'
+                ]}
+                variant="columns"
+                triggerClassName="h-7 w-7"
+              />
+            </div>
             <FilterTabs filter={filter} setFilter={setFilter} pendingCount={pendingCount} />
             <div className="flex items-center gap-2 py-3 border-t border-border/40">
               <SearchBar searchQuery={searchQuery} setSearchQuery={setSearchQuery} />

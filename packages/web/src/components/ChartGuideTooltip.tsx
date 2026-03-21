@@ -9,6 +9,7 @@ type ChartGuideTooltipProps = {
   summary: string;
   focusPoints: string[];
   variant?: ChartGuideVariant;
+  triggerClassName?: string;
 };
 
 function GuideVisual({ variant }: { variant: ChartGuideVariant }) {
@@ -175,7 +176,7 @@ function TooltipPanel({
   return (
     <div
       ref={panelRef}
-      className="fixed z-40 w-72 max-w-[calc(100vw-1.5rem)] rounded-3xl border border-border bg-bg-card/95 p-3 text-left shadow-[0_18px_60px_rgba(0,0,0,0.32)] backdrop-blur"
+      className="fixed z-[240] w-72 max-w-[calc(100vw-1.5rem)] rounded-3xl border border-border bg-bg-card p-3 text-left shadow-[0_18px_60px_rgba(0,0,0,0.32)]"
       style={{ left: position.left, top: position.top }}
     >
       <div className="mb-3 flex items-center gap-2">
@@ -218,7 +219,8 @@ export function ChartGuideTooltip({
   title,
   summary,
   focusPoints,
-  variant = 'bars'
+  variant = 'bars',
+  triggerClassName = ''
 }: ChartGuideTooltipProps) {
   const [isPinned, setIsPinned] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
@@ -250,7 +252,7 @@ export function ChartGuideTooltip({
           open
             ? 'border-accent/50 bg-accent/10 text-accent'
             : 'border-border bg-bg-card text-muted hover:border-border-hover hover:text-foreground'
-        }`}
+        } ${triggerClassName}`}
       >
         <CircleHelpIcon size={14} strokeWidth={2.1} />
       </button>

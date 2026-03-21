@@ -2,7 +2,7 @@
 
 <a name="top"></a>
 
-This note defines the purpose, UX contract, and implementation boundaries for explanatory tooltips used in Stats and habit analytics blocks.
+This note defines the purpose, UX contract, and implementation boundaries for explanatory tooltips used in dashboard, stats, and habit detail blocks.
 
 ## 📋 Table of Contents
 
@@ -23,8 +23,8 @@ This note defines the purpose, UX contract, and implementation boundaries for ex
 
 Use this document when:
 - explaining to product or design stakeholders why chart tooltips exist;
-- reviewing new analytics blocks before release;
-- implementing another chart or heatmap that should follow the same pattern.
+- reviewing new dashboard, analytics, or habit detail blocks before release;
+- implementing another chart, summary card, or heatmap that should follow the same pattern.
 
 Primary goal:
 - turn each analytics block into a self-explanatory unit;
@@ -37,12 +37,12 @@ Primary goal:
 
 ## 🧭 Concept summary <a name="concept-summary"></a>
 
-Each analytics card may include a small help trigger next to the title. When opened, the tooltip should answer three questions:
+Each dashboard, stats, or habit-detail block may include a small help trigger next to the title. When opened, the tooltip should answer three questions:
 - what this block shows;
 - why it matters;
 - what the user should watch for.
 
-This is not a raw data tooltip for a single point on the chart. It is a block-level explanation layer for the whole chart or heatmap.
+This is not a raw data tooltip for a single point on the chart. It is a block-level explanation layer for the whole card, chart, or control surface.
 
 [↑ Back to top](#top)
 
@@ -50,15 +50,28 @@ This is not a raw data tooltip for a single point on the chart. It is a block-le
 
 ## 🧩 Where tooltips belong <a name="where-tooltips-belong"></a>
 
-Tooltips are appropriate for analytics blocks where the meaning is not obvious at first glance.
+Tooltips are appropriate for analytics or control blocks where the meaning or intended usage is not obvious at first glance.
 
 Current intended coverage in this repo:
+- `Today snapshot`
+- `Reminders`
+- `Dashboard filters`
+- `Habit card`
+- `Habit row`
+- `Overview signals`
+- `Your Investment`
+- `Insights`
 - `Daily completion rate`
 - `Period trends`
 - `Weekly breakdown`
 - `Habit performance`
+- `Focus intensity`
 - `Activity — 90 days`
 - `Activity - 90 days` on habit detail
+- `Key metrics`
+- `Habit strength`
+- `Today progress`
+- `Target streak`
 - `Monthly completion rate`
 - `Weekly completions`
 
@@ -74,14 +87,14 @@ Do not add this pattern to:
 ## 📝 Content contract <a name="content-contract"></a>
 
 Every chart guide tooltip should contain:
-- a short title matching the analytics block;
+- a short title matching the block;
 - a plain-English summary of what the block represents;
 - a `Watch for` list with 2-3 concrete signals.
 
 Content rules:
 - keep copy short and operational;
 - describe patterns, not theory;
-- mention observable signals like trend direction, recent bars, empty stretches, completion rate, or streak momentum;
+- mention observable signals like trend direction, recent bars, empty stretches, completion rate, streak momentum, or which control the user should use next;
 - avoid generic motivational text;
 - avoid implementation jargon unless the audience is engineers.
 
@@ -157,7 +170,7 @@ The tooltip should feel informative and intentional, but not become the dominant
 Current frontend implementation lives in:
 - `packages/web/src/components/ChartGuideTooltip.tsx`
 
-When wiring a new analytics block:
+When wiring a new dashboard, analytics, or habit-detail block:
 1. Place the trigger beside the block title.
 2. Choose the visual variant that matches the chart shape.
 3. Write one summary sentence.
