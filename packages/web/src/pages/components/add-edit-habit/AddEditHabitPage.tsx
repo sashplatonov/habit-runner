@@ -1,5 +1,5 @@
 import { PlusIcon, XIcon } from 'lucide-react';
-import { COLORS, DAILY_TARGET_OPTIONS, ICONS, SUGGESTED_TAGS, TARGET_STREAK_OPTIONS } from '../add-edit-habit.constants';
+import { COLORS, DAILY_TARGET_OPTIONS, ICONS, SUGGESTED_TAGS } from '../add-edit-habit.constants';
 import type { AddEditHabitModel } from '@/pages/hooks/useAddEditHabitModel';
 import { invokeIfFunction } from '@/lib/callback';
 import { HeaderSection } from './AddEditHabitHeader';
@@ -17,12 +17,6 @@ export function AddEditHabitPage({ model }: { model: AddEditHabitModel }) {
     setIcon,
     color,
     setColor,
-    targetStreak,
-    canDecreaseStreak,
-    canIncreaseStreak,
-    decreaseTargetStreak,
-    increaseTargetStreak,
-    setTargetStreak,
     dailyTarget,
     setDailyTarget,
     type,
@@ -67,12 +61,6 @@ export function AddEditHabitPage({ model }: { model: AddEditHabitModel }) {
         <ColorSection color={color} setColor={setColor} />
         <ScheduleSection schedule={schedule} setSchedule={setSchedule} />
         <TargetSection
-          targetStreak={targetStreak}
-          canDecreaseStreak={canDecreaseStreak}
-          canIncreaseStreak={canIncreaseStreak}
-          decreaseTargetStreak={decreaseTargetStreak}
-          increaseTargetStreak={increaseTargetStreak}
-          setTargetStreak={setTargetStreak}
           dailyTarget={dailyTarget}
           setDailyTarget={setDailyTarget}
           selectedColor={selectedColor}
@@ -221,93 +209,36 @@ function ColorSection({
   );
 }
 function TargetSection({
-  targetStreak,
-  canDecreaseStreak,
-  canIncreaseStreak,
-  decreaseTargetStreak,
-  increaseTargetStreak,
-  setTargetStreak,
   dailyTarget,
-  setDailyTarget,
-  selectedColor
+  setDailyTarget
 }: {
-  targetStreak: number;
-  canDecreaseStreak: boolean;
-  canIncreaseStreak: boolean;
-  decreaseTargetStreak: () => void;
-  increaseTargetStreak: () => void;
-  setTargetStreak: AddEditHabitModel['setTargetStreak'];
   dailyTarget: number;
   setDailyTarget: AddEditHabitModel['setDailyTarget'];
   selectedColor: AddEditHabitModel['selectedColor'];
 }) {
   return (
-    <>
-      <div>
-        <label className="block text-[10px] font-mono text-muted uppercase tracking-wider mb-2">
-          Target streak{' '}
-          <span className="font-bold" style={{ color: selectedColor.hex }}>
-            {targetStreak} days
-          </span>
-        </label>
-        <div className="flex items-center gap-2">
+    <div>
+      <label className="block text-[10px] font-mono text-muted uppercase tracking-wider mb-2">Daily target</label>
+      <div className="flex items-center gap-2">
+        {DAILY_TARGET_OPTIONS.map((value) => (
           <button
+            key={value}
             type="button"
-            onClick={decreaseTargetStreak}
-            disabled={!canDecreaseStreak}
-            className="h-8 min-w-8 px-2 rounded-lg border border-border bg-bg-secondary text-xs font-mono text-muted hover:text-foreground hover:border-border-hover disabled:opacity-40 disabled:hover:border-border disabled:hover:text-muted transition"
+            onClick={() => setDailyTarget(value)}
+            className={`px-3 py-1.5 rounded-lg border text-[11px] font-mono transition ${
+              dailyTarget === value
+                ? 'border-accent/50 bg-accent/10 text-accent'
+                : 'border-border bg-bg-secondary text-muted hover:border-border-hover'
+            }`}
           >
-            -
+            {value}x/day
           </button>
-          <div className="flex-1 grid grid-cols-4 gap-1.5">
-            {TARGET_STREAK_OPTIONS.map((value) => (
-              <button
-                key={value}
-                type="button"
-                onClick={() => setTargetStreak(value)}
-                className={`h-8 px-2 rounded-lg border text-[10px] font-mono transition ${
-                  targetStreak === value
-                    ? 'border-accent/50 bg-accent/10 text-accent'
-                    : 'border-border bg-bg-secondary text-muted hover:border-border-hover'
-                }`}
-              >
-                {value}d
-              </button>
-            ))}
-          </div>
-          <button
-            type="button"
-            onClick={increaseTargetStreak}
-            disabled={!canIncreaseStreak}
-            className="h-8 min-w-8 px-2 rounded-lg border border-border bg-bg-secondary text-xs font-mono text-muted hover:text-foreground hover:border-border-hover disabled:opacity-40 disabled:hover:border-border disabled:hover:text-muted transition"
-          >
-            +
-          </button>
-        </div>
+        ))}
       </div>
-      <div>
-        <label className="block text-[10px] font-mono text-muted uppercase tracking-wider mb-2">Daily target</label>
-        <div className="flex items-center gap-2">
-          {DAILY_TARGET_OPTIONS.map((value) => (
-            <button
-              key={value}
-              type="button"
-              onClick={() => setDailyTarget(value)}
-              className={`px-3 py-1.5 rounded-lg border text-[11px] font-mono transition ${
-                dailyTarget === value
-                  ? 'border-accent/50 bg-accent/10 text-accent'
-                  : 'border-border bg-bg-secondary text-muted hover:border-border-hover'
-              }`}
-            >
-              {value}x/day
-            </button>
-          ))}
-        </div>
-        <p className="text-[9px] font-mono text-muted mt-1">
-          Habit counts as done only when today&apos;s completions reach this target.
-        </p>
-      </div>
-    </>
+      <p className="text-[9px] font-mono text-muted mt-1">
+        Habit counts as done only when today&apos;s completions reach this target.
+      </p>
+    </div>
   );
 }
 

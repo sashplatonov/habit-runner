@@ -415,7 +415,6 @@ function HabitRowCardContent({
             toggleButtonTitle={toggleButtonTitle}
             onToggle={onToggle}
             streak={streak}
-            targetStreak={habit.targetStreak}
             todayCount={todayCount}
             dailyTarget={target}
           />

@@ -1,6 +1,7 @@
 import { CalendarIcon, FlameIcon, TargetIcon, TrendingUpIcon } from 'lucide-react';
 import { ChartGuideTooltip } from '@/components/ChartGuideTooltip';
 import type { HabitColorTheme } from '@/lib/theme/habit-colors';
+import { getHabitPhase, HABIT_PHASES } from '@/lib/habits/phases';
 import {
   getStreakHint,
   getBestHint,
@@ -30,7 +31,9 @@ function StatCard({
   unit,
   hint,
   hintColor,
-  valueColor
+  valueColor,
+  tooltip,
+  badge
 }: {
   icon: React.ComponentType<{ size: number; className?: string }>;
   label: string;
@@ -39,17 +42,21 @@ function StatCard({
   hint: CardHint;
   hintColor: string;
   valueColor?: string;
+  tooltip?: React.ReactNode;
+  badge?: React.ReactNode;
 }) {
   return (
     <div className="bg-bg-secondary border border-border rounded-lg p-3">
       <div className="flex items-center gap-1 mb-2">
         <Icon size={10} className={label === 'Streak' ? 'text-accent-secondary' : label === 'Best' ? '' : label === 'Rate' ? 'text-accent-secondary' : 'text-muted'} style={label === 'Best' ? { color: valueColor } : undefined} />
         <span className="text-[9px] font-mono text-muted uppercase tracking-wider">{label}</span>
+        {tooltip && <span className="ml-auto">{tooltip}</span>}
       </div>
       <div className={`text-xl font-mono font-bold ${valueColor || (label === 'Streak' ? 'text-accent-secondary' : label === 'Total' ? 'text-foreground' : '')}`} style={label === 'Best' ? { color: valueColor } : undefined}>
         {value}
       </div>
       {unit && <div className="text-[9px] font-mono text-muted">{unit}</div>}
+      {badge}
       <div className={`flex items-center gap-0.5 mt-1 ${hintColor}`}>
         <hint.icon size={8} className="flex-shrink-0" />
         <span className="text-[9px] font-mono">{hint.text}</span>
@@ -71,6 +78,24 @@ export function StatCardGrid({ stats, accent, habitCreatedAt }: StatCardGridProp
     stats.currentStreak === 0 ? 'text-accent-secondary' : stats.currentStreak >= stats.longestStreak ? 'text-accent' : 'text-muted';
   const bestHintColor = stats.longestStreak >= 21 ? 'text-accent' : stats.longestStreak >= 7 ? 'text-accent-secondary' : 'text-muted';
   const totalHintColor = stats.completedDays >= 100 ? 'text-accent' : 'text-muted';
+
+  const phase = getHabitPhase(stats.currentStreak);
+  const PhaseIcon = phase.icon;
+  const phaseBadge = stats.currentStreak > 0 ? (
+    <div className="flex items-center gap-0.5 mt-0.5 mb-0.5">
+      <PhaseIcon size={8} className="text-muted flex-shrink-0" />
+      <span className="text-[9px] font-mono text-muted">{phase.name}</span>
+    </div>
+  ) : null;
+  const phaseTooltip = (
+    <ChartGuideTooltip
+      title="Adaptive phases"
+      summary="Your streak passes through 4 science-backed phases. Each phase changes what skipping a day actually means for your habit."
+      focusPoints={HABIT_PHASES.map((p) => `${p.name} (${p.range}d): ${p.description}. ${p.hint}.`)}
+      variant="columns"
+      triggerClassName="h-5 w-5"
+    />
+  );
 
   return (
     <div className="space-y-2">
@@ -96,6 +121,8 @@ export function StatCardGrid({ stats, accent, habitCreatedAt }: StatCardGridProp
           unit="days"
           hint={streakHint}
           hintColor={streakHintColor}
+          badge={phaseBadge}
+          tooltip={phaseTooltip}
         />
         <StatCard
           icon={TargetIcon}
