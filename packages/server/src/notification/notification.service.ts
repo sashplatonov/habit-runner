@@ -110,26 +110,36 @@ export class NotificationService implements OnModuleInit {
   @Cron('* * * * *')
   async sendReminderNotifications(): Promise<void> {
     const now = new Date();
-    const currentTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
-    const today = new Date(now);
-    today.setHours(0, 0, 0, 0);
 
     try {
       const habits = await this.prisma.habit.findMany({
         where: {
           reminderEnabled: true,
-          reminderTime: currentTime,
+          reminderTime: { not: null },
           archived: false
         },
         include: {
-          user: true
+          user: {
+            select: { id: true, timezone: true }
+          }
         }
       });
 
       for (const habit of habits) {
-        // Skip if notification already sent today
-        if (habit.lastReminderSentAt && new Date(habit.lastReminderSentAt) >= today) {
+        const tz = habit.user.timezone || 'UTC';
+        const currentTimeInTz = this.getTimeInTimezone(now, tz);
+
+        if (habit.reminderTime !== currentTimeInTz) {
           continue;
+        }
+
+        // Skip if notification already sent today in user's timezone
+        if (habit.lastReminderSentAt) {
+          const todayKeyInTz = this.getDateKeyInTimezone(now, tz);
+          const lastSentKeyInTz = this.getDateKeyInTimezone(new Date(habit.lastReminderSentAt), tz);
+          if (lastSentKeyInTz === todayKeyInTz) {
+            continue;
+          }
         }
 
         await this.sendPush(habit.user.id, {
@@ -137,7 +147,6 @@ export class NotificationService implements OnModuleInit {
           body: habit.description || `Time to complete your habit!`
         });
 
-        // Mark as sent
         await this.prisma.habit.update({
           where: { id: habit.id },
           data: { lastReminderSentAt: now }
@@ -145,6 +154,36 @@ export class NotificationService implements OnModuleInit {
       }
     } catch (error) {
       this.logger.error(`Cron reminder notification failed: ${error}`);
+    }
+  }
+
+  private getTimeInTimezone(date: Date, timezone: string): string {
+    try {
+      const parts = new Intl.DateTimeFormat('en-US', {
+        timeZone: timezone,
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false
+      }).formatToParts(date);
+      const partMap = Object.fromEntries(parts.map((p) => [p.type, p.value]));
+      // hour12:false can return "24" at midnight in some environments
+      const hour = partMap.hour === '24' ? '00' : partMap.hour;
+      return `${hour.padStart(2, '0')}:${partMap.minute.padStart(2, '0')}`;
+    } catch {
+      return `${String(date.getUTCHours()).padStart(2, '0')}:${String(date.getUTCMinutes()).padStart(2, '0')}`;
+    }
+  }
+
+  private getDateKeyInTimezone(date: Date, timezone: string): string {
+    try {
+      return new Intl.DateTimeFormat('en-CA', {
+        timeZone: timezone,
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit'
+      }).format(date);
+    } catch {
+      return date.toISOString().slice(0, 10);
     }
   }
 
