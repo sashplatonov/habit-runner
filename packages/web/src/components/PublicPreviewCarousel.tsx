@@ -248,6 +248,8 @@ function buildDemoStatsModel(habits: Habit[]) {
     totalActiveDays: 26,
     period,
     setPeriod: () => undefined,
+    hiddenHabits: [],
+    toggleHabitVisibility: () => undefined,
     insights,
     activityWeeks
   };

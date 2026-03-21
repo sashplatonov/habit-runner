@@ -4,6 +4,7 @@ const HEATMAP_LEVELS = [0.18, 0.38, 0.62, 0.88];
 const HEATMAP_MONTH_FORMATTER = new Intl.DateTimeFormat('en-US', { month: 'short' });
 const HEATMAP_DAY_FORMATTER = new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric' });
 const HEATMAP_DAY_NUMBER_FORMATTER = new Intl.DateTimeFormat('en-US', { day: 'numeric' });
+const HEATMAP_MONTH_YEAR_FORMATTER = new Intl.DateTimeFormat('en-US', { month: 'short', year: '2-digit' });
 
 const HEATMAP_ROW_LABELS: Record<PeriodOption, string[]> = {
   week: ['Week'],
@@ -15,7 +16,7 @@ const HEATMAP_ROW_LABELS: Record<PeriodOption, string[]> = {
 const HEATMAP_SUMMARIES: Record<PeriodOption, string> = {
   week: '7 days across the current window',
   month: 'Daily grid grouped by week',
-  quarter: 'Three months compressed into weekly columns',
+  quarter: 'Quarterly grid with four weekly columns per month',
   year: 'Full-year overview with monthly anchors'
 };
 
@@ -28,6 +29,7 @@ type HeatmapLayout = {
   cells: ActivityDay[][];
   rowLabels: string[];
   columnLabels: HeatmapAxisLabel[];
+  quarterMonthGroups?: { label: string; colSpan: number }[];
 };
 
 function heatOpacity(intensity: number, maxIntensity: number): number {
@@ -99,14 +101,78 @@ function buildMonthColumnLabels(weeks: ActivityWeek[]): HeatmapAxisLabel[] {
   });
 }
 
+type MonthlyWeekGroup = {
+  key: string;
+  label: string;
+  weeks: ActivityWeek[];
+};
+
+function groupWeeksByMonthForQuarter(weeks: ActivityWeek[]): MonthlyWeekGroup[] {
+  const groups: MonthlyWeekGroup[] = [];
+  weeks.forEach((week) => {
+    const first = week.days[0];
+    if (!first) {
+      return;
+    }
+    const date = parseHeatmapDate(first.date);
+    const key = `${date.getFullYear()}-${date.getMonth()}`;
+    if (!groups.length || groups[groups.length - 1].key !== key) {
+      groups.push({
+        key,
+        label: HEATMAP_MONTH_YEAR_FORMATTER.format(date),
+        weeks: []
+      });
+    }
+    groups[groups.length - 1].weeks.push(week);
+  });
+  return groups;
+}
+
+function buildQuarterHeatmapConfig(
+  weeks: ActivityWeek[]
+): { weeks: ActivityWeek[]; columnLabels: HeatmapAxisLabel[]; monthGroups: { label: string; colSpan: number }[] } {
+  const groups = groupWeeksByMonthForQuarter(weeks);
+  const recentGroups = groups.length > 3 ? groups.slice(-3) : groups;
+  const layoutWeeks: ActivityWeek[] = [];
+  const columnLabels: HeatmapAxisLabel[] = [];
+  const monthGroups: { label: string; colSpan: number }[] = [];
+  recentGroups.forEach((group) => {
+    const trimmed = group.weeks.length <= 4 ? group.weeks : group.weeks.slice(-4);
+    trimmed.forEach((week, index) => {
+      layoutWeeks.push(week);
+      columnLabels.push({
+        label: `Week ${index + 1}`,
+        sublabel: ''
+      });
+    });
+    monthGroups.push({ label: group.label, colSpan: trimmed.length });
+  });
+  return { weeks: layoutWeeks, columnLabels, monthGroups };
+}
+
 function buildHeatmapLayout(weeks: ActivityWeek[], period: PeriodOption): HeatmapLayout {
   if (period === 'week') {
     return buildWeekHeatmapLayout(weeks[0]?.days ?? []);
   }
+  let layoutWeeks = weeks;
+  let columnLabels: HeatmapAxisLabel[];
+  let quarterMonthGroups: { label: string; colSpan: number }[] | undefined;
+  if (period === 'quarter') {
+    const quarterConfig = buildQuarterHeatmapConfig(weeks);
+    layoutWeeks = quarterConfig.weeks;
+    columnLabels = quarterConfig.columnLabels;
+    quarterMonthGroups = quarterConfig.monthGroups;
+  } else if (period === 'month') {
+    columnLabels = buildWeekColumnLabels(weeks);
+  } else {
+    columnLabels = buildMonthColumnLabels(weeks);
+  }
+  const cells = Array.from({ length: 7 }, (_, rowIndex) => layoutWeeks.map((week) => week.days[rowIndex]).filter(Boolean));
   return {
-    cells: Array.from({ length: 7 }, (_, rowIndex) => weeks.map((week) => week.days[rowIndex]).filter(Boolean)),
+    cells,
     rowLabels: HEATMAP_ROW_LABELS[period],
-    columnLabels: period === 'month' ? buildWeekColumnLabels(weeks) : buildMonthColumnLabels(weeks)
+    columnLabels,
+    quarterMonthGroups
   };
 }
 
@@ -167,6 +233,22 @@ export function ActivityHeatmap({ weeks, period }: { weeks: ActivityWeek[]; peri
             </div>
           ))}
         </div>
+        {period === 'quarter' && layout.quarterMonthGroups?.length ? (
+          <div
+            className="grid gap-1 text-[9px] font-mono uppercase tracking-[0.2em] text-muted"
+            style={{ gridTemplateColumns: `repeat(${Math.max(cols, 1)}, minmax(0, 1fr))` }}
+          >
+            {layout.quarterMonthGroups.map((group, index) => (
+              <div
+                key={`month-${index}`}
+                className="flex items-center justify-center"
+                style={{ gridColumn: `span ${group.colSpan}` }}
+              >
+                <span>{group.label}</span>
+              </div>
+            ))}
+          </div>
+        ) : null}
         <div className="grid gap-1" style={{ gridTemplateRows: `repeat(${Math.max(rows, 1)}, minmax(0, 1fr))` }}>
           {layout.rowLabels.map((label, index) => (
             <div key={`row-${index}`} className="flex items-center justify-end pr-1">
