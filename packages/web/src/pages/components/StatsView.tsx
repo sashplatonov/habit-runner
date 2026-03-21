@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { CalendarIcon, FilterIcon, FlameIcon, TrendingUpIcon, ZapIcon } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
+import { ChartGuideTooltip } from '@/components/ChartGuideTooltip';
 import type { Habit } from '@/types/habit';
 import { PeriodSelector, FiltersPanel, InsightsRow, DailyRateChart, PeriodTrendChart, HabitPerformanceList, WeeklyBreakdown, HabitSortControls } from './StatsViewPanels';
 import { HabitHeatmap } from '@/components/HabitHeatmap';
@@ -379,7 +380,19 @@ function TabHabits({ navigate, allStats, sorted }: Pick<StatsViewProps, 'navigat
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-4">
-        <h2 className="text-xs font-mono text-muted uppercase tracking-wider">Habit performance</h2>
+        <div className="flex items-center gap-2">
+          <h2 className="text-xs font-mono text-muted uppercase tracking-wider">Habit performance</h2>
+          <ChartGuideTooltip
+            title="Habit performance"
+            summary="This ranking helps you compare habits by outcome, so you can see which routines are solid and which ones need intervention first."
+            focusPoints={[
+              'Completion rate: the fastest signal of reliability.',
+              'Current streak: whether the habit still has live momentum.',
+              'Status labels: quick flags for strong, steady, or struggling habits.'
+            ]}
+            variant="columns"
+          />
+        </div>
         <HabitSortControls habitSort={habitSort} handleSortChange={handleSortChange} />
       </div>
       <div className="grid gap-4 md:grid-cols-[2fr,1fr]">
@@ -412,7 +425,19 @@ function TabActivity({
   return (
     <div className="bg-bg-secondary border border-border rounded-lg p-3 space-y-3">
       <div className="flex items-center justify-between">
-        <h2 className="text-xs font-mono text-muted uppercase tracking-wider">Activity — 90 days</h2>
+        <div className="flex items-center gap-2">
+          <h2 className="text-xs font-mono text-muted uppercase tracking-wider">Activity — 90 days</h2>
+          <ChartGuideTooltip
+            title="Activity heatmap"
+            summary="This heatmap compresses 90 days of execution into one grid, so you can see consistency, streak clusters, and dead zones at a glance."
+            focusPoints={[
+              'Brighter cells: heavier completion volume on that day.',
+              'Repeated empty columns: missed stretches that break rhythm.',
+              'Dense recent activity: a strong sign your routine is becoming durable.'
+            ]}
+            variant="grid"
+          />
+        </div>
         <span className="text-[10px] font-mono text-muted">{filteredHabits.length} habits</span>
       </div>
       <HabitHeatmap

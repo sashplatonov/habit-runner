@@ -2,6 +2,7 @@ import { AlertTriangleIcon, ArrowUpDownIcon, CheckCircle2Icon, FlameIcon, Lightb
 import type { LucideIcon } from 'lucide-react';
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 import { CompletionRing } from '@/components/CompletionRing';
+import { ChartGuideTooltip } from '@/components/ChartGuideTooltip';
 import { HABIT_COLOR_THEMES } from '@/lib/theme/habit-colors';
 import { invokeIfFunction } from '@/lib/callback';
 import type { Habit, StatsViewProps, Insight, PeriodOption } from './StatsView';
@@ -293,7 +294,19 @@ export function DailyRateChart({ avgRate, dailyData, period }: Pick<StatsViewPro
   return (
     <div className="bg-bg-secondary border border-border rounded-lg p-4">
       <div className="flex items-center justify-between mb-1">
-        <h2 className="text-xs font-mono text-muted uppercase tracking-wider">Daily completion rate</h2>
+        <div className="flex items-center gap-2">
+          <h2 className="text-xs font-mono text-muted uppercase tracking-wider">Daily completion rate</h2>
+          <ChartGuideTooltip
+            title="Daily completion rate"
+            summary="This chart shows how consistently you finished scheduled habits each day in the selected period."
+            focusPoints={[
+              'Average rate: your baseline consistency for this window.',
+              'Low bars or gaps: days where routine friction is breaking momentum.',
+              'Clusters of strong days: patterns worth repeating.'
+            ]}
+            variant="bars"
+          />
+        </div>
         <span className="text-[10px] font-mono text-accent">{avgRate}% avg</span>
       </div>
       <p className="text-[10px] font-mono text-muted mb-3">Tap to hide/show habits</p>
@@ -350,7 +363,19 @@ export function PeriodTrendChart({
     <div className="bg-bg-secondary border border-border rounded-lg p-4 space-y-4">
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <div>
-          <h2 className="text-xs font-mono text-muted uppercase tracking-wider">Period trends</h2>
+          <div className="flex items-center gap-2">
+            <h2 className="text-xs font-mono text-muted uppercase tracking-wider">Period trends</h2>
+            <ChartGuideTooltip
+              title="Period trends"
+              summary="Each line tracks how one habit performs over time, so you can compare momentum and spot drop-offs early."
+              focusPoints={[
+                'Trend direction: rising lines usually mean the habit is stabilizing.',
+                'Line crossings: habits changing rank or losing priority.',
+                'Flat low lines: habits that may need a simpler schedule or target.'
+              ]}
+              variant="line"
+            />
+          </div>
           <p className="text-[10px] font-mono text-muted">Tap to hide/show habits</p>
         </div>
         <div className="flex flex-wrap gap-2 max-w-full">
@@ -460,7 +485,19 @@ export function HabitPerformanceList({ sorted, navigate }: Pick<StatsViewProps, 
 export function WeeklyBreakdown({ allStats }: Pick<StatsViewProps, 'allStats'>) {
   return (
     <div className="bg-bg-secondary border border-border rounded-lg p-4">
-      <h2 className="text-xs font-mono text-muted uppercase tracking-wider mb-3">Weekly breakdown</h2>
+      <div className="mb-3 flex items-center gap-2">
+        <h2 className="text-xs font-mono text-muted uppercase tracking-wider">Weekly breakdown</h2>
+        <ChartGuideTooltip
+          title="Weekly breakdown"
+          summary="This compact view compares recent weekly volume for every habit so you can see which ones stay active and which ones fade out."
+          focusPoints={[
+            'Bar height: how many days the habit was completed that week.',
+            'Latest bars: whether the habit is strengthening or cooling off now.',
+            'Right-side percent: overall completion rate for quick ranking.'
+          ]}
+          variant="columns"
+        />
+      </div>
       <div className="space-y-3">
         {allStats.map(({ habit, stats }) => (
           <div key={habit.id} className="flex items-center gap-3">
