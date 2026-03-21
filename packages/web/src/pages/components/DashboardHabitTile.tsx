@@ -1,5 +1,5 @@
 import { useCallback, useRef, useState } from 'react';
-import { CheckIcon, FlameIcon, MoonIcon, SnowflakeIcon, TrophyIcon } from 'lucide-react';
+import { CheckIcon, MoonIcon, SnowflakeIcon, TrophyIcon } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { ChartGuideTooltip } from '@/components/ChartGuideTooltip';
 import { CompletionRing } from '@/components/CompletionRing';
@@ -7,6 +7,7 @@ import { HabitHeatmap } from '@/components/HabitHeatmap';
 import { HABIT_COLOR_THEMES } from '@/lib/theme/habit-colors';
 import type { HabitColorTheme } from '@/lib/theme/habit-colors';
 import { calculateScheduledCompletionRate, calculateScheduledStreak, getScheduleStatusForDate, isMandatoryToday } from '@/lib/habits/schedule';
+import { getHabitPhase, isPhaseTransition } from '@/lib/habits/phases';
 import { toCompletionKey } from '@/lib/completionKey';
 import type { Habit } from '@/types/habit';
 import { computeTileHint, type TileHint } from './DashboardHabitTile.helpers';
@@ -65,7 +66,6 @@ type HabitRowToggleButtonProps = {
   toggleButtonTitle: string;
   onToggle: () => void;
   streak: number;
-  targetStreak: number;
   sizeClass?: string;
   todayCount: number;
   dailyTarget: number;
@@ -79,7 +79,6 @@ export function HabitRowToggleButton({
   toggleButtonTitle,
   onToggle,
   streak,
-  targetStreak,
   sizeClass = 'w-8 h-8',
   todayCount,
   dailyTarget
@@ -108,7 +107,7 @@ export function HabitRowToggleButton({
       });
       setParticles(newParticles);
 
-      if (streak + 1 === targetStreak) {
+      if (isPhaseTransition(streak + 1)) {
         setTimeout(() => {
           confetti({
             particleCount: 150,
@@ -126,7 +125,7 @@ export function HabitRowToggleButton({
       }, 650);
     }
     onToggle();
-  }, [accent.hex, completed, onToggle, streak, targetStreak]);
+  }, [accent.hex, completed, onToggle, streak]);
 
   return (
     <div className="relative flex-shrink-0">
@@ -186,7 +185,13 @@ function StreakIndicator({
   scheduledToday: boolean;
   habitType: string;
 }) {
-  if (streak > 0 && !isFrozen && scheduledToday) {
+  if (isFrozen) {
+    return <SnowflakeIcon size={9} className="text-muted" />;
+  }
+  if (!scheduledToday) {
+    return <MoonIcon size={9} className="text-muted" />;
+  }
+  if (streak > 0) {
     if (habitType === 'negative') {
       return (
         <div className="flex items-center gap-0.5 text-accent-secondary">
@@ -195,18 +200,14 @@ function StreakIndicator({
         </div>
       );
     }
+    const phase = getHabitPhase(streak);
+    const PhaseIcon = phase.icon;
     return (
-      <div className="flex items-center gap-0.5">
-        <FlameIcon size={9} className="text-accent-secondary flex-shrink-0" />
-        <span className="text-[10px] font-mono text-accent-secondary">{streak}</span>
+      <div className="flex items-center gap-0.5 text-accent-secondary">
+        <PhaseIcon size={9} className="flex-shrink-0" />
+        <span className="text-[10px] font-mono">{streak}d</span>
       </div>
     );
-  }
-  if (isFrozen) {
-    return <SnowflakeIcon size={9} className="text-muted" />;
-  }
-  if (!scheduledToday) {
-    return <MoonIcon size={9} className="text-muted" />;
   }
   return null;
 }
@@ -376,7 +377,6 @@ export function HabitTile({
             toggleButtonTitle={presentation.toggleButtonTitle}
             onToggle={onToggle}
             streak={presentation.streak}
-            targetStreak={habit.targetStreak}
             sizeClass="w-8 h-8"
             todayCount={presentation.todayCount}
             dailyTarget={presentation.target}
