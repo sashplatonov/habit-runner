@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { ChartGuideTooltip } from '@/components/ChartGuideTooltip';
 import { invokeIfFunction } from '@/lib/callback';
 import { isMandatoryToday } from '@/lib/habits/schedule';
-import { LayoutGridIcon, ListIcon, type LucideIcon } from 'lucide-react';
+import { GripVerticalIcon, LayoutGridIcon, ListIcon, SparklesIcon, type LucideIcon } from 'lucide-react';
 import type { DashboardViewProps, ViewDensity } from './DashboardHero';
 
 function SearchBar({ searchQuery, setSearchQuery }: { searchQuery: string; setSearchQuery: (v: string) => void }) {
@@ -31,23 +31,44 @@ function SearchBar({ searchQuery, setSearchQuery }: { searchQuery: string; setSe
   );
 }
 
+const SORT_MODES: { value: 'custom' | 'smart'; Icon: LucideIcon; label: string }[] = [
+  { value: 'custom', Icon: GripVerticalIcon, label: 'Custom' },
+  { value: 'smart', Icon: SparklesIcon, label: 'Smart' }
+];
+
 function SortToggle({ sortMode, setSortMode }: { sortMode: 'custom' | 'smart'; setSortMode: (m: 'custom' | 'smart') => void }) {
   return (
-    <div className="flex items-center gap-1.5 p-0.5 bg-bg-secondary rounded-lg border border-border/50">
-      {(['custom', 'smart'] as const).map((mode) => (
-        <button
-          key={mode}
-          type="button"
-          onClick={() => setSortMode(mode)}
-          className={`px-3 py-1 rounded-md text-[10px] font-mono uppercase tracking-wider transition-all duration-200 ${
-            sortMode === mode
-              ? 'bg-bg-primary text-accent shadow-sm ring-1 ring-border'
-              : 'text-muted hover:text-foreground'
-          }`}
-        >
-          {mode}
-        </button>
-      ))}
+    <div className="flex items-center gap-1">
+      <div className="flex items-center gap-1.5 p-0.5 bg-bg-secondary rounded-lg border border-border/50">
+        {SORT_MODES.map(({ value, Icon, label }) => (
+          <button
+            key={value}
+            type="button"
+            onClick={() => setSortMode(value)}
+            className={`flex items-center gap-1 px-2.5 py-1 rounded-md text-[10px] font-mono uppercase tracking-wider transition-all duration-200 ${
+              sortMode === value
+                ? 'bg-bg-primary text-accent shadow-sm ring-1 ring-border'
+                : 'text-muted hover:text-foreground'
+            }`}
+          >
+            <Icon size={11} />
+            {label}
+          </button>
+        ))}
+      </div>
+      <ChartGuideTooltip
+        title="Smart Sort"
+        summary="Habits are ranked by how much attention they need right now, based on behavioural science research. The most fragile habits always appear first."
+        focusPoints={[
+          'Young habits (<21 days): maximally fragile — Lally et al., 2010.',
+          'Low 30-day completion rate signals a habit losing traction.',
+          'Recent miss (1–3 days ago) is the highest abandonment risk signal.',
+          'Evening reminders rank higher due to ego depletion — Baumeister.',
+          'Negative habits (DON\'T do X) are inherently harder than positive ones.'
+        ]}
+        variant="columns"
+        triggerClassName="h-6 w-6"
+      />
     </div>
   );
 }
