@@ -34,6 +34,7 @@
 - Use 2-space indentation, semicolons, and single quotes (match existing files).
 - React components/pages use PascalCase filenames (for example `HabitDetail.tsx`, `AuthGate.tsx`).
 - Nest modules follow `*.module.ts`, `*.controller.ts`, `*.service.ts`, and DTOs as `*.dto.ts`.
+- Habit names in UI, tooltips, previews, and analytics views must use the shared helper `packages/web/src/lib/habits/formatHabitLabel.ts` so the habit emoji is always shown together with the name.
 - Language policy: all code comments, logs, UI copy, docs, and other repository text must be in English; non-English text is allowed only inside dedicated i18n translation resources.
 
 ## Testing Guidelines

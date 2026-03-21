@@ -3,6 +3,7 @@ import { AlertTriangleIcon, BarChart2Icon, DumbbellIcon, FlameIcon, LightbulbIco
 import type { Habit, HabitStats } from '@/types/habit';
 import type { PeriodOption } from './components/StatsView';
 import { PERIOD_DISPLAY_NAMES, STREAK_THRESHOLDS, WEEKDAY_NA, STREAK_MESSAGES } from '@/lib/constants/stats';
+import { formatHabitLabel } from '@/lib/habits/formatHabitLabel';
 
 type HabitStatsEntry = {
   habit: Habit;
@@ -16,10 +17,6 @@ type WeekdayStats = {
   worstIndex: number;
   counts: number[];
 };
-
-export function formatHabitLabel(habit: Habit): string {
-  return habit.icon ? `${habit.icon} ${habit.name}` : habit.name;
-}
 
 export function filterStatsHabits(
   habits: Habit[],

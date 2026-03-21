@@ -4,6 +4,7 @@ import { HABIT_COLOR_THEMES, DEFAULT_HABIT_COLOR } from '@/lib/theme/habit-color
 import type { HabitColor } from '@/types/habit';
 import { formatDate } from '@/lib/habits/habitStats';
 import { formatAppDate } from '@/lib/i18n';
+import { normalizeToCompletionKey } from '@/lib/completionKey';
 
 // Opacity levels for intensity 0–4. Level 0 uses a neutral CSS var instead.
 const FILL_OPACITIES = [0, 0.22, 0.46, 0.72, 1.0] as const;
@@ -72,9 +73,10 @@ function buildMonthMarkers(weeks: Cell[][]): { label: string; index: number }[] 
   const markers: { label: string; index: number }[] = [];
   let lastMonth = -1;
   weeks.forEach((week, idx) => {
-    const m = new Date(week[0].date).getMonth();
+    const weekStart = new Date(normalizeToCompletionKey(week[0].date));
+    const m = weekStart.getMonth();
     if (m !== lastMonth) {
-      markers.push({ label: new Date(week[0].date).toLocaleString('default', { month: 'short' }), index: idx });
+      markers.push({ label: weekStart.toLocaleString('default', { month: 'short' }), index: idx });
       lastMonth = m;
     }
   });
@@ -110,7 +112,7 @@ interface TooltipData {
 }
 
 function formatTooltipDate(date: string) {
-  const parsed = new Date(`${date}T00:00:00`);
+  const parsed = new Date(normalizeToCompletionKey(date));
   return formatAppDate(parsed, { weekday: 'long', month: 'short', day: 'numeric' });
 }
 

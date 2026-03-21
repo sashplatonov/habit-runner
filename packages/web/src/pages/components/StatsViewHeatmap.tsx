@@ -1,4 +1,5 @@
 import { ChartGuideTooltip } from '@/components/ChartGuideTooltip';
+import { normalizeToCompletionKey } from '@/lib/completionKey';
 import type { ActivityDay, ActivityWeek, PeriodOption } from './StatsView';
 
 const HEATMAP_LEVELS = [0.18, 0.38, 0.62, 0.88];
@@ -51,7 +52,7 @@ function heatOpacity(intensity: number, maxIntensity: number): number {
 }
 
 function parseHeatmapDate(date: string) {
-  return new Date(`${date}T00:00:00`);
+  return new Date(normalizeToCompletionKey(date));
 }
 
 function buildWeekHeatmapLayout(days: ActivityDay[]): HeatmapLayout {

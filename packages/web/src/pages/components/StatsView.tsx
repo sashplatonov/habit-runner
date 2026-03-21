@@ -244,16 +244,16 @@ function StatsTabBar({
   return (
     <div className="sticky top-0 z-30 border-b border-border bg-bg-primary/95 backdrop-blur-sm">
       <div className="max-w-6xl mx-auto px-4">
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-2 overflow-hidden">
           {/* Tabs */}
-          <div className="flex flex-1 min-w-0">
+          <div className="flex min-w-0 flex-1 items-center overflow-x-auto whitespace-nowrap [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             {TABS.map((tab) => {
               const isActive = activeTab === tab.id;
               return (
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`relative px-4 py-3 text-xs font-mono transition-colors whitespace-nowrap ${
+                  className={`relative shrink-0 px-3 py-3 text-[11px] font-mono transition-colors whitespace-nowrap sm:px-4 sm:text-xs ${
                     isActive
                       ? 'text-foreground'
                       : 'text-muted hover:text-foreground/70'
@@ -272,18 +272,18 @@ function StatsTabBar({
           </div>
 
           {/* Right controls */}
-          <div className="flex items-center gap-2 py-2 pl-2">
+          <div className="flex shrink-0 items-center justify-end py-2 pl-1">
             <button
               onClick={() => setFiltersOpen((prev) => !prev)}
               aria-label="Toggle filters"
-              className={`rounded-full border px-3 py-1 text-xs font-mono flex items-center gap-1.5 transition-colors ${
+              className={`flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-mono transition-colors sm:px-3 sm:text-xs ${
                 filtersOpen
                   ? 'border-accent text-accent'
                   : 'border-border text-muted hover:text-foreground'
               }`}
             >
               <FilterIcon size={12} />
-              <span className="hidden md:inline">Filters</span>
+              <span className="hidden sm:inline">Filters</span>
             </button>
           </div>
         </div>

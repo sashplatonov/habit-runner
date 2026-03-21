@@ -2,6 +2,7 @@ import { ArrowUpDownIcon, FlameIcon, SearchIcon, SparklesIcon, TagIcon } from 'l
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 import { CompletionRing } from '@/components/CompletionRing';
 import { ChartGuideTooltip } from '@/components/ChartGuideTooltip';
+import { formatHabitLabel } from '@/lib/habits/formatHabitLabel';
 import { HABIT_COLOR_THEMES } from '@/lib/theme/habit-colors';
 import { invokeIfFunction } from '@/lib/callback';
 import type { Habit, StatsViewProps, Insight, PeriodOption } from './StatsView';
@@ -41,10 +42,6 @@ function CustomTooltip({
     );
   }
   return null;
-}
-
-function formatHabitLabel(habit: Habit) {
-  return habit.icon ? `${habit.icon} ${habit.name}` : habit.name;
 }
 
 function DailyTooltip({

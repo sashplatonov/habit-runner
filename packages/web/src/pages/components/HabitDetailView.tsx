@@ -21,6 +21,7 @@ import { TodayBlock } from './HabitDetailTodayBlock';
 import { CompletionRing } from '@/components/CompletionRing';
 import { StatCardGrid } from './StatCardGrid';
 import { AutomatismSection } from './AutomatismSection';
+import { formatHabitLabel } from '@/lib/habits/formatHabitLabel';
 import { TARGET_STREAK_TOOLTIP } from './blockGuideTooltips';
 import {
   LineChart,
@@ -33,7 +34,6 @@ import {
 } from 'recharts';
 import type { Habit } from '@/types/habit';
 import type { HabitColorTheme } from '@/lib/theme/habit-colors';
-
 type HabitStats = {
   currentStreak: number;
   longestStreak: number;
@@ -260,11 +260,12 @@ function TargetRingSection({ stats, habit, accent }: Pick<HabitDetailViewProps, 
   );
 }
 
-function HeatmapSection({
-  habit,
-  dailyTarget
-}: Pick<HabitDetailViewProps, 'habit'> & { dailyTarget: number }) {
+function HeatmapSection({ habit, dailyTarget }: Pick<HabitDetailViewProps, 'habit'> & { dailyTarget: number }) {
   const completedCount = habit.completions ? Object.keys(habit.completions).length : 0;
+  const dayDetails = Object.entries(habit.completions).reduce<Record<string, string[]>>(
+    (acc, [date, count]) => (count >= dailyTarget ? { ...acc, [date]: [formatHabitLabel(habit)] } : acc),
+    {}
+  );
   return (
     <div className="bg-bg-secondary border border-border rounded-lg p-3 space-y-3">
       <div className="flex items-center justify-between">
@@ -284,7 +285,7 @@ function HeatmapSection({
         <span className="text-[10px] font-mono text-muted">{completedCount} completions</span>
       </div>
       <div className="w-full mx-auto lg:max-w-[560px]">
-        <HabitHeatmap completions={habit.completions} dailyTarget={dailyTarget} color={habit.color} />
+        <HabitHeatmap completions={habit.completions} dailyTarget={dailyTarget} color={habit.color} dayDetails={dayDetails} />
       </div>
     </div>
   );
