@@ -103,7 +103,15 @@ function SortHabits(a: Habit, b: Habit, sortMode: 'custom' | 'smart', today: Dat
     return orderA - orderB;
   }
 
-  // Smart Sort — higher score = needs more attention = goes first
+  // Smart Sort — habits due today always rank above habits not due today
+  const aDueToday = isMandatoryToday(a, today);
+  const bDueToday = isMandatoryToday(b, today);
+
+  if (aDueToday !== bDueToday) {
+    return aDueToday ? -1 : 1;
+  }
+
+  // Within the same group, higher score = needs more attention = goes first
   return calculateSmartScore(b, today) - calculateSmartScore(a, today);
 }
 
