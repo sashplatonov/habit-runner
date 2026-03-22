@@ -4,6 +4,7 @@ import { invokeIfFunction } from '@/lib/callback';
 import { isMandatoryToday } from '@/lib/habits/schedule';
 import { GripVerticalIcon, LayoutGridIcon, ListIcon, SparklesIcon, type LucideIcon } from 'lucide-react';
 import type { DashboardViewProps, ViewDensity } from './DashboardHero';
+import type { Habit } from '@/types/habit';
 
 function SearchBar({ searchQuery, setSearchQuery }: { searchQuery: string; setSearchQuery: (v: string) => void }) {
   return (
@@ -95,13 +96,22 @@ function FilterTabs({
           }`}
         >
           {value}
-          {value === 'pending' && (
-            <span className="ml-1.5 text-[9px] bg-border px-1 py-0.5 rounded font-mono">{pendingCount}</span>
+          {value === 'pending' && pendingCount > 0 && (
+            <span className="ml-1.5 text-[9px] font-mono rounded px-1 py-0.5 border border-accent/40 bg-accent/10 text-accent">
+              {pendingCount}
+            </span>
           )}
         </button>
       ))}
     </div>
   );
+}
+
+function isHabitCompletedToday(habit: Habit, todayKey: string) {
+  if (habit.type === 'negative') {
+    return (habit.completions[todayKey] ?? 0) === 0;
+  }
+  return (habit.completions[todayKey] ?? 0) >= Math.max(1, habit.dailyTarget ?? 1);
 }
 
 function TagFilterRow({
@@ -183,10 +193,13 @@ export function FilterBar({
   const todayDate = new Date(today);
   todayDate.setHours(0, 0, 0, 0);
   const pendingCount = habits.filter((habit) => {
+    if (habit.archived) {
+      return false;
+    }
     if (!isMandatoryToday(habit, todayDate)) {
       return false;
     }
-    return (habit.completions[today] ?? 0) < Math.max(1, habit.dailyTarget ?? 1);
+    return !isHabitCompletedToday(habit, today);
   }).length;
   const [isSticky, setIsSticky] = useState(false);
   const sentinelRef = useRef<HTMLDivElement | null>(null);
