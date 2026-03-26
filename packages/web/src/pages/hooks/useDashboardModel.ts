@@ -49,13 +49,15 @@ function readStoredSortMode(): 'custom' | 'smart' {
   return localStorage.getItem(SORT_MODE_STORAGE_KEY) === 'smart' ? 'smart' : 'custom';
 }
 
+function isHabitCompletedToday(habit: Habit, today: string): boolean {
+  return habit.type === 'negative'
+    ? (habit.completions[today] ?? 0) === 0
+    : (habit.completions[today] ?? 0) >= Math.max(1, habit.dailyTarget ?? 1);
+}
+
 function buildDashboardSummary(activeHabits: Habit[], todayDate: Date, today: string) {
   const scheduledTodayHabits = activeHabits.filter((habit) => isMandatoryToday(habit, todayDate));
-  const completedToday = scheduledTodayHabits.filter((habit) =>
-    habit.type === 'negative'
-      ? (habit.completions[today] ?? 0) === 0
-      : (habit.completions[today] ?? 0) >= Math.max(1, habit.dailyTarget ?? 1)
-  ).length;
+  const completedToday = scheduledTodayHabits.filter((habit) => isHabitCompletedToday(habit, today)).length;
   const totalActive = scheduledTodayHabits.length;
   return {
     scheduledTodayHabits,
@@ -63,6 +65,26 @@ function buildDashboardSummary(activeHabits: Habit[], todayDate: Date, today: st
     totalActive,
     todayRate: totalActive > 0 ? Math.round((completedToday / totalActive) * 100) : 0
   };
+}
+
+function createNotifyCallback(today: string) {
+  return (habit: Habit) => {
+    if (isHabitCompletedToday(habit, today)) {
+      return;
+    }
+    if (typeof window === 'undefined' || !('Notification' in window) || Notification.permission !== 'granted') {
+      return;
+    }
+    try {
+      new Notification('Habbit reminder', { body: `Time for: ${habit.name}`, tag: `habit-reminder-${habit.id}` });
+    } catch {
+      // ignore
+    }
+  };
+}
+
+function useReminderSetup(scheduledHabits: Habit[], formatDate: (d: Date) => string, today: string) {
+  return useReminderTracker(scheduledHabits, formatDate, createNotifyCallback(today));
 }
 
 export function useDashboardModel() {
@@ -79,27 +101,12 @@ export function useDashboardModel() {
   const [viewDensity, setViewDensity] = useState<'comfortable' | 'compact'>(readStoredViewDensity);
   const [heroCollapsed, setHeroCollapsed] = useState(readStoredHeroCollapsed);
 
-  useEffect(() => {
-    localStorage.setItem(FILTER_STORAGE_KEY, filter);
-  }, [filter]);
+  useEffect(() => { localStorage.setItem(FILTER_STORAGE_KEY, filter); }, [filter]);
+  useEffect(() => { localStorage.setItem(DENSITY_STORAGE_KEY, viewDensity); }, [viewDensity]);
+  useEffect(() => { localStorage.setItem(HERO_COLLAPSED_STORAGE_KEY, heroCollapsed ? '1' : '0'); }, [heroCollapsed]);
+  useEffect(() => { localStorage.setItem(SORT_MODE_STORAGE_KEY, sortMode); }, [sortMode]);
 
-  useEffect(() => {
-    localStorage.setItem(DENSITY_STORAGE_KEY, viewDensity);
-  }, [viewDensity]);
-
-  useEffect(() => {
-    localStorage.setItem(HERO_COLLAPSED_STORAGE_KEY, heroCollapsed ? '1' : '0');
-  }, [heroCollapsed]);
-
-  useEffect(() => {
-    localStorage.setItem(SORT_MODE_STORAGE_KEY, sortMode);
-  }, [sortMode]);
-
-  const todayDate = useMemo(() => {
-    const d = new Date();
-    d.setHours(0, 0, 0, 0);
-    return d;
-  }, []);
+  const todayDate = useMemo(() => { const d = new Date(); d.setHours(0, 0, 0, 0); return d; }, []);
 
   const today = formatDate(todayDate);
   const activeHabits = useMemo(() => allHabits.filter(h => !h.archived), [allHabits]);
@@ -109,19 +116,7 @@ export function useDashboardModel() {
   );
   const dateStr = formatAppDate(new Date(), { weekday: 'long', month: 'short', day: 'numeric' });
 
-  const remindersHook = useReminderTracker(summary.scheduledTodayHabits, formatDate, (habit) => {
-    if (typeof window === 'undefined' || !('Notification' in window) || Notification.permission !== 'granted') {
-      return;
-    }
-    try {
-      new Notification('Habbit reminder', {
-        body: `Time for: ${habit.name}`,
-        tag: `habit-reminder-${habit.id}`
-      });
-    } catch {
-      // ignore
-    }
-  });
+  const remindersHook = useReminderSetup(summary.scheduledTodayHabits, formatDate, today);
 
   const data = useDashboardData({
     habits: allHabits,
