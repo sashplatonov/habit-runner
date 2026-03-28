@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import type { RefObject } from 'react';
 import { BarChart3Icon, CircleHelpIcon, Grid2x2Icon, TrendingUpIcon, XIcon } from 'lucide-react';
 
@@ -256,7 +257,7 @@ export function ChartGuideTooltip({
       >
         <CircleHelpIcon size={14} strokeWidth={2.1} />
       </button>
-      {open ? (
+      {open ? createPortal(
         <TooltipPanel
           title={title}
           summary={summary}
@@ -265,7 +266,8 @@ export function ChartGuideTooltip({
           position={position}
           panelRef={panelRef}
           closeTooltip={closeTooltip}
-        />
+        />,
+        document.body
       ) : null}
     </div>
   );
