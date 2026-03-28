@@ -173,22 +173,6 @@ export function HabitRow({
   );
 }
 
-function handleHabitRowKeyDown(
-  event: React.KeyboardEvent<HTMLDivElement>,
-  onDetail: () => void,
-  onToggle: () => void
-) {
-  if (event.key === 'Enter') {
-    event.preventDefault();
-    onDetail();
-    return;
-  }
-  if (event.key === ' ') {
-    event.preventDefault();
-    onToggle();
-  }
-}
-
 type HabitRowCardProps = {
   habit: Habit;
   completed: boolean;
@@ -297,7 +281,10 @@ function HabitRowCard({
       tabIndex={0}
       role="listitem"
       aria-label={`${habit.name}, ${completed ? 'completed' : 'not completed'}`}
-      onKeyDown={(event) => handleHabitRowKeyDown(event, onDetail, onToggle)}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter') { e.preventDefault(); onDetail(); }
+        else if (e.key === ' ') { e.preventDefault(); onToggle(); }
+      }}
       className={`relative flex items-stretch w-full transform ${outerPaddingClass} ${dropTransformClass} ${dragTransformClass}`}
     >
       <div
@@ -510,10 +497,3 @@ function getHabitStatusBadge(isFrozen: boolean, scheduledToday: boolean) {
   return null;
 }
 
-export function DropIndicator() {
-  return (
-    <div className="px-4 py-1">
-      <div className="h-[3px] w-full rounded-full bg-gradient-to-r from-accent to-accent-secondary animate-pulse transition-all" />
-    </div>
-  );
-}
