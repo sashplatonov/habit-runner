@@ -242,7 +242,7 @@ export function ChartGuideTooltip({
         type="button"
         aria-label={`Explain ${title}`}
         aria-expanded={open}
-        onClick={() => setIsPinned((prev) => !prev)}
+        onClick={(e) => { e.stopPropagation(); setIsPinned((prev) => !prev); }}
         onBlur={(event) => {
           if (!event.currentTarget.parentElement?.contains(event.relatedTarget as Node | null)) {
             setIsPinned(false);
