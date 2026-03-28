@@ -11,6 +11,7 @@ import { getHabitPhase, isPhaseTransition } from '@/lib/habits/phases';
 import { toCompletionKey } from '@/lib/completionKey';
 import type { Habit } from '@/types/habit';
 import { computeTileHint, type TileHint } from './DashboardHabitTile.helpers';
+import { DescriptionTooltip } from '@/components/DescriptionTooltip';
 
 const CONFETTI_COLORS = ['var(--accent)', 'var(--accent-secondary)', '#fff', 'var(--glow)'];
 
@@ -230,13 +231,16 @@ function HabitTileMeta({
   const hintColor = hint?.type === 'good' ? 'text-accent' : hint?.type === 'warn' ? 'text-accent-secondary' : 'text-muted';
   return (
     <div className="flex-1 min-w-0">
-      <div className={`text-sm font-semibold truncate leading-tight ${completed ? 'text-muted line-through' : 'text-foreground'}`}>
-        {habit.name}
-        {habit.dailyTarget && habit.dailyTarget > 1 && (
-          <span className="ml-1 text-[10px] font-mono font-medium px-1 py-0.5 rounded bg-accent/10 text-accent-secondary">
-            ×{habit.dailyTarget}
-          </span>
-        )}
+      <div className={`flex items-center gap-1 leading-tight ${completed ? 'text-muted line-through' : 'text-foreground'}`}>
+        <span className="text-sm font-semibold truncate">
+          {habit.name}
+          {habit.dailyTarget && habit.dailyTarget > 1 && (
+            <span className="ml-1 text-[10px] font-mono font-medium px-1 py-0.5 rounded bg-accent/10 text-accent-secondary">
+              ×{habit.dailyTarget}
+            </span>
+          )}
+        </span>
+        {habit.description && <DescriptionTooltip description={habit.description} />}
       </div>
       <div className="mt-0.5 h-4">
         <StreakIndicator

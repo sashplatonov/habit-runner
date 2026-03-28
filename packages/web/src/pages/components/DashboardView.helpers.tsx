@@ -1,4 +1,5 @@
 import { GripVerticalIcon, SnowflakeIcon, FlameIcon, TrophyIcon } from 'lucide-react';
+import { DescriptionTooltip } from '@/components/DescriptionTooltip';
 import { ChartGuideTooltip } from '@/components/ChartGuideTooltip';
 import { CompletionRing } from '@/components/CompletionRing';
 import { MiniHeatmap } from '@/components/MiniHeatmap';
@@ -460,6 +461,7 @@ function HabitRowInfoPane({
           <span className={nameClasses}>
             {habit.name}
           </span>
+          {habit.description && <DescriptionTooltip description={habit.description} />}
           {habit.dailyTarget && habit.dailyTarget > 1 && (
             <span className="flex-shrink-0 text-[10px] font-mono font-medium px-1 py-0.5 rounded bg-accent/10 text-accent-secondary">
               ×{habit.dailyTarget}
@@ -480,22 +482,17 @@ function HabitRowInfoPane({
             </div>
           )}
         </div>
-        {(habit.description || statusBadge) && (
+        {statusBadge && (
           <div className="flex items-center gap-2 mt-0.5">
-            {habit.description && (
-              <span className="text-[10px] text-muted truncate opacity-60">{habit.description}</span>
-            )}
-            {statusBadge && (
-              <span
-                className={`flex items-center gap-1 flex-shrink-0 text-[10px] font-mono uppercase tracking-[0.3em] ${statusBadge.tone}`}
-                aria-label={statusBadge.title}
-              >
-                {isFrozen && (
-                  <SnowflakeIcon size={10} className="text-current" aria-hidden />
-                )}
-                {statusBadge.label}
-              </span>
-            )}
+            <span
+              className={`flex items-center gap-1 flex-shrink-0 text-[10px] font-mono uppercase tracking-[0.3em] ${statusBadge.tone}`}
+              aria-label={statusBadge.title}
+            >
+              {isFrozen && (
+                <SnowflakeIcon size={10} className="text-current" aria-hidden />
+              )}
+              {statusBadge.label}
+            </span>
           </div>
         )}
       </div>

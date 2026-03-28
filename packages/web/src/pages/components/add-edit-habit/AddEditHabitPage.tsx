@@ -162,15 +162,15 @@ function IconNameSection({
           />
           {nameError && <p className="text-[10px] font-mono text-accent-secondary mt-1">{nameError}</p>}
         </div>
-        <div>
+        <div className="col-span-full">
           <label className="block text-[10px] font-mono text-muted uppercase tracking-wider mb-2">Description</label>
-          <input
-            type="text"
+          <textarea
             value={description}
             onChange={(event) => setDescription(event.target.value)}
             placeholder="Brief description..."
-            maxLength={100}
-            className="w-full bg-bg-secondary border border-border rounded-lg px-3 py-2.5 text-sm text-foreground placeholder-border-hover focus:outline-none focus:border-accent/50 focus:shadow-[0_0_12px_var(--glow)] transition-all"
+            maxLength={400}
+            rows={6}
+            className="w-full bg-bg-secondary border border-border rounded-lg px-3 py-2.5 text-sm text-foreground placeholder-border-hover focus:outline-none focus:border-accent/50 focus:shadow-[0_0_12px_var(--glow)] transition-all resize-none overflow-y-auto"
           />
         </div>
       </div>
