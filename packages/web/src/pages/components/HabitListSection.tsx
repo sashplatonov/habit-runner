@@ -1,5 +1,13 @@
 import React from 'react';
-import { HabitRow, HabitTile, DropIndicator } from './DashboardView.helpers';
+import { HabitRow, HabitTile } from './DashboardView.helpers';
+
+function DropIndicator() {
+  return (
+    <div className="px-4 py-1">
+      <div className="h-[3px] w-full rounded-full bg-gradient-to-r from-accent to-accent-secondary animate-pulse transition-all" />
+    </div>
+  );
+}
 import type { Habit } from '@/types/habit';
 import type { DashboardViewProps, ViewDensity } from './DashboardHero';
 

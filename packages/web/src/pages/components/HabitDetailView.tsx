@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { ChartGuideTooltip } from '@/components/ChartGuideTooltip';
+import { DescriptionTooltip } from '@/components/DescriptionTooltip';
 import { HabitHeatmap } from '@/components/HabitHeatmap';
 import { HabitRetroCalendar } from './HabitRetroCalendar';
 import { TodayBlock } from './HabitDetailTodayBlock';
@@ -100,18 +101,10 @@ function HabitDetailHeader({
   handleIncrementCompletion,
   handleDecrementCompletion,
   toggleFreezeToday
-}: Pick<
-  HabitDetailViewProps,
-  | 'habit'
-  | 'habitId'
-  | 'accent'
-  | 'completedToday'
-  | 'todayCompletionCount'
-  | 'navigate'
-  | 'handleToggleArchive'
-  | 'handleIncrementCompletion'
-  | 'handleDecrementCompletion'
-  | 'toggleFreezeToday'
+}: Pick<HabitDetailViewProps,
+  'habit' | 'habitId' | 'accent' | 'completedToday' | 'todayCompletionCount' |
+  'navigate' | 'handleToggleArchive' | 'handleIncrementCompletion' |
+  'handleDecrementCompletion' | 'toggleFreezeToday'
 > & { canIncrement: boolean; isTodayFrozen: boolean }) {
   return (
     <div
@@ -130,7 +123,12 @@ function HabitDetailHeader({
           <span className="text-xl flex-shrink-0">{habit.icon}</span>
           <div className="flex-1 min-w-0">
             <h1 className="text-base font-semibold text-foreground break-words sm:truncate">{habit.name}</h1>
-            <p className="text-[11px] text-muted break-words sm:truncate">{habit.description}</p>
+            {habit.description && (
+              <div className="flex items-center gap-1 min-w-0">
+                <p className="text-[11px] text-muted truncate">{habit.description}</p>
+                <DescriptionTooltip description={habit.description} />
+              </div>
+            )}
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-2 sm:justify-end">
