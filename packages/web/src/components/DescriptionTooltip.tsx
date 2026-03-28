@@ -9,7 +9,7 @@ export function DescriptionTooltip({ description }: { description: string }) {
   const computePos = () => {
     if (triggerRef.current) {
       const rect = triggerRef.current.getBoundingClientRect();
-      setPos({ left: rect.left + rect.width / 2, top: rect.top - 8 });
+      setPos({ left: rect.left + rect.width / 2, top: rect.top - 10 });
     }
   };
 
@@ -28,12 +28,33 @@ export function DescriptionTooltip({ description }: { description: string }) {
       </button>
       {show && createPortal(
         <div
-          className="fixed bg-bg-card border border-border rounded-lg p-2 text-[11px] text-foreground shadow-lg z-[9999] whitespace-pre-wrap break-words max-h-40 overflow-auto"
-          style={{ left: pos.left, top: pos.top, transform: 'translate(-50%, -100%)', width: '220px' }}
+          className="fixed z-[9999] max-w-xs"
+          style={{
+            left: pos.left,
+            top: pos.top,
+            transform: 'translate(-50%, -100%)',
+            width: 'min(280px, calc(100vw - 24px))'
+          }}
           onMouseEnter={() => setShow(true)}
           onMouseLeave={() => setShow(false)}
         >
-          {description}
+          <div className="rounded-2xl border border-border/60 bg-bg-card shadow-[0_8px_32px_rgba(0,0,0,0.28)] backdrop-blur-sm overflow-hidden">
+            <div className="px-1 py-1">
+              <div className="h-[2px] w-8 rounded-full mx-auto mb-2 opacity-30 bg-foreground" />
+            </div>
+            <p className="px-3 pb-3 text-[11px] leading-[1.6] text-foreground whitespace-pre-wrap break-words">
+              {description}
+            </p>
+          </div>
+          <div
+            className="absolute left-1/2 -translate-x-1/2 bottom-0 translate-y-full w-0 h-0"
+            style={{
+              borderLeft: '6px solid transparent',
+              borderRight: '6px solid transparent',
+              borderTop: '6px solid var(--border)'
+            }}
+            aria-hidden
+          />
         </div>,
         document.body
       )}
