@@ -32,24 +32,40 @@ Each step must pass. CI does not run automatically yet — run `npm run check` l
 
 ## 🧪 Testing <a name="testing"></a>
 
-**Frontend**: Vitest
+**Frontend**: Vitest + @testing-library/react (18 test suites, 103 tests)
 
 ```bash
 cd packages/web && npm run test
+# or from root:
+npm run test -w @habbit-runner/web
 ```
 
-Tests live alongside source files (`*.test.ts`). Focus areas: schedule calculations, streak logic, date handling.
+Test suites cover:
+- Schedule/streak/stat calculations (`schedule.test.ts`, `habitStats.test.ts`, `completionKey.test.ts`)
+- Sync engine hook (`useSyncEngine.test.tsx`)
+- Sync status component (`SyncStatus.test.tsx`)
+- Outbox panel — soft-delete + undo flow (`OutboxPanel.test.tsx`)
+- Async state hook (`useAsyncState.test.ts`)
+- Async UI state components (`AsyncStateUI.test.tsx`)
+- AppLayout accessibility (`AppLayout.a11y.test.tsx`)
+- Router, write-through, habitsSerialization, Dexie write-through, caching
 
-**Backend**: No automated test suite yet. Manual testing via Prisma Studio and curl.
+> **Note**: `react` and `react-dom` must be installed at the workspace root for
+> `@testing-library/react` (hoisted to root `node_modules`) to find its peer deps.
+> They are listed in root `devDependencies` — run `npm install` if missing.
+
+**Backend**: Node test runner (built-in) — e2e + unit tests for auth and sync flows.
 
 ```bash
-# Open Prisma Studio (local)
-cd packages/server && npx prisma studio
-
-# Quick API health check
-curl http://localhost:3000/
+cd packages/server && npm run test
+# or from root:
+npm run test -w @habbit-runner/server
 ```
 
+Test suites cover:
+- Auth guard: bearer token validation and unauthorized rejection (`test/unit/auth.guard.test.ts`)
+- E2E auth+sync: login, preferences get/update, pull (with/without cursor), push upsert + conflict, push delete + tombstone, deduplication via SyncOpLog, delta pull (`test/e2e/auth-sync.e2e.test.ts`)
+- In-memory Prisma mock for isolated test execution (`test/e2e/in-memory-prisma.mock.ts`)
 [↑ Back to top](#top)
 
 ---

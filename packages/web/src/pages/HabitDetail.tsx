@@ -96,7 +96,7 @@ export function HabitDetail() {
   if (!habit || !habitId) {
     return (
       <div className="min-h-screen bg-bg-primary flex items-center justify-center">
-        <div className="text-muted font-mono">Habit not found</div>
+        <div className="text-muted font-mono" role="status" aria-live="polite">Habit not found</div>
       </div>
     );
   }

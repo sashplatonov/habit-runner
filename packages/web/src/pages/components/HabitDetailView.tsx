@@ -87,6 +87,54 @@ function CustomTooltip({
   }
   return null;
 }
+type HabitDetailActionsProps = Pick<HabitDetailViewProps, 'habit' | 'habitId' | 'accent' | 'completedToday' | 'todayCompletionCount' | 'navigate' | 'handleToggleArchive' | 'handleIncrementCompletion' | 'handleDecrementCompletion' | 'toggleFreezeToday'> & { canIncrement: boolean; isTodayFrozen: boolean };
+
+function HabitDetailActions({
+  habit, habitId, accent, completedToday, todayCompletionCount,
+  canIncrement, isTodayFrozen, navigate, handleToggleArchive,
+  handleIncrementCompletion, handleDecrementCompletion, toggleFreezeToday
+}: HabitDetailActionsProps) {
+  return (
+    <div className="flex flex-wrap items-center gap-2 sm:justify-end">
+      <button
+        onClick={handleToggleArchive}
+        aria-label={habit.archived ? 'Unarchive habit' : 'Archive habit'}
+        title={habit.archived ? 'Unarchive' : 'Archive'}
+        className={`p-1.5 rounded border transition-colors ${habit.archived ? 'border-accent-secondary/30 text-accent-secondary bg-accent-secondary/10 hover:bg-accent-secondary/20' : 'border-border text-muted hover:text-foreground hover:border-border-hover'}`}
+      >
+        {habit.archived ? <ArchiveRestoreIcon size={13} aria-hidden /> : <ArchiveIcon size={13} aria-hidden />}
+      </button>
+      <button onClick={() => navigate(`/habit/${habitId}/edit`)} aria-label="Edit habit" className="p-1.5 rounded border border-border text-muted hover:text-foreground hover:border-border-hover transition-colors">
+        <EditIcon size={13} aria-hidden />
+      </button>
+      <button
+        onClick={() => { void handleIncrementCompletion(); }}
+        disabled={!canIncrement}
+        aria-label={completedToday ? 'Habit completed today' : 'Mark as completed today'}
+        className={`px-3 py-1.5 rounded text-xs font-mono font-medium border transition-all duration-200 ${completedToday ? 'border-border text-muted bg-transparent' : 'text-bg-primary font-bold'} disabled:opacity-40 disabled:cursor-not-allowed`}
+        style={!completedToday ? { backgroundColor: accent.hex, borderColor: accent.hex, boxShadow: `0 0 16px ${accent.glow}` } : undefined}
+      >
+        {completedToday ? 'Done' : 'Add +1'}
+      </button>
+      <button
+        type="button"
+        onClick={() => { void handleDecrementCompletion(); }}
+        disabled={todayCompletionCount <= 0}
+        aria-label="Remove one completion for today"
+        className="px-3 py-1.5 rounded text-xs font-mono font-medium border border-border text-muted transition disabled:opacity-40 disabled:cursor-not-allowed hover:border-border-hover hover:text-foreground"
+      >-1</button>
+      <button
+        type="button"
+        onClick={() => { void toggleFreezeToday(); }}
+        aria-label={isTodayFrozen ? 'Unfreeze today' : 'Freeze today'}
+        title={isTodayFrozen ? 'Unfreeze today' : 'Freeze today'}
+        className={`inline-flex h-[34px] w-[34px] flex-none items-center justify-center rounded border transition-colors ${isTodayFrozen ? 'border-accent text-accent bg-accent/15 shadow-[0_0_12px_rgba(255,255,255,0.08)]' : 'border-border text-muted hover:text-foreground hover:border-border-hover'}`}
+      >
+        <SnowflakeIcon size={11} strokeWidth={2.2} aria-hidden />
+      </button>
+    </div>
+  );
+}
 
 function HabitDetailHeader({
   habit,
@@ -117,8 +165,12 @@ function HabitDetailHeader({
     >
       <div className="max-w-2xl mx-auto flex flex-col gap-3 sm:flex-row sm:items-center">
         <div className="flex items-center gap-3 min-w-0 flex-1">
-          <button onClick={() => navigate('/')} className="text-muted hover:text-foreground transition-colors p-1 -ml-1 flex-shrink-0">
-            <ArrowLeftIcon size={16} />
+          <button
+            onClick={() => navigate('/')}
+            aria-label="Back to dashboard"
+            className="text-muted hover:text-foreground transition-colors p-1 -ml-1 flex-shrink-0"
+          >
+            <ArrowLeftIcon size={16} aria-hidden />
           </button>
           <span className="text-xl flex-shrink-0">{habit.icon}</span>
           <div className="flex-1 min-w-0">
@@ -131,70 +183,20 @@ function HabitDetailHeader({
             )}
           </div>
         </div>
-        <div className="flex flex-wrap items-center gap-2 sm:justify-end">
-          <button
-            onClick={handleToggleArchive}
-            className={`p-1.5 rounded border transition-colors ${
-              habit.archived
-                ? 'border-accent-secondary/30 text-accent-secondary bg-accent-secondary/10 hover:bg-accent-secondary/20'
-                : 'border-border text-muted hover:text-foreground hover:border-border-hover'
-            }`}
-            title={habit.archived ? 'Unarchive' : 'Archive'}
-          >
-            {habit.archived ? <ArchiveRestoreIcon size={13} /> : <ArchiveIcon size={13} />}
-          </button>
-          <button
-            onClick={() => navigate(`/habit/${habitId}/edit`)}
-            className="p-1.5 rounded border border-border text-muted hover:text-foreground hover:border-border-hover transition-colors"
-          >
-            <EditIcon size={13} />
-          </button>
-          <button
-            onClick={() => {
-              void handleIncrementCompletion();
-            }}
-            disabled={!canIncrement}
-            className={`px-3 py-1.5 rounded text-xs font-mono font-medium border transition-all duration-200 ${
-              completedToday ? 'border-border text-muted bg-transparent' : 'text-bg-primary font-bold'
-            } disabled:opacity-40 disabled:cursor-not-allowed`}
-            style={
-              !completedToday
-                ? {
-                    backgroundColor: accent.hex,
-                    borderColor: accent.hex,
-                    boxShadow: `0 0 16px ${accent.glow}`
-                  }
-                : undefined
-            }
-          >
-            {completedToday ? 'Done' : 'Add +1'}
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              void handleDecrementCompletion();
-            }}
-            disabled={todayCompletionCount <= 0}
-            className="px-3 py-1.5 rounded text-xs font-mono font-medium border border-border text-muted transition disabled:opacity-40 disabled:cursor-not-allowed hover:border-border-hover hover:text-foreground"
-          >
-            -1
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              void toggleFreezeToday();
-            }}
-            className={`inline-flex h-[34px] w-[34px] flex-none items-center justify-center rounded border transition-colors ${
-              isTodayFrozen
-                ? 'border-accent text-accent bg-accent/15 shadow-[0_0_12px_rgba(255,255,255,0.08)]'
-                : 'border-border text-muted hover:text-foreground hover:border-border-hover'
-            }`}
-            aria-label={isTodayFrozen ? 'Unfreeze today' : 'Freeze today'}
-            title={isTodayFrozen ? 'Unfreeze today' : 'Freeze today'}
-          >
-            <SnowflakeIcon size={11} strokeWidth={2.2} aria-hidden />
-          </button>
-        </div>
+        <HabitDetailActions
+          habit={habit}
+          habitId={habitId}
+          accent={accent}
+          completedToday={completedToday}
+          todayCompletionCount={todayCompletionCount}
+          canIncrement={canIncrement}
+          isTodayFrozen={isTodayFrozen}
+          navigate={navigate}
+          handleToggleArchive={handleToggleArchive}
+          handleIncrementCompletion={handleIncrementCompletion}
+          handleDecrementCompletion={handleDecrementCompletion}
+          toggleFreezeToday={toggleFreezeToday}
+        />
       </div>
     </div>
   );
