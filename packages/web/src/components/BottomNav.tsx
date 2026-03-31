@@ -109,6 +109,7 @@ export function BottomNav({ theme, onThemeChange, onLogout }: BottomNavProps) {
         to="/"
         className={`flex-1 flex flex-col items-center justify-center gap-1 transition-colors ${isHome ? 'text-accent' : 'text-muted'}`}
         aria-label="Dashboard"
+        aria-current={isHome ? 'page' : undefined}
       >
         <div className={`w-8 h-8 flex items-center justify-center rounded-[10px] ${isHome ? 'bg-accent/10' : ''}`}>
           <LayoutDashboardIcon size={18} />
@@ -120,6 +121,7 @@ export function BottomNav({ theme, onThemeChange, onLogout }: BottomNavProps) {
         to="/stats"
         className={`flex-1 flex flex-col items-center justify-center gap-1 transition-colors ${isStats ? 'text-accent' : 'text-muted'}`}
         aria-label="Stats"
+        aria-current={isStats ? 'page' : undefined}
       >
         <div className={`w-8 h-8 flex items-center justify-center rounded-[10px] ${isStats ? 'bg-accent/10' : ''}`}>
           <BarChart2Icon size={18} />
@@ -163,6 +165,8 @@ export function BottomNav({ theme, onThemeChange, onLogout }: BottomNavProps) {
           onClick={() => setIsThemeOpen((prev) => !prev)}
           className={`flex flex-col items-center gap-1 ${isThemeOpen ? 'text-accent' : 'text-muted'}`}
           aria-label="Choose theme"
+          aria-expanded={isThemeOpen}
+          aria-haspopup="listbox"
         >
           <div className={`w-8 h-8 flex items-center justify-center rounded-[10px] ${isThemeOpen ? 'bg-accent/10' : ''}`}>
             <PaletteIcon size={18} />

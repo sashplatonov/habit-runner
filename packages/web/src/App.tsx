@@ -175,7 +175,7 @@ export function App() {
             >
               Skip to main content
             </a>
-            <AppLayout theme={theme} onThemeChange={setTheme} onLogout={logout}>
+            <AppLayout theme={theme} onThemeChange={setTheme} onLogout={logout} syncState={syncState}>
               <RouteFocusManager />
               <Routes>
                 <Route path="/" element={<Dashboard />} />

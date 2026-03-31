@@ -7,7 +7,8 @@ export function AddEditHabit() {
   if (model.shouldShowLoading) {
     return (
       <div className="min-h-screen bg-bg-primary">
-        <div className="max-w-lg mx-auto px-4 py-12 text-center text-sm font-mono text-muted">
+        <div className="max-w-lg mx-auto px-4 py-12 text-center text-sm font-mono text-muted" role="status" aria-live="polite">
+          <h2 className="sr-only">Loading</h2>
           Loading habit...
         </div>
       </div>
