@@ -38,7 +38,7 @@ services:
     <<: *service_defaults
     build:
       context: .
-      dockerfile: packages/server/Dockerfile
+      dockerfile: packages/server-java/Dockerfile
     init: true
     environment:
       DATABASE_URL: ${DATABASE_URL:-postgresql://habbit:password@db:5432/habbit_runner}
@@ -61,7 +61,7 @@ services:
       test:
         [
           "CMD-SHELL",
-          "node -e \"const p=Number(process.env.PORT||3000);const net=require('node:net');const socket=net.connect({host:'127.0.0.1',port:p},()=>{socket.destroy();process.exit(0)});socket.on('error',()=>process.exit(1));setTimeout(()=>process.exit(1),2500);\""
+          "sh -lc 'exec 3<>/dev/tcp/127.0.0.1/${PORT:-3000}'"
         ]
       interval: 10s
       timeout: 5s
