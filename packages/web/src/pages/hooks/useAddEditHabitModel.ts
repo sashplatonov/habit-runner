@@ -44,8 +44,6 @@ export type AddEditHabitModel = {
   increaseTargetStreak: () => void;
   dailyTarget: number;
   setDailyTarget: React.Dispatch<React.SetStateAction<number>>;
-  difficulty: 1 | 2 | 3 | 4 | 5;
-  setDifficulty: React.Dispatch<React.SetStateAction<1 | 2 | 3 | 4 | 5>>;
   type: 'positive' | 'negative';
   setType: React.Dispatch<React.SetStateAction<'positive' | 'negative'>>;
   tags: string[];
@@ -117,7 +115,6 @@ function useHabitFormState(existing?: Habit, isEdit?: boolean) {
   );
   const [targetStreak, setTargetStreak] = useState(getClosestStreakTick(existing?.targetStreak ?? 21));
   const [dailyTarget, setDailyTarget] = useState(existing?.dailyTarget ?? 1);
-  const [difficulty, setDifficulty] = useState<1 | 2 | 3 | 4 | 5>((existing?.difficulty as any) || 1);
   const [type, setType] = useState<'positive' | 'negative'>(existing?.type || 'positive');
   const [tags, setTags] = useState<string[]>(existing?.tags || []);
   const [tagInput, setTagInput] = useState('');
@@ -141,7 +138,6 @@ function useHabitFormState(existing?: Habit, isEdit?: boolean) {
     );
     setTargetStreak(getClosestStreakTick(existing.targetStreak));
     setDailyTarget(existing.dailyTarget ?? 1);
-    setDifficulty((existing.difficulty as any) || 1);
     setType(existing.type || 'positive');
     setTags(existing.tags ?? []);
     setTagInput('');
@@ -187,8 +183,6 @@ function useHabitFormState(existing?: Habit, isEdit?: boolean) {
     setCustomDays,
     targetStreak,
     setTargetStreak,
-    difficulty,
-    setDifficulty,
     type,
     setType,
     canDecreaseStreak,
@@ -227,7 +221,6 @@ function useHabitHandlers({
   tagInput,
   reminderTime,
   reminderEnabled,
-  difficulty,
   type,
   setErrors,
   setTags,
@@ -271,7 +264,6 @@ function useHabitHandlers({
       existing,
       reminderTime,
       reminderEnabled,
-      difficulty,
       type
     });
     if (isEdit && habitId) {
@@ -298,6 +290,7 @@ function useHabitHandlers({
     reminderTime,
     tags,
     targetStreak,
+    type,
     updateHabit,
     validate,
     schedule,
@@ -402,7 +395,6 @@ function buildHabitPayload({
   existing,
   reminderTime,
   reminderEnabled,
-  difficulty,
   type
 }: {
   name: string;
@@ -418,7 +410,6 @@ function buildHabitPayload({
   existing?: Habit;
   reminderTime: string;
   reminderEnabled: boolean;
-  difficulty: 1 | 2 | 3 | 4 | 5;
   type: 'positive' | 'negative';
 }): HabitUpsertInput {
   return {
@@ -431,7 +422,6 @@ function buildHabitPayload({
     customDays,
     targetStreak,
     dailyTarget: Math.max(1, Math.trunc(dailyTarget)),
-    difficulty,
     type,
     archived: existing?.archived ?? false,
     schedule: schedule ?? scheduleFromLegacy(frequency, customDays),

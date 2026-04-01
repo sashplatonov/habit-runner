@@ -31,6 +31,8 @@ import { useTheme } from '@/hooks/useTheme';
 import { UndoProvider } from '@/lib/undo';
 import { installGlobalClientLogging } from '@/lib/logging/clientLogger';
 import { PullToRefresh } from '@/components/PullToRefresh';
+import { subscribeToPush, isPushNotificationSupported } from '@/lib/pwa/pushSubscription';
+import { clearCurrentUserTimeZone } from '@/lib/time/userTimezone';
 
 type AuthCallbackPageProps = {
   message?: string;
@@ -90,6 +92,7 @@ export function App() {
   useEffect(() => {
     const onSessionCleared = () => {
       setCurrentUserId(null);
+      clearCurrentUserTimeZone();
       setAuthSession(null);
       setAuthError('Session expired. Please log in again.');
     };
@@ -103,6 +106,13 @@ export function App() {
   useEffect(() => {
     return installGlobalClientLogging();
   }, []);
+
+  // Auto-subscribe to push if permission already granted and user is logged in
+  useEffect(() => {
+    if (!authSession || !isPushNotificationSupported()) {return;}
+    if (Notification.permission !== 'granted') {return;}
+    subscribeToPush().catch(() => {/* silent — push is best-effort */});
+  }, [authSession]);
 
   useEffect(() => {
     const url = new URL(window.location.href);
@@ -126,6 +136,7 @@ export function App() {
     const refreshToken = authSession?.refreshToken;
     clearAuthSession();
     setCurrentUserId(null);
+    clearCurrentUserTimeZone();
     setAuthSession(null);
     if (typeof window !== 'undefined') {
       window.history.replaceState({}, '', '/');
@@ -164,7 +175,7 @@ export function App() {
             >
               Skip to main content
             </a>
-            <AppLayout theme={theme} onThemeChange={setTheme} onLogout={logout}>
+            <AppLayout theme={theme} onThemeChange={setTheme} onLogout={logout} syncState={syncState}>
               <RouteFocusManager />
               <Routes>
                 <Route path="/" element={<Dashboard />} />

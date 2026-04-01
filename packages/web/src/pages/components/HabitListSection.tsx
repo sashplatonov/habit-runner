@@ -1,7 +1,105 @@
 import React from 'react';
-import { HabitRow, DropIndicator } from './DashboardView.helpers';
+import { HabitRow, HabitTile } from './DashboardView.helpers';
+
+function DropIndicator() {
+  return (
+    <div className="px-4 py-1">
+      <div className="h-[3px] w-full rounded-full bg-gradient-to-r from-accent to-accent-secondary animate-pulse transition-all" />
+    </div>
+  );
+}
 import type { Habit } from '@/types/habit';
-import type { DashboardViewProps } from './DashboardHero';
+import type { DashboardViewProps, ViewDensity } from './DashboardHero';
+
+const FILTER_EMPTY_STATES: Record<
+  DashboardViewProps['filter'],
+  { title: string; subtitle: string; emoji: string }
+> = {
+  pending: {
+    title: 'All done for today!',
+    subtitle: 'Enjoy the break or set up a new habit when you’re ready.',
+    emoji: '🎉'
+  },
+  done: {
+    title: 'No completed habits yet',
+    subtitle: 'Complete a habit to track streaks and stats.',
+    emoji: '✨'
+  },
+  all: {
+    title: 'No habits yet',
+    subtitle: 'Add your first habit to start building momentum.',
+    emoji: '👋'
+  },
+  archived: {
+    title: 'No archived habits',
+    subtitle: 'Archive habits here once you want to pause them.',
+    emoji: '🗂️'
+  }
+};
+
+function EmptyHabitState({
+  filter,
+  selectedTags,
+  navigate
+}: Pick<DashboardViewProps, 'filter' | 'selectedTags' | 'navigate'>) {
+  const emptyState = FILTER_EMPTY_STATES[filter];
+  const message = selectedTags.length > 0
+    ? `No habits match ${selectedTags.join(', ')} under this filter.`
+    : emptyState.subtitle;
+
+  return (
+    <div className="max-w-2xl mx-auto py-16 flex flex-col items-center justify-center gap-3 text-center text-muted">
+      <div className="text-4xl">{emptyState.emoji}</div>
+      <h2 className="text-2xl font-semibold text-foreground">{emptyState.title}</h2>
+      <p className="text-sm text-muted max-w-md">{message}</p>
+      <button
+        type="button"
+        onClick={() => navigate('/habit/new')}
+        className="px-5 py-2 rounded-2xl bg-accent text-white text-sm font-semibold uppercase tracking-widest transition hover:opacity-90"
+      >
+        Add a habit
+      </button>
+    </div>
+  );
+}
+
+function GroupedHabitItems({
+  selectedTags,
+  filtered,
+  renderHabitItem,
+  listClassName,
+  headingClassName
+}: {
+  selectedTags: string[];
+  filtered: Habit[];
+  renderHabitItem: (habit: Habit, key: string) => React.ReactNode;
+  listClassName: string;
+  headingClassName: string;
+}) {
+  if (selectedTags.length === 0) {
+    return <>{filtered.map((habit) => renderHabitItem(habit, habit.id))}</>;
+  }
+
+  return (
+    <>
+      {selectedTags.map((tag) => {
+        const habitsInTag = filtered.filter((habit) => habit.tags.includes(tag));
+        if (habitsInTag.length === 0) {
+          return null;
+        }
+        return (
+          <div key={tag} className={listClassName}>
+            <div className={headingClassName}>
+              <span className="w-1.5 h-1.5 rounded-full bg-accent" />
+              <h3 className="text-[10px] font-mono font-bold uppercase tracking-widest text-muted">{tag}</h3>
+            </div>
+            {habitsInTag.map((habit) => renderHabitItem(habit, `${tag}-${habit.id}`))}
+          </div>
+        );
+      })}
+    </>
+  );
+}
 
 export function HabitListSection({
   filtered,
@@ -13,10 +111,11 @@ export function HabitListSection({
   handleDragStart,
   handleDragOver,
   handleDragEnd,
+  handleTouchStart,
   navigate,
-  reorderMode,
-  moveHabit,
-  selectedTags
+  selectedTags,
+  viewDensity,
+  filter
 }: Pick<
   DashboardViewProps,
   | 'filtered'
@@ -28,82 +127,89 @@ export function HabitListSection({
   | 'handleDragStart'
   | 'handleDragOver'
   | 'handleDragEnd'
+  | 'handleTouchStart'
   | 'navigate'
-  | 'reorderMode'
-  | 'moveHabit'
   | 'selectedTags'
+  | 'viewDensity'
+  | 'filter'
 >) {
   if (filtered.length === 0) {
+    return <EmptyHabitState filter={filter} selectedTags={selectedTags} navigate={navigate} />;
+  }
+  const isGrid = viewDensity === 'comfortable';
+  let animationIndex = 0;
+
+  const renderHabitItem = (habit: Habit, key: string) => {
+    const index = animationIndex++;
+    if (isGrid) {
+      return (
+        <HabitTile
+          key={key}
+          habit={habit}
+          onToggle={() => { void handleToggle(habit); }}
+          onDetail={() => navigate(`/habit/${habit.id}`)}
+          appearanceIndex={index}
+        />
+      );
+    }
     return (
-      <div className="max-w-2xl mx-auto py-16 text-muted flex flex-col items-center justify-center">
-        <div className="text-4xl mb-3">✓</div>
-        <p className="font-mono text-sm">All habits are currently paused</p>
+      <HabitRowEntry
+        key={key}
+        habit={habit}
+        dropHint={dropHint}
+        dragOverHabitId={dragOverHabitId}
+        draggedHabitId={draggedHabitId}
+        handleToggle={handleToggle}
+        handleDrop={handleDrop}
+        handleDragStart={handleDragStart}
+        handleDragOver={handleDragOver}
+        handleDragEnd={handleDragEnd}
+        handleTouchStart={handleTouchStart}
+        navigate={navigate}
+        viewDensity={viewDensity}
+        appearanceIndex={index}
+      />
+    );
+  };
+
+  if (isGrid) {
+    return (
+      <div
+        className="w-full max-w-6xl mx-auto py-3 px-4 sm:px-6 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3"
+        role="list"
+        aria-label="Habit list"
+      >
+        <GroupedHabitItems
+          selectedTags={selectedTags}
+          filtered={filtered}
+          renderHabitItem={renderHabitItem}
+          listClassName="col-span-full"
+          headingClassName="flex items-center gap-2 px-1 mt-2 first:mt-0"
+        />
       </div>
     );
   }
+
   return (
-    <div className="max-w-2xl mx-auto py-3 flex flex-col gap-2 px-4" role="list" aria-label="Habit list">
-      {selectedTags.length > 0 ? (
-        selectedTags.map((tag) => {
-          const habitsInTag = filtered.filter((h) => h.tags.includes(tag));
-          if (habitsInTag.length === 0) {return null;}
-          return (
-            <div key={tag} className="space-y-2 mb-4">
-              <div className="flex items-center gap-2 px-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-accent" />
-                <h3 className="text-[10px] font-mono font-bold uppercase tracking-widest text-muted">{tag}</h3>
-              </div>
-              {habitsInTag.map((habit, index) => (
-                <HabitRowEntry
-                  key={`${tag}-${habit.id}`}
-                  habit={habit}
-                  index={index}
-                  filteredLength={habitsInTag.length}
-                  dropHint={dropHint}
-                  dragOverHabitId={dragOverHabitId}
-                  draggedHabitId={draggedHabitId}
-                  handleToggle={handleToggle}
-                  handleDrop={handleDrop}
-                  handleDragStart={handleDragStart}
-                  handleDragOver={handleDragOver}
-                  handleDragEnd={handleDragEnd}
-                  navigate={navigate}
-                  reorderMode={reorderMode}
-                  moveHabit={moveHabit}
-                />
-              ))}
-            </div>
-          );
-        })
-      ) : (
-        filtered.map((habit, index) => (
-          <HabitRowEntry
-            key={habit.id}
-            habit={habit}
-            index={index}
-            filteredLength={filtered.length}
-            dropHint={dropHint}
-            dragOverHabitId={dragOverHabitId}
-            draggedHabitId={draggedHabitId}
-            handleToggle={handleToggle}
-            handleDrop={handleDrop}
-            handleDragStart={handleDragStart}
-            handleDragOver={handleDragOver}
-            handleDragEnd={handleDragEnd}
-            navigate={navigate}
-            reorderMode={reorderMode}
-            moveHabit={moveHabit}
-          />
-        ))
-      )}
+    <div
+      className="w-full max-w-2xl mx-auto py-3 flex flex-col px-4 sm:px-6"
+      style={{ gap: '0.25rem' }}
+      role="list"
+      aria-label="Habit list"
+    >
+      <GroupedHabitItems
+        selectedTags={selectedTags}
+        filtered={filtered}
+        renderHabitItem={renderHabitItem}
+        listClassName="space-y-1 mb-3"
+        headingClassName="flex items-center gap-2 px-1"
+      />
     </div>
   );
 }
 
 type HabitRowEntryProps = {
   habit: Habit;
-  index: number;
-  filteredLength: number;
   dropHint: { habitId: string; position: 'above' | 'below' } | null;
   dragOverHabitId: string | null;
   draggedHabitId: string | null;
@@ -112,15 +218,14 @@ type HabitRowEntryProps = {
   handleDragStart: (event: React.DragEvent<HTMLDivElement>, habitId: string) => void;
   handleDragOver: (event: React.DragEvent<HTMLDivElement>, habitId: string) => void;
   handleDragEnd: () => void;
+  handleTouchStart: (event: React.TouchEvent, habitId: string) => void;
   navigate: (to: string) => void;
-  reorderMode: boolean;
-  moveHabit: (habitId: string, direction: 'up' | 'down') => Promise<void>;
+  viewDensity: ViewDensity;
+  appearanceIndex: number;
 };
 
 function HabitRowEntry({
   habit,
-  index,
-  filteredLength,
   dropHint,
   dragOverHabitId,
   draggedHabitId,
@@ -129,14 +234,13 @@ function HabitRowEntry({
   handleDragStart,
   handleDragOver,
   handleDragEnd,
+  handleTouchStart,
   navigate,
-  reorderMode,
-  moveHabit
+  viewDensity,
+  appearanceIndex
 }: HabitRowEntryProps) {
   const dropHintPosition = dropHint?.habitId === habit.id ? dropHint.position : null;
   const isDragging = draggedHabitId === habit.id;
-  const canMoveUp = reorderMode && index > 0;
-  const canMoveDown = reorderMode && index < filteredLength - 1;
   const showDropAbove = dropHintPosition === 'above';
   const showDropBelow = dropHintPosition === 'below';
 
@@ -155,14 +259,12 @@ function HabitRowEntry({
           void handleDrop(event, habit.id);
         }}
         onDragEnd={handleDragEnd}
+        onTouchStart={(event) => handleTouchStart(event, habit.id)}
         isDropTarget={dragOverHabitId === habit.id}
         isDragging={isDragging}
         dropHintPosition={dropHintPosition}
-        reorderMode={reorderMode}
-        onMoveUp={canMoveUp ? () => void moveHabit(habit.id, 'up') : undefined}
-        onMoveDown={canMoveDown ? () => void moveHabit(habit.id, 'down') : undefined}
-        disableMoveUp={!canMoveUp}
-        disableMoveDown={!canMoveDown}
+        viewDensity={viewDensity}
+        appearanceIndex={appearanceIndex}
       />
       {showDropBelow && <DropIndicator />}
     </React.Fragment>

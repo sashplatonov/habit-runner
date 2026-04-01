@@ -1,5 +1,6 @@
 import React from 'react';
 import { SidebarNav } from './SidebarNav';
+import type { SyncEngineState } from '@/hooks/useSyncEngine';
 import { BottomNav } from './BottomNav';
 import type { ThemeId } from '@/hooks/useTheme';
 
@@ -8,12 +9,20 @@ interface AppLayoutProps {
   onThemeChange: (id: ThemeId) => void;
   onLogout?: () => void | Promise<void>;
   children: React.ReactNode;
+  syncState?: SyncEngineState;
 }
 
-export function AppLayout({ theme, onThemeChange, onLogout, children }: AppLayoutProps) {
+export function AppLayout({ theme, onThemeChange, onLogout, children, syncState }: AppLayoutProps) {
   return (
     <div className="min-h-screen bg-bg-primary">
-      <SidebarNav theme={theme} onThemeChange={onThemeChange} onLogout={onLogout} />
+      {/* Skip navigation link — visible on focus for keyboard users (WCAG 2.4.1) */}
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[9999] focus:px-4 focus:py-2 focus:rounded-lg focus:bg-accent focus:text-bg-primary focus:font-semibold focus:text-sm focus:shadow-lg"
+      >
+        Skip to main content
+      </a>
+      <SidebarNav theme={theme} onThemeChange={onThemeChange} onLogout={onLogout} syncState={syncState} />
       <div className="sm:ml-[220px]">
         <main
           id="main-content"

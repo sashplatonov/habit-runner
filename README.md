@@ -1,7 +1,5 @@
 # 🏃 Habbit Runner
 
-Habbit Runner is built on a [Magic Patterns](https://magicpatterns.com) Vite template tailored to this design: [Source Design](https://www.magicpatterns.com/c/a6wro8plb53dmt2pzr6t7n)
-
 ## 📚 Documentation
 
 - 📌 Start here: [docs/README.md](./docs/README.md)

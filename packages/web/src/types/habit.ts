@@ -19,7 +19,6 @@ export interface Habit {
   version?: number;
   archived: boolean;
   sortOrder: number;
-  difficulty: 1 | 2 | 3 | 4 | 5;
   type: 'positive' | 'negative';
   reminderTime?: string;
   reminderEnabled?: boolean;

@@ -1,60 +1,304 @@
-import { normalizeSchedule, scheduleFromLegacy } from '@habbit-runner/shared';
-import type { HabitSchedule } from '@habbit-runner/shared';
+/* eslint-disable max-lines */
+import {
+  addDaysToCalendarDate,
+  calendarDateToDate,
+  diffCalendarDays,
+  extractCalendarDate,
+  formatCalendarDateInTimeZone,
+  getWeekdayFromCalendarDate,
+  normalizeSchedule,
+  scheduleFromLegacy,
+  toCalendarDateKey
+} from '@habbit-runner/shared';
+import type { HabitSchedule, WeekOfMonth } from '@habbit-runner/shared';
 import type { Habit } from '@/types/habit';
+import { getCurrentUserTimeZone } from '@/lib/time/userTimezone';
 
-const DAY_KEY_FORMAT = (date: Date) => {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}T00:00:00.000Z`;
-};
+type CalendarBoundary = Date | string;
+type CalendarRange = { start: string; end: string };
 
-function startOfWeek(date: Date): Date {
-  const result = new Date(date);
-  const day = (result.getDay() + 6) % 7;
-  result.setDate(result.getDate() - day);
-  result.setHours(0, 0, 0, 0);
-  return result;
+const MAX_STREAK_LOOKBACK_DAYS = 366;
+const WEEKLY_RATE_WINDOW = 12;
+const MONTH_LOOKBACK = 12;
+const MONTHLY_RATE_WINDOW = 6;
+
+function toCalendarDate(value: CalendarBoundary, timeZone: string): string {
+  if (typeof value === 'string') {
+    const extracted = extractCalendarDate(value);
+    if (extracted) {
+      return extracted;
+    }
+  }
+
+  return formatCalendarDateInTimeZone(value, timeZone);
 }
 
-function endOfWeek(date: Date): Date {
-  const result = startOfWeek(date);
-  result.setDate(result.getDate() + 6);
-  result.setHours(23, 59, 59, 999);
-  return result;
+function toCompletionKey(value: CalendarBoundary, timeZone: string): string {
+  if (typeof value === 'string') {
+    const extracted = extractCalendarDate(value);
+    if (extracted) {
+      return `${extracted}T00:00:00Z`;
+    }
+  }
+
+  return toCalendarDateKey(value, timeZone);
 }
 
-function startOfMonth(date: Date): Date {
-  const result = new Date(date.getFullYear(), date.getMonth(), 1);
-  result.setHours(0, 0, 0, 0);
-  return result;
+function shiftCalendarMonth(value: string, delta: number): string {
+  const date = calendarDateToDate(value);
+  date.setUTCMonth(date.getUTCMonth() + delta, 1);
+  return toCalendarDate(date, 'UTC');
 }
 
-function endOfMonth(date: Date): Date {
-  const result = new Date(date.getFullYear(), date.getMonth() + 1, 0);
-  result.setHours(23, 59, 59, 999);
-  return result;
+function getDaysInCalendarMonth(value: string): number {
+  const date = calendarDateToDate(value);
+  return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth() + 1, 0)).getUTCDate();
 }
 
-function getWeekOfMonth(date: Date): { week: number; isLast: boolean } {
-  const first = startOfMonth(date);
-  const offset = (first.getDay() + 6) % 7;
-  const dayOfMonth = date.getDate();
+
+function startOfWeek(date: Date, timeZone: string): string {
+  const calendarDate = toCalendarDate(date, timeZone);
+  const day = (getWeekdayFromCalendarDate(calendarDate) + 6) % 7;
+  return addDaysToCalendarDate(calendarDate, -day);
+}
+
+function endOfWeek(date: Date, timeZone: string): string {
+  return addDaysToCalendarDate(startOfWeek(date, timeZone), 6);
+}
+
+function startOfMonth(date: Date, timeZone: string): string {
+  const calendarDate = toCalendarDate(date, timeZone);
+  return `${calendarDate.slice(0, 7)}-01`;
+}
+
+function endOfMonth(date: Date, timeZone: string): string {
+  const monthStart = startOfMonth(date, timeZone);
+  return addDaysToCalendarDate(shiftCalendarMonth(monthStart, 1), -1);
+}
+
+function getWeekOfMonth(calendarDate: string): { week: number; isLast: boolean } {
+  const first = `${calendarDate.slice(0, 7)}-01`;
+  const offset = (getWeekdayFromCalendarDate(first) + 6) % 7;
+  const dayOfMonth = Number(calendarDate.slice(8, 10));
   const adjusted = dayOfMonth + offset;
   const week = Math.min(4, Math.ceil(adjusted / 7));
-  const lastWeekStart = startOfWeek(endOfMonth(date));
-  return { week, isLast: date >= lastWeekStart };
+  const monthEnd = `${calendarDate.slice(0, 7)}-${getDaysInCalendarMonth(calendarDate).toString().padStart(2, '0')}`;
+  const lastWeekStart = addDaysToCalendarDate(monthEnd, -((getWeekdayFromCalendarDate(monthEnd) + 6) % 7));
+  return { week, isLast: calendarDate >= lastWeekStart };
 }
 
-function dayIsCompleted(completions: Record<string, number>, date: Date, dailyTarget: number): boolean {
-  return (completions[DAY_KEY_FORMAT(date)] ?? 0) >= Math.max(1, dailyTarget ?? 1);
+function getMonthWeekToken(isLast: boolean, week: number): WeekOfMonth {
+  return isLast ? 'last' : (Math.min(4, Math.max(1, week)) as Exclude<WeekOfMonth, 'last'>);
 }
 
-export function isScheduledForDate(schedule: HabitSchedule | undefined | null, date: Date): boolean {
+function dayIsCompleted(
+  completions: Record<string, number>,
+  value: CalendarBoundary,
+  dailyTarget: number,
+  timeZone: string
+): boolean {
+  return (completions[toCompletionKey(value, timeZone)] ?? 0) >= Math.max(1, dailyTarget ?? 1);
+}
+
+function isSuccessfulCompletion(
+  habit: Habit,
+  completions: Record<string, number>,
+  key: string,
+  dailyTarget: number
+): boolean {
+  if (habit.type === 'negative') {
+    return (completions[key] ?? 0) === 0;
+  }
+
+  return (completions[key] ?? 0) >= dailyTarget;
+}
+
+function buildQuotaMatches({
+  periodWindow,
+  getBoundaries,
+  schedule,
+  habit,
+  completions,
+  dailyTarget,
+  periodTarget,
+  timeZone
+}: {
+  periodWindow: number;
+  getBoundaries: (offset: number) => CalendarRange;
+  schedule: HabitSchedule;
+  habit: Habit;
+  completions: Record<string, number>;
+  dailyTarget: number;
+  periodTarget: number;
+  timeZone: string;
+}): (boolean | null)[] {
+  const today = toCalendarDate(new Date(), timeZone);
+  const meetsTarget: (boolean | null)[] = [];
+
+  for (let offset = 0; offset < periodWindow; offset += 1) {
+    const { start, end } = getBoundaries(offset);
+    if (end > today) {
+      meetsTarget.push(null);
+      continue;
+    }
+
+    let frozenCount = 0;
+    for (let cursor = start; cursor <= end; cursor = addDaysToCalendarDate(cursor, 1)) {
+      if (isScheduledForDate(schedule, cursor, timeZone) && habit.freezeDays?.includes(cursor)) {
+        frozenCount += 1;
+      }
+    }
+
+    const adjustedTarget = Math.max(0, periodTarget - frozenCount);
+    const completed = countCompletedDaysInRange(completions, start, end, dailyTarget, schedule, timeZone);
+    meetsTarget.push(completed >= adjustedTarget);
+  }
+
+  return meetsTarget;
+}
+
+function summarizeBooleanStreak(values: (boolean | null)[]): { current: number; longest: number; metCount: number } {
+  let current = 0;
+  for (const value of values) {
+    if (value !== true) {
+      break;
+    }
+    current += 1;
+  }
+
+  let longest = 0;
+  let running = 0;
+  for (const value of values) {
+    if (value === true) {
+      running += 1;
+      continue;
+    }
+    longest = Math.max(longest, running);
+    running = 0;
+  }
+
+  return {
+    current,
+    longest: Math.max(longest, running),
+    metCount: values.filter((value) => value === true).length
+  };
+}
+
+function isSkippedStreakDay(
+  habit: Habit,
+  schedule: HabitSchedule,
+  value: CalendarBoundary,
+  timeZone: string
+): boolean {
+  const freezeKey = toCalendarDate(value, timeZone);
+  return !isScheduledForDate(schedule, freezeKey, timeZone) || habit.freezeDays?.includes(freezeKey) === true;
+}
+
+// The exported API keeps explicit args for habit math helpers, so suppress max-params here.
+// eslint-disable-next-line max-params
+function findStreakStartDate(
+  habit: Habit,
+  completions: Record<string, number>,
+  schedule: HabitSchedule,
+  referenceDate: Date,
+  dailyTarget: number,
+  timeZone: string
+): string {
+  const today = toCalendarDate(new Date(), timeZone);
+  const cursor = toCalendarDate(referenceDate, timeZone);
+  const isReferenceToday = cursor === today;
+  const isTodayScheduled = !isSkippedStreakDay(habit, schedule, today, timeZone);
+  const isTodayCompleted = isSuccessfulCompletion(habit, completions, toCompletionKey(today, timeZone), dailyTarget);
+  if (!isReferenceToday || !isTodayScheduled || isTodayCompleted) {
+    return cursor;
+  }
+
+  return addDaysToCalendarDate(cursor, -1);
+}
+
+function calculateLongestDailyStreak({
+  habit,
+  completions,
+  schedule,
+  start,
+  end,
+  dailyTarget,
+  timeZone
+}: {
+  habit: Habit;
+  completions: Record<string, number>;
+  schedule: HabitSchedule;
+  start: string;
+  end: string;
+  dailyTarget: number;
+  timeZone: string;
+}): number {
+  let longest = 0;
+  let running = 0;
+
+  for (let cursor = start; cursor <= end; cursor = addDaysToCalendarDate(cursor, 1)) {
+    if (isSkippedStreakDay(habit, schedule, cursor, timeZone)) {
+      continue;
+    }
+
+    if (isSuccessfulCompletion(habit, completions, toCompletionKey(cursor, timeZone), dailyTarget)) {
+      running += 1;
+      continue;
+    }
+
+    longest = Math.max(longest, running);
+    running = 0;
+  }
+
+  return Math.max(longest, running);
+}
+
+function calculateCurrentDailyStreak({
+  habit,
+  completions,
+  schedule,
+  start,
+  end,
+  dailyTarget,
+  timeZone
+}: {
+  habit: Habit;
+  completions: Record<string, number>;
+  schedule: HabitSchedule;
+  start: string;
+  end: string;
+  dailyTarget: number;
+  timeZone: string;
+}): number {
+  let current = 0;
+
+  for (let cursor = end; cursor >= start; cursor = addDaysToCalendarDate(cursor, -1)) {
+    if (isSkippedStreakDay(habit, schedule, cursor, timeZone)) {
+      continue;
+    }
+
+    if (!isSuccessfulCompletion(habit, completions, toCompletionKey(cursor, timeZone), dailyTarget)) {
+      break;
+    }
+
+    current += 1;
+  }
+
+  return current;
+}
+
+export function isScheduledForDate(
+  schedule: HabitSchedule | undefined | null,
+  value: CalendarBoundary,
+  timeZone = getCurrentUserTimeZone()
+): boolean {
   if (!schedule) {
     return true;
   }
-  const weekday = date.getDay();
+
+  const calendarDate = toCalendarDate(value, timeZone);
+  const weekday = getWeekdayFromCalendarDate(calendarDate);
+
   switch (schedule.type) {
     case 'daily':
       return true;
@@ -66,8 +310,8 @@ export function isScheduledForDate(schedule: HabitSchedule | undefined | null, d
       if (!schedule.weekdays.includes(weekday)) {
         return false;
       }
-      const { week, isLast } = getWeekOfMonth(date);
-      return schedule.weeksOfMonth.includes((isLast ? 'last' : week) as any);
+      const { week, isLast } = getWeekOfMonth(calendarDate);
+      return schedule.weeksOfMonth.includes(getMonthWeekToken(isLast, week));
     }
     case 'monthly_quota':
       return schedule.weekdays ? schedule.weekdays.includes(weekday) : true;
@@ -78,64 +322,67 @@ export function isScheduledForDate(schedule: HabitSchedule | undefined | null, d
 
 export function isMandatoryToday(
   habit: Habit,
-  date: Date
+  date: Date,
+  timeZone = getCurrentUserTimeZone()
 ): boolean {
   const schedule = resolveHabitSchedule(habit);
+  const today = toCalendarDate(date, timeZone);
 
-  // First check if it matches the schedule pattern
-  if (!isScheduledForDate(schedule, date)) {
+  if (!isScheduledForDate(schedule, today, timeZone)) {
     return false;
   }
 
-  // For quota-based habits, check if quota is already met using rolling window
   if (schedule.type === 'weekly_quota') {
-    // Use rolling window: last 7 days (not current calendar week)
-    const end = new Date(date);
-    end.setHours(23, 59, 59, 999);
-    const start = new Date(date);
-    start.setDate(start.getDate() - 6); // 7 days including today
-    start.setHours(0, 0, 0, 0);
-
+    const windowStart = addDaysToCalendarDate(today, -6);
     const dailyTarget = Math.max(1, habit.dailyTarget ?? 1);
-    const completed = countCompletedDaysInRange(habit.completions, start, end, dailyTarget, schedule);
+    const completed = countCompletedDaysInRange(
+      habit.completions,
+      windowStart,
+      today,
+      dailyTarget,
+      undefined,
+      timeZone
+    );
     return completed < schedule.timesPerWeek;
   }
 
   if (schedule.type === 'monthly_quota') {
-    // Use rolling window: last 30 days (not current calendar month)
-    const end = new Date(date);
-    end.setHours(23, 59, 59, 999);
-    const start = new Date(date);
-    start.setDate(start.getDate() - 29); // 30 days including today
-    start.setHours(0, 0, 0, 0);
-
-    const dailyTarget = Math.max(1, habit.dailyTarget ?? 1);
-    const completed = countCompletedDaysInRange(habit.completions, start, end, dailyTarget, schedule);
+    const completed = countCompletedDaysInRange(
+      habit.completions,
+      addDaysToCalendarDate(today, -29),
+      today,
+      Math.max(1, habit.dailyTarget ?? 1),
+      undefined,
+      timeZone
+    );
     return completed < schedule.timesPerMonth;
   }
 
   return true;
 }
 
+// eslint-disable-next-line max-params
 export function countCompletedDaysInRange(
   completions: Record<string, number>,
-  start: Date,
-  end: Date,
+  start: CalendarBoundary,
+  end: CalendarBoundary,
   dailyTarget: number,
-  schedule?: HabitSchedule
+  schedule?: HabitSchedule,
+  timeZone = getCurrentUserTimeZone()
 ): number {
-  const cursor = new Date(start);
+  const startDate = toCalendarDate(start, timeZone);
+  const endDate = toCalendarDate(end, timeZone);
   let count = 0;
-  while (cursor <= end) {
-    if (schedule && !isScheduledForDate(schedule, cursor)) {
-      cursor.setDate(cursor.getDate() + 1);
+
+  for (let cursor = startDate; cursor <= endDate; cursor = addDaysToCalendarDate(cursor, 1)) {
+    if (schedule && !isScheduledForDate(schedule, cursor, timeZone)) {
       continue;
     }
-    if (dayIsCompleted(completions, cursor, dailyTarget)) {
+    if (dayIsCompleted(completions, cursor, dailyTarget, timeZone)) {
       count += 1;
     }
-    cursor.setDate(cursor.getDate() + 1);
   }
+
   return count;
 }
 
@@ -145,39 +392,41 @@ export function resolveHabitSchedule(habit: Habit): HabitSchedule {
   return normalizeSchedule(habit.schedule) ?? scheduleFromLegacy(habit.frequency, habit.customDays);
 }
 
-export function getScheduleStatusForDate(habit: Habit, date: Date): ScheduleDayStatus {
-  if (habit.freezeDays?.includes(DAY_KEY_FORMAT(date))) {
+export function getScheduleStatusForDate(
+  habit: Habit,
+  date: Date,
+  timeZone = getCurrentUserTimeZone()
+): ScheduleDayStatus {
+  if (habit.freezeDays?.includes(toCalendarDate(date, timeZone))) {
     return 'frozen';
   }
   const schedule = resolveHabitSchedule(habit);
-  return isScheduledForDate(schedule, date) ? 'scheduled' : 'unscheduled';
+  return isScheduledForDate(schedule, date, timeZone) ? 'scheduled' : 'unscheduled';
 }
 
-export function getWeekRange(date: Date): { start: Date; end: Date } {
-  return { start: startOfWeek(date), end: endOfWeek(date) };
+export function getWeekRange(date: Date, timeZone = getCurrentUserTimeZone()): CalendarRange {
+  return { start: startOfWeek(date, timeZone), end: endOfWeek(date, timeZone) };
 }
 
-export function getMonthRange(date: Date): { start: Date; end: Date } {
-  return { start: startOfMonth(date), end: endOfMonth(date) };
+export function getMonthRange(date: Date, timeZone = getCurrentUserTimeZone()): CalendarRange {
+  return { start: startOfMonth(date, timeZone), end: endOfMonth(date, timeZone) };
 }
 
-export function getPeriodProgress(habit: Habit, date: Date) {
+export function getPeriodProgress(habit: Habit, date: Date, timeZone = getCurrentUserTimeZone()) {
   const schedule = resolveHabitSchedule(habit);
   const dailyTarget = Math.max(1, habit.dailyTarget ?? 1);
   if (schedule.type === 'weekly_quota') {
-    const { start, end } = getWeekRange(date);
-    const completed = countCompletedDaysInRange(habit.completions, start, end, dailyTarget, schedule);
+    const { start, end } = getWeekRange(date, timeZone);
     return {
-      current: completed,
+      current: countCompletedDaysInRange(habit.completions, start, end, dailyTarget, schedule, timeZone),
       target: schedule.timesPerWeek,
       period: 'week'
     };
   }
   if (schedule.type === 'monthly_quota') {
-    const { start, end } = getMonthRange(date);
-    const completed = countCompletedDaysInRange(habit.completions, start, end, dailyTarget, schedule);
+    const { start, end } = getMonthRange(date, timeZone);
     return {
-      current: completed,
+      current: countCompletedDaysInRange(habit.completions, start, end, dailyTarget, schedule, timeZone),
       target: schedule.timesPerMonth,
       period: 'month'
     };
@@ -185,309 +434,187 @@ export function getPeriodProgress(habit: Habit, date: Date) {
   return null;
 }
 
-const MAX_STREAK_LOOKBACK_DAYS = 366;
-const WEEKLY_RATE_WINDOW = 12;
-const MONTH_LOOKBACK = 12;
-const MONTHLY_RATE_WINDOW = 6;
-
-function ensureStartOfDay(date: Date) {
-  const result = new Date(date);
-  result.setHours(0, 0, 0, 0);
-  return result;
-}
-
-function countScheduledDaysInRange(habit: Habit, start: Date, end: Date): number {
+function countScheduledDaysInRange(
+  habit: Habit,
+  start: string,
+  end: string,
+  timeZone: string
+): number {
   const schedule = resolveHabitSchedule(habit);
-  const cursor = new Date(start);
   let count = 0;
-  while (cursor <= end) {
-    if (isScheduledForDate(schedule, cursor)) {
+
+  for (let cursor = start; cursor <= end; cursor = addDaysToCalendarDate(cursor, 1)) {
+    if (isScheduledForDate(schedule, cursor, timeZone)) {
       count += 1;
     }
-    cursor.setDate(cursor.getDate() + 1);
   }
+
   return count;
 }
 
-function buildWeekBoundaries(reference: Date, back: number) {
-  const base = getWeekRange(reference);
-  const start = new Date(base.start);
-  start.setDate(start.getDate() - back * 7);
-  const end = new Date(base.end);
-  end.setDate(end.getDate() - back * 7);
-  return { start, end };
+function buildWeekBoundaries(reference: Date, back: number, timeZone: string): CalendarRange {
+  const base = getWeekRange(reference, timeZone);
+  const shift = back * 7;
+  return {
+    start: addDaysToCalendarDate(base.start, -shift),
+    end: addDaysToCalendarDate(base.end, -shift)
+  };
 }
 
-function buildMonthBoundaries(reference: Date, back: number) {
-  const baseStart = getMonthRange(reference).start;
-  const start = new Date(baseStart);
-  start.setMonth(start.getMonth() - back);
-  const end = new Date(start);
-  end.setMonth(end.getMonth() + 1);
-  end.setDate(end.getDate() - 1);
-  end.setHours(23, 59, 59, 999);
-  return { start, end };
+function buildMonthBoundaries(reference: Date, back: number, timeZone: string): CalendarRange {
+  const start = shiftCalendarMonth(getMonthRange(reference, timeZone).start, -back);
+  return {
+    start,
+    end: addDaysToCalendarDate(shiftCalendarMonth(start, 1), -1)
+  };
 }
 
+// eslint-disable-next-line max-params
 function calculateQuotaStreak(
   habit: Habit,
   completions: Record<string, number>,
   referenceDate: Date,
   periodWindow: number,
-  periodTarget: number
+  periodTarget: number,
+  timeZone: string
 ) {
   const dailyTarget = Math.max(1, habit.dailyTarget ?? 1);
   const schedule = resolveHabitSchedule(habit);
-  const today = ensureStartOfDay(new Date());
-  const meetsTarget: (boolean | null)[] = [];
-
-  for (let offset = 0; offset < periodWindow; offset += 1) {
-    const { start, end } = buildWeekBoundaries(referenceDate, offset);
-
-    // Skip current unfinished period - if week end is in the future, it's ongoing
-    if (end > today) {
-      meetsTarget.push(null); // null means "ongoing, not yet counted"
-      continue;
-    }
-
-    // Count frozen scheduled days and adjust target
-    let frozenCount = 0;
-    const cursor = new Date(start);
-    while (cursor <= end) {
-      const dateKey = DAY_KEY_FORMAT(cursor);
-      if (isScheduledForDate(schedule, cursor) && habit.freezeDays?.includes(dateKey)) {
-        frozenCount += 1;
-      }
-      cursor.setDate(cursor.getDate() + 1);
-    }
-    const adjustedTarget = Math.max(0, periodTarget - frozenCount);
-
-    const completed = countCompletedDaysInRange(completions, start, end, dailyTarget, schedule);
-    meetsTarget.push(completed >= adjustedTarget);
-  }
-
-  let current = 0;
-  for (let i = 0; i < meetsTarget.length; i += 1) {
-    if (meetsTarget[i] === true) {
-      current += 1;
-    } else {
-      break;
-    }
-  }
-
-  let longest = 0;
-  let running = 0;
-  for (let i = 0; i < meetsTarget.length; i += 1) {
-    if (meetsTarget[i] === true) {
-      running += 1;
-    } else {
-      longest = Math.max(longest, running);
-      running = 0;
-    }
-  }
-  longest = Math.max(longest, running);
-  const metCount = meetsTarget.filter(v => v === true).length;
-  return { current, longest, metCount };
+  return summarizeBooleanStreak(
+    buildQuotaMatches({
+      periodWindow,
+      getBoundaries: (offset) => buildWeekBoundaries(referenceDate, offset, timeZone),
+      schedule,
+      habit,
+      completions,
+      dailyTarget,
+      periodTarget,
+      timeZone
+    })
+  );
 }
 
 function calculateMonthlyQuotaStreak(
   habit: Habit,
   completions: Record<string, number>,
-  referenceDate: Date
+  referenceDate: Date,
+  timeZone: string
 ) {
   const dailyTarget = Math.max(1, habit.dailyTarget ?? 1);
   const schedule = resolveHabitSchedule(habit);
   if (schedule.type !== 'monthly_quota') {
     return { current: 0, longest: 0, metCount: 0 };
   }
-  const today = ensureStartOfDay(new Date());
-  const meetsTarget: (boolean | null)[] = [];
-
-  for (let offset = 0; offset < MONTH_LOOKBACK; offset += 1) {
-    const { start, end } = buildMonthBoundaries(referenceDate, offset);
-
-    // Skip current unfinished period - if month end is in the future, it's ongoing
-    if (end > today) {
-      meetsTarget.push(null); // null means "ongoing, not yet counted"
-      continue;
-    }
-
-    // Count frozen scheduled days and adjust target
-    let frozenCount = 0;
-    const cursor = new Date(start);
-    while (cursor <= end) {
-      const dateKey = DAY_KEY_FORMAT(cursor);
-      if (isScheduledForDate(schedule, cursor) && habit.freezeDays?.includes(dateKey)) {
-        frozenCount += 1;
-      }
-      cursor.setDate(cursor.getDate() + 1);
-    }
-    const adjustedTarget = Math.max(0, schedule.timesPerMonth - frozenCount);
-
-    const completed = countCompletedDaysInRange(completions, start, end, dailyTarget, schedule);
-    meetsTarget.push(completed >= adjustedTarget);
-  }
-
-  let current = 0;
-  for (let i = 0; i < meetsTarget.length; i += 1) {
-    if (meetsTarget[i] === true) {
-      current += 1;
-    } else {
-      break;
-    }
-  }
-
-  let longest = 0;
-  let running = 0;
-  for (let i = 0; i < meetsTarget.length; i += 1) {
-    if (meetsTarget[i] === true) {
-      running += 1;
-    } else {
-      longest = Math.max(longest, running);
-      running = 0;
-    }
-  }
-  longest = Math.max(longest, running);
-  const metCount = meetsTarget.filter(v => v === true).length;
-  return { current, longest, metCount };
+  return summarizeBooleanStreak(
+    buildQuotaMatches({
+      periodWindow: MONTH_LOOKBACK,
+      getBoundaries: (offset) => buildMonthBoundaries(referenceDate, offset, timeZone),
+      schedule,
+      habit,
+      completions,
+      dailyTarget,
+      periodTarget: schedule.timesPerMonth,
+      timeZone
+    })
+  );
 }
 
 function calculateDailyStreak(
   habit: Habit,
   completions: Record<string, number>,
   schedule: HabitSchedule,
-  referenceDate: Date
+  referenceDate: Date,
+  timeZone: string
 ): { current: number; longest: number } {
   const dailyTarget = Math.max(1, habit.dailyTarget ?? 1);
-  const cursor = ensureStartOfDay(referenceDate);
-  const start = new Date(cursor);
-  start.setDate(start.getDate() - MAX_STREAK_LOOKBACK_DAYS);
-
-  // Check if referenceDate is today, is scheduled, and not yet completed
-  const today = ensureStartOfDay(new Date());
-  const todayKey = DAY_KEY_FORMAT(today);
-  const isToday = DAY_KEY_FORMAT(cursor) === todayKey;
-  const isTodayScheduled = isScheduledForDate(schedule, today) && !habit.freezeDays?.includes(todayKey);
-  const isTodayCompleted =
-    habit.type === 'negative'
-      ? (completions[todayKey] ?? 0) === 0
-      : (completions[todayKey] ?? 0) >= dailyTarget;
-
-  // If today is scheduled but not completed, start "current" streak from yesterday
-  const streakStartDate = isToday && isTodayScheduled && !isTodayCompleted
-    ? new Date(cursor) // will subtract 1 day below
-    : cursor;
-
-  if (isToday && isTodayScheduled && !isTodayCompleted) {
-    streakStartDate.setDate(streakStartDate.getDate() - 1);
-  }
-
-  let longest = 0;
-  let running = 0;
-  const iterator = new Date(start);
-  while (iterator <= streakStartDate) {
-    const key = DAY_KEY_FORMAT(iterator);
-    if (!isScheduledForDate(schedule, iterator) || habit.freezeDays?.includes(key)) {
-      iterator.setDate(iterator.getDate() + 1);
-      continue;
-    }
-    const success = habit.type === 'negative'
-      ? (completions[key] ?? 0) === 0
-      : (completions[key] ?? 0) >= dailyTarget;
-
-    if (success) {
-      running += 1;
-    } else {
-      longest = Math.max(longest, running);
-      running = 0;
-    }
-    iterator.setDate(iterator.getDate() + 1);
-  }
-  longest = Math.max(longest, running);
-
-  let current = 0;
-  const backward = new Date(streakStartDate);
-  while (backward >= start) {
-    const key = DAY_KEY_FORMAT(backward);
-    if (!isScheduledForDate(schedule, backward) || habit.freezeDays?.includes(key)) {
-      backward.setDate(backward.getDate() - 1);
-      continue;
-    }
-    const success = habit.type === 'negative'
-      ? (completions[key] ?? 0) === 0
-      : (completions[key] ?? 0) >= dailyTarget;
-
-    if (success) {
-      current += 1;
-      backward.setDate(backward.getDate() - 1);
-      continue;
-    }
-    break;
-  }
-  return { current, longest };
+  const streakStartDate = findStreakStartDate(habit, completions, schedule, referenceDate, dailyTarget, timeZone);
+  const start = addDaysToCalendarDate(streakStartDate, -MAX_STREAK_LOOKBACK_DAYS);
+  return {
+    current: calculateCurrentDailyStreak({
+      habit,
+      completions,
+      schedule,
+      start,
+      end: streakStartDate,
+      dailyTarget,
+      timeZone
+    }),
+    longest: calculateLongestDailyStreak({
+      habit,
+      completions,
+      schedule,
+      start,
+      end: streakStartDate,
+      dailyTarget,
+      timeZone
+    })
+  };
 }
 
 export function calculateScheduledStreak(
   habit: Habit,
   completions: Record<string, number>,
-  referenceDate = new Date()
+  referenceDate = new Date(),
+  timeZone = getCurrentUserTimeZone()
 ): { current: number; longest: number } {
   const schedule = resolveHabitSchedule(habit);
   if (schedule.type === 'weekly_quota') {
-    const result = calculateQuotaStreak(habit, completions, referenceDate, WEEKLY_RATE_WINDOW, schedule.timesPerWeek);
+    const result = calculateQuotaStreak(habit, completions, referenceDate, WEEKLY_RATE_WINDOW, schedule.timesPerWeek, timeZone);
     return { current: result.current, longest: result.longest };
   }
   if (schedule.type === 'monthly_quota') {
-    const result = calculateMonthlyQuotaStreak(habit, completions, referenceDate);
+    const result = calculateMonthlyQuotaStreak(habit, completions, referenceDate, timeZone);
     return { current: result.current, longest: result.longest };
   }
-  return calculateDailyStreak(habit, completions, schedule, referenceDate);
+  return calculateDailyStreak(habit, completions, schedule, referenceDate, timeZone);
 }
 
 export function calculateScheduledCompletionRate(
   habit: Habit,
   completions: Record<string, number>,
-  referenceDate = new Date()
+  referenceDate = new Date(),
+  timeZone = getCurrentUserTimeZone()
 ): number {
   const schedule = resolveHabitSchedule(habit);
   if (schedule.type === 'weekly_quota') {
-    const result = calculateQuotaStreak(habit, completions, referenceDate, WEEKLY_RATE_WINDOW, schedule.timesPerWeek);
+    const result = calculateQuotaStreak(habit, completions, referenceDate, WEEKLY_RATE_WINDOW, schedule.timesPerWeek, timeZone);
     return Math.round((result.metCount / WEEKLY_RATE_WINDOW) * 100);
   }
   if (schedule.type === 'monthly_quota') {
-    const result = calculateMonthlyQuotaStreak(habit, completions, referenceDate);
+    const result = calculateMonthlyQuotaStreak(habit, completions, referenceDate, timeZone);
     return Math.round((result.metCount / MONTHLY_RATE_WINDOW) * 100);
   }
-  const windowSize = 30;
-  const end = ensureStartOfDay(referenceDate);
-  const start = new Date(end);
-  start.setDate(start.getDate() - (windowSize - 1));
-  const scheduledDays = countScheduledDaysInRange(habit, start, end);
+  const end = toCalendarDate(referenceDate, timeZone);
+  const start = addDaysToCalendarDate(end, -29);
+  const scheduledDays = countScheduledDaysInRange(habit, start, end, timeZone);
   if (scheduledDays === 0) {
     return 0;
   }
-  const completed = countCompletedDaysInRange(completions, start, end, Math.max(1, habit.dailyTarget ?? 1), schedule);
+  const completed = countCompletedDaysInRange(completions, start, end, Math.max(1, habit.dailyTarget ?? 1), schedule, timeZone);
   return Math.round((completed / scheduledDays) * 100);
 }
 
 export function calculateAutomatismScore(
   habit: Habit,
   completions: Record<string, number>,
-  referenceDate = new Date()
+  referenceDate = new Date(),
+  timeZone = getCurrentUserTimeZone()
 ): number {
-  const consistency30d = calculateScheduledCompletionRate(habit, completions, referenceDate) / 100;
-  const { current: streak } = calculateScheduledStreak(habit, completions, referenceDate);
-  
-  // Total completed days count
+  const consistency30d = calculateScheduledCompletionRate(habit, completions, referenceDate, timeZone) / 100;
+  const { current: streak } = calculateScheduledStreak(habit, completions, referenceDate, timeZone);
   const totalCompleted = Object.values(completions).filter(
     (count) => (count ?? 0) >= Math.max(1, habit.dailyTarget ?? 1)
   ).length;
 
   const streakFactor = Math.min(streak / 66, 1);
   const totalFactor = Math.min(totalCompleted / 100, 1);
-
-  // Formula: 50% consistency + 30% streak + 20% total volume
-  const score = (consistency30d * 0.5 + streakFactor * 0.3 + totalFactor * 0.2) * 100;
-  return Math.min(100, Math.round(score));
+  return Math.min(100, Math.round((consistency30d * 0.5 + streakFactor * 0.3 + totalFactor * 0.2) * 100));
 }
 
+export function getCalendarDayDistance(start: string, end: string): number {
+  return diffCalendarDays(start, end);
+}
+
+export function calendarDateToUtcDate(value: string): Date {
+  return calendarDateToDate(value);
+}

@@ -141,7 +141,7 @@ function PullIndicator({ isRefreshing, pullDistance }: { isRefreshing: boolean; 
         </div>
       </div>
       <div aria-live="polite" className="sr-only">
-        {indicatorVisible ? message : ''}
+        {indicatorVisible ? `${message}${isRefreshing ? ' — Syncing data in background' : ''}` : ''}
       </div>
     </>
   );

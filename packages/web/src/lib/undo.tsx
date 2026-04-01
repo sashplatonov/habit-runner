@@ -3,8 +3,8 @@ import { UndoToast } from '@/components/UndoToast';
 
 type UndoAction = {
   message: string;
-  actionLabel: string;
-  onUndo: () => void | Promise<void>;
+  actionLabel?: string;
+  onUndo?: () => void | Promise<void>;
 };
 
 const UndoContext = createContext<{ push: (action: UndoAction) => void } | null>(null);
@@ -36,11 +36,11 @@ export function UndoProvider({ children }: { children: React.ReactNode }) {
 
   const wrappedOnUndo = useMemo(
     () =>
-      current
+      current?.onUndo
         ? async () => {
             clearTimer();
             setCurrent(null);
-            await current.onUndo();
+            await current.onUndo?.();
           }
         : undefined,
     [current, clearTimer]
@@ -54,6 +54,12 @@ export function UndoProvider({ children }: { children: React.ReactNode }) {
           message={current.message}
           actionLabel={current.actionLabel}
           onAction={wrappedOnUndo}
+          onClose={handleClose}
+        />
+      )}
+      {current && !wrappedOnUndo && (
+        <UndoToast
+          message={current.message}
           onClose={handleClose}
         />
       )}

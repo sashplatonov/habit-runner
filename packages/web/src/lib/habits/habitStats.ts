@@ -1,28 +1,40 @@
-const MS_PER_DAY = 24 * 60 * 60 * 1000;
-const MONTH_NAMES = [
-  'Jan',
-  'Feb',
-  'Mar',
-  'Apr',
-  'May',
-  'Jun',
-  'Jul',
-  'Aug',
-  'Sep',
-  'Oct',
-  'Nov',
-  'Dec'
-];
+import {
+  addDaysToCalendarDate,
+  calendarDateToDate,
+  diffCalendarDays,
+  extractCalendarDate,
+  formatCalendarDateInTimeZone
+} from '@habbit-runner/shared';
+import { getCurrentUserTimeZone } from '@/lib/time/userTimezone';
+import { toCompletionKey, calendarDateToCompletionKey } from '@/lib/completionKey';
 
-function padDateSegment(value: number) {
-  return value.toString().padStart(2, '0');
+const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+function toCalendarDate(value: Date | string, timeZone: string): string {
+  if (typeof value === 'string') {
+    const extracted = extractCalendarDate(value);
+    if (extracted) {
+      return extracted;
+    }
+  }
+
+  return formatCalendarDateInTimeZone(value, timeZone);
 }
 
-export function formatDate(date: Date): string {
-  const year = date.getFullYear();
-  const month = padDateSegment(date.getMonth() + 1);
-  const day = padDateSegment(date.getDate());
-  return `${year}-${month}-${day}T00:00:00.000Z`;
+function shiftCalendarMonth(value: string, delta: number): string {
+  const date = calendarDateToDate(value);
+  date.setUTCMonth(date.getUTCMonth() + delta, 1);
+  return date.toISOString().slice(0, 10);
+}
+
+function getDaysInCalendarMonth(value: string): number {
+  const date = calendarDateToDate(value);
+  return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth() + 1, 0)).getUTCDate();
+}
+
+/** @deprecated Import toCompletionKey from @/lib/completionKey instead */
+export function formatDate(date: Date, timeZone = getCurrentUserTimeZone()): string {
+  return toCompletionKey(date, timeZone);
 }
 
 function buildCompletedDates(
@@ -31,22 +43,25 @@ function buildCompletedDates(
 ): string[] {
   return Object.keys(completions)
     .filter((key) => (completions[key] ?? 0) >= dailyTarget)
+    .map((key) => extractCalendarDate(key) ?? key)
     .sort();
 }
 
 function countCurrentStreak(
   completedDates: Set<string>,
-  referenceDate: Date
+  referenceDate: Date,
+  timeZone: string
 ): number {
   let count = 0;
-  const cursor = new Date(referenceDate);
-  while (count < 365) {
-    const key = formatDate(cursor);
-    if (!completedDates.has(key)) {
+  for (
+    let cursor = toCalendarDate(referenceDate, timeZone);
+    count < 365;
+    cursor = addDaysToCalendarDate(cursor, -1)
+  ) {
+    if (!completedDates.has(cursor)) {
       break;
     }
-    count++;
-    cursor.setDate(cursor.getDate() - 1);
+    count += 1;
   }
   return count;
 }
@@ -55,21 +70,15 @@ function countLongestStreak(completedDates: string[]): number {
   let longest = 0;
   let temp = 0;
 
-  for (let i = 0; i < completedDates.length; i++) {
-    if (i === 0) {
+  for (let index = 0; index < completedDates.length; index += 1) {
+    if (index === 0) {
       temp = 1;
+    } else if (diffCalendarDays(completedDates[index - 1], completedDates[index]) === 1) {
+      temp += 1;
     } else {
-      const prev = new Date(completedDates[i - 1]);
-      const curr = new Date(completedDates[i]);
-      if ((curr.getTime() - prev.getTime()) / MS_PER_DAY === 1) {
-        temp++;
-      } else {
-        temp = 1;
-      }
+      temp = 1;
     }
-    if (temp > longest) {
-      longest = temp;
-    }
+    longest = Math.max(longest, temp);
   }
 
   return longest;
@@ -78,13 +87,15 @@ function countLongestStreak(completedDates: string[]): number {
 export function calculateStreak(
   completions: Record<string, number>,
   referenceDate = new Date(),
-  dailyTarget = 1
+  dailyTarget = 1,
+  timeZone = getCurrentUserTimeZone()
 ): { current: number; longest: number } {
   const completedDates = buildCompletedDates(completions, dailyTarget);
   const completedSet = new Set(completedDates);
-  const current = countCurrentStreak(completedSet, referenceDate);
-  const longest = countLongestStreak(completedDates);
-  return { current, longest };
+  return {
+    current: countCurrentStreak(completedSet, referenceDate, timeZone),
+    longest: countLongestStreak(completedDates)
+  };
 }
 
 export function countCompletedDays(completions: Record<string, number>, dailyTarget = 1): number {
@@ -95,23 +106,25 @@ export function buildWeeklyCompletionData(
   completions: Record<string, number>,
   weeks = 12,
   referenceDate = new Date(),
-  dailyTarget = 1
+  dailyTarget = 1,
+  timeZone = getCurrentUserTimeZone()
 ): { week: string; count: number }[] {
-  const today = new Date(referenceDate);
+  const today = toCalendarDate(referenceDate, timeZone);
   const data = [];
 
-  for (let w = weeks - 1; w >= 0; w--) {
+  for (let weekOffset = weeks - 1; weekOffset >= 0; weekOffset -= 1) {
     let count = 0;
-    for (let d = 0; d < 7; d++) {
-      const date = new Date(today);
-      date.setDate(date.getDate() - w * 7 - d);
-      const key = formatDate(date);
-      if ((completions[key] ?? 0) >= dailyTarget) {count++;}
+    for (let dayOffset = 0; dayOffset < 7; dayOffset += 1) {
+      const cursor = addDaysToCalendarDate(today, -(weekOffset * 7 + dayOffset));
+      const key = calendarDateToCompletionKey(cursor);
+      if ((completions[key] ?? 0) >= dailyTarget) {
+        count += 1;
+      }
     }
-    const weekStart = new Date(today);
-    weekStart.setDate(weekStart.getDate() - w * 7);
+    const weekStart = addDaysToCalendarDate(today, -(weekOffset * 7));
+    const labelDate = calendarDateToDate(weekStart);
     data.push({
-      week: `W${weekStart.getMonth() + 1}/${weekStart.getDate()}`,
+      week: `W${labelDate.getUTCMonth() + 1}/${labelDate.getUTCDate()}`,
       count
     });
   }
@@ -123,33 +136,37 @@ export function buildMonthlyCompletionRates(
   completions: Record<string, number>,
   months = 6,
   referenceDate = new Date(),
-  dailyTarget = 1
+  dailyTarget = 1,
+  timeZone = getCurrentUserTimeZone()
 ): { month: string; rate: number }[] {
-  const today = new Date(referenceDate);
+  const today = toCalendarDate(referenceDate, timeZone);
+  const todayDate = calendarDateToDate(today);
   const data = [];
 
-  for (let m = months - 1; m >= 0; m--) {
-    const monthDate = new Date(today.getFullYear(), today.getMonth() - m, 1);
-    const daysInMonth = new Date(
-      monthDate.getFullYear(),
-      monthDate.getMonth() + 1,
-      0
-    ).getDate();
+  for (let monthOffset = months - 1; monthOffset >= 0; monthOffset -= 1) {
+    const monthStart = shiftCalendarMonth(`${today.slice(0, 7)}-01`, -monthOffset);
+    const daysInMonth = getDaysInCalendarMonth(monthStart);
     let completed = 0;
-    for (let d = 1; d <= daysInMonth; d++) {
-      const date = new Date(
-        monthDate.getFullYear(),
-        monthDate.getMonth(),
-        d
-      );
-      if (date > today) {break;}
-      const key = formatDate(date);
-      if ((completions[key] ?? 0) >= dailyTarget) {completed++;}
+
+    for (let day = 0; day < daysInMonth; day += 1) {
+      const cursor = addDaysToCalendarDate(monthStart, day);
+      if (cursor > today) {
+        break;
+      }
+      const key = calendarDateToCompletionKey(cursor);
+      if ((completions[key] ?? 0) >= dailyTarget) {
+        completed += 1;
+      }
     }
+
+    const monthDate = calendarDateToDate(monthStart);
     const daysElapsed =
-      monthDate.getMonth() === today.getMonth() ? today.getDate() : daysInMonth;
+      monthDate.getUTCFullYear() === todayDate.getUTCFullYear() && monthDate.getUTCMonth() === todayDate.getUTCMonth()
+        ? todayDate.getUTCDate()
+        : daysInMonth;
+
     data.push({
-      month: MONTH_NAMES[monthDate.getMonth()],
+      month: MONTH_NAMES[monthDate.getUTCMonth()],
       rate: Math.round((completed / Math.max(1, daysElapsed)) * 100)
     });
   }
@@ -159,38 +176,30 @@ export function buildMonthlyCompletionRates(
 
 export function getDaysSinceLastCompletion(
   habits: { completions: Record<string, number>; dailyTarget: number }[],
-  referenceDate = new Date()
+  referenceDate = new Date(),
+  timeZone = getCurrentUserTimeZone()
 ): number {
-  if (habits.length === 0) return 0;
+  if (habits.length === 0) {
+    return 0;
+  }
 
-  const todayStr = formatDate(referenceDate);
-  const allCompletions: Set<string> = new Set();
-  
-  habits.forEach((h) => {
-    const target = Math.max(1, h.dailyTarget ?? 1);
-    Object.keys(h.completions).forEach((dateKey) => {
-      if ((h.completions[dateKey] ?? 0) >= target && dateKey < todayStr) {
-        allCompletions.add(dateKey);
+  const today = toCalendarDate(referenceDate, timeZone);
+  const allCompletions = new Set<string>();
+
+  habits.forEach((habit) => {
+    const target = Math.max(1, habit.dailyTarget ?? 1);
+    Object.keys(habit.completions).forEach((dateKey) => {
+      const calendarDate = extractCalendarDate(dateKey);
+      if (calendarDate && (habit.completions[dateKey] ?? 0) >= target && calendarDate < today) {
+        allCompletions.add(calendarDate);
       }
     });
   });
 
   if (allCompletions.size === 0) {
-    // There are no past completions - don't show "comeback" banner for totally new users
     return 0;
   }
 
-  const sortedDates = Array.from(allCompletions).sort((a, b) => b.localeCompare(a));
-  const mostRecentStr = sortedDates[0];
-  
-  const mostRecentDate = new Date(mostRecentStr);
-  mostRecentDate.setHours(0, 0, 0, 0);
-  const refDate = new Date(referenceDate);
-  refDate.setHours(0, 0, 0, 0);
-  
-  const diffTime = Math.abs(refDate.getTime() - mostRecentDate.getTime());
-  const diffDays = Math.floor(diffTime / MS_PER_DAY);
-  
-  return diffDays;
+  const mostRecent = Array.from(allCompletions).sort((first, second) => second.localeCompare(first))[0];
+  return diffCalendarDays(mostRecent, today);
 }
-

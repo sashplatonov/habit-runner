@@ -1,5 +1,10 @@
 import { useEffect, useState } from 'react';
-import { fetchUserTheme, saveUserTheme } from '@/lib/api/theme';
+import { fetchUserPreferences, saveUserPreferences } from '@/lib/api/theme';
+import {
+  getBrowserTimeZone,
+  getCurrentUserTimeZone,
+  setCurrentUserTimeZone
+} from '@/lib/time/userTimezone';
 
 export type ThemeId =
 'midnight' |
@@ -108,6 +113,7 @@ export function useTheme(isAuthenticated = false) {
     }
     return 'cloud';
   });
+  const [timezone, setTimezoneState] = useState<string>(() => getCurrentUserTimeZone());
   const [serverSyncReady, setServerSyncReady] = useState(!isAuthenticated);
 
   useEffect(() => {
@@ -116,7 +122,12 @@ export function useTheme(isAuthenticated = false) {
   }, [theme]);
 
   useEffect(() => {
+    setCurrentUserTimeZone(timezone);
+  }, [timezone]);
+
+  useEffect(() => {
     if (!isAuthenticated) {
+      setTimezoneState(getBrowserTimeZone());
       setServerSyncReady(false);
       return;
     }
@@ -126,13 +137,18 @@ export function useTheme(isAuthenticated = false) {
 
     const hydrateTheme = async () => {
       try {
-        const remoteTheme = await fetchUserTheme();
+        const remotePreferences = await fetchUserPreferences();
+        if (cancelled) {
+          return;
+        }
         if (
-          !cancelled &&
-          remoteTheme &&
-          THEMES.some((candidate) => candidate.id === remoteTheme)
+          remotePreferences.theme &&
+          THEMES.some((candidate) => candidate.id === remotePreferences.theme)
         ) {
-          setThemeState(remoteTheme);
+          setThemeState(remotePreferences.theme as ThemeId);
+        }
+        if (remotePreferences.timezone) {
+          setTimezoneState(setCurrentUserTimeZone(remotePreferences.timezone));
         }
       } catch {
         // Theme sync should not block app usage when API is temporarily unavailable.
@@ -157,14 +173,14 @@ export function useTheme(isAuthenticated = false) {
 
     const persistTheme = async () => {
       try {
-        await saveUserTheme(theme);
+        await saveUserPreferences({ theme, timezone });
       } catch {
         // Keep local theme if remote preference update fails.
       }
     };
 
     void persistTheme();
-  }, [isAuthenticated, serverSyncReady, theme]);
+  }, [isAuthenticated, serverSyncReady, theme, timezone]);
 
   const setTheme = (id: ThemeId) => {
     setThemeState(id);
@@ -172,5 +188,5 @@ export function useTheme(isAuthenticated = false) {
 
   const currentTheme = THEMES.find((t) => t.id === theme) ?? THEMES[0];
 
-  return { theme, setTheme, currentTheme };
+  return { theme, setTheme, currentTheme, timezone };
 }

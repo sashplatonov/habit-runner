@@ -22,6 +22,10 @@ export interface SyncRunResult {
   lastCursor?: string;
 }
 
+let activeSyncRun: Promise<SyncRunResult> | null = null;
+let shouldRerunAfterActiveSync = false;
+let scheduledSyncHandle: number | null = null;
+
 async function pushPendingOutbox(): Promise<{
   applied: number;
   conflicts: number;
@@ -60,7 +64,7 @@ async function pushPendingOutbox(): Promise<{
   };
 }
 
-export async function runSyncCycle(): Promise<SyncRunResult> {
+async function runSyncCycleOnce(): Promise<SyncRunResult> {
   const meta = await ensureSyncMeta();
   const result: SyncRunResult = {
     status: 'syncing',
@@ -116,4 +120,39 @@ export async function runSyncCycle(): Promise<SyncRunResult> {
       lastError: message
     };
   }
+}
+
+export async function runSyncCycle(): Promise<SyncRunResult> {
+  if (activeSyncRun) {
+    shouldRerunAfterActiveSync = true;
+    return activeSyncRun;
+  }
+
+  activeSyncRun = runSyncCycleOnce().finally(() => {
+    activeSyncRun = null;
+    if (!shouldRerunAfterActiveSync) {
+      return;
+    }
+    shouldRerunAfterActiveSync = false;
+    if (typeof window !== 'undefined') {
+      window.setTimeout(() => {
+        void runSyncCycle();
+      }, 0);
+    }
+  });
+
+  return activeSyncRun;
+}
+
+export function scheduleSyncCycle(delayMs = 0): void {
+  if (typeof window === 'undefined') {
+    return;
+  }
+  if (scheduledSyncHandle !== null) {
+    return;
+  }
+  scheduledSyncHandle = window.setTimeout(() => {
+    scheduledSyncHandle = null;
+    void runSyncCycle();
+  }, delayMs);
 }

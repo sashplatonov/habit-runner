@@ -100,6 +100,31 @@ test('POST /auth/login returns access and refresh tokens for known user', async 
   assert.equal(result.expiresIn, 3600);
 });
 
+test('GET /auth/preferences returns current theme and timezone', async () => {
+  const token = await loginAndGetToken();
+  const { req } = createRequest(token);
+  await runGuard(req);
+
+  const result = await authController.getPreferences(req);
+
+  assert.equal(result.theme, 'cloud');
+  assert.equal(result.timezone, null);
+});
+
+test('PUT /auth/preferences updates theme and timezone', async () => {
+  const token = await loginAndGetToken();
+  const { req } = createRequest(token);
+  await runGuard(req);
+
+  const result = await authController.updatePreferences(req, {
+    theme: 'mint',
+    timezone: 'Europe/Belgrade'
+  });
+
+  assert.equal(result.theme, 'mint');
+  assert.equal(result.timezone, 'Europe/Belgrade');
+});
+
 test('GET /sync/pull requires auth and returns UnauthorizedException when token is missing', async () => {
   const { req } = createRequest();
   await assert.rejects(() => runGuard(req), (error: unknown) => {

@@ -1,13 +1,18 @@
-import { FlameIcon, TrendingUpIcon, ZapIcon } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { ChevronDownIcon, ChevronUpIcon, FlameIcon, MoreHorizontalIcon, TrendingUpIcon, ZapIcon } from 'lucide-react';
+import { ChartGuideTooltip } from '@/components/ChartGuideTooltip';
 import { CompletionRing } from '@/components/CompletionRing';
 import type { OnboardingTemplate } from '@/components/Onboarding';
 import type { Habit } from '@/types/habit';
 
 type Reminder = {
+  id: string;
   habitId: string;
   time: string;
   message: string;
 };
+
+export type ViewDensity = 'comfortable' | 'compact';
 
 export type DashboardViewProps = {
   habits: Habit[];
@@ -36,16 +41,19 @@ export type DashboardViewProps = {
   handleExport: () => void;
   handleTemplateSelect: (template: OnboardingTemplate) => Promise<void>;
   handleToggle: (habit: Habit) => Promise<void>;
-  handleDismissReminder: (habitId: string) => void;
+  handleDismissReminder: (reminderId: string) => void;
+  handleDisableReminder: (habit: Habit) => Promise<void>;
   handleDragStart: (event: React.DragEvent<HTMLDivElement>, habitId: string) => void;
   handleDragOver: (event: React.DragEvent<HTMLDivElement>, habitId: string) => void;
   handleDrop: (event: React.DragEvent<HTMLDivElement>, habitId: string) => Promise<void>;
   handleDragEnd: () => void;
-  reorderMode: boolean;
-  toggleReorderMode: () => void;
-  moveHabit: (habitId: string, direction: 'up' | 'down') => Promise<void>;
+  handleTouchStart: (event: React.TouchEvent, habitId: string) => void;
   sortMode: 'custom' | 'smart';
   setSortMode: (mode: 'custom' | 'smart') => void;
+  viewDensity: ViewDensity;
+  setViewDensity: (density: ViewDensity) => void;
+  heroCollapsed: boolean;
+  setHeroCollapsed: React.Dispatch<React.SetStateAction<boolean>>;
 };
 
 function StatCards({ totalActive, overallStreak, completedToday }: { totalActive: number; overallStreak: number; completedToday: number }) {
@@ -101,48 +109,140 @@ function HeroBanners({ showComebackBanner, daysSinceLastCompletion, todayRate }:
   );
 }
 
-export function DashboardHero({
+function getMotivationText(todayRate: number, remaining: number): string | null {
+  if (todayRate >= 100) {
+    return null;
+  }
+  if (todayRate >= 50) {
+    return `Almost there - ${remaining} left!`;
+  }
+  if (todayRate > 0) {
+    return `Keep going - ${remaining} to go`;
+  }
+  return 'Start your streak';
+}
+
+function HeroSummaryBar({
   dateStr,
   todayRate,
   completedToday,
   totalActive,
-  overallStreak,
-  daysSinceLastCompletion,
-  handleExport,
-  reorderMode,
-  toggleReorderMode
-}: Pick<
-  DashboardViewProps,
-  | 'dateStr'
-  | 'todayRate'
-  | 'completedToday'
-  | 'totalActive'
-  | 'overallStreak'
-  | 'daysSinceLastCompletion'
-  | 'handleExport'
-  | 'reorderMode'
-  | 'toggleReorderMode'
->) {
-  const remaining = totalActive - completedToday;
-  const motivationText =
-    todayRate >= 100
-      ? null
-      : todayRate >= 50
-        ? `Almost there — ${remaining} left!`
-        : todayRate > 0
-          ? `Keep going — ${remaining} to go`
-          : 'Start your streak';
-  const showComebackBanner = daysSinceLastCompletion >= 2 && todayRate < 100;
-
+  overallStreak
+}: {
+  dateStr: string;
+  todayRate: number;
+  completedToday: number;
+  totalActive: number;
+  overallStreak: number;
+}) {
   return (
-    <>
-      <div className="px-4 pt-4 pb-3 bg-bg-primary" style={{ paddingTop: 'calc(var(--safe-area-inset-top, 0px) + 1rem)' }}>
-        <div className="max-w-2xl mx-auto">
-          <p className="text-[11px] font-mono text-muted uppercase tracking-widest mb-0.5">{dateStr}</p>
-          <h1 className="text-xl font-semibold text-foreground">Today</h1>
+    <div>
+      <div className="mb-1 flex items-center gap-2">
+        <p className="text-[11px] font-mono text-muted uppercase tracking-widest">{dateStr}</p>
+        <ChartGuideTooltip
+          title="Today snapshot"
+          summary="This dashboard summary gives you the fastest read on today: how many habits are scheduled, how much is already done, and whether your streak is still alive."
+          focusPoints={[
+            'Completion ring: today progress across habits due now.',
+            'Done count: how many scheduled habits are already closed.',
+            'Streak badge: whether daily consistency is still compounding.'
+          ]}
+          variant="bars"
+          triggerClassName="h-7 w-7"
+        />
+      </div>
+      <div className="flex items-center gap-3">
+        <CompletionRing size={28} strokeWidth={3.5} percentage={todayRate} />
+        <div className="text-[12px] font-semibold text-foreground">{`${completedToday}/${totalActive || 0}`}</div>
+        <div className="flex items-center gap-1 text-[12px] font-mono text-accent-secondary">
+          <FlameIcon size={14} />
+          <span>{overallStreak}d</span>
         </div>
       </div>
-      <div className="border-b border-border bg-bg-primary px-4 pb-4">
+    </div>
+  );
+}
+
+function HeroActions({
+  menuOpen,
+  setMenuOpen,
+  menuRef,
+  handleExport,
+  heroCollapsed,
+  onToggleHero
+}: {
+  menuOpen: boolean;
+  setMenuOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  menuRef: React.RefObject<HTMLDivElement | null>;
+  handleExport: () => void;
+  heroCollapsed: boolean;
+  onToggleHero: () => void;
+}) {
+  return (
+    <div className="flex items-center gap-2">
+      <div className="relative" ref={menuRef}>
+        <button
+          type="button"
+          onClick={() => setMenuOpen((prev) => !prev)}
+          className="w-9 h-9 rounded-xl border border-border bg-bg-secondary flex items-center justify-center transition hover:border-accent"
+          aria-haspopup="true"
+          aria-expanded={menuOpen}
+        >
+          <MoreHorizontalIcon size={18} />
+        </button>
+        {menuOpen && (
+          <div className="absolute right-0 top-full mt-2 w-36 rounded-2xl border border-border bg-bg-card shadow-xl z-20">
+            <button
+              type="button"
+              onClick={() => {
+                handleExport();
+                setMenuOpen(false);
+              }}
+              className="w-full px-3 py-2 text-left text-xs font-semibold tracking-widest uppercase text-foreground hover:bg-bg-secondary"
+            >
+              Export CSV
+            </button>
+          </div>
+        )}
+      </div>
+      <button
+        type="button"
+        onClick={onToggleHero}
+        className="w-9 h-9 rounded-xl border border-border bg-bg-secondary flex items-center justify-center transition hover:border-accent"
+        aria-label={heroCollapsed ? 'Expand hero' : 'Collapse hero'}
+      >
+        {heroCollapsed ? <ChevronDownIcon size={16} /> : <ChevronUpIcon size={16} />}
+      </button>
+    </div>
+  );
+}
+
+function HeroExpandedPanel({
+  heroCollapsed,
+  todayRate,
+  totalActive,
+  overallStreak,
+  completedToday,
+  motivationText,
+  showComebackBanner,
+  daysSinceLastCompletion
+}: {
+  heroCollapsed: boolean;
+  todayRate: number;
+  totalActive: number;
+  overallStreak: number;
+  completedToday: number;
+  motivationText: string | null;
+  showComebackBanner: boolean;
+  daysSinceLastCompletion: number;
+}) {
+  return (
+    <div
+      className="overflow-hidden transition-all duration-300"
+      style={{ maxHeight: heroCollapsed ? 0 : 1200 }}
+      aria-hidden={heroCollapsed}
+    >
+      <div className="px-4 pb-4">
         <div className="max-w-2xl mx-auto">
           <div className="flex items-center gap-5 mb-3">
             <CompletionRing size={88} strokeWidth={7} percentage={todayRate} />
@@ -168,29 +268,81 @@ export function DashboardHero({
             />
           </div>
           <HeroBanners showComebackBanner={showComebackBanner} daysSinceLastCompletion={daysSinceLastCompletion} todayRate={todayRate} />
-          <div className="flex items-center justify-between gap-3">
-            <div className="text-[10px] font-mono uppercase tracking-[0.4em] text-muted">Filters</div>
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={toggleReorderMode}
-                className={`text-[10px] font-mono uppercase tracking-[0.3em] border px-3 py-1 rounded-full transition ${
-                  reorderMode ? 'border-accent text-accent bg-accent/10' : 'border-border hover:border-accent hover:text-accent'
-                }`}
-              >
-                {reorderMode ? 'Done' : 'Reorder'}
-              </button>
-              <button
-                type="button"
-                onClick={handleExport}
-                className="text-[10px] font-mono uppercase tracking-[0.3em] border border-border px-3 py-1 rounded-full transition hover:border-accent hover:text-accent"
-              >
-                Export CSV
-              </button>
-            </div>
-          </div>
         </div>
       </div>
-    </>
+    </div>
+  );
+}
+
+export function DashboardHero({
+  dateStr,
+  todayRate,
+  completedToday,
+  totalActive,
+  overallStreak,
+  daysSinceLastCompletion,
+  handleExport,
+  heroCollapsed,
+  setHeroCollapsed
+}: Pick<
+  DashboardViewProps,
+  | 'dateStr'
+  | 'todayRate'
+  | 'completedToday'
+  | 'totalActive'
+  | 'overallStreak'
+  | 'daysSinceLastCompletion'
+  | 'handleExport'
+  | 'heroCollapsed'
+  | 'setHeroCollapsed'
+>) {
+  const remaining = totalActive - completedToday;
+  const motivationText = getMotivationText(todayRate, remaining);
+  const showComebackBanner = daysSinceLastCompletion >= 2 && todayRate < 100;
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    const handleClickAway = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setMenuOpen(false);
+      }
+    };
+    document.addEventListener('pointerdown', handleClickAway);
+    return () => document.removeEventListener('pointerdown', handleClickAway);
+  }, []);
+
+  const toggleHero = () => setHeroCollapsed((prev) => !prev);
+  return (
+    <section className="border-b border-border bg-bg-primary">
+      <div className="px-4 py-3" style={{ paddingTop: 'calc(var(--safe-area-inset-top, 0px) + 1rem)' }}>
+        <div className="max-w-2xl mx-auto flex items-center justify-between">
+          <HeroSummaryBar
+            dateStr={dateStr}
+            todayRate={todayRate}
+            completedToday={completedToday}
+            totalActive={totalActive}
+            overallStreak={overallStreak}
+          />
+          <HeroActions
+            menuOpen={menuOpen}
+            setMenuOpen={setMenuOpen}
+            menuRef={menuRef}
+            handleExport={handleExport}
+            heroCollapsed={heroCollapsed}
+            onToggleHero={toggleHero}
+          />
+        </div>
+      </div>
+      <HeroExpandedPanel
+        heroCollapsed={heroCollapsed}
+        todayRate={todayRate}
+        totalActive={totalActive}
+        overallStreak={overallStreak}
+        completedToday={completedToday}
+        motivationText={motivationText}
+        showComebackBanner={showComebackBanner}
+        daysSinceLastCompletion={daysSinceLastCompletion}
+      />
+    </section>
   );
 }

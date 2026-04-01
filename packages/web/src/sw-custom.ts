@@ -1,14 +1,14 @@
 /// <reference lib="webworker" />
+import { precacheAndRoute } from 'workbox-precaching';
+
 declare const self: ServiceWorkerGlobalScope;
 
-// Manifest placeholder for vite-plugin-pwa to inject
-declare const __WB_MANIFEST: any;
-self.__WB_MANIFEST;
+// Precache app shell — list injected by vite-plugin-pwa at build time
+precacheAndRoute(self.__WB_MANIFEST);
 
 // Handle push events in the service worker
 self.addEventListener('push', (event: PushEvent) => {
   if (!event.data) {
-    console.log('Push event received with no data');
     return;
   }
 
@@ -23,14 +23,27 @@ self.addEventListener('push', (event: PushEvent) => {
     };
   }
 
+  const origin = self.location.origin;
+  const iconUrl = `${origin}/icon-192.png`;
+
   event.waitUntil(
-    self.registration.showNotification(notificationData.title, {
-      body: notificationData.body,
-      icon: '/icon-192.png',
-      badge: '/icon-192.png',
-      tag: 'habbit-reminder',
-      requireInteraction: false
-    })
+    (async () => {
+      // Pre-fetch icon to ensure it's in cache before Firefox tries to load it
+      try {
+        await fetch(iconUrl);
+      } catch {
+        // ignore — proceed without icon cache guarantee
+      }
+
+      await self.registration.showNotification(notificationData.title, {
+        body: notificationData.body,
+        icon: iconUrl,
+        badge: iconUrl,
+        image: `${origin}/icon-512.png`,
+        tag: 'habbit-reminder',
+        requireInteraction: false
+      });
+    })()
   );
 });
 

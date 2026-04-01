@@ -1,9 +1,11 @@
+import type {
+  LucideIcon
+} from 'lucide-react';
 import {
   ActivityIcon,
   CheckCircle2Icon,
   SparklesIcon,
-  PlusCircleIcon,
-  LucideIcon
+  PlusCircleIcon
 } from 'lucide-react';
 import type { HabitColor, HabitFrequency } from '@habbit-runner/shared';
 

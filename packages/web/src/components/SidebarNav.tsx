@@ -11,10 +11,13 @@ import {
 import { NavLink, Link } from '@/lib/router';
 import { THEMES, type ThemeId } from '@/hooks/useTheme';
 
+import type { SyncEngineState } from '@/hooks/useSyncEngine';
+
 interface SidebarNavProps {
   theme: ThemeId;
   onThemeChange: (id: ThemeId) => void;
   onLogout?: () => void | Promise<void>;
+  syncState?: SyncEngineState;
 }
 
 function ThemeDropdown({ theme, onThemeChange }: { theme: ThemeId; onThemeChange: (id: ThemeId) => void }) {
@@ -55,7 +58,9 @@ function ThemeDropdown({ theme, onThemeChange }: { theme: ThemeId; onThemeChange
   );
 }
 
-export function SidebarNav({ theme, onThemeChange, onLogout }: SidebarNavProps) {
+import { SyncStatus } from './SyncStatus';
+
+export function SidebarNav({ theme, onThemeChange, onLogout, syncState }: SidebarNavProps) {
   const [isThemeOpen, setIsThemeOpen] = useState(false);
   const themeRef = useRef<HTMLDivElement>(null);
 
@@ -80,6 +85,9 @@ export function SidebarNav({ theme, onThemeChange, onLogout }: SidebarNavProps) 
         <img src="/app-icon.svg" alt="Habbit Runner" className="w-8 h-8 rounded-lg flex-shrink-0 object-contain" />
         <span className="text-sm font-bold tracking-tight">Habbit Runner</span>
       </Link>
+
+      {/* Sync status */}
+      <SyncStatus syncState={syncState} />
 
       <Link
         to="/habit/new"
@@ -119,6 +127,8 @@ export function SidebarNav({ theme, onThemeChange, onLogout }: SidebarNavProps) 
             onClick={() => setIsThemeOpen((prev) => !prev)}
             className={`flex w-full items-center gap-2.5 px-3 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${isThemeOpen ? 'bg-bg-secondary text-foreground' : 'text-muted hover:text-foreground hover:bg-bg-secondary'}`}
             aria-label="Choose color theme"
+            aria-expanded={isThemeOpen}
+            aria-haspopup="listbox"
           >
             <PaletteIcon size={16} />
             <span className="flex-1 text-left capitalize">{theme}</span>

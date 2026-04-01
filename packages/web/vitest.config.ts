@@ -9,8 +9,11 @@ export default defineConfig({
   },
   test: {
     globals: true,
-    environment: 'node',
-    include: ['tests/**/*.test.ts'],
+    environment: 'jsdom',
+    deps: {
+      inline: ['@testing-library/react']
+    },
+    include: ['tests/**/*.test.{ts,tsx}'],
     coverage: {
       reporter: ['text', 'lcov'],
       exclude: ['node_modules', 'tests/helpers']
