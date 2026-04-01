@@ -20,19 +20,15 @@ import type {
 import {
   buildCursorClause,
   calculateNextCursor,
-  normalizeCustomDays,
+  nextSyncDate,
   normalizeDate,
-  normalizeFreezeDays,
-  normalizeReminderEnabled,
-  normalizeReminderTime,
-  normalizeSortOrder,
-  normalizeTags,
   parseCursor,
   serializeCheckin,
   serializeHabit,
   serializeTombstone
 } from './sync.utils';
-import { HABIT_FREQUENCIES, HabitFrequency, HabitSchedule, normalizeSchedule, scheduleFromLegacy, nowSyncISO } from '@habbit-runner/shared';
+import { nowSyncISO } from '@habbit-runner/shared';
+import { buildHabitWriteValues, hasHabitOwnershipConflict, hasNewerHabitConflict } from './sync.service.helpers';
 
 @Injectable()
 export class SyncService {
@@ -174,14 +170,14 @@ export class SyncService {
     }
 
     const existing = await tx.habit.findUnique({ where: { id: payload.id } }) as ExistingHabitRecord | null;
-    if (this.hasHabitOwnershipConflict(existing, userId)) {
+    if (hasHabitOwnershipConflict(existing, userId)) {
       conflicts.push({
         opId: op.id,
         reason: 'habit belongs to another user'
       });
       return;
     }
-    if (this.hasNewerHabitConflict(existing, timestamp, op.id, conflicts)) {return;}
+    if (hasNewerHabitConflict(existing, timestamp, op.id, conflicts)) {return;}
 
     await this.upsertHabit(tx, userId, payload, existing, timestamp);
 
@@ -189,12 +185,14 @@ export class SyncService {
   }
 
   private async deleteHabit(tx: TxClient, userId: string, payload: HabitPayload): Promise<void> {
+    const deletedAt = nextSyncDate(payload.updatedAt);
     await tx.tombstone.create({
       data: {
         userId,
         entity: 'habit',
         entityId: payload.id,
-        version: payload.version ?? 1
+        version: payload.version ?? 1,
+        deletedAt
       }
     });
     await tx.checkin.deleteMany({ where: { habitId: payload.id, userId } });
@@ -233,7 +231,8 @@ export class SyncService {
     existing: ExistingHabitRecord | null,
     timestamp: Date
   ): Promise<void> {
-    const writeValues = this.buildHabitWriteValues(payload, existing);
+    const writeValues = buildHabitWriteValues(payload, existing);
+    const appliedAt = nextSyncDate(timestamp, existing?.updatedAt);
     await tx.habit.upsert({
       where: { id: payload.id },
       create: {
@@ -254,10 +253,9 @@ export class SyncService {
         sortOrder: writeValues.sortOrder,
         reminderTime: writeValues.reminderTime,
         reminderEnabled: writeValues.reminderEnabled,
-        difficulty: writeValues.difficulty,
         type: writeValues.type,
         freezeDays: (writeValues.freezeDays ?? []) as never,
-        updatedAt: timestamp,
+        updatedAt: appliedAt,
         version: writeValues.nextVersion
       },
       update: {
@@ -275,114 +273,12 @@ export class SyncService {
         sortOrder: writeValues.sortOrder,
         reminderTime: writeValues.reminderTime,
         reminderEnabled: writeValues.reminderEnabled,
-        difficulty: writeValues.difficulty,
         type: writeValues.type,
         freezeDays: (writeValues.freezeDays ?? []) as never,
-        updatedAt: timestamp,
+        updatedAt: appliedAt,
         version: writeValues.nextVersion
       }
     });
-  }
-
-  private buildHabitWriteValues(
-    payload: HabitPayload,
-    existing: ExistingHabitRecord | null
-  ): {
-    nextVersion: number;
-    sortOrder: bigint;
-    dailyTarget: number;
-    reminderTime: string | null;
-    reminderEnabled: boolean;
-    tags: unknown;
-    customDays: number[] | undefined;
-    schedule: HabitSchedule;
-    difficulty: number;
-    type: string;
-    freezeDays: string[] | undefined;
-  } {
-    return {
-      nextVersion: this.resolveHabitVersion(existing, payload.version),
-      sortOrder: this.resolveHabitSortOrder(existing, payload.sortOrder),
-      dailyTarget: this.resolveHabitDailyTarget(existing, payload.dailyTarget),
-      reminderTime: this.resolveHabitReminderTime(existing, payload.reminderTime),
-      reminderEnabled: this.resolveHabitReminderEnabled(existing, payload.reminderEnabled),
-      tags: normalizeTags(payload.tags),
-      customDays: normalizeCustomDays(payload.customDays),
-      schedule: this.resolveHabitSchedule(existing, payload),
-      difficulty: this.resolveHabitDifficulty(existing, payload.difficulty),
-      type: this.resolveHabitType(existing, payload.type),
-      freezeDays: this.resolveHabitFreezeDays(existing, payload.freezeDays)
-    };
-  }
-
-  private resolveHabitVersion(existing: ExistingHabitRecord | null, payloadVersion?: number): number {
-    return Math.max(existing?.version ?? 0, payloadVersion ?? 0) + 1;
-  }
-
-  private resolveHabitSortOrder(existing: ExistingHabitRecord | null, payloadSortOrder?: number): bigint {
-    const normalizedSortOrder = normalizeSortOrder(payloadSortOrder);
-    if (typeof normalizedSortOrder === 'number') {
-      return BigInt(normalizedSortOrder);
-    }
-
-    const existingSortOrder = existing?.sortOrder;
-    if (typeof existingSortOrder === 'bigint') {
-      return existingSortOrder;
-    }
-    if (typeof existingSortOrder === 'number') {
-      return BigInt(Math.trunc(existingSortOrder));
-    }
-
-    return 0n;
-  }
-
-  private resolveHabitDailyTarget(existing: ExistingHabitRecord | null, payloadDailyTarget?: number): number {
-    if (typeof payloadDailyTarget === 'number' && Number.isFinite(payloadDailyTarget)) {
-      return Math.max(1, Math.trunc(payloadDailyTarget));
-    }
-    return Math.max(1, existing?.dailyTarget ?? 1);
-  }
-
-  private resolveHabitReminderTime(
-    existing: ExistingHabitRecord | null,
-    payloadReminderTime?: string | null
-  ): string | null {
-    return normalizeReminderTime(payloadReminderTime ?? existing?.reminderTime);
-  }
-
-  private resolveHabitReminderEnabled(
-    existing: ExistingHabitRecord | null,
-    payloadReminderEnabled?: boolean
-  ): boolean {
-    return normalizeReminderEnabled(payloadReminderEnabled, existing?.reminderEnabled ?? true);
-  }
-
-  private resolveHabitSchedule(
-    existing: ExistingHabitRecord | null,
-    payload: HabitPayload
-  ): HabitSchedule {
-    const normalized = normalizeSchedule(payload.schedule);
-    if (normalized) {
-      return normalized;
-    }
-    if (existing?.schedule) {
-      const inherited = normalizeSchedule(existing.schedule);
-      if (inherited) {
-        return inherited;
-      }
-    }
-    const frequency = this.normalizeHabitFrequency(payload.frequency);
-    return scheduleFromLegacy(frequency, normalizeCustomDays(payload.customDays));
-  }
-
-  private normalizeHabitFrequency(value: unknown): HabitFrequency {
-    if (typeof value !== 'string') {
-      return 'daily';
-    }
-    if ((HABIT_FREQUENCIES as readonly string[]).includes(value)) {
-      return value as HabitFrequency;
-    }
-    return 'daily';
   }
 
   private async applyCheckinOp(
@@ -419,6 +315,7 @@ export class SyncService {
     const nextVersion =
       Math.max(existing?.version ?? 0, payload.version ?? 0) + 1;
     const normalizedCount = Math.max(1, Math.trunc(payload.count ?? 1));
+    const appliedAt = nextSyncDate(timestamp, existing?.updatedAt);
 
     await tx.checkin.upsert({
       where: {
@@ -433,13 +330,13 @@ export class SyncService {
         date,
         done: payload.done,
         count: normalizedCount,
-        updatedAt: timestamp,
+        updatedAt: appliedAt,
         version: nextVersion
       },
       update: {
         done: payload.done,
         count: normalizedCount,
-        updatedAt: timestamp,
+        updatedAt: appliedAt,
         version: nextVersion
       }
     });
@@ -480,13 +377,15 @@ export class SyncService {
     const existing = await tx.checkin.findFirst({
       where: { habitId: payload.habitId, date, userId }
     }) as { id: string } | null;
+    const deletedAt = nextSyncDate(payload.updatedAt);
 
     await tx.tombstone.create({
       data: {
         userId,
         entity: 'checkin',
         entityId: payload.id ?? existing?.id ?? `${payload.habitId}:${payload.date}`,
-        version: payload.version ?? 1
+        version: payload.version ?? 1,
+        deletedAt
       }
     });
     await tx.checkin.deleteMany({
@@ -513,34 +412,6 @@ export class SyncService {
       }
     });
     return true;
-  }
-
-  private resolveHabitDifficulty(existing: ExistingHabitRecord | null, payloadValue?: number): number {
-    if (typeof payloadValue === 'number') {
-      return Math.max(1, Math.min(5, Math.trunc(payloadValue)));
-    }
-    return existing?.difficulty ?? 1;
-  }
-
-  private resolveHabitType(existing: ExistingHabitRecord | null, payloadValue?: string): string {
-    if (typeof payloadValue === 'string') {
-      return payloadValue === 'negative' ? 'negative' : 'positive';
-    }
-    return existing?.type ?? 'positive';
-  }
-
-  private resolveHabitFreezeDays(existing: ExistingHabitRecord | null, payloadValue?: string[]): string[] | undefined {
-    const normalized = normalizeFreezeDays(payloadValue);
-    if (normalized) {
-      return normalized;
-    }
-    if (existing?.freezeDays) {
-      const inheritedFreeze = normalizeFreezeDays(existing.freezeDays);
-      if (inheritedFreeze) {
-        return inheritedFreeze;
-      }
-    }
-    return undefined;
   }
 
   private async tryCreateLog(

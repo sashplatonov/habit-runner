@@ -30,3 +30,12 @@ export class UpdateThemeRequest {
   @IsString()
   theme!: string;
 }
+
+export class UpdatePreferencesRequest {
+  @IsString()
+  theme!: string;
+
+  @IsOptional()
+  @IsString()
+  timezone?: string;
+}

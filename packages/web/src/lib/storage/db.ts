@@ -1,9 +1,9 @@
 import type { Table } from 'dexie';
 import Dexie from 'dexie';
 import type { Habit } from '@/types/habit';
-import type { PullResponseDto } from '@/types/sync';
 import type { HabitSchedule, SyncEntity, SyncOpType } from '@habbit-runner/shared';
 import { normalizeSchedule, scheduleFromLegacy } from '@habbit-runner/shared';
+import { normalizeToCompletionKey } from '@/lib/completionKey';
 import { DEFAULT_USER_ID } from '@/lib/core/config';
 import { generateId } from '@/lib/core/id';
 import { nowSyncISO } from '@habbit-runner/shared';
@@ -43,7 +43,6 @@ export interface HabitEntity {
   reminderTime?: string | null;
   reminderEnabled: boolean;
   freezeDays: string[];
-  difficulty: 1 | 2 | 3 | 4 | 5;
   type: 'positive' | 'negative';
 }
 
@@ -89,12 +88,27 @@ export interface OutboxEntry {
   lastError?: string;
 }
 
+export interface PendingReminder {
+  id: string;
+  userId: string;
+  habitId: string;
+  habitName: string;
+  reminderTime: string;
+  createdAt: string;
+}
+
+type LegacyCheckinRecord = Partial<CheckinEntity> & { date?: string };
+type LegacyHabitRecord = Partial<HabitEntity>;
+
+const normalizeCheckinDateKey = normalizeToCompletionKey;
+
 export class HabbitRunnerDb extends Dexie {
   habits!: Table<HabitEntity>;
   checkins!: Table<CheckinEntity>;
   tombstones!: Table<TombstoneEntity>;
   sync_meta!: Table<SyncMeta>;
   outbox!: Table<OutboxEntry>;
+  pending_reminders!: Table<PendingReminder>;
 
   constructor() {
     super('habbitRunner');
@@ -169,17 +183,40 @@ export class HabbitRunnerDb extends Dexie {
         checkins: 'id, userId, habitId, date, updatedAt, version',
         tombstones: 'id, userId, entity, entityId, deletedAt',
         sync_meta: 'id, status',
-        outbox: 'id, userId, entity, type, status'
+        outbox: 'id, userId, entity, type, status',
+        pending_reminders: 'id, userId, habitId, createdAt'
       })
       .upgrade(async (transaction) => {
-        await (transaction as any).checkins.toCollection().modify((record: any) => {
+        const checkinsTable = transaction.table('checkins') as Table<LegacyCheckinRecord, string>;
+        const habitsTable = transaction.table('habits') as Table<LegacyHabitRecord, string>;
+
+        await checkinsTable.toCollection().modify((record) => {
           if (record.date && record.date.length === 10) {
-            record.date = `${record.date}T00:00:00.000Z`;
+            record.date = `${record.date}T00:00:00Z`;
           }
         });
-        await (transaction as any).habits.toCollection().modify((record: any) => {
-          if (record.difficulty === undefined) {record.difficulty = 1;}
+
+        await habitsTable.toCollection().modify((record) => {
           if (record.type === undefined) {record.type = 'positive';}
+        });
+      });
+
+    this.version(6)
+      .stores({
+        habits: 'id, userId, updatedAt, version, sortOrder',
+        checkins: 'id, userId, habitId, date, updatedAt, version',
+        tombstones: 'id, userId, entity, entityId, deletedAt',
+        sync_meta: 'id, status',
+        outbox: 'id, userId, entity, type, status',
+        pending_reminders: 'id, userId, habitId, createdAt'
+      })
+      .upgrade(async (transaction) => {
+        const checkinsTable = transaction.table('checkins') as Table<LegacyCheckinRecord, string>;
+
+        await checkinsTable.toCollection().modify((record) => {
+          if (record.date) {
+            record.date = normalizeCheckinDateKey(record.date);
+          }
         });
       });
   }
@@ -208,7 +245,6 @@ export function habitEntityToDomain(entity: HabitEntity): Habit {
       updatedAt: entity.updatedAt,
       version: entity.version,
       archived: entity.archived,
-      difficulty: entity.difficulty ?? 1,
       type: entity.type ?? 'positive',
       schedule:
         normalizeSchedule(entity.schedule) ??
@@ -240,7 +276,6 @@ export function domainToHabitEntity(habit: Habit): HabitEntity {
     reminderTime: habit.reminderTime ?? null,
     reminderEnabled: habit.reminderEnabled ?? true,
     freezeDays: habit.freezeDays ?? [],
-    difficulty: habit.difficulty ?? 1,
     type: habit.type ?? 'positive'
   };
 }
@@ -282,7 +317,7 @@ export async function upsertCheckinInDb(
   updatedAt?: string
 ): Promise<string> {
   const userId = getCurrentUserId();
-  const normalized = date;
+  const normalized = normalizeCheckinDateKey(date);
   const ts = updatedAt ?? nowSyncISO();
   const existing = await db.checkins
     .where('habitId')
@@ -325,7 +360,7 @@ export async function upsertCheckinInDb(
 
 export async function deleteCheckinInDb(habitId: string, date: string): Promise<CheckinEntity | undefined> {
   const userId = getCurrentUserId();
-  const normalized = date;
+  const normalized = normalizeCheckinDateKey(date);
   const existing = await db.checkins
     .where('habitId')
     .equals(habitId)
@@ -442,88 +477,38 @@ export async function updateOutboxEntryFailure(
   });
 }
 
-export async function applyPullResponse(
-  response: PullResponseDto
-): Promise<void> {
+export async function addPendingReminder(
+  habitId: string,
+  habitName: string,
+  reminderTime: string
+): Promise<string> {
   const userId = getCurrentUserId();
-  const habitPromises = response.habits.map(async (habit) => {
-    await db.habits.put({
-      id: habit.id,
-      userId,
-      name: habit.name,
-      description: habit.description ?? null,
-      color: habit.color,
-      icon: habit.icon,
-      frequency: habit.frequency,
-      targetStreak: habit.targetStreak,
-      dailyTarget: Math.max(1, Math.trunc(habit.dailyTarget ?? 1)),
-      tags: (habit.tags as string[]) ?? [],
-      customDays: Array.isArray(habit.customDays) ?
-      habit.customDays.filter((day): day is number => typeof day === 'number') :
-      undefined,
-      schedule: habit.schedule,
-      archived: habit.archived,
-      createdAt: habit.createdAt,
-      updatedAt: habit.updatedAt,
-      version: habit.version,
-      sortOrder:
-        typeof habit.sortOrder === 'number'
-          ? habit.sortOrder
-          : Date.parse(habit.createdAt) || Date.now(),
-      reminderTime:
-        typeof habit.reminderTime === 'string' ? habit.reminderTime : null,
-      reminderEnabled: habit.reminderEnabled ?? true,
-      freezeDays: (habit.freezeDays as string[]) ?? [],
-      completions: {},
-      difficulty: (habit as any).difficulty ?? 1,
-      type: (habit as any).type ?? 'positive'
-    });
+  const id = generateId();
+  await db.pending_reminders.add({
+    id,
+    userId,
+    habitId,
+    habitName,
+    reminderTime,
+    createdAt: nowSyncISO()
   });
-
-  const checkinPromises = response.checkins.map(async (checkin) => {
-    const datePart = checkin.date.split('T')[0];
-    const normalizedDate = `${datePart}T00:00:00.000Z`;
-    await db.checkins
-      .where('habitId')
-      .equals(checkin.habitId)
-      .filter(
-        (record) =>
-          record.date === normalizedDate &&
-          record.userId === userId &&
-          record.id !== checkin.id
-      )
-      .delete();
-    await db.checkins.put({
-      id: checkin.id,
-      userId,
-      habitId: checkin.habitId,
-      date: normalizedDate,
-      done: checkin.done,
-      count: Math.max(1, Math.trunc(checkin.count ?? 1)),
-      updatedAt: checkin.updatedAt,
-      version: checkin.version
-    });
-  });
-
-  const tombstonePromises = response.tombstones.map(async (tombstone) => {
-    if (tombstone.entity === 'habit') {
-      await removeHabitFromDb(tombstone.entityId);
-    } else if (tombstone.entity === 'checkin') {
-      if (!tombstone.entityId.includes(':')) {
-        await db.checkins.delete(tombstone.entityId);
-      } else {
-        const [habitId, date] = tombstone.entityId.split(':');
-        if (habitId && date) {
-          await deleteCheckinInDb(habitId, date);
-        }
-      }
-    }
-  });
-
-  await Promise.all([...habitPromises, ...checkinPromises, ...tombstonePromises]);
+  return id;
 }
 
-export function getBackoffMs(retries: number): number {
-  const attempt = Math.min(retries, 6);
-  return (attempt + 1) * 1000;
+export async function removePendingReminder(id: string): Promise<void> {
+  const userId = getCurrentUserId();
+  const reminder = await db.pending_reminders.get(id);
+  if (reminder?.userId === userId) {
+    await db.pending_reminders.delete(id);
+  }
 }
+
+export async function getPendingReminders(): Promise<PendingReminder[]> {
+  const userId = getCurrentUserId();
+  return await db.pending_reminders
+    .where('userId')
+    .equals(userId)
+    .toArray();
+}
+
+export { applyPullResponse, getBackoffMs } from './dbSync';

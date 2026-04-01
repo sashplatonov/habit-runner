@@ -1,12 +1,14 @@
 import React, { useMemo, useRef } from 'react';
-import { ChevronLeftIcon, ChevronRightIcon } from 'lucide-react';
+import { ChevronLeftIcon, ChevronRightIcon, FlameIcon, BarChart2Icon, TrendingUpIcon } from 'lucide-react';
 import { DashboardView } from '@/pages/components/DashboardView';
-import { StatsView } from '@/pages/components/StatsView';
+import { StatsView, type ActivityWeek, type Insight, type PeriodOption } from '@/pages/components/StatsView';
 import { AddEditHabitPage } from '@/pages/components/add-edit-habit/AddEditHabitPage';
 import { COLORS } from '@/pages/components/add-edit-habit.constants';
 import type { AddEditHabitModel } from '@/pages/hooks/useAddEditHabitModel';
+import { formatHabitLabel } from '@/lib/habits/formatHabitLabel';
 import { BrowserRouter } from '@/lib/router';
-import type { Habit, HabitSchedule } from '@/types/habit';
+import type { Habit } from '@/types/habit';
+import type { HabitSchedule } from '@habbit-runner/shared';
 
 function isoDate(offsetDays = 0) {
   const date = new Date();
@@ -39,6 +41,7 @@ function buildDemoHabits(): Habit[] {
       createdAt: isoDate(-45),
       archived: false,
       sortOrder: 0,
+      type: 'positive',
       reminderTime: '07:30',
       reminderEnabled: true
     },
@@ -57,6 +60,7 @@ function buildDemoHabits(): Habit[] {
       createdAt: isoDate(-30),
       archived: false,
       sortOrder: 1,
+      type: 'positive',
       reminderTime: '21:00',
       reminderEnabled: true
     },
@@ -75,6 +79,7 @@ function buildDemoHabits(): Habit[] {
       createdAt: isoDate(-20),
       archived: false,
       sortOrder: 2,
+      type: 'negative',
       reminderTime: '18:05',
       reminderEnabled: true
     }
@@ -92,12 +97,15 @@ function buildDemoEditModel(): AddEditHabitModel {
   const setColor = noopSetter<Habit['color']>();
   const setFrequency = noopSetter<Habit['frequency']>();
   const setSchedule = noopSetter<HabitSchedule>();
+  const setType = noopSetter<'positive' | 'negative'>();
 
   return {
     habitId: 'demo-read',
     isEdit: true,
     hasExisting: true,
     shouldShowLoading: false,
+    showSoftLimitWarning: false,
+    acknowledgeSoftLimit: () => undefined,
     name: 'Read 20 pages',
     setName: setString,
     description: 'Build a consistent nightly reading routine.',
@@ -120,6 +128,8 @@ function buildDemoEditModel(): AddEditHabitModel {
     increaseTargetStreak: () => undefined,
     dailyTarget: 1,
     setDailyTarget: setNumber,
+    type: 'positive',
+    setType,
     tags: ['learning', 'focus'],
     tagInput: '',
     setTagInput: setString,
@@ -136,6 +146,22 @@ function buildDemoEditModel(): AddEditHabitModel {
   };
 }
 
+function buildDailyHabitDetails(habits: Habit[]) {
+  const details: Record<string, string[]> = {};
+  habits.forEach((habit) => {
+    const threshold = Math.max(1, habit.dailyTarget ?? 1);
+    Object.entries(habit.completions).forEach(([date, count]) => {
+      if ((count ?? 0) >= threshold) {
+        if (!details[date]) {
+          details[date] = [];
+        }
+        details[date].push(formatHabitLabel(habit));
+      }
+    });
+  });
+  return details;
+}
+
 function buildDemoStatsModel(habits: Habit[]) {
   const allStats = habits.map((habit, idx) => ({
     habit,
@@ -147,6 +173,36 @@ function buildDemoStatsModel(habits: Habit[]) {
       weeklyData: [6, 7, 5, 6, 5, 7, 6, 6, 5, 7, 6, 6].map((count) => ({ count }))
     }
   }));
+
+  const habitPeriodData = [
+    { period: 'Oct', 'Morning Run': 74, 'Read 20 pages': 62, 'No sugar after 18:00': 58 },
+    { period: 'Nov', 'Morning Run': 78, 'Read 20 pages': 68, 'No sugar after 18:00': 61 },
+    { period: 'Dec', 'Morning Run': 82, 'Read 20 pages': 70, 'No sugar after 18:00': 65 },
+    { period: 'Jan', 'Morning Run': 86, 'Read 20 pages': 72, 'No sugar after 18:00': 66 },
+    { period: 'Feb', 'Morning Run': 88, 'Read 20 pages': 75, 'No sugar after 18:00': 68 },
+    { period: 'Mar', 'Morning Run': 90, 'Read 20 pages': 76, 'No sugar after 18:00': 69 }
+  ];
+  const insights: Insight[] = [
+    { id: 'streak', title: 'Best streak', body: 'Morning Run leads with a 21-day streak.', icon: FlameIcon },
+    { id: 'weekday', title: 'Weekday shift', body: 'Wednesday is your strongest day this month.', icon: BarChart2Icon },
+    { id: 'momentum', title: 'Momentum', body: '2 habits improved versus the previous period.', icon: TrendingUpIcon }
+  ];
+  const activityWeeks: ActivityWeek[] = [
+    {
+      label: 'Week 1',
+      days: [
+        { date: '2026-03-01', intensity: 2, isFrozen: false, inWindow: true },
+        { date: '2026-03-02', intensity: 3, isFrozen: false, inWindow: true },
+        { date: '2026-03-03', intensity: 2, isFrozen: false, inWindow: true },
+        { date: '2026-03-04', intensity: 1, isFrozen: false, inWindow: true },
+        { date: '2026-03-05', intensity: 3, isFrozen: false, inWindow: true },
+        { date: '2026-03-06', intensity: 2, isFrozen: false, inWindow: true },
+        { date: '2026-03-07', intensity: 0, isFrozen: true, inWindow: true }
+      ]
+    }
+  ];
+  const period: PeriodOption = 'month';
+  const dailyHabitDetails = buildDailyHabitDetails(habits);
 
   return {
     navigate: () => undefined,
@@ -162,27 +218,31 @@ function buildDemoStatsModel(habits: Habit[]) {
     selectedTags: [],
     toggleTag: () => undefined,
     dailyData: [
-      { day: 'Mar 01', completed: 2, total: 3, rate: 67 },
-      { day: 'Mar 02', completed: 3, total: 3, rate: 100 },
-      { day: 'Mar 03', completed: 2, total: 3, rate: 67 },
-      { day: 'Mar 04', completed: 2, total: 3, rate: 67 },
-      { day: 'Mar 05', completed: 3, total: 3, rate: 100 },
-      { day: 'Mar 06', completed: 2, total: 3, rate: 67 },
-      { day: 'Mar 07', completed: 1, total: 3, rate: 33 },
-      { day: 'Mar 08', completed: 2, total: 3, rate: 67 },
-      { day: 'Mar 09', completed: 2, total: 3, rate: 67 }
+      { day: 'Mar 01', axisLabel: 'Mar 26', completed: 2, total: 3, rate: 67 },
+      { day: 'Mar 02', axisLabel: 'Mar 26', completed: 3, total: 3, rate: 100 },
+      { day: 'Mar 03', axisLabel: 'Mar 26', completed: 2, total: 3, rate: 67 },
+      { day: 'Mar 04', axisLabel: 'Mar 26', completed: 2, total: 3, rate: 67 },
+      { day: 'Mar 05', axisLabel: 'Mar 26', completed: 3, total: 3, rate: 100 },
+      { day: 'Mar 06', axisLabel: 'Mar 26', completed: 2, total: 3, rate: 67 },
+      { day: 'Mar 07', axisLabel: 'Mar 26', completed: 1, total: 3, rate: 33 },
+      { day: 'Mar 08', axisLabel: 'Mar 26', completed: 2, total: 3, rate: 67 },
+      { day: 'Mar 09', axisLabel: 'Mar 26', completed: 2, total: 3, rate: 67 }
     ],
-    habitMonthlyData: [
-      { month: 'Oct', 'Morning Run': 74, 'Read 20 pages': 62, 'No sugar after 18:00': 58 },
-      { month: 'Nov', 'Morning Run': 78, 'Read 20 pages': 68, 'No sugar after 18:00': 61 },
-      { month: 'Dec', 'Morning Run': 82, 'Read 20 pages': 70, 'No sugar after 18:00': 65 },
-      { month: 'Jan', 'Morning Run': 86, 'Read 20 pages': 72, 'No sugar after 18:00': 66 },
-      { month: 'Feb', 'Morning Run': 88, 'Read 20 pages': 75, 'No sugar after 18:00': 68 },
-      { month: 'Mar', 'Morning Run': 90, 'Read 20 pages': 76, 'No sugar after 18:00': 69 }
-    ],
+    habitPeriodData,
     filteredHabits: habits,
+    dailyHabitDetails,
     sorted: [...allStats].sort((a, b) => b.stats.completionRate - a.stats.completionRate),
-    allStats
+    allStats,
+    bestWeekday: 'Wednesday',
+    worstWeekday: 'Sunday',
+    investmentPercent: 78,
+    totalActiveDays: 26,
+    period,
+    setPeriod: () => undefined,
+    hiddenHabits: [],
+    toggleHabitVisibility: () => undefined,
+    insights,
+    activityWeeks
   };
 }
 
@@ -257,6 +317,9 @@ export function PublicPreviewCarousel() {
                 reminders={[]}
                 dropHint={null}
                 dragOverHabitId={null}
+                draggedHabitId={null}
+                searchQuery=""
+                setSearchQuery={() => undefined}
                 filter="all"
                 allTags={allTags}
                 selectedTags={[]}
@@ -271,6 +334,7 @@ export function PublicPreviewCarousel() {
                   day: 'numeric'
                 })}
                 overallStreak={15}
+                daysSinceLastCompletion={0}
                 setFilter={() => undefined}
                 setSelectedTags={() => undefined}
                 toggleTag={() => undefined}
@@ -279,10 +343,18 @@ export function PublicPreviewCarousel() {
                 handleTemplateSelect={async () => undefined}
                 handleToggle={async () => undefined}
                 handleDismissReminder={() => undefined}
+                handleDisableReminder={async () => undefined}
                 handleDragStart={() => undefined}
                 handleDragOver={() => undefined}
                 handleDrop={async () => undefined}
                 handleDragEnd={() => undefined}
+                handleTouchStart={() => undefined}
+                sortMode="custom"
+                setSortMode={() => undefined}
+                viewDensity="comfortable"
+                setViewDensity={() => undefined}
+                heroCollapsed={false}
+                setHeroCollapsed={() => undefined}
               />
             </BrowserRouter>
           </PreviewSlide>

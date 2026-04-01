@@ -67,6 +67,7 @@ habbit-runner/
 |---|---|
 | [getting-started.md](./getting-started.md) | Local dev setup, Docker setup, env vars |
 | [architecture.md](./architecture.md) | Sync protocol, data flow, module structure |
+| [chart-tooltips.md](./chart-tooltips.md) | UX contract for explanatory chart and heatmap tooltips |
 | [offline-sync-plan.md](./offline-sync-plan.md) | Outbox pattern, conflict resolution, retry |
 | [WEB_PUSH_SETUP.md](./WEB_PUSH_SETUP.md) | VAPID key generation, push subscription flow |
 | [github-automation.md](./github-automation.md) | Renovate, Trivy scanner setup |

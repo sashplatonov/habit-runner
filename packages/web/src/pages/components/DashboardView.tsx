@@ -29,14 +29,15 @@ export function DashboardView(props: DashboardViewProps) {
         overallStreak={props.overallStreak}
         daysSinceLastCompletion={props.daysSinceLastCompletion}
         handleExport={props.handleExport}
-        reorderMode={props.reorderMode}
-        toggleReorderMode={props.toggleReorderMode}
+        heroCollapsed={props.heroCollapsed}
+        setHeroCollapsed={props.setHeroCollapsed}
       />
       <RemindersPanel
         reminders={props.reminders}
         habits={props.habits}
         handleToggle={props.handleToggle}
         handleDismissReminder={props.handleDismissReminder}
+        handleDisableReminder={props.handleDisableReminder}
       />
       <FilterBar
         filter={props.filter}
@@ -49,6 +50,8 @@ export function DashboardView(props: DashboardViewProps) {
         today={props.today}
         sortMode={props.sortMode}
         setSortMode={props.setSortMode}
+        viewDensity={props.viewDensity}
+        setViewDensity={props.setViewDensity}
         searchQuery={props.searchQuery}
         setSearchQuery={props.setSearchQuery}
       />
@@ -62,10 +65,11 @@ export function DashboardView(props: DashboardViewProps) {
         handleDragStart={props.handleDragStart}
         handleDragOver={props.handleDragOver}
         handleDragEnd={props.handleDragEnd}
-        reorderMode={props.reorderMode}
-        moveHabit={props.moveHabit}
+        handleTouchStart={props.handleTouchStart}
         navigate={props.navigate}
         selectedTags={props.selectedTags}
+        viewDensity={props.viewDensity}
+        filter={props.filter}
       />
     </div>
   );

@@ -1,28 +1,14 @@
-import {
-  TrendingUpIcon,
-  ZapIcon,
-  FlameIcon,
-  CalendarIcon,
-  SearchIcon,
-  TagIcon
-} from 'lucide-react';
-import {
-  LineChart,
-  Line,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  Tooltip,
-  ResponsiveContainer,
-  CartesianGrid
-} from 'recharts';
-import { CompletionRing } from '@/components/CompletionRing';
-import { HABIT_COLOR_THEMES } from '@/lib/theme/habit-colors';
+import { useMemo, useState } from 'react';
+import { CalendarIcon, FilterIcon, FlameIcon, TrendingUpIcon, ZapIcon } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
+import { ChartGuideTooltip } from '@/components/ChartGuideTooltip';
 import type { Habit } from '@/types/habit';
-import { invokeIfFunction } from '@/lib/callback';
+import { PeriodSelector, FiltersPanel, InsightsRow, DailyRateChart, PeriodTrendChart, HabitPerformanceList, WeeklyBreakdown, HabitSortControls } from './StatsViewPanels';
+import { HabitHeatmap } from '@/components/HabitHeatmap';
+import { OVERVIEW_SIGNALS_TOOLTIP, YOUR_INVESTMENT_TOOLTIP } from './blockGuideTooltips';
+import { getInvestmentColor, getInvestmentMessage } from './StatsView.helpers';
 
-type HabitStats = {
+export type HabitStats = {
   completionRate: number;
   completedDays: number;
   longestStreak: number;
@@ -37,12 +23,43 @@ type HabitStatEntry = {
 
 type DailyDataPoint = {
   day: string;
+  axisLabel: string;
   completed: number;
   total: number;
   rate: number;
 };
 
-type StatsViewProps = {
+export type PeriodOption = 'week' | 'month' | 'quarter' | 'year';
+
+export type Insight = {
+  id: string;
+  title: string;
+  body: string;
+  icon: LucideIcon;
+};
+
+export type ActivityDay = {
+  date: string;
+  intensity: number;
+  isFrozen: boolean;
+  inWindow: boolean;
+};
+
+export type ActivityWeek = {
+  label: string;
+  days: ActivityDay[];
+};
+
+const TABS = [
+  { id: 'overview', label: 'Overview' },
+  { id: 'charts', label: 'Charts' },
+  { id: 'habits', label: 'Habits' },
+  { id: 'activity', label: 'Activity' }
+] as const;
+
+type TabId = (typeof TABS)[number]['id'];
+
+export type StatsViewProps = {
   navigate: (to: string) => void;
   avgRate: number;
   bestStreak: number;
@@ -56,70 +73,27 @@ type StatsViewProps = {
   selectedTags: string[];
   toggleTag: (tag: string) => void;
   dailyData: DailyDataPoint[];
-  habitMonthlyData: Array<Record<string, string | number>>;
+  habitPeriodData: Array<Record<string, string | number>>;
   filteredHabits: Habit[];
+  dailyHabitDetails: Record<string, string[]>;
   sorted: HabitStatEntry[];
   allStats: HabitStatEntry[];
   bestWeekday: string;
   worstWeekday: string;
   investmentPercent: number;
   totalActiveDays: number;
-  globalActivityData: Array<{ date: string; intensity: number }>;
-  frozenDates: Set<string>;
+  period: PeriodOption;
+  setPeriod: (value: PeriodOption) => void;
+  insights: Insight[];
+  hiddenHabits: string[];
+  toggleHabitVisibility: (name: string) => void;
+  activityWeeks: ActivityWeek[];
 };
-
-function CustomTooltip({
-  active,
-  payload,
-  label
-}: {
-  active?: boolean;
-  payload?: { name: string; value: number; color: string }[];
-  label?: string;
-}) {
-  if (active && payload && payload.length) {
-    return (
-      <div className="bg-bg-card border border-border rounded px-3 py-2 space-y-1">
-        <p className="text-[10px] font-mono text-muted mb-1">{label}</p>
-        {payload.map((p) => (
-          <div key={p.name} className="flex items-center gap-2">
-            <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: p.color }} />
-            <span className="text-[10px] font-mono text-muted">{p.name}:</span>
-            <span className="text-[10px] font-mono font-bold" style={{ color: p.color }}>
-              {p.value}%
-            </span>
-          </div>
-        ))}
-      </div>
-    );
-  }
-  return null;
-}
-
-function DailyTooltip({
-  active,
-  payload,
-  label
-}: {
-  active?: boolean;
-  payload?: { value: number }[];
-  label?: string;
-}) {
-  if (active && payload && payload.length) {
-    return (
-      <div className="bg-bg-card border border-border rounded px-2 py-1.5">
-        <p className="text-[10px] font-mono text-muted">{label}</p>
-        <p className="text-xs font-mono font-bold text-accent">{payload[0].value}%</p>
-      </div>
-    );
-  }
-  return null;
-}
 
 function StatsHeader() {
   return (
     <div className="border-b border-border px-4 py-4">
-      <div className="max-w-2xl mx-auto">
+      <div className="max-w-6xl mx-auto">
         <p className="text-[10px] font-mono text-muted uppercase tracking-widest mb-1">Overview</p>
         <h1 className="text-xl font-semibold text-foreground">Statistics</h1>
       </div>
@@ -134,41 +108,47 @@ function OverviewGrid({
   currentStreaks
 }: Pick<StatsViewProps, 'avgRate' | 'bestStreak' | 'totalCompletions' | 'currentStreaks'>) {
   return (
-    <div className="grid grid-cols-4 gap-2">
-      <div className="bg-bg-secondary border border-border rounded-lg p-3">
-        <div className="flex items-center gap-1 mb-2">
-          <ZapIcon size={10} className="text-accent" />
-          <span className="text-[9px] font-mono text-muted uppercase tracking-wider">Avg Rate</span>
-        </div>
-        <div className="text-xl font-mono font-bold text-accent" style={{ textShadow: '0 0 12px var(--glow)' }}>
-          {avgRate}%
-        </div>
+    <div className="space-y-2">
+      <div className="flex items-center gap-2">
+        <h2 className="text-xs font-mono text-muted uppercase tracking-wider">Overview signals</h2>
+        <ChartGuideTooltip {...OVERVIEW_SIGNALS_TOOLTIP} triggerClassName="h-7 w-7" />
       </div>
-      <div className="bg-bg-secondary border border-border rounded-lg p-3">
-        <div className="flex items-center gap-1 mb-2">
-          <FlameIcon size={10} className="text-accent-secondary" />
-          <span className="text-[9px] font-mono text-muted uppercase tracking-wider">Best</span>
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+        <div className="bg-bg-secondary border border-border rounded-lg p-3">
+          <div className="flex items-center gap-1 mb-2">
+            <ZapIcon size={10} className="text-accent" />
+            <span className="text-[9px] font-mono text-muted uppercase tracking-wider">Avg Rate</span>
+          </div>
+          <div className="text-2xl font-mono font-bold text-accent" style={{ textShadow: '0 0 12px var(--glow)' }}>
+            {avgRate}%
+          </div>
         </div>
-        <div className="text-xl font-mono font-bold text-accent-secondary">{bestStreak}d</div>
-      </div>
-      <div className="bg-bg-secondary border border-border rounded-lg p-3">
-        <div className="flex items-center gap-1 mb-2">
-          <TrendingUpIcon size={10} className="text-accent-secondary" />
-          <span className="text-[9px] font-mono text-muted uppercase tracking-wider">Total</span>
+        <div className="bg-bg-secondary border border-border rounded-lg p-3">
+          <div className="flex items-center gap-1 mb-2">
+            <FlameIcon size={10} className="text-accent-secondary" />
+            <span className="text-[9px] font-mono text-muted uppercase tracking-wider">Best</span>
+          </div>
+          <div className="text-2xl font-mono font-bold text-accent-secondary">{bestStreak}d</div>
         </div>
-        <div
-          className="text-xl font-mono font-bold text-accent-secondary"
-          style={{ textShadow: '0 0 12px var(--glow-secondary)' }}
-        >
-          {totalCompletions}
+        <div className="bg-bg-secondary border border-border rounded-lg p-3">
+          <div className="flex items-center gap-1 mb-2">
+            <TrendingUpIcon size={10} className="text-accent-secondary" />
+            <span className="text-[9px] font-mono text-muted uppercase tracking-wider">Total</span>
+          </div>
+          <div
+            className="text-2xl font-mono font-bold text-accent-secondary"
+            style={{ textShadow: '0 0 12px var(--glow-secondary)' }}
+          >
+            {totalCompletions}
+          </div>
         </div>
-      </div>
-      <div className="bg-bg-secondary border border-border rounded-lg p-3">
-        <div className="flex items-center gap-1 mb-2">
-          <CalendarIcon size={10} className="text-muted" />
-          <span className="text-[9px] font-mono text-muted uppercase tracking-wider">Active</span>
+        <div className="bg-bg-secondary border border-border rounded-lg p-3">
+          <div className="flex items-center gap-1 mb-2">
+            <CalendarIcon size={10} className="text-muted" />
+            <span className="text-[9px] font-mono text-muted uppercase tracking-wider">Active</span>
+          </div>
+          <div className="text-2xl font-mono font-bold text-foreground">{currentStreaks}</div>
         </div>
-        <div className="text-xl font-mono font-bold text-foreground">{currentStreaks}</div>
       </div>
     </div>
   );
@@ -185,47 +165,66 @@ function InvestmentSection({
   bestDay: string;
   worstDay: string;
 }) {
+  const hasBestDay = bestDay !== 'N/A';
+  const hasWorstDay = worstDay !== 'N/A';
+  const displayBestDay = hasBestDay ? bestDay : '—';
+  const displayWorstDay = hasWorstDay ? worstDay : '—';
+  const investmentColor = getInvestmentColor(percent);
+  const investmentMessage = getInvestmentMessage(percent, worstDay);
   return (
     <div className="bg-bg-secondary border border-border rounded-lg p-4 space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-xs font-mono text-muted uppercase tracking-wider">Your Investment</h2>
-          <p className="text-[10px] text-muted mt-1 italic">
-            Cumulative progress across all habits
-          </p>
+          <div className="flex items-center gap-2">
+            <h2 className="text-xs font-mono text-muted uppercase tracking-wider">Your Investment</h2>
+            <ChartGuideTooltip {...YOUR_INVESTMENT_TOOLTIP} triggerClassName="h-7 w-7" />
+          </div>
+          <p className="text-[10px] text-muted mt-1 italic">Progress across habits this window</p>
         </div>
         <div className="text-2xl font-mono font-bold text-accent">{percent}%</div>
       </div>
-      
       <div className="grid grid-cols-3 gap-2">
         <div className="p-2 bg-bg-card border border-border rounded-lg text-center">
-            <p className="text-[8px] font-mono text-muted uppercase">Best Day</p>
-            <p className="text-xs font-mono font-bold text-accent-secondary">{bestDay}</p>
+          <p className="text-[8px] font-mono text-muted uppercase">Best Day</p>
+          <p
+            className={`text-xs font-mono font-bold ${hasBestDay ? 'text-accent-secondary' : 'text-muted'}`}
+            title={hasBestDay ? `Best day: ${bestDay}` : 'No data yet'}
+          >
+            {displayBestDay}
+          </p>
         </div>
         <div className="p-2 bg-bg-card border border-border rounded-lg text-center">
-            <p className="text-[8px] font-mono text-muted uppercase">Worst Day</p>
-            <p className="text-xs font-mono font-bold text-muted">{worstDay}</p>
+          <p className="text-[8px] font-mono text-muted uppercase">Worst Day</p>
+          <p
+            className={`text-xs font-mono font-bold ${hasWorstDay ? 'text-muted' : 'text-muted/70'}`}
+            title={hasWorstDay ? `Worst day: ${worstDay}` : 'No data yet'}
+          >
+            {displayWorstDay}
+          </p>
         </div>
         <div className="p-2 bg-bg-card border border-border rounded-lg text-center">
-            <p className="text-[8px] font-mono text-muted uppercase">Total Active</p>
-            <p className="text-xs font-mono font-bold text-foreground">{totalDays}d</p>
+          <p className="text-[8px] font-mono text-muted uppercase">Active Days</p>
+          <p className="text-xs font-mono font-bold text-foreground">{totalDays}d</p>
         </div>
       </div>
-
       <div className="h-1.5 bg-border rounded-full overflow-hidden">
-        <div 
-          className="h-full bg-accent transition-all duration-1000" 
-          style={{ width: `${percent}%`, boxShadow: `0 0 10px var(--glow)` }} 
+        <div
+          className="h-full bg-accent transition-all duration-1000"
+          style={{ width: `${percent}%`, boxShadow: `0 0 10px var(--glow)` }}
         />
       </div>
-      <p className="text-[10px] font-mono text-muted text-center">
-        You were active on {percent}% of days this year. Keep it up!
+      <p className="text-[10px] font-mono text-center" style={{ color: investmentColor }}>
+        {investmentMessage}
       </p>
     </div>
   );
 }
 
-function FiltersPanel({
+function StatsTabBar({
+  activeTab,
+  setActiveTab,
+  filtersOpen,
+  setFiltersOpen,
   searchQuery,
   setSearchQuery,
   statusFilter,
@@ -233,296 +232,290 @@ function FiltersPanel({
   allTags,
   selectedTags,
   toggleTag
-}: Pick<
+}: {
+  activeTab: TabId;
+  setActiveTab: (id: TabId) => void;
+  filtersOpen: boolean;
+  setFiltersOpen: React.Dispatch<React.SetStateAction<boolean>>;
+} & Pick<
   StatsViewProps,
   'searchQuery' | 'setSearchQuery' | 'statusFilter' | 'setStatusFilter' | 'allTags' | 'selectedTags' | 'toggleTag'
 >) {
   return (
-    <div className="bg-bg-secondary border border-border rounded-lg p-4 space-y-4">
-      <div className="flex flex-col sm:flex-row gap-3">
-        <div className="flex-1 relative">
-          <SearchIcon size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
-          <input
-            type="text"
-            placeholder="Search habits..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-bg-card border border-border rounded-lg pl-9 pr-3 py-2 text-sm text-foreground placeholder-muted focus:outline-none focus:border-accent/50 transition-colors"
-          />
-        </div>
+    <div className="sticky top-0 z-30 border-b border-border bg-bg-primary/95 backdrop-blur-sm">
+      <div className="max-w-6xl mx-auto px-4">
+        <div className="flex items-center gap-2 overflow-hidden">
+          {/* Tabs */}
+          <div className="flex min-w-0 flex-1 items-center overflow-x-auto whitespace-nowrap [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            {TABS.map((tab) => {
+              const isActive = activeTab === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`relative shrink-0 px-3 py-3 text-[11px] font-mono transition-colors whitespace-nowrap sm:px-4 sm:text-xs ${
+                    isActive
+                      ? 'text-foreground'
+                      : 'text-muted hover:text-foreground/70'
+                  }`}
+                >
+                  {tab.label}
+                  {isActive && (
+                    <span
+                      className="absolute bottom-0 left-0 right-0 h-[2px] rounded-t-full bg-accent"
+                      style={{ boxShadow: '0 0 6px var(--glow)' }}
+                    />
+                  )}
+                </button>
+              );
+            })}
+          </div>
 
-        <div className="flex bg-bg-card border border-border rounded-lg p-1">
-          {(['all', 'active', 'archived'] as const).map((status) => (
+          {/* Right controls */}
+          <div className="flex shrink-0 items-center justify-end py-2 pl-1">
             <button
-              key={status}
-              onClick={() => setStatusFilter(status)}
-              className={`px-3 py-1 rounded-md text-xs font-mono capitalize transition-colors ${
-                statusFilter === status ? 'bg-border text-foreground' : 'text-muted hover:text-foreground'
+              onClick={() => setFiltersOpen((prev) => !prev)}
+              aria-label="Toggle filters"
+              className={`flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-mono transition-colors sm:px-3 sm:text-xs ${
+                filtersOpen
+                  ? 'border-accent text-accent'
+                  : 'border-border text-muted hover:text-foreground'
               }`}
             >
-              {status}
+              <FilterIcon size={12} />
+              <span className="hidden sm:inline">Filters</span>
             </button>
-          ))}
+          </div>
         </div>
       </div>
-
-      <div className="flex items-start gap-2">
-        <TagIcon size={14} className="text-muted mt-1 flex-shrink-0" />
-        {(allTags || []).length > 0 ? (
-          <div className="flex flex-wrap gap-1.5">
-            {(allTags || []).map((tag) => (
-              <button
-                key={tag}
-                onClick={() => invokeIfFunction(toggleTag, tag)}
-                className={`px-2 py-1 rounded border text-[10px] font-mono transition-colors ${
-                  (selectedTags || []).includes(tag)
-                    ? 'bg-accent/10 border-accent/30 text-accent'
-                    : 'bg-bg-card border-border text-muted hover:border-border-hover hover:text-foreground'
-                }`}
-              >
-                #{tag}
-              </button>
-            ))}
-          </div>
-        ) : (
-          <span className="text-[11px] font-mono text-muted">No tags yet</span>
-        )}
-      </div>
-    </div>
-  );
-}
-
-function DailyRateChart({ avgRate, dailyData }: Pick<StatsViewProps, 'avgRate' | 'dailyData'>) {
-  return (
-    <div className="bg-bg-secondary border border-border rounded-lg p-4">
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-xs font-mono text-muted uppercase tracking-wider">Daily completion rate - 30 days</h2>
-        <span className="text-[10px] font-mono text-accent">{avgRate}% avg</span>
-      </div>
-      <ResponsiveContainer width="100%" height={120}>
-        <BarChart data={dailyData.filter((_, i) => i % 3 === 0)} margin={{ top: 4, right: 4, bottom: 0, left: -20 }} barSize={8}>
-          <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
-          <XAxis
-            dataKey="day"
-            tick={{ fill: 'var(--text-muted)', fontSize: 9, fontFamily: 'JetBrains Mono' }}
-            axisLine={false}
-            tickLine={false}
+      {filtersOpen && (
+        <div className="border-t border-border px-4 py-3 max-w-6xl mx-auto">
+          <FiltersPanel
+            searchQuery={searchQuery}
+            setSearchQuery={setSearchQuery}
+            statusFilter={statusFilter}
+            setStatusFilter={setStatusFilter}
+            allTags={allTags}
+            selectedTags={selectedTags}
+            toggleTag={toggleTag}
           />
-          <YAxis
-            tick={{ fill: 'var(--text-muted)', fontSize: 9, fontFamily: 'JetBrains Mono' }}
-            axisLine={false}
-            tickLine={false}
-            domain={[0, 100]}
-            tickFormatter={(v) => `${v}%`}
-          />
-          <Tooltip content={<DailyTooltip />} />
-          <Bar
-            dataKey="rate"
-            fill="var(--accent)"
-            radius={[2, 2, 0, 0]}
-            style={{ filter: 'drop-shadow(0 0 4px var(--glow))' }}
-          />
-        </BarChart>
-      </ResponsiveContainer>
-    </div>
-  );
-}
-
-function MonthlyRateChart({
-  habitMonthlyData,
-  filteredHabits
-}: Pick<StatsViewProps, 'habitMonthlyData' | 'filteredHabits'>) {
-  return (
-    <div className="bg-bg-secondary border border-border rounded-lg p-4">
-      <h2 className="text-xs font-mono text-muted uppercase tracking-wider mb-4">Per-habit monthly rate</h2>
-      <ResponsiveContainer width="100%" height={150}>
-        <LineChart data={habitMonthlyData} margin={{ top: 4, right: 4, bottom: 0, left: -20 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
-          <XAxis
-            dataKey="month"
-            tick={{ fill: 'var(--text-muted)', fontSize: 10, fontFamily: 'JetBrains Mono' }}
-            axisLine={false}
-            tickLine={false}
-          />
-          <YAxis
-            tick={{ fill: 'var(--text-muted)', fontSize: 10, fontFamily: 'JetBrains Mono' }}
-            axisLine={false}
-            tickLine={false}
-            domain={[0, 100]}
-            tickFormatter={(v) => `${v}%`}
-          />
-          <Tooltip content={<CustomTooltip />} />
-          {filteredHabits.map((h) => (
-            <Line
-              key={h.id}
-              type="monotone"
-              dataKey={h.name}
-              stroke={HABIT_COLOR_THEMES[h.color].hex}
-              strokeWidth={1.5}
-              dot={{ fill: HABIT_COLOR_THEMES[h.color].hex, r: 2.5, strokeWidth: 0 }}
-              activeDot={{ r: 4, fill: HABIT_COLOR_THEMES[h.color].hex }}
-              style={{ filter: `drop-shadow(0 0 3px ${HABIT_COLOR_THEMES[h.color].hex}80)` }}
-            />
-          ))}
-        </LineChart>
-      </ResponsiveContainer>
-    </div>
-  );
-}
-
-function HabitPerformanceList({
-  sorted,
-  navigate
-}: Pick<StatsViewProps, 'sorted' | 'navigate'>) {
-  return (
-    <div className="bg-bg-secondary border border-border rounded-lg p-4">
-      <h2 className="text-xs font-mono text-muted uppercase tracking-wider mb-3">Habit performance</h2>
-      {(!sorted || sorted.length === 0) ? (
-        <div className="text-center py-8 text-sm text-muted font-mono">No habits match the current filters.</div>
-      ) : (
-        <div className="space-y-2">
-          {sorted.map(({ habit, stats }, i) => {
-            const hex = HABIT_COLOR_THEMES[habit.color].hex;
-            return (
-              <button
-                key={habit.id}
-                onClick={() => navigate(`/habit/${habit.id}`)}
-                className="w-full flex items-center gap-3 p-2.5 rounded-lg hover:bg-bg-card transition-colors text-left"
-              >
-                <span className="text-[10px] font-mono text-muted w-4">{i + 1}</span>
-                <span className="text-base">{habit.icon}</span>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="text-xs font-medium text-foreground truncate">{habit.name}</span>
-                    <span className="text-[10px] font-mono ml-2 flex-shrink-0" style={{ color: hex }}>
-                      {stats.completionRate}%
-                    </span>
-                  </div>
-                  <div className="h-1 bg-border rounded-full overflow-hidden">
-                    <div
-                      className="h-full rounded-full"
-                      style={{
-                        width: `${stats.completionRate}%`,
-                        backgroundColor: hex,
-                        boxShadow: `0 0 6px ${hex}60`
-                      }}
-                    />
-                  </div>
-                </div>
-                <div className="flex items-center gap-1 flex-shrink-0">
-                  <FlameIcon size={10} className="text-accent-secondary" />
-                  <span className="text-[10px] font-mono text-accent-secondary">{stats.currentStreak}</span>
-                </div>
-                <CompletionRing percentage={stats.completionRate} size={28} strokeWidth={2} color={habit.color} />
-              </button>
-            );
-          })}
         </div>
       )}
     </div>
   );
 }
 
-function WeeklyBreakdown({ allStats }: Pick<StatsViewProps, 'allStats'>) {
+function TabOverview({
+  avgRate,
+  bestStreak,
+  totalCompletions,
+  currentStreaks,
+  investmentPercent,
+  totalActiveDays,
+  bestWeekday,
+  worstWeekday,
+  insights
+}: Pick<
+  StatsViewProps,
+  'avgRate' | 'bestStreak' | 'totalCompletions' | 'currentStreaks' | 'investmentPercent' | 'totalActiveDays' | 'bestWeekday' | 'worstWeekday' | 'insights'
+>) {
   return (
-    <div className="bg-bg-secondary border border-border rounded-lg p-4">
-      <h2 className="text-xs font-mono text-muted uppercase tracking-wider mb-3">Weekly breakdown - last 12 weeks</h2>
-      <div className="space-y-2">
-        {(allStats || []).map(({ habit, stats }) => (
-          <div key={habit.id} className="flex items-center gap-3">
-            <span className="text-sm w-5">{habit.icon}</span>
-            <span className="text-[11px] text-muted w-20 truncate font-mono">{habit.name}</span>
-            <div className="flex-1 flex items-end gap-[2px] h-6">
-              {stats.weeklyData.map((w, i) => (
-                <div
-                  key={i}
-                  className="flex-1 rounded-sm"
-                  style={{
-                    height: `${(w.count / 7) * 100}%`,
-                    minHeight: 2,
-                    backgroundColor: HABIT_COLOR_THEMES[habit.color].hex,
-                    opacity: 0.3 + (i / 12) * 0.7
-                  }}
-                />
-              ))}
-            </div>
-            <span className="text-[10px] font-mono w-8 text-right" style={{ color: HABIT_COLOR_THEMES[habit.color].hex }}>
-              {stats.completionRate}%
-            </span>
-          </div>
-        ))}
+    <div className="space-y-4">
+      <div className="grid gap-4 md:grid-cols-[2fr,1fr]">
+        <OverviewGrid avgRate={avgRate} bestStreak={bestStreak} totalCompletions={totalCompletions} currentStreaks={currentStreaks} />
+        <InvestmentSection percent={investmentPercent} totalDays={totalActiveDays} bestDay={bestWeekday} worstDay={worstWeekday} />
       </div>
+      <InsightsRow insights={insights} />
+    </div>
+  );
+}
+
+type TabChartsProps = Pick<
+  StatsViewProps,
+  'avgRate' | 'dailyData' | 'habitPeriodData' | 'filteredHabits' | 'period' | 'setPeriod'
+> & {
+  hiddenHabits: string[];
+  toggleHabitVisibility: (name: string) => void;
+};
+
+function TabCharts({
+  avgRate,
+  dailyData,
+  habitPeriodData,
+  filteredHabits,
+  period,
+  setPeriod,
+  hiddenHabits,
+  toggleHabitVisibility
+}: TabChartsProps) {
+  return (
+    <div className="space-y-4">
+      <div className="flex justify-end">
+        <PeriodSelector period={period} setPeriod={setPeriod} />
+      </div>
+      <div className="grid gap-4 md:grid-cols-2">
+        <DailyRateChart avgRate={avgRate} dailyData={dailyData} period={period} />
+        <PeriodTrendChart
+          habitPeriodData={habitPeriodData}
+          filteredHabits={filteredHabits}
+          hiddenHabits={hiddenHabits}
+          toggleHabitVisibility={toggleHabitVisibility}
+          period={period}
+        />
+      </div>
+    </div>
+  );
+}
+
+function TabHabits({ navigate, allStats, sorted }: Pick<StatsViewProps, 'navigate' | 'allStats' | 'sorted'>) {
+  const [habitSort, setHabitSort] = useState<'rate' | 'streak' | 'name'>('rate');
+  const [habitSortDir, setHabitSortDir] = useState<'desc' | 'asc'>('desc');
+  const sortedStats = useMemo(() => {
+    const entries = [...sorted];
+    if (habitSort === 'name') {
+      entries.sort((a, b) => habitSortDir === 'asc' ? a.habit.name.localeCompare(b.habit.name) : b.habit.name.localeCompare(a.habit.name));
+    } else {
+      const metric = habitSort === 'rate' ? 'completionRate' : 'longestStreak';
+      entries.sort((a, b) => habitSortDir === 'asc' ? a.stats[metric] - b.stats[metric] : b.stats[metric] - a.stats[metric]);
+    }
+    return entries;
+  }, [sorted, habitSort, habitSortDir]);
+  const handleSortChange = (key: 'rate' | 'streak' | 'name') => {
+    if (habitSort === key) { setHabitSortDir((prev) => (prev === 'desc' ? 'asc' : 'desc')); }
+    else { setHabitSort(key); setHabitSortDir('desc'); }
+  };
+  return (
+    <div className="space-y-4">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex min-w-0 items-center gap-2">
+          <h2 className="text-xs font-mono text-muted uppercase tracking-wider">Habit performance</h2>
+          <ChartGuideTooltip
+            title="Habit performance"
+            summary="This ranking helps you compare habits by outcome, so you can see which routines are solid and which ones need intervention first."
+            focusPoints={[
+              'Completion rate: the fastest signal of reliability.',
+              'Current streak: whether the habit still has live momentum.',
+              'Status labels: quick flags for strong, steady, or struggling habits.'
+            ]}
+            variant="columns"
+          />
+        </div>
+        <HabitSortControls habitSort={habitSort} handleSortChange={handleSortChange} />
+      </div>
+      <div className="grid gap-4 md:grid-cols-[2fr,1fr]">
+        <div className="min-w-0">
+          <HabitPerformanceList sorted={sortedStats} navigate={navigate} />
+        </div>
+        <div className="min-w-0">
+          <WeeklyBreakdown allStats={allStats} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function TabActivity({
+  filteredHabits,
+  dailyHabitDetails
+}: Pick<StatsViewProps, 'filteredHabits' | 'dailyHabitDetails'>) {
+  const mergedCompletions = useMemo(() => {
+    const merged: Record<string, number> = {};
+    for (const habit of filteredHabits) {
+      for (const [date, count] of Object.entries(habit.completions)) {
+        merged[date] = (merged[date] ?? 0) + count;
+      }
+    }
+    return merged;
+  }, [filteredHabits]);
+
+  const aggregateTarget = Math.max(
+    1,
+    filteredHabits.reduce((sum, habit) => sum + Math.max(1, habit.dailyTarget ?? 1), 0)
+  );
+
+  return (
+    <div className="bg-bg-secondary border border-border rounded-lg p-3 space-y-3">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <h2 className="text-xs font-mono text-muted uppercase tracking-wider">Activity — 90 days</h2>
+          <ChartGuideTooltip
+            title="Activity heatmap"
+            summary="This heatmap compresses 90 days of execution into one grid, so you can see consistency, streak clusters, and dead zones at a glance."
+            focusPoints={[
+              'Brighter cells: heavier completion volume on that day.',
+              'Repeated empty columns: missed stretches that break rhythm.',
+              'Dense recent activity: a strong sign your routine is becoming durable.'
+            ]}
+            variant="grid"
+          />
+        </div>
+        <span className="text-[10px] font-mono text-muted">{filteredHabits.length} habits</span>
+      </div>
+      <HabitHeatmap
+        completions={mergedCompletions}
+        dailyTarget={aggregateTarget}
+        dayDetails={dailyHabitDetails}
+      />
     </div>
   );
 }
 
 export function StatsView(props: StatsViewProps) {
+  const [activeTab, setActiveTab] = useState<TabId>('overview');
+  const [filtersOpen, setFiltersOpen] = useState(false);
+
   return (
     <div className="min-h-screen bg-bg-primary">
       <StatsHeader />
-      <div className="max-w-2xl mx-auto px-4 py-4 space-y-4">
-        <OverviewGrid
-          avgRate={props.avgRate}
-          bestStreak={props.bestStreak}
-          totalCompletions={props.totalCompletions}
-          currentStreaks={props.currentStreaks}
-        />
-        <InvestmentSection
-          percent={props.investmentPercent}
-          totalDays={props.totalActiveDays}
-          bestDay={props.bestWeekday}
-          worstDay={props.worstWeekday}
-        />
-        <FiltersPanel
-          searchQuery={props.searchQuery}
-          setSearchQuery={props.setSearchQuery}
-          statusFilter={props.statusFilter}
-          setStatusFilter={props.setStatusFilter}
-          allTags={props.allTags}
-          selectedTags={props.selectedTags}
-          toggleTag={props.toggleTag}
-        />
-        <DailyRateChart avgRate={props.avgRate} dailyData={props.dailyData} />
-        <GlobalActivityMap data={props.globalActivityData} frozenDates={props.frozenDates} />
-        <MonthlyRateChart habitMonthlyData={props.habitMonthlyData} filteredHabits={props.filteredHabits} />
-        <HabitPerformanceList sorted={props.sorted} navigate={props.navigate} />
-        <WeeklyBreakdown allStats={props.allStats} />
-      </div>
-    </div>
-  );
-}
-
-function GlobalActivityMap({ data, frozenDates }: { data: Array<{ date: string; intensity: number }>; frozenDates: Set<string> }) {
-  // Simple Intensity Heatmap (GitHub style) with frozen days indicator
-  return (
-    <div className="bg-bg-secondary border border-border rounded-lg p-4">
-      <h2 className="text-xs font-mono text-muted uppercase tracking-wider mb-4">Focus intensity (last 12 weeks)</h2>
-      <div className="flex flex-wrap gap-1">
-        {(data || []).map((d, i) => {
-          const isFrozen = frozenDates.has(d.date);
-          let opacity = 0.05;
-          if (!isFrozen && d.intensity > 0) {
-            opacity = 0.2 + (d.intensity * 0.2);
-          }
-          return (
-            <div
-              key={i}
-              title={`${d.date}: ${isFrozen ? 'frozen' : d.intensity + ' habits done'}`}
-              className={`w-2.5 h-2.5 rounded-sm transition-all duration-300 ${isFrozen ? 'bg-blue-400 opacity-40' : 'bg-accent'}`}
-              style={!isFrozen ? { opacity: Math.min(1, opacity) } : undefined}
-            />
-          );
-        })}
-      </div>
-      <div className="flex items-center justify-between mt-3">
-        <span className="text-[10px] font-mono text-muted">Less focus</span>
-        <div className="flex gap-1">
-          {[0.1, 0.4, 0.7, 1.0].map(o => (
-            <div key={o} className="w-2 h-2 rounded-sm bg-accent" style={{ opacity: o }} />
-          ))}
-          <div className="w-2 h-2 rounded-sm bg-blue-400 opacity-40" title="frozen" />
-        </div>
-        <span className="text-[10px] font-mono text-muted">More focus / Frozen</span>
+      <StatsTabBar
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        filtersOpen={filtersOpen}
+        setFiltersOpen={setFiltersOpen}
+        searchQuery={props.searchQuery}
+        setSearchQuery={props.setSearchQuery}
+        statusFilter={props.statusFilter}
+        setStatusFilter={props.setStatusFilter}
+        allTags={props.allTags}
+        selectedTags={props.selectedTags}
+        toggleTag={props.toggleTag}
+      />
+      <div className="max-w-6xl mx-auto px-4 py-4">
+        {activeTab === 'overview' && (
+          <TabOverview
+            avgRate={props.avgRate}
+            bestStreak={props.bestStreak}
+            totalCompletions={props.totalCompletions}
+            currentStreaks={props.currentStreaks}
+            investmentPercent={props.investmentPercent}
+            totalActiveDays={props.totalActiveDays}
+            bestWeekday={props.bestWeekday}
+            worstWeekday={props.worstWeekday}
+            insights={props.insights}
+          />
+        )}
+        {activeTab === 'charts' && (
+          <TabCharts
+            avgRate={props.avgRate}
+            dailyData={props.dailyData}
+            habitPeriodData={props.habitPeriodData}
+            filteredHabits={props.filteredHabits}
+            period={props.period}
+            setPeriod={props.setPeriod}
+            hiddenHabits={props.hiddenHabits}
+            toggleHabitVisibility={props.toggleHabitVisibility}
+          />
+        )}
+        {activeTab === 'habits' && (
+          <TabHabits
+            navigate={props.navigate}
+            allStats={props.allStats}
+            sorted={props.sorted}
+          />
+        )}
+        {activeTab === 'activity' && (
+          <TabActivity filteredHabits={props.filteredHabits} dailyHabitDetails={props.dailyHabitDetails} />
+        )}
       </div>
     </div>
   );

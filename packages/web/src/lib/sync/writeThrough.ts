@@ -18,10 +18,6 @@ export interface WriteThroughResult {
   lastError?: string;
 }
 
-interface InitialPullResult {
-  cursorAfterPull: string | undefined;
-}
-
 interface PushAttemptResult {
   appliedCount: number;
   queuedEntries: OutboxEntry[];
@@ -103,17 +99,15 @@ async function queueAndMarkFailure(
   return buildQueuedResult(entries, message);
 }
 
-async function performInitialPull(lastCursor?: string): Promise<InitialPullResult> {
+async function performInitialPull(lastCursor?: string): Promise<void> {
   const firstPull = await pullChanges(lastCursor);
   await applyPullResponse(firstPull);
-  const cursorAfterPull = firstPull.nextCursor ?? lastCursor ?? firstPull.serverTime;
   await updateSyncMeta({
-    lastCursor: cursorAfterPull,
+    lastCursor: firstPull.nextCursor ?? lastCursor ?? firstPull.serverTime,
     lastSyncedAt: firstPull.serverTime,
     status: 'syncing',
     lastError: undefined
   });
-  return { cursorAfterPull };
 }
 
 async function pushEntriesImmediately(entries: OutboxEntry[]): Promise<PushAttemptResult> {
@@ -135,17 +129,14 @@ async function pushEntriesImmediately(entries: OutboxEntry[]): Promise<PushAttem
   };
 }
 
-async function finalizeSync(
-  cursorAfterPull: string | undefined,
-  pushResult: PushAttemptResult
-): Promise<WriteThroughResult> {
-  const secondPull = await pullChanges(cursorAfterPull);
+async function finalizeSync(pushResult: PushAttemptResult): Promise<WriteThroughResult> {
+  // Use a full pull after an interactive push so the UI does not depend on cursor timing.
+  const secondPull = await pullChanges();
   await applyPullResponse(secondPull);
-  const nextCursor = secondPull.nextCursor ?? cursorAfterPull ?? secondPull.serverTime;
   const queuedMessage =
     pushResult.queuedEntries.length > 0 ? 'Some changes were queued for retry' : undefined;
   await updateSyncMeta({
-    lastCursor: nextCursor,
+    lastCursor: secondPull.nextCursor ?? secondPull.serverTime,
     lastSyncedAt: secondPull.serverTime,
     status: pushResult.queuedEntries.length > 0 ? 'error' : 'idle',
     lastError: queuedMessage
@@ -183,9 +174,8 @@ export async function syncEntriesWithFallback(entries: OutboxEntry[]): Promise<W
     return queueForOffline(entries);
   }
   const meta = await ensureSyncMeta();
-  let initialPull: InitialPullResult;
   try {
-    initialPull = await performInitialPull(meta.lastCursor);
+    await performInitialPull(meta.lastCursor);
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     return queueAndMarkFailure(entries, message);
@@ -198,7 +188,7 @@ export async function syncEntriesWithFallback(entries: OutboxEntry[]): Promise<W
     return queueAndMarkFailure(entries, message);
   }
   try {
-    return await finalizeSync(initialPull.cursorAfterPull, pushResult);
+    return await finalizeSync(pushResult);
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     await updateSyncMeta({

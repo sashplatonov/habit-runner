@@ -1,0 +1,155 @@
+import { CalendarIcon, FlameIcon, TargetIcon, TrendingUpIcon } from 'lucide-react';
+import { ChartGuideTooltip } from '@/components/ChartGuideTooltip';
+import type { HabitColorTheme } from '@/lib/theme/habit-colors';
+import { getHabitPhase, HABIT_PHASES } from '@/lib/habits/phases';
+import {
+  getStreakHint,
+  getBestHint,
+  getRateHint,
+  getRateColor,
+  getTotalHint,
+  getHabitAgeDays,
+  getRateWindowLabel,
+  type CardHint
+} from './HabitDetailView.helpers';
+
+type StatCardGridProps = {
+  stats: {
+    currentStreak: number;
+    longestStreak: number;
+    completionRate: number;
+    completedDays: number;
+  };
+  accent: HabitColorTheme;
+  habitCreatedAt: string;
+};
+
+function StatCard({
+  icon: Icon,
+  label,
+  value,
+  unit,
+  hint,
+  hintColor,
+  valueColor,
+  tooltip,
+  badge
+}: {
+  icon: React.ComponentType<{ size: number; className?: string }>;
+  label: string;
+  value: string | number;
+  unit?: string;
+  hint: CardHint;
+  hintColor: string;
+  valueColor?: string;
+  tooltip?: React.ReactNode;
+  badge?: React.ReactNode;
+}) {
+  return (
+    <div className="bg-bg-secondary border border-border rounded-lg p-3">
+      <div className="flex items-center gap-1 mb-2">
+        <Icon size={10} className={label === 'Streak' ? 'text-accent-secondary' : label === 'Best' ? '' : label === 'Rate' ? 'text-accent-secondary' : 'text-muted'} style={label === 'Best' ? { color: valueColor } : undefined} />
+        <span className="text-[9px] font-mono text-muted uppercase tracking-wider">{label}</span>
+        {tooltip && <span className="ml-auto">{tooltip}</span>}
+      </div>
+      <div className={`text-xl font-mono font-bold ${valueColor || (label === 'Streak' ? 'text-accent-secondary' : label === 'Total' ? 'text-foreground' : '')}`} style={label === 'Best' ? { color: valueColor } : undefined}>
+        {value}
+      </div>
+      {unit && <div className="text-[9px] font-mono text-muted">{unit}</div>}
+      {badge}
+      <div className={`flex items-center gap-0.5 mt-1 ${hintColor}`}>
+        <hint.icon size={8} className="flex-shrink-0" />
+        <span className="text-[9px] font-mono">{hint.text}</span>
+      </div>
+    </div>
+  );
+}
+
+export function StatCardGrid({ stats, accent, habitCreatedAt }: StatCardGridProps) {
+  const habitAgeDays = getHabitAgeDays(habitCreatedAt);
+  const rateWindowLabel = getRateWindowLabel(habitAgeDays);
+  const streakHint = getStreakHint(stats.currentStreak, stats.longestStreak);
+  const bestHint = getBestHint(stats.longestStreak);
+  const rateHint = getRateHint(habitAgeDays, stats.completionRate);
+  const totalHint = getTotalHint(stats.completedDays);
+  const rateColor = getRateColor(habitAgeDays, stats.completionRate);
+
+  const streakHintColor =
+    stats.currentStreak === 0 ? 'text-accent-secondary' : stats.currentStreak >= stats.longestStreak ? 'text-accent' : 'text-muted';
+  const bestHintColor = stats.longestStreak >= 21 ? 'text-accent' : stats.longestStreak >= 7 ? 'text-accent-secondary' : 'text-muted';
+  const totalHintColor = stats.completedDays >= 100 ? 'text-accent' : 'text-muted';
+
+  const phase = getHabitPhase(stats.currentStreak);
+  const PhaseIcon = phase.icon;
+  const phaseBadge = stats.currentStreak > 0 ? (
+    <div className="flex items-center gap-0.5 mt-0.5 mb-0.5">
+      <PhaseIcon size={8} className="text-muted flex-shrink-0" />
+      <span className="text-[9px] font-mono text-muted">{phase.name}</span>
+    </div>
+  ) : null;
+  const phaseTooltip = (
+    <ChartGuideTooltip
+      title="Adaptive phases"
+      summary="Your streak passes through 4 science-backed phases. Each phase changes what skipping a day actually means for your habit."
+      focusPoints={HABIT_PHASES.map((p) => `${p.name} (${p.range}d): ${p.description}. ${p.hint}.`)}
+      variant="columns"
+      triggerClassName="h-5 w-5"
+    />
+  );
+
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center gap-2">
+        <h2 className="text-xs font-mono text-muted uppercase tracking-wider">Key metrics</h2>
+        <ChartGuideTooltip
+          title="Key metrics"
+          summary="These four cards give you the essential snapshot for one habit: live streak, personal best, completion reliability, and total volume."
+          focusPoints={[
+            'Streak: whether the habit is alive right now.',
+            'Best and rate: compare current form against your baseline ceiling.',
+            'Total completions: long-term proof that repetitions are accumulating.'
+          ]}
+          variant="columns"
+          triggerClassName="h-7 w-7"
+        />
+      </div>
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+        <StatCard
+          icon={FlameIcon}
+          label="Streak"
+          value={stats.currentStreak}
+          unit="days"
+          hint={streakHint}
+          hintColor={streakHintColor}
+          badge={phaseBadge}
+          tooltip={phaseTooltip}
+        />
+        <StatCard
+          icon={TargetIcon}
+          label="Best"
+          value={stats.longestStreak}
+          unit="days"
+          hint={bestHint}
+          hintColor={bestHintColor}
+          valueColor={accent.hex}
+        />
+        <StatCard
+          icon={TrendingUpIcon}
+          label="Rate"
+          value={`${stats.completionRate}%`}
+          unit={rateWindowLabel}
+          hint={rateHint}
+          hintColor={rateColor}
+        />
+        <StatCard
+          icon={CalendarIcon}
+          label="Total"
+          value={stats.completedDays}
+          unit="days"
+          hint={totalHint}
+          hintColor={totalHintColor}
+        />
+      </div>
+    </div>
+  );
+}

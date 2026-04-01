@@ -3,6 +3,8 @@ import { randomUUID } from 'node:crypto';
 type UserRecord = {
   id: string;
   email: string;
+  theme: string;
+  timezone: string | null;
 };
 
 type RefreshTokenRecord = {
@@ -60,7 +62,7 @@ export class InMemoryPrismaMock {
   private syncOpIds = new Set<string>();
 
   reset() {
-    this.users = [{ id: 'user-1', email: 'alice@example.com' }];
+    this.users = [{ id: 'user-1', email: 'alice@example.com', theme: 'cloud', timezone: null }];
     this.refreshTokens = [];
     this.habits = [
       {
@@ -87,19 +89,48 @@ export class InMemoryPrismaMock {
   }
 
   user = {
-    findUnique: async (args: { where: { id?: string; email?: string } }) => {
+    findUnique: async (args: {
+      where: { id?: string; email?: string };
+      select?: { theme?: true; timezone?: true };
+    }) => {
       const { id, email } = args.where;
       const found = this.users.find(
         (user) =>
           (typeof id === 'string' && user.id === id) ||
           (typeof email === 'string' && user.email === email)
       );
-      return found ?? null;
+      if (!found) {return null;}
+      if (args.select?.theme || args.select?.timezone) {
+        return {
+          ...(args.select?.theme ? { theme: found.theme } : {}),
+          ...(args.select?.timezone ? { timezone: found.timezone } : {})
+        };
+      }
+      return found;
     },
     create: async (args: { data: { email: string }; select: { id: true; email: true } }) => {
-      const created = { id: `user-${this.users.length + 1}`, email: args.data.email };
+      const created = { id: `user-${this.users.length + 1}`, email: args.data.email, theme: 'cloud', timezone: null };
       this.users.push(created);
-      return created;
+      return { id: created.id, email: created.email };
+    },
+    update: async (args: {
+      where: { id: string };
+      data: { theme?: string; timezone?: string | null };
+      select: { theme?: true; timezone?: true };
+    }) => {
+      const index = this.users.findIndex((user) => user.id === args.where.id);
+      if (index === -1) {
+        throw new Error(`User not found: ${args.where.id}`);
+      }
+      this.users[index] = {
+        ...this.users[index],
+        ...(args.data.theme !== undefined ? { theme: args.data.theme } : {}),
+        ...(Object.prototype.hasOwnProperty.call(args.data, 'timezone') ? { timezone: args.data.timezone ?? null } : {})
+      };
+      return {
+        ...(args.select.theme ? { theme: this.users[index].theme } : {}),
+        ...(args.select.timezone ? { timezone: this.users[index].timezone } : {})
+      };
     }
   };
 

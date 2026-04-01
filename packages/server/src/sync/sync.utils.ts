@@ -61,7 +61,6 @@ export const serializeHabit = (habit: {
   createdAt: Date;
   updatedAt: Date;
   version: number;
-  difficulty?: number;
   type?: string;
   freezeDays?: unknown;
 }): HabitDto => ({
@@ -88,7 +87,6 @@ export const serializeHabit = (habit: {
   createdAt: toSyncISO(habit.createdAt),
   updatedAt: toSyncISO(habit.updatedAt),
   version: habit.version,
-  difficulty: habit.difficulty,
   type: habit.type,
   freezeDays: (habit.freezeDays as string[]) ?? []
 });
@@ -130,6 +128,16 @@ export const normalizeDate = (value?: string): Date => {
   const parsed = new Date(value);
   if (Number.isNaN(parsed.getTime())) {return new Date();}
   return parsed;
+};
+
+export const nextSyncDate = (...values: Array<Date | string | number | undefined | null>): Date => {
+  const candidates = values
+    .filter((value): value is Date | string | number => value !== undefined && value !== null)
+    .map((value) => new Date(value))
+    .filter((value) => !Number.isNaN(value.getTime()))
+    .map((value) => value.getTime());
+  const base = Math.max(Date.now(), ...candidates);
+  return new Date(base + 1000);
 };
 
 export const isUniqueConstraintError = (error: unknown): boolean => {
@@ -197,9 +205,8 @@ export const normalizeFreezeDays = (value: unknown): string[] | undefined => {
   if (!Array.isArray(value)) {
     return undefined;
   }
-  // Filter for valid YYYY-MM-DD date strings
   const dates = value
     .filter((day) => typeof day === 'string')
     .filter((day) => /^\d{4}-\d{2}-\d{2}$/.test(day));
-  return dates.length > 0 ? dates : undefined;
+  return Array.from(new Set(dates)).sort();
 };

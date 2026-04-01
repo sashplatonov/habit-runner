@@ -22,7 +22,6 @@ export interface HabitPayload {
   sortOrder?: number;
   reminderTime?: string | null;
   reminderEnabled?: boolean;
-  difficulty?: number;
   type?: string;
   freezeDays?: string[];
 }
@@ -46,7 +45,6 @@ export interface ExistingHabitRecord {
   reminderTime: string | null;
   reminderEnabled: boolean;
   schedule?: unknown;
-  difficulty: number;
   type: string;
   freezeDays?: unknown;
 }
@@ -74,6 +72,7 @@ export type TxClient = {
         entity: string;
         entityId: string;
         version: number;
+        deletedAt?: Date;
       };
     }): Promise<unknown>;
   };

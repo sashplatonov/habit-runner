@@ -29,6 +29,9 @@ export class SyncController {
     if (!userId) {throw new UnauthorizedException('Authentication required');}
     const traceId = this.getTraceId(req);
     req.res?.setHeader('x-trace-id', traceId);
+    req.res?.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    req.res?.setHeader('Pragma', 'no-cache');
+    req.res?.setHeader('Expires', '0');
     return this.syncService.pull(userId, since, traceId);
   }
 
@@ -41,6 +44,9 @@ export class SyncController {
     if (!userId) {throw new UnauthorizedException('Authentication required');}
     const traceId = this.getTraceId(req);
     req.res?.setHeader('x-trace-id', traceId);
+    req.res?.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    req.res?.setHeader('Pragma', 'no-cache');
+    req.res?.setHeader('Expires', '0');
     return this.syncService.push(userId, body.ops, traceId);
   }
 

@@ -1,8 +1,15 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useHabits } from '@/hooks/useHabits';
 import { formatAppDate } from '@/lib/i18n';
+import { toCompletionKey } from '@/lib/completionKey';
 import { useNavigate } from '@/lib/router';
 import { StatsView } from './components/StatsView';
+import type { Habit } from '@/types/habit';
+import type { PeriodOption } from './components/StatsView';
+import { buildStatsSummary, buildStatsInsights, filterStatsHabits } from './Stats.helpers';
+import { PERIOD_DAY_RANGES } from '@/lib/constants/stats';
+import { formatHabitLabel } from '@/lib/habits/formatHabitLabel';
+type Period = PeriodOption;
 
 export function Stats() {
   const navigate = useNavigate();
@@ -10,6 +17,7 @@ export function Stats() {
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'archived'>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [period, setPeriod] = useState<PeriodOption>('month');
 
   const allTags = useMemo(() => {
     const tags = new Set<string>();
@@ -17,125 +25,44 @@ export function Stats() {
     return Array.from(tags).sort();
   }, [allHabits]);
 
-  const filteredHabits = useMemo(() => {
-    return allHabits.filter((h) => {
-      if (statusFilter === 'active' && h.archived) {return false;}
-      if (statusFilter === 'archived' && !h.archived) {return false;}
-      if (searchQuery) {
-        const query = searchQuery.toLowerCase();
-        if (!h.name.toLowerCase().includes(query) && !h.description.toLowerCase().includes(query)) {
-          return false;
-        }
-      }
-      if (selectedTags.length > 0 && !(h.tags || []).some((t) => selectedTags.includes(t))) {
-        return false;
-      }
-      return true;
-    });
-  }, [allHabits, statusFilter, searchQuery, selectedTags]);
+  const filteredHabits = useMemo(
+    () => filterStatsHabits(allHabits, statusFilter, searchQuery, selectedTags),
+    [allHabits, statusFilter, searchQuery, selectedTags]
+  );
 
+  const [hiddenHabits, setHiddenHabits] = useState<string[]>([]);
+  const visibleHabits = useMemo(() => filteredHabits.filter((habit) => !hiddenHabits.includes(habit.name)), [filteredHabits, hiddenHabits]);
+  useEffect(() => {
+    setHiddenHabits((prev) => {
+      const allowed = new Set(filteredHabits.map((habit) => habit.name));
+      const next = prev.filter((name) => allowed.has(name));
+      return next.length === prev.length ? prev : next;
+    });
+  }, [filteredHabits]);
+
+  const windowRange = useMemo(() => getWindowRange(period), [period]);
+  const periodDayCount = PERIOD_DAY_RANGES[period] ?? 30;
+  const periodSegments = useMemo(() => buildPeriodSegments(period, periodDayCount), [period, periodDayCount]);
   const allStats = useMemo(
     () => filteredHabits.map((h) => ({ habit: h, stats: getHabitStats(h.id) })),
     [filteredHabits, getHabitStats]
   );
 
-  const dailyData = useMemo(() => {
-    return Array.from({ length: 30 }, (_, i) => {
-      const date = new Date();
-      date.setDate(date.getDate() - (29 - i));
-      const key = date.toISOString().split('T')[0];
-      const completed = filteredHabits.filter((h) => (h.completions[key] ?? 0) >= Math.max(1, h.dailyTarget ?? 1)).length;
-      return {
-        day: formatAppDate(date, { month: 'short', day: 'numeric' }),
-        completed,
-        total: filteredHabits.length,
-        rate: filteredHabits.length > 0 ? Math.round((completed / filteredHabits.length) * 100) : 0
-      };
-    });
-  }, [filteredHabits]);
+  const dailyData = useMemo(
+    () => generateDailyCompletionData(visibleHabits, windowRange.start, windowRange.end, period, periodSegments),
+    [visibleHabits, windowRange, period, periodSegments]
+  );
 
-  const habitMonthlyData = useMemo(() => {
-    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    const today = new Date();
-    return Array.from({ length: 6 }, (_, m) => {
-      const monthDate = new Date(today.getFullYear(), today.getMonth() - (5 - m), 1);
-      const daysInMonth = new Date(monthDate.getFullYear(), monthDate.getMonth() + 1, 0).getDate();
-      const entry: Record<string, string | number> = { month: monthNames[monthDate.getMonth()] };
+  const habitPeriodData = useMemo(
+    () => generateHabitPeriodData(filteredHabits, periodSegments),
+    [filteredHabits, periodSegments]
+  );
 
-      filteredHabits.forEach((h) => {
-        let completed = 0;
-        for (let d = 1; d <= daysInMonth; d++) {
-          const date = new Date(monthDate.getFullYear(), monthDate.getMonth(), d);
-          if (date > today) {break;}
-          const key = date.toISOString().split('T')[0];
-          if ((h.completions[key] ?? 0) >= Math.max(1, h.dailyTarget ?? 1)) {completed++;}
-        }
-        const daysElapsed = monthDate.getMonth() === today.getMonth() ? today.getDate() : daysInMonth;
-        entry[h.name] = Math.round((completed / Math.max(1, daysElapsed)) * 100);
-      });
-
-      return entry;
-    });
-  }, [filteredHabits]);
-
-  const sorted = [...allStats].sort((a, b) => b.stats.completionRate - a.stats.completionRate);
-  const totalCompletions = allStats.reduce((sum, { stats }) => sum + stats.completedDays, 0);
-  const avgRate =
-    allStats.length > 0
-      ? Math.round(allStats.reduce((sum, { stats }) => sum + stats.completionRate, 0) / allStats.length)
-      : 0;
-  const bestStreak = Math.max(...allStats.map(({ stats }) => stats.longestStreak), 0);
-  const currentStreaks = allStats.reduce((sum, { stats }) => sum + (stats.currentStreak > 0 ? 1 : 0), 0);
-
-  // Best/Worst Weekday & Investment
-  const weekdayStats = useMemo(() => {
-    const counts = Array(7).fill(0);
-    const allUniqueActiveDays = new Set<string>();
-
-    allHabits.forEach(h => {
-      Object.keys(h.completions).forEach(dateStr => {
-        if ((h.completions[dateStr] ?? 0) >= Math.max(1, h.dailyTarget ?? 1)) {
-          const d = new Date(dateStr);
-          const day = d.getDay(); // 0 = Sun
-          counts[day]++;
-          allUniqueActiveDays.add(dateStr);
-        }
-      });
-    });
-
-    const weekdayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-    let best = 1;
-    let worst = 1;
-    for (let i = 0; i < 7; i++) {
-        if (counts[i] > counts[best]) {best = i;}
-        if (counts[i] < counts[worst] && counts[i] > 0) {worst = i;}
-    }
-
-    const yearStart = new Date(new Date().getFullYear(), 0, 1);
-    const daysSinceYearStart = Math.ceil((new Date().getTime() - yearStart.getTime()) / (1000 * 60 * 60 * 24));
-    const investmentPercent = Math.round((allUniqueActiveDays.size / Math.max(1, daysSinceYearStart)) * 100);
-
-    return {
-      bestWeekday: counts[best] > 0 ? weekdayNames[best] : 'N/A',
-      worstWeekday: counts[worst] > 0 ? weekdayNames[worst] : 'N/A',
-      investmentPercent,
-      totalActiveDays: allUniqueActiveDays.size
-    };
-  }, [allHabits]);
-
-  const globalActivityData = useMemo(() => {
-    const data: Array<{ date: string; intensity: number }> = [];
-    const now = new Date();
-    // 12 weeks back (84 days)
-    for (let i = 83; i >= 0; i--) {
-      const d = new Date(now);
-      d.setDate(d.getDate() - i);
-      const key = d.toISOString().split('T')[0];
-      const intensity = allHabits.filter(h => (h.completions[key] ?? 0) >= Math.max(1, h.dailyTarget ?? 1)).length;
-      data.push({ date: key, intensity });
-    }
-    return data;
-  }, [allHabits]);
+  const summary = useMemo(() => buildStatsSummary(allStats), [allStats]);
+  const weekdayStats = useMemo(
+    () => buildWeekdayStats(filteredHabits, windowRange.start, windowRange.end),
+    [filteredHabits, windowRange]
+  );
 
   const frozenDates = useMemo(() => {
     const frozen = new Set<string>();
@@ -147,17 +74,49 @@ export function Stats() {
     return frozen;
   }, [allHabits]);
 
+  const dailyHabitDetails = useMemo(() => {
+    const details: Record<string, string[]> = {};
+    filteredHabits.forEach((habit) => {
+      const threshold = getCompletionThreshold(habit);
+      Object.entries(habit.completions).forEach(([date, count]) => {
+        if (count >= threshold) {
+          if (!details[date]) {
+            details[date] = [];
+          }
+          const label = formatHabitLabel(habit);
+          details[date].push(label);
+        }
+      });
+    });
+    return details;
+  }, [filteredHabits]);
+
+  const activityWeeks = useMemo(
+    () => buildActivityWeeks(filteredHabits, frozenDates, windowRange.start, windowRange.end),
+    [filteredHabits, frozenDates, windowRange]
+  );
+
+  const insights = useMemo(
+    () => buildStatsInsights(allStats, weekdayStats, habitPeriodData, filteredHabits, period),
+    [allStats, weekdayStats, habitPeriodData, filteredHabits, period]
+  );
+
   const toggleTag = (tag: string) => {
     setSelectedTags((prev) => (prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]));
+  };
+  const toggleHabitVisibility = (name: string) => {
+    setHiddenHabits((prev) =>
+      prev.includes(name) ? prev.filter((item) => item !== name) : [...prev, name]
+    );
   };
 
   return (
     <StatsView
       navigate={navigate}
-      avgRate={avgRate}
-      bestStreak={bestStreak}
-      totalCompletions={totalCompletions}
-      currentStreaks={currentStreaks}
+      avgRate={summary.avgRate}
+      bestStreak={summary.bestStreak}
+      totalCompletions={summary.totalCompletions}
+      currentStreaks={summary.currentStreaks}
       searchQuery={searchQuery}
       setSearchQuery={setSearchQuery}
       statusFilter={statusFilter}
@@ -166,16 +125,329 @@ export function Stats() {
       selectedTags={selectedTags}
       toggleTag={toggleTag}
       dailyData={dailyData}
-      habitMonthlyData={habitMonthlyData}
+      habitPeriodData={habitPeriodData}
       filteredHabits={filteredHabits}
-      sorted={sorted}
+      dailyHabitDetails={dailyHabitDetails}
+      sorted={summary.sorted}
       allStats={allStats}
       bestWeekday={weekdayStats.bestWeekday}
       worstWeekday={weekdayStats.worstWeekday}
       investmentPercent={weekdayStats.investmentPercent}
       totalActiveDays={weekdayStats.totalActiveDays}
-      globalActivityData={globalActivityData}
-      frozenDates={frozenDates}
+      period={period}
+      setPeriod={setPeriod}
+      insights={insights}
+      hiddenHabits={hiddenHabits}
+      toggleHabitVisibility={toggleHabitVisibility}
+      activityWeeks={activityWeeks}
     />
   );
+}
+
+type PeriodSegment = {
+  start: Date;
+  end: Date;
+  label: string;
+};
+
+type WeekdayStats = {
+  bestWeekday: string;
+  worstWeekday: string;
+  bestIndex: number;
+  worstIndex: number;
+  counts: number[];
+  investmentPercent: number;
+  totalActiveDays: number;
+};
+
+type ActivityDay = {
+  date: string;
+  intensity: number;
+  isFrozen: boolean;
+  inWindow: boolean;
+};
+
+type ActivityWeek = {
+  label: string;
+  days: ActivityDay[];
+};
+
+const WEEKDAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+function getWindowRange(period: Period) {
+  const end = new Date();
+  end.setHours(0, 0, 0, 0);
+  const start = new Date(end);
+  const windowLength = PERIOD_DAY_RANGES[period] ?? 30;
+  start.setDate(end.getDate() - (windowLength - 1));
+  return { start, end };
+}
+
+function formatSegmentLabel(date: Date, period: Period) {
+  switch (period) {
+    case 'week':
+      return formatAppDate(date, { weekday: 'short' });
+    case 'month':
+      return formatAppDate(date, { month: 'short', day: 'numeric' });
+    case 'quarter':
+      return formatAppDate(date, { month: 'short', day: 'numeric' });
+    case 'year':
+      return formatAppDate(date, { month: 'short', day: 'numeric', year: '2-digit' });
+    default:
+      return formatAppDate(date, { month: 'short', day: 'numeric' });
+  }
+}
+
+function buildPeriodSegments(period: Period, days: number): PeriodSegment[] {
+  const dailySegments = buildDailySegments(period, days);
+
+  if (period === 'quarter') {
+    return groupSegmentsByWeekByMonth(dailySegments);
+  }
+
+  if (period === 'year') {
+    return groupSegmentsByMonth(dailySegments);
+  }
+
+  return dailySegments;
+}
+
+function buildDailySegments(period: Period, days: number): PeriodSegment[] {
+  const segments: PeriodSegment[] = [];
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  for (let offset = days - 1; offset >= 0; offset--) {
+    const start = new Date(today);
+    start.setDate(start.getDate() - offset);
+    const end = new Date(start);
+    end.setDate(end.getDate() + 1);
+    segments.push({
+      start,
+      end,
+      label: formatSegmentLabel(start, period)
+    });
+  }
+  return segments;
+}
+
+function groupSegmentsByMonth(segments: PeriodSegment[]): PeriodSegment[] {
+  if (segments.length === 0) {
+    return segments;
+  }
+  const grouped: PeriodSegment[] = [];
+  let cursor = 0;
+
+  while (cursor < segments.length) {
+    const { start } = segments[cursor];
+    const keyMonth = start.getMonth();
+    const keyYear = start.getFullYear();
+    let endIndex = cursor + 1;
+    while (endIndex < segments.length) {
+      const next = segments[endIndex].start;
+      if (next.getMonth() !== keyMonth || next.getFullYear() !== keyYear) {
+        break;
+      }
+      endIndex += 1;
+    }
+    const chunk = segments.slice(cursor, endIndex);
+    const last = chunk[chunk.length - 1];
+    grouped.push({
+      start,
+      end: last.end,
+      label: formatAppDate(start, { month: 'short', year: 'numeric' })
+    });
+    cursor = endIndex;
+  }
+
+  return grouped;
+}
+
+function groupSegmentsByWeekByMonth(segments: PeriodSegment[]): PeriodSegment[] {
+  if (segments.length === 0) {
+    return segments;
+  }
+  const grouped: PeriodSegment[] = [];
+  let cursor = 0;
+
+  while (cursor < segments.length) {
+    const { start } = segments[cursor];
+    const keyMonth = start.getMonth();
+    const keyYear = start.getFullYear();
+    const monthSegments: PeriodSegment[] = [];
+
+    while (cursor < segments.length) {
+      const current = segments[cursor];
+      if (current.start.getMonth() !== keyMonth || current.start.getFullYear() !== keyYear) {
+        break;
+      }
+      monthSegments.push(current);
+      cursor += 1;
+    }
+
+    const monthLabel = formatAppDate(monthSegments[0].start, { month: 'short', year: '2-digit' });
+    let weekNumber = 1;
+    for (let i = 0; i < monthSegments.length; i += 7) {
+      const chunk = monthSegments.slice(i, i + 7);
+      const last = chunk[chunk.length - 1];
+      grouped.push({
+        start: chunk[0].start,
+        end: last.end,
+        label: `${monthLabel} · Week ${weekNumber}`
+      });
+      weekNumber += 1;
+    }
+  }
+
+  return grouped;
+}
+
+function differenceInDays(later: Date, earlier: Date) {
+  const msPerDay = 1000 * 60 * 60 * 24;
+  return Math.round((later.getTime() - earlier.getTime()) / msPerDay);
+}
+
+
+function getCompletionThreshold(habit: Habit) {
+  return Math.max(1, habit.dailyTarget ?? 1);
+}
+
+function generateDailyCompletionData(
+  habits: Habit[],
+  start: Date,
+  end: Date,
+  period: Period,
+  segments: PeriodSegment[]
+) {
+  if (period === 'week' || period === 'month') {
+    const total = habits.length;
+    const length = differenceInDays(end, start) + 1;
+    return Array.from({ length }, (_, index) => {
+      const date = new Date(start);
+      date.setDate(start.getDate() + index);
+      const key = toCompletionKey(date);
+      const completed = habits.filter((h) => (h.completions[key] ?? 0) >= getCompletionThreshold(h)).length;
+      return {
+        day: formatAppDate(date, { month: 'short', day: 'numeric' }),
+        axisLabel: period === 'week' ? formatAppDate(date, { weekday: 'short' }) : formatAppDate(date, { month: 'short', day: 'numeric' }),
+        completed,
+        total,
+        rate: total > 0 ? Math.round((completed / total) * 100) : 0
+      };
+    });
+  }
+
+  return segments.map((segment) => {
+    const spanDays = Math.max(1, differenceInDays(segment.end, segment.start));
+    let completed = 0;
+    for (let cursor = new Date(segment.start); cursor < segment.end; cursor.setDate(cursor.getDate() + 1)) {
+      const key = toCompletionKey(cursor);
+      const completedToday = habits.filter((h) => (h.completions[key] ?? 0) >= getCompletionThreshold(h)).length;
+      completed += completedToday;
+    }
+    const total = habits.length * spanDays;
+    return {
+      day: segment.label,
+      axisLabel: segment.label,
+      completed,
+      total,
+      rate: total > 0 ? Math.round((completed / total) * 100) : 0
+    };
+  });
+}
+
+function generateHabitPeriodData(habits: Habit[], segments: PeriodSegment[]) {
+  return segments.map((segment) => {
+    const entry: Record<string, string | number> = { period: segment.label };
+    const spanDays = Math.max(1, differenceInDays(segment.end, segment.start));
+    habits.forEach((habit) => {
+      let completed = 0;
+      for (let cursor = new Date(segment.start); cursor < segment.end; cursor.setDate(cursor.getDate() + 1)) {
+        const key = toCompletionKey(cursor);
+        if ((habit.completions[key] ?? 0) >= getCompletionThreshold(habit)) {
+          completed++;
+        }
+      }
+      entry[habit.name] = Math.round((completed / spanDays) * 100);
+    });
+    return entry;
+  });
+}
+
+function buildWeekdayStats(habits: Habit[], start: Date, end: Date): WeekdayStats {
+  const counts = Array(7).fill(0);
+  const activeDays = new Set<string>();
+  const spanDays = differenceInDays(end, start) + 1;
+  for (let offset = 0; offset < spanDays; offset++) {
+    const date = new Date(start);
+    date.setDate(start.getDate() + offset);
+    const key = toCompletionKey(date);
+    const isCompleted = habits.some((habit) => (habit.completions[key] ?? 0) >= getCompletionThreshold(habit));
+    if (isCompleted) {
+      counts[date.getDay()] += 1;
+      activeDays.add(key);
+    }
+  }
+  let bestIndex = 0;
+  let worstIndex = -1;
+  for (let i = 0; i < 7; i++) {
+    if (counts[i] > counts[bestIndex]) {
+      bestIndex = i;
+    }
+    if (counts[i] > 0 && (worstIndex === -1 || counts[i] < counts[worstIndex])) {
+      worstIndex = i;
+    }
+  }
+  const totalActiveDays = activeDays.size;
+  const investmentPercent = Math.round((totalActiveDays / Math.max(1, spanDays)) * 100);
+  const resolvedWorstIndex = worstIndex >= 0 ? worstIndex : bestIndex;
+  return {
+    bestWeekday: counts[bestIndex] > 0 ? WEEKDAY_NAMES[bestIndex] : 'N/A',
+    worstWeekday: worstIndex >= 0 ? WEEKDAY_NAMES[worstIndex] : 'N/A',
+    bestIndex,
+    worstIndex: resolvedWorstIndex,
+    counts,
+    investmentPercent,
+    totalActiveDays
+  };
+}
+
+function buildActivityWeeks(
+  habits: Habit[],
+  frozenDates: Set<string>,
+  rangeStart: Date,
+  rangeEnd: Date
+): ActivityWeek[] {
+  const start = new Date(rangeStart);
+  const startOffset = (start.getDay() + 6) % 7;
+  start.setDate(start.getDate() - startOffset);
+  start.setHours(0, 0, 0, 0);
+  const spanDays = differenceInDays(rangeEnd, start) + 1;
+  const columns = Math.ceil(spanDays / 7);
+  const weeks: ActivityWeek[] = [];
+  for (let col = 0; col < columns; col++) {
+    const columnDays: ActivityDay[] = [];
+    for (let row = 0; row < 7; row++) {
+      const index = col * 7 + row;
+      const date = new Date(start);
+      date.setDate(start.getDate() + index);
+      const key = toCompletionKey(date);
+      const inWindow = date >= rangeStart && date <= rangeEnd;
+      const intensity = inWindow
+        ? habits.filter((habit) => (habit.completions[key] ?? 0) >= getCompletionThreshold(habit)).length
+        : 0;
+      columnDays.push({
+        date: key,
+        intensity,
+        isFrozen: inWindow && frozenDates.has(key),
+        inWindow
+      });
+    }
+    const weekStart = new Date(start);
+    weekStart.setDate(start.getDate() + col * 7);
+    weeks.push({
+      label: formatAppDate(weekStart, { month: 'short', day: 'numeric' }),
+      days: columnDays
+    });
+  }
+  return weeks;
 }

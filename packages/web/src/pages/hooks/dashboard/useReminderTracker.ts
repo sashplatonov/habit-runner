@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { Habit } from '@/types/habit';
+import { addPendingReminder, getPendingReminders, removePendingReminder } from '@/lib/storage/db';
 
 export interface Reminder {
+  id: string;
   habitId: string;
   time: string;
   message: string;
@@ -16,8 +18,25 @@ export function useReminderTracker(
   const reminderLastCheckRef = useRef<number | null>(null);
   const [reminders, setReminders] = useState<Reminder[]>([]);
 
-  const handleDismissReminder = useCallback((habitId: string) => {
-    setReminders((prev) => prev.filter((reminder) => reminder.habitId !== habitId));
+  const handleDismissReminder = useCallback((reminderId: string) => {
+    removePendingReminder(reminderId).catch(() => {});
+    setReminders((prev) => prev.filter((reminder) => reminder.id !== reminderId));
+  }, []);
+
+  // Restore pending reminders on mount
+  useEffect(() => {
+    getPendingReminders()
+      .then((pending) => {
+        setReminders(
+          pending.map((p) => ({
+            id: p.id,
+            habitId: p.habitId,
+            time: p.reminderTime,
+            message: `Reminder: ${p.habitName} (${p.reminderTime})`
+          }))
+        );
+      })
+      .catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -59,18 +78,25 @@ export function useReminderTracker(
         }
 
         reminderTracker.current[habit.id] = nowDayKey;
-        setReminders((prev) =>
-          prev.some((item) => item.habitId === habit.id)
-            ? prev
-            : [
-                ...prev,
-                {
-                  habitId: habit.id,
-                  time: habit.reminderTime!,
-                  message: `Reminder: ${habit.name} (${habit.reminderTime})`
-                }
-              ]
-        );
+
+        // Save to IndexedDB and add to state
+        addPendingReminder(habit.id, habit.name, habit.reminderTime!)
+          .then((id) => {
+            setReminders((prev) =>
+              prev.some((item) => item.habitId === habit.id)
+                ? prev
+                : [
+                    ...prev,
+                    {
+                      id,
+                      habitId: habit.id,
+                      time: habit.reminderTime!,
+                      message: `Reminder: ${habit.name} (${habit.reminderTime})`
+                    }
+                  ]
+            );
+          })
+          .catch(() => {});
         notify(habit);
       });
     };

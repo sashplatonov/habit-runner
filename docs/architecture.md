@@ -55,9 +55,9 @@ All UI state reads from IndexedDB. The server is only involved during sync cycle
 | `src/hooks/useSyncEngine.ts` | Sync scheduler (mount, 30s, online event) |
 | `src/lib/auth/session.ts` | Token storage, refresh, expiry check |
 | `src/lib/habits/schedule.ts` | Schedule calculations (streak, mandatory check) |
-| `src/App.tsx` | Router (string-based), AuthGate, sync init |
+| `src/App.tsx` | BrowserRouter setup, AuthGate, sync init, OAuth callback handling |
 
-**Routing**: No router library. `App.tsx` manages a `view` string (`dashboard | detail | add | edit | stats`) with a `navigate()` helper.
+**Routing**: Custom `BrowserRouter` in `src/lib/router.tsx` — provides `BrowserRouter`, `Routes`, `Route`, `Navigate`, `Link`, `NavLink`, `useNavigate`, `useLocation`, `useParams`. Supports dynamic segments (`:id`), wildcard `*`, and `replace` history mode. No external router library dependency.
 
 **State**: No Redux/Zustand. All persistent state in IndexedDB. React state for UI-only concerns.
 
@@ -195,7 +195,7 @@ Habit
   id, userId, name, description, color, icon
   frequency, schedule (JSON), customDays (JSON)
   dailyTarget, targetStreak, tags (JSON)
-  archived, sortOrder, difficulty, type (positive|negative)
+.  archived, sortOrder, type (positive|negative)
   reminderTime, reminderEnabled
   freezeDays (JSON []), createdAt, updatedAt, version
 
