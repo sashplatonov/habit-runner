@@ -3,7 +3,6 @@ package com.habittracker.auth;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTVerificationException;
-import io.quarkus.arc.properties.IfBuildProperty;
 import jakarta.enterprise.context.ApplicationScoped;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
@@ -12,7 +11,6 @@ import java.time.temporal.ChronoUnit;
 import java.util.Date;
 
 @ApplicationScoped
-@IfBuildProperty(name = "auth.secret", stringValue = "dev-secret", enableIfMissing = true)
 public class JwtUtil {
   @ConfigProperty(name = "auth.secret")
   String authSecret;

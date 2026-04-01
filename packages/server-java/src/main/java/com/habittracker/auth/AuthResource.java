@@ -49,9 +49,9 @@ public class AuthResource {
 
   @POST
   @Path("/logout")
-  public java.util.Map<String, Object> logout(@Valid AuthDtos.RefreshRequest request) {
+  public Response logout(@Valid AuthDtos.RefreshRequest request) {
     authService.revokeToken(request.refreshToken());
-    return java.util.Map.of("success", true);
+    return Response.noContent().build();
   }
 
   @RequireAuth

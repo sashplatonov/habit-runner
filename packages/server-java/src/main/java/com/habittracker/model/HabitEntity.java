@@ -6,6 +6,8 @@ import jakarta.persistence.Id;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.math.BigInteger;
 import java.time.Instant;
@@ -37,9 +39,11 @@ public class HabitEntity extends PanacheEntityBase {
   public String frequency;
 
   @Column(name = "customDays", columnDefinition = "jsonb")
+  @JdbcTypeCode(SqlTypes.JSON)
   public String customDays;
 
   @Column(name = "schedule", columnDefinition = "jsonb")
+  @JdbcTypeCode(SqlTypes.JSON)
   public String schedule;
 
   @Column(name = "targetStreak", nullable = false)
@@ -49,6 +53,7 @@ public class HabitEntity extends PanacheEntityBase {
   public int dailyTarget;
 
   @Column(columnDefinition = "jsonb")
+  @JdbcTypeCode(SqlTypes.JSON)
   public String tags;
 
   @Column(nullable = false)
@@ -70,6 +75,7 @@ public class HabitEntity extends PanacheEntityBase {
   public String type;
 
   @Column(name = "freezeDays", columnDefinition = "jsonb")
+  @JdbcTypeCode(SqlTypes.JSON)
   public String freezeDays;
 
   @Column(name = "createdAt", nullable = false)

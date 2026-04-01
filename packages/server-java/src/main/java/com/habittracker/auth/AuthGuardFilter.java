@@ -27,7 +27,9 @@ public class AuthGuardFilter implements ContainerRequestFilter {
   @Override
   public void filter(ContainerRequestContext requestContext) {
     var method = resourceInfo.getResourceMethod();
-    var requiresAuth = method != null && method.isAnnotationPresent(RequireAuth.class);
+    var clazz = resourceInfo.getResourceClass();
+    var requiresAuth = (method != null && method.isAnnotationPresent(RequireAuth.class))
+        || (clazz != null && clazz.isAnnotationPresent(RequireAuth.class));
     if (!requiresAuth) {
       return;
     }
