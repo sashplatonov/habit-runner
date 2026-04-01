@@ -85,3 +85,10 @@
    and keep `OAUTH_DEFAULT_RETURN_TO` at the frontend origin (for example `http://localhost` with default `WEB_PORT=80`).
 6. Start the backend and frontend (`docker compose`, `npm run dev`, whatever your workflow is). In the UI click **Continue with Google**; you will be redirected through Google’s login screens, and after granting consent you’ll land back at `http://localhost/auth/callback` (or your configured frontend origin) with the tokens appended as query parameters.
 7. When you deploy to another domain, revisit the Google credential: add that domain to **Authorized redirect URIs** (again ending with `/auth/google/callback`), and update `API_PUBLIC_URL`/`OAUTH_DEFAULT_RETURN_TO` before issuing new client secrets to avoid redirect mismatches.
+
+## Java Backend
+
+- Backend moved to Java (Quarkus) at `packages/server-java`.
+- Run locally in Quarkus dev mode: `npm run dev:server` (runs `./mvnw quarkus:dev`).
+- Build the Java server: `npm run build:server` (runs `./mvnw package -DskipTests`).
+
