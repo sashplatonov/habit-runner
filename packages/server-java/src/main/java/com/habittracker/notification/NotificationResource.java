@@ -20,7 +20,7 @@ import java.util.Map;
 @Produces(MediaType.APPLICATION_JSON)
 public class NotificationResource {
   @ConfigProperty(name = "notification.vapid-public-key")
-  String vapidPublicKey;
+  java.util.Optional<String> vapidPublicKey;
 
   final CurrentUserContext currentUserContext;
 
@@ -31,10 +31,9 @@ public class NotificationResource {
   @GET
   @Path("/vapid-public-key")
   public Map<String, String> getVapidPublicKey() {
-    if (vapidPublicKey == null || vapidPublicKey.isBlank()) {
-      throw new IllegalStateException("VAPID_PUBLIC_KEY not configured");
-    }
-    return Map.of("publicKey", vapidPublicKey);
+    var key = vapidPublicKey.filter(s -> !s.isBlank()).orElseThrow(
+        () -> new IllegalStateException("VAPID_PUBLIC_KEY not configured"));
+    return Map.of("publicKey", key);
   }
 
   @RequireAuth

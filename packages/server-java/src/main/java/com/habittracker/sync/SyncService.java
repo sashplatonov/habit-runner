@@ -4,10 +4,10 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.habittracker.model.CheckinEntity;
 import com.habittracker.model.HabitEntity;
-import com.habittracker.model.SyncOpLogEntity;
 import com.habittracker.model.TombstoneEntity;
 import io.quarkus.hibernate.orm.panache.Panache;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
 
 import java.math.BigInteger;
@@ -17,10 +17,11 @@ import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeSet;
 
 @ApplicationScoped
 public class SyncService {
@@ -34,45 +35,57 @@ public class SyncService {
     this.objectMapper = objectMapper;
   }
 
+  // ─── Pull ─────────────────────────────────────────────────────────────────
+
   public SyncDtos.PullResponseDto pull(String userId, String since) {
     var cursor = parseCursor(since);
-    var habits = HabitEntity.<HabitEntity>find("userId", userId).list();
-    var checkins = CheckinEntity.<CheckinEntity>find("userId", userId).list();
-    var tombstones = TombstoneEntity.<TombstoneEntity>find("userId", userId).list();
 
-    var filteredHabits = habits.stream()
-        .filter(h -> cursor == null || isAfterCursor(h.updatedAt, h.id, cursor))
-        .sorted(Comparator.comparing((HabitEntity h) -> h.updatedAt).thenComparing(h -> h.id))
-        .limit(200)
-        .toList();
+    List<HabitEntity> habits;
+    List<CheckinEntity> checkins;
+    List<TombstoneEntity> tombstones;
 
-    var filteredCheckins = checkins.stream()
-        .filter(c -> cursor == null || isAfterCursor(c.updatedAt, c.id, cursor))
-        .sorted(Comparator.comparing((CheckinEntity c) -> c.updatedAt).thenComparing(c -> c.id))
-        .limit(200)
-        .toList();
-
-    var filteredTombstones = tombstones.stream()
-        .filter(t -> cursor == null || isAfterCursor(t.deletedAt, t.id, cursor))
-        .sorted(Comparator.comparing((TombstoneEntity t) -> t.deletedAt).thenComparing(t -> t.id))
-        .limit(200)
-        .toList();
+    if (cursor == null) {
+      habits = HabitEntity.<HabitEntity>find(
+          "userId = ?1 ORDER BY updatedAt ASC, id ASC", userId
+      ).page(0, 200).list();
+      checkins = CheckinEntity.<CheckinEntity>find(
+          "userId = ?1 ORDER BY updatedAt ASC, id ASC", userId
+      ).page(0, 200).list();
+      tombstones = TombstoneEntity.<TombstoneEntity>find(
+          "userId = ?1 ORDER BY deletedAt ASC, id ASC", userId
+      ).page(0, 200).list();
+    } else {
+      habits = HabitEntity.<HabitEntity>find(
+          "userId = ?1 AND (updatedAt > ?2 OR (updatedAt = ?2 AND id > ?3)) ORDER BY updatedAt ASC, id ASC",
+          userId, cursor.updatedAt(), cursor.id()
+      ).page(0, 200).list();
+      checkins = CheckinEntity.<CheckinEntity>find(
+          "userId = ?1 AND (updatedAt > ?2 OR (updatedAt = ?2 AND id > ?3)) ORDER BY updatedAt ASC, id ASC",
+          userId, cursor.updatedAt(), cursor.id()
+      ).page(0, 200).list();
+      tombstones = TombstoneEntity.<TombstoneEntity>find(
+          "userId = ?1 AND (deletedAt > ?2 OR (deletedAt = ?2 AND id > ?3)) ORDER BY deletedAt ASC, id ASC",
+          userId, cursor.updatedAt(), cursor.id()
+      ).page(0, 200).list();
+    }
 
     var candidates = new ArrayList<CursorRow>();
-    filteredHabits.forEach(h -> candidates.add(new CursorRow(h.updatedAt, h.id)));
-    filteredCheckins.forEach(c -> candidates.add(new CursorRow(c.updatedAt, c.id)));
-    filteredTombstones.forEach(t -> candidates.add(new CursorRow(t.deletedAt, t.id)));
+    habits.forEach(h -> candidates.add(new CursorRow(h.updatedAt, h.id)));
+    checkins.forEach(c -> candidates.add(new CursorRow(c.updatedAt, c.id)));
+    tombstones.forEach(t -> candidates.add(new CursorRow(t.deletedAt, t.id)));
 
     var nextCursor = calculateNextCursor(candidates);
 
     return new SyncDtos.PullResponseDto(
-        filteredHabits.stream().map(this::serializeHabit).toList(),
-        filteredCheckins.stream().map(this::serializeCheckin).toList(),
-        filteredTombstones.stream().map(this::serializeTombstone).toList(),
+        habits.stream().map(this::serializeHabit).toList(),
+        checkins.stream().map(this::serializeCheckin).toList(),
+        tombstones.stream().map(this::serializeTombstone).toList(),
         nextCursor,
         toSyncIso(Instant.now())
     );
   }
+
+  // ─── Push ─────────────────────────────────────────────────────────────────
 
   @Transactional
   public SyncDtos.PushResponseDto push(String userId, List<SyncDtos.SyncOpDto> ops) {
@@ -96,7 +109,14 @@ public class SyncService {
     return new SyncDtos.PushResponseDto(applied, conflicts, toSyncIso(Instant.now()));
   }
 
-  private void applyHabitOp(String userId, SyncDtos.SyncOpDto op, List<String> applied, List<SyncDtos.PushConflict> conflicts) {
+  // ─── Habit ops ────────────────────────────────────────────────────────────
+
+  private void applyHabitOp(
+      String userId,
+      SyncDtos.SyncOpDto op,
+      List<String> applied,
+      List<SyncDtos.PushConflict> conflicts
+  ) {
     var payload = toMap(op.payload());
     var habitId = asString(payload.get("id"));
     if (habitId == null) {
@@ -124,40 +144,67 @@ public class SyncService {
       return;
     }
 
+    boolean isNew = false;
     if (existing == null) {
       existing = new HabitEntity();
       existing.id = habitId;
       existing.userId = userId;
-      existing.createdAt = normalizeInstant(asString(payload.get("createdAt")));
-      if (existing.createdAt == null) {
-        existing.createdAt = Instant.now();
-      }
-      existing.persist();
+      var raw = asString(payload.get("createdAt"));
+      existing.createdAt = raw != null ? parseInstantOrNow(raw) : Instant.now();
+      isNew = true;
     }
 
-    existing.name = asString(payload.get("name"));
+    var name = asString(payload.get("name"));
+    existing.name = name != null ? name : (existing.name != null ? existing.name : "Habit");
     existing.description = nullableString(payload.get("description"));
-    existing.color = asString(payload.get("color"));
-    existing.icon = asString(payload.get("icon"));
-    existing.frequency = asString(payload.get("frequency"));
-    existing.customDays = jsonOrNull(payload.get("customDays"));
+    var color = asString(payload.get("color"));
+    existing.color = color != null ? color : (existing.color != null ? existing.color : "#5E81AC");
+    var icon = asString(payload.get("icon"));
+    existing.icon = icon != null ? icon : (existing.icon != null ? existing.icon : "star");
+    var frequency = asString(payload.get("frequency"));
+    existing.frequency = frequency != null ? frequency : (existing.frequency != null ? existing.frequency : "daily");
+    existing.customDays = normalizeCustomDaysJson(payload.get("customDays"));
     existing.schedule = jsonOrNull(payload.get("schedule"));
     existing.targetStreak = asInt(payload.get("targetStreak"), 1);
-    existing.dailyTarget = Math.max(1, asInt(payload.get("dailyTarget"), existing.dailyTarget > 0 ? existing.dailyTarget : 1));
+    existing.dailyTarget = resolveDailyTarget(payload.get("dailyTarget"), existing.dailyTarget);
     existing.tags = jsonOrNull(payload.get("tags"));
     existing.archived = asBoolean(payload.get("archived"), false);
-    existing.sortOrder = BigInteger.valueOf(asInt(payload.get("sortOrder"), 0));
-    existing.reminderTime = nullableString(payload.get("reminderTime"));
-    existing.reminderEnabled = asBoolean(payload.get("reminderEnabled"), true);
+    existing.sortOrder = resolveSortOrder(payload.get("sortOrder"), existing.sortOrder);
+    existing.reminderTime = normalizeReminderTime(asString(payload.get("reminderTime")));
+    existing.reminderEnabled = asBoolean(payload.get("reminderEnabled"), existing.reminderEnabled);
     existing.type = normalizeType(asString(payload.get("type")));
-    existing.freezeDays = jsonOrDefault(payload.get("freezeDays"), "[]");
+    existing.freezeDays = normalizeFreezeDaysJson(payload.get("freezeDays"), existing.freezeDays);
     existing.version = Math.max(existing.version, asInt(payload.get("version"), 0)) + 1;
     existing.updatedAt = nextSyncDate(clientUpdated, existing.updatedAt);
+
+    if (isNew) {
+      existing.persist();
+    }
 
     applied.add(op.id());
   }
 
-  private void applyCheckinOp(String userId, SyncDtos.SyncOpDto op, List<String> applied, List<SyncDtos.PushConflict> conflicts) {
+  private void deleteHabit(String userId, String habitId, Map<String, Object> payload) {
+    var tombstone = new TombstoneEntity();
+    tombstone.userId = userId;
+    tombstone.entity = "habit";
+    tombstone.entityId = habitId;
+    tombstone.version = asInt(payload.get("version"), 1);
+    tombstone.deletedAt = nextSyncDate(parseInstantOrNow(asString(payload.get("updatedAt"))));
+    tombstone.persist();
+
+    Panache.executeUpdate("delete from CheckinEntity where habitId = ?1 and userId = ?2", habitId, userId);
+    Panache.executeUpdate("delete from HabitEntity where id = ?1 and userId = ?2", habitId, userId);
+  }
+
+  // ─── Checkin ops ──────────────────────────────────────────────────────────
+
+  private void applyCheckinOp(
+      String userId,
+      SyncDtos.SyncOpDto op,
+      List<String> applied,
+      List<SyncDtos.PushConflict> conflicts
+  ) {
     var payload = toMap(op.payload());
     var habitId = asString(payload.get("habitId"));
     var dateString = asString(payload.get("date"));
@@ -172,7 +219,9 @@ public class SyncService {
     }
 
     var date = toLocalDate(dateString);
-    var existing = CheckinEntity.<CheckinEntity>find("habitId = ?1 and date = ?2 and userId = ?3", habitId, date, userId).firstResult();
+    var existing = CheckinEntity.<CheckinEntity>find(
+        "habitId = ?1 and date = ?2 and userId = ?3", habitId, date, userId
+    ).firstResult();
     var clientUpdated = normalizeInstant(asString(payload.get("updatedAt")));
 
     if ("delete".equals(op.type())) {
@@ -205,42 +254,41 @@ public class SyncService {
     applied.add(op.id());
   }
 
-  private void deleteHabit(String userId, String habitId, Map<String, Object> payload) {
-    var tombstone = new TombstoneEntity();
-    tombstone.userId = userId;
-    tombstone.entity = "habit";
-    tombstone.entityId = habitId;
-    tombstone.version = asInt(payload.get("version"), 1);
-    tombstone.deletedAt = nextSyncDate(normalizeInstant(asString(payload.get("updatedAt"))), null);
-    tombstone.persist();
-
-    Panache.executeUpdate("delete from CheckinEntity where habitId = ?1 and userId = ?2", habitId, userId);
-    Panache.executeUpdate("delete from HabitEntity where id = ?1 and userId = ?2", habitId, userId);
-  }
-
-  private void deleteCheckin(String userId, String habitId, LocalDate date, Map<String, Object> payload, CheckinEntity existing) {
+  private void deleteCheckin(
+      String userId,
+      String habitId,
+      LocalDate date,
+      Map<String, Object> payload,
+      CheckinEntity existing
+  ) {
     var tombstone = new TombstoneEntity();
     tombstone.userId = userId;
     tombstone.entity = "checkin";
     var payloadId = asString(payload.get("id"));
-    tombstone.entityId = payloadId != null ? payloadId : (existing != null ? existing.id : habitId + ":" + date);
+    tombstone.entityId = payloadId != null ? payloadId
+        : (existing != null ? existing.id : habitId + ":" + date);
     tombstone.version = asInt(payload.get("version"), 1);
-    tombstone.deletedAt = nextSyncDate(normalizeInstant(asString(payload.get("updatedAt"))), null);
+    tombstone.deletedAt = nextSyncDate(parseInstantOrNow(asString(payload.get("updatedAt"))));
     tombstone.persist();
 
-    Panache.executeUpdate("delete from CheckinEntity where habitId = ?1 and userId = ?2 and date = ?3", habitId, userId, date);
+    Panache.executeUpdate(
+        "delete from CheckinEntity where habitId = ?1 and userId = ?2 and date = ?3",
+        habitId, userId, date
+    );
   }
 
+  // ─── Deduplication log ────────────────────────────────────────────────────
+
+  /** Atomically inserts the opId. Returns true if inserted (new op), false if duplicate. */
   private boolean tryCreateLog(String opId) {
-    var existing = SyncOpLogEntity.findById(opId);
-    if (existing != null) {
-      return false;
-    }
-    var log = new SyncOpLogEntity();
-    log.opId = opId;
-    log.persist();
-    return true;
+    EntityManager em = Panache.getEntityManager();
+    int rows = em.createNativeQuery(
+        "INSERT INTO sync_op_logs (\"opId\", \"createdAt\") VALUES (:opId, now()) ON CONFLICT DO NOTHING"
+    ).setParameter("opId", opId).executeUpdate();
+    return rows > 0;
   }
+
+  // ─── Serialization ────────────────────────────────────────────────────────
 
   private SyncDtos.HabitDto serializeHabit(HabitEntity habit) {
     return new SyncDtos.HabitDto(
@@ -289,18 +337,7 @@ public class SyncService {
     );
   }
 
-  private boolean isAfterCursor(Instant time, String id, CursorRow cursor) {
-    if (time == null) {
-      return false;
-    }
-    if (time.isAfter(cursor.updatedAt())) {
-      return true;
-    }
-    if (time.isBefore(cursor.updatedAt())) {
-      return false;
-    }
-    return id.compareTo(cursor.id()) > 0;
-  }
+  // ─── Cursor helpers ───────────────────────────────────────────────────────
 
   private CursorRow parseCursor(String raw) {
     if (raw == null || raw.isBlank()) {
@@ -308,31 +345,27 @@ public class SyncService {
     }
     try {
       var data = objectMapper.readValue(raw, MAP_TYPE);
-      var updatedAt = normalizeInstant(asString(data.get("updatedAt")));
+      var updatedAtStr = asString(data.get("updatedAt"));
       var id = asString(data.get("id"));
-      if (updatedAt == null || id == null) {
+      if (updatedAtStr == null || id == null) {
         return null;
       }
-      return new CursorRow(updatedAt, id);
+      return new CursorRow(Instant.parse(updatedAtStr), id);
     } catch (Exception ex) {
       return null;
     }
   }
 
   private String calculateNextCursor(List<CursorRow> rows) {
+    CursorRow latest;
     if (rows.isEmpty()) {
-      return null;
-    }
-    var latest = rows.stream().max((a, b) -> {
-      var cmp = a.updatedAt().compareTo(b.updatedAt());
-      if (cmp != 0) {
-        return cmp;
-      }
-      return a.id().compareTo(b.id());
-    }).orElse(null);
-
-    if (latest == null) {
-      return null;
+      // Always return a cursor so clients know sync happened up to now
+      latest = new CursorRow(Instant.now(), "");
+    } else {
+      latest = rows.stream().max((a, b) -> {
+        var cmp = a.updatedAt().compareTo(b.updatedAt());
+        return cmp != 0 ? cmp : a.id().compareTo(b.id());
+      }).orElse(new CursorRow(Instant.now(), ""));
     }
 
     try {
@@ -345,7 +378,97 @@ public class SyncService {
     }
   }
 
+  // ─── Normalization helpers ────────────────────────────────────────────────
+
+  /** Validates HH:MM format, returns null if invalid (mirrors NestJS normalizeReminderTime). */
+  private String normalizeReminderTime(String value) {
+    if (value == null || value.isBlank()) {
+      return null;
+    }
+    if (!value.matches("^\\d{2}:\\d{2}$")) {
+      return null;
+    }
+    var parts = value.split(":");
+    int hours = Integer.parseInt(parts[0]);
+    int minutes = Integer.parseInt(parts[1]);
+    if (hours < 0 || hours > 23 || minutes < 0 || minutes > 59) {
+      return null;
+    }
+    return String.format("%02d:%02d", hours, minutes);
+  }
+
+  /** Filters customDays to valid values 0–6, deduplicates (mirrors NestJS normalizeCustomDays). */
+  @SuppressWarnings("unchecked")
+  private String normalizeCustomDaysJson(Object value) {
+    if (!(value instanceof List)) {
+      return null;
+    }
+    var seen = new HashSet<Integer>();
+    var result = new ArrayList<Integer>();
+    for (var item : (List<?>) value) {
+      if (item instanceof Number num) {
+        int day = (int) num.doubleValue();
+        if (day >= 0 && day <= 6 && seen.add(day)) {
+          result.add(day);
+        }
+      }
+    }
+    if (result.isEmpty()) {
+      return null;
+    }
+    return jsonOrNull(result);
+  }
+
+  /**
+   * Validates freezeDays — each entry must match yyyy-MM-dd; deduplicates and sorts.
+   * Falls back to existing if payload is absent/invalid.
+   */
+  @SuppressWarnings("unchecked")
+  private String normalizeFreezeDaysJson(Object payloadValue, String existing) {
+    if (payloadValue == null) {
+      return existing != null ? existing : "[]";
+    }
+    if (!(payloadValue instanceof List)) {
+      return "[]";
+    }
+    var seen = new TreeSet<String>();
+    for (var item : (List<?>) payloadValue) {
+      if (item instanceof String s && s.matches("^\\d{4}-\\d{2}-\\d{2}$")) {
+        seen.add(s);
+      }
+    }
+    return jsonOrNull(new ArrayList<>(seen));
+  }
+
+  /** Mirrors NestJS resolveSortOrder — falls back to existing when payload is invalid. */
+  private BigInteger resolveSortOrder(Object payload, BigInteger existing) {
+    if (payload instanceof Number num) {
+      double val = num.doubleValue();
+      if (Double.isFinite(val)) {
+        return BigInteger.valueOf((long) val);
+      }
+    }
+    return existing != null ? existing : BigInteger.ZERO;
+  }
+
+  /** Mirrors NestJS resolveDailyTarget — min 1, falls back to existing. */
+  private int resolveDailyTarget(Object payload, int existingValue) {
+    if (payload instanceof Number num) {
+      double val = num.doubleValue();
+      if (Double.isFinite(val)) {
+        return Math.max(1, (int) val);
+      }
+    }
+    return Math.max(1, existingValue > 0 ? existingValue : 1);
+  }
+
+  // ─── Utility helpers ──────────────────────────────────────────────────────
+
   private Instant normalizeInstant(String value) {
+    return value != null ? parseInstantOrNow(value) : Instant.now();
+  }
+
+  private Instant parseInstantOrNow(String value) {
     if (value == null || value.isBlank()) {
       return Instant.now();
     }
@@ -358,7 +481,7 @@ public class SyncService {
 
   private LocalDate toLocalDate(String value) {
     try {
-      if (value.length() >= 10) {
+      if (value != null && value.length() >= 10) {
         return LocalDate.parse(value.substring(0, 10));
       }
     } catch (Exception ignored) {
@@ -377,6 +500,9 @@ public class SyncService {
   }
 
   private String toSyncIso(Instant instant) {
+    if (instant == null) {
+      return ISO.format(OffsetDateTime.now(ZoneOffset.UTC));
+    }
     return ISO.format(OffsetDateTime.ofInstant(instant, ZoneOffset.UTC));
   }
 
@@ -393,10 +519,7 @@ public class SyncService {
   }
 
   private String nullableString(Object value) {
-    if (value == null) {
-      return null;
-    }
-    return String.valueOf(value);
+    return value == null ? null : String.valueOf(value);
   }
 
   private int asInt(Object value, int fallback) {
@@ -435,11 +558,6 @@ public class SyncService {
     } catch (Exception ex) {
       return null;
     }
-  }
-
-  private String jsonOrDefault(Object value, String fallbackJson) {
-    var result = jsonOrNull(value);
-    return result == null ? fallbackJson : result;
   }
 
   private Object parseJsonOrNull(String json) {

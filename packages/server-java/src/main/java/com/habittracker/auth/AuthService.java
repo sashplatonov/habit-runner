@@ -1,5 +1,7 @@
 package com.habittracker.auth;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.habittracker.model.OAuthStateEntity;
 import com.habittracker.model.RefreshTokenEntity;
 import com.habittracker.model.UserEntity;
@@ -12,10 +14,15 @@ import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import java.net.URI;
 import java.net.URLEncoder;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.HexFormat;
+import java.util.Map;
 
 @ApplicationScoped
 public class AuthService {
@@ -36,15 +43,20 @@ public class AuthService {
   String oauthDefaultReturnTo;
 
   @ConfigProperty(name = "auth.google-client-id")
-  String googleClientId;
+  java.util.Optional<String> googleClientId;
 
   @ConfigProperty(name = "auth.google-client-secret")
-  String googleClientSecret;
+  java.util.Optional<String> googleClientSecret;
 
   final JwtUtil jwtUtil;
+  final ObjectMapper objectMapper;
+  private final HttpClient httpClient = HttpClient.newBuilder()
+      .connectTimeout(Duration.ofSeconds(10))
+      .build();
 
-  public AuthService(JwtUtil jwtUtil) {
+  public AuthService(JwtUtil jwtUtil, ObjectMapper objectMapper) {
     this.jwtUtil = jwtUtil;
+    this.objectMapper = objectMapper;
   }
 
   @Transactional
@@ -98,9 +110,10 @@ public class AuthService {
     if (user == null) {
       throw new NotAuthorizedException("User no longer exists");
     }
-
     user.theme = normalizeTheme(request.theme());
-    user.timezone = request.timezone();
+    if (request.timezone() != null) {
+      user.timezone = request.timezone().isBlank() ? null : request.timezone();
+    }
     return new AuthDtos.UserPreferencesResponse(user.theme, user.timezone);
   }
 
@@ -122,7 +135,7 @@ public class AuthService {
 
     var callback = getOAuthCallbackUrl();
     return "https://accounts.google.com/o/oauth2/v2/auth"
-        + "?client_id=" + urlEncode(googleClientId)
+        + "?client_id=" + urlEncode(googleClientId.orElseThrow())
         + "&redirect_uri=" + urlEncode(callback)
         + "&response_type=code"
         + "&scope=" + urlEncode("openid email profile")
@@ -139,10 +152,10 @@ public class AuthService {
     var stateEntity = (OAuthStateEntity) OAuthStateEntity.findById(state);
     OAuthStateEntity.deleteById(state);
     if (stateEntity == null || stateEntity.expiresAt.isBefore(Instant.now())) {
-      throw new NotAuthorizedException("Invalid OAuth state");
+      throw new NotAuthorizedException("Invalid or expired OAuth state");
     }
 
-    var email = "google-" + state.substring(0, Math.min(12, state.length())) + "@oauth.habbit-runner.local";
+    var email = exchangeCodeForEmail(code);
     var user = (UserEntity) UserEntity.find("email", email).firstResult();
     if (user == null) {
       user = new UserEntity();
@@ -151,12 +164,68 @@ public class AuthService {
     }
 
     var session = issueTokenPair(user);
-    return URI.create(stateEntity.returnTo + "/auth/callback"
+    return stateEntity.returnTo + "/auth/callback"
         + "?accessToken=" + urlEncode(session.accessToken())
         + "&refreshToken=" + urlEncode(session.refreshToken())
         + "&expiresIn=" + session.expiresIn()
-        + "&email=" + urlEncode(user.email)).toString();
+        + "&email=" + urlEncode(email);
   }
+
+  // ─── Google OAuth helpers ─────────────────────────────────────────────────
+
+  private String exchangeCodeForEmail(String code) {
+    try {
+      var callback = getOAuthCallbackUrl();
+      var body = "code=" + urlEncode(code)
+          + "&client_id=" + urlEncode(googleClientId.orElseThrow())
+          + "&client_secret=" + urlEncode(googleClientSecret.orElseThrow())
+          + "&redirect_uri=" + urlEncode(callback)
+          + "&grant_type=authorization_code";
+
+      var tokenReq = HttpRequest.newBuilder()
+          .uri(URI.create("https://oauth2.googleapis.com/token"))
+          .header("Content-Type", "application/x-www-form-urlencoded")
+          .POST(HttpRequest.BodyPublishers.ofString(body))
+          .timeout(Duration.ofSeconds(10))
+          .build();
+
+      var tokenResp = httpClient.send(tokenReq, HttpResponse.BodyHandlers.ofString());
+      if (tokenResp.statusCode() != 200) {
+        throw new NotAuthorizedException("Google token exchange failed: " + tokenResp.statusCode());
+      }
+
+      var tokenMap = objectMapper.readValue(tokenResp.body(), new TypeReference<Map<String, Object>>() {});
+      var accessToken = (String) tokenMap.get("access_token");
+      if (accessToken == null || accessToken.isBlank()) {
+        throw new NotAuthorizedException("Google did not return an access_token");
+      }
+
+      var userInfoReq = HttpRequest.newBuilder()
+          .uri(URI.create("https://www.googleapis.com/oauth2/v3/userinfo"))
+          .header("Authorization", "Bearer " + accessToken)
+          .GET()
+          .timeout(Duration.ofSeconds(10))
+          .build();
+
+      var userInfoResp = httpClient.send(userInfoReq, HttpResponse.BodyHandlers.ofString());
+      if (userInfoResp.statusCode() != 200) {
+        throw new NotAuthorizedException("Failed to fetch Google userinfo: " + userInfoResp.statusCode());
+      }
+
+      var userInfoMap = objectMapper.readValue(userInfoResp.body(), new TypeReference<Map<String, Object>>() {});
+      var email = (String) userInfoMap.get("email");
+      if (email == null || email.isBlank()) {
+        throw new NotAuthorizedException("Google userinfo did not include email");
+      }
+      return email;
+    } catch (NotAuthorizedException | BadRequestException ex) {
+      throw ex;
+    } catch (Exception ex) {
+      throw new NotAuthorizedException("OAuth exchange error: " + ex.getMessage());
+    }
+  }
+
+  // ─── Token helpers ────────────────────────────────────────────────────────
 
   private AuthDtos.TokenResponse issueTokenPair(UserEntity user) {
     var accessToken = jwtUtil.createAccessToken(user.id, user.email, accessTokenTtlSeconds);
@@ -176,12 +245,11 @@ public class AuthService {
   }
 
   private String normalizeTheme(String value) {
-    if (value == null) {
-      return "cloud";
-    }
-    for (var theme : THEME_IDS) {
-      if (theme.equals(value)) {
-        return theme;
+    if (value != null) {
+      for (var theme : THEME_IDS) {
+        if (theme.equals(value)) {
+          return theme;
+        }
       }
     }
     return "cloud";
@@ -197,7 +265,7 @@ public class AuthService {
       if (!"http".equalsIgnoreCase(scheme) && !"https".equalsIgnoreCase(scheme)) {
         return oauthDefaultReturnTo;
       }
-      return parsed.getScheme() + "://" + parsed.getAuthority();
+      return scheme + "://" + parsed.getAuthority();
     } catch (RuntimeException ex) {
       return oauthDefaultReturnTo;
     }
@@ -208,8 +276,9 @@ public class AuthService {
   }
 
   private void ensureGoogleConfig() {
-    if (googleClientId == null || googleClientId.isBlank() || googleClientSecret == null || googleClientSecret.isBlank()) {
-      throw new NotAuthorizedException("Google OAuth is not configured");
+    if (googleClientId.map(String::isBlank).orElse(true)
+        || googleClientSecret.map(String::isBlank).orElse(true)) {
+      throw new BadRequestException("Google OAuth is not configured on this server");
     }
   }
 
