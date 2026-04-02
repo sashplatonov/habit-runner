@@ -1,0 +1,24 @@
+# JVM build for local development
+FROM docker.io/library/eclipse-temurin:25-jdk AS build
+WORKDIR /workspace
+
+# Copy only the app sources (context will be apps/api-java)
+COPY .mvn .mvn
+COPY mvnw mvnw
+COPY pom.xml .
+COPY src src
+
+RUN chmod +x mvnw
+RUN ./mvnw -B -DskipTests package
+
+# Normalize produced jar to a known location
+RUN set -eux \
+  && JAR=$(ls target/*.jar | grep -v "original" | head -n1) \
+  && cp "$JAR" application.jar
+
+FROM docker.io/library/eclipse-temurin:25-jre AS runtime
+WORKDIR /work
+COPY --from=build /workspace/application.jar /work/application.jar
+
+EXPOSE 8080
+CMD ["java","-jar","/work/application.jar"]

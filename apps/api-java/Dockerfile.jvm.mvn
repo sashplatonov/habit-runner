@@ -1,0 +1,21 @@
+FROM maven:3.9.6-eclipse-temurin-17 AS build
+WORKDIR /workspace
+
+# Copy project files into the build context
+COPY pom.xml .
+COPY src src
+
+# Build a runnable jar
+RUN mvn -B -DskipTests package
+
+# Normalize produced jar to a known location
+RUN set -eux \
+  && JAR=$(ls target/*.jar | grep -v "original" | head -n1) \
+  && cp "$JAR" application.jar
+
+FROM docker.io/library/eclipse-temurin:25-jre AS runtime
+WORKDIR /work
+COPY --from=build /workspace/application.jar /work/application.jar
+
+EXPOSE 8080
+CMD ["java","-jar","/work/application.jar"]
