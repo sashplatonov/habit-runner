@@ -1,0 +1,22 @@
+FROM docker.io/library/eclipse-temurin:25-jdk AS build
+WORKDIR /workspace
+
+# Install Maven in the image so we can build with JDK 25
+RUN apt-get update && apt-get install -y maven \
+  && rm -rf /var/lib/apt/lists/*
+
+COPY pom.xml .
+COPY src src
+
+RUN mvn -B -DskipTests package
+
+RUN set -eux \
+  && JAR=$(ls target/*.jar | grep -v "original" | head -n1) \
+  && cp "$JAR" application.jar
+
+FROM docker.io/library/eclipse-temurin:25-jre AS runtime
+WORKDIR /work
+COPY --from=build /workspace/application.jar /work/application.jar
+
+EXPOSE 8080
+CMD ["java","-jar","/work/application.jar"]
