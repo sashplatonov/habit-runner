@@ -3,7 +3,7 @@ WORKDIR /app
 
 COPY package*.json ./
 COPY packages/shared/package.json packages/shared/
-COPY packages/web/package.json packages/web/
+COPY apps/web/package.json apps/web/
 COPY tsconfig.base.json ./
 
 RUN npm ci --ignore-scripts --workspace=@habbit-runner/shared --workspace=@habbit-runner/web
@@ -11,12 +11,12 @@ RUN npm ci --ignore-scripts --workspace=@habbit-runner/shared --workspace=@habbi
 COPY packages/shared/ packages/shared/
 RUN npm run build -w @habbit-runner/shared
 
-COPY packages/web/ packages/web/
+COPY apps/web/ apps/web/
 ARG VITE_API_BASE_URL=/api
 ENV VITE_API_BASE_URL=${VITE_API_BASE_URL}
 RUN npm run build -w @habbit-runner/web
 
 FROM nginx:1.27-alpine AS runtime
-COPY --from=build /app/packages/web/dist /usr/share/nginx/html
-COPY packages/web/nginx.conf /etc/nginx/conf.d/default.conf
+COPY --from=build /app/apps/web/dist /usr/share/nginx/html
+COPY apps/web/nginx.conf /etc/nginx/conf.d/default.conf
 EXPOSE 80

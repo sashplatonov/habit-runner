@@ -45,15 +45,12 @@ Or use any local Postgres and set `DATABASE_URL` accordingly.
 ### 3. Configure the server
 
 ```bash
-cp packages/server/.env.example packages/server/.env
-```
-
-Edit `packages/server/.env`:
-
-```env
-DATABASE_URL=postgresql://habbit:password@localhost:5432/habbit_runner
+cat > apps/api-java/.env <<'EOF'
+PORT=3000
+DATABASE_URL=jdbc:postgresql://localhost:5432/habbit_runner
+DB_USER=habbit
+DB_PASSWORD=password
 AUTH_SECRET=any-local-secret
-ACCESS_TOKEN_EXPIRES_IN=1h
 ACCESS_TOKEN_TTL_SECONDS=3600
 REFRESH_TOKEN_EXPIRES_DAYS=30
 GOOGLE_OAUTH_CLIENT_ID=<your-id>
@@ -61,17 +58,20 @@ GOOGLE_OAUTH_CLIENT_SECRET=<your-secret>
 API_PUBLIC_URL=http://localhost:3000
 OAUTH_DEFAULT_RETURN_TO=http://localhost:5173
 CORS_ORIGINS=http://localhost:5173
+EOF
 ```
 
 ### 4. Run migrations
 
 ```bash
-cd packages/server && npx prisma migrate dev
+# Flyway migrations are applied automatically on app startup.
+# Start backend once to apply them:
+npm run dev:server
 ```
 
 ### 5. Configure the web client
 
-Create `packages/web/.env`:
+Create `apps/web/.env`:
 
 ```env
 VITE_API_BASE_URL=http://localhost:3000
@@ -85,7 +85,7 @@ VITE_DEFAULT_USER_ID=demo-user
 npm run dev          # web + server in parallel (Turbo)
 # or individually:
 npm run dev:web      # Vite on http://localhost:5173
-npm run dev:server   # NestJS on http://localhost:3000
+npm run dev:server   # Quarkus on http://localhost:3000
 ```
 
 [↑ Back to top](#top)
@@ -126,7 +126,7 @@ The `api` and `db` services have no published host ports — all external traffi
 
 ```bash
 docker compose logs -f api           # Stream API logs
-docker compose exec api npx prisma studio   # Open Prisma Studio
+docker compose exec db psql -U ${HR_DB_USER:-habbit} -d ${HR_DB_NAME:-habbit_runner}
 docker compose down -v               # Remove containers + volumes
 ```
 
@@ -157,7 +157,7 @@ docker compose down -v               # Remove containers + volumes
 
 ## 🔔 Web Push setup <a name="web-push-setup"></a>
 
-See [WEB_PUSH_SETUP.md](./WEB_PUSH_SETUP.md) for VAPID key generation and configuration.
+See [web-push-setup.md](./web-push-setup.md) for VAPID key generation and configuration.
 
 [↑ Back to top](#top)
 
@@ -189,7 +189,7 @@ See [WEB_PUSH_SETUP.md](./WEB_PUSH_SETUP.md) for VAPID key generation and config
 | `THROTTLE_TTL_SECONDS` | No | `60` | Rate limit window |
 | `THROTTLE_LIMIT` | No | `120` | Max requests per window |
 
-### `packages/web/.env` (local dev)
+### `apps/web/.env` (local dev)
 
 | Variable | Default | Description |
 |---|---|---|

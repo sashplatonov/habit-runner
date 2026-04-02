@@ -8,7 +8,7 @@ const configPath = ts.findConfigFile(projectRoot, ts.sys.fileExists, 'tsconfig.j
 const HIGH_RISK_DIAGNOSTICS = new Set([2304, 2322, 2345, 2552, 2739, 2740, 2741]);
 
 if (!configPath) {
-  console.error('Unable to find packages/web/tsconfig.json');
+  console.error('Unable to find apps/web/tsconfig.json');
   process.exit(1);
 }
 
@@ -44,7 +44,7 @@ process.exit(1);
 
 function isInWebSrc(fileName) {
   const normalized = fileName.split(path.sep).join('/');
-  return normalized.includes('/packages/web/src/') || normalized.startsWith('packages/web/src/');
+  return normalized.includes('/apps/web/src/') || normalized.startsWith('apps/web/src/');
 }
 
 function isTypeOnlyReference(sourceFile, position) {

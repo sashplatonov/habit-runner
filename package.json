@@ -3,20 +3,21 @@
   "private": true,
   "packageManager": "npm@11.11.0",
   "workspaces": [
+    "apps/*",
     "packages/*"
   ],
   "scripts": {
     "prepare": "npm run build -w @habbit-runner/shared",
     "dev": "turbo dev",
     "dev:web": "npm run dev --workspace=@habbit-runner/web",
-    "dev:server": "cd packages/server-java && ./mvnw quarkus:dev",
+    "dev:server": "cd apps/api-java && ./mvnw quarkus:dev",
     "dev:all": "npm run dev --workspaces --if-present",
     "build": "turbo build",
     "build:web": "npm run build --workspace=@habbit-runner/web",
-    "build:server": "cd packages/server-java && ./mvnw package -DskipTests",
+    "build:server": "cd apps/api-java && (./mvnw package -DskipTests || mvn -DskipTests package)",
     "lint": "turbo lint",
     "lint:fix": "turbo run lint:fix",
-    "check": "npm run lint && npm run build && npm run build:server && (cd packages/server && npx prisma generate)",
+    "check": "npm run lint && npm run build && npm run build:server && (cd apps/api-nest-legacy && npx prisma generate)",
     "clean": "turbo run clean"
   },
   "devDependencies": {

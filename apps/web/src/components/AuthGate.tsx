@@ -26,7 +26,7 @@ export function AuthGate({ onError }: AuthGateProps) {
         <button
           className="mt-4 text-xs text-muted hover:text-foreground"
           onClick={() =>
-            onError('OAuth is not configured. Fill in packages/server/.env and restart the API.')
+            onError('OAuth is not configured. Fill in apps/api-java/.env (or root .env for Docker) and restart the API.')
           }
         >
           Sign-in not working?

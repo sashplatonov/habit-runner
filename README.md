@@ -3,12 +3,12 @@
 ## 📚 Documentation
 
 - 📌 Start here: [docs/README.md](./docs/README.md)
-- 🏗️ Architecture: [docs/architecture.md](./docs/architecture.md)
-- 🚀 Initial setup: [docs/getting-started.md](./docs/getting-started.md)
-- 🔄 Offline sync: [docs/offline-sync-plan.md](./docs/offline-sync-plan.md)
-- 🛡️ Reliability and rollout: [docs/reliability-rollout.md](./docs/reliability-rollout.md)
-- 🤖 GitHub automation (Renovate + Trivy): [docs/github-automation.md](./docs/github-automation.md)
-- 🧹 Project health review: [docs/project-health.md](./docs/project-health.md)
+- 🏗️ Architecture: [docs/architecture/overview.md](./docs/architecture/overview.md)
+- 🚀 Initial setup: [docs/setup/getting-started.md](./docs/setup/getting-started.md)
+- 🔄 Offline sync: [docs/architecture/offline-sync-plan.md](./docs/architecture/offline-sync-plan.md)
+- 🛡️ Reliability and rollout: [docs/operations/reliability-rollout.md](./docs/operations/reliability-rollout.md)
+- 🤖 GitHub automation (Renovate + Trivy): [docs/operations/github-automation.md](./docs/operations/github-automation.md)
+- 🧹 Project health review: [docs/project/health.md](./docs/project/health.md)
 
 ## 🚀 Getting Started
 
@@ -23,11 +23,11 @@
   - lint
   - full build
   - server build
-  - Prisma client generation in `packages/server`
+   - Prisma client generation in `apps/api-nest-legacy`
 
 ## 📦 Current State (March 9, 2026)
 
-- ✅ Monorepo with npm workspaces: `packages/web`, `packages/server`, `packages/shared`
+- ✅ Monorepo with npm workspaces: `apps/web`, `apps/api-java`, `packages/shared`
 - ✅ ESLint v10 flat-config in all packages
 - ✅ Web unit tests on Vitest
 - ✅ Security and dependency automation via Renovate + Trivy
@@ -37,7 +37,7 @@
 
 ### 🖥️ Client
 
-- Create `packages/web/.env` before launching the dev server and set:
+- Create `apps/web/.env` before launching the dev server and set:
   - `VITE_API_BASE_URL` (defaults to `http://localhost:3000` for local dev; use `/api` behind Docker/nginx)
   - `VITE_SYNC_ENABLED` lets you disable sync (`false` to stay offline)
   - `VITE_DEFAULT_USER_ID` seeds Dexie records for offline demos
@@ -46,13 +46,13 @@
 
 - Copy root `.env.example` to `.env`; this root `.env` is the Docker source of truth for container env (published web port, DB credentials, API auth/token settings, and Google credentials).
 - `api` and `db` have no published host ports; external clients reach backend only via the `web` nginx reverse proxy at `/api`.
-- `docker compose` injects API env directly from root `.env`; `packages/server/.env` is not used inside containers.
+- `docker compose` injects API env directly from root `.env`; `apps/api-java/.env` is not used inside containers.
 - By default in Docker, Compose derives `API_PUBLIC_URL` as `http://localhost:${WEB_PORT}/api` and `OAUTH_DEFAULT_RETURN_TO` as `http://localhost:${WEB_PORT}`.
 
 ### 🧠 API
 
-   1. `cd packages/server`
-   2. Create `packages/server/.env` and configure values for local non-Docker backend runs:
+   1. `cd apps/api-java`
+   2. Create `apps/api-java/.env` and configure values for local non-Docker backend runs:
       - `DATABASE_URL`, `AUTH_SECRET`, `ACCESS_TOKEN_EXPIRES_IN`, `ACCESS_TOKEN_TTL_SECONDS`, `REFRESH_TOKEN_EXPIRES_DAYS`
       - For local `npm run dev:server`, use `localhost` in `DATABASE_URL` (not `db`).
       - For Docker, edit only root `.env`; compose passes those values into the `api` service.
@@ -78,7 +78,7 @@
      - `http://localhost/api/auth/google/callback` for Docker Compose default (`WEB_PORT=80`, API hidden behind web proxy).
      - If you run on a different host, keep the same `/auth/google/callback` path on the API URL base used by the app.
    - Click **Create**; Google displays a modal with your **Client ID** and **Client Secret**.
-4. Copy the values into `packages/server/.env` for `GOOGLE_OAUTH_CLIENT_ID` and `GOOGLE_OAUTH_CLIENT_SECRET`. Keep this file secret.
+4. Copy the values into `apps/api-java/.env` for `GOOGLE_OAUTH_CLIENT_ID` and `GOOGLE_OAUTH_CLIENT_SECRET`. Keep this file secret.
 5. Confirm `API_PUBLIC_URL` matches the API base URL your app uses:
    - Local non-Docker backend: `http://localhost:3000`
    - Docker Compose default: `http://localhost/api`
@@ -88,7 +88,7 @@
 
 ## Java Backend
 
-- Backend moved to Java (Quarkus) at `packages/server-java`.
+- Backend moved to Java (Quarkus) at `apps/api-java`.
 - Run locally in Quarkus dev mode: `npm run dev:server` (runs `./mvnw quarkus:dev`).
 - Build the Java server: `npm run build:server` (runs `./mvnw package -DskipTests`).
 

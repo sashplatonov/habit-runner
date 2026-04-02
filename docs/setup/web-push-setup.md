@@ -19,7 +19,6 @@ VAPID (Voluntary Application Server Identification) keys are required to authent
 **Run this command once:**
 
 ```bash
-cd packages/server
 npx web-push generate-vapid-keys
 ```
 
@@ -44,7 +43,7 @@ VAPID_SUBJECT=mailto:admin@yourdomain.com
 
 #### For Local Development
 
-Create `packages/server/.env`:
+Create `apps/api-java/.env` (or append to existing file):
 
 ```env
 VAPID_PUBLIC_KEY=BKT8nR5OScHpnHJfLG-xh5BTd0qVxnb_PxYfvQqYrKP5aE...
@@ -52,7 +51,7 @@ VAPID_PRIVATE_KEY=8f3e2d1c9b4a7f6e5d4c3b2a1f0e9d8c7b6a5f4e...
 VAPID_SUBJECT=mailto:admin@localhost
 ```
 
-Create `packages/web/.env.local`:
+Create `apps/web/.env.local`:
 
 ```env
 VITE_API_BASE_URL=http://localhost:3000
@@ -60,15 +59,14 @@ VITE_API_BASE_URL=http://localhost:3000
 
 ### 3. Deploy Database Migration
 
-The Web Push feature requires new database tables. Apply the migration:
+The Web Push feature requires DB schema up to date. Flyway migrations run automatically when the Quarkus API starts.
 
 ```bash
 # If using Docker Compose:
-docker compose exec api npx prisma migrate deploy
+docker compose up -d api
 
 # If running locally:
-cd packages/server
-npx prisma migrate deploy
+npm run dev:server
 ```
 
 This creates:
@@ -117,7 +115,7 @@ After deploying:
 - ✅ VAPID keys generated and stored securely
 - ✅ Environment variables set (use secrets manager, not hardcoded)
 - ✅ HTTPS enabled
-- ✅ Database migrations applied
+- ✅ API started at least once so Flyway migrations were applied
 - ✅ API_PUBLIC_URL and OAUTH_DEFAULT_RETURN_TO configured
 - ✅ Service worker deployed (included in Vite build)
 - ✅ Tested with at least one device
@@ -153,11 +151,11 @@ After deploying:
 
 - Clear browser cache: Ctrl+Shift+Delete (or Cmd+Shift+Delete on Mac)
 - Check CORS settings (`CORS_ORIGINS` in .env)
-- Verify `packages/web/vite.config.ts` has `strategies: 'injectManifest'`
+- Verify `apps/web/vite.config.ts` has `strategies: 'injectManifest'`
 
 ## Architecture
 
-- **Server:** `NotificationModule` handles subscriptions and sends pushes via Web Push API
+- **Server:** `NotificationResource` handles subscriptions and exposes VAPID public key endpoint
 - **Client:** Service Worker (`sw-custom.ts`) receives push events and shows notifications
 - **Database:** `push_subscriptions` table stores browser endpoints per user
 - **Sync:** Freeze days sync via existing sync protocol

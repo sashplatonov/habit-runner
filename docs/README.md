@@ -32,10 +32,12 @@ Key features:
 
 ```
 habbit-runner/
+├── apps/
+│   ├── web/            React + Vite PWA (frontend)
+│   ├── api-java/       Quarkus API (active backend)
+│   └── api-nest-legacy/ NestJS + Prisma API (legacy reference)
 ├── packages/
-│   ├── web/        React + Vite PWA (frontend)
-│   ├── server/     NestJS + Prisma API (backend)
-│   └── shared/     Shared TypeScript types and DTOs
+│   └── shared/         Shared TypeScript types and DTOs
 ├── docker-compose.yml
 ├── .env.example    Copy to .env for Docker
 └── turbo.json      Build orchestration
@@ -51,7 +53,7 @@ habbit-runner/
 |---|---|
 | Frontend | React 19, Vite, TypeScript, Tailwind CSS |
 | Offline storage | Dexie (IndexedDB wrapper) |
-| Backend | NestJS 11, Prisma 7, PostgreSQL |
+| Backend | Java 25, Quarkus 3, PostgreSQL |
 | Auth | Google OAuth + JWT (access + refresh) |
 | Sync | Custom pull-push-pull cycle with outbox |
 | Push | Web Push (VAPID via `web-push`) |
@@ -65,12 +67,12 @@ habbit-runner/
 
 | Document | Contents |
 |---|---|
-| [getting-started.md](./getting-started.md) | Local dev setup, Docker setup, env vars |
-| [architecture.md](./architecture.md) | Sync protocol, data flow, module structure |
-| [chart-tooltips.md](./chart-tooltips.md) | UX contract for explanatory chart and heatmap tooltips |
-| [offline-sync-plan.md](./offline-sync-plan.md) | Outbox pattern, conflict resolution, retry |
-| [WEB_PUSH_SETUP.md](./WEB_PUSH_SETUP.md) | VAPID key generation, push subscription flow |
-| [github-automation.md](./github-automation.md) | Renovate, Trivy scanner setup |
-| [project-health.md](./project-health.md) | Linting, testing, quality gates |
+| [setup/getting-started.md](./setup/getting-started.md) | Local dev setup, Docker setup, env vars |
+| [architecture/overview.md](./architecture/overview.md) | Sync protocol, data flow, module structure |
+| [features/chart-tooltips.md](./features/chart-tooltips.md) | UX contract for explanatory chart and heatmap tooltips |
+| [architecture/offline-sync-plan.md](./architecture/offline-sync-plan.md) | Outbox pattern, conflict resolution, retry |
+| [setup/web-push-setup.md](./setup/web-push-setup.md) | VAPID key generation, push subscription flow |
+| [operations/github-automation.md](./operations/github-automation.md) | Renovate, Trivy scanner setup |
+| [project/health.md](./project/health.md) | Linting, testing, quality gates |
 
 [↑ Back to top](#top)

@@ -22,7 +22,8 @@ npm run check
 This runs in order:
 1. `npm run lint` — ESLint across all workspaces
 2. `npm run build` — Turbo build: shared → server → web
-3. `npx prisma generate` — Regenerate Prisma client (in `packages/server`)
+3. `npm run build:server` — Java backend package build (Quarkus)
+4. `npx prisma generate` — Regenerate Prisma client (in `apps/api-nest-legacy`)
 
 Each step must pass. CI does not run automatically yet — run `npm run check` locally.
 
@@ -35,7 +36,7 @@ Each step must pass. CI does not run automatically yet — run `npm run check` l
 **Frontend**: Vitest + @testing-library/react (18 test suites, 103 tests)
 
 ```bash
-cd packages/web && npm run test
+cd apps/web && npm run test
 # or from root:
 npm run test -w @habbit-runner/web
 ```
@@ -54,18 +55,19 @@ Test suites cover:
 > `@testing-library/react` (hoisted to root `node_modules`) to find its peer deps.
 > They are listed in root `devDependencies` — run `npm install` if missing.
 
-**Backend**: Node test runner (built-in) — e2e + unit tests for auth and sync flows.
+**Backend (active)**: Quarkus tests (JUnit + RestAssured).
 
 ```bash
-cd packages/server && npm run test
+cd apps/api-java && ./mvnw test
+```
+
+**Backend (legacy reference)**: NestJS tests still available in `apps/api-nest-legacy/test/`.
+
+```bash
+cd apps/api-nest-legacy && npm run test
 # or from root:
 npm run test -w @habbit-runner/server
 ```
-
-Test suites cover:
-- Auth guard: bearer token validation and unauthorized rejection (`test/unit/auth.guard.test.ts`)
-- E2E auth+sync: login, preferences get/update, pull (with/without cursor), push upsert + conflict, push delete + tombstone, deduplication via SyncOpLog, delta pull (`test/e2e/auth-sync.e2e.test.ts`)
-- In-memory Prisma mock for isolated test execution (`test/e2e/in-memory-prisma.mock.ts`)
 [↑ Back to top](#top)
 
 ---
@@ -76,13 +78,13 @@ ESLint v10 flat-config in all packages.
 
 ```bash
 npm run lint              # all workspaces
-cd packages/web && npm run lint   # web only
+cd apps/web && npm run lint   # web only
 ```
 
 Config files:
-- `packages/web/eslint.config.js`
-- `packages/server/eslint.config.js`
-- `packages/shared/eslint.config.js`
+- `apps/web/eslint.config.cjs`
+- `apps/api-nest-legacy/eslint.config.cjs`
+- `packages/shared/eslint.config.cjs`
 
 [↑ Back to top](#top)
 
@@ -93,10 +95,10 @@ Config files:
 Checklist for adding new habit fields:
 
 1. **Shared** (`packages/shared/src/sync.ts`) — add field to `HabitDto`
-2. **Server** (`packages/server/prisma/schema.prisma`) — add column, run `npx prisma migrate dev`
-3. **Server** (`sync.service.ts`) — include field in pull/push serialization
-4. **Client** (`src/types/habit.ts`) — add to `Habit` type
-5. **Client** (`src/lib/storage/db.ts`) — add to Dexie entity + domain mapping
+2. **Server schema** (`apps/api-java/src/main/resources/db/migration/`) — add Flyway SQL migration for new column
+3. **Server sync layer** (`apps/api-java/src/main/java/com/habittracker/sync/`) — include field in pull/push serialization
+4. **Client** (`apps/web/src/types/habit.ts`) — add to `Habit` type
+5. **Client** (`apps/web/src/lib/storage/db.ts`) — add to Dexie entity + domain mapping
 6. Run `npm run check` before opening PR
 
 [↑ Back to top](#top)

@@ -56,19 +56,19 @@ docker compose up -d --build --no-deps web
 
 ## 🗃️ Database migrations <a name="database-migrations"></a>
 
-Migrations run automatically on `api` container start via `docker-entrypoint.sh`:
+Migrations run automatically on `api` startup via Flyway (`quarkus.flyway.migrate-at-start=true`):
 
 ```bash
-npx prisma migrate deploy
+# Docker Compose (starts API, applies Flyway migrations on boot)
+docker compose up -d api
 ```
 
 For local development:
 
 ```bash
-cd packages/server
-npx prisma migrate dev        # create + apply migration
-npx prisma migrate deploy     # apply existing migrations (prod-style)
-npx prisma generate           # regenerate client after schema change
+cd apps/api-java
+./mvnw quarkus:dev            # applies Flyway migrations on startup
+./mvnw package -DskipTests    # validates migrations during build pipeline
 ```
 
 ⚠️ Always back up the database before applying migrations in production.
@@ -97,8 +97,10 @@ There is no automatic rollback. Steps:
 
 **Sync metrics**: `GET /metrics` returns basic sync performance data (counts, timings).
 
-**Logs**: `docker compose logs -f api` — NestJS structured logs include sync op counts and auth events.
+**Prometheus metrics**: `GET /q/metrics` exposes Micrometer metrics.
 
-**Push subscription cleanup**: A nightly cron in `NotificationModule` removes subscriptions that returned HTTP 410 (gone) or 404 from the push service. Check logs if push delivery drops.
+**Logs**: `docker compose logs -f api` — Quarkus logs include sync and auth events.
+
+**Push subscription cleanup**: review notification errors in API logs and remove invalid endpoints via `/notifications/unsubscribe` when needed.
 
 [↑ Back to top](#top)
