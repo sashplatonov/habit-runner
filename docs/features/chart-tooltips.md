@@ -168,7 +168,7 @@ The tooltip should feel informative and intentional, but not become the dominant
 ## 🛠️ Implementation notes <a name="implementation-notes"></a>
 
 Current frontend implementation lives in:
-- `packages/web/src/components/ChartGuideTooltip.tsx`
+- `apps/web/src/components/ChartGuideTooltip.tsx`
 
 When wiring a new dashboard, analytics, or habit-detail block:
 1. Place the trigger beside the block title.

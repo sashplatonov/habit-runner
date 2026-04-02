@@ -2,7 +2,7 @@
 set -eu
 
 if [ "${RUN_DB_PUSH:-true}" = "true" ]; then
-  PRISMA_BIN='/app/packages/server/node_modules/.bin/prisma'
+  PRISMA_BIN='/app/apps/api-nest-legacy/node_modules/.bin/prisma'
   if [ ! -x "$PRISMA_BIN" ]; then
     PRISMA_BIN='/app/node_modules/.bin/prisma'
   fi

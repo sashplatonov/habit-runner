@@ -29,6 +29,17 @@ packages/*/.cache
 packages/*/.vite
 packages/*/.env
 packages/*/.env.*
+apps/*/node_modules
+apps/*/dist
+apps/*/dist-ssr
+apps/*/dist-test
+apps/*/coverage
+apps/*/build
+apps/*/.turbo
+apps/*/.cache
+apps/*/.vite
+apps/*/.env
+apps/*/.env.*
 
 # Editor directories and files
 .vscode/*
@@ -43,7 +54,7 @@ packages/*/.env.*
 .env
 .env.*
 !.env.example
-packages/server/.env
+apps/api-nest-legacy/.env
 
 secrets/
 .claude/settings.local.json

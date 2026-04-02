@@ -221,7 +221,7 @@ function PublicLandingFooter({ onHelpClick }: Pick<PublicLandingProps, 'onHelpCl
         <button
           type="button"
           onClick={() =>
-            onHelpClick('OAuth is not configured. Fill in packages/server/.env and restart the API.')
+            onHelpClick('OAuth is not configured. Fill in apps/api-java/.env (or root .env for Docker) and restart the API.')
           }
           className="rounded border border-slate-300 bg-white px-3 py-1.5 text-slate-700 transition-colors hover:border-slate-400 hover:text-slate-900"
         >
