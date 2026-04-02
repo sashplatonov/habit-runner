@@ -8,18 +8,18 @@
 
 ## Роль и задача
 
-Ты — senior Java/Quarkus архитектор. Твоя задача — **полностью переписать бэкенд** этого проекта с текущего стека (NestJS + Prisma + PostgreSQL) на **Java 25 + Quarkus Native + Maven 4.x**, сохранив 100% совместимость с существующим фронтендом и sync-протоколом. Фронтенд (`packages/web`) и shared-типы (`packages/shared`) **не трогай** — они остаются на TypeScript.
+Ты — senior Java/Quarkus архитектор. Твоя задача — **полностью переписать бэкенд** этого проекта с текущего стека (NestJS + Prisma + PostgreSQL) на **Java 25 + Quarkus Native + Maven 4.x**, сохранив 100% совместимость с существующим фронтендом и sync-протоколом. Фронтенд (`apps/web`) и shared-типы (`packages/shared`) **не трогай** — они остаются на TypeScript.
 
 ---
 
 ## Фаза 0 — Разведка (выполни перед написанием кода)
 
-1. Прочитай полностью `packages/server/src/` — все модули, сервисы, контроллеры, DTO, guards, interceptors.
-2. Прочитай `packages/server/prisma/schema.prisma` — полная модель данных.
+1. Прочитай полностью `apps/api-nest-legacy/src/` — все модули, сервисы, контроллеры, DTO, guards, interceptors.
+2. Прочитай `apps/api-nest-legacy/prisma/schema.prisma` — полная модель данных.
 3. Прочитай `packages/shared/src/` — все DTO и типы, особенно `sync.ts` (SyncOpDto, PullResponseDto, PushRequestDto, PushResponseDto, PushConflict).
-4. Прочитай `packages/web/src/lib/sync.ts` и `packages/web/src/lib/syncEngine.ts` — это клиент, с которым твой новый бэкенд должен быть полностью совместим.
-5. Прочитай `packages/web/src/lib/session.ts` — auth flow (OAuth callback, refresh token).
-6. Найди и прочитай все тесты в `packages/server/` (unit, e2e) — пойми что покрыто.
+4. Прочитай `apps/web/src/lib/api/sync.ts` и `apps/web/src/lib/sync/syncEngine.ts` — это клиент, с которым твой новый бэкенд должен быть полностью совместим.
+5. Прочитай `apps/web/src/lib/auth/session.ts` — auth flow (OAuth callback, refresh token).
+6. Найди и прочитай все тесты в `apps/api-nest-legacy/` (unit, e2e) — пойми что покрыто.
 7. Прочитай `package.json`, `docker-compose.yml`, `.env.example` и любые CI/CD конфиги в корне.
 8. **Составь и выведи мне** краткий маппинг: каждый NestJS модуль/сервис/контроллер → планируемый Quarkus-аналог (класс/пакет). Дождись моего подтверждения перед началом кодинга.
 
@@ -27,7 +27,7 @@
 
 ## Фаза 1 — Scaffold нового бэкенда
 
-Создай новый Maven-проект в папке `packages/server-java/` (текущий `packages/server/` не удаляй — он остаётся как референс).
+Создай новый Maven-проект в папке `apps/api-java/` (текущий `apps/api-nest-legacy/` не удаляй — он остаётся как референс).
 
 ### Стек и версии
 - **Java**: 25 (если EA недоступна — используй последнюю GA, 24+; в `pom.xml` укажи `<java.version>25</java.version>` и поправь если нужно)
@@ -139,7 +139,7 @@ quarkus.http.port=${PORT:3000}
 
 ## Фаза 4 — Docker и CI
 
-1. Создай `packages/server-java/Dockerfile`:
+1. Создай `apps/api-java/Dockerfile`:
    - Multi-stage: Maven build with native profile → minimal runtime image.
    - Финальный образ на базе `quay.io/quarkus/quarkus-micro-image:2.0` или `registry.access.redhat.com/ubi8/ubi-minimal`.
 2. Обнови `docker-compose.yml` в корне — замени сервис `server` на `server-java` (или сделай рядом, по аналогии).
@@ -164,11 +164,11 @@ quarkus.http.port=${PORT:3000}
 
 ## Жёсткие правила (НЕ НАРУШАЙ)
 
-1. **API-контракт неизменен**: URL paths, HTTP methods, request/response JSON — **точно как в NestJS**. Фронтенд (`packages/web`) не трогаем, он должен работать без изменений.
+1. **API-контракт неизменен**: URL paths, HTTP methods, request/response JSON — **точно как в NestJS**. Фронтенд (`apps/web`) не трогаем, он должен работать без изменений.
 2. **Имена полей в JSON**: camelCase, совпадают с `shared/src/sync.ts`. Если в NestJS было `serverTime` — в Java тоже `serverTime`, не `server_time`.
 3. **HTTP-коды ответов**: сохрани те же коды (200, 201, 401, 409 и т.д.), что возвращает текущий NestJS-бэкенд.
-4. **Не трогай**: `packages/web/`, `packages/shared/`, любые фронтенд-файлы.
-5. **Не удаляй**: `packages/server/` — он остаётся как референс.
+4. **Не трогай**: `apps/web/`, `packages/shared/`, любые фронтенд-файлы.
+5. **Не удаляй**: `apps/api-nest-legacy/` — он остаётся как референс.
 6. **Flyway миграции**: начальная `V1__init.sql` должна создавать **идентичную** схему тому, что создаёт `prisma migrate`. Сверь каждую таблицу, колонку, индекс, constraint.
 7. **Native-совместимость**: все зависимости должны работать в GraalVM native image. Не используй библиотеки, несовместимые с native (проверяй Quarkus extensions — они native-ready).
 8. **Java 25 features**: используй records для DTO, sealed interfaces где уместно, pattern matching, virtual threads (`quarkus.virtual-threads.enabled=true` если доступно). Пиши современный идиоматичный Java.
