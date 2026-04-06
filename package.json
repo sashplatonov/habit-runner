@@ -17,7 +17,7 @@
     "build:server": "cd apps/api-java && (./mvnw package -DskipTests || mvn -DskipTests package)",
     "lint": "turbo lint",
     "lint:fix": "turbo run lint:fix",
-    "check": "npm run lint && npm run build && npm run build:server && (cd apps/api-nest-legacy && npx prisma generate)",
+    "check": "npm run lint && npm run build && npm run build:server",
     "clean": "turbo run clean"
   },
   "devDependencies": {

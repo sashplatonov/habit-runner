@@ -5,8 +5,7 @@
 - Frontend app lives in `apps/web/` (React + TypeScript + Vite plus PostCSS/Tailwind configs).
 - UI building blocks are in `apps/web/src/components/`, route-level screens in `apps/web/src/pages/`, reusable logic in `apps/web/src/hooks/`, and client helpers/types in `apps/web/src/lib/` and `apps/web/src/types/`.
 - Active API lives in `apps/api-java/` (Quarkus + Flyway + PostgreSQL).
-- Legacy API reference lives in `apps/api-nest-legacy/` (NestJS + Prisma).
-- Java migrations are in `apps/api-java/src/main/resources/db/migration/`; legacy Prisma schema/seed are in `apps/api-nest-legacy/prisma/`.
+- Java migrations are in `apps/api-java/src/main/resources/db/migration/`.
 - Shared DTOs and constants (sync, auth, habit helpers) live in `packages/shared/` so both packages import the same shapes.
 - Operational docs and rollout notes are still in `docs/`.
 
@@ -22,16 +21,13 @@
   - `npm run build:server` — Java server build (`./mvnw package -DskipTests`).
 - Checks:
   - `npm run lint` — runs ESLint for workspaces that expose a lint script.
-  - `npm run check` — lint + full build + Java server build + legacy Prisma generate.
+  - `npm run check` — lint + full build + Java server build.
   - `npm run clean` — wipes `dist` outputs across packages via workspace scripts.
 - Java backend tasks:
   - `cd apps/api-java && ./mvnw quarkus:dev`
   - `cd apps/api-java && ./mvnw package -DskipTests`
   - `cd apps/api-java && ./mvnw test`
-- Legacy Prisma tasks (reference backend):
-  - `cd apps/api-nest-legacy && npx prisma migrate dev`
-  - `cd apps/api-nest-legacy && npx prisma generate`
-  - `cd apps/api-nest-legacy && npm run seed`
+- Legacy Prisma tasks removed; Prisma schema (archive) is available under `archive/` if needed.
 - Full stack via Docker: set `DOCKER_HOST=unix:///Users/sash/.colima/default/docker.sock`, then run `docker compose up --build` (docker-compose uses `apps/web/Dockerfile` and `apps/api-java/Dockerfile`).
 
 ## Coding Style & Naming Conventions
