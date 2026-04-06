@@ -168,7 +168,7 @@ quarkus.http.port=${PORT:3000}
 2. **Имена полей в JSON**: camelCase, совпадают с `shared/src/sync.ts`. Если в NestJS было `serverTime` — в Java тоже `serverTime`, не `server_time`.
 3. **HTTP-коды ответов**: сохрани те же коды (200, 201, 401, 409 и т.д.), что возвращает текущий NestJS-бэкенд.
 4. **Не трогай**: `apps/web/`, `packages/shared/`, любые фронтенд-файлы.
-5. **Не удаляй**: `apps/api-nest-legacy/` — он остаётся как референс.
+5. `apps/api-nest-legacy/` удалён — используйте `apps/api-java/` как основной бэкенд.
 6. **Flyway миграции**: начальная `V1__init.sql` должна создавать **идентичную** схему тому, что создаёт `prisma migrate`. Сверь каждую таблицу, колонку, индекс, constraint.
 7. **Native-совместимость**: все зависимости должны работать в GraalVM native image. Не используй библиотеки, несовместимые с native (проверяй Quarkus extensions — они native-ready).
 8. **Java 25 features**: используй records для DTO, sealed interfaces где уместно, pattern matching, virtual threads (`quarkus.virtual-threads.enabled=true` если доступно). Пиши современный идиоматичный Java.

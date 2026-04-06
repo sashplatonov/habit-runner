@@ -13,7 +13,7 @@ npm run dev:web    # Vite dev server for @habbit-runner/web only
 npm run build      # shared -> server -> web build chain
 npm run build:web  # frontend-only production build
 npm run lint       # runs ESLint in the workspace
-npm run check      # lint + build + Java build + legacy Prisma generate
+npm run check      # lint + build + Java build
 cd apps/web && npm run preview    # preview the web build
 ```
 
@@ -24,13 +24,8 @@ cd apps/web && npm run preview    # preview the web build
 ./mvnw test                         # run Java tests
 ```
 
-### Legacy Nest API (`cd apps/api-nest-legacy`)
-```bash
-npx prisma migrate dev              # apply DB migrations
-npx prisma generate                 # regenerate Prisma client after schema changes
-npm run seed                        # seed the database
-npm run test                        # run legacy server tests
-```
+### Legacy Nest API (removed)
+The legacy NestJS + Prisma reference backend has been removed from the workspace. The active backend is now `apps/api-java/` (Quarkus + Flyway + PostgreSQL). If you need archived Prisma artifacts, check `archive/`.
 
 ### Docker (full stack)
 ```bash

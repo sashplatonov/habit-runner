@@ -54,7 +54,7 @@ apps/*/.env.*
 .env
 .env.*
 !.env.example
-apps/api-nest-legacy/.env
+ # apps/api-nest-legacy/.env removed as legacy folder will be removed
 
 secrets/
 .claude/settings.local.json
