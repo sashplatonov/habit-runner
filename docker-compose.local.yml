@@ -1,9 +1,17 @@
 services:
   api:
+    # On Apple Silicon/Colima local builds you can force amd64 here:
+    platform: linux/amd64
+    build:
+      platform: linux/amd64
     networks:
       - backend
       - edge
 
   web:
+    # Local override to run web as amd64 on M1/Colima hosts
+    platform: linux/amd64
+    build:
+      platform: linux/amd64
     ports:
       - "5137:80"
