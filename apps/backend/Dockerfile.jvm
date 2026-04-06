@@ -21,7 +21,9 @@ RUN set -eux; \
 
 FROM docker.io/library/eclipse-temurin:25-jre AS runtime
 WORKDIR /work
-COPY --from=build /workspace/application.jar /work/application.jar
+# Copy the full Quarkus application layout so that quarkus-run.jar can load classes from lib/
+COPY --from=build /workspace/target/quarkus-app/ /work/
 
 EXPOSE 8080
-CMD ["java","-jar","/work/application.jar"]
+# Run the Quarkus runner jar from the quarkus-app directory
+CMD ["java","-jar","/work/quarkus-run.jar"]
