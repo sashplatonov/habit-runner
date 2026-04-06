@@ -43,6 +43,10 @@ services:
     init: true
     environment:
       DATABASE_URL: ${DATABASE_URL:-postgresql://habbit:password@db:5432/habbit_runner}
+      # Provide explicit Quarkus datasource env vars so the JDBC URL is correct
+      QUARKUS_DATASOURCE_JDBC_URL: ${QUARKUS_DATASOURCE_JDBC_URL:-jdbc:postgresql://db:5432/${HR_DB_NAME:-habbit_runner}}
+      QUARKUS_DATASOURCE_USERNAME: ${QUARKUS_DATASOURCE_USERNAME:-${HR_DB_USER:-habbit}}
+      QUARKUS_DATASOURCE_PASSWORD: ${QUARKUS_DATASOURCE_PASSWORD:-${HR_DB_PASSWORD:-password}}
       DEFAULT_DB_SCHEMA: ${DEFAULT_DB_SCHEMA:-habbit_runner}
       PORT: 3000
       AUTH_SECRET: ${AUTH_SECRET:-dev-secret}
