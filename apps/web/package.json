@@ -3,20 +3,32 @@
   "version": "0.0.1",
   "private": true,
   "type": "module",
+  "packageManager": "npm@11.11.0",
+  "workspaces": ["packages/*"],
   "scripts": {
+    "prepare": "npm run build -w @habbit-runner/shared",
+    "dev": "npx vite",
+    "dev:web": "npm run dev",
+    "monorepo:dev": "turbo dev",
+    "dev:server": "cd ../apps/api-java && ./mvnw quarkus:dev",
+    "dev:all": "npm run dev --workspaces --if-present",
+    "build": "npx vite build",
+    "monorepo:build": "turbo build",
+    "build:web": "npm run build",
+    "build:server": "cd ../apps/api-java && (./mvnw package -DskipTests || mvn -DskipTests package)",
     "check:runtime-undefined": "node ./scripts/check-runtime-undefined.cjs",
     "prebuild": "npm run lint && npm run check:runtime-undefined && npm run build -w @habbit-runner/shared",
-    "dev": "npx vite",
-    "build": "npx vite build",
     "lint": "npm run check:runtime-undefined && eslint src tests --ext .js,.jsx,.ts,.tsx --max-warnings 0",
     "lint:fix": "npm run check:runtime-undefined && eslint src tests --ext .js,.jsx,.ts,.tsx --fix --max-warnings 0",
+    "monorepo:lint": "turbo lint",
     "preview": "npx vite preview",
     "test": "vitest run",
     "test:unit": "vitest run",
     "test:coverage": "vitest run --coverage",
     "test:watch": "vitest",
     "test:ui": "vitest --ui",
-    "clean": "rm -rf dist"
+    "check": "npm run lint && npm run build && npm run build:server",
+    "clean": "turbo run clean"
   },
   "dependencies": {
     "@habbit-runner/shared": "*",
@@ -55,6 +67,25 @@
     "vite": "^7.3.1",
     "vite-plugin-pwa": "^1.2.0",
     "vitest": "^4.0.18",
-    "workbox-precaching": "^7.4.0"
+    "workbox-precaching": "^7.4.0",
+    "turbo": "^2.8.14"
+  },
+  "overrides": {
+    "@nestjs/common": "^11.1.16",
+    "@nestjs/core": "^11.1.16",
+    "@hono/node-server": "^1.19.10",
+    "hono": "^4.12.4",
+    "@prisma/dev": {
+      "@hono/node-server": "^1.19.10",
+      "hono": "^4.12.4"
+    },
+    "@nestjs/schedule": {
+      "@nestjs/common": "^11.1.16",
+      "@nestjs/core": "^11.1.16"
+    },
+    "@nestjs/throttler": {
+      "@nestjs/common": "^11.1.16",
+      "@nestjs/core": "^11.1.16"
+    }
   }
 }

@@ -1,0 +1,50 @@
+openapi: 3.0.3
+info:
+  title: Habbit Runner API (contract)
+  version: 1.0.0
+  description: Language-independent OpenAPI contract for frontend↔backend sync
+servers:
+  - url: /api
+paths:
+  /habits:
+    get:
+      summary: List habits
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Habit'
+    post:
+      summary: Create habit
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Habit'
+      responses:
+        '201':
+          description: Created
+components:
+  schemas:
+    Habit:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        emoji:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required: [id, name]
