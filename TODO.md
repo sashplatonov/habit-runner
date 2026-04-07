@@ -1,5 +1,50 @@
 # План задач для ИИ агента: Миграция фронтенда с React на SvelteKit
 
+## Ключевое требование
+
+```
+⚠️ КРИТИЧЕСКОЕ ПРАВИЛО: 
+Миграция — это ПЕРЕНОС, а не переписывание с упрощением.
+Каждый UI экран в SvelteKit версии должен быть ФУНКЦИОНАЛЬНО ИДЕНТИЧЕН 
+React версии: те же поля, те же состояния, те же сообщения об ошибках,
+та же последовательность действий пользователя.
+
+ЗАПРЕЩЕНО:
+- Убирать поля форм
+- Упрощать логику валидации
+- Заменять компоненты на заглушки
+- Опускать edge case обработку ошибок
+- Пропускать loading/empty/error состояния
+- Менять UX flow (порядок шагов, редиректы)
+- Удалять анимации и переходы если они есть в React версии
+- Импортировать React, ReactDOM, или любые react-* пакеты в SvelteKit проекте
+- Оборачивать React компоненты для использования в SvelteKit
+
+ПРАВИЛО ВЫБОРА БИБЛИОТЕК:
+Всегда использовать нативные Svelte библиотеки.
+Оборачивать React компоненты для использования в SvelteKit ЗАПРЕЩЕНО.
+
+Для графиков (recharts → layerchart или svelte-chartjs):
+- Использовать нативную Svelte библиотеку
+- Визуальный результат должен быть максимально близким к React версии
+  (те же типы графиков, те же цвета, те же метрики, те же tooltips)
+- Допускается незначительное визуальное отличие в деталях рендеринга
+  при условии что функционал полностью сохранён
+
+Это правило применяется ко ВСЕМ внешним библиотекам, не только к графикам:
+- Если React версия использует react-query → использовать нативные Svelte stores
+- Если React версия использует react-hook-form → использовать bind:value
+- Если React версия использует react-spring → использовать svelte/transition и svelte/animate
+- Любой react-* пакет заменяется на svelte-аналог или реализуется нативными средствами SvelteKit
+
+ОБЯЗАТЕЛЬНО перед реализацией каждого компонента/страницы:
+1. Открыть соответствующий React файл
+2. Зафиксировать ВСЕ состояния, пропсы, обработчики событий
+3. Перенести в Svelte БЕЗ потери ни одного из них
+```
+
+---
+
 ## Принципы приоритизации
 
 **P0** — Блокирует всё остальное (инфраструктура)
@@ -21,9 +66,9 @@
 **Что сделать:**
 - Создать новый пакет `apps/web-svelte` в монорепо рядом с существующим `apps/web`
 - Инициализировать SvelteKit через `npm create svelte@latest` с опциями:
-    - TypeScript: yes
-    - ESLint: yes
-    - Vitest: yes
+  - TypeScript: yes
+  - ESLint: yes
+  - Vitest: yes
 - Настроить `package.json` нового пакета (name, scripts, workspace-совместимость)
 - Добавить новый пакет в корневой `package.json` workspaces
 
@@ -90,15 +135,22 @@ apps/web-svelte/
 
 **Что сделать:**
 - Установить `tailwindcss`, `postcss`, `autoprefixer`
-- Скопировать `tailwind.config.js` из старого проекта, обновить `content`:
+- Скопировать `tailwind.config.js` из старого проекта ПОЛНОСТЬЮ, включая:
+  - кастомные цвета, spacing, fonts
+  - кастомные плагины
+  - `darkMode` настройку
+- Обновить только `content`:
 ```javascript
 content: ['./src/**/*.{html,svelte,ts}']
 // Было: ['./src/**/*.{tsx,ts,html}']
 ```
 - Добавить директивы Tailwind в `app.css`
+- Перенести ВСЕ глобальные CSS стили из `index.css` React проекта, включая кастомные CSS переменные и анимации
 - Установить `svelte-preprocess` для обработки PostCSS внутри `<style>` блоков
 
-**Критерий готовности:** класс `bg-blue-500` применяется к элементу на тестовой странице
+**⚠️ Обязательно проверить:** все кастомные CSS классы, которые используются в React компонентах, должны быть доступны в Svelte версии
+
+**Критерий готовности:** класс `bg-blue-500` применяется к элементу на тестовой странице; все кастомные утилиты из React версии работают
 
 ---
 
@@ -111,7 +163,11 @@ content: ['./src/**/*.{html,svelte,ts}']
 
 **Что сделать:**
 - Установить `vite-plugin-pwa`
-- Перенести конфигурацию PWA из старого `vite.config.ts`
+- Перенести конфигурацию PWA из старого `vite.config.ts` **полностью**, включая:
+  - `manifest` (name, short_name, icons, theme_color, background_color, display, все поля)
+  - `workbox` стратегии кэширования
+  - `registerType` настройку
+  - `includeAssets`
 - Адаптировать `sw-custom.ts` для SvelteKit:
 
 ```typescript
@@ -122,10 +178,11 @@ content: ['./src/**/*.{html,svelte,ts}']
 ```
 
 - Настроить регистрацию SW в `src/app.html` или через хук `+layout.ts`
+- Перенести **все иконки и ассеты** из старого `public/` в новый `static/`
 
 **Риск:** SvelteKit строит файлы в `.svelte-kit/output` — проверить что `globDirectory` в workbox указывает правильно
 
-**Критерий готовности:** SW регистрируется в DevTools, precache список не пустой
+**Критерий готовности:** SW зарегистрирован в DevTools, precache список не пустой, PWA устанавливается идентично React версии
 
 ---
 
@@ -168,14 +225,14 @@ export default defineConfig({
 ```
 
 **Что сделать:**
-- Скопировать `db.ts` в `apps/web-svelte/src/lib/storage/db.ts`
-- Обернуть инициализацию Dexie в guard для SSR (хотя SPA режим, но на всякий случай):
+- Скопировать `db.ts` в `apps/web-svelte/src/lib/storage/db.ts` **без изменения схемы**
+- Сохранить все версии миграций Dexie без изменений — это критично для существующих пользователей
+- Обернуть инициализацию Dexie в guard для SSR:
 
 ```typescript
 // src/lib/storage/db.ts
 
 import { browser } from '$app/environment'
-// browser === true только на клиенте
 
 let _db: AppDatabase | null = null
 
@@ -195,9 +252,10 @@ export function getDb(): AppDatabase {
 ```
 
 - Все функции-хелперы (`getHabits`, `saveOutboxItem` и т.д.) обновить на использование `getDb()`
-- Сохранить все схемы (Outbox, tombstone, sync_meta) без изменений
+- Сохранить **все** схемы (Outbox, tombstone, sync_meta) без изменений
+- Сохранить **все** индексы Dexie без изменений
 
-**Критерий готовности:** тест — создание записи в Dexie работает в jsdom окружении
+**Критерий готовности:** тест — создание записи в Dexie работает в jsdom окружении; структура БД идентична React версии
 
 ---
 
@@ -210,9 +268,15 @@ export function getDb(): AppDatabase {
 ```
 
 **Что сделать:**
-- Скопировать `session.ts` → `src/lib/auth/session.ts`
-- Скопировать `oauth.ts` → `src/lib/auth/oauth.ts`
-- Добавить `browser` guard аналогично db.ts:
+- Скопировать `session.ts` → `src/lib/auth/session.ts` с полным сохранением:
+  - всех полей Session типа
+  - всех функций (включая refresh token логику если есть)
+  - всех констант (ключи localStorage и т.д.)
+- Скопировать `oauth.ts` → `src/lib/auth/oauth.ts` с полным сохранением:
+  - PKCE flow если используется
+  - state/nonce параметров
+  - всех эндпоинтов
+- Добавить `browser` guard:
 
 ```typescript
 import { browser } from '$app/environment'
@@ -237,14 +301,11 @@ import { writable, derived } from 'svelte/store'
 import { getSession } from './session'
 
 function createSessionStore() {
-  const { subscribe, set, update } = writable<Session | null>(
-    // Инициализация: null (browser guard внутри getSession)
-    null
-  )
+  const { subscribe, set, update } = writable<Session | null>(null)
   
   return {
     subscribe,
-    init: () => set(getSession()),    // вызывать в onMount
+    init: () => set(getSession()),
     login: (s: Session) => {
       saveSession(s)
       set(s)
@@ -252,7 +313,8 @@ function createSessionStore() {
     logout: () => {
       clearSession()
       set(null)
-    }
+    },
+    // Перенести ВСЕ методы из React версии (refresh, update и т.д.)
   }
 }
 
@@ -263,7 +325,7 @@ export const isAuthenticated = derived(
 )
 ```
 
-**Критерий готовности:** `sessionStore` обновляется при логине, `isAuthenticated` реактивно меняется
+**Критерий готовности:** все методы из React auth логики доступны; `sessionStore` обновляется при логине; `isAuthenticated` реактивно меняется
 
 ---
 
@@ -276,38 +338,40 @@ export const isAuthenticated = derived(
 ```
 
 **Что сделать:**
-- Скопировать `syncEngine.ts` → `src/lib/sync/syncEngine.ts`
-- Скопировать `sync.ts` → `src/lib/sync/sync.ts`
+- Скопировать `syncEngine.ts` → `src/lib/sync/syncEngine.ts` **полностью**, включая:
+  - всю логику retry с backoff
+  - обработку конфликтов
+  - очередь outbox
+  - все состояния (idle, syncing, error, offline и любые другие)
+- Скопировать `sync.ts` → `src/lib/sync/sync.ts` без изменений
 - Все browser-специфичные API обернуть в проверки:
 
 ```typescript
-// Плохо (сломается при SSR или тестах):
-window.addEventListener('visibilitychange', handler)
-
-// Хорошо:
 if (typeof window !== 'undefined') {
   window.addEventListener('visibilitychange', handler)
 }
 ```
 
-- Создать Svelte store для статуса синхронизации:
+- Создать Svelte store для статуса синхронизации — **перенести все состояния из React версии**:
 
 ```typescript
 // src/lib/sync/syncStatusStore.ts
 import { writable } from 'svelte/store'
 
+// Тип должен включать ВСЕ состояния из React версии, не только эти четыре
 export type SyncStatus = 'idle' | 'syncing' | 'error' | 'offline'
 
 export const syncStatus = writable<SyncStatus>('idle')
 export const lastSyncTime = writable<Date | null>(null)
 export const syncError = writable<string | null>(null)
+// Добавить все дополнительные поля которые были в React версии
 ```
 
 - Обновить `syncEngine.ts` — вместо колбэков React использовать запись в stores
 
 **HTTP адаптеры (`sync.ts`):** изменений не требуют — это чистый fetch, работает без изменений
 
-**Критерий готовности:** вызов `syncEngine.startSync()` в браузере не бросает ошибок, статус обновляется в store
+**Критерий готовности:** вся логика синхронизации перенесена без упрощений; все состояния синка работают идентично React версии
 
 ---
 
@@ -319,7 +383,8 @@ export const syncError = writable<string | null>(null)
 ```
 
 **Что сделать:**
-- Создать `src/lib/sync/initSync.ts` — функцию для вызова в `onMount` корневого layout:
+- Открыть `useSyncEngine.ts` и зафиксировать ВСЕ эффекты, подписки, cleanup логику
+- Создать `src/lib/sync/initSync.ts`:
 
 ```typescript
 // src/lib/sync/initSync.ts
@@ -329,7 +394,7 @@ import { sessionStore } from '$lib/auth/sessionStore'
 import { get } from 'svelte/store'
 
 export function initSyncEngine() {
-  if (!browser) return () => {}   // noop для SSR
+  if (!browser) return () => {}
   
   const session = get(sessionStore)
   if (!session) return () => {}
@@ -341,7 +406,9 @@ export function initSyncEngine() {
 }
 ```
 
-**Критерий готовности:** синк запускается при монтировании layout и останавливается при размонтировании
+- Перенести **все** side-эффекты из `useSyncEngine.ts` (обработчики online/offline, visibility и т.д.)
+
+**Критерий готовности:** поведение при старте/остановке синка идентично React версии
 
 ---
 
@@ -366,11 +433,13 @@ export function initSyncEngine() {
 | `/stats` | `src/routes/stats/+page.svelte` |
 | `*` (404) | `src/routes/+error.svelte` |
 
+**⚠️ Проверить React Router конфиг на дополнительные маршруты** — перенести все, включая редиректы и вложенные роуты
+
 **Что создать:**
 - Все директории и пустые `+page.svelte` файлы (заглушки)
 - `src/routes/+layout.svelte` — корневой layout
 
-**Критерий готовности:** навигация между страницами-заглушками работает без ошибок
+**Критерий готовности:** все маршруты из React версии присутствуют; навигация работает
 
 ---
 
@@ -382,7 +451,12 @@ export function initSyncEngine() {
 ```
 
 **Что сделать:**
-- Создать `src/routes/+layout.svelte`:
+- Открыть React `App.tsx` (или корневой layout компонент) и зафиксировать ВСЕ:
+  - провайдеры (Context providers)
+  - глобальные обработчики событий
+  - глобальные состояния
+  - мета-теги и head настройки
+- Создать `src/routes/+layout.svelte`, перенеся весь этот функционал:
 
 ```svelte
 <script lang="ts">
@@ -400,6 +474,8 @@ export function initSyncEngine() {
     
     // 2. Запустить sync engine
     cleanupSync = initSyncEngine()
+    
+    // Перенести ВСЕ остальные onMount эффекты из React App.tsx
   })
 
   onDestroy(() => {
@@ -418,7 +494,7 @@ export const ssr = false
 export const prerender = false
 ```
 
-**Критерий готовности:** при загрузке приложения сессия читается из localStorage, sync стартует
+**Критерий готовности:** все глобальные провайдеры и эффекты из React App.tsx воспроизведены
 
 ---
 
@@ -430,7 +506,11 @@ export const prerender = false
 ```
 
 **Что сделать:**
-- Создать `src/lib/components/AuthGate.svelte`:
+- Открыть `AuthGate.tsx` и зафиксировать полную логику:
+  - условия показа/скрытия
+  - редиректы
+  - loading состояние пока сессия инициализируется (если есть)
+- Создать `src/lib/components/AuthGate.svelte` с полным воспроизведением логики:
 
 ```svelte
 <script lang="ts">
@@ -439,7 +519,6 @@ export const prerender = false
   import { onMount } from 'svelte'
 
   onMount(() => {
-    // Реактивная подписка — редирект если не авторизован
     const unsubscribe = isAuthenticated.subscribe((auth) => {
       if (!auth) goto('/login')
     })
@@ -466,45 +545,43 @@ export const prerender = false
 
 - Переместить dashboard, habit, stats маршруты в `(protected)` группу
 
-**Критерий готовности:** неавторизованный пользователь редиректится на `/login`
+**Критерий готовности:** поведение AuthGate идентично React версии (включая loading состояния если они есть); неавторизованный пользователь редиректится на `/login`
 
 ---
 
 ## ФАЗА 3: UI Компоненты (P2)
 
-### Задача 3.1 — AppLayout и SidebarNav
+### Правило миграции компонентов (применять к каждому)
 
 ```
-Приоритет: P2 | Зависит от: 2.2, 2.3
-Сложность: средняя
-```
+Перед началом реализации каждого компонента:
 
-**Миграционный шаблон React → Svelte:**
+1. АУДИТ React компонента:
+   - Перечислить все props (включая опциональные)
+   - Перечислить все внутренние состояния (useState)
+   - Перечислить все side-эффекты (useEffect)
+   - Перечислить все обработчики событий
+   - Описать все визуальные состояния (loading, error, empty, success)
+   - Зафиксировать все условные рендеры
+   - Зафиксировать анимации и переходы
 
-```
-// React (AppLayout.tsx):                    // Svelte (AppLayout.svelte):
-interface Props {                            <script lang="ts">
-  children: ReactNode                          export let title: string = ''
-  title?: string                             </script>
-}
-export function AppLayout({                  <div class="app-layout">
-  children, title                              <SidebarNav />
-}: Props) {                                    <main>
-  return (                                       <slot />
-    <div className="app-layout">             </main>
-      <SidebarNav />                         </div>
-      <main>{children}</main>
-    </div>
-  )
-}
-```
+2. РЕАЛИЗАЦИЯ в Svelte (только нативные средства):
+   - props → export let (все, без исключений)
+   - useState → let (реактивные переменные)
+   - useEffect → onMount / $: реактивные выражения
+   - children → <slot />
+   - className → class
+   - onClick → on:click
+   - Условный рендер → {#if} / {#each}
+   - Анимации → svelte/transition или svelte/animate (не react-spring)
+   - Формы → bind:value (не react-hook-form)
+   - Любой react-* пакет → нативный svelte аналог
 
-**Ключевые замены:**
-- `children` → `<slot />`
-- `className` → `class`
-- `onClick={handler}` → `on:click={handler}`
-- `useState` → `let` (локальное реактивное состояние)
-- `props.value` → `export let value`
+3. ПРОВЕРКА:
+   - Сравнить количество состояний: React === Svelte
+   - Сравнить все пропсы: React === Svelte
+   - Сравнить визуально: каждый пиксель на месте
+```
 
 **Компоненты для миграции (в порядке приоритета):**
 
@@ -516,23 +593,54 @@ export function AppLayout({                  <div class="app-layout">
 | HabitCard | components/HabitCard.tsx | lib/components/HabitCard.svelte | средняя |
 | HabitForm | components/HabitForm.tsx | lib/components/HabitForm.svelte | высокая |
 
-**Критерий готовности:** компонент рендерится, Tailwind стили применяются, события работают
+---
+
+### Задача 3.1 — AppLayout и SidebarNav
+
+```
+Приоритет: P2 | Зависит от: 2.2, 2.3
+Сложность: средняя
+```
+
+**Обязательно перенести из React версии:**
+- Все варианты layout (если есть collapsed sidebar, mobile view и т.д.)
+- Активное состояние пунктов навигации (подсветка текущего маршрута)
+- Все иконки в навигации (не заменять на другие)
+- Поведение при разных размерах экрана (responsive)
+- Любые анимации (раскрытие меню и т.д.) — реализовать через `svelte/transition`
+
+**Ключевые замены синтаксиса:**
+```
+className → class
+children → <slot />
+onClick={handler} → on:click={handler}
+useState → let (локальное реактивное состояние)
+props.value → export let value
+```
+
+**Критерий готовности:** компонент визуально идентичен React версии на всех breakpoint'ах; навигация подсвечивает активный раздел
 
 ---
 
-### Задача 3.2 — Миграция SyncStatus компонента
+### Задача 3.2 — SyncStatus компонент
 
 ```
 Приоритет: P2 | Зависит от: 1.3, 3.1
 Сложность: низкая
 ```
 
-**Что сделать:**
+**Обязательно перенести:**
+- Все состояния отображения (idle, syncing, error, offline — и любые другие из React версии)
+- Точные тексты сообщений (не перефразировать)
+- Иконки и их анимации (спиннер при syncing и т.д.) — реализовать через CSS или `svelte/transition`
+- Tooltip или дополнительную информацию если есть
+- Обработчик ручного запуска синка если есть
 
 ```svelte
 <!-- src/lib/components/SyncStatus.svelte -->
 <script lang="ts">
-  import { syncStatus, lastSyncTime } from '$lib/sync/syncStatusStore'
+  import { syncStatus, lastSyncTime, syncError } from '$lib/sync/syncStatusStore'
+  // Импортировать все поля которые использует React версия
 </script>
 
 <div class="sync-status">
@@ -550,7 +658,7 @@ export function AppLayout({                  <div class="app-layout">
 </div>
 ```
 
-**Критерий готовности:** статус меняется реактивно при изменении syncStatus store
+**Критерий готовности:** компонент отображает все те же состояния что и React версия; тексты идентичны
 
 ---
 
@@ -561,30 +669,25 @@ export function AppLayout({                  <div class="app-layout">
 Сложность: высокая
 ```
 
-**Ключевые отличия при миграции форм:**
+**Обязательно перенести из React `HabitForm.tsx`:**
+- **Все поля формы** (не выбрасывать "необязательные")
+- **Все правила валидации** (минимальная длина, формат, обязательность)
+- **Все сообщения об ошибках** (дословно, не перефразировать)
+- **Порядок полей** в форме (не менять)
+- **Поведение Submit кнопки** (disabled пока невалидна, loading state при отправке)
+- **Поведение Cancel** (подтверждение если форма изменена)
+- **Предзаполнение при редактировании**
+- **Все типы привычек** если есть (daily, weekly и т.д.)
+- **Дополнительные настройки** (напоминания, цвет, иконка и т.д.)
 
+**Замена controlled inputs (react-hook-form не используется — только нативный Svelte):**
+```svelte
+<!-- React: value={name} onChange={e => setName(e.target.value)} -->
+<!-- Svelte: -->
+<input bind:value={name} />
 ```
-// React (useState + onChange):              // Svelte (bind:value):
-const [name, setName] = useState('')         let name = ''
-<input                                       <input
-  value={name}                                 bind:value={name}
-  onChange={e => setName(e.target.value)}      class="..."
-  className="..."                            />
-/>
 
-// React (useCallback submit):               // Svelte (on:submit):
-const handleSubmit = useCallback(async      async function handleSubmit(e: Event) {
-  (e) => {                                     e.preventDefault()
-    e.preventDefault()                         // логика
-  }, [deps])                               }
-<form onSubmit={handleSubmit}>              <form on:submit={handleSubmit}>
-```
-
-**Что сделать:**
-- Перенести всю валидационную логику (без изменений — чистый TS)
-- Заменить controlled inputs на `bind:value`
-- Заменить `onSubmit` callback props на `createEventDispatcher`:
-
+**Замена callbacks на events:**
 ```svelte
 <script lang="ts">
   import { createEventDispatcher } from 'svelte'
@@ -598,16 +701,17 @@ const handleSubmit = useCallback(async      async function handleSubmit(e: Event
   }>()
   
   let name = initialData.name ?? ''
-  // ... другие поля
+  // ... все остальные поля из React версии
   
   function handleSubmit(e: Event) {
     e.preventDefault()
-    dispatch('submit', { name, /* ... */ } as HabitDTO)
+    dispatch('submit', { name, /* все поля */ } as HabitDTO)
   }
 </script>
 
 <form on:submit={handleSubmit}>
   <input bind:value={name} />
+  <!-- все остальные поля -->
   <button type="submit">Сохранить</button>
   <button type="button" on:click={() => dispatch('cancel')}>
     Отмена
@@ -615,7 +719,7 @@ const handleSubmit = useCallback(async      async function handleSubmit(e: Event
 </form>
 ```
 
-**Критерий готовности:** форма создаёт/обновляет запись в Dexie
+**Критерий готовности:** форма содержит все поля, все валидации, все сообщения об ошибках идентично React версии; UX flow не изменён; форма создаёт/обновляет запись в Dexie
 
 ---
 
@@ -628,12 +732,16 @@ const handleSubmit = useCallback(async      async function handleSubmit(e: Event
 Сложность: низкая
 ```
 
-**Что сделать:**
-- Создать `src/routes/login/+page.svelte`
-- Перенести логику из `oauth.ts` без изменений
-- Кнопка логина вызывает `initiateOAuthLogin()` из oauth.ts
+**Обязательно перенести:**
+- Точную вёрстку (логотип, заголовки, описание)
+- Все кнопки входа (Google, GitHub и любые другие провайдеры)
+- Loading состояние кнопки при инициации OAuth
+- Сообщение об ошибке если OAuth вернул ошибку
+- Редирект если уже авторизован
+- Footer / legal links если есть
 
 ```svelte
+<!-- src/routes/login/+page.svelte -->
 <script lang="ts">
   import { initiateOAuthLogin } from '$lib/auth/oauth'
   import { isAuthenticated } from '$lib/auth/sessionStore'
@@ -641,23 +749,23 @@ const handleSubmit = useCallback(async      async function handleSubmit(e: Event
   import { onMount } from 'svelte'
   
   onMount(() => {
-    // Если уже авторизован — редиректим
     return isAuthenticated.subscribe((auth) => {
       if (auth) goto('/dashboard')
     })
   })
 </script>
 
-<div class="login-page">
-  <button on:click={initiateOAuthLogin} class="btn-google">
-    Войти через Google
-  </button>
-</div>
+<!-- Полная копия Login страницы из React, без упрощений -->
 ```
 
-- Создать `src/routes/auth/callback/+page.svelte` для обработки OAuth redirect
+- Создать `src/routes/auth/callback/+page.svelte` с полным воспроизведением callback обработки:
+  - обработка `code` параметра
+  - обработка `state` параметра (PKCE/CSRF)
+  - отображение loading во время обмена code на token
+  - обработка ошибок OAuth (access_denied и т.д.)
+  - редирект после успешного логина
 
-**Критерий готовности:** клик по кнопке инициирует OAuth flow, после редиректа сессия сохраняется
+**Критерий готовности:** весь OAuth flow работает end-to-end; UI идентичен React версии включая состояния ошибок
 
 ---
 
@@ -668,13 +776,21 @@ const handleSubmit = useCallback(async      async function handleSubmit(e: Event
 Сложность: средняя
 ```
 
-**Что сделать:**
-- Создать `src/routes/(protected)/dashboard/+page.svelte`
-- Создать **Svelte store** для хабитов (замена `useHabits` hook):
+**Обязательно перенести из React Dashboard:**
+- **Заголовок страницы** (точный текст)
+- **Все фильтры** если есть (по дате, статусу, тегу)
+- **Сортировку** если есть
+- **Empty state** (точный текст и иллюстрацию когда нет привычек)
+- **Loading state** (скелетон или спиннер — тот же что в React)
+- **Error state** (если загрузка из Dexie вернула ошибку)
+- **Кнопку "Добавить привычку"** (её расположение и вид)
+- **Статистику на дашборде** если есть (streak, completion rate и т.д.)
+- **HabitCard** — все действия (complete, edit, delete) с теми же confirmation диалогами
 
+**Создать Svelte store для хабитов:**
 ```typescript
 // src/lib/stores/habitsStore.ts
-import { writable, derived } from 'svelte/store'
+import { writable } from 'svelte/store'
 import { getDb } from '$lib/storage/db'
 import { browser } from '$app/environment'
 
@@ -699,11 +815,11 @@ function createHabitsStore() {
         syncStatus: 'pending'
       })
       update(habits => [...habits, { ...habit, id }])
-      // Добавить в outbox
       await db.outbox.add({ operation: 'create', entity: 'habit', payload: habit })
     },
     
-    // ... update, delete, complete
+    // Перенести ВСЕ операции из React hooks (useHabits, useHabitActions и т.д.)
+    // Включая оптимистичные обновления если они есть
   }
 }
 
@@ -732,7 +848,7 @@ export const habitsStore = createHabitsStore()
 </AppLayout>
 ```
 
-**Критерий готовности:** список хабитов загружается из Dexie и отображается
+**Критерий готовности:** дашборд визуально и функционально идентичен React версии во всех состояниях
 
 ---
 
@@ -743,11 +859,17 @@ export const habitsStore = createHabitsStore()
 Сложность: средняя
 ```
 
-**Что сделать:**
-- Создать `src/routes/(protected)/habit/[id]/+page.svelte`
-- Получить параметр маршрута через `page` store:
+**Обязательно перенести:**
+- **Все секции страницы** (информация о привычке, история, статистика и т.д.)
+- **Все действия** (редактировать, удалить, отметить и т.д.)
+- **Confirmation диалог** при удалении (тот же текст)
+- **Loading state** пока данные загружаются
+- **404 состояние** если привычка не найдена (тот же текст и кнопка "назад")
+- **Навигацию** (breadcrumbs или кнопка назад)
+- **Историю выполнения** (календарь или список — перенести точно)
 
 ```svelte
+<!-- src/routes/(protected)/habit/[id]/+page.svelte -->
 <script lang="ts">
   import { page } from '$app/stores'
   import { onMount } from 'svelte'
@@ -757,7 +879,6 @@ export const habitsStore = createHabitsStore()
   let habit: Habit | null = null
   let loading = true
   
-  // $page.params.id — реактивный параметр маршрута
   $: habitId = $page.params.id
   
   onMount(async () => {
@@ -768,15 +889,15 @@ export const habitsStore = createHabitsStore()
 </script>
 
 {#if loading}
-  <p>Загрузка...</p>
+  <!-- loading state из React версии -->
 {:else if habit}
-  <!-- детали хабита -->
+  <!-- все секции из React версии -->
 {:else}
-  <p>Хабит не найден</p>
+  <!-- 404 state из React версии -->
 {/if}
 ```
 
-**Критерий готовности:** страница корректно загружает данные по ID из URL
+**Критерий готовности:** страница полностью воспроизводит React версию включая все секции и состояния
 
 ---
 
@@ -787,12 +908,18 @@ export const habitsStore = createHabitsStore()
 Сложность: средняя
 ```
 
-**Что сделать:**
-- Создать `src/routes/(protected)/habit/new/+page.svelte`
-- Создать `src/routes/(protected)/habit/[id]/edit/+page.svelte`
-- Использовать HabitForm компонент с `on:submit` и `on:cancel`
+**Обязательно перенести:**
+- **Заголовок страницы** (разный для создания и редактирования)
+- **Breadcrumbs или навигация** наверху
+- **Loading state** при загрузке существующего хабита для редактирования
+- **404 если хабит не найден** при редактировании
+- **Поведение Cancel** (редирект на detail или dashboard — тот же что в React)
+- **Поведение Submit** (оптимистичный апдейт + outbox + редирект)
+- **Loading состояние кнопки Submit** во время сохранения
+- **Сообщения об ошибке** при неудачном сохранении
 
 ```svelte
+<!-- src/routes/(protected)/habit/new/+page.svelte -->
 <script lang="ts">
   import { goto } from '$app/navigation'
   import HabitForm from '$lib/components/HabitForm.svelte'
@@ -810,7 +937,7 @@ export const habitsStore = createHabitsStore()
 />
 ```
 
-**Критерий готовности:** создание и редактирование хабита сохраняется в Dexie, пользователь редиректируется
+**Критерий готовности:** создание и редактирование работают идентично React версии; UX flow не изменён
 
 ---
 
@@ -821,17 +948,30 @@ export const habitsStore = createHabitsStore()
 Сложность: высокая (charts)
 ```
 
-**Что сделать:**
-- Создать `src/routes/(protected)/stats/+page.svelte`
-- Перенести recharts/d3 логику:
+**Обязательно перенести:**
+- **Все виды графиков** (не убирать ни один)
+- **Все периоды** (неделя, месяц, год и т.д.)
+- **Все метрики** (streak, completion rate, best streak и т.д.)
+- **Цветовую схему** графиков (идентичную React версии)
+- **Tooltips** на графиках
+- **Легенду** графиков
+- **Empty state** когда нет данных
+- **Loading state**
+- **Фильтры по привычкам** если есть
 
+**Правило выбора библиотеки графиков:**
 ```
-Вариант A: оставить recharts через svelte-wrap (сложнее)
-Вариант B: заменить на chart библиотеку для Svelte:
-  - layerchart (рекомендуется, D3-based, Svelte-native)
-  - svelte-chartjs
-  
-Рекомендация: Вариант B — меньше технического долга
+Использовать нативную Svelte библиотеку (layerchart или svelte-chartjs).
+Оборачивать recharts или любые другие React библиотеки ЗАПРЕЩЕНО.
+
+Требования к результату:
+- Те же типы графиков что в React версии (bar, line, pie и т.д.)
+- Те же цвета и цветовая схема
+- Те же метрики и данные
+- Те же tooltips (содержание, не обязательно точный стиль)
+- Те же периоды фильтрации
+- Допускается незначительное визуальное отличие в деталях рендеринга
+  при условии что весь функционал полностью сохранён
 ```
 
 - Настроить `manualChunks` в `vite.config.ts` для chart-библиотеки:
@@ -849,7 +989,7 @@ build: {
 }
 ```
 
-**Критерий готовности:** графики отображаются, данные из Dexie корректно агрегируются
+**Критерий готовности:** все графики и метрики из React версии присутствуют; данные агрегируются идентично; ни один тип графика не пропущен
 
 ---
 
@@ -860,6 +1000,13 @@ build: {
 ```
 Приоритет: P3 | Сложность: низкая
 ```
+
+**Обязательно перенести:**
+- Все поддерживаемые темы (light, dark, system — перенести полный список)
+- Логику определения системной темы если есть
+- Хранение предпочтения пользователя
+- Применение темы (CSS переменные, data-theme атрибут — тот же механизм)
+- Переключатель темы в UI (его расположение и вид)
 
 ```typescript
 // src/lib/stores/themeStore.ts
@@ -884,11 +1031,14 @@ function createThemeStore() {
         return next
       })
     }
+    // Перенести все методы из useTheme.ts
   }
 }
 
 export const themeStore = createThemeStore()
 ```
+
+**Критерий готовности:** переключение темы работает идентично React версии
 
 ---
 
@@ -901,19 +1051,20 @@ export const themeStore = createThemeStore()
 **Воспроизвести из старого vite.config.ts:**
 
 ```typescript
-// vite.config.ts
 build: {
   rollupOptions: {
     output: {
       manualChunks: {
         'dexie': ['dexie'],
-        'charts': ['layerchart'],  // или recharts
+        'charts': ['layerchart'],
         'shared': ['@habbit-runner/shared'],
       }
     }
   }
 }
 ```
+
+**Цель:** итоговый размер бандла не должен значительно превышать React версию
 
 ---
 
@@ -923,10 +1074,14 @@ build: {
 Приоритет: P3 | Сложность: низкая
 ```
 
-- Создать `src/routes/+error.svelte` (глобальный обработчик ошибок)
-- Создать `src/routes/(protected)/+error.svelte` (ошибки в защищённых роутах)
+**Обязательно перенести:**
+- Точный текст сообщений об ошибках из React ErrorBoundary
+- Кнопку "Попробовать снова" если есть
+- Кнопку "На главную"
+- Репортинг ошибок (Sentry или аналог) если настроен в React версии — подключить нативный Sentry SDK для Svelte
 
 ```svelte
+<!-- src/routes/+error.svelte -->
 <script>
   import { page } from '$app/stores'
 </script>
@@ -935,8 +1090,11 @@ build: {
   <h1>{$page.status}</h1>
   <p>{$page.error?.message}</p>
   <a href="/dashboard">На главную</a>
+  <!-- все элементы из React ErrorBoundary -->
 </div>
 ```
+
+- Создать `src/routes/(protected)/+error.svelte` для ошибок в защищённых роутах
 
 ---
 
@@ -954,27 +1112,74 @@ build: {
 | sessionStore — login/logout | `session.test.ts` | высокий |
 | habitsStore — CRUD операции | `habitsStore.test.ts` | высокий |
 | syncEngine — outbox flush | `syncEngine.test.ts` | высокий |
+| OAuth callback — success и error сценарии | `callback.test.ts` | высокий |
 | AuthGate — редирект | `AuthGate.test.ts` | средний |
-| HabitForm — валидация | `HabitForm.test.ts` | средний |
-| Dashboard — рендер списка | `dashboard.test.ts` | низкий |
+| HabitForm — валидация всех полей | `HabitForm.test.ts` | средний |
+| Dashboard — все состояния (loading/empty/list/error) | `dashboard.test.ts` | средний |
+| Stats — рендер всех типов графиков | `stats.test.ts` | средний |
 
 ---
 
-### Задача 5.5 — Удаление старого React приложения
+### Задача 5.5 — QA: Сравнение React и Svelte версий
 
 ```
-Приоритет: P3 | Зависит от: все тесты зелёные
+Приоритет: P3 | Зависит от: 5.4
+Сложность: средняя
+ОБЯЗАТЕЛЬНА перед удалением React версии
+```
+
+**Что сделать:**
+- Запустить обе версии параллельно (React на одном порту, Svelte на другом)
+- Пройти каждый сценарий в обеих версиях и сравнить:
+
+| Сценарий | React | Svelte | Статус |
+|---|---|---|---|
+| Регистрация/Логин | ✓ | ? | |
+| OAuth callback success | ✓ | ? | |
+| OAuth callback error | ✓ | ? | |
+| Создание привычки (все поля) | ✓ | ? | |
+| Валидация формы (все ошибки) | ✓ | ? | |
+| Редактирование привычки | ✓ | ? | |
+| Удаление привычки (с confirm) | ✓ | ? | |
+| Отметка выполнения | ✓ | ? | |
+| Dashboard фильтры/сортировка | ✓ | ? | |
+| Dashboard empty state | ✓ | ? | |
+| Dashboard loading state | ✓ | ? | |
+| HabitDetail все секции | ✓ | ? | |
+| Stats все графики | ✓ | ? | |
+| Stats все периоды | ✓ | ? | |
+| Stats все метрики | ✓ | ? | |
+| Offline режим | ✓ | ? | |
+| Синхронизация после offline | ✓ | ? | |
+| PWA установка | ✓ | ? | |
+| Смена темы | ✓ | ? | |
+| Мобильный вид | ✓ | ? | |
+| 404 страница | ✓ | ? | |
+| Error boundary | ✓ | ? | |
+
+**Критерий:** все строки таблицы имеют статус ✓ в колонке Svelte
+
+---
+
+### Задача 5.6 — Удаление старого React приложения
+
+```
+Приоритет: P3 | Зависит от: 5.5 (QA пройден полностью)
 Сложность: низкая
 ВНИМАНИЕ: необратимое действие
 ```
 
 **Checklist перед удалением:**
+- [ ] QA таблица из 5.5 полностью заполнена статусом ✓
 - [ ] Все маршруты доступны в SvelteKit версии
 - [ ] Offline режим работает (SW зарегистрирован)
 - [ ] Sync pull/push работает с реальным бэкендом
 - [ ] OAuth flow работает end-to-end
 - [ ] Тесты зелёные
-- [ ] Проверить на мобильном (PWA install)
+- [ ] Проверено на мобильном (PWA install)
+- [ ] Проверена тема (light/dark)
+- [ ] Проверены все поля форм и валидации
+- [ ] Проверены все типы графиков на Stats странице
 
 ---
 
@@ -984,29 +1189,30 @@ build: {
 |---|---|---|---|---|
 | 0.1 | Инициализация SvelteKit проекта | P0 | — | средняя |
 | 0.2 | TypeScript + shared types | P0 | 0.1 | низкая |
-| 0.3 | Tailwind CSS + PostCSS | P0 | 0.1 | низкая |
-| 0.4 | PWA + Service Worker | P0 | 0.1 | средняя |
+| 0.3 | Tailwind CSS + PostCSS (полный перенос стилей) | P0 | 0.1 | низкая |
+| 0.4 | PWA + Service Worker (полный перенос конфига) | P0 | 0.1 | средняя |
 | 0.5 | Vitest для Svelte | P0 | 0.1 | низкая |
-| 1.1 | Перенос Dexie / db.ts | P1 | 0.2 | средняя |
-| 1.2 | Перенос Auth (session + store) | P1 | 0.2 | средняя |
-| 1.3 | Перенос Sync Engine | P1 | 1.1, 1.2 | высокая |
-| 1.4 | initSync (замена useSyncEngine) | P1 | 1.3 | низкая |
-| 2.1 | Маппинг маршрутов | P1 | 0.1 | низкая |
-| 2.2 | Корневой Layout | P1 | 1.2, 1.4 | средняя |
-| 2.3 | AuthGate компонент | P1 | 1.2, 2.2 | низкая |
-| 3.1 | AppLayout + SidebarNav | P2 | 2.2 | средняя |
-| 3.2 | SyncStatus компонент | P2 | 1.3, 3.1 | низкая |
-| 3.3 | HabitForm компонент | P2 | 1.1, 3.1 | высокая |
-| 4.1 | Login / OAuth страница | P2 | 1.2 | низкая |
-| 4.2 | Dashboard страница | P2 | 1.1, 3.1 | средняя |
-| 4.3 | HabitDetail страница | P2 | 4.2 | средняя |
-| 4.4 | AddEditHabit страница | P2 | 3.3, 4.3 | средняя |
-| 4.5 | Stats страница | P2 | 4.2 | высокая |
-| 5.1 | themeStore | P3 | 2.2 | низкая |
+| 1.1 | Перенос Dexie / db.ts (схема без изменений) | P1 | 0.2 | средняя |
+| 1.2 | Перенос Auth (все методы session + oauth) | P1 | 0.2 | средняя |
+| 1.3 | Перенос Sync Engine (все состояния) | P1 | 1.1, 1.2 | высокая |
+| 1.4 | initSync (все side-эффекты из useSyncEngine) | P1 | 1.3 | низкая |
+| 2.1 | Маппинг всех маршрутов | P1 | 0.1 | низкая |
+| 2.2 | Корневой Layout (все провайдеры) | P1 | 1.2, 1.4 | средняя |
+| 2.3 | AuthGate (полная логика) | P1 | 1.2, 2.2 | низкая |
+| 3.1 | AppLayout + SidebarNav (все состояния) | P2 | 2.2 | средняя |
+| 3.2 | SyncStatus (все состояния, точные тексты) | P2 | 1.3, 3.1 | низкая |
+| 3.3 | HabitForm (все поля, все валидации) | P2 | 1.1, 3.1 | высокая |
+| 4.1 | Login + OAuth callback (все состояния) | P2 | 1.2 | низкая |
+| 4.2 | Dashboard (все фильтры, все состояния) | P2 | 1.1, 3.1 | средняя |
+| 4.3 | HabitDetail (все секции, все действия) | P2 | 4.2 | средняя |
+| 4.4 | AddEditHabit (все состояния, UX flow) | P2 | 3.3, 4.3 | средняя |
+| 4.5 | Stats (все графики, все метрики, нативная Svelte библиотека) | P2 | 4.2 | высокая |
+| 5.1 | themeStore (все темы, тот же механизм) | P3 | 2.2 | низкая |
 | 5.2 | manualChunks оптимизация | P3 | 4.5 | низкая |
-| 5.3 | Error boundaries | P3 | 2.1 | низкая |
+| 5.3 | Error boundaries (точные тексты, репортинг) | P3 | 2.1 | низкая |
 | 5.4 | Тесты критических путей | P3 | все | средняя |
-| 5.5 | Удаление React приложения | P3 | 5.4 | низкая |
+| 5.5 | QA: попарное сравнение React и Svelte | P3 | 5.4 | средняя |
+| 5.6 | Удаление React приложения | P3 | 5.5 | низкая |
 
 ---
 
@@ -1024,10 +1230,25 @@ build: {
          useContext → Svelte stores (writable/readable)
          useRef → bind:this или let переменная
 
-РИСК 3: recharts не имеет Svelte версии
-РЕШЕНИЕ: layerchart или svelte-chartjs
+РИСК 3: React библиотеки (recharts, react-hook-form, react-spring и др.)
+РЕШЕНИЕ: Заменить на нативные Svelte аналоги:
+         recharts → layerchart или svelte-chartjs
+         react-hook-form → нативный bind:value
+         react-spring → svelte/transition и svelte/animate
+         Любой react-* пакет → нативный svelte аналог или
+         реализация нативными средствами SvelteKit
+         ЗАПРЕЩЕНО: импортировать React или оборачивать React компоненты
 
 РИСК 4: Outbox sync может потерять данные при миграции
 РЕШЕНИЕ: НЕ трогать структуру IndexedDB — Dexie схема
          остаётся идентичной, данные пользователя сохраняются
+
+РИСК 5: Упрощение при портировании
+РЕШЕНИЕ: Обязательный аудит каждого React компонента перед
+         началом его реализации в Svelte. Чек-лист всех состояний,
+         пропсов, валидаций — документировать перед кодингом.
+         Ни один элемент функционала не считается "необязательным"
+         без явного согласования.
+         Обязательное QA сравнение (задача 5.5) перед удалением
+         React версии.
 ```
