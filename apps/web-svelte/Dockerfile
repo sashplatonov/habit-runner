@@ -23,6 +23,8 @@ RUN cd apps/web-svelte && npm install --no-audit --no-fund && npm run build
 FROM nginx:1.27-alpine AS runtime
 # Copy Svelte build output
 COPY --from=build /app/apps/web-svelte/build /usr/share/nginx/html
+# Copy custom nginx config to enable /api proxying
+COPY apps/web/nginx.conf /etc/nginx/conf.d/default.conf
 # Use default nginx config; expose port 80
 EXPOSE 80
 CMD ["/bin/sh", "-c", "nginx -g 'daemon off;' -c /etc/nginx/nginx.conf"]
