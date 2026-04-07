@@ -1,0 +1,386 @@
+{
+  ".svelte-kit/generated/server/internal.js": {
+    "file": "internal.js",
+    "name": "internal",
+    "src": ".svelte-kit/generated/server/internal.js",
+    "isEntry": true,
+    "imports": [
+      "_root.js",
+      "_environment.js",
+      "_internal.js"
+    ]
+  },
+  "_AddEditHabit.js": {
+    "file": "chunks/AddEditHabit.js",
+    "name": "AddEditHabit",
+    "imports": [
+      "_root.js",
+      "_exports.js",
+      "_utils.js",
+      "_state.svelte.js",
+      "_stores.js",
+      "_habitsStore.js",
+      "_db.js",
+      "_plus.js",
+      "_arrow-left.js",
+      "_Icon.js"
+    ]
+  },
+  "_ChartGuideTooltip.js": {
+    "file": "chunks/ChartGuideTooltip.js",
+    "name": "ChartGuideTooltip",
+    "imports": [
+      "_root.js"
+    ]
+  },
+  "_Icon.js": {
+    "file": "chunks/Icon.js",
+    "name": "Icon",
+    "imports": [
+      "_root.js"
+    ]
+  },
+  "_arrow-left.js": {
+    "file": "chunks/arrow-left.js",
+    "name": "arrow-left",
+    "imports": [
+      "_root.js",
+      "_Icon.js"
+    ]
+  },
+  "_automatism.js": {
+    "file": "chunks/automatism.js",
+    "name": "automatism",
+    "imports": [
+      "_root.js",
+      "_Icon.js"
+    ]
+  },
+  "_blockGuideTooltips.js": {
+    "file": "chunks/blockGuideTooltips.js",
+    "name": "blockGuideTooltips"
+  },
+  "_db.js": {
+    "file": "chunks/db.js",
+    "name": "db",
+    "imports": [
+      "_session.js"
+    ]
+  },
+  "_environment.js": {
+    "file": "chunks/environment.js",
+    "name": "environment"
+  },
+  "_exports.js": {
+    "file": "chunks/exports.js",
+    "name": "exports"
+  },
+  "_habitsStore.js": {
+    "file": "chunks/habitsStore.js",
+    "name": "habitsStore",
+    "imports": [
+      "_index.js",
+      "_db.js",
+      "_sync.js"
+    ]
+  },
+  "_index.js": {
+    "file": "chunks/index.js",
+    "name": "index",
+    "imports": [
+      "_root.js"
+    ]
+  },
+  "_internal.js": {
+    "file": "chunks/internal.js",
+    "name": "internal",
+    "imports": [
+      "_root.js",
+      "_environment.js"
+    ]
+  },
+  "_plus.js": {
+    "file": "chunks/plus.js",
+    "name": "plus",
+    "imports": [
+      "_root.js",
+      "_Icon.js"
+    ]
+  },
+  "_render-context.js": {
+    "file": "chunks/render-context.js",
+    "name": "render-context"
+  },
+  "_root.js": {
+    "file": "chunks/root.js",
+    "name": "root",
+    "imports": [
+      "_render-context.js"
+    ]
+  },
+  "_session.js": {
+    "file": "chunks/session.js",
+    "name": "session"
+  },
+  "_sessionStore.js": {
+    "file": "chunks/sessionStore.js",
+    "name": "sessionStore",
+    "imports": [
+      "_index.js",
+      "_session.js"
+    ]
+  },
+  "_shared.js": {
+    "file": "chunks/shared.js",
+    "name": "shared",
+    "imports": [
+      "_utils.js",
+      "_render-context.js"
+    ]
+  },
+  "_sparkles.js": {
+    "file": "chunks/sparkles.js",
+    "name": "sparkles",
+    "imports": [
+      "_root.js",
+      "_Icon.js"
+    ]
+  },
+  "_state.svelte.js": {
+    "file": "chunks/state.svelte.js",
+    "name": "state.svelte",
+    "imports": [
+      "_root.js",
+      "_exports.js"
+    ]
+  },
+  "_stores.js": {
+    "file": "chunks/stores.js",
+    "name": "stores",
+    "imports": [
+      "_root.js",
+      "_exports.js",
+      "_utils.js",
+      "_state.svelte.js"
+    ]
+  },
+  "_sync.js": {
+    "file": "chunks/sync.js",
+    "name": "sync",
+    "imports": [
+      "_db.js",
+      "_session.js"
+    ]
+  },
+  "_themeStore.js": {
+    "file": "chunks/themeStore.js",
+    "name": "themeStore",
+    "imports": [
+      "_root.js",
+      "_index.js",
+      "_session.js",
+      "_db.js",
+      "_sessionStore.js"
+    ]
+  },
+  "_undoStore.js": {
+    "file": "chunks/undoStore.js",
+    "name": "undoStore",
+    "imports": [
+      "_index.js"
+    ]
+  },
+  "_utils.js": {
+    "file": "chunks/utils.js",
+    "name": "utils"
+  },
+  "node_modules/@sveltejs/kit/src/runtime/app/server/remote/index.js": {
+    "file": "remote-entry.js",
+    "name": "remote-entry",
+    "src": "node_modules/@sveltejs/kit/src/runtime/app/server/remote/index.js",
+    "isEntry": true,
+    "imports": [
+      "_shared.js",
+      "_render-context.js",
+      "_environment.js"
+    ]
+  },
+  "node_modules/@sveltejs/kit/src/runtime/server/index.js": {
+    "file": "index.js",
+    "name": "index",
+    "src": "node_modules/@sveltejs/kit/src/runtime/server/index.js",
+    "isEntry": true,
+    "imports": [
+      "_render-context.js",
+      "_environment.js",
+      "_shared.js",
+      "_exports.js",
+      "_utils.js",
+      "_index.js",
+      "_internal.js"
+    ]
+  },
+  "src/routes/(protected)/+layout.svelte": {
+    "file": "entries/pages/(protected)/_layout.svelte.js",
+    "name": "entries/pages/(protected)/_layout.svelte",
+    "src": "src/routes/(protected)/+layout.svelte",
+    "isEntry": true,
+    "imports": [
+      "_root.js",
+      "_themeStore.js",
+      "_exports.js",
+      "_utils.js",
+      "_state.svelte.js",
+      "_sessionStore.js",
+      "_index.js",
+      "_db.js",
+      "_sync.js",
+      "_undoStore.js",
+      "_session.js",
+      "_stores.js",
+      "_plus.js",
+      "_Icon.js"
+    ]
+  },
+  "src/routes/(protected)/dashboard/+page.svelte": {
+    "file": "entries/pages/(protected)/dashboard/_page.svelte.js",
+    "name": "entries/pages/(protected)/dashboard/_page.svelte",
+    "src": "src/routes/(protected)/dashboard/+page.svelte",
+    "isEntry": true,
+    "imports": [
+      "_root.js",
+      "_exports.js",
+      "_utils.js",
+      "_state.svelte.js",
+      "_habitsStore.js",
+      "_undoStore.js",
+      "_db.js",
+      "_ChartGuideTooltip.js",
+      "_automatism.js",
+      "_Icon.js",
+      "_sparkles.js",
+      "_plus.js"
+    ]
+  },
+  "src/routes/(protected)/habit/[id]/+page.svelte": {
+    "file": "entries/pages/(protected)/habit/_id_/_page.svelte.js",
+    "name": "entries/pages/(protected)/habit/_id_/_page.svelte",
+    "src": "src/routes/(protected)/habit/[id]/+page.svelte",
+    "isEntry": true,
+    "imports": [
+      "_root.js",
+      "_exports.js",
+      "_utils.js",
+      "_state.svelte.js",
+      "_stores.js",
+      "_automatism.js",
+      "_habitsStore.js",
+      "_db.js",
+      "_ChartGuideTooltip.js",
+      "_undoStore.js",
+      "_blockGuideTooltips.js",
+      "_arrow-left.js",
+      "_Icon.js"
+    ]
+  },
+  "src/routes/(protected)/habit/[id]/edit/+page.svelte": {
+    "file": "entries/pages/(protected)/habit/_id_/edit/_page.svelte.js",
+    "name": "entries/pages/(protected)/habit/_id_/edit/_page.svelte",
+    "src": "src/routes/(protected)/habit/[id]/edit/+page.svelte",
+    "isEntry": true,
+    "imports": [
+      "_root.js",
+      "_AddEditHabit.js",
+      "_stores.js"
+    ]
+  },
+  "src/routes/(protected)/habit/new/+page.svelte": {
+    "file": "entries/pages/(protected)/habit/new/_page.svelte.js",
+    "name": "entries/pages/(protected)/habit/new/_page.svelte",
+    "src": "src/routes/(protected)/habit/new/+page.svelte",
+    "isEntry": true,
+    "imports": [
+      "_AddEditHabit.js"
+    ]
+  },
+  "src/routes/(protected)/stats/+page.svelte": {
+    "file": "entries/pages/(protected)/stats/_page.svelte.js",
+    "name": "entries/pages/(protected)/stats/_page.svelte",
+    "src": "src/routes/(protected)/stats/+page.svelte",
+    "isEntry": true,
+    "imports": [
+      "_root.js",
+      "_exports.js",
+      "_utils.js",
+      "_state.svelte.js",
+      "_habitsStore.js",
+      "_db.js",
+      "_blockGuideTooltips.js",
+      "_ChartGuideTooltip.js"
+    ]
+  },
+  "src/routes/+error.svelte": {
+    "file": "entries/pages/_error.svelte.js",
+    "name": "entries/pages/_error.svelte",
+    "src": "src/routes/+error.svelte",
+    "isEntry": true,
+    "imports": [
+      "_exports.js",
+      "_utils.js",
+      "_root.js",
+      "_state.svelte.js"
+    ]
+  },
+  "src/routes/+layout.svelte": {
+    "file": "entries/pages/_layout.svelte.js",
+    "name": "entries/pages/_layout.svelte",
+    "src": "src/routes/+layout.svelte",
+    "isEntry": true,
+    "imports": [
+      "_themeStore.js",
+      "_sessionStore.js",
+      "_db.js",
+      "_exports.js",
+      "_utils.js",
+      "_root.js",
+      "_state.svelte.js"
+    ],
+    "css": [
+      "_app/immutable/assets/_layout.CrBd2cwy.css"
+    ]
+  },
+  "src/routes/+layout.ts": {
+    "file": "entries/pages/_layout.ts.js",
+    "name": "entries/pages/_layout.ts",
+    "src": "src/routes/+layout.ts",
+    "isEntry": true
+  },
+  "src/routes/+page.svelte": {
+    "file": "entries/pages/_page.svelte.js",
+    "name": "entries/pages/_page.svelte",
+    "src": "src/routes/+page.svelte",
+    "isEntry": true,
+    "imports": [
+      "_root.js",
+      "_sessionStore.js",
+      "_exports.js",
+      "_utils.js",
+      "_state.svelte.js",
+      "_stores.js",
+      "_sparkles.js",
+      "_Icon.js"
+    ]
+  },
+  "src/routes/auth/callback/+page.svelte": {
+    "file": "entries/pages/auth/callback/_page.svelte.js",
+    "name": "entries/pages/auth/callback/_page.svelte",
+    "src": "src/routes/auth/callback/+page.svelte",
+    "isEntry": true,
+    "imports": [
+      "_exports.js",
+      "_utils.js",
+      "_root.js",
+      "_state.svelte.js"
+    ]
+  }
+}

@@ -1,0 +1,43 @@
+{
+  "name": "@habbit-runner/web-svelte",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite dev --port 5174",
+    "build": "vite build",
+    "preview": "vite preview",
+    "lint": "eslint src --max-warnings 0",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json"
+  },
+  "dependencies": {
+    "@sindresorhus/slugify": "^3.0.0",
+    "canvas-confetti": "^1.9.4",
+    "dexie": "^4.3.0",
+    "lucide-svelte": "^0.468.0",
+    "nanoid": "^5.1.6"
+  },
+  "devDependencies": {
+    "@sveltejs/adapter-static": "^3.0.8",
+    "@sveltejs/kit": "^2.15.2",
+    "@sveltejs/vite-plugin-svelte": "^5.0.0",
+    "@testing-library/svelte": "^5.2.6",
+    "@testing-library/jest-dom": "^6.6.3",
+    "@types/canvas-confetti": "^1.9.0",
+    "@types/node": "^22.10.2",
+    "autoprefixer": "^10.4.20",
+    "eslint": "^9.17.0",
+    "jsdom": "^25.0.1",
+    "postcss": "^8.4.49",
+    "svelte": "^5.16.0",
+    "svelte-check": "^4.1.1",
+    "tailwindcss": "^3.4.17",
+    "typescript": "^5.7.2",
+    "vite": "^6.0.6",
+    "vite-plugin-pwa": "^0.21.1",
+    "vitest": "^2.1.8",
+    "workbox-precaching": "^7.4.0"
+  }
+}

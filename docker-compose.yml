@@ -80,8 +80,8 @@ services:
   web:
     <<: *service_defaults
     build:
-      context: ./apps/web
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: ./apps/web-svelte/Dockerfile
       # platform is intentionally not set here; set locally in docker-compose.local.yml if needed
       args:
         VITE_API_BASE_URL: ${VITE_API_BASE_URL:-/api}

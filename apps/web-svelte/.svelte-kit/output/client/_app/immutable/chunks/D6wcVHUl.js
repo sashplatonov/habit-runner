@@ -1,0 +1,1 @@
+import{w as r}from"./DMNvjtLl.js";import{r as o}from"./CrEgX6eK.js";function i(){const{subscribe:t,set:s,update:e}=r(null);return{subscribe:t,set:s,update:e,init(){s(o())}}}const u=i();export{u as s};

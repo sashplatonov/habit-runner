@@ -1,0 +1,1 @@
+import{w as s}from"./DMNvjtLl.js";function o(){const{subscribe:r,set:u}=s(null);let e=null;function n(){e&&(clearTimeout(e),e=null)}return{subscribe:r,push(l){n(),u(l),e=setTimeout(()=>{u(null),e=null},5200)},dismiss(){n(),u(null)},async executeUndo(l){var t;n(),u(null),await((t=l.onUndo)==null?void 0:t.call(l))}}}const m=o();export{m as u};

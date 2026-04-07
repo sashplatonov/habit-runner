@@ -1,0 +1,27 @@
+{
+	"/(protected)": [
+		"src/routes/+layout.ts"
+	],
+	"/": [
+		"src/routes/+layout.ts",
+		"src/routes/+layout.ts"
+	],
+	"/auth/callback": [
+		"src/routes/+layout.ts"
+	],
+	"/(protected)/dashboard": [
+		"src/routes/+layout.ts"
+	],
+	"/(protected)/habit/new": [
+		"src/routes/+layout.ts"
+	],
+	"/(protected)/habit/[id]": [
+		"src/routes/+layout.ts"
+	],
+	"/(protected)/habit/[id]/edit": [
+		"src/routes/+layout.ts"
+	],
+	"/(protected)/stats": [
+		"src/routes/+layout.ts"
+	]
+}

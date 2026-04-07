@@ -1,0 +1,1 @@
+import"../chunks/BvLInyod.js";import{p as r,a as i,g as m,d}from"../chunks/DMNvjtLl.js";import{a as n,b as g}from"../chunks/kLQS-96E.js";import{A as u}from"../chunks/BvnBKm7j.js";import{p as c}from"../chunks/Jy30vol7.js";function A(t,s){r(s,!0);const a=()=>g(c,"$page",e),[e,o]=n(),p=d(()=>a().params.id);u(t,{get editId(){return m(p)}}),i(),o()}export{A as component};
