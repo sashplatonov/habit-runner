@@ -18,7 +18,7 @@ RUN npm run build -w @habbit-runner/shared
 
 # copy web app and build
 COPY . ./
-ARG VITE_API_BASE_URL=/api
+ARG VITE_API_BASE_URL
 ENV VITE_API_BASE_URL=${VITE_API_BASE_URL}
 # Run the root build (the package itself is the root package, not a workspace member)
 RUN npm run build

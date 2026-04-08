@@ -126,7 +126,7 @@ The `api` and `db` services have no published host ports — all external traffi
 
 ```bash
 docker compose logs -f api           # Stream API logs
-docker compose exec db psql -U ${HR_DB_USER:-habbit} -d ${HR_DB_NAME:-habbit_runner}
+docker compose exec db psql -U ${DB_USER} -d ${DB_NAME}
 docker compose down -v               # Remove containers + volumes
 ```
 
@@ -170,9 +170,9 @@ See [web-push-setup.md](./web-push-setup.md) for VAPID key generation and config
 | Variable | Required | Default | Description |
 |---|---|---|---|
 | `WEB_PORT` | No | `80` | Host port for the web service |
-| `HR_DB_NAME` | No | `habbit_runner` | PostgreSQL database name |
-| `HR_DB_USER` | No | `habbit` | PostgreSQL user |
-| `HR_DB_PASSWORD` | No | `password` | PostgreSQL password |
+| `DB_NAME` | No | `habbit_runner` | PostgreSQL database name |
+| `DB_USER` | No | `habbit` | PostgreSQL user |
+| `DB_PASSWORD` | No | `password` | PostgreSQL password |
 | `DATABASE_URL` | Yes | — | Full Postgres connection string |
 | `AUTH_SECRET` | Yes | — | JWT signing secret |
 | `ACCESS_TOKEN_EXPIRES_IN` | No | `1h` | JWT expiry |

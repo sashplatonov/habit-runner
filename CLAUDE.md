@@ -63,7 +63,7 @@ This is an **offline-first habit tracker PWA** with an active Quarkus API backen
 | `apps/web/.env` | `VITE_API_BASE_URL` | API origin (default `http://localhost:3000` for local, `/api` for Docker with nginx proxy) |
 | `apps/web/.env` | `VITE_SYNC_ENABLED` | Set to `false` to disable sync |
 | `apps/web/.env` | `VITE_DEFAULT_USER_ID` | User ID embedded in Dexie records |
-| `.env` | `WEB_PORT`, `HR_DB_*` | Docker Compose published web port and Postgres container credentials |
+| `.env` | `WEB_PORT`, `DB_*` | Docker Compose published web port and Postgres container credentials |
 | `.env` | `DATABASE_URL`, `AUTH_SECRET`, token TTLs, Google OAuth vars | Docker Compose source for `api` container env |
 | `docker-compose.yml` defaults | `API_PUBLIC_URL`, `OAUTH_DEFAULT_RETURN_TO` | Derived from `WEB_PORT` (`/api` + frontend origin) unless explicitly overridden |
 | `apps/api-java/.env` | `DATABASE_URL`, `DB_USER`, `DB_PASSWORD` | Local (non-Docker) PostgreSQL connection settings |
