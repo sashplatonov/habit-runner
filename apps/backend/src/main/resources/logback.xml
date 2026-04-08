@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+  <!-- logback configuration that can optionally push logs to Grafana Cloud Loki.
+       Prefer running Grafana Agent / Promtail on the host and shipping stdout/files to the agent.
+       This appender is optional — it will only work if you provide a Loki push URL and API key.
+       Set system properties (or env mapped to system props) before starting the app:
+         -DLOKI_PUSH_URL=https://<tenant>.grafana.net/loki/api/v1/push
+         -DGRAFANA_CLOUD_API_KEY=<api_key>
+  -->
+  <property name="LOKI_PUSH_URL" value="${LOKI_PUSH_URL}"/>
+  <property name="GRAFANA_CLOUD_API_KEY" value="${GRAFANA_CLOUD_API_KEY}"/>
+
+  <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+    <encoder>
+      <pattern>%d{ISO8601} %-5level [%thread] %logger{36} - %msg%n</pattern>
+    </encoder>
+  </appender>
+
+  <appender name="LOKI" class="com.github.loki4j.logback.Loki4jAppender">
+    <lokiUrl>${LOKI_PUSH_URL}</lokiUrl>
+    <basicAuthUser>api</basicAuthUser>
+    <basicAuthPassword>${GRAFANA_CLOUD_API_KEY}</basicAuthPassword>
+    <labels>{"app":"server-java"}</labels>
+  </appender>
+
+  <root level="INFO">
+    <appender-ref ref="CONSOLE"/>
+    <appender-ref ref="LOKI"/>
+  </root>
+</configuration>
