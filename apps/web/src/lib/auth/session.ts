@@ -66,28 +66,40 @@ function isTokenExpiring(session: AuthSession): boolean {
 }
 
 async function refreshSession(session: AuthSession): Promise<AuthSession> {
-  const response = await fetch(`${API_BASE_URL}/auth/refresh`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ refreshToken: session.refreshToken })
-  });
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 10_000);
+  try {
+    const response = await fetch(`${API_BASE_URL}/auth/refresh`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ refreshToken: session.refreshToken }),
+      signal: controller.signal
+    });
 
-  if (!response.ok) {
-    throw new Error('Unable to refresh authentication token');
+    if (!response.ok) {
+      throw new Error('Unable to refresh authentication token');
+    }
+
+    const data = (await response.json()) as {
+      accessToken: string;
+      refreshToken: string;
+      expiresIn: number;
+    };
+
+    return saveAuthSession({
+      accessToken: data.accessToken,
+      refreshToken: data.refreshToken,
+      expiresIn: data.expiresIn,
+      email: session.email
+    });
+  } catch (err: any) {
+    if (err && err.name === 'AbortError') {
+      throw new Error('Auth refresh timed out');
+    }
+    throw err;
+  } finally {
+    clearTimeout(timeoutId);
   }
-
-  const data = (await response.json()) as {
-    accessToken: string;
-    refreshToken: string;
-    expiresIn: number;
-  };
-
-  return saveAuthSession({
-    accessToken: data.accessToken,
-    refreshToken: data.refreshToken,
-    expiresIn: data.expiresIn,
-    email: session.email
-  });
 }
 
 export async function getValidAccessToken(): Promise<string | null> {

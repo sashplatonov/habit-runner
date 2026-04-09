@@ -6,6 +6,7 @@ import { logClientError, logClientInfo } from '@/lib/logging/clientLogger';
 
 export interface SyncEngineState extends SyncRunResult {
   syncNow: () => Promise<void>;
+  isActive: boolean;
 }
 
 export function useSyncEngine(enabled = true): SyncEngineState {
@@ -15,6 +16,7 @@ export function useSyncEngine(enabled = true): SyncEngineState {
     conflicts: 0
   });
   const runningRef = useRef(false);
+  const [isRunning, setIsRunning] = useState(false);
 
   const syncNow = useCallback(async () => {
     if (!enabled) {
@@ -28,6 +30,9 @@ export function useSyncEngine(enabled = true): SyncEngineState {
     }
     if (runningRef.current) {return;}
     runningRef.current = true;
+    setIsRunning(true);
+    // log sync start for debugging
+    logClientInfo('sync.start', 'Sync cycle started');
     setState((prev) => ({ ...prev, status: navigator.onLine ? 'syncing' : 'offline' }));
 
     if (!SYNC_ENABLED) {
@@ -38,6 +43,7 @@ export function useSyncEngine(enabled = true): SyncEngineState {
         lastError: SYNC_DISABLED_REASON
       }));
       runningRef.current = false;
+      setIsRunning(false);
       return;
     }
 
@@ -59,6 +65,8 @@ export function useSyncEngine(enabled = true): SyncEngineState {
       }));
     } finally {
       runningRef.current = false;
+      setIsRunning(false);
+      logClientInfo('sync.end', 'Sync cycle finished');
     }
   }, [enabled]);
 
@@ -82,5 +90,5 @@ export function useSyncEngine(enabled = true): SyncEngineState {
     };
   }, [enabled, syncNow]);
 
-  return { ...state, syncNow };
+  return { ...state, syncNow, isActive: isRunning };
 }

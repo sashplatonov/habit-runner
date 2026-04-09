@@ -155,9 +155,26 @@ export function PullToRefresh({
 }: PullToRefreshProps) {
   const { rootRef, pullDistance } = usePullGesture(enabled, isRefreshing, onRefresh);
 
+  // UI debounce: avoid flashing the sync indicator for very short runs
+  const [displayRefreshing, setDisplayRefreshing] = useState(false);
+  useEffect(() => {
+    let timer: number | undefined;
+    if (isRefreshing) {
+      timer = window.setTimeout(() => setDisplayRefreshing(true), 150);
+    } else {
+      // hide immediately when not refreshing
+      setDisplayRefreshing(false);
+    }
+    return () => {
+      if (timer) {
+        clearTimeout(timer);
+      }
+    };
+  }, [isRefreshing]);
+
   return (
     <div ref={rootRef} className="relative min-h-screen">
-      <PullIndicator isRefreshing={isRefreshing} pullDistance={pullDistance} />
+      <PullIndicator isRefreshing={displayRefreshing} pullDistance={pullDistance} />
       {children}
     </div>
   );

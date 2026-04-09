@@ -166,7 +166,7 @@ export function App() {
         <BrowserRouter>
           <PullToRefresh
             enabled={Boolean(authSession)}
-            isRefreshing={syncState.status === 'syncing'}
+            isRefreshing={syncState.status === 'syncing' && syncState.isActive}
             onRefresh={syncState.syncNow}
           >
             <a

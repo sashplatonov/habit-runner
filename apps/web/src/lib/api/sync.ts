@@ -7,7 +7,8 @@ const buildUrl = buildApiUrl;
 
 async function fetchJson(
   url: string,
-  init: RequestInit = {}
+  init: RequestInit = {},
+  timeoutMs = 15_000
 ): Promise<Response> {
   const headers = new Headers(init.headers);
   const accessToken = await getValidAccessToken();
@@ -20,17 +21,30 @@ async function fetchJson(
     headers.set('Content-Type', 'application/json');
   }
 
-  const response = await fetch(url, {
-    ...init,
-    headers,
-    cache: 'no-store'
-  });
-  if (!response.ok) {
-    throw new Error(
-      `Sync request failed: ${response.status} ${response.statusText}`
-    );
+  const controller = new AbortController();
+  const timeoutHandle = setTimeout(() => controller.abort(), timeoutMs);
+
+  try {
+    const response = await fetch(url, {
+      ...init,
+      headers,
+      cache: 'no-store',
+      signal: controller.signal
+    });
+    if (!response.ok) {
+      throw new Error(
+        `Sync request failed: ${response.status} ${response.statusText}`
+      );
+    }
+    return response;
+  } catch (err: any) {
+    if (err && err.name === 'AbortError') {
+      throw new Error('Sync request timed out');
+    }
+    throw err;
+  } finally {
+    clearTimeout(timeoutHandle);
   }
-  return response;
 }
 
 export async function pullChanges(
