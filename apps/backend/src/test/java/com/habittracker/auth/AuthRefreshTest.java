@@ -108,19 +108,38 @@ class AuthRefreshTest {
         .when()
         .post("/auth/refresh")
         .then()
-        .statusCode(401);
+      .statusCode(401)
+      .body("status", equalTo(401))
+        .body("message", equalTo("Unauthorized"))
+      .body("timestamp", notNullValue());
   }
 
   @Test
-  void refreshWithBlankTokenReturns400OrUnprocessable() {
+    void refreshWithBlankTokenReturns400() {
     given()
         .contentType(ContentType.JSON)
         .body("{\"refreshToken\": \"\"}")
         .when()
         .post("/auth/refresh")
         .then()
-        .statusCode(anyOf(is(400), is(422)));
+      .statusCode(400)
+      .body("status", equalTo(400))
+        .body("title", equalTo("Constraint Violation"))
+        .body("violations.message", hasItem("must not be blank"));
   }
+
+    @Test
+    void getThemeReturnsTypedThemeResponse() {
+      var accessToken = generateAccessToken(userId, userId + "@test.com");
+
+      given()
+      .header("Authorization", "Bearer " + accessToken)
+      .when()
+      .get("/auth/theme")
+      .then()
+      .statusCode(200)
+      .body("theme", equalTo("cloud"));
+    }
 
   // ─── Logout (revoke) test ─────────────────────────────────────────────────
 

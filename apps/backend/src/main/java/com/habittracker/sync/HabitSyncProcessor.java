@@ -6,12 +6,15 @@ import com.habittracker.model.TombstoneEntity;
 import com.habittracker.sync.dto.PushConflict;
 import com.habittracker.sync.dto.SyncOpDto;
 import jakarta.enterprise.context.ApplicationScoped;
+import lombok.extern.slf4j.Slf4j;
 
 import java.time.Instant;
 import java.util.Map;
 
 @ApplicationScoped
+@Slf4j
 public class HabitSyncProcessor {
+
   private final SyncPayloadCodec payloadCodec;
   private final SyncValueCodec valueCodec;
   private final SyncEntityMapper entityMapper;
@@ -26,9 +29,10 @@ public class HabitSyncProcessor {
     var payload = payloadCodec.toMap(op.payload());
     var habitId = valueCodec.asString(payload.get("id"));
     if (habitId == null) {
+      log.debug("Ignoring habit sync op without habit id: opId={}", op.id());
       return;
     }
-    if ("delete".equals(op.type())) {
+    if (SyncOperationType.from(op.type()) == SyncOperationType.DELETE) {
       state.addAppliedHabitDelete(op.id(), deleteHabit(userId, habitId, payload));
       return;
     }
@@ -37,6 +41,7 @@ public class HabitSyncProcessor {
     var clientUpdated = payloadCodec.normalizeInstant(valueCodec.asString(payload.get("updatedAt")));
     var conflict = habitConflict(userId, op.id(), existing, clientUpdated);
     if (conflict != null) {
+      log.debug("Detected habit sync conflict: opId={} habitId={}", op.id(), habitId);
       state.addConflict(conflict);
       return;
     }

@@ -5,12 +5,15 @@ import com.habittracker.model.HabitEntity;
 import com.habittracker.sync.dto.PushConflict;
 import com.habittracker.sync.dto.SyncOpDto;
 import jakarta.enterprise.context.ApplicationScoped;
+import lombok.extern.slf4j.Slf4j;
 
 import java.time.Instant;
 import java.time.LocalDate;
 
 @ApplicationScoped
+@Slf4j
 public class CheckinSyncProcessor {
+
   private final SyncPayloadCodec payloadCodec;
   private final SyncValueCodec valueCodec;
   private final SyncEntityMapper entityMapper;
@@ -32,7 +35,11 @@ public class CheckinSyncProcessor {
     var payload = payloadCodec.toMap(op.payload());
     var habitId = valueCodec.asString(payload.get("habitId"));
     var dateString = valueCodec.asString(payload.get("date"));
-    if (habitId == null || dateString == null || hasCheckinParentConflict(userId, habitId, op.id(), state)) {
+    if (habitId == null || dateString == null) {
+      log.debug("Ignoring checkin sync op with incomplete payload: opId={}", op.id());
+      return;
+    }
+    if (hasCheckinParentConflict(userId, habitId, op.id(), state)) {
       return;
     }
 
@@ -42,7 +49,7 @@ public class CheckinSyncProcessor {
     ).firstResult();
     var clientUpdated = payloadCodec.normalizeInstant(valueCodec.asString(payload.get("updatedAt")));
 
-    if ("delete".equals(op.type())) {
+    if (SyncOperationType.from(op.type()) == SyncOperationType.DELETE) {
       state.addAppliedCheckinDelete(op.id(), checkinDeleteHandler.delete(new CheckinDeleteHandler.CheckinDeleteRequest(
           userId,
           habitId,
@@ -55,6 +62,7 @@ public class CheckinSyncProcessor {
 
     var conflict = checkinConflict(op.id(), existing, clientUpdated);
     if (conflict != null) {
+      log.debug("Detected checkin sync conflict: opId={} habitId={} date={}", op.id(), habitId, date);
       state.addConflict(conflict);
       return;
     }
@@ -72,6 +80,7 @@ public class CheckinSyncProcessor {
     if (parent != null && userId.equals(parent.userId)) {
       return false;
     }
+    log.debug("Detected missing parent habit for checkin sync: opId={} habitId={}", opId, habitId);
     state.addConflict(entityMapper.buildMissingEntityConflict(opId, "checkin habit belongs to another user"));
     return true;
   }

@@ -1,10 +1,10 @@
 package com.habittracker.auth;
 
+import com.habittracker.api.ApiResponses;
 import com.habittracker.auth.dto.LoginRequest;
 import com.habittracker.auth.dto.RefreshRequest;
 import com.habittracker.auth.dto.TokenResponse;
 import com.habittracker.auth.dto.UpdatePreferencesRequest;
-import com.habittracker.auth.dto.UpdateThemeRequest;
 import com.habittracker.auth.dto.UserPreferencesResponse;
 import jakarta.validation.Valid;
 import jakarta.ws.rs.GET;
@@ -20,10 +20,12 @@ import jakarta.ws.rs.core.Response;
 @Produces(MediaType.APPLICATION_JSON)
 public class AuthResource {
   final AuthService authService;
+  final PreferencesService preferencesService;
   final CurrentUserContext currentUserContext;
 
-  public AuthResource(AuthService authService, CurrentUserContext currentUserContext) {
+  public AuthResource(AuthService authService, PreferencesService preferencesService, CurrentUserContext currentUserContext) {
     this.authService = authService;
+    this.preferencesService = preferencesService;
     this.currentUserContext = currentUserContext;
   }
 
@@ -37,14 +39,14 @@ public class AuthResource {
   @Path("/google/start")
   public Response startGoogle(@QueryParam("returnTo") String returnTo) {
     var redirect = authService.createOAuthAuthorizationUrl(returnTo);
-    return Response.status(Response.Status.FOUND).location(java.net.URI.create(redirect)).build();
+    return ApiResponses.redirect(redirect);
   }
 
   @GET
   @Path("/google/callback")
   public Response googleCallback(@QueryParam("code") String code, @QueryParam("state") String state) {
     var redirect = authService.handleOAuthCallback(code, state);
-    return Response.status(Response.Status.FOUND).location(java.net.URI.create(redirect)).build();
+    return ApiResponses.redirect(redirect);
   }
 
   @POST
@@ -57,39 +59,22 @@ public class AuthResource {
   @Path("/logout")
   public Response logout(@Valid RefreshRequest request) {
     authService.revokeToken(request.refreshToken());
-    return Response.noContent().build();
+    return ApiResponses.noContent();
   }
 
   @RequireAuth
   @GET
   @Path("/preferences")
   public UserPreferencesResponse getPreferences() {
-    return authService.getUserPreferences(currentUserContext.requireUser().id());
+    return preferencesService.getUserPreferences(currentUserContext.requireUser().id());
   }
 
   @RequireAuth
   @PUT
   @Path("/preferences")
   public UserPreferencesResponse updatePreferences(@Valid UpdatePreferencesRequest request) {
-    return authService.updateUserPreferences(currentUserContext.requireUser().id(), request);
+    return preferencesService.updateUserPreferences(currentUserContext.requireUser().id(), request);
   }
 
-  @RequireAuth
-  @GET
-  @Path("/theme")
-  public java.util.Map<String, String> getTheme() {
-    var prefs = authService.getUserPreferences(currentUserContext.requireUser().id());
-    return java.util.Map.of("theme", prefs.theme());
-  }
 
-  @RequireAuth
-  @PUT
-  @Path("/theme")
-  public java.util.Map<String, String> updateTheme(@Valid UpdateThemeRequest request) {
-    var prefs = authService.updateUserPreferences(
-        currentUserContext.requireUser().id(),
-        new UpdatePreferencesRequest(request.theme(), null)
-    );
-    return java.util.Map.of("theme", prefs.theme());
-  }
 }

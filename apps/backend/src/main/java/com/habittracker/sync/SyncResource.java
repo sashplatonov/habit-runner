@@ -1,5 +1,6 @@
 package com.habittracker.sync;
 
+import com.habittracker.api.ApiResponses;
 import com.habittracker.auth.CurrentUserContext;
 import com.habittracker.auth.RequireAuth;
 import com.habittracker.sync.dto.PushRequestDto;
@@ -11,9 +12,9 @@ import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.container.ContainerRequestContext;
 import jakarta.ws.rs.core.Context;
-import jakarta.ws.rs.core.HttpHeaders;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import org.jboss.logging.Logger;
 
 import java.util.UUID;
 
@@ -21,6 +22,8 @@ import java.util.UUID;
 @Produces(MediaType.APPLICATION_JSON)
 @RequireAuth
 public class SyncResource {
+  private static final Logger LOG = Logger.getLogger(SyncResource.class);
+
   final SyncService syncService;
   final CurrentUserContext currentUserContext;
 
@@ -39,7 +42,9 @@ public class SyncResource {
     var traceId = traceId();
     var startedAt = System.nanoTime();
     var payload = syncService.pull(userId, since);
-    return noStoreResponse(payload, traceId, durationMs(startedAt));
+    var durationMs = durationMs(startedAt);
+    LOG.debugf("Completed sync pull: userId=%s traceId=%s durationMs=%d", userId, traceId, durationMs);
+    return ApiResponses.noStore(payload, traceId, durationMs);
   }
 
   @POST
@@ -50,7 +55,15 @@ public class SyncResource {
     var startedAt = System.nanoTime();
     var ops = body == null || body.ops() == null ? java.util.List.<SyncOpDto>of() : body.ops();
     var payload = syncService.push(userId, ops);
-    return noStoreResponse(payload, traceId, durationMs(startedAt));
+    var durationMs = durationMs(startedAt);
+    LOG.debugf(
+        "Completed sync push: userId=%s traceId=%s opCount=%d durationMs=%d",
+        userId,
+        traceId,
+        ops.size(),
+        durationMs
+    );
+    return ApiResponses.noStore(payload, traceId, durationMs);
   }
 
   private String traceId() {
@@ -63,16 +76,5 @@ public class SyncResource {
 
   private long durationMs(long startedAt) {
     return Math.round((System.nanoTime() - startedAt) / 1_000_000.0d);
-  }
-
-  private Response noStoreResponse(Object payload, String traceId, long durationMs) {
-    return Response.ok(payload)
-        .header("x-trace-id", traceId)
-        .header("x-sync-duration-ms", durationMs)
-        .header("Server-Timing", "app;dur=" + durationMs)
-        .header(HttpHeaders.CACHE_CONTROL, "no-store, no-cache, must-revalidate, proxy-revalidate")
-        .header("Pragma", "no-cache")
-        .header("Expires", "0")
-        .build();
   }
 }

@@ -1,100 +1,63 @@
 package com.habittracker.auth;
 
 import com.habittracker.auth.dto.TokenResponse;
-import com.habittracker.auth.dto.UpdatePreferencesRequest;
-import com.habittracker.auth.dto.UserPreferencesResponse;
 import com.habittracker.model.OAuthStateEntity;
 import com.habittracker.model.UserEntity;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.NotAuthorizedException;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
+import lombok.extern.slf4j.Slf4j;
 
-import java.net.URI;
 import java.time.Instant;
 
 @ApplicationScoped
+@Slf4j
 public class AuthService {
-  @ConfigProperty(name = "auth.access-token-ttl-seconds")
-  int accessTokenTtlSeconds;
 
-  @ConfigProperty(name = "auth.refresh-token-days")
-  int refreshTokenDays;
-
-  @ConfigProperty(name = "auth.api-public-url")
-  String apiPublicUrl;
-
-  @ConfigProperty(name = "auth.oauth-default-return-to")
-  String oauthDefaultReturnTo;
-
-  private final JwtUtil jwtUtil;
-  private final RefreshTokenService refreshTokenService;
-  private final GoogleOAuthClient googleOAuthClient;
+  private final AuthConfig authConfig;
+  private final AuthCollaborators collaborators;
 
   public AuthService(
-      JwtUtil jwtUtil,
-      RefreshTokenService refreshTokenService,
-      GoogleOAuthClient googleOAuthClient
+      AuthConfig authConfig,
+      AuthCollaborators collaborators
   ) {
-    this.jwtUtil = jwtUtil;
-    this.refreshTokenService = refreshTokenService;
-    this.googleOAuthClient = googleOAuthClient;
+    this.authConfig = authConfig;
+    this.collaborators = collaborators;
   }
 
   @Transactional
   public TokenResponse login(String email) {
-    var user = UserEntity.find("email", email).firstResult();
+    var user = findUserByEmail(email);
     if (user == null) {
+      log.warn("Login rejected for unknown user: email={}", email);
       throw new NotAuthorizedException("Unknown user");
     }
-    return issueTokenPair((UserEntity) user);
+    log.debug("Login issued tokens: userId={}", user.id);
+    return issueTokenPair(user);
   }
 
   @Transactional
   public TokenResponse refreshToken(String token) {
-    var record = refreshTokenService.requireActive(token);
-    var user = (UserEntity) UserEntity.findById(record.userId);
-    if (user == null) {
-      throw new NotAuthorizedException("User no longer exists");
-    }
-    var accessToken = jwtUtil.createAccessToken(user.id, user.email, accessTokenTtlSeconds);
-    return new TokenResponse(accessToken, record.token, accessTokenTtlSeconds, "Bearer");
+    var record = collaborators.requireActiveRefreshToken(token);
+    var user = requireUserById(record.userId);
+    log.debug("Refresh token accepted for userId={}", record.userId);
+    var accessToken = collaborators.createAccessToken(user.id, user.email, authConfig.accessTokenTtlSeconds());
+    return new TokenResponse(accessToken, record.token, authConfig.accessTokenTtlSeconds(), "Bearer");
   }
 
   @Transactional
   public void revokeToken(String token) {
-    refreshTokenService.revoke(token);
+    collaborators.revokeRefreshToken(token);
+    log.debug("Refresh token revoked");
   }
 
   public CurrentUser verifyAccessToken(String token) {
     try {
-      return jwtUtil.verify(token);
+      return collaborators.verifyToken(token);
     } catch (IllegalArgumentException ex) {
       throw new NotAuthorizedException("Invalid token", ex);
     }
-  }
-
-  @Transactional
-  public UserPreferencesResponse getUserPreferences(String userId) {
-    var user = (UserEntity) UserEntity.findById(userId);
-    if (user == null) {
-      throw new NotAuthorizedException("User no longer exists");
-    }
-    return new UserPreferencesResponse(ThemeCatalog.normalize(user.theme), user.timezone);
-  }
-
-  @Transactional
-  public UserPreferencesResponse updateUserPreferences(String userId, UpdatePreferencesRequest request) {
-    var user = (UserEntity) UserEntity.findById(userId);
-    if (user == null) {
-      throw new NotAuthorizedException("User no longer exists");
-    }
-    user.theme = ThemeCatalog.normalize(request.theme());
-    if (request.timezone() != null) {
-      user.timezone = request.timezone().isBlank() ? null : request.timezone();
-    }
-    return new UserPreferencesResponse(user.theme, user.timezone);
   }
 
   @Transactional
@@ -102,32 +65,32 @@ public class AuthService {
     var state = AuthSupport.randomToken(16);
     var payload = new OAuthStateEntity();
     payload.state = state;
-    payload.returnTo = normalizeReturnTo(returnTo);
+    payload.returnTo = collaborators.normalizeReturnTo(returnTo);
     payload.setExpiry(Instant.now().plusSeconds(600));
     payload.persist();
-
-    return googleOAuthClient.buildAuthorizationUrl(state, getOAuthCallbackUrl());
+    log.debug("Created OAuth authorization URL: returnTo={}", payload.returnTo);
+    return collaborators.buildAuthorizationUrl(state);
   }
 
   @Transactional
   public String handleOAuthCallback(String code, String state) {
     validateOAuthCallbackInput(code, state);
     var stateEntity = consumeOAuthState(state);
-    var email = googleOAuthClient.exchangeCodeForEmail(code, getOAuthCallbackUrl());
-    var user = findOrCreateUser(email);
-    var session = issueTokenPair(user);
-    return buildOAuthCallbackRedirect(stateEntity.returnTo, session, email);
+    var email = collaborators.exchangeCodeForEmail(code);
+    var user = collaborators.findOrCreateUser(email);
+    var session = collaborators.issueTokenPair(user, authConfig.accessTokenTtlSeconds(), authConfig.refreshTokenDays());
+    return collaborators.buildCallbackRedirect(stateEntity.returnTo, session, email);
   }
 
   private TokenResponse issueTokenPair(UserEntity user) {
-    var accessToken = jwtUtil.createAccessToken(user.id, user.email, accessTokenTtlSeconds);
+    var accessToken = collaborators.createAccessToken(user.id, user.email, authConfig.accessTokenTtlSeconds());
     var refreshToken = createRefreshToken(user.id);
-    return new TokenResponse(accessToken, refreshToken, accessTokenTtlSeconds, "Bearer");
+    return new TokenResponse(accessToken, refreshToken, authConfig.accessTokenTtlSeconds(), "Bearer");
   }
 
   private String createRefreshToken(String userId) {
     var token = AuthSupport.randomToken(32);
-    return refreshTokenService.create(token, userId, refreshTokenDays);
+    return collaborators.createRefreshToken(token, userId, authConfig.refreshTokenDays());
   }
 
   private void validateOAuthCallbackInput(String code, String state) {
@@ -137,7 +100,7 @@ public class AuthService {
   }
 
   private OAuthStateEntity consumeOAuthState(String state) {
-    var stateEntity = (OAuthStateEntity) OAuthStateEntity.findById(state);
+    var stateEntity = OAuthStateEntity.<OAuthStateEntity>findById(state);
     OAuthStateEntity.deleteById(state);
     if (stateEntity == null || stateEntity.isExpiredAt(Instant.now())) {
       throw new NotAuthorizedException("Invalid or expired OAuth state");
@@ -145,47 +108,17 @@ public class AuthService {
     return stateEntity;
   }
 
-  private UserEntity findOrCreateUser(String email) {
-    var user = (UserEntity) UserEntity.find("email", email).firstResult();
-    if (user != null) {
-      return user;
+  private UserEntity findUserByEmail(String email) {
+    return UserEntity.<UserEntity>find("email", email).firstResult();
+  }
+
+  private UserEntity requireUserById(String userId) {
+    var user = UserEntity.<UserEntity>findById(userId);
+    if (user == null) {
+      throw new NotAuthorizedException("User no longer exists");
     }
-
-    var createdUser = new UserEntity();
-    createdUser.email = email;
-    createdUser.persist();
-    return createdUser;
+    return user;
   }
 
-  private String buildOAuthCallbackRedirect(
-      String returnTo,
-      TokenResponse session,
-      String email
-  ) {
-    return returnTo + "/auth/callback"
-        + "?accessToken=" + AuthSupport.urlEncode(session.accessToken())
-        + "&refreshToken=" + AuthSupport.urlEncode(session.refreshToken())
-        + "&expiresIn=" + session.expiresIn()
-        + "&email=" + AuthSupport.urlEncode(email);
-  }
-
-  private String normalizeReturnTo(String returnTo) {
-    if (returnTo == null || returnTo.isBlank()) {
-      return oauthDefaultReturnTo;
-    }
-    try {
-      var parsed = URI.create(returnTo);
-      var scheme = parsed.getScheme();
-      if (!"http".equalsIgnoreCase(scheme) && !"https".equalsIgnoreCase(scheme)) {
-        return oauthDefaultReturnTo;
-      }
-      return scheme + "://" + parsed.getAuthority();
-    } catch (IllegalArgumentException ex) {
-      return oauthDefaultReturnTo;
-    }
-  }
-
-  private String getOAuthCallbackUrl() {
-    return apiPublicUrl + "/auth/google/callback";
-  }
+  
 }

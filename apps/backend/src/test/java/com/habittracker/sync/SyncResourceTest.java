@@ -147,7 +147,10 @@ class SyncResourceTest {
         .when()
         .get("/sync/pull")
         .then()
-        .statusCode(401);
+      .statusCode(401)
+      .body("status", equalTo(401))
+          .body("message", equalTo("Unauthorized"))
+      .body("timestamp", notNullValue());
   }
 
   // ─── Push tests ───────────────────────────────────────────────────────────
