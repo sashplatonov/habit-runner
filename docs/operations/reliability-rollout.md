@@ -1,106 +1,141 @@
-# Reliability & Rollout
+# Reliability and Rollout
 
 <a name="top"></a>
 
 ## 📋 Table of Contents
 
 - [Health checks](#health-checks)
-- [Deploying](#deploying)
-- [Database migrations](#database-migrations)
-- [Rollback](#rollback)
-- [Observability](#observability)
+- [Deployment paths](#deployment-paths)
+- [Migration behavior](#migration-behavior)
+- [Rollback notes](#rollback-notes)
+- [Operational checks](#operational-checks)
 
 ---
 
 ## 🏥 Health checks <a name="health-checks"></a>
 
-Docker Compose health checks:
+Current runtime endpoints:
 
-| Service | Check | Interval |
-|---|---|---|
-| `db` | `pg_isready` | 5s |
-| `api` | TCP socket on port 3000 | 10s |
-| `web` | HTTP GET `localhost:80` | 10s |
+| Endpoint | Purpose |
+|---|---|
+| `/q/health` | Quarkus health |
+| `/q/metrics` | Prometheus/Micrometer export |
+| `/metrics` | Lightweight JSON app metrics |
 
-The `api` service waits for `db` to be healthy before starting. The `web` service waits for `api`.
+Docker Compose health checks currently monitor:
+
+| Service | Check |
+|---|---|
+| `db` | `pg_isready -U ${DB_USER} -d ${DB_NAME}` |
+| `api` | `curl -f http://127.0.0.1:${API_PORT}/q/health` |
+| `web` | `wget -q -O /dev/null http://127.0.0.1:80` |
+
+Important current behavior:
+- `db` is behind the `db` profile;
+- `api` does not publish a host port in the default stack;
+- external browser traffic reaches the API through the `web` proxy at `/api`.
 
 [↑ Back to top](#top)
 
 ---
 
-## 🚀 Deploying <a name="deploying"></a>
+## 🚀 Deployment paths <a name="deployment-paths"></a>
 
-**Docker Compose (recommended):**
+### Full local stack with bundled Postgres
 
 ```bash
-# Pull latest code
-git pull
+cp .env.example .env
+docker compose --profile db up --build
+```
 
-# Rebuild and restart with zero-downtime (one service at a time)
+### Stack against an external database
+
+```bash
+cp .env.example .env
+docker compose up --build
+```
+
+### App-only rebuilds
+
+```bash
 docker compose up -d --build --no-deps api
 docker compose up -d --build --no-deps web
 ```
 
-`db` does not need a rebuild unless the compose file changes.
-
-**Environment checklist before deploy:**
-- [ ] `AUTH_SECRET` is a strong random string (not the example value)
-- [ ] `GOOGLE_OAUTH_CLIENT_ID/SECRET` are set
-- [ ] Redirect URIs in Google Console match `API_PUBLIC_URL`
-- [ ] `VAPID_*` keys set if push notifications are used
-- [ ] `CORS_ORIGINS` includes the production frontend domain
+Before rollout:
+- confirm `DB_*`, `DB_SCHEMA`, `AUTH_SECRET`, `API_PUBLIC_URL`, and `OAUTH_DEFAULT_RETURN_TO`;
+- confirm Google OAuth redirect URIs match the deployed public URL;
+- confirm VAPID vars are present if notifications are expected;
+- confirm the target DB is reachable if you are not enabling the `db` profile.
 
 [↑ Back to top](#top)
 
 ---
 
-## 🗃️ Database migrations <a name="database-migrations"></a>
+## 🗃️ Migration behavior <a name="migration-behavior"></a>
 
-Migrations run automatically on `api` startup via Flyway (`quarkus.flyway.migrate-at-start=true`):
+Flyway runs automatically on backend startup.
+
+Current backend config:
+- `quarkus.flyway.migrate-at-start=true`
+- `quarkus.flyway.create-schemas=true`
+- schema selection follows `DB_SCHEMA`
+
+Local backend verification:
 
 ```bash
-# Docker Compose (starts API, applies Flyway migrations on boot)
-docker compose up -d api
+cd apps/backend
+./mvnw quarkus:dev
 ```
 
-For local development:
+Build-time verification:
 
 ```bash
-cd apps/api-java
-./mvnw quarkus:dev            # applies Flyway migrations on startup
-./mvnw package -DskipTests    # validates migrations during build pipeline
+cd apps/backend
+./mvnw package -DskipTests
 ```
 
-⚠️ Always back up the database before applying migrations in production.
+Operational caution:
+- treat schema changes as production-impacting even when Flyway applies them automatically;
+- back up the database before destructive or irreversible migrations.
 
 [↑ Back to top](#top)
 
 ---
 
-## ↩️ Rollback <a name="rollback"></a>
+## ↩️ Rollback notes <a name="rollback-notes"></a>
 
-There is no automatic rollback. Steps:
+There is no automatic rollback workflow in the current repo.
 
-1. Restore the previous Docker image tag:
-   ```bash
-   docker compose up -d --no-build api  # using previous image if tagged
-   ```
-2. If the migration changed the schema destructively, restore from DB backup before rolling back the code.
+Recommended rollback pattern:
+1. restore the previous application images or commit;
+2. restart `api` and `web`;
+3. restore the database from backup if a migration changed schema or data incompatibly.
 
-📝 Tag images before every production deploy (`docker tag habbit-runner-api:latest habbit-runner-api:prev`) to make rollback simple.
+If the problem is configuration-only:
+- revert `.env` or deployment secret changes first;
+- re-check OAuth redirect URLs and `DB_SCHEMA`;
+- validate `/q/health` before reopening traffic.
 
 [↑ Back to top](#top)
 
 ---
 
-## 📊 Observability <a name="observability"></a>
+## 🧭 Operational checks <a name="operational-checks"></a>
 
-**Sync metrics**: `GET /metrics` returns basic sync performance data (counts, timings).
+Useful commands:
 
-**Prometheus metrics**: `GET /q/metrics` exposes Micrometer metrics.
+```bash
+docker compose logs -f api
+docker compose logs -f web
+docker compose --profile db ps
+```
 
-**Logs**: `docker compose logs -f api` — Quarkus logs include sync and auth events.
+```bash
+curl http://localhost/api/q/health
+curl http://localhost/api/metrics
+```
 
-**Push subscription cleanup**: review notification errors in API logs and remove invalid endpoints via `/notifications/unsubscribe` when needed.
+If you use `docker-compose.local.yml`, the web app is available on `http://localhost:5137`, so the equivalent health path becomes `http://localhost:5137/api/q/health`.
 
 [↑ Back to top](#top)

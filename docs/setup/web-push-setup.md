@@ -1,214 +1,161 @@
-# Web Push Notifications Setup Guide
+# Web Push Setup
 
-## Overview
+<a name="top"></a>
 
-Web Push Notifications allow Habbit Runner to send reminders to users even when the app is closed (on desktop browsers and mobile PWA). Notifications are delivered through the browser's native notification system.
+## 📋 Table of Contents
 
-## Prerequisites
+- [What this covers](#what-this-covers)
+- [Prerequisites](#prerequisites)
+- [Generate VAPID keys](#generate-vapid-keys)
+- [Configure backend and frontend](#configure-backend-and-frontend)
+- [Verify the flow](#verify-the-flow)
+- [Troubleshooting](#troubleshooting)
 
-- Node.js and npm installed
-- Access to environment variables (`.env` files or hosting platform secrets)
-- HTTPS enabled in production (required for service workers)
+---
 
-## Setup Instructions
+## 🔔 What this covers <a name="what-this-covers"></a>
 
-### 1. Generate VAPID Keys
+Habbit Runner uses browser push subscriptions for reminder delivery. The current implementation exposes:
+- `GET /notifications/vapid-public-key`
+- `POST /notifications/subscribe`
+- `DELETE /notifications/unsubscribe`
 
-VAPID (Voluntary Application Server Identification) keys are required to authenticate your server with browser push services.
+The backend stores subscription endpoints in PostgreSQL and the frontend handles browser permission + service worker registration.
 
-**Run this command once:**
+[↑ Back to top](#top)
+
+---
+
+## ✅ Prerequisites <a name="prerequisites"></a>
+
+- backend running from `apps/backend`;
+- frontend running from `apps/web`;
+- HTTPS in production;
+- valid VAPID keys;
+- a browser that supports Push API and service workers.
+
+Notes:
+- local backend configuration must be exported in the shell; the current repo does not auto-load `apps/backend/.env`;
+- frontend API target should point at the backend through `VITE_API_BASE_URL` when needed.
+
+[↑ Back to top](#top)
+
+---
+
+## 🔑 Generate VAPID keys <a name="generate-vapid-keys"></a>
+
+Run once on a machine with Node installed:
 
 ```bash
 npx web-push generate-vapid-keys
 ```
 
-**Output example:**
-```
-Public Key: configure locally
-Private Key: configure locally
-```
-
-### 2. Configure Environment Variables
-
-#### For Docker Compose (Production)
-
-Update `/.env`:
+Store the result securely:
 
 ```env
-# Web Push Notifications
 VAPID_PUBLIC_KEY=
 VAPID_PRIVATE_KEY=
 VAPID_SUBJECT=mailto:admin@yourdomain.com
 ```
 
-#### For Local Development
+For Docker Compose, place them in the root `.env`.
 
-Create `apps/api-java/.env` (or append to existing file):
+For local backend runs, export them in the shell before starting Quarkus:
 
-```env
+```bash
 VAPID_PUBLIC_KEY=
 VAPID_PRIVATE_KEY=
-VAPID_SUBJECT=mailto:admin@localhost
+export VAPID_SUBJECT=mailto:admin@localhost
 ```
 
-Create `apps/web/.env.local`:
+[↑ Back to top](#top)
+
+---
+
+## ⚙️ Configure backend and frontend <a name="configure-backend-and-frontend"></a>
+
+Backend requirements:
+- `VAPID_PUBLIC_KEY`
+- `VAPID_PRIVATE_KEY`
+- `VAPID_SUBJECT`
+- auth env if you want the full authenticated subscription flow
+
+Frontend local override example:
 
 ```env
 VITE_API_BASE_URL=http://localhost:3000
 ```
 
-### 3. Deploy Database Migration
-
-The Web Push feature requires DB schema up to date. Flyway migrations run automatically when the Quarkus API starts.
+Run the services:
 
 ```bash
-# If using Docker Compose:
-docker compose up -d api
+docker compose --profile db up -d db
 
-# If running locally:
-npm run dev:server
+cd apps/backend
+./mvnw quarkus:dev
 ```
 
-This creates:
-- `push_subscriptions` table (stores browser endpoints)
-- `freezeDays` field in `habits` table
+In another terminal:
 
-### 4. Configure OAuth Redirects (if needed)
-
-Ensure these URLs match your Google OAuth Console settings:
-
-```env
-API_PUBLIC_URL=https://yourdomain.com/api
-OAUTH_DEFAULT_RETURN_TO=https://yourdomain.com
+```bash
+cd apps/web
+npm install
+npm run dev
 ```
 
-### 5. Verify Installation
+Flyway migrations are applied on backend startup, so no separate push-specific migration step is required.
 
-After deploying:
+[↑ Back to top](#top)
 
-1. Open the app in a browser
-2. Go to Edit Habit page (any habit)
-3. Scroll to bottom → "Push Notifications" section should appear
-4. Click "Disabled" button
-5. Browser prompts for permission → grant it
-6. Button changes to "Enabled" ✅
-7. Set a reminder time (e.g., 14:30)
+---
 
-### 6. Test Notifications
+## 🧪 Verify the flow <a name="verify-the-flow"></a>
 
-**Desktop Browser:**
-- Set reminder for the current time + 1 minute
-- Keep app closed/in background
-- Wait for notification to appear in system notification tray
+1. Open the app in the browser.
+2. Sign in so authenticated notification endpoints are available.
+3. Open the reminder or habit-edit flow that enables notifications.
+4. Grant browser notification permission.
+5. Confirm the backend serves a public key:
 
-**Mobile PWA (Android):**
-- Install app via "Add to Home Screen"
-- Same steps as desktop
-- Notification appears in Android notification tray
-
-**iOS Safari:**
-- Web Push not supported (Apple limitation)
-- Notifications will still work when app is open (Notification API)
-
-## Production Checklist
-
-- ✅ VAPID keys generated and stored securely
-- ✅ Environment variables set (use secrets manager, not hardcoded)
-- ✅ HTTPS enabled
-- ✅ API started at least once so Flyway migrations were applied
-- ✅ API_PUBLIC_URL and OAUTH_DEFAULT_RETURN_TO configured
-- ✅ Service worker deployed (included in Vite build)
-- ✅ Tested with at least one device
-
-## Troubleshooting
-
-### Notifications not appearing
-
-1. **Check browser permission:**
-   - Chrome/Edge: Settings → Privacy and security → Site settings → Notifications
-   - Firefox: Preferences → Privacy → Permissions → Notifications
-
-2. **Verify service worker:**
-   - Open DevTools → Application → Service Workers
-   - Should show one active service worker with "activated and running" status
-
-3. **Check server logs:**
-   ```bash
-   docker compose logs api | grep -i notification
-   ```
-
-4. **Verify VAPID keys:**
-   - Public and private keys must match
-   - Ensure no extra whitespace in `.env` values
-
-### "Cannot connect to push service" error
-
-- Ensure HTTPS is enabled (required for Web Push)
-- Check network connectivity
-- Verify VAPID keys are valid
-
-### Service worker not loading
-
-- Clear browser cache: Ctrl+Shift+Delete (or Cmd+Shift+Delete on Mac)
-- Check CORS settings (`CORS_ORIGINS` in .env)
-- Verify `apps/web/vite.config.ts` has `strategies: 'injectManifest'`
-
-## Architecture
-
-- **Server:** `NotificationResource` handles subscriptions and exposes VAPID public key endpoint
-- **Client:** Service Worker (`sw-custom.ts`) receives push events and shows notifications
-- **Database:** `push_subscriptions` table stores browser endpoints per user
-- **Sync:** Freeze days sync via existing sync protocol
-
-## API Endpoints
-
-### POST `/notifications/subscribe`
-Register a browser for push notifications.
-
-**Request:**
-```json
-{
-  "endpoint": "https://fcm.googleapis.com/...",
-  "keys": {
-    "auth": "...",
-    "p256dh": "..."
-  }
-}
+```bash
+curl http://localhost:3000/notifications/vapid-public-key
 ```
 
-**Response:** `{ "success": true }`
+6. Confirm subscription writes show up in backend logs or database records.
 
-### DELETE `/notifications/unsubscribe`
-Unsubscribe from push notifications.
+For Docker-backed local runs, verify the proxied path instead:
 
-**Request:**
-```json
-{
-  "endpoint": "https://fcm.googleapis.com/..."
-}
+```bash
+curl http://localhost/api/notifications/vapid-public-key
 ```
 
-### GET `/notifications/vapid-public-key`
-Get the VAPID public key for subscription.
+[↑ Back to top](#top)
 
-**Response:**
-```json
-{
-  "publicKey": "BKT8nR5OScHpnHJfLG-xh5BTd0qVxnb_PxYfvQqYrKP5aE..."
-}
+---
+
+## ⚠️ Troubleshooting <a name="troubleshooting"></a>
+
+Common issues:
+- `VAPID_PUBLIC_KEY not configured`: <REDACTED>
+- browser permission denied: reset site notification permission and retry.
+- no subscription request reaches the backend: check `VITE_API_BASE_URL` and dev proxy behavior.
+- Docker stack works but direct local backend does not: confirm env vars are exported in the shell, not only written to a file.
+- no notifications in production: check HTTPS, service worker registration, and real browser push support on the target platform.
+
+Useful checks:
+
+```bash
+docker compose logs -f api
+docker compose logs -f web
 ```
 
-## Security Notes
+```bash
+cd apps/backend
+./mvnw test
+```
 
-⚠️ **NEVER commit VAPID_PRIVATE_KEY to Git**
+Security reminder:
+- never commit `VAPID_PRIVATE_KEY`;
+- rotate production keys deliberately and coordinate with deployment secrets.
 
-- Use environment variables for all deployments
-- Rotate keys annually for production
-- Private key must be kept secret (like database passwords)
-- Public key is safe to embed in client code (already done via API endpoint)
-
-## References
-
-- [Web Push Protocol](https://datatracker.ietf.org/doc/html/draft-thomson-webpush-protocol)
-- [Service Workers](https://developer.mozilla.org/en-US/docs/Web/API/Service_Worker_API)
-- [Notification API](https://developer.mozilla.org/en-US/docs/Web/API/Notification)
+[↑ Back to top](#top)

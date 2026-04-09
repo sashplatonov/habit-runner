@@ -4,41 +4,65 @@
 
 ## 📋 Table of Contents
 
+- [Current state](#current-state)
 - [Renovate](#renovate)
-- [Trivy](#trivy)
+- [Security scanning](#security-scanning)
 
 ---
 
-## 🤖 Renovate <a name="renovate"></a>
+## 🧭 Current state <a name="current-state"></a>
 
-Renovate automatically opens PRs for outdated dependencies.
+The current checkout includes:
+- `.github/renovate.json`
 
-**Config**: `.github/renovate.json`
-
-Renovate groups minor/patch updates and opens individual PRs for major bumps. Review the generated PRs; run `npm run check` before merging.
-
-To test Renovate config locally:
-```bash
-npx renovate --dry-run --token=$GITHUB_TOKEN
-```
+The current checkout does not include committed GitHub Actions workflows for Trivy or other CI automation, so treat those flows as manual or planned work rather than active guarantees.
 
 [↑ Back to top](#top)
 
 ---
 
-## 🛡️ Trivy <a name="trivy"></a>
+## 🤖 Renovate <a name="renovate"></a>
 
-Trivy scans Docker images and the dependency tree for CVEs.
+Renovate configuration lives in `.github/renovate.json`.
 
-**Run manually:**
+Current behavior:
+- extends `config:recommended`;
+- uses timezone `Europe/Belgrade`;
+- schedules updates after 06:00 on Monday;
+- labels Renovate PRs with `dependencies`;
+- groups npm patch/minor/digest updates together;
+- groups Docker-related updates together.
+
+Manual validation:
+
 ```bash
-# Scan the built image
-trivy image habbit-runner-web:latest
-
-# Scan filesystem (deps)
-trivy fs --scanners vuln .
+npx renovate --dry-run --token="$GITHUB_TOKEN"
 ```
 
-⚠️ Set up a scheduled GitHub Actions workflow to run Trivy on a cron and post results as GitHub Security alerts (SARIF upload).
+Review expectation:
+- validate frontend commands from `apps/web`;
+- validate backend Maven commands from `apps/backend`;
+- update docs when dependency changes alter commands, config names, or runtime behavior.
+
+[↑ Back to top](#top)
+
+---
+
+## 🛡️ Security scanning <a name="security-scanning"></a>
+
+There is no committed Trivy workflow in this repository right now.
+
+Manual examples:
+
+```bash
+trivy fs --scanners vuln .
+trivy image habbit-runner-web:latest
+trivy image habbit-runner-api:latest
+```
+
+If you add automated scanning later, update this doc together with:
+- workflow files in `.github/workflows`;
+- rollout or remediation instructions;
+- any required secrets or SARIF upload steps.
 
 [↑ Back to top](#top)

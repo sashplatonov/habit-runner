@@ -4,101 +4,116 @@
 
 ## 📋 Table of Contents
 
-- [Quality gates](#quality-gates)
-- [Testing](#testing)
-- [Linting](#linting)
-- [Adding new habits features](#adding-new-features)
+- [Primary quality gates](#primary-quality-gates)
+- [Frontend verification](#frontend-verification)
+- [Backend verification](#backend-verification)
+- [Known repo constraints](#known-repo-constraints)
+- [Change checklist](#change-checklist)
 
 ---
 
-## ✅ Quality gates <a name="quality-gates"></a>
+## ✅ Primary quality gates <a name="primary-quality-gates"></a>
 
-Run before every PR:
+Current repo verification is split by application:
+
+Frontend:
 
 ```bash
+cd apps/web
 npm run check
 ```
 
-This runs in order:
-1. `npm run lint` — ESLint across all workspaces
-2. `npm run build` — Turbo build: shared → server → web
-3. `npm run build:server` — Java backend package build (Quarkus)
-4. `npx prisma generate` — Regenerate Prisma client (in `apps/api-nest-legacy`)
+This runs:
+1. `npm run lint`
+2. `npm run build`
+3. `npm run build:server`
 
-Each step must pass. CI does not run automatically yet — run `npm run check` locally.
+Backend:
+
+```bash
+cd apps/backend
+./mvnw test
+./mvnw package -DskipTests
+```
+
+Use both paths for cross-cutting changes that touch the web app, API contracts, or sync behavior.
 
 [↑ Back to top](#top)
 
 ---
 
-## 🧪 Testing <a name="testing"></a>
+## 🧪 Frontend verification <a name="frontend-verification"></a>
 
-**Frontend**: Vitest + @testing-library/react (18 test suites, 103 tests)
-
-```bash
-cd apps/web && npm run test
-# or from root:
-npm run test -w @habbit-runner/web
-```
-
-Test suites cover:
-- Schedule/streak/stat calculations (`schedule.test.ts`, `habitStats.test.ts`, `completionKey.test.ts`)
-- Sync engine hook (`useSyncEngine.test.tsx`)
-- Sync status component (`SyncStatus.test.tsx`)
-- Outbox panel — soft-delete + undo flow (`OutboxPanel.test.tsx`)
-- Async state hook (`useAsyncState.test.ts`)
-- Async UI state components (`AsyncStateUI.test.tsx`)
-- AppLayout accessibility (`AppLayout.a11y.test.tsx`)
-- Router, write-through, habitsSerialization, Dexie write-through, caching
-
-> **Note**: `react` and `react-dom` must be installed at the workspace root for
-> `@testing-library/react` (hoisted to root `node_modules`) to find its peer deps.
-> They are listed in root `devDependencies` — run `npm install` if missing.
-
-**Backend (active)**: Quarkus tests (JUnit + RestAssured).
+Frontend commands:
 
 ```bash
-cd apps/api-java && ./mvnw test
+cd apps/web
+npm run lint
+npm run test
+npm run build
+npm run check:runtime-undefined
 ```
 
-**Backend (legacy reference)**: NestJS tests still available in `apps/api-nest-legacy/test/`.
+Current frontend test inventory lives in `apps/web/tests/unit` and includes coverage for:
+- router behavior;
+- sync engine hooks;
+- write-through and serialization helpers;
+- runtime caching and dev proxy helpers;
+- add/edit model safety and callback safety;
+- accessibility and async UI state paths.
 
-```bash
-cd apps/api-nest-legacy && npm run test
-# or from root:
-npm run test -w @habbit-runner/server
-```
-[↑ Back to top](#top)
-
----
-
-## 🔍 Linting <a name="linting"></a>
-
-ESLint v10 flat-config in all packages.
-
-```bash
-npm run lint              # all workspaces
-cd apps/web && npm run lint   # web only
-```
-
-Config files:
-- `apps/web/eslint.config.cjs`
-- `apps/api-nest-legacy/eslint.config.cjs`
-- `packages/shared/eslint.config.cjs`
+High-risk guard:
+- `apps/web/scripts/check-runtime-undefined.cjs` blocks builds on selected TypeScript diagnostics inside `apps/web/src`.
+- This guard is part of the web lint/build flow and should remain green after UI refactors.
 
 [↑ Back to top](#top)
 
 ---
 
-## 🏗️ Adding new habit features <a name="adding-new-features"></a>
+## ⚙️ Backend verification <a name="backend-verification"></a>
 
-Checklist for adding new habit fields:
+Backend commands:
 
-1. **Shared** (`packages/shared/src/sync.ts`) — add field to `HabitDto`
-2. **Server schema** (`apps/api-java/src/main/resources/db/migration/`) — add Flyway SQL migration for new column
-3. **Server sync layer** (`apps/api-java/src/main/java/com/habittracker/sync/`) — include field in pull/push serialization
-4. **Client** (`apps/web/src/types/habit.ts`) — add to `Habit` type
-5. **Client** (`apps/web/src/lib/storage/db.ts`) — add to Dexie entity + domain mapping
-6. Run `npm run check` before opening PR
+```bash
+cd apps/backend
+./mvnw test
+./mvnw package -DskipTests
+```
+
+Current backend tests cover:
+- auth refresh and logout flows;
+- sync pull/push paths.
+
+Backend runtime checks:
+- `GET /q/health`
+- `GET /q/metrics`
+- `GET /metrics`
+
+When you touch auth, sync, notifications, or schema migration code, verify both the Maven test path and the relevant runtime endpoint.
+
+[↑ Back to top](#top)
+
+---
+
+## ⚠️ Known repo constraints <a name="known-repo-constraints"></a>
+
+- There is no root `package.json`; do not document root-level `npm run ...` commands as if they are currently available.
+- Backend env comes from the shell or Docker Compose; the repo does not auto-load `apps/backend/.env`.
+- The bundled Postgres service in Docker Compose is behind the `db` profile.
+- Historical docs that mention `apps/api-java`, `packages/shared` at repo root, Prisma, or NestJS are stale for the current checkout.
+
+[↑ Back to top](#top)
+
+---
+
+## 🧭 Change checklist <a name="change-checklist"></a>
+
+When a change touches habits, sync, auth, or notifications:
+
+1. Update the code path.
+2. Update docs if commands, paths, endpoints, or env names changed.
+3. Run the nearest frontend verification path from `apps/web`.
+4. Run the nearest backend verification path from `apps/backend`.
+5. If Docker behavior changed, re-check `docker-compose.yml`, `.env.example`, and the setup docs together.
 
 [↑ Back to top](#top)

@@ -1,90 +1,121 @@
-# server-java
+# Backend Service
 
-This project uses Quarkus, the Supersonic Subatomic Java Framework.
+<a name="top"></a>
 
-If you want to learn more about Quarkus, please visit its website: <https://quarkus.io/>.
+## 📋 Table of Contents
 
-## Running the application in dev mode
+- [What lives here](#what-lives-here)
+- [Run locally](#run-locally)
+- [Build and test](#build-and-test)
+- [Environment contract](#environment-contract)
+- [Key endpoints](#key-endpoints)
 
-You can run your application in dev mode that enables live coding using:
+---
 
-```shell script
+## ⚙️ What lives here <a name="what-lives-here"></a>
+
+This directory contains the active Habbit Runner backend:
+- Quarkus 3 application
+- Hibernate ORM with Panache
+- Flyway migrations
+- PostgreSQL datasource
+- auth, sync, notification, and metrics resources
+
+[↑ Back to top](#top)
+
+---
+
+## 🚀 Run locally <a name="run-locally"></a>
+
+Start a database first, for example with the repo Compose profile:
+
+```bash
+cd /Users/sash/Dev/Projects/habbit-runner
+docker compose --profile db up -d db
+```
+
+Export the required env in your shell, then run:
+
+```bash
+cd /Users/sash/Dev/Projects/habbit-runner/apps/backend
 ./mvnw quarkus:dev
 ```
 
-> **_NOTE:_**  Quarkus now ships with a Dev UI, which is available in dev mode only at <http://localhost:8080/q/dev/>.
+Important:
+- backend config is read from environment variables;
+- this repo does not auto-load `apps/backend/.env`;
+- Flyway migrations run on startup.
 
-## Packaging and running the application
+[↑ Back to top](#top)
 
-The application can be packaged using:
+---
 
-```shell script
-./mvnw package
+## 🧪 Build and test <a name="build-and-test"></a>
+
+```bash
+cd /Users/sash/Dev/Projects/habbit-runner/apps/backend
+./mvnw test
+./mvnw package -DskipTests
 ```
 
-It produces the `quarkus-run.jar` file in the `target/quarkus-app/` directory.
-Be aware that it’s not an _über-jar_ as the dependencies are copied into the `target/quarkus-app/lib/` directory.
+Docker image build used by the repo:
 
-The application is now runnable using `java -jar target/quarkus-app/quarkus-run.jar`.
-
-If you want to build an _über-jar_, execute the following command:
-
-```shell script
-./mvnw package -Dquarkus.package.jar.type=uber-jar
+```bash
+docker build -t habbit-backend:local -f Dockerfile.jvm .
 ```
 
-The application, packaged as an _über-jar_, is now runnable using `java -jar target/*-runner.jar`.
+[↑ Back to top](#top)
 
-## Creating a native executable
+---
 
-You can create a native executable using:
+## 🧾 Environment contract <a name="environment-contract"></a>
 
-```shell script
-./mvnw package -Dnative
-```
+Required core variables:
+- `DB_HOST`
+- `DB_PORT`
+- `DB_NAME`
+- `DB_USER`
+- `DB_PASSWORD`
+- `DB_SCHEMA`
+- `API_PORT`
+- `AUTH_SECRET`
+- `ACCESS_TOKEN_TTL_SECONDS`
+- `REFRESH_TOKEN_EXPIRES_DAYS`
+- `JWT_ISSUER`
+- `API_PUBLIC_URL`
+- `OAUTH_DEFAULT_RETURN_TO`
+- `CORS_ORIGINS`
 
-Or, if you don't have GraalVM installed, you can run the native executable build in a container using:
+Optional feature variables:
+- `GOOGLE_OAUTH_CLIENT_ID`
+- `GOOGLE_OAUTH_CLIENT_SECRET`
+- `VAPID_PUBLIC_KEY`
+- `VAPID_PRIVATE_KEY`
+- `VAPID_SUBJECT`
+- `OTEL_EXPORTER_OTLP_ENDPOINT`
+- `OTEL_EXPORTER_OTLP_HEADERS`
+- `OTEL_RESOURCE_ATTRIBUTES`
+- `GRAFANA_CLOUD_API_KEY`
+- `LOKI_PUSH_URL`
 
-```shell script
-./mvnw package -Dnative -Dquarkus.native.container-build=true
-```
+[↑ Back to top](#top)
 
-You can then execute your native executable with: `./target/server-java-1.0.0-SNAPSHOT-runner`
+---
 
-If you want to learn more about building native executables, please consult <https://quarkus.io/guides/maven-tooling>.
+## 🌐 Key endpoints <a name="key-endpoints"></a>
 
-## Related Guides
+- `GET /q/health`
+- `GET /q/metrics`
+- `GET /metrics`
+- `GET /auth/google/start`
+- `GET /auth/google/callback`
+- `POST /auth/refresh`
+- `GET /auth/preferences`
+- `PUT /auth/preferences`
+- `GET /sync/pull`
+- `POST /sync/push`
+- `GET /notifications/vapid-public-key`
+- `POST /notifications/subscribe`
+- `DELETE /notifications/unsubscribe`
 
-- Hibernate ORM with Panache ([guide](https://quarkus.io/guides/hibernate-orm-panache)): Simplify your persistence code for Hibernate ORM via the active record or the repository pattern
-- Scheduler ([guide](https://quarkus.io/guides/scheduler)): Schedule jobs and tasks
-- REST Jackson ([guide](https://quarkus.io/guides/rest#json-serialisation)): Jackson serialization support for Quarkus REST. This extension is not compatible with the quarkus-resteasy extension, or any of the extensions that depend on it
-- SmallRye Health ([guide](https://quarkus.io/guides/smallrye-health)): Monitor service health
-- Hibernate Validator ([guide](https://quarkus.io/guides/validation)): Validate object properties (field, getter) and method parameters for your beans (REST, CDI, Jakarta Persistence)
-- Flyway ([guide](https://quarkus.io/guides/flyway)): Handle your database schema migrations
-- SmallRye OpenAPI ([guide](https://quarkus.io/guides/openapi-swaggerui)): Document your REST APIs with OpenAPI - comes with Swagger UI
-- JDBC Driver - PostgreSQL ([guide](https://quarkus.io/guides/datasource)): Connect to the PostgreSQL database via JDBC
-- Micrometer Registry Prometheus ([guide](https://quarkus.io/guides/micrometer)): Enable Prometheus support for Micrometer
-
-## Provided Code
-
-### Hibernate ORM
-
-Create your first JPA entity
-
-[Related guide section...](https://quarkus.io/guides/hibernate-orm)
-
-
-[Related Hibernate with Panache section...](https://quarkus.io/guides/hibernate-orm-panache)
-
-
-### REST
-
-Easily start your REST Web Services
-
-[Related guide section...](https://quarkus.io/guides/getting-started-reactive#reactive-jax-rs-resources)
-
-### SmallRye Health
-
-Monitor your application's health using SmallRye Health
-
-[Related guide section...](https://quarkus.io/guides/smallrye-health)
+[↑ Back to top](#top)

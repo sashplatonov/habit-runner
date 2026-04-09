@@ -7,35 +7,35 @@
 - [System overview](#system-overview)
 - [Frontend](#frontend)
 - [Backend](#backend)
-- [Sync protocol](#sync-protocol)
-- [Habit schedules](#habit-schedules)
-- [Auth flow](#auth-flow)
-- [Database schema](#database-schema)
-- [API endpoints](#api-endpoints)
+- [Sync and preferences flow](#sync-and-preferences-flow)
+- [Auth and notification endpoints](#auth-and-notification-endpoints)
+- [Deployment shape](#deployment-shape)
 
 ---
 
 ## 🗺️ System overview <a name="system-overview"></a>
 
-```
+```text
 Browser
-├── React app (Vite)
-│   ├── Dexie (IndexedDB) ← source of truth for UI
-│   ├── Outbox table     ← pending mutations
-│   └── Sync engine      ← pull-push-pull every 30s
+├── React app in apps/web
+│   ├── IndexedDB via Dexie
+│   ├── OAuth callback handling
+│   ├── Sync engine and write-through fallback
+│   └── PWA service worker and notification subscription flow
 │
-Nginx (port 80 in Docker)
-├── /        → web (React build)
-└── /api/*   → api service (port 3000)
+Backend API in apps/backend
+├── /auth           login, refresh, Google OAuth, preferences
+├── /sync           pull and push for habits/checkins/tombstones
+├── /notifications  VAPID key, subscribe, unsubscribe
+├── /metrics        lightweight JSON metrics
+├── /q/health       Quarkus health endpoint
+└── /q/metrics      Prometheus metrics
 │
-NestJS API
-├── AuthModule   (OAuth, JWT)
-├── SyncModule   (pull/push)
-├── NotificationModule (Web Push)
-└── Prisma → PostgreSQL
+PostgreSQL
+└── Flyway-managed schema selected by DB_SCHEMA
 ```
 
-All UI state reads from IndexedDB. The server is only involved during sync cycles — the app is fully functional offline.
+The frontend keeps UX responsive by writing local state first and syncing in the background. The backend is the source of truth for authenticated cross-device state, OAuth, push subscriptions, and schema migrations.
 
 [↑ Back to top](#top)
 
@@ -43,33 +43,32 @@ All UI state reads from IndexedDB. The server is only involved during sync cycle
 
 ## 🖥️ Frontend <a name="frontend"></a>
 
-**Stack**: React 19, Vite, TypeScript, Tailwind CSS, Dexie 4
+Stack:
+- React 19
+- Vite 7
+- TypeScript
+- Dexie 4
+- Vitest
+- `vite-plugin-pwa`
 
-**Key modules:**
+Important paths:
 
-| File | Purpose |
+| Path | Purpose |
 |---|---|
-| `src/lib/storage/db.ts` | Dexie schema, all DB read/write helpers |
-| `src/hooks/useHabits.ts` | Main data hook — habits, completions, mutations |
-| `src/lib/sync/syncEngine.ts` | Pull-push-pull sync implementation |
-| `src/hooks/useSyncEngine.ts` | Sync scheduler (mount, 30s, online event) |
-| `src/lib/auth/session.ts` | Token storage, refresh, expiry check |
-| `src/lib/habits/schedule.ts` | Schedule calculations (streak, mandatory check) |
-| `src/App.tsx` | BrowserRouter setup, AuthGate, sync init, OAuth callback handling |
+| `apps/web/src/App.tsx` | App shell, auth callback, route registration |
+| `apps/web/src/lib/core/config.ts` | Runtime config derived from `VITE_*` env |
+| `apps/web/src/lib/api/` | HTTP clients for auth, sync, theme/preferences |
+| `apps/web/src/lib/storage/` | IndexedDB schema and persistence helpers |
+| `apps/web/src/lib/sync/` | Pull/push cycle, write-through fallback, sync logging |
+| `apps/web/src/lib/pwa/` | Runtime caching and push subscription client flow |
+| `apps/web/src/hooks/` | Theme, habits, sync engine hooks |
+| `apps/web/packages/shared` | Shared DTOs consumed by the web app |
+| `apps/web/tests/unit` | Frontend unit tests |
 
-**Routing**: Custom `BrowserRouter` in `src/lib/router.tsx` — provides `BrowserRouter`, `Routes`, `Route`, `Navigate`, `Link`, `NavLink`, `useNavigate`, `useLocation`, `useParams`. Supports dynamic segments (`:id`), wildcard `*`, and `replace` history mode. No external router library dependency.
-
-**State**: No Redux/Zustand. All persistent state in IndexedDB. React state for UI-only concerns.
-
-**IndexedDB tables:**
-
-| Table | Contents |
-|---|---|
-| `habits` | Habit entity with schedule, metadata |
-| `checkins` | Daily completion records |
-| `tombstones` | Soft-delete markers for deleted entities |
-| `sync_meta` | Sync cursor, last sync time, status |
-| `outbox` | Pending mutations waiting to be pushed |
+Configuration notes:
+- `VITE_API_BASE_URL` sets the API origin; if omitted, dev defaults to `http://localhost:3000` and production defaults to `/api`.
+- `VITE_SYNC_ENABLED=false` disables background sync for offline-only or UI-focused work.
+- Faro observability is optional and controlled by `VITE_FARO_*` variables.
 
 [↑ Back to top](#top)
 
@@ -77,172 +76,98 @@ All UI state reads from IndexedDB. The server is only involved during sync cycle
 
 ## ⚙️ Backend <a name="backend"></a>
 
-**Stack**: NestJS 11, Prisma 7, PostgreSQL, TypeScript
+Stack:
+- Java 25
+- Quarkus 3
+- Hibernate ORM with Panache
+- Flyway
+- PostgreSQL
+- RestAssured + Quarkus JUnit tests
 
-**Module structure:**
+Important paths:
 
-```
-AppModule
-├── PrismaModule          — DB connection (extends PrismaClient)
-├── AuthModule            — OAuth flow, JWT, token refresh
-├── SyncModule            — pull/push endpoints + op log cleanup cron
-├── MetricsModule         — sync performance metrics
-└── NotificationModule    — Web Push subscription management
-```
+| Path | Purpose |
+|---|---|
+| `apps/backend/src/main/java/com/habittracker/auth` | Login, refresh, Google OAuth, preferences, JWT guard |
+| `apps/backend/src/main/java/com/habittracker/sync` | Pull/push resources, DTOs, server-side sync logic |
+| `apps/backend/src/main/java/com/habittracker/notification` | VAPID public key and push subscription endpoints |
+| `apps/backend/src/main/java/com/habittracker/metrics` | Lightweight `/metrics` JSON payload |
+| `apps/backend/src/main/java/com/habittracker/model` | Panache entities |
+| `apps/backend/src/main/resources/application.properties` | Quarkus, datasource, CORS, Flyway, auth config |
+| `apps/backend/src/main/resources/db/migration` | Flyway migrations |
+| `apps/backend/src/test/java` | Backend tests |
 
-**Rate limiting** (ThrottlerModule):
-- Default: 120 req / 60s
-- Auth endpoints: 10 req / 60s
-- Theme endpoints: 20 req / 60s
-
-[↑ Back to top](#top)
-
----
-
-## 🔄 Sync protocol <a name="sync-protocol"></a>
-
-**Pattern**: Pull → Push → Pull (one cycle)
-
-```
-1. PULL  GET /sync/pull?since=<cursor>
-         → receives changed habits, checkins, tombstones
-         → applied to IndexedDB
-
-2. PUSH  POST /sync/push  { ops: [SyncOp, ...] }
-         → outbox entries sent to server
-         → applied: entries removed from outbox
-         → conflicts: entry marked failed, retry with backoff
-
-3. PULL  GET /sync/pull?since=<newCursor>
-         → picks up any server-side changes from step 2
-
-4. Update sync_meta: cursor, lastSyncedAt, status=idle
-```
-
-**Scheduler triggers:**
-- App mount (if authenticated)
-- Every 30 seconds
-- `online` browser event
-- Tab visibility change (tab becomes visible)
-
-**Conflict resolution**: Last-write-wins on `updatedAt` timestamp.
-
-**Idempotency**: Each push op has a unique `opId`. Server records processed opIds in `SyncOpLog` — duplicate pushes are silently ignored.
-
-**Cursor format**: `"<ISO timestamp>|<entity id>"` — opaque pagination token.
-
-**Pagination**: Pull returns max 200 items per entity type per request. Client follows `nextCursor` until empty.
-
-**Outbox retry backoff:**
-```
-delay = (retryCount + 1) * 1000ms   // 2s, 3s, 4s ... capped at 7s
-```
+Operational notes:
+- Backend env is read from process environment; the current repo does not auto-load `apps/backend/.env`.
+- `DB_SCHEMA` is first-class: datasource search path, Flyway schema, and Hibernate default schema are all bound to it.
+- Flyway runs automatically on startup and can create the target schema if needed.
 
 [↑ Back to top](#top)
 
 ---
 
-## 📅 Habit schedules <a name="habit-schedules"></a>
+## 🔄 Sync and preferences flow <a name="sync-and-preferences-flow"></a>
 
-**Schedule types** (stored as JSON on `Habit`):
+Current sync surface:
+- `GET /sync/pull?since=<cursor>`
+- `POST /sync/push`
 
-| Type | Config | Meaning |
+Payload families currently handled by the backend:
+- habits
+- checkins
+- tombstones
+
+Client-side behavior:
+- sync requests are authenticated with the access token;
+- responses are marked `no-store`;
+- the backend returns timing headers such as `x-sync-duration-ms` and `Server-Timing`;
+- theme and timezone preferences use `GET /auth/preferences` and `PUT /auth/preferences`.
+
+The frontend also keeps a write-through path so local habit changes can remain usable even when scheduled background sync is paused or unavailable.
+
+[↑ Back to top](#top)
+
+---
+
+## 🔐 Auth and notification endpoints <a name="auth-and-notification-endpoints"></a>
+
+Auth endpoints:
+
+| Method | Path | Notes |
 |---|---|---|
-| `daily` | — | Every day |
-| `weekly_days` | `weekdays: number[]` | Specific days of week (0=Sun) |
-| `weekly_quota` | `timesPerWeek: number` | N times per rolling 7-day window |
-| `monthly_weeks` | `weeksOfMonth`, `weekdays` | Specific week(s) of month on specific days |
-| `monthly_quota` | `timesPerMonth: number` | N times per rolling 30-day window |
+| `POST` | `/auth/login` | Lightweight email login path used for non-OAuth flows/tests |
+| `GET` | `/auth/google/start` | Starts Google OAuth |
+| `GET` | `/auth/google/callback` | Handles provider callback |
+| `POST` | `/auth/refresh` | Refreshes access token |
+| `POST` | `/auth/logout` | Revokes refresh token |
+| `GET` | `/auth/preferences` | Reads theme and timezone |
+| `PUT` | `/auth/preferences` | Writes theme and timezone |
+| `GET` | `/auth/theme` | Theme-only compatibility endpoint |
+| `PUT` | `/auth/theme` | Theme-only compatibility endpoint |
 
-**Mandatory check** (`isMandatoryToday`): a habit is mandatory for today if:
-1. Its schedule pattern matches today (correct day/week)
-2. For quota types: quota is not yet met in the rolling window
+Notification endpoints:
 
-Habits with met quotas are excluded from the pending list, progress ring, and summary streak.
-
-**Freeze days**: dates stored as `YYYY-MM-DD` strings in `habit.freezeDays[]`. A frozen day is counted as completed for streak purposes.
-
-[↑ Back to top](#top)
-
----
-
-## 🔐 Auth flow <a name="auth-flow"></a>
-
-```
-1. UI → GET /auth/google/start?returnTo=<frontend-url>
-2. Server stores state, redirects to Google consent
-3. Google → GET /auth/google/callback?code=X&state=Y
-4. Server exchanges code → user upserted in DB
-5. Server redirects to <returnTo>/auth/callback?accessToken=...&refreshToken=...&expiresIn=...
-6. Frontend parses URL params, stores tokens in localStorage
-7. All API requests: Authorization: Bearer <accessToken>
-8. On expiry: POST /auth/refresh → new access token
-```
-
-**Token storage key**: `habbitRunner.auth.session`
+| Method | Path | Notes |
+|---|---|---|
+| `GET` | `/notifications/vapid-public-key` | Public key for the browser subscription flow |
+| `POST` | `/notifications/subscribe` | Stores browser endpoint and keys |
+| `DELETE` | `/notifications/unsubscribe` | Removes an endpoint |
 
 [↑ Back to top](#top)
 
 ---
 
-## 🗄️ Database schema <a name="database-schema"></a>
+## 🐳 Deployment shape <a name="deployment-shape"></a>
 
-```
-User
-  id, email, theme, createdAt
+Root `docker-compose.yml` defines:
+- `web`: nginx-served frontend image built from `apps/web`
+- `api`: Quarkus image built from `apps/backend`
+- `db`: PostgreSQL 18 image behind the optional `db` profile
 
-Habit
-  id, userId, name, description, color, icon
-  frequency, schedule (JSON), customDays (JSON)
-  dailyTarget, targetStreak, tags (JSON)
-.  archived, sortOrder, type (positive|negative)
-  reminderTime, reminderEnabled
-  freezeDays (JSON []), createdAt, updatedAt, version
-
-Checkin
-  id, habitId, userId, date, done, count
-  createdAt, updatedAt, version
-  unique(habitId, date)
-
-Tombstone          — soft delete markers for sync
-SyncOpLog          — processed op IDs (idempotency)
-RefreshToken       — refresh tokens with revocation
-OAuthState         — temp OAuth CSRF state
-PushSubscription   — Web Push endpoints + encryption keys
-```
-
-[↑ Back to top](#top)
-
----
-
-## 🌐 API endpoints <a name="api-endpoints"></a>
-
-All protected routes require `Authorization: Bearer <token>`.
-
-**Auth**
-
-| Method | Path | Auth | Description |
-|---|---|---|---|
-| GET | `/auth/google/start` | — | Start OAuth flow |
-| GET | `/auth/google/callback` | — | OAuth callback |
-| POST | `/auth/refresh` | — | Refresh access token |
-| POST | `/auth/logout` | ✅ | Revoke refresh token |
-| GET | `/auth/theme` | ✅ | Get user theme |
-| PUT | `/auth/theme` | ✅ | Update user theme |
-
-**Sync**
-
-| Method | Path | Auth | Description |
-|---|---|---|---|
-| GET | `/sync/pull?since=<cursor>` | ✅ | Fetch changes since cursor |
-| POST | `/sync/push` | ✅ | Push local mutations |
-
-**Notifications**
-
-| Method | Path | Auth | Description |
-|---|---|---|---|
-| GET | `/notifications/vapid-public-key` | — | Get VAPID public key |
-| POST | `/notifications/subscribe` | ✅ | Register push subscription |
-| POST | `/notifications/unsubscribe` | ✅ | Remove push subscription |
+Important runtime assumptions:
+- the web container proxies `/api/*` to the internal `api` service;
+- `api` and `db` are not published directly for host access in the default stack;
+- `docker compose --profile db up --build` is the complete local stack path when using the bundled database;
+- `docker compose up --build` without the profile is valid only when `DB_*` points to an already reachable database.
 
 [↑ Back to top](#top)
