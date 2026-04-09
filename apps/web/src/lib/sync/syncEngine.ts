@@ -197,6 +197,13 @@ async function runSyncCycleOnce(): Promise<SyncRunResult> {
       pushApplyDurationMs: 0,
       cycleStartedAt
     };
+    logClientInfo('sync.pull_applied', 'Pull response applied locally', {
+      habits: firstPull.habits.length,
+      checkins: firstPull.checkins.length,
+      tombstones: firstPull.tombstones.length,
+      firstPullDurationMs,
+      firstPullApplyDurationMs
+    });
     await updateSyncMeta({
       lastCursor: cursorAfterPull,
       lastSyncedAt: firstPull.serverTime,

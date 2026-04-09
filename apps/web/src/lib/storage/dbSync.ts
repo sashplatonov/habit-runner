@@ -215,16 +215,23 @@ export async function applyAcknowledgedPushResponse(response: PullResponseDto): 
 
 export async function applyPullResponse(response: PullResponseDto): Promise<void> {
   const userId = getCurrentUserId();
-  const habitPromises = response.habits.map(async (habit) => {
-    const existingHabit = await db.habits.get(habit.id);
-    if (!shouldApplyRemoteRecord(existingHabit, habit.updatedAt, habit.version)) {
-      return;
+  await db.transaction('rw', db.habits, db.checkins, async () => {
+    for (const habit of response.habits) {
+      const existingHabit = await db.habits.get(habit.id);
+      if (!shouldApplyRemoteRecord(existingHabit, habit.updatedAt, habit.version)) {
+        continue;
+      }
+      await db.habits.put(mapRemoteHabitToEntity(habit, userId));
     }
-    await db.habits.put(mapRemoteHabitToEntity(habit, userId));
+
+    for (const checkin of response.checkins) {
+      await applyCheckinUpsert(checkin, userId);
+    }
+
+    for (const tombstone of response.tombstones) {
+      await applyTombstone(tombstone, userId);
+    }
   });
-  const checkinPromises = response.checkins.map((checkin) => applyCheckinUpsert(checkin, userId));
-  const tombstonePromises = response.tombstones.map((tombstone) => applyTombstone(tombstone, userId));
-  await Promise.all([...habitPromises, ...checkinPromises, ...tombstonePromises]);
 }
 
 export function getBackoffMs(retries: number): number {

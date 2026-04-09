@@ -72,6 +72,34 @@ function logSyncHttpFailure(
   logClientError('sync.http_failed', 'Sync request failed', context);
 }
 
+async function parseJsonResponse<T>(
+  response: Response,
+  operation: 'pull' | 'push'
+): Promise<T> {
+  const startedAt = nowMs();
+  const payload = await response.json() as T;
+  const duration = Math.round(nowMs() - startedAt);
+  const summary = typeof payload === 'object' && payload !== null
+    ? {
+        habits: Array.isArray((payload as { habits?: unknown[] }).habits)
+          ? (payload as { habits: unknown[] }).habits.length
+          : undefined,
+        checkins: Array.isArray((payload as { checkins?: unknown[] }).checkins)
+          ? (payload as { checkins: unknown[] }).checkins.length
+          : undefined,
+        tombstones: Array.isArray((payload as { tombstones?: unknown[] }).tombstones)
+          ? (payload as { tombstones: unknown[] }).tombstones.length
+          : undefined
+      }
+    : undefined;
+  logClientInfo('sync.http_body_parsed', 'Sync response body parsed', {
+    operation,
+    durationMs: duration,
+    ...summary
+  });
+  return payload;
+}
+
 async function fetchJson(
   url: string,
   init: RequestInit = {},
@@ -132,7 +160,7 @@ export async function pullChanges(
   const url = new URL(buildUrl('/sync/pull'));
   if (since) {url.searchParams.set('since', since);}
   const response = await fetchJson(url.toString(), { method: 'GET' });
-  return await response.json() as PullResponseDto;
+  return await parseJsonResponse<PullResponseDto>(response, 'pull');
 }
 
 export async function pushChanges(
@@ -151,5 +179,5 @@ export async function pushChanges(
     method: 'POST',
     body: JSON.stringify(payload)
   });
-  return await response.json() as PushResponseDto;
+  return await parseJsonResponse<PushResponseDto>(response, 'push');
 }
