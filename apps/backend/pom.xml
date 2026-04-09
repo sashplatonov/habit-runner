@@ -94,21 +94,6 @@
             <artifactId>rest-assured</artifactId>
             <scope>test</scope>
         </dependency>
-        <!-- OpenTelemetry + OTLP exporter -->
-        <dependency>
-            <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-opentelemetry</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-opentelemetry-exporter-otlp</artifactId>
-        </dependency>
-
-        <!-- Logback logging support -->
-        <dependency>
-            <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-logging-logback</artifactId>
-        </dependency>
         <!-- Optional: Loki Logback appender (used only if Loki endpoint/api key provided) -->
         <dependency>
             <groupId>com.github.loki4j</groupId>

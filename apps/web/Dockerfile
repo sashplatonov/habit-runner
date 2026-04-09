@@ -6,11 +6,7 @@ COPY package*.json ./
 COPY packages/shared/package.json ./packages/shared/
 COPY tsconfig.base.json ./
 
-RUN if [ -f package-lock.json ]; then \
-			npm ci --ignore-scripts --legacy-peer-deps; \
-		else \
-			npm install --ignore-scripts --no-audit --no-fund --legacy-peer-deps; \
-		fi
+RUN npm install --ignore-scripts --no-audit --no-fund --legacy-peer-deps
 
 # copy shared, build it
 COPY packages/shared/ ./packages/shared/
