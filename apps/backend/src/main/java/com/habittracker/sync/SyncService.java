@@ -5,10 +5,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.habittracker.model.CheckinEntity;
 import com.habittracker.model.HabitEntity;
 import com.habittracker.model.TombstoneEntity;
-import io.quarkus.hibernate.orm.panache.Panache;
 import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceException;
 import jakarta.transaction.Transactional;
+import com.habittracker.model.SyncOpLogEntity;
 
 import java.math.BigInteger;
 import java.time.Instant;
@@ -193,8 +193,8 @@ public class SyncService {
     tombstone.deletedAt = nextSyncDate(parseInstantOrNow(asString(payload.get("updatedAt"))));
     tombstone.persist();
 
-    Panache.executeUpdate("delete from CheckinEntity where habitId = ?1 and userId = ?2", habitId, userId);
-    Panache.executeUpdate("delete from HabitEntity where id = ?1 and userId = ?2", habitId, userId);
+    CheckinEntity.delete("habitId = ?1 and userId = ?2", habitId, userId);
+    HabitEntity.delete("id = ?1 and userId = ?2", habitId, userId);
   }
 
   // ─── Checkin ops ──────────────────────────────────────────────────────────
@@ -271,21 +271,22 @@ public class SyncService {
     tombstone.deletedAt = nextSyncDate(parseInstantOrNow(asString(payload.get("updatedAt"))));
     tombstone.persist();
 
-    Panache.executeUpdate(
-        "delete from CheckinEntity where habitId = ?1 and userId = ?2 and date = ?3",
-        habitId, userId, date
-    );
+    CheckinEntity.delete("habitId = ?1 and userId = ?2 and date = ?3", habitId, userId, date);
   }
 
   // ─── Deduplication log ────────────────────────────────────────────────────
 
   /** Atomically inserts the opId. Returns true if inserted (new op), false if duplicate. */
   private boolean tryCreateLog(String opId) {
-    EntityManager em = Panache.getEntityManager();
-    int rows = em.createNativeQuery(
-        "INSERT INTO sync_op_logs (\"opId\", \"createdAt\") VALUES (:opId, now()) ON CONFLICT DO NOTHING"
-    ).setParameter("opId", opId).executeUpdate();
-    return rows > 0;
+    try {
+      SyncOpLogEntity log = new SyncOpLogEntity();
+      log.opId = opId;
+      log.persistAndFlush();
+      return true;
+    } catch (PersistenceException ex) {
+      // Duplicate opId and any other persistence error are treated as not-inserted.
+      return false;
+    }
   }
 
   // ─── Serialization ────────────────────────────────────────────────────────

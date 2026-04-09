@@ -3,7 +3,6 @@ package com.habittracker.notification;
 import com.habittracker.auth.CurrentUserContext;
 import com.habittracker.auth.RequireAuth;
 import com.habittracker.model.PushSubscriptionEntity;
-import io.quarkus.hibernate.orm.panache.Panache;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.DELETE;
 import jakarta.ws.rs.GET;
@@ -63,7 +62,7 @@ public class NotificationResource {
   public Response unsubscribe(Map<String, String> body) {
     var endpoint = body == null ? null : body.get("endpoint");
     if (endpoint != null) {
-      Panache.executeUpdate("delete from PushSubscriptionEntity where endpoint = ?1", endpoint);
+      PushSubscriptionEntity.delete("endpoint", endpoint);
     }
     return Response.status(204).build();
   }

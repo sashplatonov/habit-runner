@@ -5,7 +5,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.habittracker.model.OAuthStateEntity;
 import com.habittracker.model.RefreshTokenEntity;
 import com.habittracker.model.UserEntity;
-import io.quarkus.hibernate.orm.panache.Panache;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.BadRequestException;
@@ -84,7 +83,10 @@ public class AuthService {
 
   @Transactional
   public void revokeToken(String token) {
-    Panache.executeUpdate("update RefreshTokenEntity set revoked=true where token=?1", token);
+    var record = (RefreshTokenEntity) RefreshTokenEntity.find("token", token).firstResult();
+    if (record != null) {
+      record.revoked = true;
+    }
   }
 
   public CurrentUser verifyAccessToken(String token) {
