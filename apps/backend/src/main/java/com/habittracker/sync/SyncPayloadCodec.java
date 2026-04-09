@@ -34,7 +34,7 @@ public class SyncPayloadCodec {
     try {
       var data = objectMapper.readValue(raw, MAP_TYPE);
       var updatedAt = stringOrNull(data.get("updatedAt"));
-      var id = stringOrNull(data.get("id"));
+      var id = rawString(data.get("id"));
       if (updatedAt == null || id == null) {
         return null;
       }
@@ -147,5 +147,9 @@ public class SyncPayloadCodec {
     }
     var text = String.valueOf(value);
     return text.isBlank() ? null : text;
+  }
+
+  private String rawString(Object value) {
+    return value == null ? null : String.valueOf(value);
   }
 }

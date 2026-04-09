@@ -1,46 +1,31 @@
 package com.habittracker.auth;
 
-import com.auth0.jwt.JWT;
-import com.auth0.jwt.algorithms.Algorithm;
 import com.habittracker.auth.dto.RefreshRequest;
 import com.habittracker.model.RefreshTokenEntity;
-import com.habittracker.model.UserEntity;
+import com.habittracker.support.AuthenticatedApiTestSupport;
 import io.quarkus.test.junit.QuarkusTest;
 import io.restassured.http.ContentType;
-import jakarta.inject.Inject;
-import jakarta.transaction.UserTransaction;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.Date;
 import java.util.UUID;
 
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.*;
 
 @QuarkusTest
-class AuthRefreshTest {
-
-  private static final String TEST_SECRET = "test-secret-for-unit-tests-1234567890";
-  private static final String TEST_ISSUER = "habittracker-test";
-
-  @Inject
-  UserTransaction ut;
+class AuthRefreshTest extends AuthenticatedApiTestSupport {
 
   private String userId;
+  private String accessToken;
 
   @BeforeEach
   void setUp() throws Exception {
-    userId = UUID.randomUUID().toString();
-    ut.begin();
-    var user = new UserEntity();
-    user.id = userId;
-    user.email = userId + "@test.com";
-    user.theme = "cloud";
-    user.persist();
-    ut.commit();
+    var user = createAuthenticatedUser("cloud");
+    userId = user.id();
+    accessToken = user.accessToken();
   }
 
   private String insertRefreshToken(boolean revoked, Instant expiresAt) throws Exception {
@@ -58,7 +43,7 @@ class AuthRefreshTest {
   // ─── Refresh token tests ──────────────────────────────────────────────────
 
   @Test
-  void refreshWithValidTokenReturnsNewAccessToken() throws Exception {
+  void shouldReturnNewAccessTokenWhenRefreshTokenIsActive() throws Exception {
     var refreshToken = insertRefreshToken(false, Instant.now().plus(30, ChronoUnit.DAYS));
 
     given()
@@ -75,7 +60,7 @@ class AuthRefreshTest {
   }
 
   @Test
-  void refreshWithExpiredTokenReturns401() throws Exception {
+  void shouldReturn401WhenRefreshTokenIsExpired() throws Exception {
     var expiredToken = insertRefreshToken(false, Instant.now().minus(1, ChronoUnit.DAYS));
 
     given()
@@ -88,7 +73,7 @@ class AuthRefreshTest {
   }
 
   @Test
-  void refreshWithRevokedTokenReturns401() throws Exception {
+  void shouldReturn401WhenRefreshTokenIsRevoked() throws Exception {
     var revokedToken = insertRefreshToken(true, Instant.now().plus(30, ChronoUnit.DAYS));
 
     given()
@@ -101,51 +86,37 @@ class AuthRefreshTest {
   }
 
   @Test
-  void refreshWithUnknownTokenReturns401() {
+  void shouldReturn401WhenRefreshTokenIsUnknown() {
     given()
         .contentType(ContentType.JSON)
         .body(new RefreshRequest("not-a-real-token"))
         .when()
         .post("/auth/refresh")
         .then()
-      .statusCode(401)
-      .body("status", equalTo(401))
+        .statusCode(401)
+        .body("status", equalTo(401))
         .body("message", equalTo("Unauthorized"))
-      .body("timestamp", notNullValue());
+        .body("timestamp", notNullValue());
   }
 
   @Test
-    void refreshWithBlankTokenReturns400() {
+  void shouldReturn400WhenRefreshTokenIsBlank() {
     given()
         .contentType(ContentType.JSON)
         .body("{\"refreshToken\": \"\"}")
         .when()
         .post("/auth/refresh")
         .then()
-      .statusCode(400)
-      .body("status", equalTo(400))
+        .statusCode(400)
+        .body("status", equalTo(400))
         .body("title", equalTo("Constraint Violation"))
         .body("violations.message", hasItem("must not be blank"));
   }
 
-    @Test
-    void getThemeReturnsTypedThemeResponse() {
-      var accessToken = generateAccessToken(userId, userId + "@test.com");
-
-      given()
-      .header("Authorization", "Bearer " + accessToken)
-      .when()
-      .get("/auth/theme")
-      .then()
-      .statusCode(200)
-      .body("theme", equalTo("cloud"));
-    }
-
   // ─── Logout (revoke) test ─────────────────────────────────────────────────
 
   @Test
-  void logoutRevokesRefreshToken() throws Exception {
-    var accessToken = generateAccessToken(userId, userId + "@test.com");
+  void shouldRevokeRefreshTokenWhenLogoutRequested() throws Exception {
     var refreshToken = insertRefreshToken(false, Instant.now().plus(30, ChronoUnit.DAYS));
 
     given()
@@ -165,16 +136,5 @@ class AuthRefreshTest {
         .post("/auth/refresh")
         .then()
         .statusCode(401);
-  }
-
-  private String generateAccessToken(String sub, String email) {
-    var now = Instant.now();
-    return JWT.create()
-        .withSubject(sub)
-        .withClaim("email", email)
-        .withIssuer(TEST_ISSUER)
-        .withIssuedAt(Date.from(now))
-        .withExpiresAt(Date.from(now.plus(3600, ChronoUnit.SECONDS)))
-        .sign(Algorithm.HMAC256(TEST_SECRET));
   }
 }

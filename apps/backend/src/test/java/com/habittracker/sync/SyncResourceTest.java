@@ -1,16 +1,13 @@
 package com.habittracker.sync;
 
-import com.auth0.jwt.JWT;
-import com.auth0.jwt.algorithms.Algorithm;
 import com.habittracker.model.CheckinEntity;
 import com.habittracker.model.HabitEntity;
 import com.habittracker.model.UserEntity;
+import com.habittracker.support.AuthenticatedApiTestSupport;
 import com.habittracker.sync.dto.PushRequestDto;
 import com.habittracker.sync.dto.SyncOpDto;
 import io.quarkus.test.junit.QuarkusTest;
 import io.restassured.http.ContentType;
-import jakarta.inject.Inject;
-import jakarta.transaction.UserTransaction;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -18,7 +15,6 @@ import java.math.BigInteger;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -27,41 +23,16 @@ import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.*;
 
 @QuarkusTest
-class SyncResourceTest {
-
-  // Must match %test.auth.secret in application.properties
-  private static final String TEST_SECRET = "test-secret-for-unit-tests-1234567890";
-  private static final String TEST_ISSUER = "habittracker-test";
-
-  @Inject
-  UserTransaction ut;
+class SyncResourceTest extends AuthenticatedApiTestSupport {
 
   private String userId;
   private String token;
 
   @BeforeEach
   void setUp() throws Exception {
-    userId = UUID.randomUUID().toString();
-    ut.begin();
-    var user = new UserEntity();
-    user.id = userId;
-    user.email = userId + "@test.com";
-    user.theme = "cloud";
-    user.markCreatedAt(Instant.now());
-    user.persist();
-    ut.commit();
-    token = generateToken(userId, userId + "@test.com");
-  }
-
-  private String generateToken(String sub, String email) {
-    var now = Instant.now();
-    return JWT.create()
-        .withSubject(sub)
-        .withClaim("email", email)
-        .withIssuer(TEST_ISSUER)
-        .withIssuedAt(Date.from(now))
-        .withExpiresAt(Date.from(now.plus(3600, ChronoUnit.SECONDS)))
-        .sign(Algorithm.HMAC256(TEST_SECRET));
+    var user = createAuthenticatedUser("cloud");
+    userId = user.id();
+    token = user.accessToken();
   }
 
   private HabitEntity createHabit(String habitId, String userId, int version, Instant updatedAt) throws Exception {
@@ -90,7 +61,7 @@ class SyncResourceTest {
   // ─── Pull tests ───────────────────────────────────────────────────────────
 
   @Test
-  void pullWithoutCursorReturns200WithEmptyLists() {
+  void shouldReturnEmptySyncPayloadWhenPullRequestedWithoutCursor() {
     given()
         .header("Authorization", "Bearer " + token)
         .queryParam("since", "")
@@ -108,7 +79,7 @@ class SyncResourceTest {
   }
 
   @Test
-  void pullReturnsHabitsCreatedAfterCursor() throws Exception {
+  void shouldReturnHabitsWhenPullRequestedAfterMatchingChanges() throws Exception {
     var habitId = UUID.randomUUID().toString();
     createHabit(habitId, userId, 1, Instant.now().minus(1, ChronoUnit.MINUTES));
 
@@ -123,7 +94,7 @@ class SyncResourceTest {
   }
 
   @Test
-  void pullWithCursorBeyondCreatedAtReturnsNoHabits() throws Exception {
+  void shouldReturnNoHabitsWhenPullCursorIsAfterLatestChange() throws Exception {
     var habitId = UUID.randomUUID().toString();
     createHabit(habitId, userId, 1, Instant.now().minus(1, ChronoUnit.HOURS));
 
@@ -142,21 +113,21 @@ class SyncResourceTest {
   }
 
   @Test
-  void pullWithoutAuthReturns401() {
+  void shouldReturn401WhenPullRequestedWithoutAccessToken() {
     given()
         .when()
         .get("/sync/pull")
         .then()
-      .statusCode(401)
-      .body("status", equalTo(401))
+        .statusCode(401)
+        .body("status", equalTo(401))
           .body("message", equalTo("Unauthorized"))
-      .body("timestamp", notNullValue());
+        .body("timestamp", notNullValue());
   }
 
   // ─── Push tests ───────────────────────────────────────────────────────────
 
   @Test
-  void pushCreateHabitAppliedAndVisibleOnPull() {
+  void shouldApplyHabitCreateAndExposeItOnNextPullWhenPushContainsUpsert() {
     var opId = UUID.randomUUID().toString();
     var habitId = UUID.randomUUID().toString();
 
@@ -200,7 +171,7 @@ class SyncResourceTest {
   }
 
   @Test
-  void pushSameOpIdTwiceDeduplicatedInApplied() {
+  void shouldIgnoreDuplicateOpIdWhenSamePushOperationSubmittedTwice() {
     var opId = UUID.randomUUID().toString();
     var habitId = UUID.randomUUID().toString();
 
@@ -241,7 +212,7 @@ class SyncResourceTest {
   }
 
   @Test
-  void pushOlderVersionHabitReturnsConflict() throws Exception {
+  void shouldReturnConflictWhenHabitPushUsesOlderVersion() throws Exception {
     var habitId = UUID.randomUUID().toString();
     // Seed server with version 5
     createHabit(habitId, userId, 5, Instant.now().minus(5, ChronoUnit.MINUTES));
@@ -264,7 +235,7 @@ class SyncResourceTest {
   }
 
   @Test
-  void pushDeleteHabitTombstonedAndCheckinsCascaded() throws Exception {
+  void shouldCreateTombstoneAndRemoveHabitWhenDeleteOperationSubmitted() throws Exception {
     var habitId = UUID.randomUUID().toString();
     createHabit(habitId, userId, 1, Instant.now().minus(1, ChronoUnit.MINUTES));
 
@@ -312,7 +283,7 @@ class SyncResourceTest {
   }
 
   @Test
-  void pushCheckinToAnotherUsersHabitReturnsConflict() throws Exception {
+  void shouldReturnConflictWhenCheckinTargetsHabitOwnedByAnotherUser() throws Exception {
     var otherUserId = UUID.randomUUID().toString();
     ut.begin();
     var other = new UserEntity();
@@ -345,7 +316,7 @@ class SyncResourceTest {
   }
 
   @Test
-  void pushWithoutAuthReturns401() {
+  void shouldReturn401WhenPushRequestedWithoutAccessToken() {
     given()
         .contentType(ContentType.JSON)
         .body(pushRequest())
