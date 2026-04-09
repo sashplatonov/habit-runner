@@ -518,4 +518,4 @@ export async function getPendingReminders(): Promise<PendingReminder[]> {
     .toArray();
 }
 
-export { applyPullResponse, getBackoffMs } from './dbSync';
+export { applyAcknowledgedPushResponse, applyPullResponse, getBackoffMs } from './dbSync';

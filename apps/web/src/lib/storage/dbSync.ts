@@ -160,6 +160,59 @@ async function applyTombstone(
   await applyDatedCheckinTombstone(tombstone, userId);
 }
 
+async function applyAcknowledgedCheckin(
+  checkin: PullResponseDto['checkins'][number],
+  userId: string
+): Promise<void> {
+  const normalizedDate = normalizeToCompletionKey(checkin.date);
+  const existingCheckin = await getCheckinByNaturalKey(checkin.habitId, normalizedDate, userId);
+  if (existingCheckin && existingCheckin.id !== checkin.id) {
+    await db.checkins.delete(existingCheckin.id);
+  }
+
+  await db.checkins.put({
+    id: checkin.id,
+    userId,
+    habitId: checkin.habitId,
+    date: normalizedDate,
+    done: checkin.done,
+    count: Math.max(1, Math.trunc(checkin.count ?? 1)),
+    updatedAt: checkin.updatedAt,
+    version: checkin.version
+  });
+}
+
+export async function applyAcknowledgedPushResponse(response: PullResponseDto): Promise<void> {
+  const userId = getCurrentUserId();
+  const habitEntities = response.habits.map((habit) => mapRemoteHabitToEntity(habit, userId));
+
+  await db.transaction('rw', db.habits, db.checkins, async () => {
+    if (habitEntities.length > 0) {
+      await db.habits.bulkPut(habitEntities);
+    }
+    for (const checkin of response.checkins) {
+      await applyAcknowledgedCheckin(checkin, userId);
+    }
+    for (const tombstone of response.tombstones) {
+      if (tombstone.entity === 'habit') {
+        await removeHabitFromDb(tombstone.entityId);
+        continue;
+      }
+      if (tombstone.entity !== 'checkin') {
+        continue;
+      }
+      if (!tombstone.entityId.includes(':')) {
+        await db.checkins.delete(tombstone.entityId);
+        continue;
+      }
+      const [habitId, date] = tombstone.entityId.split(':');
+      if (habitId && date) {
+        await deleteCheckinInDb(habitId, date);
+      }
+    }
+  });
+}
+
 export async function applyPullResponse(response: PullResponseDto): Promise<void> {
   const userId = getCurrentUserId();
   const habitPromises = response.habits.map(async (habit) => {

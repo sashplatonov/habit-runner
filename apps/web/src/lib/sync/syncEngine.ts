@@ -1,4 +1,5 @@
 import {
+  applyAcknowledgedPushResponse,
   ensureSyncMeta,
   updateSyncMeta,
   applyPullResponse,
@@ -132,7 +133,7 @@ async function finalizePushCycle(
   context: SyncCycleMetricsContext
 ): Promise<SyncRunResult> {
   const pushApplyStartedAt = nowMs();
-  await applyPullResponse({
+  await applyAcknowledgedPushResponse({
     habits: pushResult.habits,
     checkins: pushResult.checkins,
     tombstones: pushResult.tombstones,

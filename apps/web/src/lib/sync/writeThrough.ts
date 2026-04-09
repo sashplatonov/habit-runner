@@ -3,6 +3,7 @@ import { pullChanges, pushChanges } from '@/lib/api/sync';
 import { SYNC_DISABLED_REASON, SYNC_ENABLED } from '@/lib/core/config';
 import { logClientInfo } from '@/lib/logging/clientLogger';
 import {
+  applyAcknowledgedPushResponse,
   applyPullResponse,
   enqueueOutboxEntry,
   ensureSyncMeta,
@@ -186,7 +187,7 @@ async function finalizeSync(
   const queuedMessage =
     pushResult.queuedEntries.length > 0 ? 'Some changes were queued for retry' : undefined;
   const pushApplyStartedAt = nowMs();
-  await applyPullResponse({
+  await applyAcknowledgedPushResponse({
     habits: pushResult.habits,
     checkins: pushResult.checkins,
     tombstones: pushResult.tombstones,

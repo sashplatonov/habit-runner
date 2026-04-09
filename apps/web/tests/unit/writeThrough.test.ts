@@ -2,6 +2,7 @@ import type { OutboxEntry } from '@/lib/storage/db';
 import { syncEntriesWithFallback } from '@/lib/sync/writeThrough';
 import { pullChanges, pushChanges } from '@/lib/api/sync';
 import {
+  applyAcknowledgedPushResponse,
   applyPullResponse,
   enqueueOutboxEntry,
   ensureSyncMeta,
@@ -20,6 +21,7 @@ vi.mock('@/lib/core/config', () => ({
 }));
 
 vi.mock('@/lib/storage/db', () => ({
+  applyAcknowledgedPushResponse: vi.fn(),
   applyPullResponse: vi.fn(),
   enqueueOutboxEntry: vi.fn(),
   ensureSyncMeta: vi.fn(),
@@ -30,6 +32,7 @@ vi.mock('@/lib/storage/db', () => ({
 
 const mockedPullChanges = vi.mocked(pullChanges);
 const mockedPushChanges = vi.mocked(pushChanges);
+const mockedApplyAcknowledgedPushResponse = vi.mocked(applyAcknowledgedPushResponse);
 const mockedApplyPullResponse = vi.mocked(applyPullResponse);
 const mockedEnqueueOutboxEntry = vi.mocked(enqueueOutboxEntry);
 const mockedEnsureSyncMeta = vi.mocked(ensureSyncMeta);
@@ -94,7 +97,8 @@ test('pushes changes immediately when network is available', async () => {
   });
   expect(mockedPushChanges).toHaveBeenCalledWith([baseEntry]);
   expect(mockedEnqueueOutboxEntry).not.toHaveBeenCalled();
-  expect(mockedApplyPullResponse).toHaveBeenCalledTimes(2);
+  expect(mockedApplyPullResponse).toHaveBeenCalledTimes(1);
+  expect(mockedApplyAcknowledgedPushResponse).toHaveBeenCalledTimes(1);
   expect(mockedUpdateOutboxEntryFailure).not.toHaveBeenCalled();
 });
 
