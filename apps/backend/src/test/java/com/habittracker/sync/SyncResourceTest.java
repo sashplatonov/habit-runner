@@ -100,6 +100,8 @@ class SyncResourceTest {
         .get("/sync/pull")
         .then()
         .statusCode(200)
+        .header("x-sync-duration-ms", not(isEmptyOrNullString()))
+        .header("Server-Timing", containsString("dur="))
         .body("habits", hasSize(0))
         .body("checkins", hasSize(0))
         .body("tombstones", hasSize(0))
@@ -177,8 +179,14 @@ class SyncResourceTest {
         .post("/sync/push")
         .then()
         .statusCode(200)
+        .header("x-sync-duration-ms", not(isEmptyOrNullString()))
+        .header("Server-Timing", containsString("dur="))
         .body("applied", hasItem(opId))
-        .body("conflicts", hasSize(0));
+        .body("conflicts", hasSize(0))
+        .body("habits.id", hasItem(habitId))
+        .body("checkins", hasSize(0))
+        .body("tombstones", hasSize(0))
+        .body("nextCursor", notNullValue());
 
     // It should appear in a subsequent pull
     given()
@@ -298,7 +306,9 @@ class SyncResourceTest {
         .post("/sync/push")
         .then()
         .statusCode(200)
-        .body("applied", hasItem(opId));
+        .body("applied", hasItem(opId))
+        .body("tombstones.entityId", hasItem(habitId))
+        .body("nextCursor", notNullValue());
 
     // Habit should not appear in subsequent pull
     given()

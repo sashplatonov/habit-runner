@@ -17,7 +17,7 @@ import java.util.UUID;
 @Table(
     name = "checkins",
     indexes = {
-      @Index(name = "checkins_user_updated_idx", columnList = "userId,updatedAt")
+      @Index(name = "checkins_user_updated_cursor_idx", columnList = "userId,updatedAt,id")
     },
     uniqueConstraints = {
       @UniqueConstraint(name = "habit_date_unique", columnNames = {"habitId", "date"})

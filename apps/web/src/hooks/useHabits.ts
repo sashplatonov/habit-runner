@@ -10,6 +10,7 @@ import {
   deleteCheckinInDb,
   createOutboxEntry,
   enqueueOutboxEntry,
+  getCheckinByNaturalKey,
   getCurrentUserId
 } from '@/lib/storage/db';
 import { nowSyncISO } from '@habbit-runner/shared';
@@ -121,11 +122,7 @@ async function getPersistedCompletionCount(
   date: string,
   userId: string
 ): Promise<number> {
-  const existingCheckin = await db.checkins
-    .where('habitId')
-    .equals(habitId)
-    .filter((record) => record.date === date && record.userId === userId && record.done)
-    .first();
+  const existingCheckin = await getCheckinByNaturalKey(habitId, date, userId);
   if (!existingCheckin?.done) {
     return 0;
   }
@@ -200,11 +197,7 @@ async function toggleCompletionImpl(
   userId: string
 ): Promise<ToggleCompletionResult> {
   const key = date || formatDate(new Date());
-  const existingCheckin = await db.checkins
-    .where('habitId')
-    .equals(habitId)
-    .filter((record) => record.date === key && record.userId === userId && record.done)
-    .first();
+  const existingCheckin = await getCheckinByNaturalKey(habitId, key, userId);
   const currentCount = existingCheckin && existingCheckin.done
     ? Math.max(1, Math.trunc(existingCheckin.count ?? 1))
     : 0;

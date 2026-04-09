@@ -35,13 +35,9 @@ public class SyncResource {
   public Response pull(@QueryParam("since") String since) {
     var userId = currentUserContext.requireUser().id();
     var traceId = traceId();
+    var startedAt = System.nanoTime();
     var payload = syncService.pull(userId, since);
-    return Response.ok(payload)
-        .header("x-trace-id", traceId)
-        .header(HttpHeaders.CACHE_CONTROL, "no-store, no-cache, must-revalidate, proxy-revalidate")
-        .header("Pragma", "no-cache")
-        .header("Expires", "0")
-        .build();
+    return noStoreResponse(payload, traceId, durationMs(startedAt));
   }
 
   @POST
@@ -49,14 +45,10 @@ public class SyncResource {
   public Response push(SyncDtos.PushRequestDto body) {
     var userId = currentUserContext.requireUser().id();
     var traceId = traceId();
+    var startedAt = System.nanoTime();
     var ops = body == null || body.ops() == null ? java.util.List.<SyncDtos.SyncOpDto>of() : body.ops();
     var payload = syncService.push(userId, ops);
-    return Response.ok(payload)
-        .header("x-trace-id", traceId)
-        .header(HttpHeaders.CACHE_CONTROL, "no-store, no-cache, must-revalidate, proxy-revalidate")
-        .header("Pragma", "no-cache")
-        .header("Expires", "0")
-        .build();
+    return noStoreResponse(payload, traceId, durationMs(startedAt));
   }
 
   private String traceId() {
@@ -65,5 +57,20 @@ public class SyncResource {
       return UUID.randomUUID().toString();
     }
     return trace.trim();
+  }
+
+  private long durationMs(long startedAt) {
+    return Math.round((System.nanoTime() - startedAt) / 1_000_000.0d);
+  }
+
+  private Response noStoreResponse(Object payload, String traceId, long durationMs) {
+    return Response.ok(payload)
+        .header("x-trace-id", traceId)
+        .header("x-sync-duration-ms", durationMs)
+        .header("Server-Timing", "app;dur=" + durationMs)
+        .header(HttpHeaders.CACHE_CONTROL, "no-store, no-cache, must-revalidate, proxy-revalidate")
+        .header("Pragma", "no-cache")
+        .header("Expires", "0")
+        .build();
   }
 }

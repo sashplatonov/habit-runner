@@ -15,7 +15,7 @@ import java.util.UUID;
 @Table(
     name = "tombstones",
     indexes = {
-      @Index(name = "tombstones_user_deleted_idx", columnList = "userId,deletedAt")
+      @Index(name = "tombstones_user_deleted_cursor_idx", columnList = "userId,deletedAt,id")
     }
 )
 public class TombstoneEntity extends PanacheEntityBase {

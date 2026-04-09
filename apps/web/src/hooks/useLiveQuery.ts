@@ -1,13 +1,16 @@
 import { liveQuery, type Observable } from 'dexie';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 export function useLiveQuery<T>(query: () => Promise<T>, dependencies: unknown[] = []): T | undefined {
   const [value, setValue] = useState<T>();
+  const queryRef = useRef(query);
   const dependenciesKey = JSON.stringify(dependencies);
+
+  queryRef.current = query;
 
   useEffect(() => {
     let active = true;
-    const observable: Observable<T> = liveQuery(() => query());
+    const observable: Observable<T> = liveQuery(() => queryRef.current());
     const subscription = observable.subscribe({
       next(result) {
         if (active) {
@@ -19,7 +22,7 @@ export function useLiveQuery<T>(query: () => Promise<T>, dependencies: unknown[]
       active = false;
       subscription.unsubscribe();
     };
-  }, [query, dependenciesKey]);
+  }, [dependenciesKey]);
 
   return value;
 }

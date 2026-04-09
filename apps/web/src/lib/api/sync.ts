@@ -2,14 +2,83 @@ import type { PullResponseDto, PushResponseDto } from '@/types/sync';
 import type { OutboxEntry } from '@/lib/storage/db';
 import { buildApiUrl } from '@/lib/api/url';
 import { getValidAccessToken } from '@/lib/auth/session';
+import { logClientError, logClientInfo } from '@/lib/logging/clientLogger';
 
 const buildUrl = buildApiUrl;
+
+function nowMs(): number {
+  return typeof performance !== 'undefined' ? performance.now() : Date.now();
+}
+
+function parseDurationHeader(value: string | null): number | undefined {
+  if (!value) {
+    return undefined;
+  }
+  const parsed = Number.parseFloat(value);
+  if (!Number.isFinite(parsed)) {
+    return undefined;
+  }
+  return Math.round(parsed);
+}
+
+function getServerDurationMs(response: Response): number | undefined {
+  const explicitHeader = parseDurationHeader(response.headers.get('x-sync-duration-ms'));
+  if (explicitHeader !== undefined) {
+    return explicitHeader;
+  }
+  const serverTiming = response.headers.get('server-timing');
+  if (!serverTiming) {
+    return undefined;
+  }
+  const match = serverTiming.match(/dur=([0-9.]+)/i);
+  return match ? parseDurationHeader(match[1]) : undefined;
+}
+
+function logSyncHttpSuccess(
+  url: string,
+  method: string,
+  response: Response,
+  startedAt: number
+): void {
+  const context: Record<string, unknown> = {
+    url,
+    method,
+    status: response.status,
+    durationMs: Math.round(nowMs() - startedAt)
+  };
+  const serverDurationMs = getServerDurationMs(response);
+  if (serverDurationMs !== undefined) {
+    context.serverDurationMs = serverDurationMs;
+  }
+  logClientInfo('sync.http_request', 'Sync request completed', context);
+}
+
+function logSyncHttpFailure(
+  url: string,
+  method: string,
+  startedAt: number,
+  err: unknown,
+  status?: number
+): void {
+  const context: Record<string, unknown> = {
+    url,
+    method,
+    durationMs: Math.round(nowMs() - startedAt),
+    error: err instanceof Error ? err.message : String(err)
+  };
+  if (status !== undefined) {
+    context.status = status;
+  }
+  logClientError('sync.http_failed', 'Sync request failed', context);
+}
 
 async function fetchJson(
   url: string,
   init: RequestInit = {},
   timeoutMs = 15_000
 ): Promise<Response> {
+  const startedAt = nowMs();
+  const method = init.method ?? 'GET';
   const headers = new Headers(init.headers);
   const accessToken = await getValidAccessToken();
   if (accessToken) {
@@ -32,12 +101,15 @@ async function fetchJson(
       signal: controller.signal
     });
     if (!response.ok) {
+      logSyncHttpFailure(url, method, startedAt, new Error(`HTTP ${response.status}`), response.status);
       throw new Error(
         `Sync request failed: ${response.status} ${response.statusText}`
       );
     }
+    logSyncHttpSuccess(url, method, response, startedAt);
     return response;
   } catch (err: unknown) {
+    logSyncHttpFailure(url, method, startedAt, err);
     // Preserve original error as `cause` when wrapping to satisfy preserve-caught-error
     if (err instanceof Error && (err as Error).name === 'AbortError') {
       throw new Error('Sync request timed out', { cause: err });

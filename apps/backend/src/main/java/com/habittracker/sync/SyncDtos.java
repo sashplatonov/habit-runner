@@ -16,7 +16,15 @@ public final class SyncDtos {
   public record PushConflict(String opId, String reason, Map<String, Object> serverValue) {
   }
 
-  public record PushResponseDto(List<String> applied, List<PushConflict> conflicts, String serverTime) {
+  public record PushResponseDto(
+      List<String> applied,
+      List<PushConflict> conflicts,
+      List<HabitDto> habits,
+      List<CheckinDto> checkins,
+      List<TombstoneDto> tombstones,
+      String nextCursor,
+      String serverTime
+  ) {
   }
 
   public record HabitDto(

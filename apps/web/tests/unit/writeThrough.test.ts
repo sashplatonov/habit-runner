@@ -67,25 +67,20 @@ beforeEach(() => {
 });
 
 test('pushes changes immediately when network is available', async () => {
-  mockedPullChanges
-    .mockResolvedValueOnce({
-      habits: [],
-      checkins: [],
-      tombstones: [],
-      nextCursor: 'cursor-2',
-      serverTime: '2026-03-12T10:01:00.000Z'
-    })
-    .mockResolvedValueOnce({
-      habits: [],
-      checkins: [],
-      tombstones: [],
-      nextCursor: 'cursor-3',
-      serverTime: '2026-03-12T10:02:00.000Z'
-    });
+  mockedPullChanges.mockResolvedValueOnce({
+    habits: [],
+    checkins: [],
+    tombstones: [],
+    nextCursor: 'cursor-2',
+    serverTime: '2026-03-12T10:01:00.000Z'
+  });
   mockedPushChanges.mockResolvedValue({
     applied: ['op-1'],
     conflicts: [],
-    serverTime: '2026-03-12T10:01:30.000Z'
+    serverTime: '2026-03-12T10:01:30.000Z',
+    habits: [],
+    checkins: [],
+    tombstones: []
   });
 
   const result = await syncEntriesWithFallback([baseEntry]);
@@ -173,25 +168,20 @@ test('queues changes when the push request throws', async () => {
 });
 
 test('moves rejected push responses to outbox with retry metadata', async () => {
-  mockedPullChanges
-    .mockResolvedValueOnce({
-      habits: [],
-      checkins: [],
-      tombstones: [],
-      nextCursor: 'cursor-2',
-      serverTime: '2026-03-12T10:01:00.000Z'
-    })
-    .mockResolvedValueOnce({
-      habits: [],
-      checkins: [],
-      tombstones: [],
-      nextCursor: 'cursor-3',
-      serverTime: '2026-03-12T10:02:00.000Z'
-    });
+  mockedPullChanges.mockResolvedValueOnce({
+    habits: [],
+    checkins: [],
+    tombstones: [],
+    nextCursor: 'cursor-2',
+    serverTime: '2026-03-12T10:01:00.000Z'
+  });
   mockedPushChanges.mockResolvedValue({
     applied: [],
     conflicts: [{ opId: 'op-1', reason: 'server already has newer habit' }],
-    serverTime: '2026-03-12T10:01:30.000Z'
+    serverTime: '2026-03-12T10:01:30.000Z',
+    habits: [],
+    checkins: [],
+    tombstones: []
   });
 
   const result = await syncEntriesWithFallback([baseEntry]);
@@ -210,4 +200,43 @@ test('moves rejected push responses to outbox with retry metadata', async () => 
     'server already has newer habit',
     expect.any(String)
   );
+});
+
+test('coalesces rapid write-through calls into one push batch', async () => {
+  vi.useFakeTimers();
+  mockedPullChanges.mockResolvedValue({
+    habits: [],
+    checkins: [],
+    tombstones: [],
+    nextCursor: 'cursor-2',
+    serverTime: '2026-03-12T10:01:00.000Z'
+  });
+  mockedPushChanges.mockResolvedValue({
+    applied: ['op-1', 'op-2'],
+    conflicts: [],
+    serverTime: '2026-03-12T10:01:30.000Z',
+    habits: [],
+    checkins: [],
+    tombstones: []
+  });
+
+  const secondEntry = {
+    ...baseEntry,
+    id: 'op-2',
+    payload: { id: 'habit-2', name: 'Walk' }
+  };
+
+  const firstPromise = syncEntriesWithFallback([baseEntry]);
+  const secondPromise = syncEntriesWithFallback([secondEntry]);
+
+  await vi.advanceTimersByTimeAsync(250);
+
+  const [firstResult, secondResult] = await Promise.all([firstPromise, secondPromise]);
+
+  expect(mockedPullChanges).toHaveBeenCalledTimes(1);
+  expect(mockedPushChanges).toHaveBeenCalledTimes(1);
+  expect(mockedPushChanges).toHaveBeenCalledWith([baseEntry, secondEntry]);
+  expect(firstResult.status).toBe('synced');
+  expect(secondResult.status).toBe('synced');
+  vi.useRealTimers();
 });

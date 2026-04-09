@@ -219,6 +219,15 @@ export class HabbitRunnerDb extends Dexie {
           }
         });
       });
+
+    this.version(7).stores({
+      habits: 'id, userId, updatedAt, version, sortOrder',
+      checkins: 'id, userId, habitId, date, updatedAt, version, [userId+habitId+date]',
+      tombstones: 'id, userId, entity, entityId, deletedAt',
+      sync_meta: 'id, status',
+      outbox: 'id, userId, entity, type, status',
+      pending_reminders: 'id, userId, habitId, createdAt'
+    });
   }
 }
 
@@ -319,14 +328,7 @@ export async function upsertCheckinInDb(
   const userId = getCurrentUserId();
   const normalized = normalizeCheckinDateKey(date);
   const ts = updatedAt ?? nowSyncISO();
-  const existing = await db.checkins
-    .where('habitId')
-    .equals(habitId)
-    .filter(
-      (record) =>
-        record.date === normalized && record.userId === userId
-    )
-    .first();
+  const existing = await getCheckinByNaturalKey(habitId, normalized, userId);
 
   if (existing) {
     if (!done) {
@@ -361,19 +363,24 @@ export async function upsertCheckinInDb(
 export async function deleteCheckinInDb(habitId: string, date: string): Promise<CheckinEntity | undefined> {
   const userId = getCurrentUserId();
   const normalized = normalizeCheckinDateKey(date);
-  const existing = await db.checkins
-    .where('habitId')
-    .equals(habitId)
-    .filter(
-      (record) =>
-        record.date === normalized && record.userId === userId
-    )
-    .first();
+  const existing = await getCheckinByNaturalKey(habitId, normalized, userId);
   if (existing) {
     await db.checkins.delete(existing.id);
     return existing;
   }
   return undefined;
+}
+
+export async function getCheckinByNaturalKey(
+  habitId: string,
+  date: string,
+  userId = getCurrentUserId()
+): Promise<CheckinEntity | undefined> {
+  const normalized = normalizeCheckinDateKey(date);
+  return await db.checkins
+    .where('[userId+habitId+date]')
+    .equals([userId, habitId, normalized])
+    .first();
 }
 
 export async function enqueueOutboxEntry(entry: OutboxEntry): Promise<void> {

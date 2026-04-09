@@ -91,6 +91,9 @@ public class SyncService {
   public SyncDtos.PushResponseDto push(String userId, List<SyncDtos.SyncOpDto> ops) {
     var applied = new ArrayList<String>();
     var conflicts = new ArrayList<SyncDtos.PushConflict>();
+    var pushedHabits = new ArrayList<HabitEntity>();
+    var pushedCheckins = new ArrayList<CheckinEntity>();
+    var pushedTombstones = new ArrayList<TombstoneEntity>();
 
     for (var op : ops) {
       if (op.id() == null || op.id().isBlank()) {
@@ -100,13 +103,26 @@ public class SyncService {
         continue;
       }
       if ("habit".equals(op.entity())) {
-        applyHabitOp(userId, op, applied, conflicts);
+        applyHabitOp(userId, op, applied, conflicts, pushedHabits, pushedTombstones);
       } else if ("checkin".equals(op.entity())) {
-        applyCheckinOp(userId, op, applied, conflicts);
+        applyCheckinOp(userId, op, applied, conflicts, pushedCheckins, pushedTombstones);
       }
     }
 
-    return new SyncDtos.PushResponseDto(applied, conflicts, toSyncIso(Instant.now()));
+    var candidates = new ArrayList<CursorRow>();
+    pushedHabits.forEach(h -> candidates.add(new CursorRow(h.updatedAt, h.id)));
+    pushedCheckins.forEach(c -> candidates.add(new CursorRow(c.updatedAt, c.id)));
+    pushedTombstones.forEach(t -> candidates.add(new CursorRow(t.deletedAt, t.id)));
+
+    return new SyncDtos.PushResponseDto(
+        applied,
+        conflicts,
+        pushedHabits.stream().map(this::serializeHabit).toList(),
+        pushedCheckins.stream().map(this::serializeCheckin).toList(),
+        pushedTombstones.stream().map(this::serializeTombstone).toList(),
+        candidates.isEmpty() ? null : calculateNextCursor(candidates),
+        toSyncIso(Instant.now())
+    );
   }
 
   // ─── Habit ops ────────────────────────────────────────────────────────────
@@ -115,7 +131,9 @@ public class SyncService {
       String userId,
       SyncDtos.SyncOpDto op,
       List<String> applied,
-      List<SyncDtos.PushConflict> conflicts
+      List<SyncDtos.PushConflict> conflicts,
+      List<HabitEntity> pushedHabits,
+      List<TombstoneEntity> pushedTombstones
   ) {
     var payload = toMap(op.payload());
     var habitId = asString(payload.get("id"));
@@ -124,7 +142,8 @@ public class SyncService {
     }
 
     if ("delete".equals(op.type())) {
-      deleteHabit(userId, habitId, payload);
+      var tombstone = deleteHabit(userId, habitId, payload);
+      pushedTombstones.add(tombstone);
       applied.add(op.id());
       return;
     }
@@ -181,10 +200,11 @@ public class SyncService {
       existing.persist();
     }
 
+    pushedHabits.add(existing);
     applied.add(op.id());
   }
 
-  private void deleteHabit(String userId, String habitId, Map<String, Object> payload) {
+  private TombstoneEntity deleteHabit(String userId, String habitId, Map<String, Object> payload) {
     var tombstone = new TombstoneEntity();
     tombstone.userId = userId;
     tombstone.entity = "habit";
@@ -195,6 +215,7 @@ public class SyncService {
 
     CheckinEntity.delete("habitId = ?1 and userId = ?2", habitId, userId);
     HabitEntity.delete("id = ?1 and userId = ?2", habitId, userId);
+    return tombstone;
   }
 
   // ─── Checkin ops ──────────────────────────────────────────────────────────
@@ -203,7 +224,9 @@ public class SyncService {
       String userId,
       SyncDtos.SyncOpDto op,
       List<String> applied,
-      List<SyncDtos.PushConflict> conflicts
+      List<SyncDtos.PushConflict> conflicts,
+      List<CheckinEntity> pushedCheckins,
+      List<TombstoneEntity> pushedTombstones
   ) {
     var payload = toMap(op.payload());
     var habitId = asString(payload.get("habitId"));
@@ -225,7 +248,8 @@ public class SyncService {
     var clientUpdated = normalizeInstant(asString(payload.get("updatedAt")));
 
     if ("delete".equals(op.type())) {
-      deleteCheckin(userId, habitId, date, payload, existing);
+      var tombstone = deleteCheckin(userId, habitId, date, payload, existing);
+      pushedTombstones.add(tombstone);
       applied.add(op.id());
       return;
     }
@@ -251,10 +275,11 @@ public class SyncService {
     existing.version = Math.max(existing.version, asInt(payload.get("version"), 0)) + 1;
     existing.updatedAt = nextSyncDate(clientUpdated, existing.updatedAt);
 
+    pushedCheckins.add(existing);
     applied.add(op.id());
   }
 
-  private void deleteCheckin(
+  private TombstoneEntity deleteCheckin(
       String userId,
       String habitId,
       LocalDate date,
@@ -272,6 +297,7 @@ public class SyncService {
     tombstone.persist();
 
     CheckinEntity.delete("habitId = ?1 and userId = ?2 and date = ?3", habitId, userId, date);
+    return tombstone;
   }
 
   // ─── Deduplication log ────────────────────────────────────────────────────

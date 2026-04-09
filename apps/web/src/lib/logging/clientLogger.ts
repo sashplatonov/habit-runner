@@ -6,11 +6,16 @@ type LogPayload = {
   context?: Record<string, unknown>;
 };
 
+export type ClientLogEntry = LogPayload & {
+  level: LogLevel;
+  timestamp: string;
+};
+
 const CLIENT_LOG_STORAGE_KEY = 'habbit-runner:client-logs';
 const MAX_STORED_LOGS = 100;
 
 function write(level: LogLevel, payload: LogPayload) {
-  const logEntry = {
+  const logEntry: ClientLogEntry = {
     ...payload,
     level,
     timestamp: new Date().toISOString()
@@ -44,6 +49,22 @@ export function logClientError(
   context?: Record<string, unknown>
 ) {
   write('error', { event, message, context });
+}
+
+export function readStoredClientLogs(): ClientLogEntry[] {
+  if (typeof window === 'undefined') {
+    return [];
+  }
+  try {
+    const existing = window.localStorage.getItem(CLIENT_LOG_STORAGE_KEY);
+    if (!existing) {
+      return [];
+    }
+    const parsed = JSON.parse(existing) as ClientLogEntry[];
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
 }
 
 export function installGlobalClientLogging() {

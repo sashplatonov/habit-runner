@@ -1,6 +1,12 @@
 import type { PullResponseDto } from '@/types/sync';
 import type { HabitEntity } from './db';
-import { db, deleteCheckinInDb, getCurrentUserId, removeHabitFromDb } from './db';
+import {
+  db,
+  deleteCheckinInDb,
+  getCheckinByNaturalKey,
+  getCurrentUserId,
+  removeHabitFromDb
+} from './db';
 import { normalizeToCompletionKey } from '@/lib/completionKey';
 
 function shouldApplyRemoteRecord(
@@ -63,14 +69,9 @@ async function applyCheckinUpsert(checkin: PullResponseDto['checkins'][number], 
   }
 
   await db.checkins
-    .where('habitId')
-    .equals(checkin.habitId)
-    .filter(
-      (record) =>
-        record.date === normalizedDate &&
-        record.userId === userId &&
-        record.id !== checkin.id
-    )
+    .where('[userId+habitId+date]')
+    .equals([userId, checkin.habitId, normalizedDate])
+    .filter((record) => record.id !== checkin.id)
     .delete();
 
   await db.checkins.put({
@@ -125,11 +126,7 @@ async function applyDatedCheckinTombstone(
   }
 
   const normalizedDate = normalizeToCompletionKey(date);
-  const existingCheckin = await db.checkins
-    .where('habitId')
-    .equals(habitId)
-    .filter((record) => record.date === normalizedDate && record.userId === userId)
-    .first();
+  const existingCheckin = await getCheckinByNaturalKey(habitId, normalizedDate, userId);
 
   if (
     existingCheckin &&

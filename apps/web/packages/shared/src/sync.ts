@@ -64,6 +64,10 @@ export interface PushConflict {
 export interface PushResponseDto {
   applied: string[];
   conflicts: PushConflict[];
+  habits: HabitDto[];
+  checkins: CheckinDto[];
+  tombstones: TombstoneDto[];
+  nextCursor?: string;
   serverTime: string;
 }
 

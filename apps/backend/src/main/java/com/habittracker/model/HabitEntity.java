@@ -3,6 +3,7 @@ package com.habittracker.model;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
@@ -14,7 +15,12 @@ import java.time.Instant;
 import java.util.UUID;
 
 @Entity
-@Table(name = "habits")
+@Table(
+    name = "habits",
+    indexes = {
+      @Index(name = "habits_user_updated_cursor_idx", columnList = "userId,updatedAt,id")
+    }
+)
 public class HabitEntity extends PanacheEntityBase {
   @Id
   @Column(nullable = false)
