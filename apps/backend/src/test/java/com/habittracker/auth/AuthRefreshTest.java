@@ -2,6 +2,7 @@ package com.habittracker.auth;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
+import com.habittracker.auth.dto.RefreshRequest;
 import com.habittracker.model.RefreshTokenEntity;
 import com.habittracker.model.UserEntity;
 import io.quarkus.test.junit.QuarkusTest;
@@ -47,22 +48,22 @@ class AuthRefreshTest {
     rt.userId = userId;
     rt.token = UUID.randomUUID().toString();
     rt.revoked = revoked;
-    rt.expiresAt = expiresAt;
+    rt.setExpiry(expiresAt);
     ut.begin();
     rt.persist();
     ut.commit();
-    return rt.token;
+    return rt.tokenValue();
   }
 
   // ─── Refresh token tests ──────────────────────────────────────────────────
 
   @Test
-  void refresh_withValidToken_returnsNewAccessToken() throws Exception {
+  void refreshWithValidTokenReturnsNewAccessToken() throws Exception {
     var refreshToken = insertRefreshToken(false, Instant.now().plus(30, ChronoUnit.DAYS));
 
     given()
         .contentType(ContentType.JSON)
-        .body(new AuthDtos.RefreshRequest(refreshToken))
+        .body(new RefreshRequest(refreshToken))
         .when()
         .post("/auth/refresh")
         .then()
@@ -74,12 +75,12 @@ class AuthRefreshTest {
   }
 
   @Test
-  void refresh_withExpiredToken_returns401() throws Exception {
+  void refreshWithExpiredTokenReturns401() throws Exception {
     var expiredToken = insertRefreshToken(false, Instant.now().minus(1, ChronoUnit.DAYS));
 
     given()
         .contentType(ContentType.JSON)
-        .body(new AuthDtos.RefreshRequest(expiredToken))
+        .body(new RefreshRequest(expiredToken))
         .when()
         .post("/auth/refresh")
         .then()
@@ -87,12 +88,12 @@ class AuthRefreshTest {
   }
 
   @Test
-  void refresh_withRevokedToken_returns401() throws Exception {
+  void refreshWithRevokedTokenReturns401() throws Exception {
     var revokedToken = insertRefreshToken(true, Instant.now().plus(30, ChronoUnit.DAYS));
 
     given()
         .contentType(ContentType.JSON)
-        .body(new AuthDtos.RefreshRequest(revokedToken))
+        .body(new RefreshRequest(revokedToken))
         .when()
         .post("/auth/refresh")
         .then()
@@ -100,10 +101,10 @@ class AuthRefreshTest {
   }
 
   @Test
-  void refresh_withUnknownToken_returns401() {
+  void refreshWithUnknownTokenReturns401() {
     given()
         .contentType(ContentType.JSON)
-        .body(new AuthDtos.RefreshRequest("not-a-real-token"))
+        .body(new RefreshRequest("not-a-real-token"))
         .when()
         .post("/auth/refresh")
         .then()
@@ -111,7 +112,7 @@ class AuthRefreshTest {
   }
 
   @Test
-  void refresh_withBlankToken_returns400OrUnprocessable() {
+  void refreshWithBlankTokenReturns400OrUnprocessable() {
     given()
         .contentType(ContentType.JSON)
         .body("{\"refreshToken\": \"\"}")
@@ -124,14 +125,14 @@ class AuthRefreshTest {
   // ─── Logout (revoke) test ─────────────────────────────────────────────────
 
   @Test
-  void logout_revokesRefreshToken() throws Exception {
+  void logoutRevokesRefreshToken() throws Exception {
     var accessToken = generateAccessToken(userId, userId + "@test.com");
     var refreshToken = insertRefreshToken(false, Instant.now().plus(30, ChronoUnit.DAYS));
 
     given()
         .header("Authorization", "Bearer " + accessToken)
         .contentType(ContentType.JSON)
-        .body(new AuthDtos.RefreshRequest(refreshToken))
+        .body(new RefreshRequest(refreshToken))
         .when()
         .post("/auth/logout")
         .then()
@@ -140,7 +141,7 @@ class AuthRefreshTest {
     // Attempting to use the revoked token should now fail
     given()
         .contentType(ContentType.JSON)
-        .body(new AuthDtos.RefreshRequest(refreshToken))
+        .body(new RefreshRequest(refreshToken))
         .when()
         .post("/auth/refresh")
         .then()

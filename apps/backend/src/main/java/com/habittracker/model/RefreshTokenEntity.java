@@ -41,4 +41,20 @@ public class RefreshTokenEntity extends PanacheEntityBase {
       createdAt = Instant.now();
     }
   }
+
+  public boolean isActiveAt(Instant instant) {
+    return !revoked && !expiresAt.isBefore(instant);
+  }
+
+  public void revoke() {
+    revoked = true;
+  }
+
+  public void setExpiry(Instant instant) {
+    expiresAt = instant;
+  }
+
+  public String tokenValue() {
+    return token;
+  }
 }

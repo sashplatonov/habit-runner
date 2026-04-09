@@ -6,16 +6,13 @@ import jakarta.ws.rs.NotAuthorizedException;
 import jakarta.ws.rs.Priorities;
 import jakarta.ws.rs.container.ContainerRequestContext;
 import jakarta.ws.rs.container.ContainerRequestFilter;
-import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.ext.Provider;
 
 @Provider
 @RequestScoped
+@RequireAuth
 @Priority(Priorities.AUTHENTICATION)
 public class AuthGuardFilter implements ContainerRequestFilter {
-  @Context
-  jakarta.ws.rs.container.ResourceInfo resourceInfo;
-
   final AuthService authService;
   final CurrentUserContext currentUserContext;
 
@@ -26,32 +23,13 @@ public class AuthGuardFilter implements ContainerRequestFilter {
 
   @Override
   public void filter(ContainerRequestContext requestContext) {
-    var method = resourceInfo.getResourceMethod();
-    var clazz = resourceInfo.getResourceClass();
-    var requiresAuth = (method != null && method.isAnnotationPresent(RequireAuth.class))
-        || (clazz != null && clazz.isAnnotationPresent(RequireAuth.class));
-    if (!requiresAuth) {
-      return;
-    }
-
     var authorization = requestContext.getHeaderString("Authorization");
-    var token = extractToken(authorization);
+    var token = BearerTokenExtractor.extract(authorization);
     if (token == null) {
       throw new NotAuthorizedException("Authentication required");
     }
 
     var user = authService.verifyAccessToken(token);
     currentUserContext.setUser(user);
-  }
-
-  private String extractToken(String header) {
-    if (header == null || header.isBlank()) {
-      return null;
-    }
-    var parts = header.split(" ", 2);
-    if (parts.length != 2 || !"bearer".equalsIgnoreCase(parts[0])) {
-      return null;
-    }
-    return parts[1].trim();
   }
 }

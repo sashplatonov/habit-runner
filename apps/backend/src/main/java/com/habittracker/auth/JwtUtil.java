@@ -34,7 +34,7 @@ public class JwtUtil {
       var decoded = JWT.require(Algorithm.HMAC256(authSecret)).withIssuer(issuer).build().verify(token);
       return new CurrentUser(decoded.getSubject(), decoded.getClaim("email").asString());
     } catch (JWTVerificationException ex) {
-      throw new IllegalArgumentException("Invalid token");
+      throw new IllegalArgumentException("Invalid token", ex);
     }
   }
 }

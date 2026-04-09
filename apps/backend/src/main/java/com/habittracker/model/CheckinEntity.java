@@ -54,20 +54,41 @@ public class CheckinEntity extends PanacheEntityBase {
 
   @PrePersist
   void prePersist() {
+    ensureId();
+    count = Math.max(1, count);
+    version = Math.max(1, version);
+    createdAt = createdAt == null ? Instant.now() : createdAt;
+    updatedAt = updatedAt == null ? createdAt : updatedAt;
+  }
+
+  private void ensureId() {
     if (id == null || id.isBlank()) {
       id = UUID.randomUUID().toString();
     }
-    if (count < 1) {
-      count = 1;
-    }
-    if (version < 1) {
-      version = 1;
-    }
-    if (createdAt == null) {
-      createdAt = Instant.now();
-    }
-    if (updatedAt == null) {
-      updatedAt = createdAt;
-    }
+  }
+
+  public LocalDate syncDate() {
+    return date;
+  }
+
+  public Instant createdAtValue() {
+    return createdAt;
+  }
+
+  public Instant updatedAtValue() {
+    return updatedAt;
+  }
+
+  public void setAuditTimestamps(Instant created, Instant updated) {
+    createdAt = created;
+    updatedAt = updated;
+  }
+
+  public void setCheckinDate(LocalDate value) {
+    date = value;
+  }
+
+  public void setUpdatedAt(Instant instant) {
+    updatedAt = instant;
   }
 }

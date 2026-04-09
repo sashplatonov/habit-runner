@@ -2,6 +2,8 @@ package com.habittracker.sync;
 
 import com.habittracker.auth.CurrentUserContext;
 import com.habittracker.auth.RequireAuth;
+import com.habittracker.sync.dto.PushRequestDto;
+import com.habittracker.sync.dto.SyncOpDto;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
@@ -42,11 +44,11 @@ public class SyncResource {
 
   @POST
   @Path("/push")
-  public Response push(SyncDtos.PushRequestDto body) {
+  public Response push(PushRequestDto body) {
     var userId = currentUserContext.requireUser().id();
     var traceId = traceId();
     var startedAt = System.nanoTime();
-    var ops = body == null || body.ops() == null ? java.util.List.<SyncDtos.SyncOpDto>of() : body.ops();
+    var ops = body == null || body.ops() == null ? java.util.List.<SyncOpDto>of() : body.ops();
     var payload = syncService.push(userId, ops);
     return noStoreResponse(payload, traceId, durationMs(startedAt));
   }

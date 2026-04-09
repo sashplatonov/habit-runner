@@ -5,13 +5,11 @@ import com.auth0.jwt.algorithms.Algorithm;
 import com.habittracker.model.CheckinEntity;
 import com.habittracker.model.HabitEntity;
 import com.habittracker.model.UserEntity;
-import io.quarkus.test.TestTransaction;
+import com.habittracker.sync.dto.PushRequestDto;
+import com.habittracker.sync.dto.SyncOpDto;
 import io.quarkus.test.junit.QuarkusTest;
-import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
 import jakarta.inject.Inject;
-import jakarta.persistence.EntityManager;
-import jakarta.transaction.Transactional;
 import jakarta.transaction.UserTransaction;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -49,7 +47,7 @@ class SyncResourceTest {
     user.id = userId;
     user.email = userId + "@test.com";
     user.theme = "cloud";
-    user.createdAt = Instant.now();
+    user.markCreatedAt(Instant.now());
     user.persist();
     ut.commit();
     token = generateToken(userId, userId + "@test.com");
@@ -78,12 +76,12 @@ class SyncResourceTest {
     habit.targetStreak = 0;
     habit.dailyTarget = 1;
     habit.archived = false;
-    habit.sortOrder = BigInteger.ZERO;
+    habit.setSortOrder(BigInteger.ZERO);
     habit.reminderEnabled = false;
     habit.type = "positive";
     habit.version = version;
-    habit.createdAt = updatedAt;
-    habit.updatedAt = updatedAt;
+    habit.setCreatedAt(updatedAt);
+    habit.setUpdatedAt(updatedAt);
     habit.persist();
     ut.commit();
     return habit;
@@ -92,7 +90,7 @@ class SyncResourceTest {
   // ─── Pull tests ───────────────────────────────────────────────────────────
 
   @Test
-  void pull_withoutCursor_returns200WithEmptyLists() {
+  void pullWithoutCursorReturns200WithEmptyLists() {
     given()
         .header("Authorization", "Bearer " + token)
         .queryParam("since", "")
@@ -110,7 +108,7 @@ class SyncResourceTest {
   }
 
   @Test
-  void pull_returnsHabitsCreatedAfterCursor() throws Exception {
+  void pullReturnsHabitsCreatedAfterCursor() throws Exception {
     var habitId = UUID.randomUUID().toString();
     createHabit(habitId, userId, 1, Instant.now().minus(1, ChronoUnit.MINUTES));
 
@@ -125,7 +123,7 @@ class SyncResourceTest {
   }
 
   @Test
-  void pull_withCursorBeyondCreatedAt_returnsNoHabits() throws Exception {
+  void pullWithCursorBeyondCreatedAtReturnsNoHabits() throws Exception {
     var habitId = UUID.randomUUID().toString();
     createHabit(habitId, userId, 1, Instant.now().minus(1, ChronoUnit.HOURS));
 
@@ -144,8 +142,8 @@ class SyncResourceTest {
   }
 
   @Test
-  void pull_withoutAuth_returns401() {
-    RestAssured.given()
+  void pullWithoutAuthReturns401() {
+    given()
         .when()
         .get("/sync/pull")
         .then()
@@ -155,11 +153,11 @@ class SyncResourceTest {
   // ─── Push tests ───────────────────────────────────────────────────────────
 
   @Test
-  void push_createHabit_appliedAndVisibleOnPull() {
+  void pushCreateHabitAppliedAndVisibleOnPull() {
     var opId = UUID.randomUUID().toString();
     var habitId = UUID.randomUUID().toString();
 
-    var op = new SyncDtos.SyncOpDto(
+    var op = new SyncOpDto(
         opId, "habit", "upsert",
         Map.of(
             "id", habitId,
@@ -174,7 +172,7 @@ class SyncResourceTest {
     given()
         .header("Authorization", "Bearer " + token)
         .contentType(ContentType.JSON)
-        .body(new SyncDtos.PushRequestDto(List.of(op)))
+        .body(pushRequest(op))
         .when()
         .post("/sync/push")
         .then()
@@ -199,11 +197,11 @@ class SyncResourceTest {
   }
 
   @Test
-  void push_sameOpIdTwice_deduplicatedInApplied() {
+  void pushSameOpIdTwiceDeduplicatedInApplied() {
     var opId = UUID.randomUUID().toString();
     var habitId = UUID.randomUUID().toString();
 
-    var op = new SyncDtos.SyncOpDto(
+    var op = new SyncOpDto(
         opId, "habit", "upsert",
         Map.of(
             "id", habitId,
@@ -214,7 +212,7 @@ class SyncResourceTest {
         ),
         Instant.now().toString()
     );
-    var request = new SyncDtos.PushRequestDto(List.of(op));
+    var request = new PushRequestDto(List.of(op));
 
     // First push — should be applied
     given()
@@ -240,14 +238,14 @@ class SyncResourceTest {
   }
 
   @Test
-  void push_olderVersionHabit_returnsConflict() throws Exception {
+  void pushOlderVersionHabitReturnsConflict() throws Exception {
     var habitId = UUID.randomUUID().toString();
     // Seed server with version 5
     createHabit(habitId, userId, 5, Instant.now().minus(5, ChronoUnit.MINUTES));
 
     // Client tries to push version 3 (older) with an older timestamp
     var opId = UUID.randomUUID().toString();
-    var op = new SyncDtos.SyncOpDto(
+    var op = new SyncOpDto(
         opId, "habit", "upsert",
         Map.of(
             "id", habitId,
@@ -259,21 +257,11 @@ class SyncResourceTest {
         Instant.now().toString()
     );
 
-    given()
-        .header("Authorization", "Bearer " + token)
-        .contentType(ContentType.JSON)
-        .body(new SyncDtos.PushRequestDto(List.of(op)))
-        .when()
-        .post("/sync/push")
-        .then()
-        .statusCode(200)
-        .body("applied", not(hasItem(opId)))
-        .body("conflicts", hasSize(1))
-        .body("conflicts[0].opId", equalTo(opId));
+    assertPushConflict(op, opId);
   }
 
   @Test
-  void push_deleteHabit_tombstonedAndCheckinsCascaded() throws Exception {
+  void pushDeleteHabitTombstonedAndCheckinsCascaded() throws Exception {
     var habitId = UUID.randomUUID().toString();
     createHabit(habitId, userId, 1, Instant.now().minus(1, ChronoUnit.MINUTES));
 
@@ -282,17 +270,16 @@ class SyncResourceTest {
     checkin.id = UUID.randomUUID().toString();
     checkin.habitId = habitId;
     checkin.userId = userId;
-    checkin.date = LocalDate.of(2025, 1, 1);
+    checkin.setCheckinDate(LocalDate.of(2025, 1, 1));
     checkin.done = true;
     checkin.count = 1;
     checkin.version = 1;
-    checkin.createdAt = Instant.now();
-    checkin.updatedAt = Instant.now();
+    checkin.setAuditTimestamps(Instant.now(), Instant.now());
     checkin.persist();
     ut.commit();
 
     var opId = UUID.randomUUID().toString();
-    var op = new SyncDtos.SyncOpDto(
+    var op = new SyncOpDto(
         opId, "habit", "delete",
         Map.of("id", habitId, "version", 2),
         Instant.now().toString()
@@ -301,7 +288,7 @@ class SyncResourceTest {
     given()
         .header("Authorization", "Bearer " + token)
         .contentType(ContentType.JSON)
-        .body(new SyncDtos.PushRequestDto(List.of(op)))
+        .body(pushRequest(op))
         .when()
         .post("/sync/push")
         .then()
@@ -322,14 +309,14 @@ class SyncResourceTest {
   }
 
   @Test
-  void push_checkinToAnotherUsersHabit_returnsConflict() throws Exception {
+  void pushCheckinToAnotherUsersHabitReturnsConflict() throws Exception {
     var otherUserId = UUID.randomUUID().toString();
     ut.begin();
     var other = new UserEntity();
     other.id = otherUserId;
     other.email = otherUserId + "@test.com";
     other.theme = "cloud";
-    other.createdAt = Instant.now();
+    other.markCreatedAt(Instant.now());
     other.persist();
     ut.commit();
 
@@ -338,7 +325,7 @@ class SyncResourceTest {
 
     // Our user tries to push a checkin to the other user's habit
     var opId = UUID.randomUUID().toString();
-    var op = new SyncDtos.SyncOpDto(
+    var op = new SyncOpDto(
         opId, "checkin", "upsert",
         Map.of(
             "id", UUID.randomUUID().toString(),
@@ -351,10 +338,29 @@ class SyncResourceTest {
         Instant.now().toString()
     );
 
+    assertPushConflict(op, opId);
+  }
+
+  @Test
+  void pushWithoutAuthReturns401() {
+    given()
+        .contentType(ContentType.JSON)
+        .body(pushRequest())
+        .when()
+        .post("/sync/push")
+        .then()
+        .statusCode(401);
+  }
+
+  private PushRequestDto pushRequest(SyncOpDto... ops) {
+    return new PushRequestDto(List.of(ops));
+  }
+
+  private void assertPushConflict(SyncOpDto op, String opId) {
     given()
         .header("Authorization", "Bearer " + token)
         .contentType(ContentType.JSON)
-        .body(new SyncDtos.PushRequestDto(List.of(op)))
+        .body(pushRequest(op))
         .when()
         .post("/sync/push")
         .then()
@@ -362,16 +368,5 @@ class SyncResourceTest {
         .body("applied", not(hasItem(opId)))
         .body("conflicts", hasSize(1))
         .body("conflicts[0].opId", equalTo(opId));
-  }
-
-  @Test
-  void push_withoutAuth_returns401() {
-    given()
-        .contentType(ContentType.JSON)
-        .body(new SyncDtos.PushRequestDto(List.of()))
-        .when()
-        .post("/sync/push")
-        .then()
-        .statusCode(401);
   }
 }

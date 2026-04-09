@@ -50,4 +50,12 @@ public class TombstoneEntity extends PanacheEntityBase {
       deletedAt = Instant.now();
     }
   }
+
+  public Instant deletedAtValue() {
+    return deletedAt;
+  }
+
+  public void setDeletedAt(Instant instant) {
+    deletedAt = instant;
+  }
 }

@@ -3,6 +3,7 @@ package com.habittracker.notification;
 import com.habittracker.auth.CurrentUserContext;
 import com.habittracker.auth.RequireAuth;
 import com.habittracker.model.PushSubscriptionEntity;
+import com.habittracker.notification.dto.PushSubscriptionRequest;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.DELETE;
 import jakarta.ws.rs.GET;
@@ -65,11 +66,5 @@ public class NotificationResource {
       PushSubscriptionEntity.delete("endpoint", endpoint);
     }
     return Response.status(204).build();
-  }
-
-  public record PushSubscriptionRequest(String endpoint, PushSubscriptionKeys keys) {
-  }
-
-  public record PushSubscriptionKeys(String p256dh, String auth) {
   }
 }

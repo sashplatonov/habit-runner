@@ -1,5 +1,11 @@
 package com.habittracker.auth;
 
+import com.habittracker.auth.dto.LoginRequest;
+import com.habittracker.auth.dto.RefreshRequest;
+import com.habittracker.auth.dto.TokenResponse;
+import com.habittracker.auth.dto.UpdatePreferencesRequest;
+import com.habittracker.auth.dto.UpdateThemeRequest;
+import com.habittracker.auth.dto.UserPreferencesResponse;
 import jakarta.validation.Valid;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
@@ -23,7 +29,7 @@ public class AuthResource {
 
   @POST
   @Path("/login")
-  public AuthDtos.TokenResponse login(@Valid AuthDtos.LoginRequest request) {
+  public TokenResponse login(@Valid LoginRequest request) {
     return authService.login(request.email());
   }
 
@@ -43,13 +49,13 @@ public class AuthResource {
 
   @POST
   @Path("/refresh")
-  public AuthDtos.TokenResponse refresh(@Valid AuthDtos.RefreshRequest request) {
+  public TokenResponse refresh(@Valid RefreshRequest request) {
     return authService.refreshToken(request.refreshToken());
   }
 
   @POST
   @Path("/logout")
-  public Response logout(@Valid AuthDtos.RefreshRequest request) {
+  public Response logout(@Valid RefreshRequest request) {
     authService.revokeToken(request.refreshToken());
     return Response.noContent().build();
   }
@@ -57,14 +63,14 @@ public class AuthResource {
   @RequireAuth
   @GET
   @Path("/preferences")
-  public AuthDtos.UserPreferencesResponse getPreferences() {
+  public UserPreferencesResponse getPreferences() {
     return authService.getUserPreferences(currentUserContext.requireUser().id());
   }
 
   @RequireAuth
   @PUT
   @Path("/preferences")
-  public AuthDtos.UserPreferencesResponse updatePreferences(@Valid AuthDtos.UpdatePreferencesRequest request) {
+  public UserPreferencesResponse updatePreferences(@Valid UpdatePreferencesRequest request) {
     return authService.updateUserPreferences(currentUserContext.requireUser().id(), request);
   }
 
@@ -79,8 +85,11 @@ public class AuthResource {
   @RequireAuth
   @PUT
   @Path("/theme")
-  public java.util.Map<String, String> updateTheme(@Valid AuthDtos.UpdateThemeRequest request) {
-    var theme = authService.updateUserTheme(currentUserContext.requireUser().id(), request.theme());
-    return java.util.Map.of("theme", theme);
+  public java.util.Map<String, String> updateTheme(@Valid UpdateThemeRequest request) {
+    var prefs = authService.updateUserPreferences(
+        currentUserContext.requireUser().id(),
+        new UpdatePreferencesRequest(request.theme(), null)
+    );
+    return java.util.Map.of("theme", prefs.theme());
   }
 }

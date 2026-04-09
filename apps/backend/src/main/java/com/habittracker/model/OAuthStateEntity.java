@@ -31,4 +31,12 @@ public class OAuthStateEntity extends PanacheEntityBase {
       createdAt = Instant.now();
     }
   }
+
+  public boolean isExpiredAt(Instant instant) {
+    return expiresAt.isBefore(instant);
+  }
+
+  public void setExpiry(Instant instant) {
+    expiresAt = instant;
+  }
 }

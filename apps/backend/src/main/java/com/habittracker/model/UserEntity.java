@@ -41,4 +41,8 @@ public class UserEntity extends PanacheEntityBase {
       createdAt = Instant.now();
     }
   }
+
+  public void markCreatedAt(Instant instant) {
+    createdAt = instant;
+  }
 }
