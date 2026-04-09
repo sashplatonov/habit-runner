@@ -92,11 +92,14 @@ async function refreshSession(session: AuthSession): Promise<AuthSession> {
       expiresIn: data.expiresIn,
       email: session.email
     });
-  } catch (err: any) {
-    if (err && err.name === 'AbortError') {
-      throw new Error('Auth refresh timed out');
+  } catch (err: unknown) {
+    if (err instanceof Error && (err as Error).name === 'AbortError') {
+      throw new Error('Auth refresh timed out', { cause: err });
     }
-    throw err;
+    if (err instanceof Error) {
+      throw err;
+    }
+    throw new Error(String(err));
   } finally {
     clearTimeout(timeoutId);
   }

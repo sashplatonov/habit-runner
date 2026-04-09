@@ -37,11 +37,16 @@ async function fetchJson(
       );
     }
     return response;
-  } catch (err: any) {
-    if (err && err.name === 'AbortError') {
-      throw new Error('Sync request timed out');
+  } catch (err: unknown) {
+    // Preserve original error as `cause` when wrapping to satisfy preserve-caught-error
+    if (err instanceof Error && (err as Error).name === 'AbortError') {
+      throw new Error('Sync request timed out', { cause: err });
     }
-    throw err;
+    if (err instanceof Error) {
+      throw err;
+    }
+    // Non-Error throwables: normalize to Error
+    throw new Error(String(err));
   } finally {
     clearTimeout(timeoutHandle);
   }
