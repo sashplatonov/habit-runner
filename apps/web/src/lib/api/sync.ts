@@ -45,8 +45,10 @@ async function fetchJson(
     if (err instanceof Error) {
       throw err;
     }
-    // Non-Error throwables: normalize to Error
-    throw new Error(String(err));
+    // Non-Error throwables: normalize to Error while preserving the original value.
+    throw new Error('Sync request failed with a non-Error throwable', {
+      cause: err
+    });
   } finally {
     clearTimeout(timeoutHandle);
   }

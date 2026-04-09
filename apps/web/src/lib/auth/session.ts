@@ -99,7 +99,9 @@ async function refreshSession(session: AuthSession): Promise<AuthSession> {
     if (err instanceof Error) {
       throw err;
     }
-    throw new Error(String(err));
+    throw new Error('Auth refresh failed with a non-Error throwable', {
+      cause: err
+    });
   } finally {
     clearTimeout(timeoutId);
   }

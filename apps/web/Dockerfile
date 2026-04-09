@@ -6,7 +6,7 @@ COPY package*.json ./
 COPY packages/shared/package.json ./packages/shared/
 COPY tsconfig.base.json ./
 
-RUN npm install --ignore-scripts --no-audit --no-fund --legacy-peer-deps
+RUN npm install --ignore-scripts --no-audit --no-fund --legacy-peer-deps --package-lock=false
 
 # copy shared, build it
 COPY packages/shared/ ./packages/shared/
