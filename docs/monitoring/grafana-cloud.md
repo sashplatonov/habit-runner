@@ -122,6 +122,54 @@ Keep all secrets out of the repository and inject them via deployment platform s
 
 ---
 
+## 🧭 OTLP / Tracing examples
+
+Use these snippets to wire OTLP into your runtime without committing secrets.
+
+.env (example — do not commit real keys):
+```bash
+# OTLP (traces) — Grafana Cloud
+OTEL_EXPORTER_OTLP_ENDPOINT="https://<GRAFANA_OTLP_ENDPOINT>"
+OTEL_EXPORTER_OTLP_HEADERS="Authorization=Bearer <GRAFANA_API_KEY>"
+OTEL_RESOURCE_ATTRIBUTES="service.name=habbit-runner-backend,service.version=1.0.0"
+```
+
+Docker run (local test):
+```bash
+docker run -e OTEL_EXPORTER_OTLP_ENDPOINT="$OTEL_EXPORTER_OTLP_ENDPOINT" \
+   -e OTEL_EXPORTER_OTLP_HEADERS="$OTEL_EXPORTER_OTLP_HEADERS" \
+   -e OTEL_RESOURCE_ATTRIBUTES="$OTEL_RESOURCE_ATTRIBUTES" \
+   -p 8080:8080 habbit-backend:local
+```
+
+Kubernetes (create Secret and reference in Deployment):
+```bash
+kubectl create secret generic grafana-otlp \
+   --from-literal=OTEL_EXPORTER_OTLP_ENDPOINT='https://<GRAFANA_OTLP_ENDPOINT>' \
+   --from-literal=OTEL_EXPORTER_OTLP_HEADERS='Authorization=Bearer <GRAFANA_API_KEY>'
+```
+
+In your `Deployment` spec:
+```yaml
+env:
+- name: OTEL_EXPORTER_OTLP_ENDPOINT
+   valueFrom:
+      secretKeyRef:
+         name: grafana-otlp
+         key: OTEL_EXPORTER_OTLP_ENDPOINT
+- name: OTEL_EXPORTER_OTLP_HEADERS
+   valueFrom:
+      secretKeyRef:
+         name: grafana-otlp
+         key: OTEL_EXPORTER_OTLP_HEADERS
+- name: OTEL_RESOURCE_ATTRIBUTES
+   value: "service.name=habbit-runner-backend,service.version=1.0.0"
+```
+
+[↑ Back to top](#top)
+
+---
+
 ## ✅ Production setup checklist <a name="production-setup-checklist"></a>
 
 1. Set backend and frontend observability environment variables in your deployment platform.
