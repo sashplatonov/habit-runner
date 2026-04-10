@@ -26,7 +26,9 @@ function resolveSampled(rate: number, persistent: boolean): boolean {
   if (persistent) {
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored !== null) return stored === '1';
+      if (stored !== null) {
+        return stored === '1';
+      }
     } catch {
       // storage blocked – fall through to fresh sample
     }
@@ -50,15 +52,21 @@ function resolveSampled(rate: number, persistent: boolean): boolean {
  * the SDK.  Must be awaited before the first network request you want traced.
  */
 export async function initFaro(): Promise<void> {
-  if (typeof window === 'undefined' || !isEnabled()) return;
+  if (typeof window === 'undefined' || !isEnabled()) {
+    return;
+  }
 
   const url = import.meta.env.VITE_FARO_URL as string | undefined;
-  if (!url) return;
+  if (!url) {
+    return;
+  }
 
   const samplingRate = Number(import.meta.env.VITE_FARO_SAMPLING_RATE ?? '1');
   const persistent = (import.meta.env.VITE_FARO_PERSISTENT_SESSIONS as string | undefined) === 'true';
 
-  if (!resolveSampled(samplingRate, persistent)) return;
+  if (!resolveSampled(samplingRate, persistent)) {
+    return;
+  }
 
   try {
     const [faroPkg, tracingPkg] = await Promise.all([
@@ -112,7 +120,9 @@ export async function initFaro(): Promise<void> {
  * the backend user ID.  Call after the auth session is resolved.
  */
 export function setFaroUser(userId: string, email?: string): void {
-  if (!isEnabled() || !_faro) return;
+  if (!isEnabled() || !_faro) {
+    return;
+  }
   _faro.api.setUser({ id: userId, email });
 }
 
@@ -120,12 +130,16 @@ export function setFaroUser(userId: string, email?: string): void {
 // These are the only public surface callers should use; they never throw.
 
 export function trackSyncStarted(type: 'pull' | 'push'): void {
-  if (!isEnabled() || !_faro) return;
+  if (!isEnabled() || !_faro) {
+    return;
+  }
   _faro.api.pushEvent('sync_started', { type }, 'sync');
 }
 
 export function trackSyncCompleted(type: 'pull' | 'push', durationMs: number): void {
-  if (!isEnabled() || !_faro) return;
+  if (!isEnabled() || !_faro) {
+    return;
+  }
   _faro.api.pushEvent('sync_completed', { type, duration_ms: String(durationMs) }, 'sync');
   _faro.api.pushMeasurement({
     type: 'sync_duration',
@@ -134,7 +148,9 @@ export function trackSyncCompleted(type: 'pull' | 'push', durationMs: number): v
 }
 
 export function trackSyncFailed(type: 'pull' | 'push', error: unknown): void {
-  if (!isEnabled() || !_faro) return;
+  if (!isEnabled() || !_faro) {
+    return;
+  }
   const message = error instanceof Error ? error.message : String(error);
   _faro.api.pushEvent('sync_failed', { type, error: message }, 'sync');
   _faro.api.pushError(error instanceof Error ? error : new Error(message));
