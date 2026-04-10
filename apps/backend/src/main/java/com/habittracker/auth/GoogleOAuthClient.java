@@ -5,7 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.NotAuthorizedException;
-import org.jboss.logging.Logger;
+import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 import java.net.URI;
@@ -18,12 +18,13 @@ import java.time.Duration;
 import java.util.Map;
 
 @ApplicationScoped
+@Slf4j
 public class GoogleOAuthClient {
   private static final String AUTHORIZATION_URL = "https://accounts.google.com/o/oauth2/v2/auth";
   private static final String TOKEN_URL = "https://oauth2.googleapis.com/token";
   private static final String USER_INFO_URL = "https://www.googleapis.com/oauth2/v3/userinfo";
   private static final Duration REQUEST_TIMEOUT = Duration.ofSeconds(10);
-  private static final Logger LOG = Logger.getLogger(GoogleOAuthClient.class);
+  private static final long SLOW_OAUTH_CALL_THRESHOLD_MS = 1_500L;
 
   private final AuthConfig authConfig;
   private final ObjectMapper objectMapper;
@@ -53,14 +54,13 @@ public class GoogleOAuthClient {
       var accessToken = exchangeCodeForAccessToken(code, callbackUrl);
       return fetchEmail(accessToken);
     } catch (NotAuthorizedException | BadRequestException exception) {
-      LOG.debugf("Google OAuth exchange rejected: reason=%s", exception.getMessage());
       throw exception;
     } catch (IOException exception) {
-      LOG.warnf(exception, "Google OAuth exchange failed due to I/O error");
+      log.error("Google OAuth exchange failed: provider=google, stage=network-io", exception);
       throw new NotAuthorizedException("OAuth exchange error: " + exception.getMessage(), exception);
     } catch (InterruptedException exception) {
       Thread.currentThread().interrupt();
-      LOG.warn("Google OAuth exchange interrupted", exception);
+      log.error("Google OAuth exchange failed: provider=google, stage=interrupted", exception);
       throw new NotAuthorizedException("OAuth exchange interrupted", exception);
     }
   }
@@ -86,16 +86,24 @@ public class GoogleOAuthClient {
         .timeout(REQUEST_TIMEOUT)
         .build();
 
+    var startedAt = System.nanoTime();
     var response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+    var elapsedMs = elapsedMs(startedAt);
     if (response.statusCode() != 200) {
-      LOG.warnf("Google token exchange failed: status=%d", response.statusCode());
+      log.warn(
+          "Google token exchange failed: provider=google, status={}, elapsed={}ms",
+          response.statusCode(),
+          elapsedMs
+      );
       throw new NotAuthorizedException("Google token exchange failed: " + response.statusCode());
     }
+    logSlowCall("token-exchange", elapsedMs);
 
     var tokenMap = objectMapper.readValue(response.body(), new TypeReference<Map<String, Object>>() {
     });
     var accessToken = (String) tokenMap.get("access_token");
     if (accessToken == null || accessToken.isBlank()) {
+      log.warn("Google token exchange returned no access token: provider=google, elapsed={}ms", elapsedMs);
       throw new NotAuthorizedException("Google did not return an access_token");
     }
     return accessToken;
@@ -109,19 +117,42 @@ public class GoogleOAuthClient {
         .timeout(REQUEST_TIMEOUT)
         .build();
 
+    var startedAt = System.nanoTime();
     var response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+    var elapsedMs = elapsedMs(startedAt);
     if (response.statusCode() != 200) {
-      LOG.warnf("Failed to fetch Google user info: status=%d", response.statusCode());
+      log.warn(
+          "Google user info request failed: provider=google, status={}, elapsed={}ms",
+          response.statusCode(),
+          elapsedMs
+      );
       throw new NotAuthorizedException("Failed to fetch Google userinfo: " + response.statusCode());
     }
+    logSlowCall("user-info", elapsedMs);
 
     var userInfoMap = objectMapper.readValue(response.body(), new TypeReference<Map<String, Object>>() {
     });
     var email = (String) userInfoMap.get("email");
     if (email == null || email.isBlank()) {
+      log.warn("Google user info response did not include email: provider=google, elapsed={}ms", elapsedMs);
       throw new NotAuthorizedException("Google userinfo did not include email");
     }
     return email;
+  }
+
+  private void logSlowCall(String operation, long elapsedMs) {
+    if (elapsedMs > SLOW_OAUTH_CALL_THRESHOLD_MS) {
+      log.warn(
+          "Slow Google OAuth call detected: provider=google, operation={}, elapsed={}ms, threshold={}ms",
+          operation,
+          elapsedMs,
+          SLOW_OAUTH_CALL_THRESHOLD_MS
+      );
+    }
+  }
+
+  private long elapsedMs(long startedAt) {
+    return Math.round((System.nanoTime() - startedAt) / 1_000_000.0d);
   }
 
   private String requiredClientId() {

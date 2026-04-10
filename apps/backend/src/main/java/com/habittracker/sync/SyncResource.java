@@ -1,6 +1,7 @@
 package com.habittracker.sync;
 
 import com.habittracker.api.ApiResponses;
+import com.habittracker.api.RequestTraceFilter;
 import com.habittracker.auth.CurrentUserContext;
 import com.habittracker.auth.RequireAuth;
 import com.habittracker.sync.dto.PushRequestDto;
@@ -14,15 +15,14 @@ import jakarta.ws.rs.container.ContainerRequestContext;
 import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
-import org.jboss.logging.Logger;
-
-import java.util.UUID;
+import lombok.extern.slf4j.Slf4j;
 
 @Path("/sync")
 @Produces(MediaType.APPLICATION_JSON)
 @RequireAuth
+@Slf4j
 public class SyncResource {
-  private static final Logger LOG = Logger.getLogger(SyncResource.class);
+  private static final long SLOW_SYNC_THRESHOLD_MS = 1_000L;
 
   final SyncService syncService;
   final CurrentUserContext currentUserContext;
@@ -43,7 +43,18 @@ public class SyncResource {
     var startedAt = System.nanoTime();
     var payload = syncService.pull(userId, since);
     var durationMs = durationMs(startedAt);
-    LOG.debugf("Completed sync pull: userId=%s traceId=%s durationMs=%d", userId, traceId, durationMs);
+    if (durationMs > SLOW_SYNC_THRESHOLD_MS) {
+      log.warn(
+          "Slow sync pull detected: userId={}, traceId={}, habits={}, checkins={}, tombstones={}, durationMs={}, thresholdMs={}",
+          userId,
+          traceId,
+          payload.habits().size(),
+          payload.checkins().size(),
+          payload.tombstones().size(),
+          durationMs,
+          SLOW_SYNC_THRESHOLD_MS
+      );
+    }
     return ApiResponses.noStore(payload, traceId, durationMs);
   }
 
@@ -56,22 +67,32 @@ public class SyncResource {
     var ops = body == null || body.ops() == null ? java.util.List.<SyncOpDto>of() : body.ops();
     var payload = syncService.push(userId, ops);
     var durationMs = durationMs(startedAt);
-    LOG.debugf(
-        "Completed sync push: userId=%s traceId=%s opCount=%d durationMs=%d",
-        userId,
-        traceId,
-        ops.size(),
-        durationMs
-    );
+    if (!payload.conflicts().isEmpty()) {
+      log.warn(
+          "Sync push completed with conflicts: userId={}, traceId={}, opCount={}, appliedCount={}, conflictCount={}, durationMs={}",
+          userId,
+          traceId,
+          ops.size(),
+          payload.applied().size(),
+          payload.conflicts().size(),
+          durationMs
+      );
+    } else if (durationMs > SLOW_SYNC_THRESHOLD_MS) {
+      log.warn(
+          "Slow sync push detected: userId={}, traceId={}, opCount={}, appliedCount={}, durationMs={}, thresholdMs={}",
+          userId,
+          traceId,
+          ops.size(),
+          payload.applied().size(),
+          durationMs,
+          SLOW_SYNC_THRESHOLD_MS
+      );
+    }
     return ApiResponses.noStore(payload, traceId, durationMs);
   }
 
   private String traceId() {
-    var trace = requestContext.getHeaderString("x-trace-id");
-    if (trace == null || trace.isBlank()) {
-      return UUID.randomUUID().toString();
-    }
-    return trace.trim();
+    return RequestTraceFilter.traceId(requestContext);
   }
 
   private long durationMs(long startedAt) {

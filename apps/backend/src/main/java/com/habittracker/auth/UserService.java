@@ -16,7 +16,7 @@ public class UserService {
     var createdUser = new UserEntity();
     createdUser.email = email;
     createdUser.persist();
-    log.info("Created OAuth user: userId={} email={}", createdUser.id, createdUser.email);
+    log.info("Created OAuth user: userId={}, provider=google", createdUser.id);
     return createdUser;
   }
 }

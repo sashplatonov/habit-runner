@@ -16,13 +16,12 @@ import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
-import org.jboss.logging.Logger;
+import lombok.extern.slf4j.Slf4j;
 
 @Path("/notifications")
 @Produces(MediaType.APPLICATION_JSON)
+@Slf4j
 public class NotificationResource {
-  private static final Logger LOG = Logger.getLogger(NotificationResource.class);
-
   final NotificationConfig notificationConfig;
   final CurrentUserContext currentUserContext;
 
@@ -47,6 +46,7 @@ public class NotificationResource {
     var userId = currentUserContext.requireUser().id();
 
     var existing = PushSubscriptionEntity.find("endpoint", body.endpoint()).firstResult();
+    var created = existing == null;
     if (existing == null) {
       var entity = new PushSubscriptionEntity();
       entity.userId = userId;
@@ -56,7 +56,7 @@ public class NotificationResource {
       entity.persist();
     }
 
-    LOG.debugf("Stored push subscription: userId=%s endpoint=%s", userId, body.endpoint());
+    log.info("Push subscription stored: userId={}, created={}", userId, created);
     return ApiResponses.created(new SubscriptionStatusResponse(true));
   }
 
@@ -65,10 +65,13 @@ public class NotificationResource {
   @Path("/unsubscribe")
   @Transactional
   public Response unsubscribe(PushSubscriptionEndpointRequest body) {
+    var userId = currentUserContext.requireUser().id();
     var endpoint = body == null ? null : body.endpoint();
     if (endpoint != null) {
       PushSubscriptionEntity.delete("endpoint", endpoint);
-      LOG.debugf("Deleted push subscription: endpoint=%s", endpoint);
+      log.info("Push subscription removed: userId={}, endpointProvided=true", userId);
+    } else {
+      log.warn("Push subscription removal skipped: userId={}, reason=missing-endpoint", userId);
     }
     return ApiResponses.noContent();
   }

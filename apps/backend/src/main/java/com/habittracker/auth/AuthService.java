@@ -30,26 +30,26 @@ public class AuthService {
   public TokenResponse login(String email) {
     var user = findUserByEmail(email);
     if (user == null) {
-      log.warn("Login rejected for unknown user: email={}", email);
+      log.warn("Login rejected: authMethod=email, reason=unknown-user");
       throw new NotAuthorizedException("Unknown user");
     }
-    log.debug("Login issued tokens: userId={}", user.id);
-    return issueTokenPair(user);
+    var session = issueTokenPair(user);
+    log.info("Login succeeded: userId={}, authMethod=email", user.id);
+    return session;
   }
 
   @Transactional
   public TokenResponse refreshToken(String token) {
     var record = collaborators.requireActiveRefreshToken(token);
     var user = requireUserById(record.userId);
-    log.debug("Refresh token accepted for userId={}", record.userId);
     var accessToken = collaborators.createAccessToken(user.id, user.email, authConfig.accessTokenTtlSeconds());
+    log.info("Access token refreshed: userId={}, authMethod=refresh-token", record.userId);
     return new TokenResponse(accessToken, record.token, authConfig.accessTokenTtlSeconds(), "Bearer");
   }
 
   @Transactional
   public void revokeToken(String token) {
     collaborators.revokeRefreshToken(token);
-    log.debug("Refresh token revoked");
   }
 
   public CurrentUser verifyAccessToken(String token) {
@@ -68,7 +68,6 @@ public class AuthService {
     payload.returnTo = collaborators.normalizeReturnTo(returnTo);
     payload.setExpiry(Instant.now().plusSeconds(600));
     payload.persist();
-    log.debug("Created OAuth authorization URL: returnTo={}", payload.returnTo);
     return collaborators.buildAuthorizationUrl(state);
   }
 
@@ -79,6 +78,7 @@ public class AuthService {
     var email = collaborators.exchangeCodeForEmail(code);
     var user = collaborators.findOrCreateUser(email);
     var session = collaborators.issueTokenPair(user, authConfig.accessTokenTtlSeconds(), authConfig.refreshTokenDays());
+    log.info("OAuth login succeeded: userId={}, provider=google", user.id);
     return collaborators.buildCallbackRedirect(stateEntity.returnTo, session, email);
   }
 
@@ -95,6 +95,7 @@ public class AuthService {
 
   private void validateOAuthCallbackInput(String code, String state) {
     if (code == null || code.isBlank() || state == null || state.isBlank()) {
+      log.warn("OAuth callback rejected: provider=google, reason=missing-parameters");
       throw new BadRequestException("Missing OAuth callback parameters");
     }
   }
@@ -103,6 +104,7 @@ public class AuthService {
     var stateEntity = OAuthStateEntity.<OAuthStateEntity>findById(state);
     OAuthStateEntity.deleteById(state);
     if (stateEntity == null || stateEntity.isExpiredAt(Instant.now())) {
+      log.warn("OAuth callback rejected: provider=google, reason=invalid-or-expired-state");
       throw new NotAuthorizedException("Invalid or expired OAuth state");
     }
     return stateEntity;
@@ -115,6 +117,7 @@ public class AuthService {
   private UserEntity requireUserById(String userId) {
     var user = UserEntity.<UserEntity>findById(userId);
     if (user == null) {
+      log.warn("Refresh token rejected: userId={}, reason=user-not-found", userId);
       throw new NotAuthorizedException("User no longer exists");
     }
     return user;

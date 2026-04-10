@@ -6,14 +6,13 @@ import com.habittracker.sync.dto.SyncOpDto;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.persistence.PersistenceException;
 import jakarta.transaction.Transactional;
-import org.jboss.logging.Logger;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
 
 @ApplicationScoped
+@Slf4j
 public class SyncPushProcessor {
-  private static final Logger LOG = Logger.getLogger(SyncPushProcessor.class);
-
   private final HabitSyncProcessor habitSyncProcessor;
   private final CheckinSyncProcessor checkinSyncProcessor;
   private final SyncPushResultFactory resultFactory;
@@ -39,17 +38,29 @@ public class SyncPushProcessor {
 
   private void processOp(String userId, SyncOpDto op, SyncPushState state) {
     if (op.id() == null || op.id().isBlank()) {
-      LOG.debug("Ignoring sync op without id");
+      log.debug("Ignoring sync op without id: userId={}, entity={}, type={}", userId, op.entity(), op.type());
       return;
     }
     if (!tryCreateLog(op.id())) {
-      LOG.debugf("Ignoring duplicate sync op: opId=%s", op.id());
+      log.debug(
+          "Ignoring duplicate sync op: userId={}, opId={}, entity={}, type={}",
+          userId,
+          op.id(),
+          op.entity(),
+          op.type()
+      );
       return;
     }
     switch (SyncEntityType.from(op.entity())) {
       case HABIT -> habitSyncProcessor.apply(userId, op, state);
       case CHECKIN -> checkinSyncProcessor.apply(userId, op, state);
-      case null -> LOG.warnf("Ignoring sync op with unsupported entity: opId=%s entity=%s", op.id(), op.entity());
+      case null -> log.warn(
+          "Ignoring sync op with unsupported entity: userId={}, opId={}, entity={}, type={}",
+          userId,
+          op.id(),
+          op.entity(),
+          op.type()
+      );
     }
   }
 

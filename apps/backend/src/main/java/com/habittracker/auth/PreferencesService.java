@@ -8,6 +8,8 @@ import jakarta.transaction.Transactional;
 import jakarta.ws.rs.NotAuthorizedException;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Objects;
+
 @ApplicationScoped
 @Slf4j
 public class PreferencesService {
@@ -27,11 +29,19 @@ public class PreferencesService {
     if (user == null) {
       throw new NotAuthorizedException("User no longer exists");
     }
+    var previousTheme = ThemeCatalog.normalize(user.theme);
+    var previousTimezone = user.timezone;
+
     user.theme = ThemeCatalog.normalize(request.theme());
     if (request.timezone() != null) {
       user.timezone = request.timezone().isBlank() ? null : request.timezone();
     }
-    log.debug("Updated user preferences: userId={}", user.id);
+    log.info(
+        "User preferences updated: userId={}, themeChanged={}, timezoneChanged={}",
+        user.id,
+        !Objects.equals(previousTheme, user.theme),
+        !Objects.equals(previousTimezone, user.timezone)
+    );
     return new UserPreferencesResponse(user.theme, user.timezone);
   }
 }

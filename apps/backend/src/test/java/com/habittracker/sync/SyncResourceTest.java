@@ -78,6 +78,20 @@ class SyncResourceTest extends AuthenticatedApiTestSupport {
         .body("serverTime", notNullValue());
   }
 
+        @Test
+        void shouldEchoProvidedTraceIdWhenPullRequestedWithClientHeader() {
+          var traceId = "trace-client-123";
+
+          given()
+          .header("Authorization", "Bearer " + token)
+          .header("x-trace-id", traceId)
+          .when()
+          .get("/sync/pull")
+          .then()
+          .statusCode(200)
+          .header("x-trace-id", equalTo(traceId));
+        }
+
   @Test
   void shouldReturnHabitsWhenPullRequestedAfterMatchingChanges() throws Exception {
     var habitId = UUID.randomUUID().toString();
@@ -119,6 +133,7 @@ class SyncResourceTest extends AuthenticatedApiTestSupport {
         .get("/sync/pull")
         .then()
         .statusCode(401)
+        .header("x-trace-id", not(isEmptyOrNullString()))
         .body("status", equalTo(401))
           .body("message", equalTo("Unauthorized"))
         .body("timestamp", notNullValue());
