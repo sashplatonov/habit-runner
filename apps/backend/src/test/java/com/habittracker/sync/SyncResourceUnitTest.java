@@ -3,6 +3,7 @@ package com.habittracker.sync;
 import com.habittracker.api.RequestTraceFilter;
 import com.habittracker.auth.CurrentUser;
 import com.habittracker.auth.CurrentUserContext;
+import com.habittracker.metrics.SyncMetricsCollector;
 import com.habittracker.sync.dto.PullResponseDto;
 import com.habittracker.sync.dto.ConflictServerValueDto;
 import com.habittracker.sync.dto.PushConflict;
@@ -12,6 +13,7 @@ import com.habittracker.sync.dto.SyncOpDto;
 import com.habittracker.sync.dto.SyncOpPayloadDto;
 import jakarta.ws.rs.container.ContainerRequestContext;
 import jakarta.ws.rs.core.Response;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Proxy;
@@ -97,7 +99,8 @@ class SyncResourceUnitTest {
   private SyncResource resource(StubSyncService service, String traceId) {
     var currentUserContext = new CurrentUserContext();
     currentUserContext.setUser(new CurrentUser("user-1", "user@example.test"));
-    var resource = new SyncResource(service, currentUserContext);
+    var syncMetricsCollector = new SyncMetricsCollector(new SimpleMeterRegistry());
+    var resource = new SyncResource(service, currentUserContext, syncMetricsCollector);
     resource.requestContext = requestContext(traceId);
     return resource;
   }

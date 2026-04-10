@@ -3,11 +3,28 @@ import type { OutboxEntry } from '@/lib/storage/db';
 import { buildApiUrl } from '@/lib/api/url';
 import { getValidAccessToken } from '@/lib/auth/session';
 import { logClientError, logClientInfo } from '@/lib/logging/clientLogger';
+import { emitFrontendMetric } from '@/lib/observability/frontendMetrics';
 
 const buildUrl = buildApiUrl;
 
 function nowMs(): number {
   return typeof performance !== 'undefined' ? performance.now() : Date.now();
+}
+
+function createErrorWithCause(message: string, cause: unknown): Error {
+  const error = new Error(message);
+  (error as Error & { cause?: unknown }).cause = cause;
+  return error;
+}
+
+function resolveSyncOperation(url: string): string {
+  if (url.includes('/sync/pull')) {
+    return 'pull';
+  }
+  if (url.includes('/sync/push')) {
+    return 'push';
+  }
+  return 'unknown';
 }
 
 function parseDurationHeader(value: string | null): number | undefined {
@@ -40,15 +57,43 @@ function logSyncHttpSuccess(
   response: Response,
   startedAt: number
 ): void {
+  const durationMs = Math.round(nowMs() - startedAt);
+  const operation = resolveSyncOperation(url);
   const context: Record<string, unknown> = {
     url,
     method,
     status: response.status,
-    durationMs: Math.round(nowMs() - startedAt)
+    durationMs
   };
   const serverDurationMs = getServerDurationMs(response);
   if (serverDurationMs !== undefined) {
     context.serverDurationMs = serverDurationMs;
+  }
+  emitFrontendMetric({
+    name: 'sync_http_request_total',
+    value: 1,
+    unit: 'count',
+    operation,
+    status: response.status,
+    success: true
+  });
+  emitFrontendMetric({
+    name: 'sync_http_duration_ms',
+    value: durationMs,
+    unit: 'ms',
+    operation,
+    status: response.status,
+    success: true
+  });
+  if (serverDurationMs !== undefined) {
+    emitFrontendMetric({
+      name: 'sync_server_duration_ms',
+      value: serverDurationMs,
+      unit: 'ms',
+      operation,
+      status: response.status,
+      success: true
+    });
   }
   logClientInfo('sync.http_request', 'Sync request completed', context);
 }
@@ -60,15 +105,33 @@ function logSyncHttpFailure(
   err: unknown,
   status?: number
 ): void {
+  const durationMs = Math.round(nowMs() - startedAt);
+  const operation = resolveSyncOperation(url);
   const context: Record<string, unknown> = {
     url,
     method,
-    durationMs: Math.round(nowMs() - startedAt),
+    durationMs,
     error: err instanceof Error ? err.message : String(err)
   };
   if (status !== undefined) {
     context.status = status;
   }
+  emitFrontendMetric({
+    name: 'sync_http_request_total',
+    value: 1,
+    unit: 'count',
+    operation,
+    status,
+    success: false
+  });
+  emitFrontendMetric({
+    name: 'sync_http_duration_ms',
+    value: durationMs,
+    unit: 'ms',
+    operation,
+    status,
+    success: false
+  });
   logClientError('sync.http_failed', 'Sync request failed', context);
 }
 
@@ -79,17 +142,17 @@ async function parseJsonResponse<T>(
   const startedAt = nowMs();
   const payload = await response.json() as T;
   const duration = Math.round(nowMs() - startedAt);
-  const summary = typeof payload === 'object' && payload !== null
+  const payloadRecord = typeof payload === 'object' && payload !== null
+    ? payload as Record<string, unknown>
+    : null;
+  const habits = payloadRecord?.['habits'];
+  const checkins = payloadRecord?.['checkins'];
+  const tombstones = payloadRecord?.['tombstones'];
+  const summary = payloadRecord
     ? {
-        habits: Array.isArray((payload as { habits?: unknown[] }).habits)
-          ? (payload as { habits: unknown[] }).habits.length
-          : undefined,
-        checkins: Array.isArray((payload as { checkins?: unknown[] }).checkins)
-          ? (payload as { checkins: unknown[] }).checkins.length
-          : undefined,
-        tombstones: Array.isArray((payload as { tombstones?: unknown[] }).tombstones)
-          ? (payload as { tombstones: unknown[] }).tombstones.length
-          : undefined
+        habits: Array.isArray(habits) ? habits.length : undefined,
+        checkins: Array.isArray(checkins) ? checkins.length : undefined,
+        tombstones: Array.isArray(tombstones) ? tombstones.length : undefined
       }
     : undefined;
   logClientInfo('sync.http_body_parsed', 'Sync response body parsed', {
@@ -138,17 +201,15 @@ async function fetchJson(
     return response;
   } catch (err: unknown) {
     logSyncHttpFailure(url, method, startedAt, err);
-    // Preserve original error as `cause` when wrapping to satisfy preserve-caught-error
+    // Preserve original error as `cause` when wrapping to satisfy preserve-caught-error.
     if (err instanceof Error && (err as Error).name === 'AbortError') {
-      throw new Error('Sync request timed out', { cause: err });
+      throw createErrorWithCause('Sync request timed out', err);
     }
     if (err instanceof Error) {
       throw err;
     }
     // Non-Error throwables: normalize to Error while preserving the original value.
-    throw new Error('Sync request failed with a non-Error throwable', {
-      cause: err
-    });
+    throw createErrorWithCause('Sync request failed with a non-Error throwable', err);
   } finally {
     clearTimeout(timeoutHandle);
   }

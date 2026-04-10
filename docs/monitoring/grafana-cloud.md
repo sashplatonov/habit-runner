@@ -5,30 +5,89 @@
 ## 📋 Table of Contents
 
 - [Scope](#scope)
-- [Current backend signals](#current-backend-signals)
+- [End-to-end telemetry flow](#end-to-end-telemetry-flow)
+- [Backend metrics and endpoints](#backend-metrics-and-endpoints)
+- [Frontend telemetry](#frontend-telemetry)
 - [Runtime configuration](#runtime-configuration)
-- [Container example](#container-example)
-- [Operational notes](#operational-notes)
+- [Production setup checklist](#production-setup-checklist)
+- [Validation after deployment](#validation-after-deployment)
 
 ---
 
 ## 📡 Scope <a name="scope"></a>
 
-This document covers backend-side Grafana Cloud integration for the current Quarkus service in `apps/backend`.
+This document describes how the current stack exports metrics to Grafana Cloud for:
+
+- backend service health and sync behavior;
+- frontend sync request behavior;
+- browser RUM/tracing with Grafana Faro.
 
 [↑ Back to top](#top)
 
 ---
 
-## 📈 Current backend signals <a name="current-backend-signals"></a>
+## 🔀 End-to-end telemetry flow <a name="end-to-end-telemetry-flow"></a>
 
-Available endpoints:
-- `/q/metrics` for Prometheus/Micrometer scraping;
-- `/q/health` for health monitoring;
-- `/metrics` for a lightweight JSON metrics payload;
-- Quarkus logs from the backend container or local process.
+1. Backend exposes Prometheus metrics on `/q/metrics`.
+2. Frontend emits sync metrics to backend endpoint `/metrics/frontend`.
+3. Backend converts those frontend events into Micrometer metrics, also visible on `/q/metrics`.
+4. Grafana Agent/Alloy (or another Prometheus-compatible scraper) scrapes `/q/metrics` and remote_writes to Grafana Cloud Prometheus.
+5. Frontend Faro SDK sends browser signals directly to Grafana Faro endpoint.
+6. Backend traces can be exported with OTLP via `OTEL_EXPORTER_OTLP_*`.
 
-Current backend config also includes `logback.xml`, which can be adapted for log shipping if needed.
+[↑ Back to top](#top)
+
+---
+
+## 📈 Backend metrics and endpoints <a name="backend-metrics-and-endpoints"></a>
+
+Endpoints:
+
+- `/q/metrics`: Prometheus/Micrometer scrape endpoint.
+- `/q/health`: health checks.
+- `/metrics`: lightweight JSON snapshot for sync aggregate counters.
+- `/metrics/frontend`: frontend metric ingestion endpoint.
+
+Main sync metrics from backend collector:
+
+- `habittracker_sync_pull_requests_total`
+- `habittracker_sync_push_requests_total`
+- `habittracker_sync_pull_rows_total`
+- `habittracker_sync_conflicts_total`
+- `habittracker_sync_errors_total`
+- `habittracker_sync_pull_latency`
+- `habittracker_sync_push_latency`
+- `habittracker_sync_max_outbox_depth`
+
+Main frontend-ingested metrics (exported by backend):
+
+- `habittracker_frontend_metrics_ingested_total`
+- `habittracker_frontend_metrics_rejected_total`
+- `habittracker_frontend_metric_events_total`
+- `habittracker_frontend_metric_value`
+- `habittracker_frontend_metric_status_total`
+
+[↑ Back to top](#top)
+
+---
+
+## 🌐 Frontend telemetry <a name="frontend-telemetry"></a>
+
+Frontend now emits sync telemetry for pull/push requests:
+
+- `sync_http_request_total` (count)
+- `sync_http_duration_ms` (milliseconds)
+- `sync_server_duration_ms` (milliseconds, when server timing is available)
+
+Transport details:
+
+- Uses `navigator.sendBeacon(...)` when available.
+- Falls back to `fetch(..., { keepalive: true })`.
+- Controlled by `VITE_FRONTEND_METRICS_ENABLED` (default enabled).
+
+RUM/tracing details:
+
+- Faro initialization is controlled by `VITE_FARO_*` variables.
 
 [↑ Back to top](#top)
 
@@ -36,49 +95,56 @@ Current backend config also includes `logback.xml`, which can be adapted for log
 
 ## ⚙️ Runtime configuration <a name="runtime-configuration"></a>
 
-Typical environment variables:
+Backend environment:
+
+- `API_PORT`
+- `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD`, `DB_SCHEMA`
+- `CORS_ORIGINS`
 - `OTEL_EXPORTER_OTLP_ENDPOINT`
 - `OTEL_EXPORTER_OTLP_HEADERS`
 - `OTEL_RESOURCE_ATTRIBUTES`
-- `GRAFANA_CLOUD_API_KEY`
-- `LOKI_PUSH_URL`
 
-Keep secrets out of the repository and inject them through your deployment platform or local shell environment.
+Frontend environment:
 
-[↑ Back to top](#top)
+- `VITE_API_BASE_URL`
+- `VITE_FRONTEND_METRICS_ENABLED`
+- `VITE_FARO_URL`
+- `VITE_FARO_API_KEY`
+- `VITE_FARO_APP_NAME`
+- `VITE_FARO_APP_VERSION`
+- `VITE_FARO_ENVIRONMENT`
+- `VITE_FARO_SAMPLING_RATE`
+- `VITE_FARO_PERSISTENT_SESSIONS`
 
----
-
-## 🐳 Container example <a name="container-example"></a>
-
-```bash
-docker build -t habbit-backend:local -f apps/backend/Dockerfile.jvm apps/backend
-
-docker run \
-  -e OTEL_EXPORTER_OTLP_ENDPOINT="$OTEL_EXPORTER_OTLP_ENDPOINT" \
-  -e OTEL_EXPORTER_OTLP_HEADERS="$OTEL_EXPORTER_OTLP_HEADERS" \
-  -e OTEL_RESOURCE_ATTRIBUTES="service.name=habbit-runner-backend" \
-  -e LOKI_PUSH_URL="$LOKI_PUSH_URL" \
-  -e GRAFANA_CLOUD_API_KEY="$GRAFANA_CLOUD_API_KEY" \
-  -e DB_HOST="$DB_HOST" \
-  -e DB_PORT="$DB_PORT" \
-  -e DB_NAME="$DB_NAME" \
-  -e DB_USER="$DB_USER" \
-  -e DB_PASSWORD="$DB_PASSWORD" \
-  -e DB_SCHEMA="$DB_SCHEMA" \
-  -e API_PORT=8080 \
-  -p 8080:8080 \
-  habbit-backend:local
-```
+Keep all secrets out of the repository and inject them via deployment platform secret management.
 
 [↑ Back to top](#top)
 
 ---
 
-## 📝 Operational notes <a name="operational-notes"></a>
+## ✅ Production setup checklist <a name="production-setup-checklist"></a>
 
-- Prefer a collector or agent when you need unified metrics, traces, and logs across environments.
-- If you wire direct Loki shipping through `logback.xml`, document the secret and retry strategy outside the repo.
-- After adding observability config, verify both `/q/health` and `/q/metrics` before treating the deployment as healthy.
+1. Set backend and frontend observability environment variables in your deployment platform.
+2. Expose backend `/q/metrics` to your internal scraper (Grafana Agent/Alloy/Prometheus).
+3. Configure remote_write from scraper to Grafana Cloud Prometheus.
+4. Set Faro endpoint and keys in frontend runtime variables.
+5. Keep `VITE_FRONTEND_METRICS_ENABLED=true` to send frontend sync events to backend ingestion endpoint.
+6. Ensure network policy and ingress allow frontend to call backend `/metrics/frontend`.
+7. Restrict public access to scrape endpoints (`/q/metrics`) using network boundaries, auth proxy, or private networking.
+
+[↑ Back to top](#top)
+
+---
+
+## 🔍 Validation after deployment <a name="validation-after-deployment"></a>
+
+Perform these checks right after rollout:
+
+1. `GET /q/health` returns healthy state.
+2. `GET /q/metrics` includes both `habittracker_sync_*` and `habittracker_frontend_*` metrics.
+3. Trigger a frontend sync and verify counters increase:
+   - `habittracker_sync_pull_requests_total` or `habittracker_sync_push_requests_total`
+   - `habittracker_frontend_metric_events_total`
+4. Confirm Faro events and traces appear in Grafana Cloud.
 
 [↑ Back to top](#top)
