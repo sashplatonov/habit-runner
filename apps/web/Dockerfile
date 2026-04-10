@@ -14,9 +14,17 @@ RUN npm run build -w @habbit-runner/shared
 
 # copy web app and build
 COPY . ./
-# Build-time args only.  Defaults must live in the repo root `.env` or CI.
+# Build-time args — must be declared here so Vite embeds them into the JS bundle.
+# Values are supplied via docker-compose build.args (or CI build-args).
 ARG VITE_API_BASE_URL
-# Additional build-time args may be provided via CI or the repo root `.env`.
+# ── Grafana Faro RUM ─────────────────────────────────────────────────────────
+ARG VITE_FARO_URL
+ARG VITE_FARO_APP_NAME
+ARG VITE_FARO_APP_VERSION
+ARG VITE_FARO_ENVIRONMENT
+ARG VITE_FARO_SAMPLING_RATE
+ARG VITE_FARO_PERSISTENT_SESSIONS
+ARG VITE_FARO_ENABLED
 # Run the root build (the package itself is the root package, not a workspace member)
 RUN npm run build
 

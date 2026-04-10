@@ -73,15 +73,17 @@ public class ObservabilityConfig {
     }
 
     /**
-     * Apply common tags to every meter created after startup.
-     * This covers auto-instrumented JVM / HTTP server meters.
+     * Startup hook kept for future use (e.g. registering gauges for live objects).
+     * Common resource labels (service.name, service.version, deployment.environment)
+     * are provided externally via Alloy scrape relabelling, so we no longer call
+     * {@code registry.config().commonTags()} here.  Applying common tags after the
+     * JVM auto-instrumentation meters have already been registered causes Micrometer
+     * to throw "Meters that share a name must share tag keys" errors because the
+     * auto-registered meters have no tags while newly created meters would carry the
+     * common tags â€" violating Micrometer's same-name invariant.
      */
     void onStart(@Observes StartupEvent ev) {
-        registry.config().commonTags(
-                "service.name", serviceName,
-                "service.version", serviceVersion,
-                "deployment.environment", environment
-        );
+        // intentionally empty – see Javadoc above
     }
 
     // ── Public helpers used by service / resource beans ─────────────────────

@@ -1,0 +1,104 @@
+// Grafana Alloy configuration for habbit-runner.
+//
+// Deployment:
+//   1. Copy this file to the host as /etc/alloy/config.alloy
+//      (or the path referenced by the alloy systemd unit ExecStart).
+//   2. Export the required environment variables in /etc/alloy/alloy.env
+//      (or the EnvironmentFile used by the alloy.service unit):
+//
+//        GRAFANA_MIMIR_URL=https://<mimir-host>/api/prom/push
+//        GRAFANA_MIMIR_USERNAME=<numeric-user-id>
+//        GRAFANA_METRICS_API_KEY=<glc_…>
+//
+//   3. Reload: sudo systemctl reload alloy
+//   4. Verify: curl -s http://127.0.0.1:12345/-/ready
+//
+// This file ships:
+//   - Node / host metrics   (prometheus.exporter.unix)
+//   - App metrics scrape    (prometheus.scrape → localhost:9000/q/metrics)
+//   - Remote write to Grafana Cloud Mimir
+//
+// Loki app logs and Tempo traces are OUT OF SCOPE for this config.
+
+// ─── Logging ──────────────────────────────────────────────────────────────────
+logging {
+  level  = "warn"
+  format = "logfmt"
+}
+
+// ─── Host / node metrics ──────────────────────────────────────────────────────
+prometheus.exporter.unix "node" {
+  // Default collectors: cpu, diskstats, filesystem, loadavg, meminfo, netdev,
+  // netstat, os, stat, time, uname, vmstat.  Override via include_exporter_metrics
+  // or disable_collectors if needed.
+}
+
+prometheus.scrape "node_metrics" {
+  targets    = prometheus.exporter.unix.node.targets
+  forward_to = [prometheus.remote_write.metrics_service.receiver]
+
+  scrape_interval = "60s"
+}
+
+// ─── Application metrics – Quarkus /q/metrics ─────────────────────────────────
+// The habittracker-api container publishes the Quarkus management port on
+// 127.0.0.1:9000 (host loopback) so Alloy can reach it without network exposure.
+prometheus.scrape "habbit_runner_api" {
+  targets = [{
+    __address__ = "localhost:9000",
+  }]
+
+  metrics_path    = "/q/metrics"
+  scrape_interval = "15s"
+
+  // Apply stable identity labels so every series from this target carries them.
+  // These supplement (or replace) runtime labels when Micrometer common-tags are
+  // not applied on the Java side to avoid the same-name tag-key conflict.
+  relabel_rules = prometheus.relabel.habbit_runner_api_labels.rules
+
+  forward_to = [prometheus.remote_write.metrics_service.receiver]
+}
+
+prometheus.relabel "habbit_runner_api_labels" {
+  rule {
+    action       = "replace"
+    target_label = "job"
+    replacement  = "habbit-runner-api"
+  }
+  rule {
+    action       = "replace"
+    target_label = "service"
+    replacement  = "habittracker-api"
+  }
+  rule {
+    action       = "replace"
+    target_label = "environment"
+    replacement  = "production"
+  }
+  rule {
+    action       = "replace"
+    target_label = "app"
+    replacement  = "habbit-runner"
+  }
+}
+
+// ─── Remote write ──────────────────────────────────────────────────────────────
+prometheus.remote_write "metrics_service" {
+  endpoint {
+    url = env("GRAFANA_MIMIR_URL")
+
+    basic_auth {
+      username = env("GRAFANA_MIMIR_USERNAME")
+      password = env("GRAFANA_METRICS_API_KEY")
+    }
+
+    // Sensible back-pressure defaults; tune if Alloy self-metrics show retries.
+    queue_config {
+      capacity             = 10000
+      max_shards           = 4
+      min_shards           = 1
+      max_samples_per_send = 2000
+      batch_send_deadline  = "5s"
+    }
+  }
+}
