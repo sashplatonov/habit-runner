@@ -5,19 +5,20 @@ export const SYNC_OP_TYPE_VALUES = ['upsert', 'delete'] as const;
 export type SyncOpType = (typeof SYNC_OP_TYPE_VALUES)[number];
 
 import type { HabitSchedule } from './habit.js';
+import type { HabitColor, HabitFrequency } from './habit.js';
 
 export interface HabitDto {
   id: string;
   name: string;
   description?: string | null;
-  color: string;
+  color: HabitColor;
   icon: string;
-  frequency: string;
-  customDays?: unknown;
+  frequency: HabitFrequency;
+  customDays?: number[];
   schedule?: HabitSchedule;
   targetStreak: number;
   dailyTarget?: number;
-  tags?: unknown;
+  tags?: string[];
   archived: boolean;
   createdAt: string;
   updatedAt: string;
@@ -25,7 +26,7 @@ export interface HabitDto {
   sortOrder: number;
   reminderTime?: string;
   reminderEnabled?: boolean;
-  type?: string;
+  type?: 'positive' | 'negative';
   freezeDays?: string[];
 }
 
@@ -58,7 +59,10 @@ export interface PullResponseDto {
 export interface PushConflict {
   opId: string;
   reason: string;
-  serverValue?: unknown;
+  serverValue?: {
+    version: number;
+    updatedAt: string;
+  };
 }
 
 export interface PushResponseDto {
@@ -71,10 +75,37 @@ export interface PushResponseDto {
   serverTime: string;
 }
 
+export interface SyncOpPayloadDto {
+  id?: string;
+  habitId?: string;
+  date?: string;
+  name?: string;
+  description?: string;
+  color?: HabitColor;
+  icon?: string;
+  frequency?: HabitFrequency;
+  customDays?: number[];
+  schedule?: HabitSchedule;
+  targetStreak?: number;
+  dailyTarget?: number;
+  tags?: string[];
+  archived?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+  version?: number;
+  sortOrder?: number;
+  reminderTime?: string;
+  reminderEnabled?: boolean;
+  type?: 'positive' | 'negative';
+  freezeDays?: string[];
+  done?: boolean;
+  count?: number;
+}
+
 export interface SyncOpDto {
   id: string;
   entity: SyncEntity;
   type: SyncOpType;
-  payload: Record<string, unknown>;
+  payload: SyncOpPayloadDto;
   clientTime?: string;
 }

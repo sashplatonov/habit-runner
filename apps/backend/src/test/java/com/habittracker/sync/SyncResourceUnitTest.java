@@ -4,10 +4,12 @@ import com.habittracker.api.RequestTraceFilter;
 import com.habittracker.auth.CurrentUser;
 import com.habittracker.auth.CurrentUserContext;
 import com.habittracker.sync.dto.PullResponseDto;
+import com.habittracker.sync.dto.ConflictServerValueDto;
 import com.habittracker.sync.dto.PushConflict;
 import com.habittracker.sync.dto.PushRequestDto;
 import com.habittracker.sync.dto.PushResponseDto;
 import com.habittracker.sync.dto.SyncOpDto;
+import com.habittracker.sync.dto.SyncOpPayloadDto;
 import jakarta.ws.rs.container.ContainerRequestContext;
 import jakarta.ws.rs.core.Response;
 import org.junit.jupiter.api.Test;
@@ -15,7 +17,6 @@ import org.junit.jupiter.api.Test;
 import java.lang.reflect.Proxy;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -25,7 +26,13 @@ class SyncResourceUnitTest {
   @Test
   void shouldReturnNoStorePullPayloadForCurrentUser() {
     var service = new StubSyncService();
-    service.pullResponse = new PullResponseDto(List.of(), List.of(), List.of(), "cursor-2", "2026-04-10T10:00:00Z");
+    service.pullResponse = PullResponseDto.builder()
+        .habits(List.of())
+        .checkins(List.of())
+        .tombstones(List.of())
+        .nextCursor("cursor-2")
+        .serverTime("2026-04-10T10:00:00Z")
+        .build();
     var resource = resource(service, "trace-pull");
 
     var response = resource.pull("cursor-1");
@@ -38,7 +45,15 @@ class SyncResourceUnitTest {
   @Test
   void shouldTreatNullPushBodyAsEmptyOps() {
     var service = new StubSyncService();
-    service.pushResponse = new PushResponseDto(List.of("op-1"), List.of(), List.of(), List.of(), List.of(), "cursor-3", "2026-04-10T10:01:00Z");
+    service.pushResponse = PushResponseDto.builder()
+        .applied(List.of("op-1"))
+        .conflicts(List.of())
+        .habits(List.of())
+        .checkins(List.of())
+        .tombstones(List.of())
+        .nextCursor("cursor-3")
+        .serverTime("2026-04-10T10:01:00Z")
+        .build();
     var resource = resource(service, "trace-push-empty");
 
     var response = resource.push(null);
@@ -51,19 +66,29 @@ class SyncResourceUnitTest {
   @Test
   void shouldForwardProvidedPushOpsAndConflicts() {
     var service = new StubSyncService();
-    var op = new SyncOpDto("op-9", "habit", "upsert", Map.of("id", "habit-1"), "2026-04-10T10:00:00Z");
-    service.pushResponse = new PushResponseDto(
-        List.of(),
-      List.of(new PushConflict("op-9", "conflict", Map.of("server", true))),
-        List.of(),
-        List.of(),
-        List.of(),
-        "cursor-4",
-        "2026-04-10T10:02:00Z"
-    );
+    var op = SyncOpDto.builder()
+      .id("op-9")
+      .entity("habit")
+      .type(SyncOperationType.UPSERT)
+      .payload(SyncOpPayloadDto.builder().id("habit-1").build())
+      .clientTime("2026-04-10T10:00:00Z")
+      .build();
+    service.pushResponse = PushResponseDto.builder()
+      .applied(List.of())
+      .conflicts(List.of(PushConflict.builder()
+        .opId("op-9")
+        .reason("conflict")
+        .serverValue(ConflictServerValueDto.builder().version(1).updatedAt("2026-04-10T10:00:00Z").build())
+        .build()))
+      .habits(List.of())
+      .checkins(List.of())
+      .tombstones(List.of())
+      .nextCursor("cursor-4")
+      .serverTime("2026-04-10T10:02:00Z")
+      .build();
     var resource = resource(service, "trace-push-conflict");
 
-    var response = resource.push(new PushRequestDto(List.of(op)));
+    var response = resource.push(PushRequestDto.builder().ops(List.of(op)).build());
 
     assertEquals(List.of(op), service.lastPushOps);
     assertResponse(response, service.pushResponse, "trace-push-conflict");

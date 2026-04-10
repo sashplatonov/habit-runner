@@ -1,6 +1,7 @@
 package com.habittracker.model;
 
 import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
 import jakarta.persistence.MappedSuperclass;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
@@ -36,7 +37,8 @@ public abstract class HabitSettingsFields extends HabitIdentityFields {
   public Instant lastReminderSentAt;
 
   @Column(nullable = false)
-  public String type;
+  @Convert(converter = HabitTypeConverter.class)
+  public HabitType type;
 
   @Column(name = "freezeDays", columnDefinition = "jsonb")
   @JdbcTypeCode(SqlTypes.JSON)

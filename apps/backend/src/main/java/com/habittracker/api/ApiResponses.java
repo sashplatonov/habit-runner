@@ -13,7 +13,7 @@ public final class ApiResponses {
     return Response.status(Response.Status.FOUND).location(URI.create(location)).build();
   }
 
-  public static Response created(Object payload) {
+  public static <T> Response created(T payload) {
     return Response.status(Response.Status.CREATED).entity(payload).build();
   }
 
@@ -21,7 +21,7 @@ public final class ApiResponses {
     return Response.noContent().build();
   }
 
-  public static Response noStore(Object payload, String traceId, long durationMs) {
+  public static <T> Response noStore(T payload, String traceId, long durationMs) {
     return Response.ok(payload)
         .header("x-trace-id", traceId)
         .header("x-sync-duration-ms", durationMs)

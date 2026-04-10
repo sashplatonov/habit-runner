@@ -1,5 +1,8 @@
 package com.habittracker.sync;
 
+import com.habittracker.model.HabitColor;
+import com.habittracker.model.HabitFrequency;
+import com.habittracker.model.HabitType;
 import jakarta.enterprise.context.ApplicationScoped;
 
 import java.math.BigInteger;
@@ -21,95 +24,71 @@ public class SyncValueCodec {
     return String.format("%02d:%02d", Integer.parseInt(timeParts[0]), Integer.parseInt(timeParts[1]));
   }
 
-  public String normalizeCustomDaysJson(Object value, SyncPayloadCodec payloadCodec) {
-    if (!(value instanceof List<?> items)) {
+  public String normalizeCustomDaysJson(List<Integer> value, SyncPayloadCodec payloadCodec) {
+    if (value == null) {
       return null;
     }
     var seen = new HashSet<Integer>();
     var result = new ArrayList<Integer>();
-    for (var item : items) {
-      var day = asValidDay(item);
-      if (day != null && seen.add(day)) {
-        result.add(day);
+    for (var day : value) {
+      var normalizedDay = asValidDay(day);
+      if (normalizedDay != null && seen.add(normalizedDay)) {
+        result.add(normalizedDay);
       }
     }
     return result.isEmpty() ? null : payloadCodec.jsonOrNull(result);
   }
 
-  public String normalizeFreezeDaysJson(Object payloadValue, String existing, SyncPayloadCodec payloadCodec) {
+  public String normalizeFreezeDaysJson(List<String> payloadValue, String existing, SyncPayloadCodec payloadCodec) {
     if (payloadValue == null) {
       return existing != null ? existing : "[]";
     }
-    if (!(payloadValue instanceof List<?> items)) {
-      return "[]";
-    }
     var seen = new TreeSet<String>();
-    for (var item : items) {
-      if (item instanceof String value && value.matches("^\\d{4}-\\d{2}-\\d{2}$")) {
+    for (var value : payloadValue) {
+      if (value != null && value.matches("^\\d{4}-\\d{2}-\\d{2}$")) {
         seen.add(value);
       }
     }
     return payloadCodec.jsonOrNull(new ArrayList<>(seen));
   }
 
-  public BigInteger resolveSortOrder(Object payload, BigInteger existing) {
-    if (payload instanceof Number number) {
-      var value = number.doubleValue();
-      if (Double.isFinite(value)) {
-        return BigInteger.valueOf((long) value);
-      }
+  public BigInteger resolveSortOrder(Integer payload, BigInteger existing) {
+    if (payload != null) {
+      return BigInteger.valueOf(payload.longValue());
     }
     return existing != null ? existing : BigInteger.ZERO;
   }
 
-  public int resolveDailyTarget(Object payload, int existingValue) {
-    if (payload instanceof Number number) {
-      var value = number.doubleValue();
-      if (Double.isFinite(value)) {
-        return Math.max(1, (int) value);
-      }
+  public int resolveDailyTarget(Integer payload, int existingValue) {
+    if (payload != null) {
+      return Math.max(1, payload);
     }
     return Math.max(1, existingValue > 0 ? existingValue : 1);
   }
 
-  public String asString(Object value) {
+  public String asString(String value) {
     if (value == null) {
       return null;
     }
-    var text = String.valueOf(value);
-    return text.isBlank() ? null : text;
+    return value.isBlank() ? null : value;
   }
 
-  public String nullableString(Object value) {
-    return value == null ? null : String.valueOf(value);
+  public HabitColor normalizeColor(HabitColor payload, HabitColor existingValue) {
+    if (payload != null) {
+      return payload;
+    }
+    return existingValue != null ? existingValue : HabitColor.BLUE;
   }
 
-  public int asInt(Object value, int fallback) {
-    if (value instanceof Number number) {
-      return number.intValue();
+  public HabitFrequency normalizeFrequency(HabitFrequency payload, HabitFrequency existingValue) {
+    if (payload != null) {
+      return payload;
     }
-    if (value instanceof String text) {
-      try {
-        return Integer.parseInt(text);
-      } catch (NumberFormatException exception) {
-        return fallback;
-      }
-    }
-    return fallback;
+    return existingValue != null ? existingValue : HabitFrequency.DAILY;
   }
 
-  public boolean asBoolean(Object value, boolean fallback) {
-    if (value instanceof Boolean bool) {
-      return bool;
-    }
-    if (value instanceof String text) {
-      return "true".equalsIgnoreCase(text) || "1".equals(text);
-    }
-    return fallback;
-  }
-
-  public String normalizeType(String type) {
-    return "negative".equals(type) ? "negative" : "positive";
+  public HabitType normalizeType(HabitType type) {
+    return HabitType.NEGATIVE.equals(type) ? HabitType.NEGATIVE : HabitType.POSITIVE;
   }
 
   private boolean isValidHourMinute(String[] timeParts) {
@@ -118,11 +97,10 @@ public class SyncValueCodec {
     return hours >= 0 && hours <= 23 && minutes >= 0 && minutes <= 59;
   }
 
-  private Integer asValidDay(Object item) {
-    if (!(item instanceof Number number)) {
+  private Integer asValidDay(Integer day) {
+    if (day == null) {
       return null;
     }
-    var day = number.intValue();
     return day >= 0 && day <= 6 ? day : null;
   }
 }

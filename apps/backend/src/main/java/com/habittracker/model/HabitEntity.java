@@ -27,11 +27,14 @@ public class HabitEntity extends HabitSettingsFields {
   public int version;
 
   @PrePersist
+  @SuppressWarnings({"PMD.CyclomaticComplexity", "PMD.NPathComplexity"})
   void prePersist() {
     ensureId();
     dailyTarget = Math.max(1, dailyTarget);
     sortOrder = sortOrder != null ? sortOrder : BigInteger.ZERO;
-    type = hasText(type) ? type : "positive";
+    color = color != null ? color : HabitColor.BLUE;
+    frequency = frequency != null ? frequency : HabitFrequency.DAILY;
+    type = type != null ? type : HabitType.POSITIVE;
     freezeDays = freezeDays != null ? freezeDays : "[]";
     version = Math.max(1, version);
     createdAt = createdAt != null ? createdAt : Instant.now();

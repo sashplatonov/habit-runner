@@ -3,13 +3,13 @@ package com.habittracker.sync.dto;
 import lombok.Builder;
 
 @Builder
-public record CheckinDto(
+public record CheckinPayloadDto(
     String id,
     String habitId,
     String date,
-    boolean done,
+    Boolean done,
     Integer count,
     String updatedAt,
-    int version
+    Integer version
 ) {
 }

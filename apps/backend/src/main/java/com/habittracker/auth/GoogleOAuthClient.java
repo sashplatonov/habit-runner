@@ -1,6 +1,5 @@
 package com.habittracker.auth;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -16,7 +15,6 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
-import java.util.Map;
 
 @ApplicationScoped
 @Slf4j
@@ -105,9 +103,8 @@ public class GoogleOAuthClient {
     }
     logSlowCall("token-exchange", elapsedMs);
 
-    var tokenMap = objectMapper.readValue(response.body(), new TypeReference<Map<String, Object>>() {
-    });
-    var accessToken = (String) tokenMap.get("access_token");
+    var tokenResponse = objectMapper.readValue(response.body(), GoogleTokenResponse.class);
+    var accessToken = tokenResponse.access_token();
     if (accessToken == null || accessToken.isBlank()) {
       log.warn("Google token exchange returned no access token: provider=google, elapsed={}ms", elapsedMs);
       throw new NotAuthorizedException("Google did not return an access_token");
@@ -136,9 +133,8 @@ public class GoogleOAuthClient {
     }
     logSlowCall("user-info", elapsedMs);
 
-    var userInfoMap = objectMapper.readValue(response.body(), new TypeReference<Map<String, Object>>() {
-    });
-    var email = (String) userInfoMap.get("email");
+    var userInfo = objectMapper.readValue(response.body(), GoogleUserInfoResponse.class);
+    var email = userInfo.email();
     if (email == null || email.isBlank()) {
       log.warn("Google user info response did not include email: provider=google, elapsed={}ms", elapsedMs);
       throw new NotAuthorizedException("Google userinfo did not include email");
@@ -175,5 +171,11 @@ public class GoogleOAuthClient {
 
   private String urlEncode(String value) {
     return URLEncoder.encode(value, StandardCharsets.UTF_8);
+  }
+
+  private record GoogleTokenResponse(String access_token) {
+  }
+
+  private record GoogleUserInfoResponse(String email) {
   }
 }

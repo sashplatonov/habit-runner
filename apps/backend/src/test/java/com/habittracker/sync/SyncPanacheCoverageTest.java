@@ -2,9 +2,11 @@ package com.habittracker.sync;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.habittracker.model.CheckinEntity;
+import com.habittracker.model.HabitColor;
 import com.habittracker.model.HabitEntity;
+import com.habittracker.model.HabitFrequency;
+import com.habittracker.model.HabitType;
 import com.habittracker.model.TombstoneEntity;
-import com.habittracker.sync.dto.SyncOpDto;
 import io.quarkus.hibernate.orm.panache.PanacheQuery;
 import io.quarkus.panache.mock.PanacheMock;
 import io.quarkus.test.junit.QuarkusTest;
@@ -21,6 +23,7 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static com.habittracker.sync.SyncTestPayloads.syncOp;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -30,7 +33,8 @@ import static org.mockito.Mockito.when;
   "PMD.CouplingBetweenObjects",
   "PMD.TooManyMethods",
   "PMD.ExcessiveParameterList",
-  "PMD.SimplifiableTestAssertion"
+  "PMD.SimplifiableTestAssertion",
+  "PMD.LawOfDemeter"
 })
 class SyncPanacheCoverageTest {
 
@@ -46,9 +50,10 @@ class SyncPanacheCoverageTest {
     payloadCodec = new SyncPayloadCodec(new ObjectMapper());
     valueCodec = new SyncValueCodec();
     entityMapper = new SyncEntityMapper(payloadCodec);
-    checkinDeleteHandler = new CheckinDeleteHandler(payloadCodec, valueCodec);
-    habitSyncProcessor = new HabitSyncProcessor(payloadCodec, valueCodec, entityMapper);
-    checkinSyncProcessor = new CheckinSyncProcessor(payloadCodec, valueCodec, entityMapper, checkinDeleteHandler);
+    checkinDeleteHandler = new CheckinDeleteHandler(payloadCodec);
+    var payloadMapper = new SyncPayloadMapperImpl();
+    habitSyncProcessor = new HabitSyncProcessor(payloadCodec, valueCodec, entityMapper, payloadMapper);
+    checkinSyncProcessor = new CheckinSyncProcessor(payloadCodec, entityMapper, checkinDeleteHandler, payloadMapper);
     PanacheMock.mock(HabitEntity.class);
     PanacheMock.mock(CheckinEntity.class);
     PanacheMock.mock(TombstoneEntity.class);
@@ -72,13 +77,7 @@ class SyncPanacheCoverageTest {
     payload.put("sortOrder", 5);
     payload.put("reminderEnabled", true);
     payload.put("type", "negative");
-    var op = new SyncOpDto(
-        "habit-create",
-        "habit",
-        "upsert",
-      payload,
-        updatedAt.toString()
-    );
+    var op = syncOp("habit-create", "habit", "upsert", payload, updatedAt.toString());
 
     habitSyncProcessor.apply("user-1", op, state);
 
@@ -88,7 +87,7 @@ class SyncPanacheCoverageTest {
     assertEquals("habit-1", habit.id);
     assertEquals("user-1", habit.userId);
     assertEquals("Deep Focus", habit.name);
-    assertEquals("negative", habit.type);
+    assertEquals(HabitType.NEGATIVE, habit.type);
     assertEquals(BigInteger.valueOf(5), habit.sortOrderOrZero());
     assertEquals(3, habit.version);
   }
@@ -103,7 +102,7 @@ class SyncPanacheCoverageTest {
 
     habitSyncProcessor.apply(
         "user-1",
-        new SyncOpDto(
+        syncOp(
             "foreign-op",
             "habit",
             "upsert",
@@ -114,7 +113,7 @@ class SyncPanacheCoverageTest {
     );
     habitSyncProcessor.apply(
         "user-1",
-        new SyncOpDto(
+      syncOp(
             "newer-op",
             "habit",
             "upsert",
@@ -136,7 +135,7 @@ class SyncPanacheCoverageTest {
 
     habitSyncProcessor.apply(
         "user-1",
-        new SyncOpDto(
+      syncOp(
             "habit-delete",
             "habit",
             "delete",
@@ -164,7 +163,7 @@ class SyncPanacheCoverageTest {
 
     checkinSyncProcessor.apply(
         "user-1",
-        new SyncOpDto(
+      syncOp(
             "checkin-create",
             "checkin",
             "upsert",
@@ -199,7 +198,7 @@ class SyncPanacheCoverageTest {
 
     checkinSyncProcessor.apply(
         "user-1",
-        new SyncOpDto(
+      syncOp(
             "newer-checkin",
             "checkin",
             "upsert",
@@ -215,7 +214,7 @@ class SyncPanacheCoverageTest {
     );
     checkinSyncProcessor.apply(
         "user-1",
-        new SyncOpDto(
+      syncOp(
             "missing-parent",
             "checkin",
             "upsert",
@@ -245,7 +244,7 @@ class SyncPanacheCoverageTest {
 
     checkinSyncProcessor.apply(
         "user-1",
-        new SyncOpDto(
+      syncOp(
             "checkin-delete",
             "checkin",
             "delete",
@@ -299,13 +298,13 @@ class SyncPanacheCoverageTest {
     habit.id = id;
     habit.userId = userId;
     habit.name = "Habit";
-    habit.color = "#5E81AC";
+    habit.color = HabitColor.LEGACY_NORD;
     habit.icon = "star";
-    habit.frequency = "daily";
+    habit.frequency = HabitFrequency.DAILY;
     habit.targetStreak = 1;
     habit.dailyTarget = 1;
     habit.archived = false;
-    habit.type = "positive";
+    habit.type = HabitType.POSITIVE;
     habit.freezeDays = "[]";
     habit.setSortOrder(BigInteger.ZERO);
     habit.setCreatedAt(updatedAt.minusSeconds(60));

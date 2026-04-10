@@ -28,13 +28,13 @@ public class SyncPullProcessor {
     var candidates = collectCursors(habits, checkins, tombstones);
     var nextCursor = payloadCodec.calculateNextCursor(candidates);
 
-    return new PullResponseDto(
-        habits.stream().map(entityMapper::serializeHabit).toList(),
-        checkins.stream().map(entityMapper::serializeCheckin).toList(),
-        tombstones.stream().map(entityMapper::serializeTombstone).toList(),
-        nextCursor,
-        payloadCodec.toSyncIso(Instant.now())
-    );
+    return PullResponseDto.builder()
+        .habits(habits.stream().map(entityMapper::serializeHabit).toList())
+        .checkins(checkins.stream().map(entityMapper::serializeCheckin).toList())
+        .tombstones(tombstones.stream().map(entityMapper::serializeTombstone).toList())
+        .nextCursor(nextCursor)
+        .serverTime(payloadCodec.toSyncIso(Instant.now()))
+        .build();
   }
 
   protected List<HabitEntity> findHabits(String userId, SyncCursor cursor) {

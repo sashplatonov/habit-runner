@@ -1,6 +1,7 @@
 package com.habittracker.sync.dto;
 
-import java.util.Map;
+import lombok.Builder;
 
-public record PushConflict(String opId, String reason, Map<String, Object> serverValue) {
+@Builder
+public record PushConflict(String opId, String reason, ConflictServerValueDto serverValue) {
 }

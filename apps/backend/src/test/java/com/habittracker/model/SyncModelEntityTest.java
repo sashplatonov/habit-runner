@@ -63,7 +63,7 @@ class SyncModelEntityTest {
     assertNotNull(habit.id);
     assertEquals(1, habit.dailyTarget);
     assertEquals(BigInteger.ZERO, habit.sortOrderOrZero());
-    assertEquals("positive", habit.type);
+    assertEquals(HabitType.POSITIVE, habit.type);
     assertEquals("[]", habit.freezeDays);
     assertEquals(1, habit.versionValue());
     assertEquals(habit.createdAt, habit.createdAtValue());

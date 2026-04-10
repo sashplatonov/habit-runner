@@ -2,12 +2,14 @@ package com.habittracker.sync;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.habittracker.model.CheckinEntity;
+import com.habittracker.model.HabitColor;
 import com.habittracker.model.HabitEntity;
+import com.habittracker.model.HabitFrequency;
+import com.habittracker.model.HabitType;
 import com.habittracker.model.SyncOpLogEntity;
 import com.habittracker.model.TombstoneEntity;
 import com.habittracker.support.AuthenticatedApiTestSupport;
 import com.habittracker.sync.dto.PushResponseDto;
-import com.habittracker.sync.dto.SyncOpDto;
 import io.quarkus.test.junit.QuarkusTest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -23,6 +25,7 @@ import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static com.habittracker.sync.SyncTestPayloads.syncOp;
 
 @QuarkusTest
 @SuppressWarnings({
@@ -47,9 +50,10 @@ class SyncProcessorCoverageTest extends AuthenticatedApiTestSupport {
     payloadCodec = new SyncPayloadCodec(new ObjectMapper());
     valueCodec = new SyncValueCodec();
     entityMapper = new SyncEntityMapper(payloadCodec);
-    checkinDeleteHandler = new CheckinDeleteHandler(payloadCodec, valueCodec);
-    habitSyncProcessor = new HabitSyncProcessor(payloadCodec, valueCodec, entityMapper);
-    checkinSyncProcessor = new CheckinSyncProcessor(payloadCodec, valueCodec, entityMapper, checkinDeleteHandler);
+    checkinDeleteHandler = new CheckinDeleteHandler(payloadCodec);
+    var payloadMapper = new SyncPayloadMapperImpl();
+    habitSyncProcessor = new HabitSyncProcessor(payloadCodec, valueCodec, entityMapper, payloadMapper);
+    checkinSyncProcessor = new CheckinSyncProcessor(payloadCodec, entityMapper, checkinDeleteHandler, payloadMapper);
   }
 
   @Test
@@ -77,13 +81,7 @@ class SyncProcessorCoverageTest extends AuthenticatedApiTestSupport {
     habitPayload.put("reminderEnabled", true);
     habitPayload.put("type", "negative");
     habitPayload.put("freezeDays", List.of("2026-04-12"));
-    var createOp = new SyncOpDto(
-        "habit-create",
-        "habit",
-        "upsert",
-      habitPayload,
-        createdAt.toString()
-    );
+    var createOp = syncOp("habit-create", "habit", "upsert", habitPayload, createdAt.toString());
 
     inTransaction(() -> habitSyncProcessor.apply(userId, createOp, createState));
 
@@ -91,21 +89,21 @@ class SyncProcessorCoverageTest extends AuthenticatedApiTestSupport {
     assertEquals(List.of("habit-create"), createState.applied());
     assertNotNull(createdHabit);
     assertEquals("Focus Sprint", createdHabit.name);
-    assertEquals("negative", createdHabit.type);
+    assertEquals(HabitType.NEGATIVE, createdHabit.type);
     assertEquals(2, createdHabit.version);
 
     var checkin = createCheckin(habitId, userId, LocalDate.parse("2026-04-10"), createdAt.plusSeconds(30));
     var deleteState = new SyncPushState();
-    var deleteOp = new SyncOpDto(
-        "habit-delete",
-        "habit",
-        "delete",
-        Map.of(
-            "id", habitId,
-            "updatedAt", createdAt.plusSeconds(60).toString(),
-            "version", 4
-        ),
-        createdAt.plusSeconds(60).toString()
+    var deleteOp = syncOp(
+      "habit-delete",
+      "habit",
+      "delete",
+      Map.of(
+        "id", habitId,
+        "updatedAt", createdAt.plusSeconds(60).toString(),
+        "version", 4
+      ),
+      createdAt.plusSeconds(60).toString()
     );
 
     inTransaction(() -> habitSyncProcessor.apply(userId, deleteOp, deleteState));
@@ -125,7 +123,7 @@ class SyncProcessorCoverageTest extends AuthenticatedApiTestSupport {
 
     inTransaction(() -> habitSyncProcessor.apply(
         userId,
-        new SyncOpDto(
+        syncOp(
             "missing-id",
             "habit",
             "upsert",
@@ -136,7 +134,7 @@ class SyncProcessorCoverageTest extends AuthenticatedApiTestSupport {
     ));
     inTransaction(() -> habitSyncProcessor.apply(
         userId,
-        new SyncOpDto(
+        syncOp(
             "foreign-habit",
             "habit",
             "upsert",
@@ -147,7 +145,7 @@ class SyncProcessorCoverageTest extends AuthenticatedApiTestSupport {
     ));
     inTransaction(() -> habitSyncProcessor.apply(
         userId,
-        new SyncOpDto(
+        syncOp(
             "newer-habit",
             "habit",
             "upsert",
@@ -169,19 +167,19 @@ class SyncProcessorCoverageTest extends AuthenticatedApiTestSupport {
     var habit = createHabit(UUID.randomUUID().toString(), userId, instant.minusSeconds(120));
     var createState = new SyncPushState();
     var date = LocalDate.parse("2026-04-10");
-    var createOp = new SyncOpDto(
-        "checkin-create",
-        "checkin",
-        "upsert",
-        Map.of(
-            "habitId", habit.id,
-            "date", date.toString(),
-            "done", true,
-            "count", 4,
-            "version", 1,
-            "updatedAt", instant.toString()
-        ),
-        instant.toString()
+    var createOp = syncOp(
+      "checkin-create",
+      "checkin",
+      "upsert",
+      Map.of(
+        "habitId", habit.id,
+        "date", date.toString(),
+        "done", true,
+        "count", 4,
+        "version", 1,
+        "updatedAt", instant.toString()
+      ),
+      instant.toString()
     );
 
     inTransaction(() -> checkinSyncProcessor.apply(userId, createOp, createState));
@@ -201,7 +199,7 @@ class SyncProcessorCoverageTest extends AuthenticatedApiTestSupport {
     createdCheckin.setUpdatedAt(instant.plusSeconds(120));
     inTransaction(() -> checkinSyncProcessor.apply(
         userId,
-        new SyncOpDto(
+        syncOp(
             "checkin-conflict",
             "checkin",
             "upsert",
@@ -219,7 +217,7 @@ class SyncProcessorCoverageTest extends AuthenticatedApiTestSupport {
     ));
     inTransaction(() -> checkinSyncProcessor.apply(
         userId,
-        new SyncOpDto(
+        syncOp(
             "missing-parent",
             "checkin",
             "upsert",
@@ -240,7 +238,7 @@ class SyncProcessorCoverageTest extends AuthenticatedApiTestSupport {
     var deleteState = new SyncPushState();
     inTransaction(() -> checkinSyncProcessor.apply(
         userId,
-        new SyncOpDto(
+        syncOp(
             "checkin-delete",
             "checkin",
             "delete",
@@ -291,10 +289,10 @@ class SyncProcessorCoverageTest extends AuthenticatedApiTestSupport {
     var resultFactory = new RecordingResultFactory();
     var pushProcessor = new SyncPushProcessor(habitRecorder, checkinRecorder, resultFactory);
     var ops = List.of(
-        new SyncOpDto(" ", "habit", "upsert", Map.of(), Instant.now().toString()),
-        new SyncOpDto("habit-op", "habit", "upsert", Map.of(), Instant.now().toString()),
-        new SyncOpDto("checkin-op", "checkin", "upsert", Map.of(), Instant.now().toString()),
-        new SyncOpDto("unsupported-op", "unknown", "upsert", Map.of(), Instant.now().toString())
+        syncOp(" ", "habit", "upsert", Map.of(), Instant.now().toString()),
+        syncOp("habit-op", "habit", "upsert", Map.of(), Instant.now().toString()),
+        syncOp("checkin-op", "checkin", "upsert", Map.of(), Instant.now().toString()),
+        syncOp("unsupported-op", "unknown", "upsert", Map.of(), Instant.now().toString())
     );
 
     PushResponseDto response = inTransaction(() -> pushProcessor.push(userId, ops));
@@ -312,13 +310,13 @@ class SyncProcessorCoverageTest extends AuthenticatedApiTestSupport {
       habit.id = habitId;
       habit.userId = ownerId;
       habit.name = "Persisted Habit";
-      habit.frequency = "daily";
-      habit.color = "#5E81AC";
+      habit.frequency = HabitFrequency.DAILY;
+      habit.color = HabitColor.LEGACY_NORD;
       habit.icon = "star";
       habit.targetStreak = 1;
       habit.dailyTarget = 1;
       habit.archived = false;
-      habit.type = "positive";
+      habit.type = HabitType.POSITIVE;
       habit.freezeDays = "[]";
       habit.setSortOrder(BigInteger.ZERO);
       habit.setCreatedAt(updatedAt.minusSeconds(60));
@@ -361,7 +359,7 @@ class SyncProcessorCoverageTest extends AuthenticatedApiTestSupport {
     private final List<String> opIds = new ArrayList<>();
 
     RecordingHabitSyncProcessor() {
-      super(null, null, null);
+        super(null, null, null, null);
     }
 
     @Override
@@ -371,13 +369,13 @@ class SyncProcessorCoverageTest extends AuthenticatedApiTestSupport {
       habit.id = op.id() + "-habit";
       habit.userId = userId;
       habit.name = "Recorded Habit";
-      habit.frequency = "daily";
-      habit.color = "#5E81AC";
+      habit.frequency = HabitFrequency.DAILY;
+      habit.color = HabitColor.LEGACY_NORD;
       habit.icon = "star";
       habit.targetStreak = 1;
       habit.dailyTarget = 1;
       habit.archived = false;
-      habit.type = "positive";
+      habit.type = HabitType.POSITIVE;
       habit.freezeDays = "[]";
       habit.version = 1;
       habit.setCreatedAt(Instant.parse("2026-04-10T12:00:00Z"));
@@ -390,7 +388,7 @@ class SyncProcessorCoverageTest extends AuthenticatedApiTestSupport {
     private final List<String> opIds = new ArrayList<>();
 
     RecordingCheckinSyncProcessor() {
-      super(null, null, null, null);
+        super(null, null, null, null);
     }
 
     @Override
@@ -419,15 +417,15 @@ class SyncProcessorCoverageTest extends AuthenticatedApiTestSupport {
     @Override
     public com.habittracker.sync.dto.PushResponseDto create(SyncPushState state) {
       lastState = state;
-      return new com.habittracker.sync.dto.PushResponseDto(
-          state.applied(),
-          state.conflicts(),
-          List.of(),
-          List.of(),
-          List.of(),
-          null,
-          "2026-04-10T12:00:00Z"
-      );
+        return com.habittracker.sync.dto.PushResponseDto.builder()
+            .applied(state.applied())
+            .conflicts(state.conflicts())
+            .habits(List.of())
+            .checkins(List.of())
+            .tombstones(List.of())
+            .nextCursor(null)
+            .serverTime("2026-04-10T12:00:00Z")
+            .build();
     }
   }
 }

@@ -3,10 +3,9 @@ package com.habittracker.sync;
 import com.habittracker.model.CheckinEntity;
 import com.habittracker.model.HabitEntity;
 import com.habittracker.model.TombstoneEntity;
+import com.habittracker.sync.dto.ConflictServerValueDto;
 import com.habittracker.sync.dto.PushConflict;
 import org.junit.jupiter.api.Test;
-
-import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -43,7 +42,11 @@ class SyncSupportTest {
     var habit = new HabitEntity();
     var checkin = new CheckinEntity();
     var tombstone = new TombstoneEntity();
-    var conflict = new PushConflict("op-1", "conflict", Map.of("server", "value"));
+    var conflict = PushConflict.builder()
+      .opId("op-1")
+      .reason("conflict")
+      .serverValue(ConflictServerValueDto.builder().version(1).updatedAt("2026-04-10T00:00:00Z").build())
+      .build();
 
     state.addAppliedHabit("habit-op", habit);
     state.addAppliedCheckin("checkin-op", checkin);

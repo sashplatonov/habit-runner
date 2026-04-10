@@ -17,15 +17,15 @@ public class SyncPushResultFactory {
 
   public PushResponseDto create(SyncPushState state) {
     var candidates = collectCursors(state);
-    return new PushResponseDto(
-        state.applied(),
-        state.conflicts(),
-        state.pushedHabits().stream().map(entityMapper::serializeHabit).toList(),
-        state.pushedCheckins().stream().map(entityMapper::serializeCheckin).toList(),
-        state.pushedTombstones().stream().map(entityMapper::serializeTombstone).toList(),
-        candidates.isEmpty() ? null : payloadCodec.calculateNextCursor(candidates),
-        payloadCodec.toSyncIso(Instant.now())
-    );
+    return PushResponseDto.builder()
+        .applied(state.applied())
+        .conflicts(state.conflicts())
+        .habits(state.pushedHabits().stream().map(entityMapper::serializeHabit).toList())
+        .checkins(state.pushedCheckins().stream().map(entityMapper::serializeCheckin).toList())
+        .tombstones(state.pushedTombstones().stream().map(entityMapper::serializeTombstone).toList())
+        .nextCursor(candidates.isEmpty() ? null : payloadCodec.calculateNextCursor(candidates))
+        .serverTime(payloadCodec.toSyncIso(Instant.now()))
+        .build();
   }
 
   private java.util.List<SyncCursor> collectCursors(SyncPushState state) {

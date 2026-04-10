@@ -10,17 +10,18 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 class MetricsResourceTest {
 
   @Test
+  @SuppressWarnings("PMD.LawOfDemeter")
   void shouldReturnZeroedMetricsSnapshotWhenRequested() {
     var metrics = new MetricsResource().getMetrics();
 
-    assertNotNull(Instant.parse((String) metrics.get("createdAt")));
-    assertEquals(0, metrics.get("pullRequests"));
-    assertEquals(0, metrics.get("pushRequests"));
-    assertEquals(0, metrics.get("avgPullLatencyMs"));
-    assertEquals(0, metrics.get("avgPushLatencyMs"));
-    assertEquals(0, metrics.get("totalPullRows"));
-    assertEquals(0, metrics.get("conflicts"));
-    assertEquals(0, metrics.get("errors"));
-    assertEquals(0, metrics.get("maxOutboxDepth"));
+    assertNotNull(Instant.parse(metrics.createdAt()));
+    assertEquals(0, metrics.pullRequests());
+    assertEquals(0, metrics.pushRequests());
+    assertEquals(0, metrics.avgPullLatencyMs());
+    assertEquals(0, metrics.avgPushLatencyMs());
+    assertEquals(0, metrics.totalPullRows());
+    assertEquals(0, metrics.conflicts());
+    assertEquals(0, metrics.errors());
+    assertEquals(0, metrics.maxOutboxDepth());
   }
 }

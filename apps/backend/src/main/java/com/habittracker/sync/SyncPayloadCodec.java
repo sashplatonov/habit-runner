@@ -2,6 +2,7 @@ package com.habittracker.sync;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.enterprise.context.ApplicationScoped;
 
@@ -11,14 +12,18 @@ import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 @ApplicationScoped
+@SuppressWarnings("PMD.CouplingBetweenObjects")
 public class SyncPayloadCodec {
   private static final DateTimeFormatter ISO = DateTimeFormatter.ISO_OFFSET_DATE_TIME;
-  private static final TypeReference<Map<String, Object>> MAP_TYPE = new TypeReference<>() {
+  private static final TypeReference<Map<String, String>> CURSOR_TYPE = new TypeReference<>() {
+  };
+  private static final TypeReference<List<Integer>> INTEGER_LIST_TYPE = new TypeReference<>() {
+  };
+  private static final TypeReference<List<String>> STRING_LIST_TYPE = new TypeReference<>() {
   };
 
   private final ObjectMapper objectMapper;
@@ -32,13 +37,16 @@ public class SyncPayloadCodec {
       return null;
     }
     try {
-      var data = objectMapper.readValue(raw, MAP_TYPE);
+      var data = objectMapper.readValue(raw, CURSOR_TYPE);
       var updatedAt = stringOrNull(data.get("updatedAt"));
       var id = rawString(data.get("id"));
       if (updatedAt == null || id == null) {
         return null;
       }
-      return new SyncCursor(Instant.parse(updatedAt), id);
+      return SyncCursor.builder()
+          .updatedAt(Instant.parse(updatedAt))
+          .id(id)
+          .build();
     } catch (JsonProcessingException exception) {
       return null;
     }
@@ -47,14 +55,20 @@ public class SyncPayloadCodec {
   public String calculateNextCursor(List<SyncCursor> rows) {
     SyncCursor latest;
     if (rows.isEmpty()) {
-      latest = new SyncCursor(Instant.now(), "");
+      latest = SyncCursor.builder()
+          .updatedAt(Instant.now())
+          .id("")
+          .build();
     } else {
       latest = rows.stream()
           .max((left, right) -> {
             var byTime = left.updatedAt().compareTo(right.updatedAt());
             return byTime != 0 ? byTime : left.id().compareTo(right.id());
           })
-          .orElse(new SyncCursor(Instant.now(), ""));
+          .orElse(SyncCursor.builder()
+              .updatedAt(Instant.now())
+              .id("")
+              .build());
     }
 
     try {
@@ -67,11 +81,7 @@ public class SyncPayloadCodec {
     }
   }
 
-  public Map<String, Object> toMap(Map<String, Object> payload) {
-    return payload == null ? new HashMap<>() : payload;
-  }
-
-  public String jsonOrNull(Object value) {
+  public <T> String jsonOrNull(T value) {
     if (value == null) {
       return null;
     }
@@ -82,20 +92,37 @@ public class SyncPayloadCodec {
     }
   }
 
-  public Object parseJsonOrNull(String json) {
+  public JsonNode parseJsonNodeOrNull(String json) {
     if (json == null || json.isBlank()) {
       return null;
     }
     try {
-      return objectMapper.readValue(json, Object.class);
+      return objectMapper.readValue(json, JsonNode.class);
     } catch (JsonProcessingException exception) {
       return null;
     }
   }
 
-  public Object parseJsonOrEmptyList(String json) {
-    var parsed = parseJsonOrNull(json);
-    return parsed == null ? List.of() : parsed;
+  public List<Integer> parseIntegerListOrNull(String json) {
+    if (json == null || json.isBlank()) {
+      return null;
+    }
+    try {
+      return objectMapper.readValue(json, INTEGER_LIST_TYPE);
+    } catch (JsonProcessingException exception) {
+      return null;
+    }
+  }
+
+  public List<String> parseStringListOrEmpty(String json) {
+    if (json == null || json.isBlank()) {
+      return List.of();
+    }
+    try {
+      return objectMapper.readValue(json, STRING_LIST_TYPE);
+    } catch (JsonProcessingException exception) {
+      return List.of();
+    }
   }
 
   public Instant normalizeInstant(String value) {
@@ -141,15 +168,14 @@ public class SyncPayloadCodec {
     return ISO.format(OffsetDateTime.ofInstant(instant, ZoneOffset.UTC));
   }
 
-  private String stringOrNull(Object value) {
+  private String stringOrNull(String value) {
     if (value == null) {
       return null;
     }
-    var text = String.valueOf(value);
-    return text.isBlank() ? null : text;
+    return value.isBlank() ? null : value;
   }
 
-  private String rawString(Object value) {
-    return value == null ? null : String.valueOf(value);
+  private String rawString(String value) {
+    return value == null ? null : value;
   }
 }

@@ -1,6 +1,7 @@
 package com.habittracker.model;
 
 import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
 import jakarta.persistence.Id;
 import jakarta.persistence.MappedSuperclass;
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
@@ -23,13 +24,15 @@ public abstract class HabitIdentityFields extends PanacheEntityBase {
   public String description;
 
   @Column(nullable = false)
-  public String color;
+  @Convert(converter = HabitColorConverter.class)
+  public HabitColor color;
 
   @Column(nullable = false)
   public String icon;
 
   @Column(nullable = false)
-  public String frequency;
+  @Convert(converter = HabitFrequencyConverter.class)
+  public HabitFrequency frequency;
 
   @Column(name = "customDays", columnDefinition = "jsonb")
   @JdbcTypeCode(SqlTypes.JSON)

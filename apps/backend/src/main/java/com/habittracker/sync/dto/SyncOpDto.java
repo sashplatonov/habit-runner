@@ -1,6 +1,8 @@
 package com.habittracker.sync.dto;
 
-import java.util.Map;
+import com.habittracker.sync.SyncOperationType;
+import lombok.Builder;
 
-public record SyncOpDto(String id, String entity, String type, Map<String, Object> payload, String clientTime) {
+@Builder
+public record SyncOpDto(String id, String entity, SyncOperationType type, SyncOpPayloadDto payload, String clientTime) {
 }

@@ -9,8 +9,10 @@ import lombok.Builder;
 import java.util.List;
 
 @Builder
-public record HabitDto(
+public record SyncOpPayloadDto(
     String id,
+    String habitId,
+    String date,
     String name,
     String description,
     HabitColor color,
@@ -18,17 +20,19 @@ public record HabitDto(
     HabitFrequency frequency,
     List<Integer> customDays,
     JsonNode schedule,
-    int targetStreak,
-    int dailyTarget,
+    Integer targetStreak,
+    Integer dailyTarget,
     List<String> tags,
-    boolean archived,
+    Boolean archived,
     String createdAt,
     String updatedAt,
-    int version,
-    int sortOrder,
+    Integer version,
+    Integer sortOrder,
     String reminderTime,
     Boolean reminderEnabled,
     HabitType type,
-    List<String> freezeDays
+    List<String> freezeDays,
+    Boolean done,
+    Integer count
 ) {
 }

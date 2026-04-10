@@ -2,30 +2,28 @@ package com.habittracker.sync;
 
 import com.habittracker.model.CheckinEntity;
 import com.habittracker.model.TombstoneEntity;
+import com.habittracker.sync.dto.CheckinPayloadDto;
 import jakarta.enterprise.context.ApplicationScoped;
 
 import java.time.LocalDate;
-import java.util.Map;
 
 @ApplicationScoped
 public class CheckinDeleteHandler {
   private final SyncPayloadCodec payloadCodec;
-  private final SyncValueCodec valueCodec;
 
-  public CheckinDeleteHandler(SyncPayloadCodec payloadCodec, SyncValueCodec valueCodec) {
+  public CheckinDeleteHandler(SyncPayloadCodec payloadCodec) {
     this.payloadCodec = payloadCodec;
-    this.valueCodec = valueCodec;
   }
 
   public TombstoneEntity delete(CheckinDeleteRequest request) {
     var tombstone = new TombstoneEntity();
     tombstone.userId = request.userId();
     tombstone.entity = "checkin";
-    var payloadId = valueCodec.asString(request.payload().get("id"));
+    var payloadId = request.payload() != null ? request.payload().id() : null;
     tombstone.entityId = payloadId != null ? payloadId : request.fallbackEntityId();
-    tombstone.version = valueCodec.asInt(request.payload().get("version"), 1);
+    tombstone.version = request.payload() != null && request.payload().version() != null ? request.payload().version() : 1;
     tombstone.setDeletedAt(payloadCodec.nextSyncDate(
-        payloadCodec.parseInstantOrNow(valueCodec.asString(request.payload().get("updatedAt")))
+        payloadCodec.parseInstantOrNow(request.payload() != null ? request.payload().updatedAt() : null)
     ));
     tombstone.persist();
 
@@ -38,7 +36,7 @@ public class CheckinDeleteHandler {
       String habitId,
       LocalDate date,
       String fallbackEntityId,
-      Map<String, Object> payload
+      CheckinPayloadDto payload
   ) {
   }
 }

@@ -1,7 +1,10 @@
 package com.habittracker.sync;
 
 import com.habittracker.model.CheckinEntity;
+import com.habittracker.model.HabitColor;
 import com.habittracker.model.HabitEntity;
+import com.habittracker.model.HabitFrequency;
+import com.habittracker.model.HabitType;
 import com.habittracker.model.UserEntity;
 import com.habittracker.support.AuthenticatedApiTestSupport;
 import com.habittracker.sync.dto.PushRequestDto;
@@ -20,9 +23,11 @@ import java.util.Map;
 import java.util.UUID;
 
 import static io.restassured.RestAssured.given;
+import static com.habittracker.sync.SyncTestPayloads.syncOp;
 import static org.hamcrest.Matchers.*;
 
 @QuarkusTest
+@SuppressWarnings({"PMD.TooManyMethods", "PMD.LawOfDemeter"})
 class SyncResourceTest extends AuthenticatedApiTestSupport {
 
   private String userId;
@@ -41,15 +46,15 @@ class SyncResourceTest extends AuthenticatedApiTestSupport {
     habit.id = habitId;
     habit.userId = userId;
     habit.name = "Test Habit";
-    habit.frequency = "daily";
-    habit.color = "#5E81AC";
+    habit.frequency = HabitFrequency.DAILY;
+    habit.color = HabitColor.LEGACY_NORD;
     habit.icon = "star";
     habit.targetStreak = 0;
     habit.dailyTarget = 1;
     habit.archived = false;
     habit.setSortOrder(BigInteger.ZERO);
     habit.reminderEnabled = false;
-    habit.type = "positive";
+    habit.type = HabitType.POSITIVE;
     habit.version = version;
     habit.setCreatedAt(updatedAt);
     habit.setUpdatedAt(updatedAt);
@@ -144,16 +149,18 @@ class SyncResourceTest extends AuthenticatedApiTestSupport {
     var opId = UUID.randomUUID().toString();
     var habitId = UUID.randomUUID().toString();
 
-    var op = new SyncOpDto(
-        opId, "habit", "upsert",
-        Map.of(
-            "id", habitId,
-            "name", "Push Habit",
-            "frequency", "daily",
-            "version", 1,
-            "updatedAt", Instant.now().toString()
-        ),
-        Instant.now().toString()
+    var op = syncOp(
+      opId,
+      "habit",
+      "upsert",
+      Map.of(
+        "id", habitId,
+        "name", "Push Habit",
+        "frequency", "daily",
+        "version", 1,
+        "updatedAt", Instant.now().toString()
+      ),
+      Instant.now().toString()
     );
 
     given()
@@ -188,18 +195,20 @@ class SyncResourceTest extends AuthenticatedApiTestSupport {
     var opId = UUID.randomUUID().toString();
     var habitId = UUID.randomUUID().toString();
 
-    var op = new SyncOpDto(
-        opId, "habit", "upsert",
-        Map.of(
-            "id", habitId,
-            "name", "Dedup Habit",
-            "frequency", "daily",
-            "version", 1,
-            "updatedAt", Instant.now().toString()
-        ),
-        Instant.now().toString()
+    var op = syncOp(
+      opId,
+      "habit",
+      "upsert",
+      Map.of(
+        "id", habitId,
+        "name", "Dedup Habit",
+        "frequency", "daily",
+        "version", 1,
+        "updatedAt", Instant.now().toString()
+      ),
+      Instant.now().toString()
     );
-    var request = new PushRequestDto(List.of(op));
+    var request = PushRequestDto.builder().ops(List.of(op)).build();
 
     // First push — should be applied
     given()
@@ -232,16 +241,18 @@ class SyncResourceTest extends AuthenticatedApiTestSupport {
 
     // Client tries to push version 3 (older) with an older timestamp
     var opId = UUID.randomUUID().toString();
-    var op = new SyncOpDto(
-        opId, "habit", "upsert",
-        Map.of(
-            "id", habitId,
-            "name", "Client Habit",
-            "frequency", "daily",
-            "version", 3,
-            "updatedAt", Instant.now().minus(10, ChronoUnit.MINUTES).toString()
-        ),
-        Instant.now().toString()
+    var op = syncOp(
+      opId,
+      "habit",
+      "upsert",
+      Map.of(
+        "id", habitId,
+        "name", "Client Habit",
+        "frequency", "daily",
+        "version", 3,
+        "updatedAt", Instant.now().minus(10, ChronoUnit.MINUTES).toString()
+      ),
+      Instant.now().toString()
     );
 
     assertPushConflict(op, opId);
@@ -266,10 +277,12 @@ class SyncResourceTest extends AuthenticatedApiTestSupport {
     ut.commit();
 
     var opId = UUID.randomUUID().toString();
-    var op = new SyncOpDto(
-        opId, "habit", "delete",
-        Map.of("id", habitId, "version", 2),
-        Instant.now().toString()
+    var op = syncOp(
+      opId,
+      "habit",
+      "delete",
+      Map.of("id", habitId, "version", 2),
+      Instant.now().toString()
     );
 
     given()
@@ -312,17 +325,19 @@ class SyncResourceTest extends AuthenticatedApiTestSupport {
 
     // Our user tries to push a checkin to the other user's habit
     var opId = UUID.randomUUID().toString();
-    var op = new SyncOpDto(
-        opId, "checkin", "upsert",
-        Map.of(
-            "id", UUID.randomUUID().toString(),
-            "habitId", habitId,
-            "date", "2025-01-01",
-            "done", true,
-            "version", 1,
-            "updatedAt", Instant.now().toString()
-        ),
-        Instant.now().toString()
+    var op = syncOp(
+      opId,
+      "checkin",
+      "upsert",
+      Map.of(
+        "id", UUID.randomUUID().toString(),
+        "habitId", habitId,
+        "date", "2025-01-01",
+        "done", true,
+        "version", 1,
+        "updatedAt", Instant.now().toString()
+      ),
+      Instant.now().toString()
     );
 
     assertPushConflict(op, opId);
@@ -340,7 +355,7 @@ class SyncResourceTest extends AuthenticatedApiTestSupport {
   }
 
   private PushRequestDto pushRequest(SyncOpDto... ops) {
-    return new PushRequestDto(List.of(ops));
+    return PushRequestDto.builder().ops(List.of(ops)).build();
   }
 
   private void assertPushConflict(SyncOpDto op, String opId) {

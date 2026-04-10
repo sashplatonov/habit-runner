@@ -2,12 +2,16 @@ package com.habittracker.sync;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.habittracker.model.CheckinEntity;
+import com.habittracker.model.HabitColor;
 import com.habittracker.model.HabitEntity;
+import com.habittracker.model.HabitFrequency;
+import com.habittracker.model.HabitType;
 import com.habittracker.model.TombstoneEntity;
 import com.habittracker.sync.dto.CheckinDto;
 import com.habittracker.sync.dto.HabitDto;
 import com.habittracker.sync.dto.PushResponseDto;
 import com.habittracker.sync.dto.SyncOpDto;
+import com.habittracker.sync.dto.SyncOpPayloadDto;
 import com.habittracker.sync.dto.TombstoneDto;
 import org.junit.jupiter.api.Test;
 
@@ -16,7 +20,6 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -81,7 +84,13 @@ class SyncCoordinatorUnitCoverageTest {
   }
 
   private SyncOpDto syncOp(String id, String entity, String type) {
-    return new SyncOpDto(id, entity, type, Map.of(), Instant.now().toString());
+    return SyncOpDto.builder()
+        .id(id)
+        .entity(entity)
+      .type(SyncOperationType.from(type))
+        .payload(SyncOpPayloadDto.builder().build())
+        .clientTime(Instant.now().toString())
+        .build();
   }
 
   private static HabitEntity habit(String id, Instant updatedAt) {
@@ -89,13 +98,13 @@ class SyncCoordinatorUnitCoverageTest {
     habit.id = id;
     habit.userId = "user-1";
     habit.name = "Habit";
-    habit.color = "#5E81AC";
+    habit.color = HabitColor.LEGACY_NORD;
     habit.icon = "star";
-    habit.frequency = "daily";
+    habit.frequency = HabitFrequency.DAILY;
     habit.targetStreak = 1;
     habit.dailyTarget = 1;
     habit.archived = false;
-    habit.type = "positive";
+    habit.type = HabitType.POSITIVE;
     habit.freezeDays = "[]";
     habit.setSortOrder(BigInteger.ZERO);
     habit.setCreatedAt(updatedAt.minusSeconds(60));
@@ -178,7 +187,7 @@ class SyncCoordinatorUnitCoverageTest {
     private final List<String> opIds = new ArrayList<>();
 
     RecordingHabitSyncProcessor() {
-      super(null, null, null);
+      super(null, null, null, null);
     }
 
     @Override
@@ -212,15 +221,50 @@ class SyncCoordinatorUnitCoverageTest {
     @Override
     public PushResponseDto create(SyncPushState state) {
       lastState = state;
-      return new PushResponseDto(
-          state.applied(),
-          state.conflicts(),
-          List.of(new HabitDto("habit-1", "Habit", "", "#5E81AC", "star", "daily", null, null, 1, 1, List.of(), false, "2026-04-10T15:00:00Z", "2026-04-10T15:00:00Z", 1, 0, null, false, "positive", List.of())),
-          List.of(new CheckinDto("checkin-1", "habit-1", "2026-04-10", true, 1, "2026-04-10T15:00:00Z", 1)),
-          List.of(new TombstoneDto("tombstone-1", "habit", "habit-1", "2026-04-10T15:00:00Z", 1)),
-          null,
-          "2026-04-10T15:00:00Z"
-      );
+      return PushResponseDto.builder()
+          .applied(state.applied())
+          .conflicts(state.conflicts())
+          .habits(List.of(HabitDto.builder()
+              .id("habit-1")
+              .name("Habit")
+              .description("")
+              .color(HabitColor.LEGACY_NORD)
+              .icon("star")
+              .frequency(HabitFrequency.DAILY)
+              .customDays(null)
+              .schedule(null)
+              .targetStreak(1)
+              .dailyTarget(1)
+              .tags(List.of())
+              .archived(false)
+              .createdAt("2026-04-10T15:00:00Z")
+              .updatedAt("2026-04-10T15:00:00Z")
+              .version(1)
+              .sortOrder(0)
+              .reminderTime(null)
+              .reminderEnabled(false)
+              .type(HabitType.POSITIVE)
+              .freezeDays(List.of())
+              .build()))
+          .checkins(List.of(CheckinDto.builder()
+              .id("checkin-1")
+              .habitId("habit-1")
+              .date("2026-04-10")
+              .done(true)
+              .count(1)
+              .updatedAt("2026-04-10T15:00:00Z")
+              .version(1)
+              .build()))
+          .tombstones(List.of(TombstoneDto.builder()
+              .id("tombstone-1")
+              .entity("habit")
+              .entityId("habit-1")
+              .deletedAt("2026-04-10T15:00:00Z")
+              .version(1)
+              .build()))
+          .nextCursor(null)
+          .serverTime("2026-04-10T15:00:00Z")
+          .build();
     }
   }
 }

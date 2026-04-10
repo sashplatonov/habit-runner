@@ -9,7 +9,7 @@ import lombok.Builder;
 import java.util.List;
 
 @Builder
-public record HabitDto(
+public record HabitPayloadDto(
     String id,
     String name,
     String description,
@@ -18,14 +18,14 @@ public record HabitDto(
     HabitFrequency frequency,
     List<Integer> customDays,
     JsonNode schedule,
-    int targetStreak,
-    int dailyTarget,
+    Integer targetStreak,
+    Integer dailyTarget,
     List<String> tags,
-    boolean archived,
+    Boolean archived,
     String createdAt,
     String updatedAt,
-    int version,
-    int sortOrder,
+    Integer version,
+    Integer sortOrder,
     String reminderTime,
     Boolean reminderEnabled,
     HabitType type,

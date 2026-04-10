@@ -8,7 +8,6 @@ import org.junit.jupiter.api.Test;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -16,8 +15,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertSame;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class SyncPayloadCodecTest {
 
@@ -59,9 +56,9 @@ class SyncPayloadCodecTest {
   @Test
   void shouldReturnLatestCursorWhenRowsContainDifferentTimestampsAndIds() {
     var rows = List.of(
-        new SyncCursor(Instant.parse("2026-04-09T10:00:00Z"), "b"),
-        new SyncCursor(Instant.parse("2026-04-09T10:00:00Z"), "c"),
-        new SyncCursor(Instant.parse("2026-04-09T11:00:00Z"), "a")
+        SyncCursor.builder().updatedAt(Instant.parse("2026-04-09T10:00:00Z")).id("b").build(),
+        SyncCursor.builder().updatedAt(Instant.parse("2026-04-09T10:00:00Z")).id("c").build(),
+        SyncCursor.builder().updatedAt(Instant.parse("2026-04-09T11:00:00Z")).id("a").build()
     );
 
     var cursor = codec.parseCursor(codec.calculateNextCursor(rows));
@@ -74,24 +71,18 @@ class SyncPayloadCodecTest {
   void shouldReturnNullWhenCursorSerializationFails() {
     var failingCodec = new SyncPayloadCodec(new FaultyObjectMapper(false, false, true));
 
-    assertNull(failingCodec.calculateNextCursor(List.of(new SyncCursor(Instant.now(), "cursor-1"))));
+    assertNull(failingCodec.calculateNextCursor(List.of(
+        SyncCursor.builder().updatedAt(Instant.now()).id("cursor-1").build()
+    )));
     assertNull(failingCodec.jsonOrNull(Map.of("key", "value")));
   }
 
   @Test
-  void shouldConvertPayloadToMapWhenRequested() {
-    var payload = new HashMap<String, Object>();
-    payload.put("key", "value");
-
-    assertSame(payload, codec.toMap(payload));
-    assertTrue(codec.toMap(null).isEmpty());
-  }
-
-  @Test
   void shouldParseJsonValuesWhenJsonInputPresent() {
-    assertEquals(List.of("one", "two"), codec.parseJsonOrNull("[\"one\",\"two\"]"));
-    assertEquals(List.of(), codec.parseJsonOrEmptyList(" "));
-    assertEquals(List.of("item"), codec.parseJsonOrEmptyList("[\"item\"]"));
+    assertEquals(List.of("one", "two"), codec.parseStringListOrEmpty("[\"one\",\"two\"]"));
+    assertEquals(List.of(), codec.parseStringListOrEmpty(" "));
+    assertEquals(List.of("item"), codec.parseStringListOrEmpty("[\"item\"]"));
+    assertEquals(List.of(1, 2, 3), codec.parseIntegerListOrNull("[1,2,3]"));
   }
 
   @Test
@@ -99,12 +90,14 @@ class SyncPayloadCodecTest {
     var failingCodec = new SyncPayloadCodec(new FaultyObjectMapper(true, true, false));
 
     assertNull(failingCodec.parseCursor("{\"updatedAt\":\"2026-04-09T12:00:00Z\",\"id\":\"cursor-1\"}"));
-    assertNull(failingCodec.parseJsonOrNull("{}"));
+    assertNull(failingCodec.parseJsonNodeOrNull("{}"));
+    assertNull(failingCodec.parseIntegerListOrNull("[1,2]"));
   }
 
   @Test
   void shouldReturnNullWhenJsonInputBlankOrCursorUpdatedAtBlank() {
-    assertNull(codec.parseJsonOrNull(" "));
+    assertNull(codec.parseJsonNodeOrNull(" "));
+    assertNull(codec.parseIntegerListOrNull(" "));
     assertNull(codec.parseCursor("{\"updatedAt\":\" \",\"id\":123}"));
   }
 

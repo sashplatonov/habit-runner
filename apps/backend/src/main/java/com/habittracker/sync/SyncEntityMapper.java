@@ -4,13 +4,13 @@ import com.habittracker.model.CheckinEntity;
 import com.habittracker.model.HabitEntity;
 import com.habittracker.model.TombstoneEntity;
 import com.habittracker.sync.dto.CheckinDto;
+import com.habittracker.sync.dto.ConflictServerValueDto;
 import com.habittracker.sync.dto.HabitDto;
 import com.habittracker.sync.dto.PushConflict;
 import com.habittracker.sync.dto.TombstoneDto;
 import jakarta.enterprise.context.ApplicationScoped;
 
 import java.time.Instant;
-import java.util.Map;
 
 @ApplicationScoped
 public class SyncEntityMapper {
@@ -21,72 +21,89 @@ public class SyncEntityMapper {
   }
 
   public SyncCursor habitCursor(HabitEntity habit) {
-    return new SyncCursor(habit.updatedAtValue(), habit.id);
+    return SyncCursor.builder()
+        .updatedAt(habit.updatedAtValue())
+        .id(habit.id)
+        .build();
   }
 
   public SyncCursor checkinCursor(CheckinEntity checkin) {
-    return new SyncCursor(checkin.updatedAtValue(), checkin.id);
+    return SyncCursor.builder()
+        .updatedAt(checkin.updatedAtValue())
+        .id(checkin.id)
+        .build();
   }
 
   public SyncCursor tombstoneCursor(TombstoneEntity tombstone) {
-    return new SyncCursor(tombstone.deletedAtValue(), tombstone.id);
+    return SyncCursor.builder()
+        .updatedAt(tombstone.deletedAtValue())
+        .id(tombstone.id)
+        .build();
   }
 
   public HabitDto serializeHabit(HabitEntity habit) {
-    return new HabitDto(
-        habit.id,
-        habit.name,
-        habit.description == null ? "" : habit.description,
-        habit.color,
-        habit.icon,
-        habit.frequency,
-        payloadCodec.parseJsonOrNull(habit.customDays),
-        payloadCodec.parseJsonOrNull(habit.schedule),
-        habit.targetStreak,
-        habit.dailyTarget,
-        payloadCodec.parseJsonOrEmptyList(habit.tags),
-        habit.archived,
-        payloadCodec.toSyncIso(habit.createdAtValue()),
-        payloadCodec.toSyncIso(habit.updatedAtValue()),
-        habit.versionValue(),
-        habit.sortOrderOrZero().intValue(),
-        habit.reminderTime,
-        habit.reminderEnabled,
-        habit.type,
-        payloadCodec.parseJsonOrEmptyList(habit.freezeDays)
-    );
+    return HabitDto.builder()
+        .id(habit.id)
+        .name(habit.name)
+        .description(habit.description == null ? "" : habit.description)
+        .color(habit.color)
+        .icon(habit.icon)
+        .frequency(habit.frequency)
+        .customDays(payloadCodec.parseIntegerListOrNull(habit.customDays))
+        .schedule(payloadCodec.parseJsonNodeOrNull(habit.schedule))
+        .targetStreak(habit.targetStreak)
+        .dailyTarget(habit.dailyTarget)
+        .tags(payloadCodec.parseStringListOrEmpty(habit.tags))
+        .archived(habit.archived)
+        .createdAt(payloadCodec.toSyncIso(habit.createdAtValue()))
+        .updatedAt(payloadCodec.toSyncIso(habit.updatedAtValue()))
+        .version(habit.versionValue())
+        .sortOrder(habit.sortOrderOrZero().intValue())
+        .reminderTime(habit.reminderTime)
+        .reminderEnabled(habit.reminderEnabled)
+        .type(habit.type)
+          .freezeDays(payloadCodec.parseStringListOrEmpty(habit.freezeDays))
+        .build();
   }
 
   public CheckinDto serializeCheckin(CheckinEntity checkin) {
-    return new CheckinDto(
-        checkin.id,
-        checkin.habitId,
-        checkin.syncDate().toString(),
-        checkin.done,
-        checkin.count,
-        payloadCodec.toSyncIso(checkin.updatedAtValue()),
-        checkin.version
-    );
+    return CheckinDto.builder()
+        .id(checkin.id)
+        .habitId(checkin.habitId)
+        .date(checkin.syncDate().toString())
+        .done(checkin.done)
+        .count(checkin.count)
+        .updatedAt(payloadCodec.toSyncIso(checkin.updatedAtValue()))
+        .version(checkin.version)
+        .build();
   }
 
   public TombstoneDto serializeTombstone(TombstoneEntity tombstone) {
-    return new TombstoneDto(
-        tombstone.id,
-        tombstone.entity,
-        tombstone.entityId,
-        payloadCodec.toSyncIso(tombstone.deletedAtValue()),
-        tombstone.version
-    );
+    return TombstoneDto.builder()
+        .id(tombstone.id)
+        .entity(tombstone.entity)
+        .entityId(tombstone.entityId)
+        .deletedAt(payloadCodec.toSyncIso(tombstone.deletedAtValue()))
+        .version(tombstone.version)
+        .build();
   }
 
   public PushConflict buildConflict(String opId, String message, int version, Instant updatedAt) {
-    return new PushConflict(opId, message, Map.of(
-        "version", version,
-        "updatedAt", payloadCodec.toSyncIso(updatedAt)
-    ));
+    return PushConflict.builder()
+        .opId(opId)
+        .reason(message)
+        .serverValue(ConflictServerValueDto.builder()
+            .version(version)
+            .updatedAt(payloadCodec.toSyncIso(updatedAt))
+            .build())
+        .build();
   }
 
   public PushConflict buildMissingEntityConflict(String opId, String message) {
-    return new PushConflict(opId, message, null);
+    return PushConflict.builder()
+        .opId(opId)
+        .reason(message)
+        .serverValue(null)
+        .build();
   }
 }

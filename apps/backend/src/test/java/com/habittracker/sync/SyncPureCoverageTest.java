@@ -2,24 +2,28 @@ package com.habittracker.sync;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.habittracker.model.CheckinEntity;
+import com.habittracker.model.HabitColor;
 import com.habittracker.model.HabitEntity;
+import com.habittracker.model.HabitFrequency;
+import com.habittracker.model.HabitType;
 import com.habittracker.model.TombstoneEntity;
 import com.habittracker.sync.dto.PullResponseDto;
 import com.habittracker.sync.dto.PushResponseDto;
 import com.habittracker.sync.dto.SyncOpDto;
+import com.habittracker.sync.dto.SyncOpPayloadDto;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigInteger;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 
+@SuppressWarnings("PMD.LawOfDemeter")
 class SyncPureCoverageTest {
 
   @Test
@@ -55,7 +59,7 @@ class SyncPureCoverageTest {
     assertEquals("tombstone-1", tombstoneDto.id());
     assertEquals("habit", tombstoneDto.entity());
     assertEquals("op-1", conflict.opId());
-    assertEquals(7, conflict.serverValue().get("version"));
+    assertEquals(7, conflict.serverValue().version());
     assertNull(missingConflict.serverValue());
     assertEquals(List.of("op-habit", "op-checkin", "op-delete"), response.applied());
     assertEquals(1, response.conflicts().size());
@@ -80,12 +84,32 @@ class SyncPureCoverageTest {
 
   @Test
   void shouldDelegateSyncServiceToUnderlyingProcessors() {
-    var pullResponse = new PullResponseDto(List.of(), List.of(), List.of(), "next-cursor", "2026-04-10T08:00:00Z");
-    var pushResponse = new PushResponseDto(List.of("op-1"), List.of(), List.of(), List.of(), List.of(), null, "2026-04-10T08:00:01Z");
+    var pullResponse = PullResponseDto.builder()
+      .habits(List.of())
+      .checkins(List.of())
+      .tombstones(List.of())
+      .nextCursor("next-cursor")
+      .serverTime("2026-04-10T08:00:00Z")
+      .build();
+    var pushResponse = PushResponseDto.builder()
+      .applied(List.of("op-1"))
+      .conflicts(List.of())
+      .habits(List.of())
+      .checkins(List.of())
+      .tombstones(List.of())
+      .nextCursor(null)
+      .serverTime("2026-04-10T08:00:01Z")
+      .build();
     var pullProcessor = new StubSyncPullProcessor(pullResponse);
     var pushProcessor = new StubSyncPushProcessor(pushResponse);
     var service = new SyncService(pullProcessor, pushProcessor);
-    var ops = List.of(new SyncOpDto("op-1", "habit", "upsert", Map.of(), "2026-04-10T08:00:00Z"));
+    var ops = List.of(SyncOpDto.builder()
+      .id("op-1")
+      .entity("habit")
+      .type(SyncOperationType.UPSERT)
+      .payload(SyncOpPayloadDto.builder().build())
+      .clientTime("2026-04-10T08:00:00Z")
+      .build());
 
     var actualPull = service.pull("user-1", "cursor-1");
     var actualPush = service.push("user-1", ops);
@@ -104,9 +128,9 @@ class SyncPureCoverageTest {
     habit.userId = "user-1";
     habit.name = "Morning Run";
     habit.description = "Track daily run";
-    habit.color = "#5E81AC";
+    habit.color = HabitColor.LEGACY_NORD;
     habit.icon = "shoe";
-    habit.frequency = "daily";
+    habit.frequency = HabitFrequency.DAILY;
     habit.customDays = "[1,2,3]";
     habit.schedule = "{\"kind\":\"daily\"}";
     habit.targetStreak = 10;
@@ -119,7 +143,7 @@ class SyncPureCoverageTest {
     habit.setSortOrder(BigInteger.valueOf(3));
     habit.reminderTime = "08:30";
     habit.reminderEnabled = true;
-    habit.type = "positive";
+    habit.type = HabitType.POSITIVE;
     habit.freezeDays = "[]";
     return habit;
   }

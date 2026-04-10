@@ -1,7 +1,10 @@
 package com.habittracker.sync.dto;
 
+import lombok.Builder;
+
 import java.util.List;
 
+@Builder
 public record PushResponseDto(
     List<String> applied,
     List<PushConflict> conflicts,

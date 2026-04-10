@@ -15,26 +15,27 @@ import java.time.LocalDate;
 public class CheckinSyncProcessor {
 
   private final SyncPayloadCodec payloadCodec;
-  private final SyncValueCodec valueCodec;
   private final SyncEntityMapper entityMapper;
   private final CheckinDeleteHandler checkinDeleteHandler;
+  private final SyncPayloadMapper payloadMapper;
 
   public CheckinSyncProcessor(
       SyncPayloadCodec payloadCodec,
-      SyncValueCodec valueCodec,
       SyncEntityMapper entityMapper,
-      CheckinDeleteHandler checkinDeleteHandler
+      CheckinDeleteHandler checkinDeleteHandler,
+      SyncPayloadMapper payloadMapper
   ) {
     this.payloadCodec = payloadCodec;
-    this.valueCodec = valueCodec;
     this.entityMapper = entityMapper;
     this.checkinDeleteHandler = checkinDeleteHandler;
+    this.payloadMapper = payloadMapper;
   }
 
+  @SuppressWarnings({"PMD.CognitiveComplexity", "PMD.CyclomaticComplexity", "PMD.NPathComplexity"})
   public void apply(String userId, SyncOpDto op, SyncPushState state) {
-    var payload = payloadCodec.toMap(op.payload());
-    var habitId = valueCodec.asString(payload.get("habitId"));
-    var dateString = valueCodec.asString(payload.get("date"));
+    var payload = payloadMapper.toCheckinPayload(op.payload());
+    var habitId = payload != null ? payload.habitId() : null;
+    var dateString = payload != null ? payload.date() : null;
     if (habitId == null || dateString == null) {
       log.debug("Ignoring checkin sync op with incomplete payload: opId={}", op.id());
       return;
@@ -47,9 +48,9 @@ public class CheckinSyncProcessor {
     var existing = CheckinEntity.<CheckinEntity>find(
         "habitId = ?1 and date = ?2 and userId = ?3", habitId, date, userId
     ).firstResult();
-    var clientUpdated = payloadCodec.normalizeInstant(valueCodec.asString(payload.get("updatedAt")));
+    var clientUpdated = payloadCodec.normalizeInstant(payload != null ? payload.updatedAt() : null);
 
-    if (SyncOperationType.from(op.type()) == SyncOperationType.DELETE) {
+    if (op.type() == SyncOperationType.DELETE) {
       state.addAppliedCheckinDelete(op.id(), checkinDeleteHandler.delete(new CheckinDeleteHandler.CheckinDeleteRequest(
           userId,
           habitId,
@@ -68,9 +69,9 @@ public class CheckinSyncProcessor {
     }
 
     var checkin = ensureCheckin(existing, habitId, userId, date);
-    checkin.done = valueCodec.asBoolean(payload.get("done"), false);
-    checkin.count = Math.max(1, valueCodec.asInt(payload.get("count"), 1));
-    checkin.version = Math.max(checkin.version, valueCodec.asInt(payload.get("version"), 0)) + 1;
+    checkin.done = payload != null && payload.done() != null && payload.done();
+    checkin.count = Math.max(1, payload != null && payload.count() != null ? payload.count() : 1);
+    checkin.version = Math.max(checkin.version, payload != null && payload.version() != null ? payload.version() : 0) + 1;
     checkin.setUpdatedAt(payloadCodec.nextSyncDate(clientUpdated, checkin.updatedAtValue()));
     state.addAppliedCheckin(op.id(), checkin);
   }
