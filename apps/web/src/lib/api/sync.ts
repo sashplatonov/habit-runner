@@ -3,7 +3,6 @@ import type { OutboxEntry } from '@/lib/storage/db';
 import { buildApiUrl } from '@/lib/api/url';
 import { getValidAccessToken } from '@/lib/auth/session';
 import { logClientError, logClientInfo } from '@/lib/logging/clientLogger';
-import { emitFrontendMetric } from '@/lib/observability/frontendMetrics';
 
 const buildUrl = buildApiUrl;
 
@@ -15,16 +14,6 @@ function createErrorWithCause(message: string, cause: unknown): Error {
   const error = new Error(message);
   (error as Error & { cause?: unknown }).cause = cause;
   return error;
-}
-
-function resolveSyncOperation(url: string): string {
-  if (url.includes('/sync/pull')) {
-    return 'pull';
-  }
-  if (url.includes('/sync/push')) {
-    return 'push';
-  }
-  return 'unknown';
 }
 
 function parseDurationHeader(value: string | null): number | undefined {
@@ -58,7 +47,6 @@ function logSyncHttpSuccess(
   startedAt: number
 ): void {
   const durationMs = Math.round(nowMs() - startedAt);
-  const operation = resolveSyncOperation(url);
   const context: Record<string, unknown> = {
     url,
     method,
@@ -68,32 +56,6 @@ function logSyncHttpSuccess(
   const serverDurationMs = getServerDurationMs(response);
   if (serverDurationMs !== undefined) {
     context.serverDurationMs = serverDurationMs;
-  }
-  emitFrontendMetric({
-    name: 'sync_http_request_total',
-    value: 1,
-    unit: 'count',
-    operation,
-    status: response.status,
-    success: true
-  });
-  emitFrontendMetric({
-    name: 'sync_http_duration_ms',
-    value: durationMs,
-    unit: 'ms',
-    operation,
-    status: response.status,
-    success: true
-  });
-  if (serverDurationMs !== undefined) {
-    emitFrontendMetric({
-      name: 'sync_server_duration_ms',
-      value: serverDurationMs,
-      unit: 'ms',
-      operation,
-      status: response.status,
-      success: true
-    });
   }
   logClientInfo('sync.http_request', 'Sync request completed', context);
 }
@@ -106,7 +68,6 @@ function logSyncHttpFailure(
   status?: number
 ): void {
   const durationMs = Math.round(nowMs() - startedAt);
-  const operation = resolveSyncOperation(url);
   const context: Record<string, unknown> = {
     url,
     method,
@@ -116,22 +77,6 @@ function logSyncHttpFailure(
   if (status !== undefined) {
     context.status = status;
   }
-  emitFrontendMetric({
-    name: 'sync_http_request_total',
-    value: 1,
-    unit: 'count',
-    operation,
-    status,
-    success: false
-  });
-  emitFrontendMetric({
-    name: 'sync_http_duration_ms',
-    value: durationMs,
-    unit: 'ms',
-    operation,
-    status,
-    success: false
-  });
   logClientError('sync.http_failed', 'Sync request failed', context);
 }
 

@@ -15,10 +15,9 @@ class MetricsResourceTest {
   void shouldReturnCollectedSyncMetricsSnapshotWhenRequested() {
     var registry = new SimpleMeterRegistry();
     var syncMetricsCollector = new SyncMetricsCollector(registry);
-    var frontendMetricsCollector = new FrontendMetricsCollector(registry);
     syncMetricsCollector.recordPull(120, 5);
     syncMetricsCollector.recordPush(80, 3, 1);
-    var metrics = new MetricsResource(syncMetricsCollector, frontendMetricsCollector).getMetrics();
+    var metrics = new MetricsResource(syncMetricsCollector).getMetrics();
 
     assertNotNull(Instant.parse(metrics.createdAt()));
     assertEquals(1, metrics.pullRequests());

@@ -62,9 +62,7 @@ services:
       VAPID_PUBLIC_KEY: <REDACTED>
       VAPID_PRIVATE_KEY: <REDACTED>
       VAPID_SUBJECT: ${VAPID_SUBJECT}
-      # ── Observability – metrics via host Grafana Agent
-      # Metrics are scraped by the Agent from management port 9000 — no push env vars needed.
-      # Keep container free of Grafana/Loki/OTLP credentials; configure them on the host Agent.
+      # ── Observability identity labels used by the sidecar collector relabeling.
       SERVICE_VERSION: "${SERVICE_VERSION:-1.0.0}"
       APP_VERSION: "${APP_VERSION:-${SERVICE_VERSION:-1.0.0}}"
       ENVIRONMENT: "${ENVIRONMENT:-production}"
@@ -75,9 +73,7 @@ services:
     # network so other services (like `web`) can reach it by service name.
     expose:
       - "${API_PORT}"
-    # 9000 published only on loopback — reachable by Grafana Agent on VPS, NOT public
-    ports:
-      - "127.0.0.1:9000:9000"
+      - "9000"
     healthcheck:
       # /q/health is served on the Quarkus management port (9000), NOT on API_PORT.
       # API_PORT (8080) only handles application REST endpoints.
@@ -95,6 +91,28 @@ services:
       - edge
       - dokploy-ipv6
 
+  alloy:
+    <<: *service_defaults
+    image: grafana/alloy:latest
+    command:
+      - run
+      - --server.http.listen-addr=0.0.0.0:12345
+      - --storage.path=/var/lib/alloy/data
+      - /etc/alloy/config.alloy
+    environment:
+      DEPLOYMENT_ENV: "${DEPLOYMENT_ENV:-production}"
+      GRAFANA_MIMIR_URL: ${GRAFANA_MIMIR_URL:-https://example.invalid/api/prom/push}
+      GRAFANA_MIMIR_USERNAME: ${GRAFANA_MIMIR_USERNAME:-disabled}
+      GRAFANA_METRICS_API_KEY: ${GRAFANA_METRICS_API_KEY:-disabled}
+    depends_on:
+      api:
+        condition: service_healthy
+    volumes:
+      - ./ops/alloy/config.alloy:/etc/alloy/config.alloy:ro
+      - alloy_data:/var/lib/alloy/data
+    networks:
+      - backend
+
   web:
     <<: *service_defaults
     build:
@@ -102,7 +120,7 @@ services:
       dockerfile: Dockerfile
       # platform is intentionally not set here; set locally in docker-compose.local.yml if needed
       args:
-        VITE_API_BASE_URL: ${VITE_API_BASE_URL}
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL:-/api}
         # ── Grafana Faro RUM build-time args ────────────────────────────────
         # Set these in .env (or CI secrets) — they are baked into the JS bundle.
         VITE_FARO_URL: ${VITE_FARO_URL:-}
@@ -131,6 +149,7 @@ services:
 
 volumes:
   habbit_runner_pgdata18:
+  alloy_data:
 
 networks:
   backend:

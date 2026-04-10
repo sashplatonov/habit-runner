@@ -92,8 +92,8 @@ Optional feature variables:
 - `VAPID_PUBLIC_KEY`
 - `VAPID_PRIVATE_KEY`
 - `VAPID_SUBJECT`
- - For logs and traces we recommend running Grafana Agent/Promtail on the host and
- 	keeping container images free of secrets (do NOT bake Loki/OTLP or OTLP creds into images).
+- For metrics to Grafana Cloud Mimir, run the Alloy sidecar from `docker-compose.yml`
+  and keep remote-write credentials in environment variables (do NOT bake secrets into images).
 
 [↑ Back to top](#top)
 
