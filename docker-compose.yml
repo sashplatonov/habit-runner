@@ -82,7 +82,7 @@ services:
       test:
         [
           "CMD-SHELL",
-          "curl -f http://127.0.0.1:${API_PORT}/q/health || exit 1"
+          "sh -c 'curl -f http://127.0.0.1:${API_PORT}/q/health >/dev/null 2>&1 || exit 1'"
         ]
       interval: 10s
       timeout: 5s
