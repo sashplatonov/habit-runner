@@ -92,11 +92,8 @@ Optional feature variables:
 - `VAPID_PUBLIC_KEY`
 - `VAPID_PRIVATE_KEY`
 - `VAPID_SUBJECT`
-- `OTEL_EXPORTER_OTLP_ENDPOINT`
-- `OTEL_EXPORTER_OTLP_HEADERS`
-- `OTEL_RESOURCE_ATTRIBUTES`
-- `GRAFANA_CLOUD_API_KEY`
-- `LOKI_PUSH_URL`
+ - For logs and traces we recommend running Grafana Agent/Promtail on the host and
+ 	keeping container images free of secrets (do NOT bake Loki/OTLP or OTLP creds into images).
 
 [↑ Back to top](#top)
 

@@ -39,9 +39,9 @@ public class ObservabilityConfig {
             MeterRegistry registry,
             @ConfigProperty(name = "quarkus.application.name", defaultValue = "habittracker-api")
             String serviceName,
-            @ConfigProperty(name = "SERVICE_VERSION", defaultValue = "1.0.0")
+            @ConfigProperty(name = "APP_VERSION", defaultValue = "1.0.0")
             String serviceVersion,
-            @ConfigProperty(name = "ENVIRONMENT", defaultValue = "production")
+            @ConfigProperty(name = "DEPLOYMENT_ENV", defaultValue = "production")
             String environment) {
 
         this.registry = registry;

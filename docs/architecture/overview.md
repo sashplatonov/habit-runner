@@ -68,7 +68,6 @@ Important paths:
 Configuration notes:
 - `VITE_API_BASE_URL` sets the API origin; if omitted, dev defaults to `http://localhost:3000` and production defaults to `/api`.
 - `VITE_SYNC_ENABLED=false` disables background sync for offline-only or UI-focused work.
-- Faro observability is optional and controlled by `VITE_FARO_*` variables.
 
 [↑ Back to top](#top)
 

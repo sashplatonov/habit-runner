@@ -14,10 +14,7 @@ COPY --from=build /workspace/target/*-runner /work/application
 
 EXPOSE 3000
 ENV QUARKUS_HTTP_HOST=0.0.0.0
-# Grafana Cloud / OpenTelemetry env placeholders (set at runtime; do NOT hardcode secrets)
-ENV OTEL_EXPORTER_OTLP_ENDPOINT=""
-ENV OTEL_EXPORTER_OTLP_HEADERS=""
-ENV OTEL_RESOURCE_ATTRIBUTES=""
-ENV GRAFANA_CLOUD_API_KEY=""
+# Metrics are scraped by an external Grafana Agent on the host (recommended).
+# Do not bake Grafana Cloud or OTLP secrets into the container image.
 
 ENTRYPOINT ["./application", "-Dquarkus.http.host=0.0.0.0"]

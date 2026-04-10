@@ -212,7 +212,7 @@ Use matching origins:
 | `VAPID_PUBLIC_KEY` | Optional | Browser push public key |
 | `VAPID_PRIVATE_KEY` | Optional | Browser push private key |
 | `VAPID_SUBJECT` | Optional | Web Push contact |
-| `VITE_FARO_*` | Optional | Frontend Faro configuration passed at build/runtime |
+|  |  |
 
 ### `apps/web/.env.local`
 
@@ -221,12 +221,6 @@ Use matching origins:
 | `VITE_API_BASE_URL` | `http://localhost:3000` in dev | API origin override |
 | `VITE_SYNC_ENABLED` | `true` | Set `false` to disable sync |
 | `VITE_DEFAULT_USER_ID` | `demo-user` | Demo/default user seed |
-| `VITE_FARO_URL` | unset | Faro collector URL |
-| `VITE_FARO_API_KEY` | unset | Optional Faro API key |
-| `VITE_FARO_APP_NAME` | `Habbit Runner` | Faro app name |
-| `VITE_FARO_APP_VERSION` | `1.0.0` | Faro app version |
-| `VITE_FARO_ENVIRONMENT` | `production` | Faro environment label |
-| `VITE_FARO_SAMPLING_RATE` | `1` | Faro sampling rate |
-| `VITE_FARO_PERSISTENT_SESSIONS` | `false` | Persistent Faro sessions toggle |
+|  |  |  |
 
 [↑ Back to top](#top)
