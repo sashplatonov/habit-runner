@@ -14,8 +14,16 @@ RUN npm run build -w @habbit-runner/shared
 
 # copy web app and build
 COPY . ./
-ARG VITE_API_BASE_URL=/api
-ENV VITE_API_BASE_URL=${VITE_API_BASE_URL}
+# Build-time args only.  Defaults must live in the repo root `.env` or CI.
+ARG VITE_API_BASE_URL
+# Grafana Faro build-time args (do not set runtime ENV here)
+ARG VITE_FARO_ENABLED
+ARG VITE_FARO_URL
+ARG VITE_FARO_APP_NAME
+ARG VITE_FARO_APP_VERSION
+ARG VITE_FARO_ENVIRONMENT
+ARG VITE_FARO_SAMPLING_RATE
+ARG VITE_FARO_PERSISTENT_SESSIONS
 # Run the root build (the package itself is the root package, not a workspace member)
 RUN npm run build
 

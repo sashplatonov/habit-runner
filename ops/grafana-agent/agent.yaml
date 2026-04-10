@@ -1,0 +1,117 @@
+# Grafana Agent (classic) configuration for habittracker-api
+# All credentials are sourced from environment variables.
+# Reload: sudo systemctl reload grafana-agent
+# Validate: grafana-agent --config.file=agent.yaml --config.check-syntax
+
+server:
+  log_level: warn
+  # Disable the HTTP API server (not needed in production; Agent is not accessed remotely)
+  http_listen_port: 0
+
+# ─── Metrics ──────────────────────────────────────────────────────────────────
+# Scrapes Quarkus /q/metrics from the management port published on 127.0.0.1:9000
+# then remote_writes to Grafana Cloud Mimir (Prometheus-compatible).
+metrics:
+  global:
+    scrape_interval: 15s
+    external_labels:
+      service: habittracker-api
+      environment: ${ENVIRONMENT}
+
+  wal_directory: /tmp/grafana-agent-wal
+
+  configs:
+    - name: habittracker-metrics
+      scrape_configs:
+        - job_name: habittracker-api
+          static_configs:
+            - targets: ['localhost:9000']
+              labels:
+                service: habittracker-api
+          metrics_path: /q/metrics
+          scrape_interval: 15s
+
+      remote_write:
+        - url: ${GRAFANA_MIMIR_URL}
+          basic_auth:
+            username: ${GRAFANA_MIMIR_USERNAME}
+            password: ${GRAFANA_METRICS_API_KEY}
+
+# ─── Traces ───────────────────────────────────────────────────────────────────
+# Listens for OTLP/gRPC from the Docker container on 0.0.0.0:4317 and forwards
+# to Grafana Cloud Tempo via TLS + basic auth.
+traces:
+  configs:
+    - name: habittracker-traces
+      receivers:
+        otlp:
+          protocols:
+            grpc:
+              endpoint: 0.0.0.0:4317
+
+      batch:
+        timeout: 5s
+        send_batch_size: 512
+
+      remote_write:
+        # Tempo endpoint: host:port (no scheme); TLS is enabled by default.
+        # Format: tempo-prod-<region>-<number>.grafana.net:443
+        - endpoint: ${GRAFANA_TEMPO_ENDPOINT}
+          insecure: false
+          basic_auth:
+            username: ${GRAFANA_TEMPO_USERNAME}
+            password: ${GRAFANA_TRACES_API_KEY}
+
+# ─── Logs ─────────────────────────────────────────────────────────────────────
+# Discovers the api Docker container by name, reads its stdout log stream,
+# parses the ECS JSON fields for labelling, and pushes to Grafana Cloud Loki.
+logs:
+  positions_directory: /tmp/grafana-agent-positions
+
+  configs:
+    - name: habittracker-logs
+      clients:
+        - url: ${GRAFANA_LOKI_URL}
+          basic_auth:
+            username: ${GRAFANA_LOKI_USERNAME}
+            password: ${GRAFANA_LOGS_API_KEY}
+          external_labels:
+            service: habittracker-api
+            environment: ${ENVIRONMENT}
+
+      scrape_configs:
+        - job_name: habittracker-containers
+          docker_sd_configs:
+            - host: unix:///var/run/docker.sock
+              refresh_interval: 5s
+              filters:
+                # Matches the 'api' service container; adjust the regex if your
+                # container name includes a project prefix (e.g. /myproject_api_1).
+                - name: name
+                  values: ['api']
+
+          pipeline_stages:
+            # Parse ECS JSON emitted by quarkus-logging-json
+            - json:
+                expressions:
+                  trace_id: trace_id
+                  span_id:  span_id
+                  level:    level
+                  logger:   logger
+            # Promote trace/level fields to Loki stream labels (low-cardinality)
+            - labels:
+                level:
+            # Store trace_id and span_id as structured metadata (not stream labels)
+            # so Loki derived fields can hyperlink to Tempo traces.
+            - structured_metadata:
+                trace_id:
+                span_id:
+
+          relabel_configs:
+            # Strip the leading '/' Docker adds before the container name
+            - source_labels: ['__meta_docker_container_name']
+              regex:          '/(.*)'
+              replacement:    '$1'
+              target_label:   container
+            - replacement:    habittracker-api
+              target_label:   job

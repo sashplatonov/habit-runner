@@ -1,1 +1,1 @@
-- com.habittracker замени пакаджи в джава на coms.sashplatonoov.habbit.runner
+- Replace Java package `com.habittracker` with `com.sashplatonoov.habbit.runner`

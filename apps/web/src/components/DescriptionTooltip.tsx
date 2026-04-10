@@ -47,7 +47,7 @@ export function DescriptionTooltip({ description }: { description: string }) {
         onMouseEnter={() => { open(); }}
         onMouseLeave={() => setShow(false)}
         onClick={(e) => { e.stopPropagation(); if (show) { setShow(false); } else { open(); } }}
-        aria-label="Описание"
+        aria-label="Description"
       >
         ?
       </button>

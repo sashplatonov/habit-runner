@@ -22,7 +22,6 @@
         <jacoco.minimum.line.coverage>0.80</jacoco.minimum.line.coverage>
         <pmd-plugin.version>3.26.0</pmd-plugin.version>
         <pmd.version>7.23.0</pmd.version>
-        <loki-logback-appender.version>1.6.0</loki-logback-appender.version>
         <mapstruct.version>1.6.3</mapstruct.version>
         <skipITs>true</skipITs>
     </properties>
@@ -72,6 +71,12 @@
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-smallrye-health</artifactId>
         </dependency>
+        <!-- Core Micrometer instrumentation: JVM, HTTP, and custom meters -->
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-micrometer</artifactId>
+        </dependency>
+        <!-- Exposes /q/metrics in Prometheus text format so Grafana Agent can scrape it -->
         <dependency>
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-micrometer-registry-prometheus</artifactId>
@@ -128,18 +133,7 @@
             <artifactId>quarkus-panache-mock</artifactId>
             <scope>test</scope>
         </dependency>
-        <!-- Optional: Loki Logback appender (used only if Loki endpoint/api key provided) -->
-        <dependency>
-            <groupId>com.github.loki4j</groupId>
-            <artifactId>loki-logback-appender</artifactId>
-            <version>${loki-logback-appender.version}</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>ch.qos.logback</groupId>
-                    <artifactId>logback-classic</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
+        <!-- Structured JSON output to stdout; Grafana Agent tails Docker container logs and pushes to Loki -->
     </dependencies>
 
     <build>
