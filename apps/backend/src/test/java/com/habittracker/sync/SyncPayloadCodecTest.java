@@ -103,6 +103,12 @@ class SyncPayloadCodecTest {
   }
 
   @Test
+  void shouldReturnNullWhenJsonInputBlankOrCursorUpdatedAtBlank() {
+    assertNull(codec.parseJsonOrNull(" "));
+    assertNull(codec.parseCursor("{\"updatedAt\":\" \",\"id\":123}"));
+  }
+
+  @Test
   void shouldNormalizeInstantsAndDatesWhenValuesValidOrInvalid() {
     var validInstant = codec.normalizeInstant("2026-04-09T12:00:00Z");
     var fallbackInstant = codec.parseInstantOrNow("broken");
@@ -113,6 +119,13 @@ class SyncPayloadCodecTest {
     assertFalse(fallbackInstant.isAfter(Instant.now().plusSeconds(1)));
     assertEquals(LocalDate.of(2026, 4, 9), validDate);
     assertEquals(LocalDate.now(ZoneOffset.UTC), fallbackDate);
+  }
+
+  @Test
+  void shouldFallbackToCurrentInstantWhenNormalizeInstantReceivesNull() {
+    var normalized = codec.normalizeInstant(null);
+
+    assertFalse(normalized.isAfter(Instant.now().plusSeconds(1)));
   }
 
   @Test

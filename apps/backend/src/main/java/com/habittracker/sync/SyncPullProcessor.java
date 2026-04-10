@@ -37,7 +37,7 @@ public class SyncPullProcessor {
     );
   }
 
-  private List<HabitEntity> findHabits(String userId, SyncCursor cursor) {
+  protected List<HabitEntity> findHabits(String userId, SyncCursor cursor) {
     if (cursor == null) {
       return HabitEntity.<HabitEntity>find(
           "userId = ?1 ORDER BY updatedAt ASC, id ASC", userId
@@ -49,7 +49,7 @@ public class SyncPullProcessor {
     ).page(0, 200).list();
   }
 
-  private List<CheckinEntity> findCheckins(String userId, SyncCursor cursor) {
+  protected List<CheckinEntity> findCheckins(String userId, SyncCursor cursor) {
     if (cursor == null) {
       return CheckinEntity.<CheckinEntity>find(
           "userId = ?1 ORDER BY updatedAt ASC, id ASC", userId
@@ -61,7 +61,7 @@ public class SyncPullProcessor {
     ).page(0, 200).list();
   }
 
-  private List<TombstoneEntity> findTombstones(String userId, SyncCursor cursor) {
+  protected List<TombstoneEntity> findTombstones(String userId, SyncCursor cursor) {
     if (cursor == null) {
       return TombstoneEntity.<TombstoneEntity>find(
           "userId = ?1 ORDER BY deletedAt ASC, id ASC", userId

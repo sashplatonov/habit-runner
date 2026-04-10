@@ -8,15 +8,21 @@ import jakarta.ws.rs.NotAuthorizedException;
 import jakarta.ws.rs.NotFoundException;
 import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.HttpHeaders;
+import jakarta.ws.rs.core.Request;
 import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.UriInfo;
 import org.junit.jupiter.api.Test;
+import org.slf4j.MDC;
 
+import java.lang.reflect.Proxy;
 import java.net.URI;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+@SuppressWarnings("PMD.LawOfDemeter")
 class ApiSupportTest {
 
   @Test
@@ -98,6 +104,24 @@ class ApiSupportTest {
     assertEquals("Internal server error", error.message());
   }
 
+  @Test
+  void shouldUseRequestContextDataWhenMappingClientFailures() {
+    var mapper = new ApiExceptionMapper();
+    mapper.request = proxy(Request.class, Map.of("getMethod", "PATCH"));
+    mapper.uriInfo = proxy(UriInfo.class, Map.of("getPath", "/auth/preferences"));
+    mapper.headers = proxy(HttpHeaders.class, Map.of("getHeaderString:X-Forwarded-For", "198.51.100.7, 10.0.0.1"));
+    MDC.put("traceId", "trace-123");
+
+    try {
+      var response = mapper.toResponse(new BadRequestException("Bad input"));
+      var error = assertApiError(response, 400);
+
+      assertEquals("Bad input", error.message());
+    } finally {
+      MDC.remove("traceId");
+    }
+  }
+
   private ConstraintViolationException blankValueViolation() {
     try (var factory = Validation.buildDefaultValidatorFactory()) {
       var violations = factory.getValidator().validate(new ValidationPayload(""));
@@ -116,5 +140,23 @@ class ApiSupportTest {
   }
 
   private record ValidationPayload(@NotBlank String value) {
+  }
+
+  @SuppressWarnings("unchecked")
+  private static <T> T proxy(Class<T> type, Map<String, Object> values) {
+    return (T) Proxy.newProxyInstance(
+        type.getClassLoader(),
+        new Class<?>[]{type},
+        (instance, method, args) -> {
+          var key = method.getName() + (args == null || args.length == 0 ? "" : ":" + args[0]);
+          if (values.containsKey(key)) {
+            return values.get(key);
+          }
+          if (values.containsKey(method.getName())) {
+            return values.get(method.getName());
+          }
+          return null;
+        }
+    );
   }
 }

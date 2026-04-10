@@ -64,7 +64,7 @@ public class SyncPushProcessor {
     }
   }
 
-  private boolean tryCreateLog(String opId) {
+  protected boolean tryCreateLog(String opId) {
     try {
       var log = new SyncOpLogEntity();
       log.opId = opId;

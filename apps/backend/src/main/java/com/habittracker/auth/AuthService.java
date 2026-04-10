@@ -13,6 +13,7 @@ import java.time.Instant;
 
 @ApplicationScoped
 @Slf4j
+@SuppressWarnings("PMD.TooManyMethods")
 public class AuthService {
 
   private final AuthConfig authConfig;
@@ -63,11 +64,7 @@ public class AuthService {
   @Transactional
   public String createOAuthAuthorizationUrl(String returnTo) {
     var state = AuthSupport.randomToken(16);
-    var payload = new OAuthStateEntity();
-    payload.state = state;
-    payload.returnTo = collaborators.normalizeReturnTo(returnTo);
-    payload.setExpiry(Instant.now().plusSeconds(600));
-    payload.persist();
+    storeOAuthState(state, collaborators.normalizeReturnTo(returnTo), now().plusSeconds(600));
     return collaborators.buildAuthorizationUrl(state);
   }
 
@@ -100,27 +97,51 @@ public class AuthService {
     }
   }
 
-  private OAuthStateEntity consumeOAuthState(String state) {
-    var stateEntity = OAuthStateEntity.<OAuthStateEntity>findById(state);
-    OAuthStateEntity.deleteById(state);
-    if (stateEntity == null || stateEntity.isExpiredAt(Instant.now())) {
+  protected OAuthStateEntity consumeOAuthState(String state) {
+    var stateEntity = findOAuthState(state);
+    deleteOAuthState(state);
+    if (stateEntity == null || stateEntity.isExpiredAt(now())) {
       log.warn("OAuth callback rejected: provider=google, reason=invalid-or-expired-state");
       throw new NotAuthorizedException("Invalid or expired OAuth state");
     }
     return stateEntity;
   }
 
-  private UserEntity findUserByEmail(String email) {
+  protected UserEntity findUserByEmail(String email) {
     return UserEntity.<UserEntity>find("email", email).firstResult();
   }
 
-  private UserEntity requireUserById(String userId) {
-    var user = UserEntity.<UserEntity>findById(userId);
+  protected UserEntity requireUserById(String userId) {
+    var user = findUserById(userId);
     if (user == null) {
       log.warn("Refresh token rejected: userId={}, reason=user-not-found", userId);
       throw new NotAuthorizedException("User no longer exists");
     }
     return user;
+  }
+
+  protected UserEntity findUserById(String userId) {
+    return UserEntity.<UserEntity>findById(userId);
+  }
+
+  protected OAuthStateEntity findOAuthState(String state) {
+    return OAuthStateEntity.findById(state);
+  }
+
+  protected void deleteOAuthState(String state) {
+    OAuthStateEntity.deleteById(state);
+  }
+
+  protected void storeOAuthState(String state, String returnTo, Instant expiresAt) {
+    var payload = new OAuthStateEntity();
+    payload.state = state;
+    payload.returnTo = returnTo;
+    payload.setExpiry(expiresAt);
+    payload.persist();
+  }
+
+  protected Instant now() {
+    return Instant.now();
   }
 
   

@@ -1,5 +1,6 @@
 package com.habittracker.auth;
 
+import com.habittracker.auth.dto.OAuthStartQuery;
 import com.habittracker.auth.dto.TokenResponse;
 import com.habittracker.support.TestConfigFactory;
 import org.junit.jupiter.api.Test;
@@ -45,6 +46,13 @@ class JwtAndOAuthHelperTest {
   }
 
   @Test
+  void shouldFallbackToDefaultReturnToWhenOAuthHelperReceivesMalformedUrl() {
+    var helper = new OAuthHelper(TestConfigFactory.defaultAuthConfig());
+
+    assertEquals("https://app.example.test", helper.normalizeReturnTo("http://["));
+  }
+
+  @Test
   void shouldReturnOriginWhenOAuthHelperReceivesValidUrl() {
     var helper = new OAuthHelper(TestConfigFactory.defaultAuthConfig());
 
@@ -70,5 +78,12 @@ class JwtAndOAuthHelperTest {
     var helper = new OAuthHelper(TestConfigFactory.defaultAuthConfig());
 
     assertEquals("https://api.example.test/auth/google/callback", helper.getCallbackUrl());
+  }
+
+  @Test
+  void shouldExposeReturnToFromOAuthStartQueryRecord() {
+    var query = new OAuthStartQuery("/dashboard");
+
+    assertEquals("/dashboard", query.returnTo());
   }
 }

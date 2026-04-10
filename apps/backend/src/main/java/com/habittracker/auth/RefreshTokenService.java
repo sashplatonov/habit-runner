@@ -12,7 +12,7 @@ import java.time.Instant;
 public class RefreshTokenService {
   public RefreshTokenEntity requireActive(String token) {
     var record = findByToken(token);
-    if (record == null || !record.isActiveAt(Instant.now())) {
+    if (record == null || !record.isActiveAt(now())) {
       log.warn("Refresh token rejected: reason=expired-or-revoked");
       throw new NotAuthorizedException("Refresh token expired or revoked");
     }
@@ -28,16 +28,28 @@ public class RefreshTokenService {
   }
 
   public String create(String token, String userId, int refreshTokenDays) {
-    var refresh = new RefreshTokenEntity();
+    var refresh = newRefreshToken();
     refresh.token = token;
     refresh.userId = userId;
     refresh.revoked = false;
-    refresh.setExpiry(Instant.now().plusSeconds((long) refreshTokenDays * 24 * 60 * 60));
-    refresh.persist();
+    refresh.setExpiry(now().plusSeconds((long) refreshTokenDays * 24 * 60 * 60));
+    persistRefreshToken(refresh);
     return token;
   }
 
-  private RefreshTokenEntity findByToken(String token) {
+  protected RefreshTokenEntity findByToken(String token) {
     return RefreshTokenEntity.<RefreshTokenEntity>find("token", token).firstResult();
+  }
+
+  protected RefreshTokenEntity newRefreshToken() {
+    return new RefreshTokenEntity();
+  }
+
+  protected void persistRefreshToken(RefreshTokenEntity refresh) {
+    refresh.persist();
+  }
+
+  protected Instant now() {
+    return Instant.now();
   }
 }

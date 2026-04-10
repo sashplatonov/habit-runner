@@ -3,6 +3,7 @@ package com.habittracker.auth;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.NotAuthorizedException;
 import lombok.extern.slf4j.Slf4j;
@@ -30,12 +31,17 @@ public class GoogleOAuthClient {
   private final ObjectMapper objectMapper;
   private final HttpClient httpClient;
 
+  @Inject
   public GoogleOAuthClient(AuthConfig authConfig, ObjectMapper objectMapper) {
+    this(authConfig, objectMapper, HttpClient.newBuilder()
+        .connectTimeout(REQUEST_TIMEOUT)
+        .build());
+  }
+
+  GoogleOAuthClient(AuthConfig authConfig, ObjectMapper objectMapper, HttpClient httpClient) {
     this.authConfig = authConfig;
     this.objectMapper = objectMapper;
-    this.httpClient = HttpClient.newBuilder()
-        .connectTimeout(REQUEST_TIMEOUT)
-        .build();
+    this.httpClient = httpClient;
   }
 
   public String buildAuthorizationUrl(String state, String callbackUrl) {

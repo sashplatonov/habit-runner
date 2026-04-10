@@ -16,7 +16,7 @@ public class PreferencesService {
 
   @Transactional
   public UserPreferencesResponse getUserPreferences(String userId) {
-    var user = UserEntity.<UserEntity>findById(userId);
+    var user = findUserById(userId);
     if (user == null) {
       throw new NotAuthorizedException("User no longer exists");
     }
@@ -25,7 +25,7 @@ public class PreferencesService {
 
   @Transactional
   public UserPreferencesResponse updateUserPreferences(String userId, UpdatePreferencesRequest request) {
-    var user = UserEntity.<UserEntity>findById(userId);
+    var user = findUserById(userId);
     if (user == null) {
       throw new NotAuthorizedException("User no longer exists");
     }
@@ -43,5 +43,9 @@ public class PreferencesService {
         !Objects.equals(previousTimezone, user.timezone)
     );
     return new UserPreferencesResponse(user.theme, user.timezone);
+  }
+
+  protected UserEntity findUserById(String userId) {
+    return UserEntity.findById(userId);
   }
 }

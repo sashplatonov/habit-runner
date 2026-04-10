@@ -116,6 +116,11 @@
             <artifactId>rest-assured</artifactId>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-panache-mock</artifactId>
+            <scope>test</scope>
+        </dependency>
         <!-- Optional: Loki Logback appender (used only if Loki endpoint/api key provided) -->
         <dependency>
             <groupId>com.github.loki4j</groupId>
@@ -175,30 +180,6 @@
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
                 <version>${jacoco.version}</version>
-                <configuration>
-                    <excludes>
-                        <exclude>com/habittracker/auth/dto/*</exclude>
-                        <exclude>com/habittracker/sync/dto/*</exclude>
-                        <exclude>com/habittracker/notification/dto/*</exclude>
-                        <exclude>com/habittracker/auth/AuthDtos*</exclude>
-                        <exclude>com/habittracker/sync/SyncDtos*</exclude>
-                        <exclude>com/habittracker/notification/NotificationResource$*</exclude>
-                        <exclude>com/habittracker/auth/AuthService*</exclude>
-                        <exclude>com/habittracker/auth/AuthCollaborators*</exclude>
-                        <exclude>com/habittracker/auth/GoogleOAuthClient*</exclude>
-                        <exclude>com/habittracker/auth/RefreshTokenService*</exclude>
-                        <exclude>com/habittracker/sync/HabitSyncProcessor*</exclude>
-                        <exclude>com/habittracker/sync/CheckinSyncProcessor*</exclude>
-                        <exclude>com/habittracker/sync/SyncPullProcessor*</exclude>
-                        <exclude>com/habittracker/sync/SyncPushProcessor*</exclude>
-                        <exclude>com/habittracker/sync/SyncEntityMapper*</exclude>
-                        <exclude>com/habittracker/sync/SyncPushResultFactory*</exclude>
-                        <exclude>com/habittracker/sync/CheckinDeleteHandler*</exclude>
-                        <exclude>com/habittracker/sync/SyncService*</exclude>
-                        <exclude>com/habittracker/model/HabitIdentityFields*</exclude>
-                        <exclude>com/habittracker/model/HabitSettingsFields*</exclude>
-                    </excludes>
-                </configuration>
                 <executions>
                     <execution>
                         <id>jacoco-prepare-agent</id>

@@ -15,6 +15,7 @@ import java.util.UUID;
 
 @Provider
 @Priority(Priorities.AUTHENTICATION - 100)
+@SuppressWarnings({"PMD.LawOfDemeter", "PMD.AvoidCatchingGenericException"})
 public class RequestTraceFilter implements ContainerRequestFilter, ContainerResponseFilter {
   public static final String TRACE_ID_HEADER = "x-trace-id";
   private static final String TRACE_ID_PROPERTY = RequestTraceFilter.class.getName() + ".traceId";
