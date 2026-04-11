@@ -14,6 +14,7 @@ import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import lombok.extern.slf4j.Slf4j;
@@ -45,7 +46,14 @@ public class NotificationResource {
   public Response subscribe(PushSubscriptionRequest body) {
     var userId = currentUserContext.requireUser().id();
 
-    var existing = PushSubscriptionEntity.find("endpoint", body.endpoint()).firstResult();
+    var existing = (PushSubscriptionEntity) PushSubscriptionEntity.find("endpoint", body.endpoint()).firstResult();
+    if (existing != null && !userId.equals(existing.userId)) {
+      log.warn("Push subscription rejected: userId={}, reason=endpoint-owned-by-another-user", userId);
+      throw new WebApplicationException(
+          "Subscription endpoint already registered by another user",
+          Response.status(Response.Status.CONFLICT).build()
+      );
+    }
     var created = existing == null;
     if (existing == null) {
       var entity = new PushSubscriptionEntity();

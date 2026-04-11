@@ -165,6 +165,33 @@ VAPID_PUBLIC_KEY=
         .body("timestamp", notNullValue());
   }
 
+  @Test
+  void shouldReturn409WhenEndpointAlreadyRegisteredByAnotherUser() throws Exception {
+    var endpoint = subscriptionEndpoint();
+    var otherUser = createAuthenticatedUser("cloud");
+
+    // Other user subscribes first
+    given()
+        .header("Authorization", "Bearer " + otherUser.accessToken())
+        .contentType(ContentType.JSON)
+        .body(new PushSubscriptionRequest(endpoint, new PushSubscriptionKeys("p256dh-key", "auth-key")))
+        .when()
+        .post("/notifications/subscribe")
+        .then()
+        .statusCode(201);
+
+    // Our user tries to claim the same endpoint
+    given()
+        .header("Authorization", "Bearer " + token)
+        .contentType(ContentType.JSON)
+        .body(new PushSubscriptionRequest(endpoint, new PushSubscriptionKeys("p256dh-key2", "auth-key2")))
+        .when()
+        .post("/notifications/subscribe")
+        .then()
+        .statusCode(409)
+        .body("status", equalTo(409));
+  }
+
   private String subscriptionEndpoint() {
     return "https://push.example/subscriptions/" + UUID.randomUUID();
   }

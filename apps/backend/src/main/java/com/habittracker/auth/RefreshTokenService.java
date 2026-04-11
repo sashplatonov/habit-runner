@@ -13,7 +13,7 @@ public class RefreshTokenService {
   public RefreshTokenEntity requireActive(String token) {
     var record = findByToken(token);
     if (record == null || !record.isActiveAt(now())) {
-      log.warn("Refresh token rejected: reason=expired-or-revoked");
+      log.warn("event=auth_refresh_rejected, reason=expired-or-revoked");
       throw new NotAuthorizedException("Refresh token expired or revoked");
     }
     return record;
@@ -23,7 +23,7 @@ public class RefreshTokenService {
     var record = findByToken(token);
     if (record != null) {
       record.revoke();
-      log.info("Refresh token revoked: userId={}", record.userId);
+      log.info("event=auth_token_revoked, userId={}", record.userId);
     }
   }
 

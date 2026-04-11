@@ -103,7 +103,7 @@ public class ApiExceptionMapper implements ExceptionMapper<Exception> {
   private Response response(Response.StatusType status, String message) {
     return Response.status(status)
         .type(MediaType.APPLICATION_JSON)
-        .entity(new ApiErrorResponse(status.getStatusCode(), message, Instant.now()))
+        .entity(new ApiErrorResponse(status.getStatusCode(), message, Instant.now(), traceId()))
         .build();
   }
 

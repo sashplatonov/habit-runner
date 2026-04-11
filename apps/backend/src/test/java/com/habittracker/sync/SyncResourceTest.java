@@ -21,6 +21,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.stream.IntStream;
 
 import static io.restassured.RestAssured.given;
 import static com.habittracker.sync.SyncTestPayloads.syncOp;
@@ -370,5 +371,71 @@ class SyncResourceTest extends AuthenticatedApiTestSupport {
         .body("applied", not(hasItem(opId)))
         .body("conflicts", hasSize(1))
         .body("conflicts[0].opId", equalTo(opId));
+  }
+
+  // ─── Guardrail tests ──────────────────────────────────────────────────────
+
+  @Test
+  void shouldReturn422WhenPushPayloadExceedsMaxOpCount() {
+    var ops = IntStream.range(0, 501).mapToObj(i -> syncOp(
+        UUID.randomUUID().toString(),
+        "habit",
+        "upsert",
+        Map.of("id", UUID.randomUUID().toString(), "name", "Habit " + i,
+            "frequency", "daily", "version", 1, "updatedAt", Instant.now().toString()),
+        Instant.now().toString()
+    )).toList();
+
+    given()
+        .header("Authorization", "Bearer " + token)
+        .contentType(ContentType.JSON)
+        .body(PushRequestDto.builder().ops(ops).build())
+        .when()
+        .post("/sync/push")
+        .then()
+        .statusCode(422)
+        .body("status", equalTo(422))
+        .body("message", containsString("500"))
+        .body("traceId", notNullValue());
+  }
+
+  // ─── Cursor pagination tests ──────────────────────────────────────────────
+
+  @Test
+  void shouldReturnOnlyNewerHabitWhenPullUsesExactCursorOfOlderHabit() throws Exception {
+    var t1 = Instant.now().minus(2, ChronoUnit.MINUTES);
+    var t2 = Instant.now().minus(1, ChronoUnit.MINUTES);
+    var habit1Id = UUID.randomUUID().toString();
+    var habit2Id = UUID.randomUUID().toString();
+    createHabit(habit1Id, userId, 1, t1);
+    createHabit(habit2Id, userId, 2, t2);
+
+    // Cursor points to the first habit — pull should return only habit2
+    var cursor = "{\"updatedAt\":\"" + t1.toString() + "\",\"id\":\"" + habit1Id + "\"}";
+
+    given()
+        .header("Authorization", "Bearer " + token)
+        .queryParam("since", cursor)
+        .when()
+        .get("/sync/pull")
+        .then()
+        .statusCode(200)
+        .body("habits", hasSize(1))
+        .body("habits[0].id", equalTo(habit2Id));
+  }
+
+  @Test
+  void shouldReturnAllHabitsWhenPullCursorIsMalformed() throws Exception {
+    var habitId = UUID.randomUUID().toString();
+    createHabit(habitId, userId, 1, Instant.now().minus(1, ChronoUnit.MINUTES));
+
+    given()
+        .header("Authorization", "Bearer " + token)
+        .queryParam("since", "not-valid-json-cursor")
+        .when()
+        .get("/sync/pull")
+        .then()
+        .statusCode(200)
+        .body("habits.id", hasItem(habitId));
   }
 }

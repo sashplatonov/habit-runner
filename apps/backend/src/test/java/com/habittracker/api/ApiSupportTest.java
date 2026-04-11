@@ -117,6 +117,7 @@ class ApiSupportTest {
       var error = assertApiError(response, 400);
 
       assertEquals("Bad input", error.message());
+      assertEquals("trace-123", error.traceId());
     } finally {
       MDC.remove("traceId");
     }

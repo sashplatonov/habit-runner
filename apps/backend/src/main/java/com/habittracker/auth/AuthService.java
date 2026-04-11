@@ -101,7 +101,7 @@ public class AuthService {
     var stateEntity = findOAuthState(state);
     deleteOAuthState(state);
     if (stateEntity == null || stateEntity.isExpiredAt(now())) {
-      log.warn("OAuth callback rejected: provider=google, reason=invalid-or-expired-state");
+      log.warn("event=oauth_callback_failed, provider=google, reason=invalid-or-expired-state");
       throw new NotAuthorizedException("Invalid or expired OAuth state");
     }
     return stateEntity;
