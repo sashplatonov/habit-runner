@@ -3,7 +3,9 @@ package com.sashplatonov.habbit.runner.auth;
 import com.sashplatonov.habbit.runner.auth.dto.UpdatePreferencesRequest;
 import com.sashplatonov.habbit.runner.auth.dto.UserPreferencesResponse;
 import com.sashplatonov.habbit.runner.model.UserEntity;
+import com.sashplatonov.habbit.runner.repository.UserRepository;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.NotAuthorizedException;
 import lombok.extern.slf4j.Slf4j;
@@ -13,6 +15,16 @@ import java.util.Objects;
 @ApplicationScoped
 @Slf4j
 public class PreferencesService {
+  private final UserRepository userRepository;
+
+  public PreferencesService() {
+    this(null);
+  }
+
+  @Inject
+  public PreferencesService(UserRepository userRepository) {
+    this.userRepository = userRepository;
+  }
 
   @Transactional
   public UserPreferencesResponse getUserPreferences(String userId) {
@@ -46,6 +58,6 @@ public class PreferencesService {
   }
 
   protected UserEntity findUserById(String userId) {
-    return UserEntity.findById(userId);
+    return userRepository == null ? UserEntity.<UserEntity>findById(userId) : userRepository.findRequiredById(userId);
   }
 }

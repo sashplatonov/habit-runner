@@ -1,10 +1,8 @@
 package com.sashplatonov.habbit.runner.auth;
 
-import com.sashplatonov.habbit.runner.auth.dto.RefreshRequest;
 import com.sashplatonov.habbit.runner.model.RefreshTokenEntity;
 import com.sashplatonov.habbit.runner.support.AuthenticatedApiTestSupport;
 import io.quarkus.test.junit.QuarkusTest;
-import io.restassured.http.ContentType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -19,13 +17,14 @@ import static org.hamcrest.Matchers.*;
 class AuthRefreshTest extends AuthenticatedApiTestSupport {
 
   private String userId;
-  private String accessToken;
+  private String email;
+  private static final String CSRF_TOKEN = "csrf-token";
 
   @BeforeEach
   void setUp() throws Exception {
     var user = createAuthenticatedUser("cloud");
     userId = user.id();
-    accessToken = user.accessToken();
+    email = user.email();
   }
 
   private String insertRefreshToken(boolean revoked, Instant expiresAt) throws Exception {
@@ -46,71 +45,61 @@ class AuthRefreshTest extends AuthenticatedApiTestSupport {
   void shouldReturnNewAccessTokenWhenRefreshTokenIsActive() throws Exception {
     var refreshToken = insertRefreshToken(false, Instant.now().plus(30, ChronoUnit.DAYS));
 
-    given()
-        .contentType(ContentType.JSON)
-        .body(new RefreshRequest(refreshToken))
+    givenRefreshCookies(refreshToken)
         .when()
         .post("/auth/refresh")
         .then()
         .statusCode(200)
-        .body("accessToken", notNullValue())
-        .body("refreshToken", equalTo(refreshToken))
-        .body("tokenType", equalTo("Bearer"))
-        .body("expiresIn", greaterThan(0));
+      .body("userId", equalTo(userId))
+      .body("email", equalTo(email));
   }
 
   @Test
   void shouldReturn401WhenRefreshTokenIsExpired() throws Exception {
     var expiredToken = insertRefreshToken(false, Instant.now().minus(1, ChronoUnit.DAYS));
 
-    given()
-        .contentType(ContentType.JSON)
-        .body(new RefreshRequest(expiredToken))
+    givenRefreshCookies(expiredToken)
         .when()
         .post("/auth/refresh")
         .then()
-        .statusCode(401);
+      .statusCode(403)
+      .body("errorCode", equalTo("AUTH_REQUIRED"));
   }
 
   @Test
   void shouldReturn401WhenRefreshTokenIsRevoked() throws Exception {
     var revokedToken = insertRefreshToken(true, Instant.now().plus(30, ChronoUnit.DAYS));
 
-    given()
-        .contentType(ContentType.JSON)
-        .body(new RefreshRequest(revokedToken))
+    givenRefreshCookies(revokedToken)
         .when()
         .post("/auth/refresh")
         .then()
-        .statusCode(401);
+      .statusCode(403)
+      .body("errorCode", equalTo("AUTH_REQUIRED"));
   }
 
   @Test
   void shouldReturn401WhenRefreshTokenIsUnknown() {
-    given()
-        .contentType(ContentType.JSON)
-        .body(new RefreshRequest("not-a-real-token"))
+    givenRefreshCookies("not-a-real-token")
         .when()
         .post("/auth/refresh")
         .then()
-        .statusCode(401)
-        .body("status", equalTo(401))
-        .body("message", equalTo("Unauthorized"))
-        .body("timestamp", notNullValue());
+      .statusCode(403)
+      .body("status", equalTo(403))
+      .body("detail", equalTo("Authentication required"))
+      .body("errorCode", equalTo("AUTH_REQUIRED"));
   }
 
   @Test
   void shouldReturn400WhenRefreshTokenIsBlank() {
-    given()
-        .contentType(ContentType.JSON)
-        .body("{\"refreshToken\": \"\"}")
+    givenRefreshCookies("")
         .when()
         .post("/auth/refresh")
         .then()
-        .statusCode(400)
-        .body("status", equalTo(400))
-        .body("title", equalTo("Constraint Violation"))
-        .body("violations.message", hasItem("must not be blank"));
+      .statusCode(403)
+      .body("status", equalTo(403))
+      .body("detail", equalTo("Authentication required"))
+      .body("errorCode", equalTo("AUTH_REQUIRED"));
   }
 
   // ─── Logout (revoke) test ─────────────────────────────────────────────────
@@ -119,22 +108,24 @@ class AuthRefreshTest extends AuthenticatedApiTestSupport {
   void shouldRevokeRefreshTokenWhenLogoutRequested() throws Exception {
     var refreshToken = insertRefreshToken(false, Instant.now().plus(30, ChronoUnit.DAYS));
 
-    given()
-        .header("Authorization", "Bearer " + accessToken)
-        .contentType(ContentType.JSON)
-        .body(new RefreshRequest(refreshToken))
+    givenRefreshCookies(refreshToken)
         .when()
         .post("/auth/logout")
         .then()
         .statusCode(204);
 
     // Attempting to use the revoked token should now fail
-    given()
-        .contentType(ContentType.JSON)
-        .body(new RefreshRequest(refreshToken))
+    givenRefreshCookies(refreshToken)
         .when()
         .post("/auth/refresh")
         .then()
-        .statusCode(401);
+        .statusCode(403);
+  }
+
+  private io.restassured.specification.RequestSpecification givenRefreshCookies(String refreshToken) {
+    return given()
+        .cookie(AuthCookieBuilder.REFRESH_TOKEN_COOKIE, refreshToken)
+        .cookie(AuthCookieBuilder.CSRF_TOKEN_COOKIE, CSRF_TOKEN)
+        .header("X-CSRF-Token", CSRF_TOKEN);
   }
 }

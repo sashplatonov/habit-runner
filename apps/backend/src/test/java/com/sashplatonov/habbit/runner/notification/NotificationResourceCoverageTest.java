@@ -2,27 +2,34 @@ package com.sashplatonov.habbit.runner.notification;
 
 import com.sashplatonov.habbit.runner.auth.CurrentUser;
 import com.sashplatonov.habbit.runner.auth.CurrentUserContext;
+import com.sashplatonov.habbit.runner.api.ErrorResponse;
 import com.sashplatonov.habbit.runner.model.PushSubscriptionEntity;
 import com.sashplatonov.habbit.runner.notification.dto.PushSubscriptionEndpointRequest;
 import com.sashplatonov.habbit.runner.notification.dto.PushSubscriptionKeys;
 import com.sashplatonov.habbit.runner.notification.dto.PushSubscriptionRequest;
 import com.sashplatonov.habbit.runner.notification.dto.SubscriptionStatusResponse;
+import com.sashplatonov.habbit.runner.notification.dto.VapidPublicKeyResponse;
+import com.sashplatonov.habbit.runner.repository.PushSubscriptionRepository;
 import com.sashplatonov.habbit.runner.support.AuthenticatedApiTestSupport;
 import com.sashplatonov.habbit.runner.support.TestConfigFactory;
 import io.quarkus.test.junit.QuarkusTest;
+import jakarta.inject.Inject;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @QuarkusTest
+@SuppressWarnings("PMD.LawOfDemeter")
 class NotificationResourceCoverageTest extends AuthenticatedApiTestSupport {
 
 VAPID_PUBLIC_KEY=
+
+  @Inject
+  PushSubscriptionRepository pushSubscriptionRepository;
 
   private String userId;
   private String email;
@@ -35,18 +42,20 @@ VAPID_PUBLIC_KEY=
   }
 
   @Test
-  @SuppressWarnings("PMD.LawOfDemeter")
   void shouldReturnConfiguredPublicKeyWhenDirectResourceCallUsesConfiguredValue() {
     var response =<REDACTED>
 
-    assertEquals(TEST_VAPID_PUBLIC_KEY, response.publicKey());
+    assertEquals(200, response.getStatus());
+    assertEquals(TEST_VAPID_PUBLIC_KEY, ((VapidPublicKeyResponse) response.getEntity()).publicKey());
   }
 
   @Test
-  void shouldThrowWhenDirectResourceCallUsesBlankConfiguredValue() {
+  void shouldReturnServiceUnavailableWhenDirectResourceCallUsesBlankConfiguredValue() {
     var resource = resourceWithUser(" ");
+    var response = resource.getVapidPublicKey();
 
-    assertThrows(IllegalStateException.class, resource::getVapidPublicKey);
+    assertEquals(503, response.getStatus());
+    assertEquals("VAPID_PUBLIC_KEY_MISSING", ((ErrorResponse) response.getEntity()).errorCode());
   }
 
   @Test
@@ -99,7 +108,7 @@ VAPID_PUBLIC_KEY=
     var resource =<REDACTED>
 
     var response = inTransaction(() -> {
-      return resource.unsubscribe(null);
+      return resource.unsubscribe(new PushSubscriptionEndpointRequest(null));
     });
 
     assertEquals(204, response.getStatus());
@@ -108,7 +117,10 @@ VAPID_PUBLIC_KEY=
   private NotificationResource resourceWithUser(String vapidPublicKey) {
     var currentUserContext = new CurrentUserContext();
     currentUserContext.setUser(new CurrentUser(userId, email));
-    return new NotificationResource(TestConfigFactory.notificationConfig(vapidPublicKey), currentUserContext);
+    return new NotificationResource(
+        new NotificationService(TestConfigFactory.notificationConfig(vapidPublicKey), pushSubscriptionRepository),
+        currentUserContext
+    );
   }
 
   @SuppressWarnings("PMD.LawOfDemeter")

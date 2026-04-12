@@ -76,8 +76,8 @@ public class AuthCollaborators {
     return userService.findOrCreateUser(email);
   }
 
-  public String buildCallbackRedirect(String returnTo, TokenResponse session, String email) {
-    return oauthSupport.buildCallbackRedirect(returnTo, session, email);
+  public String buildCallbackRedirect(String returnTo) {
+    return oauthSupport.buildCallbackRedirect(returnTo);
   }
 
   public TokenResponse issueTokenPair(UserEntity user, int accessTtlSeconds, int refreshDays) {

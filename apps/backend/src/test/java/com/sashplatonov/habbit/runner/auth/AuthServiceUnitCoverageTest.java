@@ -397,7 +397,7 @@ class AuthServiceUnitCoverageTest {
     }
 
     @Override
-    public String buildCallbackRedirect(String returnTo, TokenResponse session, String email) {
+    public String buildCallbackRedirect(String returnTo) {
       return callbackRedirect;
     }
   }

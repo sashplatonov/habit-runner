@@ -7,34 +7,35 @@ import jakarta.ws.rs.container.ContainerRequestFilter;
 import jakarta.ws.rs.container.ContainerResponseContext;
 import jakarta.ws.rs.container.ContainerResponseFilter;
 import jakarta.ws.rs.ext.Provider;
-import org.slf4j.MDC;
 import io.opentelemetry.api.trace.Span;
-import io.opentelemetry.api.trace.SpanContext;
+import org.slf4j.MDC;
 
 import java.util.UUID;
 
 @Provider
 @Priority(Priorities.AUTHENTICATION - 100)
-@SuppressWarnings({"PMD.LawOfDemeter", "PMD.AvoidCatchingGenericException"})
+@SuppressWarnings("PMD.LawOfDemeter")
 public class RequestTraceFilter implements ContainerRequestFilter, ContainerResponseFilter {
   public static final String TRACE_ID_HEADER = "x-trace-id";
   private static final String TRACE_ID_PROPERTY = RequestTraceFilter.class.getName() + ".traceId";
 
   @Override
+  @SuppressWarnings({"PMD.CyclomaticComplexity", "PMD.AvoidCatchingGenericException"})
   public void filter(ContainerRequestContext requestContext) {
-    // Prefer an existing OpenTelemetry span trace id (if the tracer has already created one),
-    // otherwise use client-provided header or a generated UUID.
     String spanTraceId = null;
     try {
-      SpanContext sc = Span.current().getSpanContext();
-      if (sc != null && sc.isValid()) {
-        spanTraceId = sc.getTraceId();
+      var spanContext = Span.current().getSpanContext();
+      if (spanContext != null && spanContext.isValid()) {
+        spanTraceId = spanContext.getTraceId();
       }
-    } catch (Throwable ignored) {
-      // If OpenTelemetry APIs are not available at runtime, fall back to header/UUID.
+    } catch (RuntimeException ignored) {
+      spanTraceId = null;
     }
 
-    var traceId = normalize(requestContext.getHeaderString(TRACE_ID_HEADER));
+    var traceId = parseTraceParent(requestContext.getHeaderString("traceparent"));
+    if (traceId == null) {
+      traceId = normalize(requestContext.getHeaderString(TRACE_ID_HEADER));
+    }
     if (spanTraceId != null && !spanTraceId.isBlank()) {
       traceId = spanTraceId;
     }
@@ -70,5 +71,18 @@ public class RequestTraceFilter implements ContainerRequestFilter, ContainerResp
     }
     var normalized = traceId.trim();
     return normalized.isEmpty() ? null : normalized;
+  }
+
+  private static String parseTraceParent(String traceParent) {
+    var normalized = normalize(traceParent);
+    if (normalized == null) {
+      return null;
+    }
+    var segments = normalized.split("-");
+    if (segments.length < 4) {
+      return null;
+    }
+    var traceId = segments[1];
+    return traceId.matches("[0-9a-fA-F]{32}") ? traceId : null;
   }
 }

@@ -1,33 +1,39 @@
 package com.sashplatonov.habbit.runner.sync;
 
 import com.sashplatonov.habbit.runner.api.ApiResponses;
+import com.sashplatonov.habbit.runner.api.ErrorResponse;
 import com.sashplatonov.habbit.runner.api.RequestTraceFilter;
 import com.sashplatonov.habbit.runner.auth.CurrentUserContext;
 import com.sashplatonov.habbit.runner.auth.RequireAuth;
 import com.sashplatonov.habbit.runner.metrics.SyncMetricsCollector;
 import com.sashplatonov.habbit.runner.sync.dto.PushRequestDto;
-import com.sashplatonov.habbit.runner.sync.dto.SyncOpDto;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
+import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.QueryParam;
-import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.container.ContainerRequestContext;
 import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import lombok.extern.slf4j.Slf4j;
-
-import java.util.List;
+import org.eclipse.microprofile.openapi.annotations.Operation;
+import org.eclipse.microprofile.openapi.annotations.media.Content;
+import org.eclipse.microprofile.openapi.annotations.media.Schema;
+import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
+import org.eclipse.microprofile.openapi.annotations.responses.APIResponses;
+import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 
 @Path("/sync")
 @Produces(MediaType.APPLICATION_JSON)
 @RequireAuth
 @Slf4j
+@Tag(name = "Sync")
 public class SyncResource {
   private static final long SLOW_SYNC_THRESHOLD_MS = 1_000L;
-  private static final int MAX_PUSH_OPS = 500;
 
   final SyncService syncService;
   final CurrentUserContext currentUserContext;
@@ -45,6 +51,12 @@ public class SyncResource {
   @GET
   @Path("/pull")
   @SuppressWarnings("PMD.AvoidCatchingGenericException")
+  @Operation(summary = "Pull sync changes", description = "Returns habits, checkins, and tombstones changed after the optional cursor.")
+  @APIResponses({
+      @APIResponse(responseCode = "200", description = "Sync pull payload"),
+      @APIResponse(responseCode = "403", description = "Authentication required",
+          content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+  })
   public Response pull(@QueryParam("since") String since) {
     var userId = currentUserContext.requireUser().id();
     var traceId = traceId();
@@ -81,12 +93,20 @@ public class SyncResource {
   @POST
   @Path("/push")
   @SuppressWarnings("PMD.AvoidCatchingGenericException")
-  public Response push(PushRequestDto body) {
+  @Consumes(MediaType.APPLICATION_JSON)
+  @Operation(summary = "Push sync changes", description = "Applies habit and checkin mutations for the authenticated user.")
+  @APIResponses({
+      @APIResponse(responseCode = "200", description = "Sync push result"),
+      @APIResponse(responseCode = "400", description = "Validation failed",
+          content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+      @APIResponse(responseCode = "403", description = "Authentication required",
+          content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+  })
+  public Response push(@Valid @NotNull PushRequestDto body) {
     var userId = currentUserContext.requireUser().id();
     var traceId = traceId();
     var startedAt = System.nanoTime();
-    var ops = body == null || body.ops() == null ? List.<SyncOpDto>of() : body.ops();
-    guardPushOpsCount(ops);
+    var ops = body.ops();
     try {
       var payload = syncService.push(userId, ops);
       var durationMs = durationMs(startedAt);
@@ -125,14 +145,5 @@ public class SyncResource {
 
   private long durationMs(long startedAt) {
     return Math.round((System.nanoTime() - startedAt) / 1_000_000.0d);
-  }
-
-  private void guardPushOpsCount(List<SyncOpDto> ops) {
-    if (ops.size() > MAX_PUSH_OPS) {
-      throw new WebApplicationException(
-          "Push payload exceeds maximum op count of " + MAX_PUSH_OPS,
-          Response.status(422).build()
-      );
-    }
   }
 }

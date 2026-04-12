@@ -2,9 +2,12 @@ package com.sashplatonov.habbit.runner.sync;
 
 import com.sashplatonov.habbit.runner.model.CheckinEntity;
 import com.sashplatonov.habbit.runner.model.HabitEntity;
+import com.sashplatonov.habbit.runner.repository.CheckinRepository;
+import com.sashplatonov.habbit.runner.repository.HabitRepository;
 import com.sashplatonov.habbit.runner.sync.dto.PushConflict;
 import com.sashplatonov.habbit.runner.sync.dto.SyncOpDto;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
 
 import java.time.Instant;
@@ -12,12 +15,15 @@ import java.time.LocalDate;
 
 @ApplicationScoped
 @Slf4j
+@SuppressWarnings("PMD.CouplingBetweenObjects")
 public class CheckinSyncProcessor {
 
   private final SyncPayloadCodec payloadCodec;
   private final SyncEntityMapper entityMapper;
   private final CheckinDeleteHandler checkinDeleteHandler;
   private final SyncPayloadMapper payloadMapper;
+  private final CheckinRepository checkinRepository;
+  private final HabitRepository habitRepository;
 
   public CheckinSyncProcessor(
       SyncPayloadCodec payloadCodec,
@@ -25,10 +31,25 @@ public class CheckinSyncProcessor {
       CheckinDeleteHandler checkinDeleteHandler,
       SyncPayloadMapper payloadMapper
   ) {
+    this(payloadCodec, entityMapper, checkinDeleteHandler, payloadMapper, null, null);
+  }
+
+  @Inject
+  @SuppressWarnings("PMD.ExcessiveParameterList")
+  public CheckinSyncProcessor(
+      SyncPayloadCodec payloadCodec,
+      SyncEntityMapper entityMapper,
+      CheckinDeleteHandler checkinDeleteHandler,
+      SyncPayloadMapper payloadMapper,
+      CheckinRepository checkinRepository,
+      HabitRepository habitRepository
+  ) {
     this.payloadCodec = payloadCodec;
     this.entityMapper = entityMapper;
     this.checkinDeleteHandler = checkinDeleteHandler;
     this.payloadMapper = payloadMapper;
+    this.checkinRepository = checkinRepository;
+    this.habitRepository = habitRepository;
   }
 
   @SuppressWarnings({"PMD.CognitiveComplexity", "PMD.CyclomaticComplexity", "PMD.NPathComplexity"})
@@ -45,9 +66,7 @@ public class CheckinSyncProcessor {
     }
 
     var date = payloadCodec.toLocalDate(dateString);
-    var existing = CheckinEntity.<CheckinEntity>find(
-        "habitId = ?1 and date = ?2 and userId = ?3", habitId, date, userId
-    ).firstResult();
+    var existing = findCheckin(habitId, date, userId);
     var clientUpdated = payloadCodec.normalizeInstant(payload != null ? payload.updatedAt() : null);
 
     if (op.type() == SyncOperationType.DELETE) {
@@ -77,7 +96,7 @@ public class CheckinSyncProcessor {
   }
 
   private boolean hasCheckinParentConflict(String userId, String habitId, String opId, SyncPushState state) {
-    var parent = (HabitEntity) HabitEntity.findById(habitId);
+    var parent = findHabit(habitId);
     if (parent != null && userId.equals(parent.userId)) {
       return false;
     }
@@ -101,7 +120,28 @@ public class CheckinSyncProcessor {
     created.habitId = habitId;
     created.userId = userId;
     created.setCheckinDate(date);
-    created.persist();
+    saveCheckin(created);
     return created;
+  }
+
+  private CheckinEntity findCheckin(String habitId, LocalDate date, String userId) {
+    if (checkinRepository != null) {
+      return checkinRepository.findByHabitDateAndUserId(habitId, date, userId);
+    }
+    return CheckinEntity.<CheckinEntity>find(
+        "habitId = ?1 and date = ?2 and userId = ?3", habitId, date, userId
+    ).firstResult();
+  }
+
+  private HabitEntity findHabit(String habitId) {
+    return habitRepository == null ? (HabitEntity) HabitEntity.findById(habitId) : habitRepository.findHabitById(habitId);
+  }
+
+  private void saveCheckin(CheckinEntity checkin) {
+    if (checkinRepository != null) {
+      checkinRepository.save(checkin);
+      return;
+    }
+    checkin.persist();
   }
 }

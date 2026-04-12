@@ -45,7 +45,7 @@ class SyncResourceUnitTest {
   }
 
   @Test
-  void shouldTreatNullPushBodyAsEmptyOps() {
+  void shouldForwardEmptyPushOpsWhenRequestContainsNoOperations() {
     var service = new StubSyncService();
     service.pushResponse = PushResponseDto.builder()
         .applied(List.of("op-1"))
@@ -58,7 +58,7 @@ class SyncResourceUnitTest {
         .build();
     var resource = resource(service, "trace-push-empty");
 
-    var response = resource.push(null);
+      var response = resource.push(PushRequestDto.builder().ops(List.of()).build());
 
     assertEquals("user-1", service.lastPushUserId);
     assertEquals(List.of(), service.lastPushOps);

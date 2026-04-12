@@ -1,5 +1,5 @@
 import { buildApiUrl } from '../api/url';
-import { getValidAccessToken } from '../auth/session';
+import { authenticatedFetch } from '../auth/session';
 
 /**
  * Convert VAPID public key from URL-safe base64 to Uint8Array
@@ -89,14 +89,9 @@ export async function subscribeToPush(): Promise<boolean> {
     applicationServerKey: urlBase64ToUint8Array(vapidData.publicKey)
   });
 
-  const accessToken = await getValidAccessToken();
   const subscribeUrl = buildApiUrl('/notifications/subscribe');
-  const subscribeResponse = await fetch(subscribeUrl, {
+  const subscribeResponse = await authenticatedFetch(subscribeUrl, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {})
-    },
     body: JSON.stringify(subscription.toJSON())
   });
 
@@ -121,14 +116,9 @@ export async function unsubscribeFromPush(): Promise<boolean> {
     return true;
   }
 
-  const accessToken = await getValidAccessToken();
   const unsubscribeUrl = buildApiUrl('/notifications/unsubscribe');
-  const unsubscribeResponse = await fetch(unsubscribeUrl, {
+  const unsubscribeResponse = await authenticatedFetch(unsubscribeUrl, {
     method: 'DELETE',
-    headers: {
-      'Content-Type': 'application/json',
-      ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {})
-    },
     body: JSON.stringify({ endpoint: subscription.endpoint })
   });
 

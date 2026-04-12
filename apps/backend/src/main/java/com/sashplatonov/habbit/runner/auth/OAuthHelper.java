@@ -1,6 +1,5 @@
 package com.sashplatonov.habbit.runner.auth;
 
-import com.sashplatonov.habbit.runner.auth.dto.TokenResponse;
 import jakarta.enterprise.context.ApplicationScoped;
 
 @ApplicationScoped
@@ -11,12 +10,8 @@ public class OAuthHelper {
     this.authConfig = authConfig;
   }
 
-  public String buildCallbackRedirect(String returnTo, TokenResponse session, String email) {
-    return returnTo + "/auth/callback"
-        + "?accessToken=" + AuthSupport.urlEncode(session.accessToken())
-        + "&refreshToken=" + AuthSupport.urlEncode(session.refreshToken())
-        + "&expiresIn=" + session.expiresIn()
-        + "&email=" + AuthSupport.urlEncode(email);
+  public String buildCallbackRedirect(String returnTo) {
+    return returnTo + "/auth/callback";
   }
 
   public String normalizeReturnTo(String returnTo) {

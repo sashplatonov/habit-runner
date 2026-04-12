@@ -20,12 +20,12 @@ import type {
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import {
   AUTH_SESSION_CLEARED_EVENT,
+  authenticatedFetch,
   clearAuthSession,
+  ensureAuthSession,
   getSessionUserId,
-  parseOAuthCallbackSession,
   readAuthSession
 } from '@/lib/auth/session';
-import { API_BASE_URL } from '@/lib/core/config';
 import { setCurrentUserId } from '@/lib/storage/db';
 import { useTheme } from '@/hooks/useTheme';
 import { UndoProvider } from '@/lib/undo';
@@ -75,6 +75,43 @@ function PublicRouter({ authError, onHelpClick }: { authError?: string; onHelpCl
   return <PublicLanding authError={authError} onHelpClick={onHelpClick} />;
 }
 
+function useAuthSessionBootstrap(
+  setAuthSession: React.Dispatch<React.SetStateAction<AuthSession | null>>,
+  setAuthError: React.Dispatch<React.SetStateAction<string | undefined>>
+) {
+  useEffect(() => {
+    let cancelled = false;
+
+    const syncSession = async () => {
+      const isCallbackPath = window.location.pathname === '/auth/callback';
+      try {
+        const session = await ensureAuthSession();
+        if (cancelled) {
+          return;
+        }
+        setCurrentUserId(getSessionUserId(session));
+        setAuthSession(session);
+        if (isCallbackPath) {
+          if (!session) {
+            setAuthError('Failed to complete OAuth login. Check provider setup and redirect URI.');
+          }
+          window.history.replaceState({}, '', '/');
+        }
+      } catch {
+        if (!cancelled && isCallbackPath) {
+          setAuthError('Failed to complete OAuth login. Check provider setup and redirect URI.');
+          window.history.replaceState({}, '', '/');
+        }
+      }
+    };
+
+    void syncSession();
+    return () => {
+      cancelled = true;
+    };
+  }, [setAuthError, setAuthSession]);
+}
+
 export function App() {
   const [authSession, setAuthSession] = useState<AuthSession | null>(() => {
     const session = readAuthSession();
@@ -114,26 +151,9 @@ export function App() {
     subscribeToPush().catch(() => {/* silent — push is best-effort */});
   }, [authSession]);
 
-  useEffect(() => {
-    const url = new URL(window.location.href);
-    if (url.pathname !== '/auth/callback') {
-      return;
-    }
-
-    const session = parseOAuthCallbackSession(url);
-    if (session) {
-      setCurrentUserId(getSessionUserId(session));
-      setAuthSession(session);
-      window.history.replaceState({}, '', '/');
-      return;
-    }
-
-    setAuthError('Failed to complete OAuth login. Check provider setup and redirect URI.');
-    window.history.replaceState({}, '', '/');
-  }, []);
+  useAuthSessionBootstrap(setAuthSession, setAuthError);
 
   const logout = async () => {
-    const refreshToken = authSession?.refreshToken;
     clearAuthSession();
     setCurrentUserId(null);
     clearCurrentUserTimeZone();
@@ -141,16 +161,9 @@ export function App() {
     if (typeof window !== 'undefined') {
       window.history.replaceState({}, '', '/');
     }
-    if (!refreshToken) {
-      return;
-    }
 
     try {
-      await fetch(`${API_BASE_URL}/auth/logout`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ refreshToken })
-      });
+      await authenticatedFetch('/api/auth/logout', { method: 'POST' });
     } catch {
       // Logout endpoint failure should not block local session cleanup.
     }

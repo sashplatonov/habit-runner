@@ -1,6 +1,5 @@
 package com.sashplatonov.habbit.runner.auth;
 
-import com.sashplatonov.habbit.runner.auth.dto.TokenResponse;
 import com.sashplatonov.habbit.runner.model.RefreshTokenEntity;
 import com.sashplatonov.habbit.runner.model.UserEntity;
 import com.sashplatonov.habbit.runner.support.TestConfigFactory;
@@ -49,12 +48,8 @@ class AuthDelegateCoverageTest {
     assertEquals("oauth@example.test", collaborators.exchangeCodeForEmail("code-123"));
     assertSame(existingUser, collaborators.findOrCreateUser("user@example.test"));
     assertEquals(
-        "https://app.example.test/callback?token=access-token&email=user@example.test",
-        collaborators.buildCallbackRedirect(
-            "/dashboard",
-            new TokenResponse("access-token", "refresh-token", 3600, "Bearer"),
-            "user@example.test"
-        )
+      "https://app.example.test/callback",
+      collaborators.buildCallbackRedirect("/dashboard")
     );
   }
 
@@ -190,8 +185,8 @@ class AuthDelegateCoverageTest {
     }
 
     @Override
-    public String buildCallbackRedirect(String returnTo, TokenResponse session, String email) {
-      return "https://app.example.test/callback?token=" + session.accessToken() + "&email=" + email;
+    public String buildCallbackRedirect(String returnTo) {
+      return "https://app.example.test/callback";
     }
   }
 

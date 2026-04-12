@@ -3,7 +3,10 @@ package com.sashplatonov.habbit.runner.auth;
 import com.sashplatonov.habbit.runner.auth.dto.TokenResponse;
 import com.sashplatonov.habbit.runner.model.OAuthStateEntity;
 import com.sashplatonov.habbit.runner.model.UserEntity;
+import com.sashplatonov.habbit.runner.repository.OAuthStateRepository;
+import com.sashplatonov.habbit.runner.repository.UserRepository;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.NotAuthorizedException;
@@ -18,13 +21,24 @@ public class AuthService {
 
   private final AuthConfig authConfig;
   private final AuthCollaborators collaborators;
+  private final UserRepository userRepository;
+  private final OAuthStateRepository oauthStateRepository;
 
+  protected AuthService(AuthConfig authConfig, AuthCollaborators collaborators) {
+    this(authConfig, collaborators, null, null);
+  }
+
+  @Inject
   public AuthService(
       AuthConfig authConfig,
-      AuthCollaborators collaborators
+      AuthCollaborators collaborators,
+      UserRepository userRepository,
+      OAuthStateRepository oauthStateRepository
   ) {
     this.authConfig = authConfig;
     this.collaborators = collaborators;
+    this.userRepository = userRepository;
+    this.oauthStateRepository = oauthStateRepository;
   }
 
   @Transactional
@@ -70,13 +84,18 @@ public class AuthService {
 
   @Transactional
   public String handleOAuthCallback(String code, String state) {
+    return handleOAuthCallbackSession(code, state).redirectUrl();
+  }
+
+  @Transactional
+  public OAuthCallbackSession handleOAuthCallbackSession(String code, String state) {
     validateOAuthCallbackInput(code, state);
     var stateEntity = consumeOAuthState(state);
     var email = collaborators.exchangeCodeForEmail(code);
     var user = collaborators.findOrCreateUser(email);
     var session = collaborators.issueTokenPair(user, authConfig.accessTokenTtlSeconds(), authConfig.refreshTokenDays());
     log.info("OAuth login succeeded: userId={}, provider=google", user.id);
-    return collaborators.buildCallbackRedirect(stateEntity.returnTo, session, email);
+    return new OAuthCallbackSession(collaborators.buildCallbackRedirect(stateEntity.returnTo), session);
   }
 
   private TokenResponse issueTokenPair(UserEntity user) {
@@ -108,7 +127,7 @@ public class AuthService {
   }
 
   protected UserEntity findUserByEmail(String email) {
-    return UserEntity.<UserEntity>find("email", email).firstResult();
+    return userRepository == null ? null : userRepository.findByEmail(email);
   }
 
   protected UserEntity requireUserById(String userId) {
@@ -121,15 +140,17 @@ public class AuthService {
   }
 
   protected UserEntity findUserById(String userId) {
-    return UserEntity.<UserEntity>findById(userId);
+    return userRepository == null ? null : userRepository.findRequiredById(userId);
   }
 
   protected OAuthStateEntity findOAuthState(String state) {
-    return OAuthStateEntity.findById(state);
+    return oauthStateRepository == null ? null : oauthStateRepository.findById(state);
   }
 
   protected void deleteOAuthState(String state) {
-    OAuthStateEntity.deleteById(state);
+    if (oauthStateRepository != null) {
+      oauthStateRepository.deleteState(state);
+    }
   }
 
   protected void storeOAuthState(String state, String returnTo, Instant expiresAt) {
@@ -137,12 +158,19 @@ public class AuthService {
     payload.state = state;
     payload.returnTo = returnTo;
     payload.setExpiry(expiresAt);
-    payload.persist();
+    if (oauthStateRepository != null) {
+      oauthStateRepository.save(payload);
+    }
   }
 
   protected Instant now() {
     return Instant.now();
   }
 
-  
+  public int refreshTokenDays() {
+    return authConfig.refreshTokenDays();
+  }
+
+  public record OAuthCallbackSession(String redirectUrl, TokenResponse session) {
+  }
 }

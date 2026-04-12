@@ -17,8 +17,10 @@ class MetricsResourceTest {
     var syncMetricsCollector = new SyncMetricsCollector(registry);
     syncMetricsCollector.recordPull(120, 5);
     syncMetricsCollector.recordPush(80, 3, 1);
-    var metrics = new MetricsResource(syncMetricsCollector).getMetrics();
+    var response = new MetricsResource(syncMetricsCollector).getMetrics();
+    var metrics = (MetricsSnapshotDto) response.getEntity();
 
+    assertEquals(200, response.getStatus());
     assertNotNull(Instant.parse(metrics.createdAt()));
     assertEquals(1, metrics.pullRequests());
     assertEquals(1, metrics.pushRequests());

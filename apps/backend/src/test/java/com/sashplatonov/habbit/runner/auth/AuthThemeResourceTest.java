@@ -10,8 +10,7 @@ import org.junit.jupiter.api.Test;
 
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.hasItem;
-import static org.hamcrest.Matchers.notNullValue;
+import static org.hamcrest.Matchers.containsString;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
@@ -80,7 +79,7 @@ class AuthThemeResourceTest extends AuthenticatedApiTestSupport {
         .then()
         .statusCode(400)
         .body("title", equalTo("Constraint Violation"))
-        .body("violations.message", hasItem("must not be blank"));
+          .body("detail", containsString("must not be blank"));
   }
 
   @Test
@@ -89,10 +88,10 @@ class AuthThemeResourceTest extends AuthenticatedApiTestSupport {
         .when()
         .get("/auth/theme")
         .then()
-        .statusCode(401)
-        .body("status", equalTo(401))
-        .body("message", equalTo("Unauthorized"))
-        .body("timestamp", notNullValue());
+          .statusCode(403)
+          .body("status", equalTo(403))
+          .body("detail", equalTo("Authentication required"))
+          .body("errorCode", equalTo("AUTH_REQUIRED"));
   }
 
   @Test
@@ -103,10 +102,10 @@ class AuthThemeResourceTest extends AuthenticatedApiTestSupport {
         .when()
         .put("/auth/theme")
         .then()
-        .statusCode(401)
-        .body("status", equalTo(401))
-        .body("message", equalTo("Unauthorized"))
-        .body("timestamp", notNullValue());
+          .statusCode(403)
+          .body("status", equalTo(403))
+          .body("detail", equalTo("Authentication required"))
+          .body("errorCode", equalTo("AUTH_REQUIRED"));
   }
 
   private void assertStoredTheme(String expectedTheme) {

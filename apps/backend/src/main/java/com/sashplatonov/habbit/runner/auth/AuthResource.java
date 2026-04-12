@@ -1,12 +1,15 @@
 package com.sashplatonov.habbit.runner.auth;
 
 import com.sashplatonov.habbit.runner.api.ApiResponses;
+import com.sashplatonov.habbit.runner.api.ErrorResponse;
+import com.sashplatonov.habbit.runner.auth.dto.AuthSessionResponse;
 import com.sashplatonov.habbit.runner.auth.dto.LoginRequest;
-import com.sashplatonov.habbit.runner.auth.dto.RefreshRequest;
-import com.sashplatonov.habbit.runner.auth.dto.TokenResponse;
 import com.sashplatonov.habbit.runner.auth.dto.UpdatePreferencesRequest;
 import com.sashplatonov.habbit.runner.auth.dto.UserPreferencesResponse;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.CookieParam;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.PUT;
@@ -15,28 +18,57 @@ import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import org.eclipse.microprofile.openapi.annotations.Operation;
+import org.eclipse.microprofile.openapi.annotations.media.Content;
+import org.eclipse.microprofile.openapi.annotations.media.Schema;
+import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
+import org.eclipse.microprofile.openapi.annotations.responses.APIResponses;
+import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 
 @Path("/auth")
 @Produces(MediaType.APPLICATION_JSON)
+@Tag(name = "Authentication")
 public class AuthResource {
   final AuthService authService;
   final PreferencesService preferencesService;
   final CurrentUserContext currentUserContext;
+  final AuthCookieBuilder authCookieBuilder;
 
-  public AuthResource(AuthService authService, PreferencesService preferencesService, CurrentUserContext currentUserContext) {
+  public AuthResource(
+      AuthService authService,
+      PreferencesService preferencesService,
+      CurrentUserContext currentUserContext,
+      AuthCookieBuilder authCookieBuilder
+  ) {
     this.authService = authService;
     this.preferencesService = preferencesService;
     this.currentUserContext = currentUserContext;
+    this.authCookieBuilder = authCookieBuilder;
   }
 
   @POST
   @Path("/login")
-  public TokenResponse login(@Valid LoginRequest request) {
-    return authService.login(request.email());
+  @Consumes(MediaType.APPLICATION_JSON)
+  @Operation(summary = "Create login session", description = "Authenticates the user and issues auth cookies.")
+  @APIResponses({
+      @APIResponse(responseCode = "200", description = "Authenticated session",
+          content = @Content(schema = @Schema(implementation = AuthSessionResponse.class))),
+      @APIResponse(responseCode = "400", description = "Validation failed",
+          content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+      @APIResponse(responseCode = "403", description = "Authentication rejected",
+          content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+  })
+  public Response login(@Valid @NotNull LoginRequest request) {
+    var session = authService.login(request.email());
+    return authenticatedSessionResponse(session);
   }
 
   @GET
   @Path("/google/start")
+  @Operation(summary = "Start Google OAuth", description = "Redirects the browser to Google OAuth authorization.")
+  @APIResponses({
+      @APIResponse(responseCode = "302", description = "OAuth redirect initiated")
+  })
   public Response startGoogle(@QueryParam("returnTo") String returnTo) {
     var redirect = authService.createOAuthAuthorizationUrl(returnTo);
     return ApiResponses.redirect(redirect);
@@ -44,37 +76,118 @@ public class AuthResource {
 
   @GET
   @Path("/google/callback")
+  @Operation(summary = "Handle Google OAuth callback", description = "Completes the OAuth exchange, sets auth cookies, and redirects back to the web app.")
+  @APIResponses({
+      @APIResponse(responseCode = "302", description = "OAuth callback completed"),
+      @APIResponse(responseCode = "400", description = "Invalid callback parameters",
+          content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+      @APIResponse(responseCode = "403", description = "OAuth callback rejected",
+          content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+  })
   public Response googleCallback(@QueryParam("code") String code, @QueryParam("state") String state) {
-    var redirect = authService.handleOAuthCallback(code, state);
-    return ApiResponses.redirect(redirect);
+    var callback = authService.handleOAuthCallbackSession(code, state);
+    var responseBuilder = Response.status(Response.Status.FOUND)
+        .location(java.net.URI.create(callback.redirectUrl()));
+    return addSessionCookies(responseBuilder, callback.session()).build();
   }
 
   @POST
   @Path("/refresh")
-  public TokenResponse refresh(@Valid RefreshRequest request) {
-    return authService.refreshToken(request.refreshToken());
+  @Operation(summary = "Refresh auth session", description = "Refreshes the access token using the refresh-token cookie.")
+  @APIResponses({
+      @APIResponse(responseCode = "200", description = "Session refreshed",
+          content = @Content(schema = @Schema(implementation = AuthSessionResponse.class))),
+      @APIResponse(responseCode = "403", description = "Refresh rejected",
+          content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+  })
+  public Response refresh(@CookieParam(AuthCookieBuilder.REFRESH_TOKEN_COOKIE) String refreshToken) {
+    var session = authService.refreshToken(refreshToken);
+    return authenticatedSessionResponse(session);
   }
 
   @POST
   @Path("/logout")
-  public Response logout(@Valid RefreshRequest request) {
-    authService.revokeToken(request.refreshToken());
-    return ApiResponses.noContent();
+  @Operation(summary = "Logout current session", description = "Revokes the refresh token and clears all auth cookies.")
+  @APIResponses({
+      @APIResponse(responseCode = "204", description = "Session cleared")
+  })
+  public Response logout(@CookieParam(AuthCookieBuilder.REFRESH_TOKEN_COOKIE) String refreshToken) {
+    authService.revokeToken(refreshToken);
+    return Response.noContent()
+        .cookie(authCookieBuilder.expiredAccessToken())
+        .cookie(authCookieBuilder.expiredRefreshToken())
+        .cookie(authCookieBuilder.expiredCsrfToken())
+        .build();
+  }
+
+  @RequireAuth
+  @GET
+  @Path("/session")
+  @Operation(summary = "Get current auth session", description = "Returns the authenticated user resolved from the request auth context.")
+  @APIResponses({
+      @APIResponse(responseCode = "200", description = "Authenticated session",
+          content = @Content(schema = @Schema(implementation = AuthSessionResponse.class))),
+      @APIResponse(responseCode = "403", description = "Authentication required",
+          content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+  })
+  public Response session() {
+    var user = currentUserContext.requireUser();
+    return Response.ok(new AuthSessionResponse(user.id(), user.email())).build();
   }
 
   @RequireAuth
   @GET
   @Path("/preferences")
-  public UserPreferencesResponse getPreferences() {
-    return preferencesService.getUserPreferences(currentUserContext.requireUser().id());
+  @Operation(summary = "Get user preferences", description = "Returns the stored preferences for the authenticated user.")
+  @APIResponses({
+      @APIResponse(responseCode = "200", description = "User preferences",
+          content = @Content(schema = @Schema(implementation = UserPreferencesResponse.class))),
+      @APIResponse(responseCode = "403", description = "Authentication required",
+          content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+  })
+  public Response getPreferences() {
+    return Response.ok(preferencesService.getUserPreferences(currentUserContext.requireUser().id())).build();
   }
 
   @RequireAuth
   @PUT
   @Path("/preferences")
-  public UserPreferencesResponse updatePreferences(@Valid UpdatePreferencesRequest request) {
-    return preferencesService.updateUserPreferences(currentUserContext.requireUser().id(), request);
+  @Consumes(MediaType.APPLICATION_JSON)
+  @Operation(summary = "Update user preferences", description = "Updates the stored preferences for the authenticated user.")
+  @APIResponses({
+      @APIResponse(responseCode = "200", description = "User preferences updated",
+          content = @Content(schema = @Schema(implementation = UserPreferencesResponse.class))),
+      @APIResponse(responseCode = "400", description = "Validation failed",
+          content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+      @APIResponse(responseCode = "403", description = "Authentication required",
+          content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+  })
+  public Response updatePreferences(@Valid @NotNull UpdatePreferencesRequest request) {
+    return Response.ok(preferencesService.updateUserPreferences(currentUserContext.requireUser().id(), request)).build();
   }
 
+  private Response authenticatedSessionResponse(com.sashplatonov.habbit.runner.auth.dto.TokenResponse session) {
+    var responseBuilder = Response.ok(currentSessionResponse(session));
+    return addSessionCookies(responseBuilder, session).build();
+  }
 
+  private Response.ResponseBuilder addSessionCookies(
+      Response.ResponseBuilder responseBuilder,
+      com.sashplatonov.habbit.runner.auth.dto.TokenResponse session
+  ) {
+    var csrfToken = AuthSupport.randomToken(16);
+    return responseBuilder
+        .cookie(authCookieBuilder.accessToken(session.accessToken(), session.expiresIn()))
+        .cookie(authCookieBuilder.refreshToken(session.refreshToken(), refreshCookieMaxAgeSeconds()))
+        .cookie(authCookieBuilder.csrfToken(csrfToken, refreshCookieMaxAgeSeconds()));
+  }
+
+  private AuthSessionResponse currentSessionResponse(com.sashplatonov.habbit.runner.auth.dto.TokenResponse session) {
+    var user = authService.verifyAccessToken(session.accessToken());
+    return new AuthSessionResponse(user.id(), user.email());
+  }
+
+  private int refreshCookieMaxAgeSeconds() {
+    return authService.refreshTokenDays() * 24 * 60 * 60;
+  }
 }

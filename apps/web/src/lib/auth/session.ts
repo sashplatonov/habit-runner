@@ -1,32 +1,20 @@
 import { API_BASE_URL } from '@/lib/core/config';
 
 const AUTH_SESSION_KEY = 'habbitRunner.auth.session';
-const EXPIRY_SKEW_SECONDS = 30;
+const CSRF_COOKIE_NAME = 'habbit_runner_csrf_token';
 export const AUTH_SESSION_CLEARED_EVENT = 'habbitRunner.auth.session-cleared';
 
 export interface AuthSession {
-  accessToken: string;
-  refreshToken: string;
-  expiresIn: number;
-  expiresAt: number;
+  userId: string;
   email?: string;
-}
-
-interface AccessTokenPayload {
-  sub?: string;
 }
 
 function toSession(payload: {
-  accessToken: string;
-  refreshToken: string;
-  expiresIn: number;
+  userId: string;
   email?: string;
 }): AuthSession {
   return {
-    accessToken: payload.accessToken,
-    refreshToken: payload.refreshToken,
-    expiresIn: payload.expiresIn,
-    expiresAt: Date.now() + payload.expiresIn * 1000,
+    userId: payload.userId,
     email: payload.email
   };
 }
@@ -36,7 +24,7 @@ export function readAuthSession(): AuthSession | null {
     const raw = localStorage.getItem(AUTH_SESSION_KEY);
     if (!raw) {return null;}
     const parsed = JSON.parse(raw) as AuthSession;
-    if (!parsed.accessToken || !parsed.refreshToken || !parsed.expiresAt) {
+    if (!parsed.userId) {
       return null;
     }
     return parsed;
@@ -46,9 +34,7 @@ export function readAuthSession(): AuthSession | null {
 }
 
 export function saveAuthSession(payload: {
-  accessToken: string;
-  refreshToken: string;
-  expiresIn: number;
+  userId: string;
   email?: string;
 }): AuthSession {
   const session = toSession(payload);
@@ -61,18 +47,74 @@ export function clearAuthSession(): void {
   window.dispatchEvent(new Event(AUTH_SESSION_CLEARED_EVENT));
 }
 
-function isTokenExpiring(session: AuthSession): boolean {
-  return Date.now() >= session.expiresAt - EXPIRY_SKEW_SECONDS * 1000;
+function readCookie(name: string): string | null {
+  if (typeof document === 'undefined') {
+    return null;
+  }
+  const cookies = document.cookie.split(';').map((value) => value.trim());
+  const prefix = `${name}=`;
+  const cookie = cookies.find((value) => value.startsWith(prefix));
+  if (!cookie) {
+    return null;
+  }
+  const [, encodedValue = ''] = cookie.split('=', 2);
+  return encodedValue ? decodeURIComponent(encodedValue) : null;
 }
 
-async function refreshSession(session: AuthSession): Promise<AuthSession> {
+function addAuthHeaders(headers: Headers, method: string, hasBody: boolean): void {
+  if (hasBody && !headers.has('Content-Type')) {
+    headers.set('Content-Type', 'application/json');
+  }
+  if (method === 'GET' || method === 'HEAD') {
+    return;
+  }
+  const csrfToken = readCookie(CSRF_COOKIE_NAME);
+  if (csrfToken) {
+    headers.set('X-CSRF-Token', csrfToken);
+  }
+}
+
+function normalizeAuthSession(payload: unknown): AuthSession {
+  if (typeof payload !== 'object' || payload === null) {
+    throw new Error('Invalid auth session payload');
+  }
+  const record = payload as Record<string, unknown>;
+  const userId = typeof record['userId'] === 'string' ? record['userId'] : null;
+  const email = typeof record['email'] === 'string' ? record['email'] : undefined;
+  if (!userId) {
+    throw new Error('Auth session response did not include a userId');
+  }
+  return saveAuthSession({ userId, email });
+}
+
+async function loadAuthSessionFromServer(): Promise<AuthSession | null> {
+  const response = await fetch(`${API_BASE_URL}/auth/session`, {
+    method: 'GET',
+    credentials: 'include',
+    cache: 'no-store'
+  });
+
+  if (response.status === 403) {
+    clearAuthSession();
+    return null;
+  }
+  if (!response.ok) {
+    throw new Error(`Auth session fetch failed: ${response.status}`);
+  }
+  return normalizeAuthSession(await response.json());
+}
+
+async function refreshSession(): Promise<AuthSession> {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 10_000);
   try {
+    const headers = new Headers();
+    addAuthHeaders(headers, 'POST', false);
     const response = await fetch(`${API_BASE_URL}/auth/refresh`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ refreshToken: session.refreshToken }),
+      headers,
+      credentials: 'include',
+      cache: 'no-store',
       signal: controller.signal
     });
 
@@ -80,18 +122,7 @@ async function refreshSession(session: AuthSession): Promise<AuthSession> {
       throw new Error('Unable to refresh authentication token');
     }
 
-    const data = (await response.json()) as {
-      accessToken: string;
-      refreshToken: string;
-      expiresIn: number;
-    };
-
-    return saveAuthSession({
-      accessToken: data.accessToken,
-      refreshToken: data.refreshToken,
-      expiresIn: data.expiresIn,
-      email: session.email
-    });
+    return normalizeAuthSession(await response.json());
   } catch (err: unknown) {
     if (err instanceof Error && (err as Error).name === 'AbortError') {
       throw new Error('Auth refresh timed out', { cause: err });
@@ -107,58 +138,57 @@ async function refreshSession(session: AuthSession): Promise<AuthSession> {
   }
 }
 
-export async function getValidAccessToken(): Promise<string | null> {
-  const session = readAuthSession();
-  if (!session) {return null;}
+export async function ensureAuthSession(): Promise<AuthSession | null> {
+  try {
+    return await loadAuthSessionFromServer();
+  } catch {
+    return readAuthSession();
+  }
+}
 
-  if (!isTokenExpiring(session)) {
-    return session.accessToken;
+function shouldRetryWithRefresh(url: string): boolean {
+  return !url.endsWith('/auth/refresh') && !url.endsWith('/auth/logout') && !url.endsWith('/auth/login');
+}
+
+export async function authenticatedFetch(input: string, init: RequestInit = {}): Promise<Response> {
+  const method = (init.method ?? 'GET').toUpperCase();
+  const hasBody = init.body !== undefined && init.body !== null;
+  const headers = new Headers(init.headers);
+  addAuthHeaders(headers, method, hasBody);
+
+  const doFetch = async (requestHeaders: Headers): Promise<Response> => {
+    return await fetch(input, {
+      ...init,
+      headers: requestHeaders,
+      credentials: 'include',
+      cache: 'no-store'
+    });
+  };
+
+  let response = await doFetch(headers);
+  if (response.status !== 403 || !shouldRetryWithRefresh(input)) {
+    if (response.status === 403) {
+      clearAuthSession();
+    }
+    return response;
   }
 
   try {
-    const refreshed = await refreshSession(session);
-    return refreshed.accessToken;
+    await refreshSession();
   } catch {
     clearAuthSession();
-    return null;
-  }
-}
-
-export function parseOAuthCallbackSession(url: URL): AuthSession | null {
-  const accessToken = url.searchParams.get('accessToken');
-  const refreshToken = url.searchParams.get('refreshToken');
-  const expiresInRaw = url.searchParams.get('expiresIn');
-  const email = url.searchParams.get('email') ?? undefined;
-  const expiresIn = Number(expiresInRaw);
-
-  if (!accessToken || !refreshToken || !Number.isFinite(expiresIn)) {
-    return null;
+    return response;
   }
 
-  return saveAuthSession({ accessToken, refreshToken, expiresIn, email });
-}
-
-function decodeBase64Url(value: string): string | null {
-  const normalized = value.replace(/-/g, '+').replace(/_/g, '/');
-  const padded = normalized.padEnd(Math.ceil(normalized.length / 4) * 4, '=');
-  try {
-    return atob(padded);
-  } catch {
-    return null;
+  const retryHeaders = new Headers(init.headers);
+  addAuthHeaders(retryHeaders, method, hasBody);
+  response = await doFetch(retryHeaders);
+  if (response.status === 403) {
+    clearAuthSession();
   }
+  return response;
 }
 
 export function getSessionUserId(session: AuthSession | null): string | null {
-  if (!session?.accessToken) {return null;}
-  const segments = session.accessToken.split('.');
-  if (segments.length < 2) {return null;}
-  const payloadRaw = decodeBase64Url(segments[1]);
-  if (!payloadRaw) {return null;}
-
-  try {
-    const payload = JSON.parse(payloadRaw) as AccessTokenPayload;
-    return payload.sub?.trim() ?? null;
-  } catch {
-    return null;
-  }
+  return session?.userId ?? null;
 }

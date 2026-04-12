@@ -3,10 +3,14 @@ package com.sashplatonov.habbit.runner.sync;
 import com.sashplatonov.habbit.runner.model.CheckinEntity;
 import com.sashplatonov.habbit.runner.model.HabitEntity;
 import com.sashplatonov.habbit.runner.model.TombstoneEntity;
+import com.sashplatonov.habbit.runner.repository.CheckinRepository;
+import com.sashplatonov.habbit.runner.repository.HabitRepository;
+import com.sashplatonov.habbit.runner.repository.TombstoneRepository;
 import com.sashplatonov.habbit.runner.sync.dto.HabitPayloadDto;
 import com.sashplatonov.habbit.runner.sync.dto.PushConflict;
 import com.sashplatonov.habbit.runner.sync.dto.SyncOpDto;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
 
 import java.time.Instant;
@@ -20,6 +24,9 @@ public class HabitSyncProcessor {
   private final SyncValueCodec valueCodec;
   private final SyncEntityMapper entityMapper;
   private final SyncPayloadMapper payloadMapper;
+  private final HabitRepository habitRepository;
+  private final CheckinRepository checkinRepository;
+  private final TombstoneRepository tombstoneRepository;
 
   public HabitSyncProcessor(
       SyncPayloadCodec payloadCodec,
@@ -27,10 +34,27 @@ public class HabitSyncProcessor {
       SyncEntityMapper entityMapper,
       SyncPayloadMapper payloadMapper
   ) {
+    this(payloadCodec, valueCodec, entityMapper, payloadMapper, null, null, null);
+  }
+
+  @Inject
+  @SuppressWarnings("PMD.ExcessiveParameterList")
+  public HabitSyncProcessor(
+      SyncPayloadCodec payloadCodec,
+      SyncValueCodec valueCodec,
+      SyncEntityMapper entityMapper,
+      SyncPayloadMapper payloadMapper,
+      HabitRepository habitRepository,
+      CheckinRepository checkinRepository,
+      TombstoneRepository tombstoneRepository
+  ) {
     this.payloadCodec = payloadCodec;
     this.valueCodec = valueCodec;
     this.entityMapper = entityMapper;
     this.payloadMapper = payloadMapper;
+    this.habitRepository = habitRepository;
+    this.checkinRepository = checkinRepository;
+    this.tombstoneRepository = tombstoneRepository;
   }
 
   public void apply(String userId, SyncOpDto op, SyncPushState state) {
@@ -45,7 +69,7 @@ public class HabitSyncProcessor {
       return;
     }
 
-    var existing = (HabitEntity) HabitEntity.findById(habitId);
+    var existing = findHabitById(habitId);
     var clientUpdated = payloadCodec.normalizeInstant(payload != null ? payload.updatedAt() : null);
     var conflict = habitConflict(userId, op.id(), existing, clientUpdated);
     if (conflict != null) {
@@ -57,7 +81,7 @@ public class HabitSyncProcessor {
     var habit = ensureHabitForUpsert(existing, habitId, userId, payload);
     populateHabit(habit, payload, clientUpdated);
     if (existing == null) {
-      habit.persist();
+      saveHabit(habit);
     }
     state.addAppliedHabit(op.id(), habit);
   }
@@ -71,10 +95,10 @@ public class HabitSyncProcessor {
     tombstone.setDeletedAt(payloadCodec.nextSyncDate(
         payloadCodec.parseInstantOrNow(payload != null ? payload.updatedAt() : null)
     ));
-    tombstone.persist();
+    saveTombstone(tombstone);
 
-    CheckinEntity.delete("habitId = ?1 and userId = ?2", habitId, userId);
-    HabitEntity.delete("id = ?1 and userId = ?2", habitId, userId);
+    deleteCheckinsForHabit(habitId, userId);
+    deleteHabit(habitId, userId);
     return tombstone;
   }
 
@@ -151,5 +175,41 @@ public class HabitSyncProcessor {
       return currentValue;
     }
     return defaultValue;
+  }
+
+  private HabitEntity findHabitById(String habitId) {
+    return habitRepository == null ? (HabitEntity) HabitEntity.findById(habitId) : habitRepository.findHabitById(habitId);
+  }
+
+  private void saveHabit(HabitEntity habit) {
+    if (habitRepository != null) {
+      habitRepository.save(habit);
+      return;
+    }
+    habit.persist();
+  }
+
+  private void saveTombstone(TombstoneEntity tombstone) {
+    if (tombstoneRepository != null) {
+      tombstoneRepository.save(tombstone);
+      return;
+    }
+    tombstone.persist();
+  }
+
+  private void deleteCheckinsForHabit(String habitId, String userId) {
+    if (checkinRepository != null) {
+      checkinRepository.deleteByHabitIdAndUserId(habitId, userId);
+      return;
+    }
+    CheckinEntity.delete("habitId = ?1 and userId = ?2", habitId, userId);
+  }
+
+  private void deleteHabit(String habitId, String userId) {
+    if (habitRepository != null) {
+      habitRepository.deleteByIdAndUserId(habitId, userId);
+      return;
+    }
+    HabitEntity.delete("id = ?1 and userId = ?2", habitId, userId);
   }
 }

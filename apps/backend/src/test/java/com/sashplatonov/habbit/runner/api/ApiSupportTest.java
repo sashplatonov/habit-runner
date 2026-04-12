@@ -19,7 +19,6 @@ import java.net.URI;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SuppressWarnings("PMD.LawOfDemeter")
@@ -64,49 +63,54 @@ class ApiSupportTest {
 
   @Test
   void shouldMapConstraintViolationWhenValidationFails() {
-    var response = new ApiExceptionMapper().toResponse(blankValueViolation());
+    var response = new ConstraintViolationExceptionMapper().toResponse(blankValueViolation());
     var error = assertApiError(response, 400);
 
-    assertTrue(error.message().contains("must not be blank"));
+    assertTrue(error.detail().contains("must not be blank"));
+    assertEquals("VALIDATION_FAILED", error.errorCode());
   }
 
   @Test
   void shouldMapUnauthorizedResponseWhenAuthorizationFails() {
-    var response = new ApiExceptionMapper().toResponse(new NotAuthorizedException("Invalid credentials"));
-    var error = assertApiError(response, 401);
+    var response = new GlobalExceptionMapper().toResponse(new NotAuthorizedException("Invalid credentials"));
+    var error = assertApiError(response, 403);
 
-    assertEquals("Unauthorized", error.message());
+    assertEquals("Forbidden", error.title());
+    assertEquals("Authentication required", error.detail());
   }
 
   @Test
   void shouldMapNotFoundAndBadRequestResponsesWhenKnownExceptionsThrown() {
-    var mapper = new ApiExceptionMapper();
+    var mapper = new GlobalExceptionMapper();
     var notFound = assertApiError(mapper.toResponse(new NotFoundException()), 404);
     var badRequest = assertApiError(mapper.toResponse(new BadRequestException("Bad input")), 400);
 
-    assertEquals("Not found", notFound.message());
-    assertEquals("Bad input", badRequest.message());
+    assertEquals("Not Found", notFound.title());
+    assertEquals("Resource not found", notFound.detail());
+    assertEquals("Bad input", badRequest.detail());
   }
 
   @Test
   void shouldMapWebApplicationExceptionWhenStatusAlreadyDefined() {
-    var response = new ApiExceptionMapper().toResponse(new WebApplicationException(Response.status(422).build()));
+    var response = new GlobalExceptionMapper().toResponse(new WebApplicationException(Response.status(422).build()));
     var error = assertApiError(response, 422);
 
-    assertEquals("Request failed", error.message());
+    assertEquals("Request Failed", error.title());
+    assertEquals("REQUEST_REJECTED", error.errorCode());
   }
 
   @Test
   void shouldMapUnhandledExceptionToInternalServerError() {
-    var response = new ApiExceptionMapper().toResponse(new IllegalStateException("boom"));
+    var response = new GlobalExceptionMapper().toResponse(new IllegalStateException("boom"));
     var error = assertApiError(response, 500);
 
-    assertEquals("Internal server error", error.message());
+    assertEquals("Internal Server Error", error.title());
+    assertEquals("Internal server error", error.detail());
   }
 
   @Test
   void shouldUseRequestContextDataWhenMappingClientFailures() {
-    var mapper = new ApiExceptionMapper();
+    var mapper = new GlobalExceptionMapper();
     mapper.request = proxy(Request.class, Map.of("getMethod", "PATCH"));
     mapper.uriInfo = proxy(UriInfo.class, Map.of("getPath", "/auth/preferences"));
     mapper.headers = proxy(HttpHeaders.class, Map.of("getHeaderString:X-Forwarded-For", "198.51.100.7, 10.0.0.1"));
@@ -116,8 +120,8 @@ class ApiSupportTest {
       var response = mapper.toResponse(new BadRequestException("Bad input"));
       var error = assertApiError(response, 400);
 
-      assertEquals("Bad input", error.message());
-      assertEquals("trace-123", error.traceId());
+      assertEquals("Bad input", error.detail());
+      assertEquals("BAD_REQUEST", error.errorCode());
     } finally {
       MDC.remove("traceId");
     }
@@ -131,11 +135,10 @@ class ApiSupportTest {
   }
 
   @SuppressWarnings("PMD.LawOfDemeter")
-  private ApiErrorResponse assertApiError(Response response, int expectedStatus) {
+  private ErrorResponse assertApiError(Response response, int expectedStatus) {
     assertEquals(expectedStatus, response.getStatus());
     assertEquals("application/json", response.getMediaType().toString());
-    var error = (ApiErrorResponse) response.getEntity();
-    assertNotNull(error.timestamp());
+    var error = (ErrorResponse) response.getEntity();
     assertEquals(expectedStatus, error.status());
     return error;
   }

@@ -1,4 +1,6 @@
 package com.sashplatonov.habbit.runner.notification.dto;
 
-public record PushSubscriptionKeys(String p256dh, String auth) {
+import jakarta.validation.constraints.NotBlank;
+
+public record PushSubscriptionKeys(@NotBlank String p256dh, @NotBlank String auth) {
 }

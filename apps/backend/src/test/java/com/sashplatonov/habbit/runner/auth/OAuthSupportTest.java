@@ -1,7 +1,6 @@
 package com.sashplatonov.habbit.runner.auth;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.sashplatonov.habbit.runner.auth.dto.TokenResponse;
 import com.sashplatonov.habbit.runner.support.TestConfigFactory;
 import org.junit.jupiter.api.Test;
 
@@ -39,10 +38,9 @@ class OAuthSupportTest {
   void shouldDelegateReturnToNormalizationAndCallbackRedirectWhenOAuthSupportUsesHelper() {
     var helper = new RecordingOAuthHelper();
     var support = new OAuthSupport(new RecordingGoogleOAuthClient(), helper);
-    var session = new TokenResponse("access", "refresh", 60, "Bearer");
 
     var normalized = support.normalizeReturnTo("https://client.example.test/path");
-    var redirect = support.buildCallbackRedirect("https://client.example.test", session, "user@example.test");
+    var redirect = support.buildCallbackRedirect("https://client.example.test");
     var callbackUrl = support.getCallbackUrl();
 
     assertEquals("https://client.example.test", normalized);
@@ -50,7 +48,6 @@ class OAuthSupportTest {
     assertEquals("https://api.example.test/auth/google/callback", callbackUrl);
     assertEquals("https://client.example.test/path", helper.lastReturnTo);
     assertEquals("https://client.example.test", helper.lastRedirectBase);
-    assertEquals("user@example.test", helper.lastEmail);
   }
 
   private static final class RecordingGoogleOAuthClient extends GoogleOAuthClient {
@@ -80,7 +77,6 @@ class OAuthSupportTest {
   private static final class RecordingOAuthHelper extends OAuthHelper {
     private String lastReturnTo;
     private String lastRedirectBase;
-    private String lastEmail;
 
     private RecordingOAuthHelper() {
       super(TestConfigFactory.defaultAuthConfig());
@@ -93,9 +89,8 @@ class OAuthSupportTest {
     }
 
     @Override
-    public String buildCallbackRedirect(String returnTo, TokenResponse session, String email) {
+    public String buildCallbackRedirect(String returnTo) {
       lastRedirectBase = returnTo;
-      lastEmail = email;
       return returnTo + "/auth/callback?ok=true";
     }
 

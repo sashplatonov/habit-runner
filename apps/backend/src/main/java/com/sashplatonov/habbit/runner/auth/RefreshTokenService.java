@@ -1,7 +1,9 @@
 package com.sashplatonov.habbit.runner.auth;
 
 import com.sashplatonov.habbit.runner.model.RefreshTokenEntity;
+import com.sashplatonov.habbit.runner.repository.RefreshTokenRepository;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 import jakarta.ws.rs.NotAuthorizedException;
 import lombok.extern.slf4j.Slf4j;
 
@@ -10,6 +12,17 @@ import java.time.Instant;
 @ApplicationScoped
 @Slf4j
 public class RefreshTokenService {
+  private final RefreshTokenRepository refreshTokenRepository;
+
+  public RefreshTokenService() {
+    this(null);
+  }
+
+  @Inject
+  public RefreshTokenService(RefreshTokenRepository refreshTokenRepository) {
+    this.refreshTokenRepository = refreshTokenRepository;
+  }
+
   public RefreshTokenEntity requireActive(String token) {
     var record = findByToken(token);
     if (record == null || !record.isActiveAt(now())) {
@@ -38,7 +51,7 @@ public class RefreshTokenService {
   }
 
   protected RefreshTokenEntity findByToken(String token) {
-    return RefreshTokenEntity.<RefreshTokenEntity>find("token", token).firstResult();
+    return refreshTokenRepository == null ? null : refreshTokenRepository.findByToken(token);
   }
 
   protected RefreshTokenEntity newRefreshToken() {
@@ -46,7 +59,9 @@ public class RefreshTokenService {
   }
 
   protected void persistRefreshToken(RefreshTokenEntity refresh) {
-    refresh.persist();
+    if (refreshTokenRepository != null) {
+      refreshTokenRepository.save(refresh);
+    }
   }
 
   protected Instant now() {

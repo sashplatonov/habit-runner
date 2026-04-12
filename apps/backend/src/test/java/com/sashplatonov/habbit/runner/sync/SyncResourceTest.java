@@ -136,11 +136,11 @@ class SyncResourceTest extends AuthenticatedApiTestSupport {
         .when()
         .get("/sync/pull")
         .then()
-        .statusCode(401)
+        .statusCode(403)
         .header("x-trace-id", not(isEmptyOrNullString()))
-        .body("status", equalTo(401))
-          .body("message", equalTo("Unauthorized"))
-        .body("timestamp", notNullValue());
+        .body("status", equalTo(403))
+        .body("detail", equalTo("Authentication required"))
+        .body("errorCode", equalTo("AUTH_REQUIRED"));
   }
 
   // ─── Push tests ───────────────────────────────────────────────────────────
@@ -352,7 +352,8 @@ class SyncResourceTest extends AuthenticatedApiTestSupport {
         .when()
         .post("/sync/push")
         .then()
-        .statusCode(401);
+      .statusCode(403)
+      .body("errorCode", equalTo("AUTH_REQUIRED"));
   }
 
   private PushRequestDto pushRequest(SyncOpDto... ops) {
@@ -376,7 +377,7 @@ class SyncResourceTest extends AuthenticatedApiTestSupport {
   // ─── Guardrail tests ──────────────────────────────────────────────────────
 
   @Test
-  void shouldReturn422WhenPushPayloadExceedsMaxOpCount() {
+  void shouldReturn400WhenPushPayloadExceedsMaxOpCount() {
     var ops = IntStream.range(0, 501).mapToObj(i -> syncOp(
         UUID.randomUUID().toString(),
         "habit",
@@ -393,10 +394,10 @@ class SyncResourceTest extends AuthenticatedApiTestSupport {
         .when()
         .post("/sync/push")
         .then()
-        .statusCode(422)
-        .body("status", equalTo(422))
-        .body("message", containsString("500"))
-        .body("traceId", notNullValue());
+          .statusCode(400)
+          .body("status", equalTo(400))
+          .body("title", equalTo("Constraint Violation"))
+          .body("detail", containsString("size must be between 0 and 500"));
   }
 
   // ─── Cursor pagination tests ──────────────────────────────────────────────

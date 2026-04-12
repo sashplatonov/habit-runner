@@ -1,5 +1,5 @@
 import { API_BASE_URL } from '@/lib/core/config';
-import { getValidAccessToken } from '@/lib/auth/session';
+import { authenticatedFetch } from '@/lib/auth/session';
 import type { ThemeId } from '@/hooks/useTheme';
 import type { UserPreferences } from '@habbit-runner/shared';
 import { getCurrentUserTimeZone } from '@/lib/time/userTimezone';
@@ -17,23 +17,10 @@ const THEME_IDS = new Set<ThemeId>([
   'cloud'
 ]);
 
-async function withAuthHeaders(init: RequestInit = {}): Promise<RequestInit> {
-  const accessToken = await getValidAccessToken();
-  if (!accessToken) {
-    throw new Error('Authentication required');
-  }
-
-  const headers = new Headers(init.headers);
-  headers.set('Authorization', `Bearer ${accessToken}`);
-  headers.set('Content-Type', 'application/json');
-
-  return { ...init, headers };
-}
-
 export async function fetchUserPreferences(): Promise<UserPreferences> {
-  const response = await fetch(
+  const response = await authenticatedFetch(
     `${API_BASE_URL}/auth/preferences`,
-    await withAuthHeaders({ method: 'GET' })
+    { method: 'GET' }
   );
 
   if (!response.ok) {
@@ -48,12 +35,12 @@ export async function fetchUserPreferences(): Promise<UserPreferences> {
 }
 
 export async function saveUserPreferences(preferences: { theme: ThemeId; timezone: string }): Promise<void> {
-  const response = await fetch(
+  const response = await authenticatedFetch(
     `${API_BASE_URL}/auth/preferences`,
-    await withAuthHeaders({
+    {
       method: 'PUT',
       body: JSON.stringify(preferences)
-    })
+    }
   );
 
   if (!response.ok) {

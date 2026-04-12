@@ -6,12 +6,14 @@ import java.security.SecureRandom;
 import java.util.HexFormat;
 
 final class AuthSupport {
+  private static final SecureRandom SECURE_RANDOM = new SecureRandom();
+
   private AuthSupport() {
   }
 
   static String randomToken(int bytes) {
     var random = new byte[bytes];
-    new SecureRandom().nextBytes(random);
+    SECURE_RANDOM.nextBytes(random);
     return HexFormat.of().formatHex(random);
   }
 

@@ -13,8 +13,8 @@ import org.junit.jupiter.api.Test;
 import java.util.UUID;
 
 import static io.restassured.RestAssured.given;
+import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
@@ -75,13 +75,9 @@ VAPID_PUBLIC_KEY=
         .when()
         .post("/notifications/subscribe")
         .then()
-        .statusCode(201)
-        .body("success", equalTo(true));
-
-    var stored = PushSubscriptionEntity.<PushSubscriptionEntity>find("endpoint", endpoint).firstResult();
-    assertNotNull(stored);
-    assertEquals("", stored.p256dh);
-    assertEquals("", stored.auth);
+        .statusCode(400)
+        .body("title", equalTo("Constraint Violation"))
+        .body("detail", containsString("must not be null"));
   }
 
   @Test
@@ -145,10 +141,10 @@ VAPID_PUBLIC_KEY=
         .when()
         .post("/notifications/subscribe")
         .then()
-        .statusCode(401)
-        .body("status", equalTo(401))
-        .body("message", equalTo("Unauthorized"))
-        .body("timestamp", notNullValue());
+      .statusCode(403)
+      .body("status", equalTo(403))
+      .body("detail", equalTo("Authentication required"))
+      .body("errorCode", equalTo("AUTH_REQUIRED"));
   }
 
   @Test
@@ -159,10 +155,10 @@ VAPID_PUBLIC_KEY=
         .when()
         .delete("/notifications/unsubscribe")
         .then()
-        .statusCode(401)
-        .body("status", equalTo(401))
-        .body("message", equalTo("Unauthorized"))
-        .body("timestamp", notNullValue());
+      .statusCode(403)
+      .body("status", equalTo(403))
+      .body("detail", equalTo("Authentication required"))
+      .body("errorCode", equalTo("AUTH_REQUIRED"));
   }
 
   @Test

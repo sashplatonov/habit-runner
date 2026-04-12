@@ -1,4 +1,6 @@
 package com.sashplatonov.habbit.runner.notification.dto;
 
-public record PushSubscriptionEndpointRequest(String endpoint) {
+import jakarta.validation.constraints.NotBlank;
+
+public record PushSubscriptionEndpointRequest(@NotBlank String endpoint) {
 }

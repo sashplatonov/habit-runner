@@ -1,13 +1,11 @@
 package com.sashplatonov.habbit.runner.auth;
 
 import com.sashplatonov.habbit.runner.auth.dto.OAuthStartQuery;
-import com.sashplatonov.habbit.runner.auth.dto.TokenResponse;
 import com.sashplatonov.habbit.runner.support.TestConfigFactory;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class JwtAndOAuthHelperTest {
 
@@ -60,17 +58,12 @@ class JwtAndOAuthHelperTest {
   }
 
   @Test
-  void shouldBuildEncodedCallbackRedirectWhenOAuthHelperReceivesSession() {
+  void shouldBuildCallbackRedirectWhenOAuthHelperReceivesReturnTarget() {
     var helper = new OAuthHelper(TestConfigFactory.defaultAuthConfig());
-    var session = new TokenResponse("access token", "refresh token", 3600, "Bearer");
 
-    var redirect = helper.buildCallbackRedirect("https://client.example.test", session, "user+test@example.test");
+    var redirect = helper.buildCallbackRedirect("https://client.example.test");
 
-    assertTrue(redirect.startsWith("https://client.example.test/auth/callback?"));
-    assertTrue(redirect.contains("accessToken=access+token"));
-    assertTrue(redirect.contains("refreshToken=refresh+token"));
-    assertTrue(redirect.contains("expiresIn=3600"));
-    assertTrue(redirect.contains("email=user%2Btest%40example.test"));
+    assertEquals("https://client.example.test/auth/callback", redirect);
   }
 
   @Test

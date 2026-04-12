@@ -1,7 +1,7 @@
 import type { PullResponseDto, PushResponseDto } from '@/types/sync';
 import type { OutboxEntry } from '@/lib/storage/db';
 import { buildApiUrl } from '@/lib/api/url';
-import { getValidAccessToken } from '@/lib/auth/session';
+import { authenticatedFetch } from '@/lib/auth/session';
 import { logClientError, logClientInfo } from '@/lib/logging/clientLogger';
 
 const buildUrl = buildApiUrl;
@@ -115,25 +115,13 @@ async function fetchJson(
 ): Promise<Response> {
   const startedAt = nowMs();
   const method = init.method ?? 'GET';
-  const headers = new Headers(init.headers);
-  const accessToken = await getValidAccessToken();
-  if (accessToken) {
-    headers.set('Authorization', `Bearer ${accessToken}`);
-  } else {
-    throw new Error('Authentication required');
-  }
-  if (init.method && init.method !== 'GET') {
-    headers.set('Content-Type', 'application/json');
-  }
 
   const controller = new AbortController();
   const timeoutHandle = setTimeout(() => controller.abort(), timeoutMs);
 
   try {
-    const response = await fetch(url, {
+    const response = await authenticatedFetch(url, {
       ...init,
-      headers,
-      cache: 'no-store',
       signal: controller.signal
     });
     if (!response.ok) {

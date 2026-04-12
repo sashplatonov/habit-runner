@@ -1,10 +1,11 @@
 package com.sashplatonov.habbit.runner.sync;
 
 import com.sashplatonov.habbit.runner.model.SyncOpLogEntity;
+import com.sashplatonov.habbit.runner.repository.SyncOpLogRepository;
 import com.sashplatonov.habbit.runner.sync.dto.PushResponseDto;
 import com.sashplatonov.habbit.runner.sync.dto.SyncOpDto;
 import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.persistence.PersistenceException;
+import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
 
@@ -16,15 +17,27 @@ public class SyncPushProcessor {
   private final HabitSyncProcessor habitSyncProcessor;
   private final CheckinSyncProcessor checkinSyncProcessor;
   private final SyncPushResultFactory resultFactory;
+  private final SyncOpLogRepository syncOpLogRepository;
 
   public SyncPushProcessor(
       HabitSyncProcessor habitSyncProcessor,
       CheckinSyncProcessor checkinSyncProcessor,
       SyncPushResultFactory resultFactory
   ) {
+    this(habitSyncProcessor, checkinSyncProcessor, resultFactory, null);
+  }
+
+  @Inject
+  public SyncPushProcessor(
+      HabitSyncProcessor habitSyncProcessor,
+      CheckinSyncProcessor checkinSyncProcessor,
+      SyncPushResultFactory resultFactory,
+      SyncOpLogRepository syncOpLogRepository
+  ) {
     this.habitSyncProcessor = habitSyncProcessor;
     this.checkinSyncProcessor = checkinSyncProcessor;
     this.resultFactory = resultFactory;
+    this.syncOpLogRepository = syncOpLogRepository;
   }
 
   @Transactional
@@ -65,12 +78,15 @@ public class SyncPushProcessor {
   }
 
   protected boolean tryCreateLog(String opId) {
+    var log = new SyncOpLogEntity();
+    log.opId = opId;
+    if (syncOpLogRepository != null) {
+      return syncOpLogRepository.createIfAbsent(log);
+    }
     try {
-      var log = new SyncOpLogEntity();
-      log.opId = opId;
       log.persistAndFlush();
       return true;
-    } catch (PersistenceException ex) {
+    } catch (jakarta.persistence.PersistenceException ex) {
       return false;
     }
   }

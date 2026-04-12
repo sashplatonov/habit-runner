@@ -1,6 +1,5 @@
 package com.sashplatonov.habbit.runner.auth;
 
-import com.sashplatonov.habbit.runner.auth.dto.TokenResponse;
 import jakarta.enterprise.context.ApplicationScoped;
 
 @ApplicationScoped
@@ -29,7 +28,7 @@ public class OAuthSupport {
     return googleOAuthClient.exchangeCodeForEmail(code, oauthHelper.getCallbackUrl());
   }
 
-  public String buildCallbackRedirect(String returnTo, TokenResponse session, String email) {
-    return oauthHelper.buildCallbackRedirect(returnTo, session, email);
+  public String buildCallbackRedirect(String returnTo) {
+    return oauthHelper.buildCallbackRedirect(returnTo);
   }
 }
