@@ -1,0 +1,6 @@
+package com.sashplatonov.habbit.runner.api;
+
+import java.time.Instant;
+
+public record ApiErrorResponse(int status, String message, Instant timestamp, String traceId) {
+}
