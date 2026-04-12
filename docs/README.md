@@ -77,6 +77,6 @@ Update docs in the same change whenever you touch:
 - auth, sync, notification, or monitoring endpoints;
 - user-facing build or verification commands.
 
-Historical references to `apps/api-java`, root workspaces, Prisma, or NestJS describe an older structure and should be treated as stale unless explicitly restored in code.
+Historical references to `apps/backend`, root workspaces, Prisma, or NestJS describe an older structure and should be treated as stale unless explicitly restored in code.
 
 [↑ Back to top](#top)

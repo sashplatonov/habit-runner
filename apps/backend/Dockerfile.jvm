@@ -2,7 +2,7 @@
 FROM docker.io/library/eclipse-temurin:25-jdk AS build
 WORKDIR /workspace
 
-# Copy only the app sources (context will be apps/api-java)
+# Copy only the app sources (context will be apps/backend)
 COPY .mvn .mvn
 COPY mvnw mvnw
 COPY pom.xml .

@@ -100,7 +100,7 @@ When you touch auth, sync, notifications, or schema migration code, verify both 
 - There is no root `package.json`; do not document root-level `npm run ...` commands as if they are currently available.
 - Backend env comes from the shell or Docker Compose; the repo does not auto-load `apps/backend/.env`.
 - The bundled Postgres service in Docker Compose is behind the `db` profile.
-- Historical docs that mention `apps/api-java`, `packages/shared` at repo root, Prisma, or NestJS are stale for the current checkout.
+- Historical docs that mention `apps/backend`, `packages/shared` at repo root, Prisma, or NestJS are stale for the current checkout.
 
 [↑ Back to top](#top)
 
