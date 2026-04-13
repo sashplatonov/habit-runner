@@ -2,45 +2,46 @@
 # Repository Guidelines
 
 ## Project Structure & Module Organization
-- Frontend app lives in `packages/web/` (React + TypeScript + Vite plus PostCSS/Tailwind configs).
-- UI building blocks are in `packages/web/src/components/`, route-level screens in `packages/web/src/pages/`, reusable logic in `packages/web/src/hooks/`, and client helpers/types in `packages/web/src/lib/` and `packages/web/src/types/`.
-- API lives in `packages/server/` (NestJS + Prisma). Main modules are in `packages/server/src/{auth,sync,metrics,prisma}` with DTOs under each module’s `dto/` folder.
-- Database schema and seed scripts are in `packages/server/prisma/`.
-- Shared DTOs and constants (sync, auth, habit helpers) live in `packages/shared/` so both packages import the same shapes.
+- Frontend app lives in `apps/web/` (React + TypeScript + Vite plus PostCSS/Tailwind configs).
+- UI building blocks are in `apps/web/src/components/`, route-level screens in `apps/web/src/pages/`, reusable logic in `apps/web/src/hooks/`, and client helpers/types in `apps/web/src/lib/` and `apps/web/src/types/`.
+- Active API lives in `apps/backend/` (Quarkus + Flyway + PostgreSQL).
+- Java migrations are in `apps/backend/src/main/resources/db/migration/`.
+- Shared DTOs and constants used by the web app live in `apps/web/packages/shared/`.
 - Operational docs and rollout notes are still in `docs/`.
 
 ## Build, Test, and Development Commands
-- Install deps: `npm install` from the workspace root (`packages/*` are workspaces; no need to `cd` into individual packages).
+- Install frontend deps in `apps/web/` with `npm install`. There is no root `package.json` in the current checkout.
 - Local development:
-  - `npm run dev` — launches all workspace `dev` scripts.
-  - `npm run dev:web` — frontend-only Vite dev server (ports defined by Vite config).
-  - `npm run dev:server` — backend NestJS `ts-node-dev` watch loop.
+  - `cd apps/web && npm run dev` — frontend-only Vite dev server.
+  - `cd apps/web && npm run dev:server` — backend Quarkus dev mode through the web package helper.
+  - `cd apps/backend && ./mvnw quarkus:dev` — direct backend dev mode.
 - Build/distro:
-  - `npm run build` — builds shared first, then server, then web.
-  - `npm run build:web` — web-only Vite production build.
-  - `npm run build:server` — server-only compilation.
+  - `cd apps/web && npm run build` — shared + web build.
+  - `cd apps/web && npm run build:server` — Java server build via `apps/backend`.
+  - `cd apps/backend && ./mvnw package -DskipTests` — direct backend build.
 - Checks:
-  - `npm run lint` — runs ESLint for workspaces that expose a lint script.
-  - `npm run clean` — wipes `dist` outputs across packages via workspace scripts.
-- Prisma/DB tasks still live inside `packages/server`:
-  - `cd packages/server && npx prisma migrate dev`
-  - `cd packages/server && npx prisma generate`
-  - `cd packages/server && npm run seed`
-  - `cd packages/server && npm run start` (production API serve after build)
-- Full stack via Docker: set `DOCKER_HOST=unix:///Users/sash/.colima/default/docker.sock`, then run `docker compose up --build` (docker-compose now uses `packages/web/Dockerfile` and `packages/server/Dockerfile`).
+  - `cd apps/web && npm run lint` — frontend lint plus runtime-undefined guard.
+  - `cd apps/web && npm run test` — frontend unit tests.
+  - `cd apps/web && npm run check` — lint + web build + backend build helper.
+  - `cd apps/backend && ./mvnw test` — backend tests.
+- Java backend tasks:
+  - `cd apps/backend && ./mvnw quarkus:dev`
+  - `cd apps/backend && ./mvnw package -DskipTests`
+  - `cd apps/backend && ./mvnw test`
+- Full stack via Docker: set `DOCKER_HOST=unix:///Users/sash/.colima/default/docker.sock`, then run `docker compose --profile db up --build` for the bundled Postgres stack. `docker compose up --build` without the profile assumes an external DB is already available.
 
 ## Coding Style & Naming Conventions
 - TypeScript strict mode is enabled for frontend and backend; keep code type-safe and avoid `any` unless justified.
 - Use 2-space indentation, semicolons, and single quotes (match existing files).
 - React components/pages use PascalCase filenames (for example `HabitDetail.tsx`, `AuthGate.tsx`).
-- Nest modules follow `*.module.ts`, `*.controller.ts`, `*.service.ts`, and DTOs as `*.dto.ts`.
-- Habit names in UI, tooltips, previews, and analytics views must use the shared helper `packages/web/src/lib/habits/formatHabitLabel.ts` so the habit emoji is always shown together with the name.
+- Habit names in UI, tooltips, previews, and analytics views must use the shared helper `apps/web/src/lib/habits/formatHabitLabel.ts` so the habit emoji is always shown together with the name.
 - Language policy: all code comments, logs, UI copy, docs, and other repository text must be in English; non-English text is allowed only inside dedicated i18n translation resources.
 
 ## Testing Guidelines
-- No automated test runner is configured yet in the workspace; follow package-specific scripts instead.
-- Minimum contribution gate: run `npm run lint && npm run build` and `cd packages/server && npm run build` before opening a PR.
-- When adding tests, place them next to the feature as `*.test.ts`/`*.test.tsx` and add matching `npm test` scripts in the relevant package.
+- Frontend tests live under `apps/web/tests/unit` and run via Vitest.
+- Backend tests live under `apps/backend/src/test/java` and run via Maven.
+- Minimum contribution gate for mixed frontend/backend work: `cd apps/web && npm run check` plus `cd apps/backend && ./mvnw test`.
+- When adding frontend tests, place them as `*.test.ts`/`*.test.tsx` under the relevant `apps/web/tests` or feature-adjacent structure.
 
 ## Commit & Pull Request Guidelines
 - Current history is short (`init`, `v1`, `v2 WIP`), so standardize now: use imperative, scoped commits (for example `feat(sync): add conflict timestamp handling`).
@@ -51,10 +52,10 @@
 ## Agent Ignore Guidance
 The root `.codexignore`/`.claudeignore` lists the directories that agents should skip, so keep this section aligned with those files.
 
-- `node_modules/` both at the workspace root and under each `packages/*/node_modules/`
-- Built/dist outputs: `dist/`, `dist-ssr/`, `dist-test/`, `packages/*/dist*/`, and any `build/` artifacts
-- Cache/temp layers: `.turbo/`, `.cache/`, `.vite/`, `tmp/`, `packages/*/.turbo/`, `packages/*/.cache/`, `packages/*/.vite/`, and `packages/*/tmp/`
-- Environment/secrets: `.env`, `.env.*`, `packages/*/.env*`, `packages/server/.env`, `secrets/`, and `backups/`
+- `node_modules/` both at the workspace root and under app/package directories such as `apps/web/node_modules/`
+- Built/dist outputs: `dist/`, `dist-ssr/`, `dist-test/`, `build/`, `apps/*/dist*/`, `apps/web/packages/shared/dist/`, and backend `target/`
+- Cache/temp layers: `.turbo/`, `.cache/`, `.vite/`, `tmp/`, `apps/*/.turbo/`, `apps/*/.cache/`, `apps/*/.vite/`, and `apps/*/tmp/`
+- Environment/secrets: `.env`, `.env.*`, `apps/*/.env*`, `secrets/`, and `backups/`
 - Ignore tooling scaffolds that already dress these directories (e.g., `.claude/`, `.codex/`, `.dokploy/`) unless the task explicitly targets them.
 
 ## Communication Guidelines

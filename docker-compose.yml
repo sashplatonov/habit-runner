@@ -15,9 +15,9 @@ services:
     environment:
       # Use app-specific variable names to avoid Dokploy or host-level
       # POSTGRES_* values leaking into initdb and breaking Postgres 18 startup.
-      POSTGRES_DB: ${HR_DB_NAME:-habbit_runner}
-      POSTGRES_USER: ${HR_DB_USER:-habbit}
-      POSTGRES_PASSWORD: ${HR_DB_PASSWORD:-password}
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
       # Force C locale on alpine (no locales installed); required for PG 18 initdb.
       POSTGRES_INITDB_ARGS: "--locale=C --encoding=UTF8"
     volumes:
@@ -26,7 +26,7 @@ services:
       test:
         [
           "CMD-SHELL",
-          "pg_isready -U ${HR_DB_USER:-habbit} -d ${HR_DB_NAME:-habbit_runner}"
+          "pg_isready -U ${DB_USER} -d ${DB_NAME}"
         ]
       interval: 5s
       timeout: 3s
@@ -37,31 +37,50 @@ services:
   api:
     <<: *service_defaults
     build:
-      context: .
-      dockerfile: packages/server/Dockerfile
+      context: ./apps/backend
+      dockerfile: Dockerfile.jvm
+      # platform is intentionally not set here; set locally in docker-compose.local.yml if needed
     init: true
     environment:
-      DATABASE_URL: ${DATABASE_URL:-postgresql://habbit:password@db:5432/habbit_runner}
-      DEFAULT_DB_SCHEMA: ${DEFAULT_DB_SCHEMA:-habbit_runner}
-      PORT: 3000
-      AUTH_SECRET: ${AUTH_SECRET:-dev-secret}
-      ACCESS_TOKEN_EXPIRES_IN: ${ACCESS_TOKEN_EXPIRES_IN:-1h}
-      ACCESS_TOKEN_TTL_SECONDS: ${ACCESS_TOKEN_TTL_SECONDS:-3600}
-      REFRESH_TOKEN_EXPIRES_DAYS: ${REFRESH_TOKEN_EXPIRES_DAYS:-30}
-      API_PUBLIC_URL: ${API_PUBLIC_URL:-http://localhost:${WEB_PORT:-80}/api}
-      OAUTH_DEFAULT_RETURN_TO: ${OAUTH_DEFAULT_RETURN_TO:-http://localhost:${WEB_PORT:-80}}
-      GOOGLE_OAUTH_CLIENT_ID: ${GOOGLE_OAUTH_CLIENT_ID:-}
-      GOOGLE_OAUTH_CLIENT_SECRET: ${GOOGLE_OAUTH_CLIENT_SECRET:-}
+      # Pass canonical DB_* to the api container (no inline defaults here)
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT}
+      DB_NAME: ${DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_SCHEMA: ${DB_SCHEMA}
+      API_PORT: ${API_PORT}
+      JWT_ISSUER: ${JWT_ISSUER}
+      AUTH_SECRET: ${AUTH_SECRET}
+      ACCESS_TOKEN_EXPIRES_IN: ${ACCESS_TOKEN_EXPIRES_IN}
+      ACCESS_TOKEN_TTL_SECONDS: ${ACCESS_TOKEN_TTL_SECONDS}
+      REFRESH_TOKEN_EXPIRES_DAYS: ${REFRESH_TOKEN_EXPIRES_DAYS}
+      API_PUBLIC_URL: ${API_PUBLIC_URL}
+      OAUTH_DEFAULT_RETURN_TO: ${OAUTH_DEFAULT_RETURN_TO}
+      GOOGLE_OAUTH_CLIENT_ID: ${GOOGLE_OAUTH_CLIENT_ID}
+      GOOGLE_OAUTH_CLIENT_SECRET: ${GOOGLE_OAUTH_CLIENT_SECRET}
       VAPID_PUBLIC_KEY: <REDACTED>
       VAPID_PRIVATE_KEY: <REDACTED>
-      VAPID_SUBJECT: ${VAPID_SUBJECT:-mailto:admin@habbit-runner.app}
+      VAPID_SUBJECT: ${VAPID_SUBJECT}
+      # ── Observability identity labels used by the sidecar collector relabeling.
+      SERVICE_VERSION: "${SERVICE_VERSION:-1.0.0}"
+      APP_VERSION: "${APP_VERSION:-${SERVICE_VERSION:-1.0.0}}"
+      ENVIRONMENT: "${ENVIRONMENT:-production}"
+      DEPLOYMENT_ENV: "${DEPLOYMENT_ENV:-${ENVIRONMENT:-production}}"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    # Do NOT publish the API port to the host. Keep it internal to the compose
+    # network so other services (like `web`) can reach it by service name.
     expose:
-      - "3000"
+      - "${API_PORT}"
+      - "9000"
     healthcheck:
+      # /q/health is served on the Quarkus management port (9000), NOT on API_PORT.
+      # API_PORT (8080) only handles application REST endpoints.
       test:
         [
           "CMD-SHELL",
-          "node -e \"const p=Number(process.env.PORT||3000);const net=require('node:net');const socket=net.connect({host:'127.0.0.1',port:p},()=>{socket.destroy();process.exit(0)});socket.on('error',()=>process.exit(1));setTimeout(()=>process.exit(1),2500);\""
+          "curl -f http://127.0.0.1:9000/q/health >/dev/null 2>&1 || exit 1"
         ]
       interval: 10s
       timeout: 5s
@@ -72,14 +91,48 @@ services:
       - edge
       - dokploy-ipv6
 
+  alloy:
+    <<: *service_defaults
+    image: grafana/alloy:latest
+    command:
+      - run
+      - --server.http.listen-addr=0.0.0.0:12345
+      - --storage.path=/var/lib/alloy/data
+      - /etc/alloy/config.alloy
+    environment:
+      DEPLOYMENT_ENV: "${DEPLOYMENT_ENV:-production}"
+      GRAFANA_MIMIR_URL: ${GRAFANA_MIMIR_URL:-https://example.invalid/api/prom/push}
+      GRAFANA_MIMIR_USERNAME: ${GRAFANA_MIMIR_USERNAME:-disabled}
+      GRAFANA_METRICS_API_KEY: ${GRAFANA_METRICS_API_KEY:-disabled}
+    depends_on:
+      api:
+        condition: service_healthy
+    volumes:
+      - ./ops/alloy/config.alloy:/etc/alloy/config.alloy:ro
+      - alloy_data:/var/lib/alloy/data
+    networks:
+      - backend
+
   web:
     <<: *service_defaults
     build:
-      context: .
-      dockerfile: packages/web/Dockerfile
+      context: ./apps/web
+      dockerfile: Dockerfile
+      # platform is intentionally not set here; set locally in docker-compose.local.yml if needed
       args:
         VITE_API_BASE_URL: ${VITE_API_BASE_URL:-/api}
+        # ── Grafana Faro RUM build-time args ────────────────────────────────
+        # Set these in .env (or CI secrets) — they are baked into the JS bundle.
+        VITE_FARO_URL: ${VITE_FARO_URL:-}
+        VITE_FARO_APP_NAME: ${VITE_FARO_APP_NAME:-Habbit Runner}
+        VITE_FARO_APP_VERSION: ${VITE_FARO_APP_VERSION:-1.0.0}
+        VITE_FARO_ENVIRONMENT: ${VITE_FARO_ENVIRONMENT:-production}
+        VITE_FARO_SAMPLING_RATE: ${VITE_FARO_SAMPLING_RATE:-1}
+        VITE_FARO_PERSISTENT_SESSIONS: ${VITE_FARO_PERSISTENT_SESSIONS:-false}
+        VITE_FARO_ENABLED: ${VITE_FARO_ENABLED:-true}
     init: true
+    environment:
+      API_PORT: ${API_PORT}
     depends_on:
       api:
         condition: service_healthy
@@ -90,12 +143,13 @@ services:
       retries: 10
       start_period: 10s
     expose:
-      - "${WEB_PORT:-80}"
+      - "${WEB_PORT}"
     networks:
       - edge
 
 volumes:
   habbit_runner_pgdata18:
+  alloy_data:
 
 networks:
   backend:

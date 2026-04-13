@@ -1,0 +1,257 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ruleset name="habbit-runner-backend"
+         xmlns="http://pmd.sourceforge.net/ruleset/2.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://pmd.sourceforge.net/ruleset/2.0.0
+             https://pmd.github.io/schema/ruleset_2_0_0.xsd">
+
+    <description>
+        Strict production PMD 7.23.0 ruleset for habbit-runner-backend.
+        Covers: code correctness, maintainability, security risks,
+        performance anti-patterns, and control-flow complexity.
+    </description>
+
+    <!-- ═══════════════════════════════════════════
+         BEST PRACTICES
+         ═══════════════════════════════════════════ -->
+    <rule ref="category/java/codestyle.xml/UnnecessaryReturn"/>
+    <rule ref="category/java/bestpractices.xml/UnusedPrivateMethod"/>
+    <rule ref="category/java/bestpractices.xml/UnusedLocalVariable"/>
+    <rule ref="category/java/bestpractices.xml/UnusedFormalParameter"/>
+    <rule ref="category/java/bestpractices.xml/PreserveStackTrace"/>
+    <rule ref="category/java/bestpractices.xml/SystemPrintln"/>
+    <rule ref="category/java/bestpractices.xml/UseTryWithResources"/>
+    <rule ref="category/java/bestpractices.xml/SimplifiableTestAssertion"/>
+    <rule ref="category/java/bestpractices.xml/UseCollectionIsEmpty"/>
+    <rule ref="category/java/bestpractices.xml/LooseCoupling"/>
+    <rule ref="category/java/bestpractices.xml/CheckResultSet"/>
+    <rule ref="category/java/bestpractices.xml/AvoidUsingHardCodedIP"/>
+    <rule ref="category/java/bestpractices.xml/UnusedPrivateField"/>
+    <rule ref="category/java/performance.xml/UseArraysAsList"/>
+
+    <!-- ═══════════════════════════════════════════
+         CODE STYLE
+         ═══════════════════════════════════════════ -->
+    <rule ref="category/java/codestyle.xml/UnnecessaryImport"/>
+    <rule ref="category/java/codestyle.xml/UnnecessaryFullyQualifiedName"/>
+    <rule ref="category/java/codestyle.xml/UnnecessaryModifier"/>
+    <rule ref="category/java/codestyle.xml/UnnecessaryCast"/>
+
+    <rule ref="category/java/codestyle.xml/ClassNamingConventions"/>
+    <rule ref="category/java/codestyle.xml/MethodNamingConventions"/>
+
+    <!-- ═══════════════════════════════════════════
+         ERROR PRONE — CODE CORRECTNESS
+         ═══════════════════════════════════════════ -->
+    <rule ref="category/java/errorprone.xml/EmptyCatchBlock">
+        <properties>
+            <property name="allowCommentedBlocks" value="true"/>
+        </properties>
+    </rule>
+    <rule ref="category/java/errorprone.xml/AvoidCatchingGenericException"/>
+    <rule ref="category/java/errorprone.xml/AvoidCatchingNPE"/>
+    <rule ref="category/java/errorprone.xml/CompareObjectsWithEquals"/>
+    <rule ref="category/java/errorprone.xml/BrokenNullCheck"/>
+    <rule ref="category/java/errorprone.xml/AssignmentInOperand"/>
+    <rule ref="category/java/errorprone.xml/UseEqualsToCompareStrings"/>
+    <rule ref="category/java/bestpractices.xml/MethodReturnsInternalArray"/>
+    <rule name="DuplicateCaseLabel"
+          language="java"
+          message="Avoid duplicate case labels in switch statements"
+          class="net.sourceforge.pmd.lang.rule.xpath.XPathRule">
+        <description>
+            Reports duplicated case labels within the same switch statement.
+        </description>
+        <priority>3</priority>
+        <properties>
+            <property name="xpath">
+                <value><![CDATA[
+//SwitchLabel[@Image = preceding-sibling::SwitchLabel/@Image]
+]]></value>
+            </property>
+        </properties>
+    </rule>
+    <rule name="EmptyIfStmt"
+          language="java"
+          message="Avoid empty 'if' statements"
+          class="net.sourceforge.pmd.lang.rule.xpath.XPathRule">
+        <description>
+            Reports if statements whose body is empty.
+        </description>
+        <priority>3</priority>
+        <properties>
+            <property name="xpath">
+                <value><![CDATA[
+//IfStatement/Statement[EmptyStatement or Block[count(*) = 0]]
+]]></value>
+            </property>
+        </properties>
+    </rule>
+    <rule name="EmptyWhileStmt"
+          language="java"
+          message="Avoid empty 'while' statements"
+          class="net.sourceforge.pmd.lang.rule.xpath.XPathRule">
+        <description>
+            Reports while statements whose body is empty.
+        </description>
+        <priority>3</priority>
+        <properties>
+            <property name="xpath">
+                <value><![CDATA[
+//WhileStatement/Statement[Block[count(*) = 0] or EmptyStatement]
+]]></value>
+            </property>
+        </properties>
+    </rule>
+    <rule name="EmptyStatementNotInLoop"
+          language="java"
+          message="An empty statement (semicolon) not part of a loop"
+          class="net.sourceforge.pmd.lang.rule.xpath.XPathRule">
+        <description>
+            Reports empty statements that are not used as the body of a loop.
+        </description>
+        <priority>3</priority>
+        <properties>
+            <property name="xpath">
+                <value><![CDATA[
+//EmptyStatement
+ [not(
+       ../../../ForStatement
+       or ../../../WhileStatement
+       or ../../../BlockStatement/ClassOrInterfaceDeclaration
+       or ../../../../../../ForStatement/Statement[1]
+        /Block[1]/BlockStatement[1]/Statement/EmptyStatement
+       or ../../../../../../WhileStatement/Statement[1]
+        /Block[1]/BlockStatement[1]/Statement/EmptyStatement)
+ ]
+]]></value>
+            </property>
+        </properties>
+    </rule>
+    <rule ref="category/java/errorprone.xml/ProperLogger"/>
+    <rule ref="category/java/errorprone.xml/InvalidLogMessageFormat"/>
+    <rule name="IntegerInstantiationWithValueOf"
+          language="java"
+          message="Do not use `new {0}(...)`, prefer `{0}.valueOf(...)`"
+          class="net.sourceforge.pmd.lang.java.rule.bestpractices.PrimitiveWrapperInstantiationRule">
+        <description>
+            Reports primitive wrapper constructor usage and prefers valueOf-style factories.
+        </description>
+        <priority>3</priority>
+    </rule>
+    <rule ref="category/java/errorprone.xml/AvoidAssertAsIdentifier"/>
+
+    <!-- ═══════════════════════════════════════════
+         DESIGN — COMPLEXITY AND ARCHITECTURE
+         ═══════════════════════════════════════════ -->
+    <rule ref="category/java/design.xml/AvoidDeeplyNestedIfStmts">
+        <properties>
+            <property name="problemDepth" value="3"/>
+        </properties>
+    </rule>
+    <rule ref="category/java/design.xml/CollapsibleIfStatements"/>
+    <rule ref="category/java/design.xml/CyclomaticComplexity">
+        <properties>
+            <property name="methodReportLevel" value="8"/>
+            <property name="classReportLevel" value="80"/>
+        </properties>
+    </rule>
+    <rule ref="category/java/design.xml/NPathComplexity">
+        <properties>
+            <property name="reportLevel" value="60"/>
+        </properties>
+    </rule>
+    <rule ref="category/java/design.xml/CognitiveComplexity">
+        <properties>
+            <property name="reportLevel" value="15"/>
+        </properties>
+    </rule>
+    <rule name="ExcessiveMethodLength"
+          language="java"
+          message="Avoid really long methods."
+          class="net.sourceforge.pmd.lang.java.rule.design.NcssCountRule">
+        <description>
+            Reports methods whose NCSS size exceeds the configured method threshold.
+        </description>
+        <priority>3</priority>
+        <properties>
+            <property name="methodReportLevel" value="40"/>
+            <property name="classReportLevel" value="100000"/>
+        </properties>
+    </rule>
+    <rule name="ExcessiveClassLength"
+          language="java"
+          message="Avoid really long classes."
+          class="net.sourceforge.pmd.lang.java.rule.design.NcssCountRule">
+        <description>
+            Reports classes whose NCSS size exceeds the configured class threshold.
+        </description>
+        <priority>3</priority>
+        <properties>
+            <property name="methodReportLevel" value="100000"/>
+            <property name="classReportLevel" value="300"/>
+        </properties>
+    </rule>
+    <rule name="ExcessiveParameterList"
+          language="java"
+          message="Avoid long parameter lists ({0} parameters - threshold is {1})."
+          class="net.sourceforge.pmd.lang.java.rule.design.ExcessiveParameterListRule">
+        <description>
+            Reports methods and constructors whose parameter count exceeds the configured threshold.
+        </description>
+        <priority>3</priority>
+        <properties>
+            <property name="minimum" value="5"/>
+        </properties>
+    </rule>
+    <rule ref="category/java/design.xml/ExcessivePublicCount">
+        <properties>
+            <property name="minimum" value="20"/>
+        </properties>
+    </rule>
+    <rule ref="category/java/design.xml/TooManyFields">
+        <properties>
+            <property name="maxfields" value="10"/>
+        </properties>
+    </rule>
+    <rule ref="category/java/design.xml/TooManyMethods">
+        <properties>
+            <property name="maxmethods" value="15"/>
+        </properties>
+    </rule>
+    <rule ref="category/java/design.xml/CouplingBetweenObjects">
+        <properties>
+            <property name="threshold" value="10"/>
+        </properties>
+    </rule>
+    <rule ref="category/java/design.xml/LawOfDemeter"/>
+    <rule ref="category/java/codestyle.xml/AvoidProtectedFieldInFinalClass"/>
+
+    <!-- ═══════════════════════════════════════════
+         PERFORMANCE
+         ═══════════════════════════════════════════ -->
+    <rule ref="category/java/performance.xml/StringInstantiation"/>
+    <rule ref="category/java/performance.xml/UseStringBufferForStringAppends"/>
+    <rule ref="category/java/performance.xml/InsufficientStringBufferDeclaration"/>
+    <rule ref="category/java/performance.xml/UseIndexOfChar"/>
+    <rule ref="category/java/performance.xml/RedundantFieldInitializer"/>
+    <rule name="UnnecessaryWrapperObjectCreation"
+          language="java"
+          message="Do not use `new {0}(...)`, prefer `{0}.valueOf(...)`"
+          class="net.sourceforge.pmd.lang.java.rule.bestpractices.PrimitiveWrapperInstantiationRule">
+        <description>
+            Reports unnecessary primitive wrapper object creation.
+        </description>
+        <priority>3</priority>
+    </rule>
+
+    <!-- ═══════════════════════════════════════════
+         MULTITHREADING
+         ═══════════════════════════════════════════ -->
+    <rule ref="category/java/multithreading.xml/UnsynchronizedStaticFormatter"/>
+    <rule ref="category/java/multithreading.xml/DoubleCheckedLocking"/>
+    <rule ref="category/java/multithreading.xml/DontCallThreadRun"/>
+    <rule ref="category/java/multithreading.xml/AvoidSynchronizedAtMethodLevel"/>
+    <rule ref="category/java/multithreading.xml/AvoidThreadGroup"/>
+
+</ruleset>

@@ -1,0 +1,95 @@
+{
+  "name": "@habbit-runner/web",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "packageManager": "npm@11.11.0",
+  "workspaces": ["packages/*"],
+  "scripts": {
+    "prepare": "npm run build -w @habbit-runner/shared",
+    "dev": "npx vite",
+    "dev:web": "npm run dev",
+    "monorepo:dev": "turbo dev",
+    "dev:server": "cd ../backend && ./mvnw quarkus:dev",
+    "dev:all": "npm run dev --workspaces --if-present",
+    "build": "npx vite build",
+    "monorepo:build": "turbo build",
+    "build:web": "npm run build",
+    "build:server": "cd ../backend && (./mvnw package -DskipTests || mvn -DskipTests package)",
+    "check:runtime-undefined": "node ./scripts/check-runtime-undefined.cjs",
+    "prebuild": "npm run lint && npm run check:runtime-undefined && npm run build -w @habbit-runner/shared",
+    "lint": "npm run check:runtime-undefined && eslint src tests --ext .js,.jsx,.ts,.tsx --max-warnings 0",
+    "lint:fix": "npm run check:runtime-undefined && eslint src tests --ext .js,.jsx,.ts,.tsx --fix --max-warnings 0",
+    "monorepo:lint": "turbo lint",
+    "preview": "npx vite preview",
+    "test": "vitest run",
+    "test:unit": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "test:watch": "vitest",
+    "test:ui": "vitest --ui",
+    "check": "npm run lint && npm run build && npm run build:server",
+    "clean": "turbo run clean"
+  },
+  "dependencies": {
+    "@habbit-runner/shared": "*",
+    "@sindresorhus/slugify": "^3.0.0",
+    "@types/canvas-confetti": "^1.9.0",
+    "canvas-confetti": "^1.9.4",
+    "dexie": "^4.3.0",
+    "lucide-react": "0.577.0",
+    "nanoid": "^5.1.6",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
+    "recharts": "^3.8.0",
+    "@grafana/faro-web-sdk": "^2.3.1",
+    "@grafana/faro-web-tracing": "^2.3.1"
+  },
+  "optionalDependencies": {
+    "@rollup/rollup-linux-arm64-musl": "4.59.0",
+    "@rollup/rollup-linux-x64-musl": "4.59.0"
+  },
+  "devDependencies": {
+    "@eslint/eslintrc": "^3.3.1",
+    "@eslint/js": "^9.39.1",
+    "@testing-library/react": "^16.3.0",
+    "@testing-library/dom": "^10.0.0",
+    "@testing-library/user-event": "^14.5.0",
+    "@types/node": "^25.3.5",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.0.0",
+    "@typescript-eslint/eslint-plugin": "^8.56.1",
+    "@typescript-eslint/parser": "^8.56.1",
+    "@vitejs/plugin-react": "^5.1.4",
+    "autoprefixer": "latest",
+    "eslint": "^9.39.1",
+    "eslint-plugin-react-hooks": "^7.0.1",
+    "eslint-plugin-react-refresh": "^0.5.2",
+    "jsdom": "^22.1.0",
+    "postcss": "latest",
+    "tailwindcss": "3.4.17",
+    "typescript": "^5.9.3",
+    "vite": "^7.3.1",
+    "vite-plugin-pwa": "^1.2.0",
+    "vitest": "^4.0.18",
+    "workbox-precaching": "^7.4.0",
+    "turbo": "^2.8.14"
+  },
+  "overrides": {
+    "@nestjs/common": "^11.1.16",
+    "@nestjs/core": "^11.1.16",
+    "@hono/node-server": "^1.19.10",
+    "hono": "^4.12.4",
+    "@prisma/dev": {
+      "@hono/node-server": "^1.19.10",
+      "hono": "^4.12.4"
+    },
+    "@nestjs/schedule": {
+      "@nestjs/common": "^11.1.16",
+      "@nestjs/core": "^11.1.16"
+    },
+    "@nestjs/throttler": {
+      "@nestjs/common": "^11.1.16",
+      "@nestjs/core": "^11.1.16"
+    }
+  }
+}

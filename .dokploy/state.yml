@@ -21,4 +21,4 @@ databases:
     type: "postgres"
     database_name: "habbit_runner"
     database_user: "habbit"
-    database_password_env: "HR_DB_PASSWORD"
+    database_password_env: "DB_PASSWORD"

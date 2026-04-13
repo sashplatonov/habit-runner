@@ -1,0 +1,68 @@
+// Grafana Alloy configuration for Docker Compose sidecar mode.
+//
+// Runtime contract:
+//   - This file is mounted into the `alloy` container at /etc/alloy/config.alloy.
+//   - Alloy scrapes the `api` container management endpoint at api:9000/q/metrics.
+//   - Remote write credentials are read from environment variables:
+//       GRAFANA_MIMIR_URL
+//       GRAFANA_MIMIR_USERNAME
+//       GRAFANA_METRICS_API_KEY
+
+logging {
+  level  = "warn"
+  format = "logfmt"
+}
+
+prometheus.scrape "habbit_runner_api" {
+  targets = [{
+    __address__ = "api:9000",
+  }]
+
+  metrics_path    = "/q/metrics"
+  scrape_interval = "15s"
+  forward_to      = [prometheus.relabel.habbit_runner_api_labels.receiver]
+}
+
+prometheus.relabel "habbit_runner_api_labels" {
+  forward_to = [prometheus.remote_write.mimir.receiver]
+
+  rule {
+    action       = "replace"
+    target_label = "job"
+    replacement  = "habbit-runner-api"
+  }
+  rule {
+    action       = "replace"
+    target_label = "service"
+    replacement  = "habittracker-api"
+  }
+  rule {
+    action       = "replace"
+    target_label = "environment"
+    replacement  = sys.env("DEPLOYMENT_ENV")
+  }
+  rule {
+    action       = "replace"
+    target_label = "app"
+    replacement  = "habbit-runner"
+  }
+}
+
+prometheus.remote_write "mimir" {
+  endpoint {
+    url = sys.env("GRAFANA_MIMIR_URL")
+
+    basic_auth {
+      username = sys.env("GRAFANA_MIMIR_USERNAME")
+      password = sys.env("GRAFANA_METRICS_API_KEY")
+    }
+
+    queue_config {
+      capacity             = 10000
+      max_shards           = 4
+      min_shards           = 1
+      max_samples_per_send = 2000
+      batch_send_deadline  = "5s"
+    }
+  }
+}

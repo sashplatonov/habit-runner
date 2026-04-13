@@ -1,0 +1,111 @@
+export const SYNC_ENTITY_VALUES = ['habit', 'checkin'] as const;
+export type SyncEntity = (typeof SYNC_ENTITY_VALUES)[number];
+
+export const SYNC_OP_TYPE_VALUES = ['upsert', 'delete'] as const;
+export type SyncOpType = (typeof SYNC_OP_TYPE_VALUES)[number];
+
+import type { HabitSchedule } from './habit.js';
+import type { HabitColor, HabitFrequency } from './habit.js';
+
+export interface HabitDto {
+  id: string;
+  name: string;
+  description?: string | null;
+  color: HabitColor;
+  icon: string;
+  frequency: HabitFrequency;
+  customDays?: number[];
+  schedule?: HabitSchedule;
+  targetStreak: number;
+  dailyTarget?: number;
+  tags?: string[];
+  archived: boolean;
+  createdAt: string;
+  updatedAt: string;
+  version: number;
+  sortOrder: number;
+  reminderTime?: string;
+  reminderEnabled?: boolean;
+  type?: 'positive' | 'negative';
+  freezeDays?: string[];
+}
+
+export interface CheckinDto {
+  id: string;
+  habitId: string;
+  date: string;
+  done: boolean;
+  count?: number;
+  updatedAt: string;
+  version: number;
+}
+
+export interface TombstoneDto {
+  id: string;
+  entity: string;
+  entityId: string;
+  deletedAt: string;
+  version: number;
+}
+
+export interface PullResponseDto {
+  habits: HabitDto[];
+  checkins: CheckinDto[];
+  tombstones: TombstoneDto[];
+  nextCursor?: string;
+  serverTime: string;
+}
+
+export interface PushConflict {
+  opId: string;
+  reason: string;
+  serverValue?: {
+    version: number;
+    updatedAt: string;
+  };
+}
+
+export interface PushResponseDto {
+  applied: string[];
+  conflicts: PushConflict[];
+  habits: HabitDto[];
+  checkins: CheckinDto[];
+  tombstones: TombstoneDto[];
+  nextCursor?: string;
+  serverTime: string;
+}
+
+export interface SyncOpPayloadDto {
+  id?: string;
+  habitId?: string;
+  date?: string;
+  name?: string;
+  description?: string;
+  color?: HabitColor;
+  icon?: string;
+  frequency?: HabitFrequency;
+  customDays?: number[];
+  schedule?: HabitSchedule;
+  targetStreak?: number;
+  dailyTarget?: number;
+  tags?: string[];
+  archived?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+  version?: number;
+  sortOrder?: number;
+  reminderTime?: string;
+  reminderEnabled?: boolean;
+  type?: 'positive' | 'negative';
+  freezeDays?: string[];
+  done?: boolean;
+  count?: number;
+}
+
+export interface SyncOpDto {
+  id: string;
+  entity: SyncEntity;
+  type: SyncOpType;
+  payload: SyncOpPayloadDto;
+  clientTime?: string;
+}

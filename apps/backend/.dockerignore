@@ -1,0 +1,19 @@
+# Default: ignore everything to keep build context small,
+# but explicitly allow files needed when building from source.
+*
+
+!/.mvn
+!/.mvn/**
+!/mvnw
+!/mvnw.cmd
+!/pom.xml
+!/src
+!/src/**
+
+!/checkstyle
+!/checkstyle/**
+
+!target/*-runner
+!target/*-runner.jar
+!target/lib/*
+!target/quarkus-app/*
