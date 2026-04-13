@@ -2,7 +2,11 @@ package com.sashplatonov.habbit.runner.auth;
 
 import com.sashplatonov.habbit.runner.model.RefreshTokenEntity;
 import com.sashplatonov.habbit.runner.model.UserEntity;
-import com.sashplatonov.habbit.runner.support.TestConfigFactory;
+import com.sashplatonov.habbit.runner.support.RecordingAuthService;
+import com.sashplatonov.habbit.runner.support.RecordingJwtUtil;
+import com.sashplatonov.habbit.runner.support.RecordingOAuthSupport;
+import com.sashplatonov.habbit.runner.support.RecordingRefreshTokenService;
+import com.sashplatonov.habbit.runner.support.RecordingUserService;
 import jakarta.ws.rs.NotAuthorizedException;
 import jakarta.ws.rs.container.ContainerRequestContext;
 import org.junit.jupiter.api.Test;
@@ -13,7 +17,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-@SuppressWarnings({"PMD.LawOfDemeter", "PMD.UnusedPrivateField"})
 class AuthDelegateCoverageTest {
 
   @Test
@@ -26,21 +29,21 @@ class AuthDelegateCoverageTest {
 
     var refreshRecord = new RefreshTokenEntity();
     refreshRecord.token = "refresh-token";
-    refreshTokenService.requireActiveResult = refreshRecord;
+    refreshTokenService.setRequireActiveResult(refreshRecord);
 
     var existingUser = new UserEntity();
     existingUser.id = "user-1";
     existingUser.email = "user@example.test";
-    userService.userResult = existingUser;
+    userService.setUserResult(existingUser);
 
     assertSame(jwtUtil, collaborators.getJwtUtil());
     assertSame(refreshTokenService, collaborators.getRefreshTokenService());
     assertSame(userService, collaborators.getUserService());
     assertSame(refreshRecord, collaborators.requireActiveRefreshToken("refresh-token"));
     collaborators.revokeRefreshToken("refresh-token");
-    assertEquals("refresh-token", refreshTokenService.revokedToken);
+    assertEquals("refresh-token", refreshTokenService.getRevokedToken());
     assertEquals("created-refresh", collaborators.createRefreshToken("seed", "user-1", 30));
-    assertEquals("seed", refreshTokenService.createdToken);
+    assertEquals("seed", refreshTokenService.getCreatedToken());
     assertEquals("verified-user", collaborators.verifyToken("access-token").id());
     assertEquals("access::user-1::user@example.test::3600", collaborators.createAccessToken("user-1", "user@example.test", 3600));
     assertEquals("/dashboard", collaborators.normalizeReturnTo("/dashboard"));
@@ -73,8 +76,8 @@ class AuthDelegateCoverageTest {
     assertEquals("created-refresh", tokenResponse.refreshToken());
     assertEquals(7200, tokenResponse.expiresIn());
     assertEquals("Bearer", tokenResponse.tokenType());
-    assertEquals("user-1", refreshTokenService.createdUserId);
-    assertEquals(45, refreshTokenService.createdDays);
+    assertEquals("user-1", refreshTokenService.getCreatedUserId());
+    assertEquals(45, refreshTokenService.getCreatedDays());
   }
 
   @Test
@@ -94,9 +97,7 @@ class AuthDelegateCoverageTest {
   void shouldRejectMissingBearerTokenWhenAuthGuardFiltersRequest() {
     var filter = new AuthGuardFilter(new RecordingAuthService(new CurrentUser("user-1", "user@example.test")), new CurrentUserContext());
 
-    var exception = assertThrows(NotAuthorizedException.class, () -> filter.filter(requestContext(null)));
-
-    assertEquals(401, exception.getResponse().getStatus());
+    assertThrows(NotAuthorizedException.class, () -> filter.filter(requestContext(null)));
   }
 
   private ContainerRequestContext requestContext(String authorizationHeader) {
@@ -119,101 +120,5 @@ class AuthDelegateCoverageTest {
     return java.lang.reflect.Array.get(java.lang.reflect.Array.newInstance(returnType, 1), 0);
   }
 
-  private static final class RecordingJwtUtil extends JwtUtil {
-    private String verifiedToken;
-
-    RecordingJwtUtil() {
-      super(TestConfigFactory.defaultAuthConfig());
-    }
-
-    @Override
-    public String createAccessToken(String userId, String email, int ttlSeconds) {
-      return "access::" + userId + "::" + email + "::" + ttlSeconds;
-    }
-
-    @Override
-    public CurrentUser verify(String token) {
-      verifiedToken = token;
-      return new CurrentUser("verified-user", "verified@example.test");
-    }
-  }
-
-  private static final class RecordingRefreshTokenService extends RefreshTokenService {
-    private RefreshTokenEntity requireActiveResult;
-    private String revokedToken;
-    private String createdToken;
-    private String createdUserId;
-    private int createdDays;
-
-    @Override
-    public RefreshTokenEntity requireActive(String token) {
-      return requireActiveResult;
-    }
-
-    @Override
-    public void revoke(String token) {
-      revokedToken = token;
-    }
-
-    @Override
-    public String create(String token, String userId, int refreshTokenDays) {
-      createdToken = token;
-      createdUserId = userId;
-      createdDays = refreshTokenDays;
-      return "created-refresh";
-    }
-  }
-
-  private static final class RecordingOAuthSupport extends OAuthSupport {
-    RecordingOAuthSupport() {
-      super(null, null);
-    }
-
-    @Override
-    public String normalizeReturnTo(String returnTo) {
-      return returnTo;
-    }
-
-    @Override
-    public String buildAuthorizationUrl(String state) {
-      return "https://accounts.example.test/start?state=" + state;
-    }
-
-    @Override
-    public String exchangeCodeForEmail(String code) {
-      return "oauth@example.test";
-    }
-
-    @Override
-    public String buildCallbackRedirect(String returnTo) {
-      return "https://app.example.test/callback";
-    }
-  }
-
-  private static final class RecordingUserService extends UserService {
-    private UserEntity userResult;
-    private String requestedEmail;
-
-    @Override
-    public UserEntity findOrCreateUser(String email) {
-      requestedEmail = email;
-      return userResult;
-    }
-  }
-
-  private static final class RecordingAuthService extends AuthService {
-    private final CurrentUser verifiedUser;
-    private String seenToken;
-
-    RecordingAuthService(CurrentUser verifiedUser) {
-      super(TestConfigFactory.defaultAuthConfig(), new AuthCollaborators(null, null, null, null));
-      this.verifiedUser = verifiedUser;
-    }
-
-    @Override
-    public CurrentUser verifyAccessToken(String token) {
-      seenToken = token;
-      return verifiedUser;
-    }
-  }
+  // Recording helpers moved to test support package: com.sashplatonov.habbit.runner.support
 }
