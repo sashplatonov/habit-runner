@@ -23,14 +23,12 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 
-@SuppressWarnings("PMD.LawOfDemeter")
 class SyncPureCoverageTest {
 
   @Test
-  void shouldSerializeSyncEntitiesAndBuildPushResponse() {
+  void shouldSerializeSyncEntities() {
     var payloadCodec = new SyncPayloadCodec(new ObjectMapper());
     var mapper = new SyncEntityMapper(payloadCodec);
-    var factory = new SyncPushResultFactory(payloadCodec, mapper);
     var state = new SyncPushState();
     var instant = Instant.parse("2026-04-10T08:00:00Z");
 
@@ -54,8 +52,6 @@ class SyncPureCoverageTest {
     state.addAppliedHabitDelete("op-delete", tombstone);
     state.addConflict(conflict);
 
-    var response = factory.create(state);
-
     assertEquals("habit-1", habitDto.id());
     assertEquals("Morning Run", habitDto.name());
     assertEquals(List.of("focus", "health"), habitDto.tags());
@@ -66,13 +62,46 @@ class SyncPureCoverageTest {
     assertEquals("op-1", conflict.opId());
     assertEquals(7, conflict.serverValue().version());
     assertNull(missingConflict.serverValue());
-    assertEquals(List.of("op-habit", "op-checkin", "op-delete"), response.applied());
-    assertEquals(1, response.conflicts().size());
-    assertEquals(1, response.habits().size());
-    assertEquals(1, response.checkins().size());
-    assertEquals(1, response.tombstones().size());
-    assertNotNull(response.nextCursor());
-    assertNotNull(response.serverTime());
+  }
+
+  @Test
+  void shouldBuildPushResponseListsAndCursor() {
+    var payloadCodec = new SyncPayloadCodec(new ObjectMapper());
+    var mapper = new SyncEntityMapper(payloadCodec);
+    var factory = new SyncPushResultFactory(payloadCodec, mapper);
+    var state = new SyncPushState();
+    var instant = Instant.parse("2026-04-10T08:00:00Z");
+
+    var habit = habitEntity("habit-1", instant);
+    var checkin = checkinEntity("checkin-1", habit.id, instant.plusSeconds(60));
+    var tombstone = tombstoneEntity("tombstone-1", habit.id, instant.plusSeconds(120));
+
+    state.addAppliedHabit("op-habit", habit);
+    state.addAppliedCheckin("op-checkin", checkin);
+    state.addAppliedHabitDelete("op-delete", tombstone);
+
+    var response = factory.create(state);
+
+    var applied = response.applied();
+    assertEquals(List.of("op-habit", "op-checkin", "op-delete"), applied);
+
+    var conflicts = response.conflicts();
+    assertEquals(0, conflicts.size());
+
+    var habitsList = response.habits();
+    assertEquals(1, habitsList.size());
+
+    var checkinsList = response.checkins();
+    assertEquals(1, checkinsList.size());
+
+    var tombstonesList = response.tombstones();
+    assertEquals(1, tombstonesList.size());
+
+    var nextCursor = response.nextCursor();
+    assertNotNull(nextCursor);
+
+    var serverTime = response.serverTime();
+    assertNotNull(serverTime);
   }
 
   @Test
@@ -133,9 +162,9 @@ class SyncPureCoverageTest {
     habit.userId = "user-1";
     habit.name = "Morning Run";
     habit.description = "Track daily run";
-    habit.color = HabitColor.LEGACY_NORD;
+    habit.setColor(HabitColor.LEGACY_NORD);
     habit.icon = "shoe";
-    habit.frequency = HabitFrequency.DAILY;
+    habit.setFrequency(HabitFrequency.DAILY);
     habit.customDays = "[1,2,3]";
     habit.schedule = "{\"kind\":\"daily\"}";
     habit.targetStreak = 10;
@@ -148,7 +177,7 @@ class SyncPureCoverageTest {
     habit.setSortOrder(BigInteger.valueOf(3));
     habit.reminderTime = "08:30";
     habit.reminderEnabled = true;
-    habit.type = HabitType.POSITIVE;
+    habit.setType(HabitType.POSITIVE);
     habit.freezeDays = "[]";
     return habit;
   }

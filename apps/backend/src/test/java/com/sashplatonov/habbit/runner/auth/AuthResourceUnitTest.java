@@ -3,28 +3,27 @@ package com.sashplatonov.habbit.runner.auth;
 import com.sashplatonov.habbit.runner.auth.dto.LoginRequest;
 import com.sashplatonov.habbit.runner.auth.dto.AuthSessionResponse;
 import com.sashplatonov.habbit.runner.auth.dto.TokenResponse;
-import com.sashplatonov.habbit.runner.auth.dto.UpdatePreferencesRequest;
-import com.sashplatonov.habbit.runner.auth.dto.UserPreferencesResponse;
+// Preference DTOs moved to AuthPreferencesResourceUnitTest
 import com.sashplatonov.habbit.runner.support.TestConfigFactory;
 import jakarta.ws.rs.core.Response;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import com.sashplatonov.habbit.runner.support.TestHelpers;
 
-@SuppressWarnings("PMD.LawOfDemeter")
 class AuthResourceUnitTest {
 
   @Test
   void shouldDelegateAuthEndpointsToAuthService() {
     var authService = new ResourceAuthService();
-    authService.loginResponse = new TokenResponse("access-1", "refresh-1", 3600, "Bearer");
-    authService.refreshResponse = new TokenResponse("access-2", "refresh-2", 3600, "Bearer");
-    authService.googleStartRedirect = "https://accounts.example.test/start";
-    authService.googleCallbackRedirect = new AuthService.OAuthCallbackSession(
-        "https://app.example.test/callback",
-        new TokenResponse("access-3", "refresh-3", 3600, "Bearer")
-    );
+    authService.setLoginResponse(new TokenResponse("access-1", "refresh-1", 3600, "Bearer"));
+    authService.setRefreshResponse(new TokenResponse("access-2", "refresh-2", 3600, "Bearer"));
+    authService.setGoogleStartRedirect("https://accounts.example.test/start");
+    authService.setGoogleCallbackRedirect(new AuthService.OAuthCallbackSession(
+      "https://app.example.test/callback",
+      new TokenResponse("access-3", "refresh-3", 3600, "Bearer")
+    ));
     var resource = resource(authService, new ResourcePreferencesService(), new CurrentUserContext());
 
     var login = resource.login(new LoginRequest("user@example.test"));
@@ -34,38 +33,23 @@ class AuthResourceUnitTest {
     var logout = resource.logout("refresh-1");
 
     assertEquals("user@example.test", authService.lastLoginEmail);
-    assertSession(login, "user-1", "user@example.test");
-    assertCookiesPresent(login);
+    AuthSessionResponse loginSession = TestHelpers.entityOf(login);
+    assertSession(loginSession, "user-1", "user@example.test");
+    assertCookiesPresent(login.getCookies());
     assertEquals("/dashboard", authService.lastReturnTo);
     assertRedirect(googleStart, "https://accounts.example.test/start");
     assertEquals("code-123", authService.lastCode);
     assertEquals("state-123", authService.lastState);
     assertRedirect(googleCallback, "https://app.example.test/callback");
-    assertCookiesPresent(googleCallback);
-    assertSession(refresh, "user-1", "user@example.test");
-    assertCookiesPresent(refresh);
+    assertCookiesPresent(googleCallback.getCookies());
+    AuthSessionResponse refreshSession = TestHelpers.entityOf(refresh);
+    assertSession(refreshSession, "user-1", "user@example.test");
+    assertCookiesPresent(refresh.getCookies());
     assertEquals("refresh-1", authService.lastRefreshToken);
-    assertEquals(204, logout.getStatus());
+    assertEquals(204, TestHelpers.statusOf(logout));
     assertEquals("refresh-1", authService.revokedToken);
   }
 
-  @Test
-  void shouldDelegatePreferenceEndpointsToPreferencesServiceForCurrentUser() {
-    var preferencesService = new ResourcePreferencesService();
-    preferencesService.getResponse = new UserPreferencesResponse("cloud", "Europe/Berlin");
-    preferencesService.updateResponse = new UserPreferencesResponse("matrix", null);
-    var currentUserContext = new CurrentUserContext();
-    currentUserContext.setUser(new CurrentUser("user-1", "user@example.test"));
-    var resource = resource(new ResourceAuthService(), preferencesService, currentUserContext);
-
-    var current = resource.getPreferences();
-    var updated = resource.updatePreferences(new UpdatePreferencesRequest("matrix", null));
-
-    assertEquals("user-1", preferencesService.lastUserId);
-    assertEquals(preferencesService.getResponse, current.getEntity());
-    assertEquals(preferencesService.updateResponse, updated.getEntity());
-    assertEquals("matrix", preferencesService.lastRequest.theme());
-  }
 
   private AuthResource resource(
       ResourceAuthService authService,
@@ -81,21 +65,20 @@ class AuthResourceUnitTest {
   }
 
   private void assertRedirect(Response response, String location) {
-    assertEquals(302, response.getStatus());
-    assertEquals(location, response.getLocation().toString());
+    assertEquals(302, TestHelpers.statusOf(response));
+    var loc = TestHelpers.locationOf(response);
+    assertEquals(location, loc.toString());
   }
 
-  private void assertSession(Response response, String userId, String email) {
-    assertEquals(200, response.getStatus());
-    var session = (AuthSessionResponse) response.getEntity();
+  private void assertSession(AuthSessionResponse session, String userId, String email) {
     assertEquals(userId, session.userId());
     assertEquals(email, session.email());
   }
 
-  private void assertCookiesPresent(Response response) {
-    assertTrue(response.getCookies().containsKey(AuthCookieBuilder.ACCESS_TOKEN_COOKIE));
-    assertTrue(response.getCookies().containsKey(AuthCookieBuilder.REFRESH_TOKEN_COOKIE));
-    assertTrue(response.getCookies().containsKey(AuthCookieBuilder.CSRF_TOKEN_COOKIE));
+  private void assertCookiesPresent(java.util.Map<String, ?> cookies) {
+    assertTrue(cookies.containsKey(AuthCookieBuilder.ACCESS_TOKEN_COOKIE));
+    assertTrue(cookies.containsKey(AuthCookieBuilder.REFRESH_TOKEN_COOKIE));
+    assertTrue(cookies.containsKey(AuthCookieBuilder.CSRF_TOKEN_COOKIE));
   }
 
   private static final class ResourceAuthService extends AuthService {
@@ -113,6 +96,11 @@ class AuthResourceUnitTest {
     ResourceAuthService() {
       super(TestConfigFactory.defaultAuthConfig(), new AuthCollaborators(null, null, null, null));
     }
+
+    public void setLoginResponse(TokenResponse r) { this.loginResponse = r; }
+    public void setRefreshResponse(TokenResponse r) { this.refreshResponse = r; }
+    public void setGoogleStartRedirect(String url) { this.googleStartRedirect = url; }
+    public void setGoogleCallbackRedirect(AuthService.OAuthCallbackSession s) { this.googleCallbackRedirect = s; }
 
     @Override
     public TokenResponse login(String email) {
@@ -150,23 +138,5 @@ class AuthResourceUnitTest {
     }
   }
 
-  private static final class ResourcePreferencesService extends PreferencesService {
-    private String lastUserId;
-    private UpdatePreferencesRequest lastRequest;
-    private UserPreferencesResponse getResponse;
-    private UserPreferencesResponse updateResponse;
-
-    @Override
-    public UserPreferencesResponse getUserPreferences(String userId) {
-      lastUserId = userId;
-      return getResponse;
-    }
-
-    @Override
-    public UserPreferencesResponse updateUserPreferences(String userId, UpdatePreferencesRequest request) {
-      lastUserId = userId;
-      lastRequest = request;
-      return updateResponse;
-    }
-  }
+  
 }

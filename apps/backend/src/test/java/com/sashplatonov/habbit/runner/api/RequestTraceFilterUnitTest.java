@@ -3,6 +3,7 @@ package com.sashplatonov.habbit.runner.api;
 import jakarta.ws.rs.container.ContainerRequestContext;
 import jakarta.ws.rs.container.ContainerResponseContext;
 import jakarta.ws.rs.core.MultivaluedHashMap;
+import jakarta.ws.rs.core.MultivaluedMap;
 import org.junit.jupiter.api.Test;
 import org.slf4j.MDC;
 
@@ -14,7 +15,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
-@SuppressWarnings({"PMD.LawOfDemeter", "PMD.LooseCoupling"})
 class RequestTraceFilterUnitTest {
 
   @Test
@@ -34,7 +34,7 @@ class RequestTraceFilterUnitTest {
   void shouldPropagateTraceIdToResponseHeadersAndClearMdc() {
     var properties = new HashMap<String, Object>();
     var requestContext = requestContext(properties, "client-trace");
-    var responseHeaders = new MultivaluedHashMap<String, Object>();
+    MultivaluedMap<String, Object> responseHeaders = new MultivaluedHashMap<>();
     var responseContext = responseContext(responseHeaders);
     var filter = new RequestTraceFilter();
 
@@ -71,7 +71,7 @@ class RequestTraceFilterUnitTest {
     );
   }
 
-  private ContainerResponseContext responseContext(MultivaluedHashMap<String, Object> headers) {
+  private ContainerResponseContext responseContext(MultivaluedMap<String, Object> headers) {
     return (ContainerResponseContext) Proxy.newProxyInstance(
         ContainerResponseContext.class.getClassLoader(),
         new Class<?>[]{ContainerResponseContext.class},

@@ -25,7 +25,6 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @QuarkusTest
-@SuppressWarnings("PMD.LawOfDemeter")
 class RepositoryCoverageTest extends AuthenticatedApiTestSupport {
 
   @Inject
@@ -104,13 +103,13 @@ class RepositoryCoverageTest extends AuthenticatedApiTestSupport {
       firstHabit.id = UUID.randomUUID().toString();
       firstHabit.userId = userId;
       firstHabit.name = "Morning Run";
-      firstHabit.frequency = HabitFrequency.DAILY;
-      firstHabit.color = HabitColor.BLUE;
+      firstHabit.setFrequency(HabitFrequency.DAILY);
+      firstHabit.setColor(HabitColor.BLUE);
       firstHabit.icon = "run";
       firstHabit.dailyTarget = 1;
       firstHabit.targetStreak = 0;
       firstHabit.archived = false;
-      firstHabit.type = HabitType.POSITIVE;
+      firstHabit.setType(HabitType.POSITIVE);
       firstHabit.version = 1;
       firstHabit.setSortOrder(BigInteger.ZERO);
       firstHabit.setCreatedAt(firstUpdatedAt);
@@ -121,13 +120,13 @@ class RepositoryCoverageTest extends AuthenticatedApiTestSupport {
       secondHabit.id = UUID.randomUUID().toString();
       secondHabit.userId = userId;
       secondHabit.name = "Evening Read";
-      secondHabit.frequency = HabitFrequency.DAILY;
-      secondHabit.color = HabitColor.GREEN;
+      secondHabit.setFrequency(HabitFrequency.DAILY);
+      secondHabit.setColor(HabitColor.GREEN);
       secondHabit.icon = "book";
       secondHabit.dailyTarget = 1;
       secondHabit.targetStreak = 0;
       secondHabit.archived = false;
-      secondHabit.type = HabitType.POSITIVE;
+      secondHabit.setType(HabitType.POSITIVE);
       secondHabit.version = 2;
       secondHabit.setSortOrder(BigInteger.ONE);
       secondHabit.setCreatedAt(secondUpdatedAt);

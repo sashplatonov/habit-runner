@@ -15,44 +15,41 @@ import org.junit.jupiter.api.Test;
 import org.slf4j.MDC;
 
 import java.lang.reflect.Proxy;
+import com.sashplatonov.habbit.runner.support.TestHelpers;
 import java.net.URI;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@SuppressWarnings("PMD.LawOfDemeter")
 class ApiSupportTest {
 
   @Test
   void shouldBuildRedirectResponseWhenLocationProvided() {
     var response = ApiResponses.redirect("https://example.test/next");
-
-    assertEquals(302, response.getStatus());
-    assertEquals(URI.create("https://example.test/next"), response.getLocation());
+    assertEquals(302, TestHelpers.statusOf(response));
+    assertEquals(URI.create("https://example.test/next"), TestHelpers.locationOf(response));
   }
 
   @Test
   void shouldBuildCreatedResponseWhenPayloadProvided() {
     var response = ApiResponses.created("created-payload");
 
-    assertEquals(201, response.getStatus());
-    assertEquals("created-payload", response.getEntity());
+    assertEquals(201, TestHelpers.statusOf(response));
+    assertEquals("created-payload", TestHelpers.entityOf(response));
   }
 
   @Test
   void shouldBuildNoContentResponseWhenRequested() {
     var response = ApiResponses.noContent();
-
-    assertEquals(204, response.getStatus());
+    assertEquals(204, TestHelpers.statusOf(response));
   }
 
   @Test
   void shouldBuildNoStoreResponseWithCacheHeadersWhenRequested() {
     var response = ApiResponses.noStore("payload", "trace-1", 42);
-
-    assertEquals(200, response.getStatus());
-    assertEquals("payload", response.getEntity());
+    assertEquals(200, TestHelpers.statusOf(response));
+    assertEquals("payload", TestHelpers.entityOf(response));
     assertEquals("trace-1", response.getHeaderString("x-trace-id"));
     assertEquals("42", response.getHeaderString("x-sync-duration-ms"));
     assertEquals("app;dur=42", response.getHeaderString("Server-Timing"));
@@ -64,7 +61,11 @@ class ApiSupportTest {
   @Test
   void shouldMapConstraintViolationWhenValidationFails() {
     var response = new ConstraintViolationExceptionMapper().toResponse(blankValueViolation());
-    var error = assertApiError(response, 400);
+    assertEquals(400, TestHelpers.statusOf(response));
+    var mediaType = TestHelpers.mediaTypeOf(response);
+    assertEquals("application/json", mediaType.toString());
+    ErrorResponse error = TestHelpers.entityOf(response);
+    assertEquals(400, error.status());
 
     assertTrue(error.detail().contains("must not be blank"));
     assertEquals("VALIDATION_FAILED", error.errorCode());
@@ -73,7 +74,11 @@ class ApiSupportTest {
   @Test
   void shouldMapUnauthorizedResponseWhenAuthorizationFails() {
     var response = new GlobalExceptionMapper().toResponse(new NotAuthorizedException("Invalid credentials"));
-    var error = assertApiError(response, 403);
+    assertEquals(403, TestHelpers.statusOf(response));
+    var mediaType = TestHelpers.mediaTypeOf(response);
+    assertEquals("application/json", mediaType.toString());
+    ErrorResponse error = TestHelpers.entityOf(response);
+    assertEquals(403, error.status());
 
     assertEquals("Forbidden", error.title());
     assertEquals("Authentication required", error.detail());
@@ -82,8 +87,19 @@ class ApiSupportTest {
   @Test
   void shouldMapNotFoundAndBadRequestResponsesWhenKnownExceptionsThrown() {
     var mapper = new GlobalExceptionMapper();
-    var notFound = assertApiError(mapper.toResponse(new NotFoundException()), 404);
-    var badRequest = assertApiError(mapper.toResponse(new BadRequestException("Bad input")), 400);
+    var notFoundResponse = mapper.toResponse(new NotFoundException());
+    assertEquals(404, TestHelpers.statusOf(notFoundResponse));
+    var notFoundMedia = TestHelpers.mediaTypeOf(notFoundResponse);
+    assertEquals("application/json", notFoundMedia.toString());
+    ErrorResponse notFound = TestHelpers.entityOf(notFoundResponse);
+    assertEquals(404, notFound.status());
+
+    var badRequestResponse = mapper.toResponse(new BadRequestException("Bad input"));
+    assertEquals(400, TestHelpers.statusOf(badRequestResponse));
+    var badRequestMedia = TestHelpers.mediaTypeOf(badRequestResponse);
+    assertEquals("application/json", badRequestMedia.toString());
+    ErrorResponse badRequest = TestHelpers.entityOf(badRequestResponse);
+    assertEquals(400, badRequest.status());
 
     assertEquals("Not Found", notFound.title());
     assertEquals("Resource not found", notFound.detail());
@@ -93,7 +109,11 @@ class ApiSupportTest {
   @Test
   void shouldMapWebApplicationExceptionWhenStatusAlreadyDefined() {
     var response = new GlobalExceptionMapper().toResponse(new WebApplicationException(Response.status(422).build()));
-    var error = assertApiError(response, 422);
+    assertEquals(422, TestHelpers.statusOf(response));
+    var mediaType422 = TestHelpers.mediaTypeOf(response);
+    assertEquals("application/json", mediaType422.toString());
+    ErrorResponse error = TestHelpers.entityOf(response);
+    assertEquals(422, error.status());
 
     assertEquals("Request Failed", error.title());
     assertEquals("REQUEST_REJECTED", error.errorCode());
@@ -102,7 +122,11 @@ class ApiSupportTest {
   @Test
   void shouldMapUnhandledExceptionToInternalServerError() {
     var response = new GlobalExceptionMapper().toResponse(new IllegalStateException("boom"));
-    var error = assertApiError(response, 500);
+    assertEquals(500, TestHelpers.statusOf(response));
+    var mediaType500 = TestHelpers.mediaTypeOf(response);
+    assertEquals("application/json", mediaType500.toString());
+    ErrorResponse error = TestHelpers.entityOf(response);
+    assertEquals(500, error.status());
 
     assertEquals("Internal Server Error", error.title());
     assertEquals("Internal server error", error.detail());
@@ -111,14 +135,18 @@ class ApiSupportTest {
   @Test
   void shouldUseRequestContextDataWhenMappingClientFailures() {
     var mapper = new GlobalExceptionMapper();
-    mapper.request = proxy(Request.class, Map.of("getMethod", "PATCH"));
-    mapper.uriInfo = proxy(UriInfo.class, Map.of("getPath", "/auth/preferences"));
-    mapper.headers = proxy(HttpHeaders.class, Map.of("getHeaderString:X-Forwarded-For", "198.51.100.7, 10.0.0.1"));
+    setField(mapper, "request", proxy(Request.class, Map.of("getMethod", "PATCH")));
+    setField(mapper, "uriInfo", proxy(UriInfo.class, Map.of("getPath", "/auth/preferences")));
+    setField(mapper, "headers", proxy(HttpHeaders.class, Map.of("getHeaderString:X-Forwarded-For", "198.51.100.7, 10.0.0.1")));
     MDC.put("traceId", "trace-123");
 
     try {
       var response = mapper.toResponse(new BadRequestException("Bad input"));
-      var error = assertApiError(response, 400);
+      assertEquals(400, TestHelpers.statusOf(response));
+      var media400 = TestHelpers.mediaTypeOf(response);
+      assertEquals("application/json", media400.toString());
+      ErrorResponse error = TestHelpers.entityOf(response);
+      assertEquals(400, error.status());
 
       assertEquals("Bad input", error.detail());
       assertEquals("BAD_REQUEST", error.errorCode());
@@ -134,14 +162,7 @@ class ApiSupportTest {
     }
   }
 
-  @SuppressWarnings("PMD.LawOfDemeter")
-  private ErrorResponse assertApiError(Response response, int expectedStatus) {
-    assertEquals(expectedStatus, response.getStatus());
-    assertEquals("application/json", response.getMediaType().toString());
-    var error = (ErrorResponse) response.getEntity();
-    assertEquals(expectedStatus, error.status());
-    return error;
-  }
+  
 
   private record ValidationPayload(@NotBlank String value) {
   }
@@ -161,5 +182,17 @@ class ApiSupportTest {
           return null;
         }
     );
+  }
+
+  // Response helpers moved to TestHelpers
+
+  private static void setField(Object target, String name, Object value) {
+    try {
+      var f = GlobalExceptionMapper.class.getDeclaredField(name);
+      f.setAccessible(true);
+      f.set(target, value);
+    } catch (ReflectiveOperationException e) {
+      throw new RuntimeException(e);
+    }
   }
 }

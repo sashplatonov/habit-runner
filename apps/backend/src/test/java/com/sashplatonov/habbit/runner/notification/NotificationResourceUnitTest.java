@@ -6,33 +6,36 @@ import com.sashplatonov.habbit.runner.api.ErrorResponse;
 import com.sashplatonov.habbit.runner.notification.dto.PushSubscriptionEndpointRequest;
 import com.sashplatonov.habbit.runner.notification.dto.VapidPublicKeyResponse;
 import org.junit.jupiter.api.Test;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import com.sashplatonov.habbit.runner.support.TestHelpers;
 
-@SuppressWarnings("PMD.LawOfDemeter")
 class NotificationResourceUnitTest {
 
   @Test
   void shouldReturnConfiguredVapidPublicKeyForDirectUnitResource() {
-    var response = resource("unit-public-key").getVapidPublicKey();
+    var res = resource("unit-public-key");
+    var response = res.getVapidPublicKey();
 
-    assertEquals(200, response.getStatus());
-    assertEquals("unit-public-key", ((VapidPublicKeyResponse) response.getEntity()).publicKey());
+    assertEquals(200, TestHelpers.statusOf(response));
+    VapidPublicKeyResponse vapid = TestHelpers.entityOf(response);
+    assertEquals("unit-public-key", vapid.publicKey());
   }
 
   @Test
   void shouldReturnServiceUnavailableWhenConfiguredVapidPublicKeyIsBlank() {
-    var response = resource(" ").getVapidPublicKey();
+    var res = resource(" ");
+    var response = res.getVapidPublicKey();
 
-    assertEquals(503, response.getStatus());
-    assertEquals("VAPID_PUBLIC_KEY_MISSING", ((ErrorResponse) response.getEntity()).errorCode());
+    assertEquals(503, TestHelpers.statusOf(response));
+    ErrorResponse err = TestHelpers.entityOf(response);
+    assertEquals("VAPID_PUBLIC_KEY_MISSING", err.errorCode());
   }
 
   @Test
   void shouldReturnNoContentWhenUnsubscribeBodyHasNoEndpoint() {
     var response = resource("unit-public-key").unsubscribe(new PushSubscriptionEndpointRequest(null));
 
-    assertEquals(204, response.getStatus());
+    assertEquals(204, TestHelpers.statusOf(response));
   }
 
   private NotificationResource resource(String vapidPublicKey) {

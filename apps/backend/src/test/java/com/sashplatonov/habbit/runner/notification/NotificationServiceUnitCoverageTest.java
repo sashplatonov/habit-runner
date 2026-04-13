@@ -16,7 +16,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
-@SuppressWarnings("PMD.LawOfDemeter")
 class NotificationServiceUnitCoverageTest {
 
   @Test
@@ -26,8 +25,9 @@ class NotificationServiceUnitCoverageTest {
     var result = service.getVapidPublicKey();
 
     var failure = assertInstanceOf(OperationResult.Failure.class, result);
-    assertEquals(503, failure.toErrorResponse().status());
-    assertEquals("VAPID_PUBLIC_KEY_MISSING", failure.toErrorResponse().errorCode());
+    var failureErr = failure.toErrorResponse();
+    assertEquals(503, failureErr.status());
+    assertEquals("VAPID_PUBLIC_KEY_MISSING", failureErr.errorCode());
   }
 
   @Test
@@ -45,35 +45,37 @@ class NotificationServiceUnitCoverageTest {
 
     var created = assertInstanceOf(OperationResult.Success.class, service.subscribe("user-1", request));
     assertEquals(new SubscriptionStatusResponse(true), assertInstanceOf(SubscriptionStatusResponse.class, created.value()));
-    assertEquals("user-1", repository.savedEntity.userId);
-    assertEquals("https://push.example/subscriptions/1", repository.savedEntity.endpoint);
+    assertEquals("user-1", repository.getSavedUserId());
+    assertEquals("https://push.example/subscriptions/1", repository.getSavedEndpoint());
 
-    repository.existing = repository.savedEntity;
+    repository.promoteSavedToExisting();
     var alreadyOwned = assertInstanceOf(OperationResult.Success.class, service.subscribe("user-1", request));
     assertEquals(new SubscriptionStatusResponse(true), assertInstanceOf(SubscriptionStatusResponse.class, alreadyOwned.value()));
 
     var foreign = new PushSubscriptionEntity();
     foreign.userId = "other-user";
     foreign.endpoint = request.endpoint();
-    repository.existing = foreign;
+    repository.setExisting(foreign);
     var subscribeConflict = assertInstanceOf(OperationResult.Failure.class, service.subscribe("user-1", request));
-    assertEquals(409, subscribeConflict.toErrorResponse().status());
-    assertEquals("SUBSCRIPTION_ENDPOINT_CONFLICT", subscribeConflict.toErrorResponse().errorCode());
+    var subscribeErr = subscribeConflict.toErrorResponse();
+    assertEquals(409, subscribeErr.status());
+    assertEquals("SUBSCRIPTION_ENDPOINT_CONFLICT", subscribeErr.errorCode());
 
     var unsubscribeConflict = assertInstanceOf(
         OperationResult.Failure.class,
         service.unsubscribe("user-1", new PushSubscriptionEndpointRequest(request.endpoint()))
     );
-    assertEquals(403, unsubscribeConflict.toErrorResponse().status());
-    assertEquals("SUBSCRIPTION_ENDPOINT_FORBIDDEN", unsubscribeConflict.toErrorResponse().errorCode());
+    var unsubscribeErr = unsubscribeConflict.toErrorResponse();
+    assertEquals(403, unsubscribeErr.status());
+    assertEquals("SUBSCRIPTION_ENDPOINT_FORBIDDEN", unsubscribeErr.errorCode());
 
-    repository.existing = repository.savedEntity;
+    repository.promoteSavedToExisting();
     var removed = assertInstanceOf(
         OperationResult.Success.class,
         service.unsubscribe("user-1", new PushSubscriptionEndpointRequest(request.endpoint()))
     );
     assertNull(removed.value());
-    assertEquals(request.endpoint(), repository.deletedEndpoint);
+    assertEquals(request.endpoint(), repository.getDeletedEndpoint());
   }
 
   private static final class StubPushSubscriptionRepository extends PushSubscriptionRepository {
@@ -98,5 +100,12 @@ class NotificationServiceUnitCoverageTest {
       existing = null;
       return 1L;
     }
+
+    public PushSubscriptionEntity getSavedEntity() { return savedEntity; }
+    public void setExisting(PushSubscriptionEntity e) { existing = e; }
+    public String getDeletedEndpoint() { return deletedEndpoint; }
+    public String getSavedUserId() { return savedEntity == null ? null : savedEntity.userId; }
+    public String getSavedEndpoint() { return savedEntity == null ? null : savedEntity.endpoint; }
+    public void promoteSavedToExisting() { existing = savedEntity; }
   }
 }

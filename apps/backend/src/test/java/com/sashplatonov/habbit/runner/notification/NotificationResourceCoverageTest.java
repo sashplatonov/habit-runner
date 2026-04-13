@@ -21,9 +21,9 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import com.sashplatonov.habbit.runner.support.TestHelpers;
 
 @QuarkusTest
-@SuppressWarnings("PMD.LawOfDemeter")
 class NotificationResourceCoverageTest extends AuthenticatedApiTestSupport {
 
 VAPID_PUBLIC_KEY=
@@ -43,10 +43,12 @@ VAPID_PUBLIC_KEY=
 
   @Test
   void shouldReturnConfiguredPublicKeyWhenDirectResourceCallUsesConfiguredValue() {
-    var response =<REDACTED>
+    var resource =<REDACTED>
+    var response = resource.getVapidPublicKey();
 
-    assertEquals(200, response.getStatus());
-    assertEquals(TEST_VAPID_PUBLIC_KEY, ((VapidPublicKeyResponse) response.getEntity()).publicKey());
+    assertEquals(200, TestHelpers.statusOf(response));
+    VapidPublicKeyResponse vapid = TestHelpers.entityOf(response);
+    assertEquals(TEST_VAPID_PUBLIC_KEY, vapid.publicKey());
   }
 
   @Test
@@ -54,8 +56,9 @@ VAPID_PUBLIC_KEY=
     var resource = resourceWithUser(" ");
     var response = resource.getVapidPublicKey();
 
-    assertEquals(503, response.getStatus());
-    assertEquals("VAPID_PUBLIC_KEY_MISSING", ((ErrorResponse) response.getEntity()).errorCode());
+    assertEquals(503, TestHelpers.statusOf(response));
+    ErrorResponse err = TestHelpers.entityOf(response);
+    assertEquals("VAPID_PUBLIC_KEY_MISSING", err.errorCode());
   }
 
   @Test
@@ -70,8 +73,9 @@ VAPID_PUBLIC_KEY=
       ));
     });
 
-    assertEquals(201, response.getStatus());
-    assertTrue(subscriptionStatus(response).success());
+    assertEquals(201, TestHelpers.statusOf(response));
+    SubscriptionStatusResponse status = TestHelpers.entityOf(response);
+    assertTrue(status.success());
     assertEquals(1L, PushSubscriptionEntity.count("endpoint", endpoint));
   }
 
@@ -99,7 +103,7 @@ VAPID_PUBLIC_KEY=
       return resource.unsubscribe(new PushSubscriptionEndpointRequest(endpoint));
     });
 
-    assertEquals(204, response.getStatus());
+    assertEquals(204, TestHelpers.statusOf(response));
     assertEquals(0L, PushSubscriptionEntity.count("endpoint", endpoint));
   }
 
@@ -111,7 +115,7 @@ VAPID_PUBLIC_KEY=
       return resource.unsubscribe(new PushSubscriptionEndpointRequest(null));
     });
 
-    assertEquals(204, response.getStatus());
+    assertEquals(204, TestHelpers.statusOf(response));
   }
 
   private NotificationResource resourceWithUser(String vapidPublicKey) {
@@ -127,9 +131,7 @@ VAPID_PUBLIC_KEY=
     return resourceWithUser(vapidPublicKey);
   }
 
-  private SubscriptionStatusResponse subscriptionStatus(jakarta.ws.rs.core.Response response) {
-    return (SubscriptionStatusResponse) response.getEntity();
-  }
+  
 
   private String subscriptionEndpoint() {
     return "https://push.example/direct/" + UUID.randomUUID();

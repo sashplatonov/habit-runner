@@ -6,6 +6,7 @@ WORKDIR /workspace
 COPY .mvn .mvn
 COPY mvnw mvnw
 COPY pom.xml .
+COPY checkstyle checkstyle
 COPY src src
 
 RUN chmod +x mvnw

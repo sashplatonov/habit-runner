@@ -19,7 +19,6 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @QuarkusTest
-@SuppressWarnings("PMD.LawOfDemeter")
 class AuthPersistenceCoverageTest extends AuthenticatedApiTestSupport {
 
   @Inject
@@ -59,7 +58,10 @@ class AuthPersistenceCoverageTest extends AuthenticatedApiTestSupport {
     var createdToken = inTransaction(() -> refreshTokenService.create(token, user.id, 30));
     var active = inTransaction(() -> refreshTokenService.requireActive(token));
     inTransaction(() -> refreshTokenService.revoke(token));
-    RefreshTokenEntity stored = inTransaction(() -> RefreshTokenEntity.<RefreshTokenEntity>find("token", token).firstResult());
+    RefreshTokenEntity stored = inTransaction(() -> {
+      var q = RefreshTokenEntity.<RefreshTokenEntity>find("token", token);
+      return q.firstResult();
+    });
 
     assertEquals(token, createdToken);
     assertEquals(token, active.token);
@@ -75,7 +77,7 @@ class AuthPersistenceCoverageTest extends AuthenticatedApiTestSupport {
       entity.email = UUID.randomUUID() + "@example.test";
       entity.theme = "unsupported-theme";
       entity.timezone = "Europe/Berlin";
-      entity.createdAt = Instant.now();
+      entity.markCreatedAt(Instant.now());
       entity.persist();
       return entity;
     });

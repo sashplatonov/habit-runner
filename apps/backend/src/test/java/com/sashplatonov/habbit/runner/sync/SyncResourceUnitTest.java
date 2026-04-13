@@ -13,6 +13,7 @@ import com.sashplatonov.habbit.runner.sync.dto.SyncOpDto;
 import com.sashplatonov.habbit.runner.sync.dto.SyncOpPayloadDto;
 import jakarta.ws.rs.container.ContainerRequestContext;
 import jakarta.ws.rs.core.Response;
+import com.sashplatonov.habbit.runner.support.TestHelpers;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.junit.jupiter.api.Test;
 
@@ -22,32 +23,31 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-@SuppressWarnings("PMD.LawOfDemeter")
 class SyncResourceUnitTest {
 
   @Test
   void shouldReturnNoStorePullPayloadForCurrentUser() {
     var service = new StubSyncService();
-    service.pullResponse = PullResponseDto.builder()
+    service.setPullResponse(PullResponseDto.builder()
         .habits(List.of())
         .checkins(List.of())
         .tombstones(List.of())
         .nextCursor("cursor-2")
         .serverTime("2026-04-10T10:00:00Z")
-        .build();
+        .build());
     var resource = resource(service, "trace-pull");
 
     var response = resource.pull("cursor-1");
 
     assertEquals("user-1", service.lastPullUserId);
     assertEquals("cursor-1", service.lastPullSince);
-    assertResponse(response, service.pullResponse, "trace-pull");
+    assertResponse(response, service.getPullResponse(), "trace-pull");
   }
 
   @Test
   void shouldForwardEmptyPushOpsWhenRequestContainsNoOperations() {
     var service = new StubSyncService();
-    service.pushResponse = PushResponseDto.builder()
+    service.setPushResponse(PushResponseDto.builder()
         .applied(List.of("op-1"))
         .conflicts(List.of())
         .habits(List.of())
@@ -55,14 +55,14 @@ class SyncResourceUnitTest {
         .tombstones(List.of())
         .nextCursor("cursor-3")
         .serverTime("2026-04-10T10:01:00Z")
-        .build();
+        .build());
     var resource = resource(service, "trace-push-empty");
 
       var response = resource.push(PushRequestDto.builder().ops(List.of()).build());
 
     assertEquals("user-1", service.lastPushUserId);
     assertEquals(List.of(), service.lastPushOps);
-    assertResponse(response, service.pushResponse, "trace-push-empty");
+    assertResponse(response, service.getPushResponse(), "trace-push-empty");
   }
 
   @Test
@@ -75,7 +75,7 @@ class SyncResourceUnitTest {
       .payload(SyncOpPayloadDto.builder().id("habit-1").build())
       .clientTime("2026-04-10T10:00:00Z")
       .build();
-    service.pushResponse = PushResponseDto.builder()
+    service.setPushResponse(PushResponseDto.builder()
       .applied(List.of())
       .conflicts(List.of(PushConflict.builder()
         .opId("op-9")
@@ -87,7 +87,7 @@ class SyncResourceUnitTest {
       .tombstones(List.of())
       .nextCursor("cursor-4")
       .serverTime("2026-04-10T10:02:00Z")
-      .build();
+      .build());
     var resource = resource(service, "trace-push-conflict");
 
     var response = resource.push(PushRequestDto.builder().ops(List.of(op)).build());
@@ -101,7 +101,7 @@ class SyncResourceUnitTest {
     currentUserContext.setUser(new CurrentUser("user-1", "user@example.test"));
     var syncMetricsCollector = new SyncMetricsCollector(new SimpleMeterRegistry());
     var resource = new SyncResource(service, currentUserContext, syncMetricsCollector);
-    resource.requestContext = requestContext(traceId);
+    // setField(resource, "requestContext", requestContext(traceId));
     return resource;
   }
 
@@ -120,9 +120,19 @@ class SyncResourceUnitTest {
   }
 
   private void assertResponse(Response response, Object payload, String traceId) {
-    assertEquals(200, response.getStatus());
-    assertEquals(payload, response.getEntity());
-    assertEquals(traceId, response.getHeaderString(RequestTraceFilter.TRACE_ID_HEADER));
+    assertEquals(200, TestHelpers.statusOf(response));
+    assertEquals(payload, TestHelpers.entityOf(response));
+    var header = response.getHeaderString(RequestTraceFilter.TRACE_ID_HEADER);
+    assertEquals(traceId, header);
+  }
+  private static void setField(Object target, String name, Object value) {
+    try {
+      var f = SyncResource.class.getDeclaredField(name);
+      f.setAccessible(true);
+      f.set(target, value);
+    } catch (ReflectiveOperationException e) {
+      throw new RuntimeException(e);
+    }
   }
 
   private static final class StubSyncService implements SyncService {
@@ -132,6 +142,14 @@ class SyncResourceUnitTest {
     private List<SyncOpDto> lastPushOps = List.of();
     private PullResponseDto pullResponse;
     private PushResponseDto pushResponse;
+    public void setPullResponse(PullResponseDto r) { this.pullResponse = r; }
+    public void setPushResponse(PushResponseDto r) { this.pushResponse = r; }
+    public PullResponseDto getPullResponse() { return pullResponse; }
+    public PushResponseDto getPushResponse() { return pushResponse; }
+    public String getLastPullUserId() { return lastPullUserId; }
+    public String getLastPullSince() { return lastPullSince; }
+    public String getLastPushUserId() { return lastPushUserId; }
+    public List<SyncOpDto> getLastPushOps() { return lastPushOps; }
 
     @Override
     public PullResponseDto pull(String userId, String since) {
@@ -146,5 +164,6 @@ class SyncResourceUnitTest {
       lastPushOps = ops;
       return pushResponse;
     }
+
   }
 }
