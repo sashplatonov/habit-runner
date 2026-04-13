@@ -19,6 +19,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 class SyncPayloadCodecTest {
 
   private final SyncPayloadCodec codec = new SyncPayloadCodec(new ObjectMapper());
+  private final SyncJsonCodec jsonCodec = new SyncJsonCodec(codec.objectMapper());
 
   @Test
   void shouldReturnNullWhenCursorBlank() {
@@ -69,35 +70,39 @@ class SyncPayloadCodecTest {
 
   @Test
   void shouldReturnNullWhenCursorSerializationFails() {
-    var failingCodec = new SyncPayloadCodec(new FaultyObjectMapper(false, false, true));
+    var failingMapper = new FaultyObjectMapper(false, false, true);
+    var failingCodec = new SyncPayloadCodec(failingMapper);
+    var failingJsonCodec = new SyncJsonCodec(failingMapper);
 
     assertNull(failingCodec.calculateNextCursor(List.of(
         SyncCursor.builder().updatedAt(Instant.now()).id("cursor-1").build()
     )));
-    assertNull(failingCodec.jsonOrNull(Map.of("key", "value")));
+    assertNull(failingJsonCodec.jsonOrNull(Map.of("key", "value")));
   }
 
   @Test
   void shouldParseJsonValuesWhenJsonInputPresent() {
-    assertEquals(List.of("one", "two"), codec.parseStringListOrEmpty("[\"one\",\"two\"]"));
-    assertEquals(List.of(), codec.parseStringListOrEmpty(" "));
-    assertEquals(List.of("item"), codec.parseStringListOrEmpty("[\"item\"]"));
-    assertEquals(List.of(1, 2, 3), codec.parseIntegerListOrNull("[1,2,3]"));
+    assertEquals(List.of("one", "two"), jsonCodec.parseStringListOrEmpty("[\"one\",\"two\"]"));
+    assertEquals(List.of(), jsonCodec.parseStringListOrEmpty(" "));
+    assertEquals(List.of("item"), jsonCodec.parseStringListOrEmpty("[\"item\"]"));
+    assertEquals(List.of(1, 2, 3), jsonCodec.parseIntegerListOrNull("[1,2,3]"));
   }
 
   @Test
   void shouldReturnNullWhenJsonParsingFails() {
-    var failingCodec = new SyncPayloadCodec(new FaultyObjectMapper(true, true, false));
+    var failingMapper = new FaultyObjectMapper(true, true, false);
+    var failingCodec = new SyncPayloadCodec(failingMapper);
+    var failingJsonCodec = new SyncJsonCodec(failingMapper);
 
     assertNull(failingCodec.parseCursor("{\"updatedAt\":\"2026-04-09T12:00:00Z\",\"id\":\"cursor-1\"}"));
-    assertNull(failingCodec.parseJsonNodeOrNull("{}"));
-    assertNull(failingCodec.parseIntegerListOrNull("[1,2]"));
+    assertNull(failingJsonCodec.parseJsonNodeOrNull("{}"));
+    assertNull(failingJsonCodec.parseIntegerListOrNull("[1,2]"));
   }
 
   @Test
   void shouldReturnNullWhenJsonInputBlankOrCursorUpdatedAtBlank() {
-    assertNull(codec.parseJsonNodeOrNull(" "));
-    assertNull(codec.parseIntegerListOrNull(" "));
+    assertNull(jsonCodec.parseJsonNodeOrNull(" "));
+    assertNull(jsonCodec.parseIntegerListOrNull(" "));
     assertNull(codec.parseCursor("{\"updatedAt\":\" \",\"id\":123}"));
   }
 

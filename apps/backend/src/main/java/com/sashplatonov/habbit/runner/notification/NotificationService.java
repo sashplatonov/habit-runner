@@ -1,86 +1,15 @@
 package com.sashplatonov.habbit.runner.notification;
 
 import com.sashplatonov.habbit.runner.api.OperationResult;
-import com.sashplatonov.habbit.runner.model.PushSubscriptionEntity;
 import com.sashplatonov.habbit.runner.notification.dto.PushSubscriptionEndpointRequest;
 import com.sashplatonov.habbit.runner.notification.dto.PushSubscriptionRequest;
 import com.sashplatonov.habbit.runner.notification.dto.SubscriptionStatusResponse;
 import com.sashplatonov.habbit.runner.notification.dto.VapidPublicKeyResponse;
-import com.sashplatonov.habbit.runner.repository.PushSubscriptionRepository;
-import jakarta.enterprise.context.ApplicationScoped;
-import lombok.extern.slf4j.Slf4j;
 
-@ApplicationScoped
-@Slf4j
-public class NotificationService {
-  private static final String CONFLICT_TYPE = "https://habbit-runner.dev/errors/subscription-conflict";
-  private static final String FORBIDDEN_TYPE = "https://habbit-runner.dev/errors/forbidden";
-  private static final String CONFIG_TYPE = "https://habbit-runner.dev/errors/configuration";
+public interface NotificationService {
+  OperationResult<VapidPublicKeyResponse> getVapidPublicKey();
 
-  private final NotificationConfig notificationConfig;
-  private final PushSubscriptionRepository pushSubscriptionRepository;
+  OperationResult<SubscriptionStatusResponse> subscribe(String userId, PushSubscriptionRequest request);
 
-  public NotificationService(NotificationConfig notificationConfig, PushSubscriptionRepository pushSubscriptionRepository) {
-    this.notificationConfig = notificationConfig;
-    this.pushSubscriptionRepository = pushSubscriptionRepository;
-  }
-
-  public OperationResult<VapidPublicKeyResponse> getVapidPublicKey() {
-    var key = notificationConfig.vapidPublicKey()
-        .filter(value -> !value.isBlank())
-        .orElse(null);
-    if (key == null) {
-      return OperationResult.failure(
-          CONFIG_TYPE,
-          "Service Unavailable",
-          jakarta.ws.rs.core.Response.Status.SERVICE_UNAVAILABLE,
-          "VAPID public key is not configured",
-          "VAPID_PUBLIC_KEY_MISSING"
-      );
-    }
-    return OperationResult.success(new VapidPublicKeyResponse(key));
-  }
-
-  public OperationResult<SubscriptionStatusResponse> subscribe(String userId, PushSubscriptionRequest request) {
-    var existing = pushSubscriptionRepository.findByEndpoint(request.endpoint());
-    if (existing != null && !userId.equals(existing.userId)) {
-      log.warn("event=push_subscription_rejected userId={} reason=endpoint_owned_by_another_user", userId);
-      return OperationResult.failure(
-          CONFLICT_TYPE,
-          "Conflict",
-          jakarta.ws.rs.core.Response.Status.CONFLICT,
-          "Subscription endpoint already registered by another user",
-          "SUBSCRIPTION_ENDPOINT_CONFLICT"
-      );
-    }
-    if (existing == null) {
-      var entity = new PushSubscriptionEntity();
-      entity.userId = userId;
-      entity.endpoint = request.endpoint();
-      entity.p256dh = request.keys().p256dh();
-      entity.auth = request.keys().auth();
-      pushSubscriptionRepository.save(entity);
-      log.info("event=push_subscription_saved userId={} endpoint={} created=true", userId, request.endpoint());
-      return OperationResult.success(new SubscriptionStatusResponse(true));
-    }
-    log.info("event=push_subscription_saved userId={} endpoint={} created=false", userId, request.endpoint());
-    return OperationResult.success(new SubscriptionStatusResponse(true));
-  }
-
-  public OperationResult<Void> unsubscribe(String userId, PushSubscriptionEndpointRequest request) {
-    var existing = pushSubscriptionRepository.findByEndpoint(request.endpoint());
-    if (existing != null && !userId.equals(existing.userId)) {
-      log.warn("event=push_subscription_unsubscribe_rejected userId={} reason=endpoint_owned_by_another_user", userId);
-      return OperationResult.failure(
-          FORBIDDEN_TYPE,
-          "Forbidden",
-          jakarta.ws.rs.core.Response.Status.FORBIDDEN,
-          "Subscription endpoint belongs to another user",
-          "SUBSCRIPTION_ENDPOINT_FORBIDDEN"
-      );
-    }
-    pushSubscriptionRepository.deleteByEndpoint(request.endpoint());
-    log.info("event=push_subscription_removed userId={} endpoint={}", userId, request.endpoint());
-    return OperationResult.success(null);
-  }
+  OperationResult<Void> unsubscribe(String userId, PushSubscriptionEndpointRequest request);
 }

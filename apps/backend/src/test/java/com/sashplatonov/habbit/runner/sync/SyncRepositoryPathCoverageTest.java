@@ -52,7 +52,11 @@ class SyncRepositoryPathCoverageTest {
     habitRepository.page = List.of(habit("habit-1", "user-1", updatedAt));
     checkinRepository.page = List.of(checkin("checkin-1", "habit-1", "user-1", LocalDate.of(2026, 4, 10), updatedAt));
     tombstoneRepository.page = List.of(tombstone("user-1", "habit", "habit-1", updatedAt.plusSeconds(60)));
-    var processor = new SyncPullProcessor(payloadCodec, entityMapper, habitRepository, checkinRepository, tombstoneRepository);
+    var processor = new SyncPullProcessor(
+        payloadCodec,
+        entityMapper,
+        new SyncPullStore(habitRepository, checkinRepository, tombstoneRepository)
+    );
 
     PullResponseDto response = processor.pull("user-1", "{\"updatedAt\":\"2026-04-10T10:00:00Z\",\"id\":\"cursor-1\"}");
 
@@ -72,14 +76,16 @@ class SyncRepositoryPathCoverageTest {
     var habitRepository = new StubHabitRepository();
     var checkinRepository = new StubCheckinRepository();
     var tombstoneRepository = new StubTombstoneRepository();
+    var habitSyncStore = new HabitSyncStore(habitRepository, checkinRepository, tombstoneRepository);
     var processor = new HabitSyncProcessor(
-        payloadCodec,
+      payloadCodec,
+      payloadMapper,
+      new HabitSyncDeleteHandler(payloadCodec, habitSyncStore),
+      new HabitSyncUpsertHandler(
         valueCodec,
-        entityMapper,
-        payloadMapper,
-        habitRepository,
-        checkinRepository,
-        tombstoneRepository
+        new SyncJsonCodec(payloadCodec.objectMapper()),
+        habitSyncStore
+      )
     );
     var state = new SyncPushState();
     var updatedAt = Instant.parse("2026-04-10T10:00:00Z").toString();
@@ -143,13 +149,12 @@ class SyncRepositoryPathCoverageTest {
     var tombstoneRepository = new StubTombstoneRepository();
     habitRepository.existingHabit = habit("habit-1", "user-1", Instant.parse("2026-04-10T10:00:00Z"));
     var deleteHandler = new CheckinDeleteHandler(payloadCodec, tombstoneRepository, checkinRepository);
+    var checkinSyncStore = new CheckinSyncStore(checkinRepository, habitRepository);
     var processor = new CheckinSyncProcessor(
         payloadCodec,
-        entityMapper,
-        deleteHandler,
         payloadMapper,
-        checkinRepository,
-        habitRepository
+      deleteHandler,
+      new CheckinSyncUpsertHandler(checkinSyncStore)
     );
     var updatedAt = Instant.parse("2026-04-10T10:00:00Z").toString();
 
@@ -211,8 +216,8 @@ class SyncRepositoryPathCoverageTest {
 
   @Test
   void shouldUseRepositoryBackedDeduplicationWhenPushingOperations() {
-    var habitProcessor = new CountingHabitSyncProcessor(payloadCodec, valueCodec, entityMapper, payloadMapper);
-    var checkinProcessor = new CountingCheckinSyncProcessor(payloadCodec, entityMapper, new CheckinDeleteHandler(payloadCodec), payloadMapper);
+    var habitProcessor = new CountingHabitSyncProcessor(payloadCodec, valueCodec, payloadMapper);
+    var checkinProcessor = new CountingCheckinSyncProcessor(payloadCodec, new CheckinDeleteHandler(payloadCodec), payloadMapper);
     var processor = new SyncPushProcessor(
         habitProcessor,
         checkinProcessor,
@@ -391,10 +396,9 @@ class SyncRepositoryPathCoverageTest {
     CountingHabitSyncProcessor(
         SyncPayloadCodec payloadCodec,
         SyncValueCodec valueCodec,
-        SyncEntityMapper entityMapper,
         SyncPayloadMapper payloadMapper
     ) {
-      super(payloadCodec, valueCodec, entityMapper, payloadMapper);
+      super(payloadCodec, valueCodec, payloadMapper);
     }
 
     @Override
@@ -413,11 +417,10 @@ class SyncRepositoryPathCoverageTest {
 
     CountingCheckinSyncProcessor(
         SyncPayloadCodec payloadCodec,
-        SyncEntityMapper entityMapper,
         CheckinDeleteHandler checkinDeleteHandler,
         SyncPayloadMapper payloadMapper
     ) {
-      super(payloadCodec, entityMapper, checkinDeleteHandler, payloadMapper);
+      super(payloadCodec, checkinDeleteHandler, payloadMapper);
     }
 
     @Override

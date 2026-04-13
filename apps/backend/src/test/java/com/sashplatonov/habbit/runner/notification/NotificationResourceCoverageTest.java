@@ -118,17 +118,15 @@ VAPID_PUBLIC_KEY=
     var currentUserContext = new CurrentUserContext();
     currentUserContext.setUser(new CurrentUser(userId, email));
     return new NotificationResource(
-        new NotificationService(TestConfigFactory.notificationConfig(vapidPublicKey), pushSubscriptionRepository),
+        new NotificationServiceImpl(TestConfigFactory.notificationConfig(vapidPublicKey), pushSubscriptionRepository),
         currentUserContext
     );
   }
 
-  @SuppressWarnings("PMD.LawOfDemeter")
   private NotificationResource directResource(String vapidPublicKey) {
     return resourceWithUser(vapidPublicKey);
   }
 
-  @SuppressWarnings("PMD.LawOfDemeter")
   private SubscriptionStatusResponse subscriptionStatus(jakarta.ws.rs.core.Response response) {
     return (SubscriptionStatusResponse) response.getEntity();
   }

@@ -24,7 +24,7 @@ public class SyncValueCodec {
     return String.format("%02d:%02d", Integer.parseInt(timeParts[0]), Integer.parseInt(timeParts[1]));
   }
 
-  public String normalizeCustomDaysJson(List<Integer> value, SyncPayloadCodec payloadCodec) {
+  public String normalizeCustomDaysJson(List<Integer> value, SyncJsonCodec jsonCodec) {
     if (value == null) {
       return null;
     }
@@ -36,10 +36,14 @@ public class SyncValueCodec {
         result.add(normalizedDay);
       }
     }
-    return result.isEmpty() ? null : payloadCodec.jsonOrNull(result);
+    return result.isEmpty() ? null : jsonCodec.jsonOrNull(result);
   }
 
-  public String normalizeFreezeDaysJson(List<String> payloadValue, String existing, SyncPayloadCodec payloadCodec) {
+  public String normalizeCustomDaysJson(List<Integer> value, SyncPayloadCodec payloadCodec) {
+    return normalizeCustomDaysJson(value, new SyncJsonCodec(payloadCodec.objectMapper()));
+  }
+
+  public String normalizeFreezeDaysJson(List<String> payloadValue, String existing, SyncJsonCodec jsonCodec) {
     if (payloadValue == null) {
       return existing != null ? existing : "[]";
     }
@@ -49,7 +53,11 @@ public class SyncValueCodec {
         seen.add(value);
       }
     }
-    return payloadCodec.jsonOrNull(new ArrayList<>(seen));
+    return jsonCodec.jsonOrNull(new ArrayList<>(seen));
+  }
+
+  public String normalizeFreezeDaysJson(List<String> payloadValue, String existing, SyncPayloadCodec payloadCodec) {
+    return normalizeFreezeDaysJson(payloadValue, existing, new SyncJsonCodec(payloadCodec.objectMapper()));
   }
 
   public BigInteger resolveSortOrder(Integer payload, BigInteger existing) {

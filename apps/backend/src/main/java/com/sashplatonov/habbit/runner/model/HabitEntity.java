@@ -27,16 +27,23 @@ public class HabitEntity extends HabitSettingsFields {
   public int version;
 
   @PrePersist
-  @SuppressWarnings({"PMD.CyclomaticComplexity", "PMD.NPathComplexity"})
   void prePersist() {
     ensureId();
+    initializeDefaults();
+    initializeAuditFields();
+  }
+
+  private void initializeDefaults() {
     dailyTarget = Math.max(1, dailyTarget);
-    sortOrder = sortOrder != null ? sortOrder : BigInteger.ZERO;
-    color = color != null ? color : HabitColor.BLUE;
-    frequency = frequency != null ? frequency : HabitFrequency.DAILY;
-    type = type != null ? type : HabitType.POSITIVE;
-    freezeDays = freezeDays != null ? freezeDays : "[]";
+    sortOrder = defaultSortOrder(sortOrder);
+    color = defaultColor(color);
+    frequency = defaultFrequency(frequency);
+    type = defaultType(type);
+    freezeDays = defaultFreezeDays(freezeDays);
     version = Math.max(1, version);
+  }
+
+  private void initializeAuditFields() {
     createdAt = createdAt != null ? createdAt : Instant.now();
     updatedAt = updatedAt != null ? updatedAt : createdAt;
   }
@@ -49,6 +56,26 @@ public class HabitEntity extends HabitSettingsFields {
 
   private boolean hasText(String value) {
     return value != null && !value.isBlank();
+  }
+
+  private BigInteger defaultSortOrder(BigInteger value) {
+    return value != null ? value : BigInteger.ZERO;
+  }
+
+  private HabitColor defaultColor(HabitColor value) {
+    return value != null ? value : HabitColor.BLUE;
+  }
+
+  private HabitFrequency defaultFrequency(HabitFrequency value) {
+    return value != null ? value : HabitFrequency.DAILY;
+  }
+
+  private HabitType defaultType(HabitType value) {
+    return value != null ? value : HabitType.POSITIVE;
+  }
+
+  private String defaultFreezeDays(String value) {
+    return value != null ? value : "[]";
   }
 
   public BigInteger sortOrderOrZero() {
@@ -77,5 +104,17 @@ public class HabitEntity extends HabitSettingsFields {
 
   public void setSortOrder(BigInteger value) {
     sortOrder = value;
+  }
+
+  public void setColor(HabitColor value) {
+    color = value;
+  }
+
+  public void setFrequency(HabitFrequency value) {
+    frequency = value;
+  }
+
+  public void setType(HabitType value) {
+    type = value;
   }
 }

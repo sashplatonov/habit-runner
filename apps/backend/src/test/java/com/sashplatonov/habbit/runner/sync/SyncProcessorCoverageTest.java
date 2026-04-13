@@ -52,8 +52,8 @@ class SyncProcessorCoverageTest extends AuthenticatedApiTestSupport {
     entityMapper = new SyncEntityMapper(payloadCodec);
     checkinDeleteHandler = new CheckinDeleteHandler(payloadCodec);
     var payloadMapper = new SyncPayloadMapperImpl();
-    habitSyncProcessor = new HabitSyncProcessor(payloadCodec, valueCodec, entityMapper, payloadMapper);
-    checkinSyncProcessor = new CheckinSyncProcessor(payloadCodec, entityMapper, checkinDeleteHandler, payloadMapper);
+    habitSyncProcessor = new HabitSyncProcessor(payloadCodec, valueCodec, payloadMapper);
+    checkinSyncProcessor = new CheckinSyncProcessor(payloadCodec, checkinDeleteHandler, payloadMapper);
   }
 
   @Test
@@ -359,7 +359,11 @@ class SyncProcessorCoverageTest extends AuthenticatedApiTestSupport {
     private final List<String> opIds = new ArrayList<>();
 
     RecordingHabitSyncProcessor() {
-        super(null, null, null, null);
+      this(new SyncPayloadCodec(new ObjectMapper()));
+    }
+
+    private RecordingHabitSyncProcessor(SyncPayloadCodec payloadCodec) {
+      super(payloadCodec, new SyncValueCodec(), new SyncPayloadMapperImpl());
     }
 
     @Override
@@ -388,7 +392,11 @@ class SyncProcessorCoverageTest extends AuthenticatedApiTestSupport {
     private final List<String> opIds = new ArrayList<>();
 
     RecordingCheckinSyncProcessor() {
-        super(null, null, null, null);
+      this(new SyncPayloadCodec(new ObjectMapper()));
+    }
+
+    private RecordingCheckinSyncProcessor(SyncPayloadCodec payloadCodec) {
+      super(payloadCodec, new CheckinDeleteHandler(payloadCodec), new SyncPayloadMapperImpl());
     }
 
     @Override

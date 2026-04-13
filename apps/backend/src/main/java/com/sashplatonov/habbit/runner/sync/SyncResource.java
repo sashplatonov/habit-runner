@@ -42,7 +42,11 @@ public class SyncResource {
   @Context
   ContainerRequestContext requestContext;
 
-  public SyncResource(SyncService syncService, CurrentUserContext currentUserContext, SyncMetricsCollector syncMetricsCollector) {
+  public SyncResource(
+      SyncService syncService,
+      CurrentUserContext currentUserContext,
+      SyncMetricsCollector syncMetricsCollector
+  ) {
     this.syncService = syncService;
     this.currentUserContext = currentUserContext;
     this.syncMetricsCollector = syncMetricsCollector;
@@ -50,7 +54,6 @@ public class SyncResource {
 
   @GET
   @Path("/pull")
-  @SuppressWarnings("PMD.AvoidCatchingGenericException")
   @Operation(summary = "Pull sync changes", description = "Returns habits, checkins, and tombstones changed after the optional cursor.")
   @APIResponses({
       @APIResponse(responseCode = "200", description = "Sync pull payload"),
@@ -60,16 +63,83 @@ public class SyncResource {
   public Response pull(@QueryParam("since") String since) {
     var userId = currentUserContext.requireUser().id();
     var traceId = traceId();
-    var startedAt = System.nanoTime();
-    try {
+    try (var tracker = SyncRequestTracker.pull(syncMetricsCollector, userId, traceId)) {
       var payload = syncService.pull(userId, since);
-      var durationMs = durationMs(startedAt);
+      return tracker.completePull(payload);
+    }
+  }
+
+  @POST
+  @Path("/push")
+  @Consumes(MediaType.APPLICATION_JSON)
+  @Operation(summary = "Push sync changes", description = "Applies habit and checkin mutations for the authenticated user.")
+  @APIResponses({
+      @APIResponse(responseCode = "200", description = "Sync push result"),
+      @APIResponse(responseCode = "400", description = "Validation failed",
+          content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+      @APIResponse(responseCode = "403", description = "Authentication required",
+          content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+  })
+  public Response push(@Valid @NotNull PushRequestDto body) {
+    var userId = currentUserContext.requireUser().id();
+    var traceId = traceId();
+    var ops = body.ops();
+    try (var tracker = SyncRequestTracker.push(syncMetricsCollector, userId, traceId, ops.size())) {
+      var payload = syncService.push(userId, ops);
+      return tracker.completePush(payload);
+    }
+  }
+
+  private String traceId() {
+    return RequestTraceFilter.traceId(requestContext);
+  }
+
+  private static final class SyncRequestTracker implements AutoCloseable {
+    private final SyncMetricsCollector metrics;
+    private final String userId;
+    private final String traceId;
+    private final int operationCount;
+    private final long startedAt;
+    private boolean completed;
+
+    private SyncRequestTracker(
+        SyncMetricsCollector metrics,
+        String userId,
+        String traceId,
+        int operationCount
+    ) {
+      this.metrics = metrics;
+      this.userId = userId;
+      this.traceId = traceId;
+      this.operationCount = operationCount;
+      this.startedAt = System.nanoTime();
+    }
+
+    private static SyncRequestTracker pull(SyncMetricsCollector metrics, String userId, String traceId) {
+      return new SyncRequestTracker(metrics, userId, traceId, 0);
+    }
+
+    private static SyncRequestTracker push(
+        SyncMetricsCollector metrics,
+        String userId,
+        String traceId,
+        int operationCount
+    ) {
+      return new SyncRequestTracker(metrics, userId, traceId, operationCount);
+    }
+
+    private Response completePull(com.sashplatonov.habbit.runner.sync.dto.PullResponseDto payload) {
+      var durationMs = durationMs();
       var totalRows = payload.habits().size() + payload.checkins().size() + payload.tombstones().size();
-      syncMetricsCollector.recordPull(durationMs, totalRows);
+      metrics.recordPull(durationMs, totalRows);
       log.debug(
           "event=sync_pull_completed, userId={}, traceId={}, habits={}, checkins={}, tombstones={}, durationMs={}",
-          userId, traceId,
-          payload.habits().size(), payload.checkins().size(), payload.tombstones().size(), durationMs
+          userId,
+          traceId,
+          payload.habits().size(),
+          payload.checkins().size(),
+          payload.tombstones().size(),
+          durationMs
       );
       if (durationMs > SLOW_SYNC_THRESHOLD_MS) {
         log.warn(
@@ -83,40 +153,19 @@ public class SyncResource {
             SLOW_SYNC_THRESHOLD_MS
         );
       }
+      completed = true;
       return ApiResponses.noStore(payload, traceId, durationMs);
-    } catch (RuntimeException ex) {
-      syncMetricsCollector.recordError();
-      throw ex;
     }
-  }
 
-  @POST
-  @Path("/push")
-  @SuppressWarnings("PMD.AvoidCatchingGenericException")
-  @Consumes(MediaType.APPLICATION_JSON)
-  @Operation(summary = "Push sync changes", description = "Applies habit and checkin mutations for the authenticated user.")
-  @APIResponses({
-      @APIResponse(responseCode = "200", description = "Sync push result"),
-      @APIResponse(responseCode = "400", description = "Validation failed",
-          content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
-      @APIResponse(responseCode = "403", description = "Authentication required",
-          content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
-  })
-  public Response push(@Valid @NotNull PushRequestDto body) {
-    var userId = currentUserContext.requireUser().id();
-    var traceId = traceId();
-    var startedAt = System.nanoTime();
-    var ops = body.ops();
-    try {
-      var payload = syncService.push(userId, ops);
-      var durationMs = durationMs(startedAt);
-      syncMetricsCollector.recordPush(durationMs, ops.size(), payload.conflicts().size());
+    private Response completePush(com.sashplatonov.habbit.runner.sync.dto.PushResponseDto payload) {
+      var durationMs = durationMs();
+      metrics.recordPush(durationMs, operationCount, payload.conflicts().size());
       if (!payload.conflicts().isEmpty()) {
         log.warn(
             "event=sync_push_conflicts, userId={}, traceId={}, opCount={}, appliedCount={}, conflictCount={}, durationMs={}",
             userId,
             traceId,
-            ops.size(),
+            operationCount,
             payload.applied().size(),
             payload.conflicts().size(),
             durationMs
@@ -126,24 +175,25 @@ public class SyncResource {
             "event=sync_push_slow, userId={}, traceId={}, opCount={}, appliedCount={}, durationMs={}, thresholdMs={}",
             userId,
             traceId,
-            ops.size(),
+            operationCount,
             payload.applied().size(),
             durationMs,
             SLOW_SYNC_THRESHOLD_MS
         );
       }
+      completed = true;
       return ApiResponses.noStore(payload, traceId, durationMs);
-    } catch (RuntimeException ex) {
-      syncMetricsCollector.recordError();
-      throw ex;
     }
-  }
 
-  private String traceId() {
-    return RequestTraceFilter.traceId(requestContext);
-  }
+    @Override
+    public void close() {
+      if (!completed) {
+        metrics.recordError();
+      }
+    }
 
-  private long durationMs(long startedAt) {
-    return Math.round((System.nanoTime() - startedAt) / 1_000_000.0d);
+    private long durationMs() {
+      return Math.round((System.nanoTime() - startedAt) / 1_000_000.0d);
+    }
   }
 }

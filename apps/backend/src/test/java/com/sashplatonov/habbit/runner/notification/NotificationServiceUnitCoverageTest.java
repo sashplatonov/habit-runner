@@ -21,19 +21,19 @@ class NotificationServiceUnitCoverageTest {
 
   @Test
   void shouldReturnFailureWhenVapidKeyIsMissing() {
-    var service = new NotificationService(() -> Optional.empty(), new StubPushSubscriptionRepository());
+    var service = new NotificationServiceImpl(() -> Optional.empty(), new StubPushSubscriptionRepository());
 
     var result = service.getVapidPublicKey();
 
     var failure = assertInstanceOf(OperationResult.Failure.class, result);
-    assertEquals(503, failure.status());
-    assertEquals("VAPID_PUBLIC_KEY_MISSING", failure.errorCode());
+    assertEquals(503, failure.toErrorResponse().status());
+    assertEquals("VAPID_PUBLIC_KEY_MISSING", failure.toErrorResponse().errorCode());
   }
 
   @Test
   void shouldHandleSubscribeAndUnsubscribeScenarios() {
     var repository = new StubPushSubscriptionRepository();
-    var service = new NotificationService(() -> Optional.of("public-key"), repository);
+    var service = new NotificationServiceImpl(() -> Optional.of("public-key"), repository);
     var request = new PushSubscriptionRequest(
         "https://push.example/subscriptions/1",
         new PushSubscriptionKeys("p256dh-key", "auth-key")
@@ -57,15 +57,15 @@ class NotificationServiceUnitCoverageTest {
     foreign.endpoint = request.endpoint();
     repository.existing = foreign;
     var subscribeConflict = assertInstanceOf(OperationResult.Failure.class, service.subscribe("user-1", request));
-    assertEquals(409, subscribeConflict.status());
-    assertEquals("SUBSCRIPTION_ENDPOINT_CONFLICT", subscribeConflict.errorCode());
+    assertEquals(409, subscribeConflict.toErrorResponse().status());
+    assertEquals("SUBSCRIPTION_ENDPOINT_CONFLICT", subscribeConflict.toErrorResponse().errorCode());
 
     var unsubscribeConflict = assertInstanceOf(
         OperationResult.Failure.class,
         service.unsubscribe("user-1", new PushSubscriptionEndpointRequest(request.endpoint()))
     );
-    assertEquals(403, unsubscribeConflict.status());
-    assertEquals("SUBSCRIPTION_ENDPOINT_FORBIDDEN", unsubscribeConflict.errorCode());
+    assertEquals(403, unsubscribeConflict.toErrorResponse().status());
+    assertEquals("SUBSCRIPTION_ENDPOINT_FORBIDDEN", unsubscribeConflict.toErrorResponse().errorCode());
 
     repository.existing = repository.savedEntity;
     var removed = assertInstanceOf(

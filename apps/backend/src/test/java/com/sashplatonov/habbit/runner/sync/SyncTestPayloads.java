@@ -28,7 +28,6 @@ final class SyncTestPayloads {
         .build();
   }
 
-  @SuppressWarnings("unchecked")
   private static SyncOpPayloadDto toPayload(Map<String, Object> payload) {
     if (payload == null) {
       return SyncOpPayloadDto.builder().build();
@@ -61,12 +60,10 @@ final class SyncTestPayloads {
         .build();
   }
 
-  @SuppressWarnings("unchecked")
   private static List<Integer> toIntegerList(Object value) {
     return value instanceof List<?> list ? (List<Integer>) list : null;
   }
 
-  @SuppressWarnings("unchecked")
   private static List<String> toStringList(Object value) {
     return value instanceof List<?> list ? (List<String>) list : null;
   }

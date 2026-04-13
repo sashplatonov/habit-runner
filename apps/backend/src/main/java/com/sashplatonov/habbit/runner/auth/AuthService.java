@@ -12,17 +12,13 @@ import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.NotAuthorizedException;
 import lombok.extern.slf4j.Slf4j;
 
-import java.time.Instant;
-
 @ApplicationScoped
 @Slf4j
-@SuppressWarnings("PMD.TooManyMethods")
-public class AuthService {
+public class AuthService extends AuthServiceSupport {
 
-  private final AuthConfig authConfig;
-  private final AuthCollaborators collaborators;
-  private final UserRepository userRepository;
-  private final OAuthStateRepository oauthStateRepository;
+  AuthService() {
+    super();
+  }
 
   protected AuthService(AuthConfig authConfig, AuthCollaborators collaborators) {
     this(authConfig, collaborators, null, null);
@@ -35,10 +31,7 @@ public class AuthService {
       UserRepository userRepository,
       OAuthStateRepository oauthStateRepository
   ) {
-    this.authConfig = authConfig;
-    this.collaborators = collaborators;
-    this.userRepository = userRepository;
-    this.oauthStateRepository = oauthStateRepository;
+    super(authConfig, collaborators, userRepository, oauthStateRepository);
   }
 
   @Transactional
@@ -137,38 +130,6 @@ public class AuthService {
       throw new NotAuthorizedException("User no longer exists");
     }
     return user;
-  }
-
-  protected UserEntity findUserById(String userId) {
-    return userRepository == null ? null : userRepository.findRequiredById(userId);
-  }
-
-  protected OAuthStateEntity findOAuthState(String state) {
-    return oauthStateRepository == null ? null : oauthStateRepository.findById(state);
-  }
-
-  protected void deleteOAuthState(String state) {
-    if (oauthStateRepository != null) {
-      oauthStateRepository.deleteState(state);
-    }
-  }
-
-  protected void storeOAuthState(String state, String returnTo, Instant expiresAt) {
-    var payload = new OAuthStateEntity();
-    payload.state = state;
-    payload.returnTo = returnTo;
-    payload.setExpiry(expiresAt);
-    if (oauthStateRepository != null) {
-      oauthStateRepository.save(payload);
-    }
-  }
-
-  protected Instant now() {
-    return Instant.now();
-  }
-
-  public int refreshTokenDays() {
-    return authConfig.refreshTokenDays();
   }
 
   public record OAuthCallbackSession(String redirectUrl, TokenResponse session) {

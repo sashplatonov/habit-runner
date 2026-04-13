@@ -1,10 +1,7 @@
 package com.sashplatonov.habbit.runner.sync;
 
 import com.sashplatonov.habbit.runner.model.CheckinEntity;
-import com.sashplatonov.habbit.runner.model.HabitEntity;
-import com.sashplatonov.habbit.runner.repository.CheckinRepository;
-import com.sashplatonov.habbit.runner.repository.HabitRepository;
-import com.sashplatonov.habbit.runner.sync.dto.PushConflict;
+import com.sashplatonov.habbit.runner.sync.dto.CheckinPayloadDto;
 import com.sashplatonov.habbit.runner.sync.dto.SyncOpDto;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -15,133 +12,121 @@ import java.time.LocalDate;
 
 @ApplicationScoped
 @Slf4j
-@SuppressWarnings("PMD.CouplingBetweenObjects")
 public class CheckinSyncProcessor {
 
   private final SyncPayloadCodec payloadCodec;
-  private final SyncEntityMapper entityMapper;
   private final CheckinDeleteHandler checkinDeleteHandler;
   private final SyncPayloadMapper payloadMapper;
-  private final CheckinRepository checkinRepository;
-  private final HabitRepository habitRepository;
+  private final CheckinSyncUpsertHandler checkinSyncUpsertHandler;
 
   public CheckinSyncProcessor(
       SyncPayloadCodec payloadCodec,
-      SyncEntityMapper entityMapper,
       CheckinDeleteHandler checkinDeleteHandler,
       SyncPayloadMapper payloadMapper
   ) {
-    this(payloadCodec, entityMapper, checkinDeleteHandler, payloadMapper, null, null);
+    this(payloadCodec, payloadMapper, checkinDeleteHandler, new CheckinSyncUpsertHandler());
   }
 
   @Inject
-  @SuppressWarnings("PMD.ExcessiveParameterList")
   public CheckinSyncProcessor(
       SyncPayloadCodec payloadCodec,
-      SyncEntityMapper entityMapper,
-      CheckinDeleteHandler checkinDeleteHandler,
       SyncPayloadMapper payloadMapper,
-      CheckinRepository checkinRepository,
-      HabitRepository habitRepository
+      CheckinDeleteHandler checkinDeleteHandler,
+      CheckinSyncUpsertHandler checkinSyncUpsertHandler
   ) {
     this.payloadCodec = payloadCodec;
-    this.entityMapper = entityMapper;
     this.checkinDeleteHandler = checkinDeleteHandler;
     this.payloadMapper = payloadMapper;
-    this.checkinRepository = checkinRepository;
-    this.habitRepository = habitRepository;
+    this.checkinSyncUpsertHandler = checkinSyncUpsertHandler;
   }
 
-  @SuppressWarnings({"PMD.CognitiveComplexity", "PMD.CyclomaticComplexity", "PMD.NPathComplexity"})
   public void apply(String userId, SyncOpDto op, SyncPushState state) {
     var payload = payloadMapper.toCheckinPayload(op.payload());
-    var habitId = payload != null ? payload.habitId() : null;
-    var dateString = payload != null ? payload.date() : null;
-    if (habitId == null || dateString == null) {
+    var command = createCommand(userId, op, payload);
+    if (command == null) {
       log.debug("Ignoring checkin sync op with incomplete payload: opId={}", op.id());
       return;
     }
-    if (hasCheckinParentConflict(userId, habitId, op.id(), state)) {
+    if (checkinSyncUpsertHandler.hasParentConflict(command.userId(), command.habitId(), command.opId(), state)) {
       return;
     }
-
-    var date = payloadCodec.toLocalDate(dateString);
-    var existing = findCheckin(habitId, date, userId);
-    var clientUpdated = payloadCodec.normalizeInstant(payload != null ? payload.updatedAt() : null);
 
     if (op.type() == SyncOperationType.DELETE) {
-      state.addAppliedCheckinDelete(op.id(), checkinDeleteHandler.delete(new CheckinDeleteHandler.CheckinDeleteRequest(
-          userId,
-          habitId,
-          date,
-          existing != null ? existing.id : habitId + ":" + date,
-          payload
-      )));
+      handleDelete(command, state);
       return;
     }
 
-    var conflict = checkinConflict(op.id(), existing, clientUpdated);
+    handleUpsert(command, state);
+  }
+
+  private CheckinCommand createCommand(String userId, SyncOpDto op, CheckinPayloadDto payload) {
+    var habitId = payload != null ? payload.habitId() : null;
+    var dateString = payload != null ? payload.date() : null;
+    if (habitId == null || dateString == null) {
+      return null;
+    }
+    return new CheckinCommand(
+        userId,
+        op.id(),
+        habitId,
+        payloadCodec.toLocalDate(dateString),
+        payload,
+        payloadCodec.normalizeInstant(payload.updatedAt())
+    );
+  }
+
+  private void handleDelete(CheckinCommand command, SyncPushState state) {
+    var existing = checkinSyncUpsertHandler.findCheckin(command.habitId(), command.date(), command.userId());
+    state.addAppliedCheckinDelete(command.opId(), checkinDeleteHandler.delete(
+        new CheckinDeleteHandler.CheckinDeleteRequest(
+            command.userId(),
+            command.habitId(),
+            command.date(),
+            existing != null ? existing.id : command.habitId() + ":" + command.date(),
+            command.payload()
+        )
+    ));
+  }
+
+  private void handleUpsert(CheckinCommand command, SyncPushState state) {
+    var existing = checkinSyncUpsertHandler.findCheckin(command.habitId(), command.date(), command.userId());
+    var conflict = checkinSyncUpsertHandler.conflict(command.opId(), existing, command.clientUpdated(), payloadCodec);
     if (conflict != null) {
-      log.debug("Detected checkin sync conflict: opId={} habitId={} date={}", op.id(), habitId, date);
+      log.debug(
+          "Detected checkin sync conflict: opId={} habitId={} date={}",
+          command.opId(),
+          command.habitId(),
+          command.date()
+      );
       state.addConflict(conflict);
       return;
     }
 
-    var checkin = ensureCheckin(existing, habitId, userId, date);
-    checkin.done = payload != null && payload.done() != null && payload.done();
-    checkin.count = Math.max(1, payload != null && payload.count() != null ? payload.count() : 1);
-    checkin.version = Math.max(checkin.version, payload != null && payload.version() != null ? payload.version() : 0) + 1;
-    checkin.setUpdatedAt(payloadCodec.nextSyncDate(clientUpdated, checkin.updatedAtValue()));
-    state.addAppliedCheckin(op.id(), checkin);
+    var checkin = checkinSyncUpsertHandler.ensureCheckin(
+        existing,
+        command.habitId(),
+        command.userId(),
+        command.date()
+    );
+    applyCheckinPayload(checkin, command);
+    state.addAppliedCheckin(command.opId(), checkin);
   }
 
-  private boolean hasCheckinParentConflict(String userId, String habitId, String opId, SyncPushState state) {
-    var parent = findHabit(habitId);
-    if (parent != null && userId.equals(parent.userId)) {
-      return false;
-    }
-    log.debug("Detected missing parent habit for checkin sync: opId={} habitId={}", opId, habitId);
-    state.addConflict(entityMapper.buildMissingEntityConflict(opId, "checkin habit belongs to another user"));
-    return true;
+  private void applyCheckinPayload(CheckinEntity checkin, CheckinCommand command) {
+    var payload = command.payload();
+    checkin.done = Boolean.TRUE.equals(payload.done());
+    checkin.count = Math.max(1, payload.count() != null ? payload.count() : 1);
+    checkin.version = Math.max(checkin.version, payload.version() != null ? payload.version() : 0) + 1;
+    checkin.setUpdatedAt(payloadCodec.nextSyncDate(command.clientUpdated(), checkin.updatedAtValue()));
   }
 
-  private PushConflict checkinConflict(String opId, CheckinEntity existing, Instant clientUpdated) {
-    if (existing == null || !existing.updatedAtValue().isAfter(clientUpdated)) {
-      return null;
-    }
-    return entityMapper.buildConflict(opId, "server already has newer checkin", existing.version, existing.updatedAtValue());
-  }
-
-  private CheckinEntity ensureCheckin(CheckinEntity existing, String habitId, String userId, LocalDate date) {
-    if (existing != null) {
-      return existing;
-    }
-    var created = new CheckinEntity();
-    created.habitId = habitId;
-    created.userId = userId;
-    created.setCheckinDate(date);
-    saveCheckin(created);
-    return created;
-  }
-
-  private CheckinEntity findCheckin(String habitId, LocalDate date, String userId) {
-    if (checkinRepository != null) {
-      return checkinRepository.findByHabitDateAndUserId(habitId, date, userId);
-    }
-    return CheckinEntity.<CheckinEntity>find(
-        "habitId = ?1 and date = ?2 and userId = ?3", habitId, date, userId
-    ).firstResult();
-  }
-
-  private HabitEntity findHabit(String habitId) {
-    return habitRepository == null ? (HabitEntity) HabitEntity.findById(habitId) : habitRepository.findHabitById(habitId);
-  }
-
-  private void saveCheckin(CheckinEntity checkin) {
-    if (checkinRepository != null) {
-      checkinRepository.save(checkin);
-      return;
-    }
-    checkin.persist();
+  private record CheckinCommand(
+      String userId,
+      String opId,
+      String habitId,
+      LocalDate date,
+      CheckinPayloadDto payload,
+      Instant clientUpdated
+  ) {
   }
 }

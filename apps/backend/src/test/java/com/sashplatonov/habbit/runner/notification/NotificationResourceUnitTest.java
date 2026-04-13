@@ -39,7 +39,7 @@ class NotificationResourceUnitTest {
     var currentUserContext = new CurrentUserContext();
     currentUserContext.setUser(new CurrentUser("user-1", "user@example.test"));
     return new NotificationResource(
-        new NotificationService(() -> java.util.Optional.ofNullable(vapidPublicKey), null),
+        new NotificationServiceImpl(() -> java.util.Optional.ofNullable(vapidPublicKey), null),
         currentUserContext
     );
   }

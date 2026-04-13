@@ -31,29 +31,51 @@ public class CheckinDeleteHandler {
     this.checkinRepository = checkinRepository;
   }
 
-  @SuppressWarnings({"PMD.CyclomaticComplexity", "PMD.NPathComplexity"})
   public TombstoneEntity delete(CheckinDeleteRequest request) {
     var tombstone = new TombstoneEntity();
     tombstone.userId = request.userId();
     tombstone.entity = "checkin";
-    var payloadId = request.payload() != null ? request.payload().id() : null;
-    tombstone.entityId = payloadId != null ? payloadId : request.fallbackEntityId();
-    tombstone.version = request.payload() != null && request.payload().version() != null ? request.payload().version() : 1;
-    tombstone.setDeletedAt(payloadCodec.nextSyncDate(
-        payloadCodec.parseInstantOrNow(request.payload() != null ? request.payload().updatedAt() : null)
-    ));
+    tombstone.entityId = entityId(request);
+    tombstone.version = version(request.payload());
+    tombstone.setDeletedAt(deletedAt(request.payload()));
+    saveTombstone(tombstone);
+    deleteCheckin(request);
+    return tombstone;
+  }
+
+  private String entityId(CheckinDeleteRequest request) {
+    var payload = request.payload();
+    var payloadId = payload == null ? null : payload.id();
+    return payloadId != null ? payloadId : request.fallbackEntityId();
+  }
+
+  private int version(CheckinPayloadDto payload) {
+    return payload != null && payload.version() != null ? payload.version() : 1;
+  }
+
+  private java.time.Instant deletedAt(CheckinPayloadDto payload) {
+    return payloadCodec.nextSyncDate(payloadCodec.parseInstantOrNow(payload == null ? null : payload.updatedAt()));
+  }
+
+  private void saveTombstone(TombstoneEntity tombstone) {
     if (tombstoneRepository != null) {
       tombstoneRepository.save(tombstone);
-    } else {
-      tombstone.persist();
+      return;
     }
+    tombstone.persist();
+  }
 
+  private void deleteCheckin(CheckinDeleteRequest request) {
     if (checkinRepository != null) {
       checkinRepository.deleteByHabitIdUserIdAndDate(request.habitId(), request.userId(), request.date());
-    } else {
-      CheckinEntity.delete("habitId = ?1 and userId = ?2 and date = ?3", request.habitId(), request.userId(), request.date());
+      return;
     }
-    return tombstone;
+    CheckinEntity.delete(
+        "habitId = ?1 and userId = ?2 and date = ?3",
+        request.habitId(),
+        request.userId(),
+        request.date()
+    );
   }
 
   record CheckinDeleteRequest(

@@ -125,17 +125,13 @@ class SyncResourceUnitTest {
     assertEquals(traceId, response.getHeaderString(RequestTraceFilter.TRACE_ID_HEADER));
   }
 
-  private static final class StubSyncService extends SyncService {
+  private static final class StubSyncService implements SyncService {
     private String lastPullUserId;
     private String lastPullSince;
     private String lastPushUserId;
     private List<SyncOpDto> lastPushOps = List.of();
     private PullResponseDto pullResponse;
     private PushResponseDto pushResponse;
-
-    StubSyncService() {
-      super(null, null);
-    }
 
     @Override
     public PullResponseDto pull(String userId, String since) {

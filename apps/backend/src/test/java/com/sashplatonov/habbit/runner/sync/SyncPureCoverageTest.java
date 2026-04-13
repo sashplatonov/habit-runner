@@ -41,8 +41,13 @@ class SyncPureCoverageTest {
     var habitDto = mapper.serializeHabit(habit);
     var checkinDto = mapper.serializeCheckin(checkin);
     var tombstoneDto = mapper.serializeTombstone(tombstone);
-    var conflict = mapper.buildConflict("op-1", "server newer", 7, instant);
-    var missingConflict = mapper.buildMissingEntityConflict("op-2", "missing parent");
+    var conflict = SyncConflicts.newerServerValue(
+      payloadCodec,
+      "op-1",
+      "server newer",
+      SyncConflicts.serverState(7, instant)
+    );
+    var missingConflict = SyncConflicts.missingEntity("op-2", "missing parent");
 
     state.addAppliedHabit("op-habit", habit);
     state.addAppliedCheckin("op-checkin", checkin);
@@ -102,7 +107,7 @@ class SyncPureCoverageTest {
       .build();
     var pullProcessor = new StubSyncPullProcessor(pullResponse);
     var pushProcessor = new StubSyncPushProcessor(pushResponse);
-    var service = new SyncService(pullProcessor, pushProcessor);
+    var service = new SyncServiceImpl(pullProcessor, pushProcessor);
     var ops = List.of(SyncOpDto.builder()
       .id("op-1")
       .entity("habit")

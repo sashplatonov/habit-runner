@@ -4,6 +4,7 @@ import com.sashplatonov.habbit.runner.api.ApiResponses;
 import com.sashplatonov.habbit.runner.api.ErrorResponse;
 import com.sashplatonov.habbit.runner.auth.dto.AuthSessionResponse;
 import com.sashplatonov.habbit.runner.auth.dto.LoginRequest;
+import com.sashplatonov.habbit.runner.auth.dto.TokenResponse;
 import com.sashplatonov.habbit.runner.auth.dto.UpdatePreferencesRequest;
 import com.sashplatonov.habbit.runner.auth.dto.UserPreferencesResponse;
 import jakarta.validation.Valid;
@@ -76,7 +77,8 @@ public class AuthResource {
 
   @GET
   @Path("/google/callback")
-  @Operation(summary = "Handle Google OAuth callback", description = "Completes the OAuth exchange, sets auth cookies, and redirects back to the web app.")
+  @Operation(summary = "Handle Google OAuth callback",
+      description = "Completes the OAuth exchange, sets auth cookies, and redirects back to the web app.")
   @APIResponses({
       @APIResponse(responseCode = "302", description = "OAuth callback completed"),
       @APIResponse(responseCode = "400", description = "Invalid callback parameters",
@@ -163,17 +165,19 @@ public class AuthResource {
           content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
   })
   public Response updatePreferences(@Valid @NotNull UpdatePreferencesRequest request) {
-    return Response.ok(preferencesService.updateUserPreferences(currentUserContext.requireUser().id(), request)).build();
+    var updated = preferencesService.updateUserPreferences(
+        currentUserContext.requireUser().id(), request);
+    return Response.ok(updated).build();
   }
 
-  private Response authenticatedSessionResponse(com.sashplatonov.habbit.runner.auth.dto.TokenResponse session) {
+  private Response authenticatedSessionResponse(TokenResponse session) {
     var responseBuilder = Response.ok(currentSessionResponse(session));
     return addSessionCookies(responseBuilder, session).build();
   }
 
   private Response.ResponseBuilder addSessionCookies(
       Response.ResponseBuilder responseBuilder,
-      com.sashplatonov.habbit.runner.auth.dto.TokenResponse session
+      TokenResponse session
   ) {
     var csrfToken = AuthSupport.randomToken(16);
     return responseBuilder
@@ -182,7 +186,7 @@ public class AuthResource {
         .cookie(authCookieBuilder.csrfToken(csrfToken, refreshCookieMaxAgeSeconds()));
   }
 
-  private AuthSessionResponse currentSessionResponse(com.sashplatonov.habbit.runner.auth.dto.TokenResponse session) {
+  private AuthSessionResponse currentSessionResponse(TokenResponse session) {
     var user = authService.verifyAccessToken(session.accessToken());
     return new AuthSessionResponse(user.id(), user.email());
   }

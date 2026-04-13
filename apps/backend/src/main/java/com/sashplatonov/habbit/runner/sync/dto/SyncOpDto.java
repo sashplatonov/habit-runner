@@ -8,10 +8,10 @@ import lombok.Builder;
 
 @Builder
 public record SyncOpDto(
-	@NotBlank String id,
-	@NotBlank String entity,
-	@NotNull SyncOperationType type,
-	@Valid @NotNull SyncOpPayloadDto payload,
-	String clientTime
+    @NotBlank String id,
+    @NotBlank String entity,
+    @NotNull SyncOperationType type,
+    @Valid @NotNull SyncOpPayloadDto payload,
+    String clientTime
 ) {
 }

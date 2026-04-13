@@ -76,7 +76,8 @@ public class NotificationResource {
   @DELETE
   @Path("/unsubscribe")
   @Consumes(MediaType.APPLICATION_JSON)
-  @Operation(summary = "Unsubscribe from push notifications", description = "Removes the stored browser push subscription for the authenticated user.")
+  @Operation(summary = "Unsubscribe from push notifications",
+      description = "Removes the stored browser push subscription for the authenticated user.")
   @APIResponses({
       @APIResponse(responseCode = "204", description = "Subscription removed"),
       @APIResponse(responseCode = "400", description = "Validation failed",
@@ -94,7 +95,8 @@ public class NotificationResource {
       return Response.noContent().build();
     }
     var failure = (OperationResult.Failure<Void>) result;
-    return Response.status(failure.status()).entity(failure.toErrorResponse()).build();
+    var error = failure.toErrorResponse();
+    return Response.status(error.status()).entity(error).build();
   }
 
   private <T> Response toResponse(OperationResult<T> result, Response.Status status, boolean created) {
@@ -104,6 +106,7 @@ public class NotificationResource {
           : Response.ok(success.value()).build();
     }
     var failure = (OperationResult.Failure<T>) result;
-    return Response.status(failure.status()).entity(failure.toErrorResponse()).build();
+    var error = failure.toErrorResponse();
+    return Response.status(error.status()).entity(error).build();
   }
 }

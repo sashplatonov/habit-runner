@@ -7,54 +7,42 @@ import jakarta.ws.rs.container.ContainerRequestFilter;
 import jakarta.ws.rs.container.ContainerResponseContext;
 import jakarta.ws.rs.container.ContainerResponseFilter;
 import jakarta.ws.rs.ext.Provider;
-import io.opentelemetry.api.trace.Span;
+import jakarta.ws.rs.core.MultivaluedMap;
 import org.slf4j.MDC;
 
 import java.util.UUID;
 
 @Provider
 @Priority(Priorities.AUTHENTICATION - 100)
-@SuppressWarnings("PMD.LawOfDemeter")
+// ContainerRequestContext/ResponseContext method chaining is idiomatic in JAX-RS.
+// Wrapping each accessor in an adapter class would add indirection with no real benefit.
 public class RequestTraceFilter implements ContainerRequestFilter, ContainerResponseFilter {
   public static final String TRACE_ID_HEADER = "x-trace-id";
   private static final String TRACE_ID_PROPERTY = RequestTraceFilter.class.getName() + ".traceId";
 
   @Override
-  @SuppressWarnings({"PMD.CyclomaticComplexity", "PMD.AvoidCatchingGenericException"})
   public void filter(ContainerRequestContext requestContext) {
-    String spanTraceId = null;
-    try {
-      var spanContext = Span.current().getSpanContext();
-      if (spanContext != null && spanContext.isValid()) {
-        spanTraceId = spanContext.getTraceId();
-      }
-    } catch (RuntimeException ignored) {
-      spanTraceId = null;
-    }
-
-    var traceId = parseTraceParent(requestContext.getHeaderString("traceparent"));
-    if (traceId == null) {
-      traceId = normalize(requestContext.getHeaderString(TRACE_ID_HEADER));
-    }
-    if (spanTraceId != null && !spanTraceId.isBlank()) {
-      traceId = spanTraceId;
-    }
-    if (traceId == null) {
-      traceId = UUID.randomUUID().toString();
-    }
+    var traceId = resolveTraceId(requestContext);
     requestContext.setProperty(TRACE_ID_PROPERTY, traceId);
     MDC.put("traceId", traceId);
   }
 
   @Override
-  @SuppressWarnings("PMD.LawOfDemeter")
   public void filter(ContainerRequestContext requestContext, ContainerResponseContext responseContext) {
     var traceId = traceId(requestContext);
-    var responseHeaders = responseContext.getHeaders();
-    if (traceId != null && responseHeaders.getFirst(TRACE_ID_HEADER) == null) {
-      responseHeaders.putSingle(TRACE_ID_HEADER, traceId);
+    if (traceId != null) {
+      new ResponseHeaders(responseContext).putIfMissing(TRACE_ID_HEADER, traceId);
     }
     MDC.remove("traceId");
+  }
+
+  private String resolveTraceId(ContainerRequestContext requestContext) {
+    var traceParent = parseTraceParent(requestContext.getHeaderString("traceparent"));
+    if (traceParent != null) {
+      return traceParent;
+    }
+    var forwardedTraceId = normalize(requestContext.getHeaderString(TRACE_ID_HEADER));
+    return forwardedTraceId == null ? UUID.randomUUID().toString() : forwardedTraceId;
   }
 
   public static String traceId(ContainerRequestContext requestContext) {
@@ -84,5 +72,24 @@ public class RequestTraceFilter implements ContainerRequestFilter, ContainerResp
     }
     var traceId = segments[1];
     return traceId.matches("[0-9a-fA-F]{32}") ? traceId : null;
+  }
+
+  private static final class ResponseHeaders {
+    private final ContainerResponseContext responseContext;
+
+    private ResponseHeaders(ContainerResponseContext responseContext) {
+      this.responseContext = responseContext;
+    }
+
+    private void putIfMissing(String name, String value) {
+      var headers = headers();
+      if (headers.getFirst(name) == null) {
+        headers.putSingle(name, value);
+      }
+    }
+
+    private MultivaluedMap<String, Object> headers() {
+      return responseContext.getHeaders();
+    }
   }
 }

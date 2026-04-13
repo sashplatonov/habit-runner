@@ -187,7 +187,11 @@ class SyncCoordinatorUnitCoverageTest {
     private final List<String> opIds = new ArrayList<>();
 
     RecordingHabitSyncProcessor() {
-      super(null, null, null, null);
+      this(new SyncPayloadCodec(new ObjectMapper()));
+    }
+
+    private RecordingHabitSyncProcessor(SyncPayloadCodec payloadCodec) {
+      super(payloadCodec, new SyncValueCodec(), new SyncPayloadMapperImpl());
     }
 
     @Override
@@ -201,7 +205,11 @@ class SyncCoordinatorUnitCoverageTest {
     private final List<String> opIds = new ArrayList<>();
 
     RecordingCheckinSyncProcessor() {
-      super(null, null, null, null);
+      this(new SyncPayloadCodec(new ObjectMapper()));
+    }
+
+    private RecordingCheckinSyncProcessor(SyncPayloadCodec payloadCodec) {
+      super(payloadCodec, new CheckinDeleteHandler(payloadCodec), new SyncPayloadMapperImpl());
     }
 
     @Override

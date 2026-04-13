@@ -52,8 +52,8 @@ class SyncPanacheCoverageTest {
     entityMapper = new SyncEntityMapper(payloadCodec);
     checkinDeleteHandler = new CheckinDeleteHandler(payloadCodec);
     var payloadMapper = new SyncPayloadMapperImpl();
-    habitSyncProcessor = new HabitSyncProcessor(payloadCodec, valueCodec, entityMapper, payloadMapper);
-    checkinSyncProcessor = new CheckinSyncProcessor(payloadCodec, entityMapper, checkinDeleteHandler, payloadMapper);
+    habitSyncProcessor = new HabitSyncProcessor(payloadCodec, valueCodec, payloadMapper);
+    checkinSyncProcessor = new CheckinSyncProcessor(payloadCodec, checkinDeleteHandler, payloadMapper);
     PanacheMock.mock(HabitEntity.class);
     PanacheMock.mock(CheckinEntity.class);
     PanacheMock.mock(TombstoneEntity.class);
@@ -344,14 +344,12 @@ class SyncPanacheCoverageTest {
     return tombstone;
   }
 
-  @SuppressWarnings("unchecked")
   private PanacheQuery<CheckinEntity> checkinQuery(String habitId, LocalDate date, String userId) {
     var query = mock(PanacheQuery.class);
     when(CheckinEntity.find("habitId = ?1 and date = ?2 and userId = ?3", habitId, date, userId)).thenReturn(query);
     return query;
   }
 
-  @SuppressWarnings("unchecked")
   private PanacheQuery<HabitEntity> habitPageQuery(String userId) {
     var query = mock(PanacheQuery.class);
     when(HabitEntity.find("userId = ?1 ORDER BY updatedAt ASC, id ASC", userId)).thenReturn(query);
@@ -359,7 +357,6 @@ class SyncPanacheCoverageTest {
     return query;
   }
 
-  @SuppressWarnings("unchecked")
   private PanacheQuery<CheckinEntity> checkinPageQuery(String userId) {
     var query = mock(PanacheQuery.class);
     when(CheckinEntity.find("userId = ?1 ORDER BY updatedAt ASC, id ASC", userId)).thenReturn(query);
@@ -367,7 +364,6 @@ class SyncPanacheCoverageTest {
     return query;
   }
 
-  @SuppressWarnings("unchecked")
   private PanacheQuery<TombstoneEntity> tombstonePageQuery(String userId) {
     var query = mock(PanacheQuery.class);
     when(TombstoneEntity.find("userId = ?1 ORDER BY deletedAt ASC, id ASC", userId)).thenReturn(query);
@@ -375,7 +371,6 @@ class SyncPanacheCoverageTest {
     return query;
   }
 
-  @SuppressWarnings("unchecked")
   private PanacheQuery<HabitEntity> habitCursorQuery(String userId, Instant updatedAt, String id) {
     var query = mock(PanacheQuery.class);
     when(HabitEntity.find(
@@ -388,7 +383,6 @@ class SyncPanacheCoverageTest {
     return query;
   }
 
-  @SuppressWarnings("unchecked")
   private PanacheQuery<CheckinEntity> checkinCursorQuery(String userId, Instant updatedAt, String id) {
     var query = mock(PanacheQuery.class);
     when(CheckinEntity.find(
@@ -401,7 +395,6 @@ class SyncPanacheCoverageTest {
     return query;
   }
 
-  @SuppressWarnings("unchecked")
   private PanacheQuery<TombstoneEntity> tombstoneCursorQuery(String userId, Instant deletedAt, String id) {
     var query = mock(PanacheQuery.class);
     when(TombstoneEntity.find(

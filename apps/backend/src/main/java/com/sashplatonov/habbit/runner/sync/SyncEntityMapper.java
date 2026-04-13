@@ -4,20 +4,18 @@ import com.sashplatonov.habbit.runner.model.CheckinEntity;
 import com.sashplatonov.habbit.runner.model.HabitEntity;
 import com.sashplatonov.habbit.runner.model.TombstoneEntity;
 import com.sashplatonov.habbit.runner.sync.dto.CheckinDto;
-import com.sashplatonov.habbit.runner.sync.dto.ConflictServerValueDto;
 import com.sashplatonov.habbit.runner.sync.dto.HabitDto;
-import com.sashplatonov.habbit.runner.sync.dto.PushConflict;
 import com.sashplatonov.habbit.runner.sync.dto.TombstoneDto;
 import jakarta.enterprise.context.ApplicationScoped;
-
-import java.time.Instant;
 
 @ApplicationScoped
 public class SyncEntityMapper {
   private final SyncPayloadCodec payloadCodec;
+  private final SyncJsonCodec jsonCodec;
 
   public SyncEntityMapper(SyncPayloadCodec payloadCodec) {
     this.payloadCodec = payloadCodec;
+    this.jsonCodec = new SyncJsonCodec(payloadCodec.objectMapper());
   }
 
   public SyncCursor habitCursor(HabitEntity habit) {
@@ -49,11 +47,11 @@ public class SyncEntityMapper {
         .color(habit.color)
         .icon(habit.icon)
         .frequency(habit.frequency)
-        .customDays(payloadCodec.parseIntegerListOrNull(habit.customDays))
-        .schedule(payloadCodec.parseJsonNodeOrNull(habit.schedule))
+        .customDays(jsonCodec.parseIntegerListOrNull(habit.customDays))
+        .schedule(jsonCodec.parseJsonNodeOrNull(habit.schedule))
         .targetStreak(habit.targetStreak)
         .dailyTarget(habit.dailyTarget)
-        .tags(payloadCodec.parseStringListOrEmpty(habit.tags))
+        .tags(jsonCodec.parseStringListOrEmpty(habit.tags))
         .archived(habit.archived)
         .createdAt(payloadCodec.toSyncIso(habit.createdAtValue()))
         .updatedAt(payloadCodec.toSyncIso(habit.updatedAtValue()))
@@ -62,7 +60,7 @@ public class SyncEntityMapper {
         .reminderTime(habit.reminderTime)
         .reminderEnabled(habit.reminderEnabled)
         .type(habit.type)
-          .freezeDays(payloadCodec.parseStringListOrEmpty(habit.freezeDays))
+        .freezeDays(jsonCodec.parseStringListOrEmpty(habit.freezeDays))
         .build();
   }
 
@@ -85,25 +83,6 @@ public class SyncEntityMapper {
         .entityId(tombstone.entityId)
         .deletedAt(payloadCodec.toSyncIso(tombstone.deletedAtValue()))
         .version(tombstone.version)
-        .build();
-  }
-
-  public PushConflict buildConflict(String opId, String message, int version, Instant updatedAt) {
-    return PushConflict.builder()
-        .opId(opId)
-        .reason(message)
-        .serverValue(ConflictServerValueDto.builder()
-            .version(version)
-            .updatedAt(payloadCodec.toSyncIso(updatedAt))
-            .build())
-        .build();
-  }
-
-  public PushConflict buildMissingEntityConflict(String opId, String message) {
-    return PushConflict.builder()
-        .opId(opId)
-        .reason(message)
-        .serverValue(null)
         .build();
   }
 }

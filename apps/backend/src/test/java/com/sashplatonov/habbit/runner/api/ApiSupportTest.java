@@ -146,7 +146,6 @@ class ApiSupportTest {
   private record ValidationPayload(@NotBlank String value) {
   }
 
-  @SuppressWarnings("unchecked")
   private static <T> T proxy(Class<T> type, Map<String, Object> values) {
     return (T) Proxy.newProxyInstance(
         type.getClassLoader(),

@@ -300,7 +300,6 @@ class GoogleOAuthClientTest {
         throw interruptedException;
       }
       var response = (FakeResponsePayload) outcome;
-      @SuppressWarnings("unchecked")
       var typedResponse = (HttpResponse<T>) new FakeStringResponse(request, response.statusCode(), response.body());
       return typedResponse;
     }

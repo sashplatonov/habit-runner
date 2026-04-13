@@ -13,12 +13,14 @@ import jakarta.ws.rs.core.UriInfo;
 import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.ext.ExceptionMapper;
 import jakarta.ws.rs.ext.Provider;
+import java.util.regex.Pattern;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
 
 @Provider
 @Slf4j
 public class GlobalExceptionMapper implements ExceptionMapper<Exception> {
+  private static final Pattern HTTP_STATUS_MESSAGE = Pattern.compile("^HTTP\\s+(\\d{3})\\b");
 
   @Context
   UriInfo uriInfo;
@@ -29,99 +31,78 @@ public class GlobalExceptionMapper implements ExceptionMapper<Exception> {
   @Context
   HttpHeaders headers;
 
+  private static final String ERR_BASE = "https://habbit-runner.dev/errors/";
+
   @Override
-  @SuppressWarnings({
-      "PMD.CognitiveComplexity",
-      "PMD.CyclomaticComplexity",
-      "PMD.NPathComplexity",
-      "PMD.LawOfDemeter"
-  })
   public Response toResponse(Exception exception) {
-    if (exception instanceof ValidationException) {
-      return serverError(
-          "https://habbit-runner.dev/errors/validation",
-          "Validation Error",
-          Response.Status.BAD_REQUEST,
-          messageOrDefault(exception, "Validation failed"),
-          "VALIDATION_FAILED",
-          false,
-          exception
-      );
-    }
-    if (exception instanceof NotAuthorizedException) {
-      return serverError(
-          "https://habbit-runner.dev/errors/forbidden",
-          "Forbidden",
-          Response.Status.FORBIDDEN,
-          messageOrDefault(exception, "Authentication required"),
-          "AUTH_REQUIRED",
-          false,
-          exception
-      );
-    }
-    if (exception instanceof NotFoundException) {
-      return serverError(
-          "https://habbit-runner.dev/errors/not-found",
-          "Not Found",
-          Response.Status.NOT_FOUND,
-          messageOrDefault(exception, "Resource not found"),
-          "RESOURCE_NOT_FOUND",
-          false,
-          exception
-      );
-    }
-    if (exception instanceof BadRequestException) {
-      return serverError(
-          "https://habbit-runner.dev/errors/bad-request",
-          "Bad Request",
-          Response.Status.BAD_REQUEST,
-          messageOrDefault(exception, "Bad request"),
-          "BAD_REQUEST",
-          false,
-          exception
-      );
-    }
-    if (exception instanceof WebApplicationException webApplicationException) {
-      var webResponse = webApplicationException.getResponse();
-      var status = webResponse == null ? null : webResponse.getStatusInfo();
-      var normalizedStatus = status == null ? Response.Status.INTERNAL_SERVER_ERROR : status;
-      var statusCode = normalizedStatus.getStatusCode();
-      var title = normalizedStatus.getReasonPhrase();
-      if (title == null || title.isBlank() || "Unknown code".equalsIgnoreCase(title)) {
-        title = statusCode >= 500 ? "Internal Server Error" : "Request Failed";
-      }
-      var errorCode = statusCode >= 500 ? "REQUEST_FAILED" : "REQUEST_REJECTED";
-      return serverError(
-          "https://habbit-runner.dev/errors/request-failed",
-          title,
-          normalizedStatus,
-          messageOrDefault(webApplicationException, title),
-          errorCode,
-          statusCode >= 500,
-          webApplicationException
-      );
-    }
-    return serverError(
-        "https://habbit-runner.dev/errors/internal-server-error",
+    return switch (exception) {
+      case ValidationException e -> serverError(new ErrorResponse(
+        ERR_BASE + "validation",
+        "Validation Error",
+        Response.Status.BAD_REQUEST.getStatusCode(),
+        messageOrDefault(e, "Validation failed"),
+        "VALIDATION_FAILED"
+      ), false, e);
+      case NotAuthorizedException e -> serverError(new ErrorResponse(
+        ERR_BASE + "forbidden",
+        "Forbidden",
+        Response.Status.FORBIDDEN.getStatusCode(),
+        messageOrDefault(e, "Authentication required"),
+        "AUTH_REQUIRED"
+      ), false, e);
+      case NotFoundException e -> serverError(new ErrorResponse(
+        ERR_BASE + "not-found",
+        "Not Found",
+        Response.Status.NOT_FOUND.getStatusCode(),
+        messageOrDefault(e, "Resource not found"),
+        "RESOURCE_NOT_FOUND"
+      ), false, e);
+      case BadRequestException e -> serverError(new ErrorResponse(
+        ERR_BASE + "bad-request",
+        "Bad Request",
+        Response.Status.BAD_REQUEST.getStatusCode(),
+        messageOrDefault(e, "Bad request"),
+        "BAD_REQUEST"
+      ), false, e);
+      case WebApplicationException e -> webException(e);
+      default -> serverError(new ErrorResponse(
+        ERR_BASE + "internal-server-error",
         "Internal Server Error",
-        Response.Status.INTERNAL_SERVER_ERROR,
+        Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(),
         "Internal server error",
-        "INTERNAL_SERVER_ERROR",
-        true,
-        exception
+        "INTERNAL_SERVER_ERROR"
+      ), true, exception);
+    };
+  }
+
+  private Response webException(WebApplicationException e) {
+    var status = normalizedStatus(e);
+    var title = title(status);
+    return serverError(
+        new ErrorResponse(
+            ERR_BASE + "request-failed",
+            title,
+            status.getStatusCode(),
+            messageOrDefault(e, title),
+            status.getStatusCode() >= 500 ? "REQUEST_FAILED" : "REQUEST_REJECTED"
+        ),
+        isServerFailure(status),
+        e
     );
   }
 
-  @SuppressWarnings("PMD.ExcessiveParameterList")
-  private Response serverError(
-      String type,
-      String title,
-      Response.StatusType status,
-      String detail,
-      String errorCode,
-      boolean serverFailure,
-      Exception exception
-  ) {
+  private static Response.StatusType normalizedStatus(WebApplicationException exception) {
+    var message = exception.getMessage();
+    if (message != null) {
+      var matcher = HTTP_STATUS_MESSAGE.matcher(message);
+      if (matcher.find()) {
+        return normalizedStatus(Integer.parseInt(matcher.group(1)));
+      }
+    }
+    return Response.Status.INTERNAL_SERVER_ERROR;
+  }
+
+  private Response serverError(ErrorResponse error, boolean serverFailure, Exception exception) {
     if (serverFailure) {
       log.error(
           "event=request_failed method={} path={} clientIp={} traceId={} status={} detail={}",
@@ -129,8 +110,8 @@ public class GlobalExceptionMapper implements ExceptionMapper<Exception> {
           requestPath(),
           clientIp(),
           traceId(),
-          status.getStatusCode(),
-          detail,
+          error.status(),
+          error.detail(),
           exception
       );
     } else {
@@ -140,13 +121,13 @@ public class GlobalExceptionMapper implements ExceptionMapper<Exception> {
           requestPath(),
           clientIp(),
           traceId(),
-          status.getStatusCode(),
-          detail
+          error.status(),
+          error.detail()
       );
     }
-    return Response.status(status)
+    return Response.status(error.status())
         .type(MediaType.APPLICATION_JSON)
-        .entity(new ErrorResponse(type, title, status.getStatusCode(), detail, errorCode))
+        .entity(error)
         .build();
   }
 
@@ -192,5 +173,48 @@ public class GlobalExceptionMapper implements ExceptionMapper<Exception> {
   private String traceId() {
     var traceId = MDC.get("traceId");
     return traceId == null || traceId.isBlank() ? "unknown" : traceId;
+  }
+
+  private static boolean isServerFailure(Response.StatusType status) {
+    return status.getStatusCode() >= 500;
+  }
+
+  private static Response.StatusType normalizedStatus(int statusCode) {
+    var status = Response.Status.fromStatusCode(statusCode);
+    if (status != null) {
+      return status;
+    }
+    return new UnknownStatus(statusCode);
+  }
+
+  private static final class UnknownStatus implements Response.StatusType {
+    private final int statusCode;
+
+    private UnknownStatus(int statusCode) {
+      this.statusCode = statusCode;
+    }
+
+    @Override
+    public int getStatusCode() {
+      return statusCode;
+    }
+
+    @Override
+    public Response.Status.Family getFamily() {
+      return Response.Status.Family.familyOf(statusCode);
+    }
+
+    @Override
+    public String getReasonPhrase() {
+      return "Unknown code";
+    }
+  }
+
+  private static String title(Response.StatusType status) {
+    var reason = status.getReasonPhrase();
+    if (reason == null || reason.isBlank() || "Unknown code".equalsIgnoreCase(reason)) {
+      return status.getStatusCode() >= 500 ? "Internal Server Error" : "Request Failed";
+    }
+    return reason;
   }
 }
