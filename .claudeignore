@@ -22,3 +22,7 @@ packages/*/.vite/
 packages/*/tmp/
 secrets/
 backups/
+
+# SvelteKit generated output
+.svelte-kit/
+apps/*/.svelte-kit/

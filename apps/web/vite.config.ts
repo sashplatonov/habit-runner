@@ -1,9 +1,11 @@
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
-import { VitePWA } from 'vite-plugin-pwa'
-import path from 'node:path'
-import { resolveApiProxyTarget } from './src/lib/api/devProxy'
-import { shouldCacheAppShell } from './src/lib/pwa/runtimeCaching'
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { defineConfig } from 'vite';
+import { sveltekit } from '@sveltejs/kit/vite';
+import { SvelteKitPWA } from '@vite-pwa/sveltekit';
+import { resolveApiProxyTarget } from './src/lib/api/devProxy';
+
+const dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -23,9 +25,8 @@ export default defineConfig({
     }
   },
   resolve: {
-    dedupe: ['react', 'react-dom'],
     alias: {
-      '@': path.resolve(__dirname, 'src')
+      '@': path.resolve(dirname, 'src')
     }
   },
   build: {
@@ -52,11 +53,10 @@ export default defineConfig({
     }
   },
   plugins: [
-    react(),
-    VitePWA({
+    sveltekit(),
+    SvelteKitPWA({
       strategies: 'injectManifest',
       srcDir: 'src',
-      filename: 'sw-custom.ts',
       registerType: 'autoUpdate',
       injectRegister: 'auto',
       manifest: {
@@ -101,4 +101,4 @@ export default defineConfig({
       }
     })
   ]
-})
+});

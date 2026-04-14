@@ -58,3 +58,7 @@ apps/*/.env.*
 
 secrets/
 .claude/settings.local.json
+
+# SvelteKit build artifact
+.svelte-kit/
+apps/*/.svelte-kit/

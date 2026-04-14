@@ -128,10 +128,12 @@ export class HabbitRunnerDb extends Dexie {
         sync_meta: 'id, status',
         outbox: 'id, userId, entity, type, status'
       })
-      .upgrade((transaction) =>
-        transaction.habits.toCollection().modify((record) => {
+      .upgrade((transaction) => {
+        const habitsTable = transaction.table('habits') as Table<LegacyHabitRecord, string>;
+
+        return habitsTable.toCollection().modify((record) => {
           if (record.sortOrder === undefined || record.sortOrder === null) {
-            record.sortOrder = Date.parse(record.createdAt) || Date.now();
+            record.sortOrder = Date.parse(record.createdAt ?? new Date().toISOString()) || Date.now();
           }
           if (!Object.prototype.hasOwnProperty.call(record, 'reminderTime')) {
             record.reminderTime = null;
@@ -142,8 +144,8 @@ export class HabbitRunnerDb extends Dexie {
           if (!Object.prototype.hasOwnProperty.call(record, 'dailyTarget')) {
             record.dailyTarget = 1;
           }
-        })
-      );
+        });
+      });
 
     this.version(3)
       .stores({
@@ -153,13 +155,15 @@ export class HabbitRunnerDb extends Dexie {
         sync_meta: 'id, status',
         outbox: 'id, userId, entity, type, status'
       })
-      .upgrade((transaction) =>
-        transaction.checkins.toCollection().modify((record) => {
+      .upgrade((transaction) => {
+        const checkinsTable = transaction.table('checkins') as Table<LegacyCheckinRecord, string>;
+
+        return checkinsTable.toCollection().modify((record) => {
           if (!Object.prototype.hasOwnProperty.call(record, 'count')) {
             record.count = 1;
           }
-        })
-      );
+        });
+      });
 
     this.version(4)
       .stores({
@@ -169,13 +173,15 @@ export class HabbitRunnerDb extends Dexie {
         sync_meta: 'id, status',
         outbox: 'id, userId, entity, type, status'
       })
-      .upgrade((transaction) =>
-        transaction.habits.toCollection().modify((record) => {
+      .upgrade((transaction) => {
+        const habitsTable = transaction.table('habits') as Table<LegacyHabitRecord, string>;
+
+        return habitsTable.toCollection().modify((record) => {
           if (!Object.prototype.hasOwnProperty.call(record, 'dailyTarget')) {
             record.dailyTarget = 1;
           }
-        })
-      );
+        });
+      });
 
     this.version(5)
       .stores({

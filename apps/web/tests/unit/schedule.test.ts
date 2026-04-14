@@ -20,6 +20,7 @@ function createHabit(overrides: Partial<Habit> = {}): Habit {
     schedule: { type: 'daily' },
     targetStreak: 21,
     dailyTarget: 1,
+    type: 'positive',
     completions: {},
     freezeDays: [],
     createdAt: new Date().toISOString(),

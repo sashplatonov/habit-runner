@@ -71,17 +71,12 @@ export async function initFaro(): Promise<void> {
   try {
     const [faroPkg, tracingPkg] = await Promise.all([
       import('@grafana/faro-web-sdk'),
-      import('@grafana/faro-web-tracing'),
+      import('@grafana/faro-web-tracing')
     ]);
 
     const {
       initializeFaro,
-      FetchInstrumentation,
-      XhrInstrumentation,
-      ConsoleInstrumentation,
-      ErrorsInstrumentation,
-      PerformanceInstrumentation,
-      SessionInstrumentation,
+      getWebInstrumentations
     } = faroPkg;
 
     const { TracingInstrumentation } = tracingPkg;
@@ -99,13 +94,8 @@ export async function initFaro(): Promise<void> {
        * The backend reads the header via quarkus-opentelemetry automatically.
        */
       instrumentations: [
-        new FetchInstrumentation(),
-        new XhrInstrumentation(),
-        new ConsoleInstrumentation(),
-        new ErrorsInstrumentation(),
-        new PerformanceInstrumentation(),
-        new SessionInstrumentation(),
-        new TracingInstrumentation(),
+        ...getWebInstrumentations({ captureConsole: true }),
+        new TracingInstrumentation()
       ],
     });
   } catch (err) {

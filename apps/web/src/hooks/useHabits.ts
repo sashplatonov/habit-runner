@@ -149,7 +149,7 @@ async function applyCompletionCountChange(
   const normalizedCount = Math.max(0, Math.trunc(count));
   let ts = nowSyncISO();
   let nextVersion = 1;
-  let deletedEntity;
+  let deletedEntity: Awaited<ReturnType<typeof deleteCheckinInDb>>;
 
   await db.transaction('rw', db.checkins, db.habits, db.outbox, async () => {
     if (normalizedCount > 0) {

@@ -1,5 +1,7 @@
 import type { HabitColor, HabitFrequency, HabitSchedule } from '@habbit-runner/shared';
 
+export type { HabitColor, HabitFrequency, HabitSchedule } from '@habbit-runner/shared';
+
 export interface Habit {
   id: string;
   name: string;
