@@ -185,7 +185,7 @@
 
   <!-- Day-of-week headers -->
   <div class="mb-1 grid grid-cols-7 gap-1">
-    {#each DAY_HEADERS as h (h)}
+    {#each DAY_HEADERS as h, hi (h + '-' + hi)}
       <div class="text-center text-[9px] font-mono uppercase tracking-widest text-muted/60">{h}</div>
     {/each}
   </div>
@@ -227,7 +227,7 @@
   <!-- Heat legend -->
   <div class="mt-3 flex items-center justify-end gap-1.5">
     <span class="text-[9px] font-mono text-muted/60">less</span>
-    {#each accent.heatmapLevels as bg, i (i)}
+    {#each accent.heatmapLevels as bg, ai (bg + '-' + ai)}
       <div class="h-3 w-3 rounded-sm border border-border/40" style:background-color={bg}></div>
     {/each}
     <span class="text-[9px] font-mono text-muted/60">more</span>

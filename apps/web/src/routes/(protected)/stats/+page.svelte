@@ -314,7 +314,7 @@
         <div class="flex items-center gap-2 overflow-hidden">
           <!-- Tabs -->
           <div class="flex min-w-0 flex-1 items-center overflow-x-auto whitespace-nowrap [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-            {#each TABS as tab (tab.id)}
+            {#each TABS as tab, ti (tab.id + '-' + ti)}
               <button
                 type="button"
                 onclick={() => { activeTab = tab.id; }}
@@ -359,7 +359,7 @@
               </div>
               <!-- Status filter -->
               <div class="flex rounded-lg border border-border bg-bg-card p-1">
-                {#each (['all', 'active', 'archived'] as const) as s (s)}
+                {#each (['all', 'active', 'archived'] as const) as s, si (s + '-' + si)}
                   <button
                     type="button"
                     onclick={() => { statusFilter = s; }}
@@ -375,7 +375,7 @@
               <div class="flex items-start gap-2">
                 <Tag size={14} class="mt-1 shrink-0 text-muted" />
                 <div class="flex flex-wrap gap-1.5">
-                  {#each allTags as tag (tag)}
+                  {#each allTags as tag, ti (tag + '-' + ti)}
                     <button
                       type="button"
                       onclick={() => toggleTag(tag)}
@@ -487,7 +487,7 @@
           <!-- Period selector -->
           <div class="flex justify-end">
             <div class="flex items-center gap-1 rounded-full border border-border bg-bg-card px-1 py-1">
-              {#each PERIOD_OPTIONS as opt (opt.id)}
+              {#each PERIOD_OPTIONS as opt, pIdx (opt.id + '-' + pIdx)}
                 <button
                   type="button"
                   onclick={() => { period = opt.id; }}
@@ -508,7 +508,7 @@
               </div>
               {#if dailyData.length > 0}
                 <div class="flex h-[150px] items-end gap-[2px]">
-                  {#each dailyData as d (d.label)}
+                  {#each dailyData as d, di (d.label + '-' + di)}
                     <div
                       class="group relative flex flex-1 flex-col items-center justify-end"
                       title="{d.label}: {d.rate}%"
@@ -524,7 +524,7 @@
                 <!-- X axis labels (only show every Nth to avoid crowding) -->
                 {#if dailyData.length <= 14}
                   <div class="mt-2 flex gap-[2px]">
-                    {#each dailyData as d (d.label)}
+                    {#each dailyData as d, di (d.label + '-' + di)}
                       <div class="flex-1 truncate text-center text-[8px] font-mono text-muted">{d.label}</div>
                     {/each}
                   </div>
@@ -582,8 +582,8 @@
           <div class="rounded-lg border border-border bg-bg-secondary p-4">
             <h2 class="mb-4 text-xs font-mono uppercase tracking-wider text-muted">Weekday breakdown</h2>
             <div class="flex gap-2">
-              {#each WEEKDAY_NAMES as day, i (day)}
-                {@const count = weekdayStats.counts[i] ?? 0}
+              {#each WEEKDAY_NAMES as day, di (day + '-' + di)}
+                {@const count = weekdayStats.counts[di] ?? 0}
                 {@const maxCount = Math.max(1, ...weekdayStats.counts)}
                 {@const isActive = count > 0}
                 <div class="flex flex-1 flex-col items-center gap-2">
@@ -610,7 +610,7 @@
             <!-- Sort controls -->
             <div class="flex flex-wrap items-center gap-2 text-[11px] font-mono">
               <span class="text-muted">Sort by</span>
-              {#each (['rate', 'streak', 'name'] as const) as key (key)}
+              {#each (['rate', 'streak', 'name'] as const) as key, keyIdx (key + '-' + keyIdx)}
                 <button
                   type="button"
                   onclick={() => handleSortChange(key)}
@@ -674,7 +674,7 @@
                     <span class="w-5 shrink-0 text-sm">{entry.habit.icon}</span>
                     <span class="w-16 min-w-0 shrink-0 truncate text-[11px] font-mono text-muted sm:w-20">{entry.habit.name}</span>
                     <div class="flex h-6 min-w-0 flex-1 items-center gap-[2px]">
-                      {#each entry.stats.weeklyData as week, wi (wi)}
+                      {#each entry.stats.weeklyData as week, wi (entry.habit.id + '-' + wi)}
                         <div
                           class="flex-1 rounded-sm"
                           style:height="{Math.max(2, (week.count / 7) * 100)}%"

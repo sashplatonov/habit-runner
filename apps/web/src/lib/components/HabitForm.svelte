@@ -213,8 +213,8 @@
       <div class="grid gap-4 sm:grid-cols-2">
         <div>
           <p class="text-[10px] font-mono uppercase tracking-[0.25em] text-muted">Frequency</p>
-          <div class="mt-2 grid gap-2">
-            {#each FREQUENCIES as option (option.value)}
+            <div class="mt-2 grid gap-2">
+            {#each FREQUENCIES as option, freqIdx (option.value + '-' + freqIdx)}
               <button
                 type="button"
                 class={`rounded-2xl border px-4 py-3 text-left transition ${frequency === option.value ? 'border-accent bg-accent/10 text-foreground' : 'border-border bg-bg-secondary text-muted hover:border-accent/40 hover:text-foreground'}`}
@@ -251,7 +251,7 @@
           <div>
             <p class="text-[10px] font-mono uppercase tracking-[0.25em] text-muted">Type</p>
             <div class="mt-2 grid grid-cols-2 gap-2">
-              {#each (['positive', 'negative'] as const) as option (option)}
+              {#each (['positive', 'negative'] as const) as option, typeIdx (option + '-' + typeIdx)}
                 <button
                   type="button"
                   class={`rounded-2xl border px-4 py-3 text-sm font-semibold capitalize transition ${type === option ? 'border-accent bg-accent/10 text-foreground' : 'border-border bg-bg-secondary text-muted hover:border-accent/40 hover:text-foreground'}`}
@@ -268,7 +268,7 @@
           <div>
             <p class="text-[10px] font-mono uppercase tracking-[0.25em] text-muted">Daily target</p>
             <div class="mt-2 flex flex-wrap gap-2">
-              {#each DAILY_TARGET_OPTIONS as option (option)}
+              {#each DAILY_TARGET_OPTIONS as option, dailyIdx (option + '-' + dailyIdx)}
                 <button
                   type="button"
                   class={`rounded-full border px-3 py-1.5 text-sm font-semibold transition ${dailyTarget === option ? 'border-accent bg-accent/10 text-accent' : 'border-border bg-bg-secondary text-muted hover:border-accent/40 hover:text-foreground'}`}
@@ -285,7 +285,7 @@
           <div>
             <p class="text-[10px] font-mono uppercase tracking-[0.25em] text-muted">Target streak</p>
             <div class="mt-2 flex flex-wrap gap-2">
-              {#each TARGET_STREAK_OPTIONS as option (option)}
+              {#each TARGET_STREAK_OPTIONS as option, tsIdx (option + '-' + tsIdx)}
                 <button
                   type="button"
                   class={`rounded-full border px-3 py-1.5 text-sm font-semibold transition ${targetStreak === option ? 'border-accent bg-accent/10 text-accent' : 'border-border bg-bg-secondary text-muted hover:border-accent/40 hover:text-foreground'}`}
@@ -306,7 +306,7 @@
       <div>
         <p class="text-[10px] font-mono uppercase tracking-[0.25em] text-muted">Icon</p>
         <div class="mt-2 grid grid-cols-5 gap-2">
-          {#each ICONS as option (option)}
+          {#each ICONS as option, iconIdx (option + '-' + iconIdx)}
             <button
               type="button"
               class={`flex h-12 items-center justify-center rounded-2xl border text-xl transition ${icon === option ? 'border-accent bg-accent/10' : 'border-border bg-bg-secondary hover:border-accent/40'}`}
@@ -323,7 +323,7 @@
       <div>
         <p class="text-[10px] font-mono uppercase tracking-[0.25em] text-muted">Color</p>
         <div class="mt-2 grid grid-cols-2 gap-2">
-          {#each COLORS as option (option.value)}
+          {#each COLORS as option, colorIdx (option.value + '-' + colorIdx)}
             <button
               type="button"
               class={`flex items-center gap-3 rounded-2xl border px-3 py-3 text-sm font-semibold transition ${color === option.value ? 'border-accent bg-accent/10 text-foreground' : 'border-border bg-bg-secondary text-muted hover:border-accent/40 hover:text-foreground'}`}
@@ -357,7 +357,7 @@
 
         {#if tags.length > 0}
           <div class="mt-3 flex flex-wrap gap-2">
-            {#each tags as tag (tag)}
+            {#each tags as tag, ti (tag + '-' + ti)}
               <button
                 type="button"
                 class="inline-flex items-center gap-2 rounded-full border border-border bg-bg-secondary px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.2em] text-foreground"

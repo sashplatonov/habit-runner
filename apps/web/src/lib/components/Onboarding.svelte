@@ -32,7 +32,7 @@
     </div>
 
     <div class="grid gap-3 sm:grid-cols-3">
-      {#each ONBOARDING_STEPS as step (step.title)}
+      {#each ONBOARDING_STEPS as step, si (step.title + '-' + si)}
         <div class="rounded-2xl border border-border bg-bg-secondary p-4 text-center">
           <step.icon class="mx-auto mb-2 text-accent" size={22} />
           <p class="text-xs font-semibold uppercase tracking-[0.3em] text-muted">{step.title}</p>
@@ -51,7 +51,7 @@
       </div>
 
       <div class="mt-4 space-y-4">
-        {#each ONBOARDING_TEMPLATES as template (template.name)}
+        {#each ONBOARDING_TEMPLATES as template, ti (template.name + '-' + ti)}
           {@const isActive = activeTemplate === template.name}
           <div class="flex flex-col gap-2 rounded-2xl border border-border bg-bg-primary/80 p-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
@@ -61,7 +61,7 @@
               </div>
               <p class="text-xs text-muted">{template.description}</p>
               <div class="mt-2 flex flex-wrap gap-1 text-[10px] uppercase tracking-[0.3em] text-muted">
-                {#each template.tags as tag (tag)}
+                {#each template.tags as tag, tagIdx (tag + '-' + tagIdx)}
                   <span class="rounded-full border border-border px-2 py-0.5">{tag}</span>
                 {/each}
               </div>

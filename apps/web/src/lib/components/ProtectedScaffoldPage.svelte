@@ -23,7 +23,7 @@
     <article class="rounded-3xl border border-border bg-bg-card p-5 shadow-glow-blue-sm">
       <h2 class="text-lg font-semibold">Current migration scope</h2>
       <ul class="mt-3 space-y-2 text-sm text-muted">
-        {#each bullets as bullet (bullet)}
+        {#each bullets as bullet, bi (bullet + '-' + bi)}
           <li>{bullet}</li>
         {/each}
       </ul>

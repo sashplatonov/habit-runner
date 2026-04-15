@@ -137,7 +137,7 @@
     style:grid-template-rows="repeat(7, 4px)"
     style:grid-auto-flow="column"
   >
-    {#each weeks.flat() as cell (cell.date)}
+    {#each weeks.flat() as cell, cellIdx (cell.date + '-' + cellIdx)}
       <div
         class="h-[4px] w-[4px] rounded-[1px]"
         style={cellStyle(cell, palette.hex, palette.glow)}
@@ -156,9 +156,9 @@
       </div>
 
       <div class="grid flex-1 gap-1 sm:gap-1.5" style:grid-template-columns={`repeat(${weekCount}, minmax(0, 1fr))`}>
-        {#each weeks as week (week[0].date)}
+        {#each weeks as week, weekIdx (week[0].date + '-' + weekIdx)}
           <div class="grid gap-1 sm:gap-1.5" style:grid-template-rows="repeat(7, minmax(0, 1fr))">
-            {#each week as cell (cell.date)}
+            {#each week as cell, ci (cell.date + '-' + ci)}
               <button
                 type="button"
                 class="aspect-square w-full rounded-[2px] transition-transform hover:scale-110"

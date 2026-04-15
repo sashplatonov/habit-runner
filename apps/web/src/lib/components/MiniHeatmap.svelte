@@ -26,7 +26,7 @@
     <div class="h-[4px] w-[4px] rounded-[1px] bg-transparent"></div>
   {/each}
 
-  {#each days as dateKey (dateKey)}
+  {#each days as dateKey, di (dateKey + '-' + di)}
     {@const isCompleted = (completions[dateKey] ?? 0) >= dailyTarget}
     <div
       class="h-[4px] w-[4px] rounded-[1px] transition-all duration-300"

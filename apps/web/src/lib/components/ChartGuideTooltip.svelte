@@ -123,7 +123,7 @@
         <div class="absolute inset-x-0 bottom-2 h-px bg-border/60"></div>
         <svg viewBox="0 0 96 56" class="relative z-10 h-full w-full">
           <polyline fill="none" stroke="var(--accent)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" points="4,40 22,30 38,34 54,18 72,22 92,8" />
-          {#each [['4','40'],['22','30'],['38','34'],['54','18'],['72','22'],['92','8']] as [x, y] (x)}
+          {#each [['4','40'],['22','30'],['38','34'],['54','18'],['72','22'],['92','8']] as [x, y], xi (x + '-' + xi)}
             <circle cx={x} cy={y} r="3.5" fill="var(--bg-primary)" stroke="var(--accent)" stroke-width="2" />
           {/each}
         </svg>
@@ -131,19 +131,19 @@
       </div>
     {:else if variant === 'grid'}
       <div class="grid h-20 grid-cols-5 gap-1 rounded-2xl border border-accent/20 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.14),transparent_55%),linear-gradient(180deg,rgba(255,255,255,0.06),rgba(255,255,255,0.01))] p-3">
-        {#each [0.14,0.22,0.42,0.78,0.3,0.24,0.56,0.92,0.48,0.18,0.12,0.66,0.28,0.84,0.34,0.16,0.38,0.7,0.5,0.2] as opacity, i (i)}
+        {#each [0.14,0.22,0.42,0.78,0.3,0.24,0.56,0.92,0.48,0.18,0.12,0.66,0.28,0.84,0.34,0.16,0.38,0.7,0.5,0.2] as opacity, oi (opacity + '-' + oi)}
           <div class="rounded-[6px] bg-accent" style:opacity={opacity}></div>
         {/each}
       </div>
     {:else if variant === 'columns'}
       <div class="flex h-20 items-end gap-1 rounded-2xl border border-accent/20 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.14),transparent_55%),linear-gradient(180deg,rgba(255,255,255,0.06),rgba(255,255,255,0.01))] p-3">
-        {#each [[24,0.28],[42,0.36],[32,0.44],[58,0.52],[50,0.60],[72,0.68],[46,0.76],[64,0.84]] as [height, opacity], i (i)}
+        {#each [[24,0.28],[42,0.36],[32,0.44],[58,0.52],[50,0.60],[72,0.68],[46,0.76],[64,0.84]] as [height, opacity], ci (height + '-' + ci)}
           <div class="flex-1 rounded-t-md bg-accent" style:height="{height}px" style:opacity={opacity}></div>
         {/each}
       </div>
     {:else}
       <div class="flex h-20 items-end gap-1 rounded-2xl border border-accent/20 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.14),transparent_55%),linear-gradient(180deg,rgba(255,255,255,0.06),rgba(255,255,255,0.01))] p-3">
-        {#each [[28,0.35],[44,0.45],[60,0.55],[38,0.65],[68,0.75]] as [height, opacity], i (i)}
+        {#each [[28,0.35],[44,0.45],[60,0.55],[38,0.65],[68,0.75]] as [height, opacity], ci2 (height + '-' + ci2)}
           <div class="flex-1 rounded-t-md bg-accent" style:height="{height}px" style:opacity={opacity}></div>
         {/each}
       </div>
@@ -154,7 +154,7 @@
 
     <!-- Focus points -->
     <ul class="mt-3 space-y-1.5">
-      {#each focusPoints as point, i (i)}
+      {#each focusPoints as point, pi (point + '-' + pi)}
         <li class="flex items-start gap-2 text-[11px] text-muted">
           <span class="mt-0.5 h-1.5 w-1.5 shrink-0 rounded-full bg-accent/60"></span>
           {point}

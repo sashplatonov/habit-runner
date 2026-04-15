@@ -63,7 +63,7 @@
       </div>
 
       <div class="mt-8 grid gap-3">
-        {#each content.bullets as item (item)}
+        {#each content.bullets as item, i (item + '-' + i)}
           <div class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">
             <CheckCircle2 size={14} class="mb-2 text-emerald-600" />
             {item}
@@ -83,7 +83,7 @@
       <section class="mt-10">
         <h2 class="text-xl font-semibold text-slate-900">FAQ</h2>
         <div class="mt-4 space-y-3">
-          {#each content.faq as item (item.question)}
+          {#each content.faq as item, j (item.question + '-' + j)}
             <details class="rounded-xl border border-slate-200 bg-white p-4">
               <summary class="cursor-pointer text-sm font-semibold text-slate-900">
                 {item.question}

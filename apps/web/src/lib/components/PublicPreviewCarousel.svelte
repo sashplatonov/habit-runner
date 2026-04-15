@@ -150,7 +150,7 @@
             </div>
 
             <div class="space-y-3">
-              {#each previewHabits as habit (habit.name)}
+              {#each previewHabits as habit, idx (habit.name + '-' + idx)}
                 <div class="rounded-2xl border border-border bg-bg-card p-4">
                   <div class="flex items-start gap-3">
                     <div class="flex h-12 w-12 items-center justify-center rounded-2xl border border-border bg-bg-secondary text-2xl">
@@ -161,7 +161,7 @@
                         <div class="min-w-0">
                           <p class="truncate text-sm font-semibold">{habit.name}</p>
                           <div class="mt-2 flex flex-wrap gap-1.5">
-                            {#each habit.tags as tag (tag)}
+                            {#each habit.tags as tag, tidx (tag + '-' + tidx)}
                               <span class="rounded-full border border-border px-2 py-1 text-[10px] font-mono uppercase tracking-[0.18em] text-muted">
                                 {tag}
                               </span>
@@ -215,7 +215,7 @@
                   </div>
                 </div>
                 <div class="grid gap-2 sm:grid-cols-3">
-                  {#each ['Daily', 'Weekdays', 'Custom'] as option (option)}
+                  {#each ['Daily', 'Weekdays', 'Custom'] as option, optIdx (option + '-' + optIdx)}
                     <div class={`rounded-2xl border px-4 py-3 text-left text-sm ${option === 'Daily' ? 'border-accent bg-accent/10' : 'border-border bg-bg-secondary text-muted'}`}>
                       <span class="block font-semibold">{option}</span>
                       <span class="mt-1 block text-xs text-muted">Schedule option</span>
@@ -228,7 +228,7 @@
                 <div>
                   <p class="text-[10px] font-mono uppercase tracking-[0.25em] text-muted">Icon</p>
                   <div class="mt-2 grid grid-cols-5 gap-2">
-                    {#each ['📚', '🏃', '💧', '🧘', '💻'] as option (option)}
+                    {#each ['📚', '🏃', '💧', '🧘', '💻'] as option, iconOptIdx (option + '-' + iconOptIdx)}
                       <div class={`flex h-12 items-center justify-center rounded-2xl border text-xl ${option === '📚' ? 'border-accent bg-accent/10' : 'border-border bg-bg-secondary'}`}>
                         {option}
                       </div>
@@ -239,7 +239,7 @@
                 <div>
                   <p class="text-[10px] font-mono uppercase tracking-[0.25em] text-muted">Tags</p>
                   <div class="mt-2 flex flex-wrap gap-2">
-                    {#each ['learning', 'focus'] as tag (tag)}
+                    {#each ['learning', 'focus'] as tag, tagOptIdx (tag + '-' + tagOptIdx)}
                       <span class="inline-flex items-center gap-2 rounded-full border border-border bg-bg-secondary px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.2em]">
                         {tag}
                       </span>
@@ -268,7 +268,7 @@
               <div class="space-y-2 rounded-3xl border border-border bg-bg-card p-5 shadow-glow-blue-sm">
                 <h3 class="text-xs font-mono uppercase tracking-wider text-muted">Overview signals</h3>
                 <div class="grid grid-cols-2 gap-3 md:grid-cols-4">
-                  {#each [{ label: 'Avg Rate', value: '78%' }, { label: 'Best', value: '21d' }, { label: 'Total', value: '68' }, { label: 'Active', value: '3' }] as card (card.label)}
+                  {#each [{ label: 'Avg Rate', value: '78%' }, { label: 'Best', value: '21d' }, { label: 'Total', value: '68' }, { label: 'Active', value: '3' }] as card, cardIdx (card.label + '-' + cardIdx)}
                     <div class="rounded-lg border border-border bg-bg-secondary p-3">
                       <p class="text-[9px] font-mono uppercase tracking-wider text-muted">{card.label}</p>
                       <div class="mt-2 text-2xl font-mono font-bold text-foreground">{card.value}</div>
@@ -304,7 +304,7 @@
               <div class="rounded-3xl border border-border bg-bg-card p-5 shadow-glow-blue-sm">
                 <h3 class="mb-3 text-xs font-mono uppercase tracking-wider text-muted">Per-habit performance</h3>
                 <div class="space-y-3">
-                  {#each habitPerformance as habit (habit.name)}
+                  {#each habitPerformance as habit, hpIdx (habit.name + '-' + hpIdx)}
                     <div class="flex items-center gap-3">
                       <span class="w-20 shrink-0 text-[11px] font-mono text-muted">{habit.name}</span>
                       <div class="h-5 min-w-0 flex-1 overflow-hidden rounded-sm bg-border">

@@ -234,7 +234,7 @@
         <div class="flex items-center gap-2">
           <!-- Filter tabs -->
           <div class="flex flex-1 gap-1 overflow-x-auto">
-            {#each (['all', 'pending', 'done', 'archived'] as const) as f (f)}
+            {#each (['all', 'pending', 'done', 'archived'] as const) as f, fi (f + '-' + fi)}
               <button
                 type="button"
                 class="flex-shrink-0 rounded-lg px-3 py-1.5 text-[11px] font-mono uppercase tracking-wider transition {filter === f ? 'bg-accent/15 text-accent' : 'text-muted hover:text-foreground'}"
@@ -356,9 +356,9 @@
                   <span class="text-xl leading-none flex-shrink-0">{habit.icon}</span>
                   <div class="min-w-0 flex-1">
                     <p class="truncate text-sm font-semibold text-foreground {completed ? 'opacity-60' : ''}">{habit.name}</p>
-                    {#if habit.tags.length > 0}
+                        {#if habit.tags.length > 0}
                       <div class="mt-0.5 flex gap-1 flex-wrap">
-                        {#each habit.tags.slice(0, 3) as tag (tag)}
+                        {#each habit.tags.slice(0, 3) as tag, tIdx (tag + '-' + tIdx)}
                           <span class="rounded-full border border-border px-1.5 py-0.5 text-[10px] font-mono text-muted">{tag}</span>
                         {/each}
                       </div>
@@ -376,10 +376,10 @@
                   {/if}
                   <CompletionRing percentage={completionRate} size={26} strokeWidth={2.5} color={habit.color} showText={false} />
                   <div class="hidden sm:flex items-end gap-[2px] h-4">
-                    {#each last7 as done, i (i)}
+                    {#each last7 as done, lj (done + '-' + lj)}
                       <div
                         class="w-[3px] rounded-sm transition-all"
-                        style="height: {done ? '100%' : '30%'}; background-color: {done ? accent.hex : 'var(--border)'}; opacity: {0.4 + i * 0.09}"
+                        style="height: {done ? '100%' : '30%'}; background-color: {done ? accent.hex : 'var(--border)'}; opacity: {0.4 + lj * 0.09}"
                       ></div>
                     {/each}
                   </div>

@@ -277,7 +277,7 @@
 
           {#if habit.tags.length > 0}
             <div class="mt-5 flex flex-wrap gap-2">
-              {#each habit.tags as tag (tag)}
+              {#each habit.tags as tag, tIdx (tag + '-' + tIdx)}
                 <span class="rounded-full border border-border bg-bg-secondary px-2.5 py-1 text-[10px] font-mono uppercase tracking-[0.2em] text-muted">
                   {tag}
                 </span>
