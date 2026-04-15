@@ -2,11 +2,18 @@
   import { goto } from '$app/navigation';
   import { resolve } from '$app/paths';
   import { page } from '$app/state';
-  import { Archive, ArchiveRestore, ArrowLeft, Minus, Pencil, Plus, Snowflake, Trash2 } from 'lucide-svelte';
-  import CompletionRing from '$lib/components/CompletionRing.svelte';
+  import { Archive, ArchiveRestore, ArrowLeft, Pencil, Snowflake, Trash2 } from 'lucide-svelte';
+  import DescriptionTooltip from '$lib/components/DescriptionTooltip.svelte';
   import EmptyState from '$lib/components/EmptyState.svelte';
+  import ChartGuideTooltip from '$lib/components/ChartGuideTooltip.svelte';
   import HabitHeatmap from '$lib/components/HabitHeatmap.svelte';
   import HabitRetroCalendar from '$lib/components/HabitRetroCalendar.svelte';
+  import StatCardGrid from '$lib/components/StatCardGrid.svelte';
+  import AutomatismSection from '$lib/components/AutomatismSection.svelte';
+  import TodayBlock from '$lib/components/TodayBlock.svelte';
+  import TargetRingSection from '$lib/components/TargetRingSection.svelte';
+  import MonthlyRateSection from '$lib/components/MonthlyRateSection.svelte';
+  import WeeklyCompletionsSection from '$lib/components/WeeklyCompletionsSection.svelte';
   import { completionKeyToCalendarDate } from '$lib/completionKey';
   import { formatHabitLabel } from '$lib/habits/formatHabitLabel';
   import { habitsStore } from '$lib/stores/habits';
@@ -24,7 +31,9 @@
   const accent = $derived(habit ? HABIT_COLOR_THEMES[habit.color] : null);
   const dailyTarget = $derived(habit ? Math.max(1, habit.dailyTarget ?? 1) : 1);
   const todayCompletionCount = $derived(habit ? (habit.completions[todayKey] ?? 0) : 0);
+  const completionEntryCount = $derived(habit ? Object.keys(habit.completions).length : 0);
   const completedToday = $derived(todayCompletionCount >= dailyTarget);
+  const canIncrement = $derived(todayCompletionCount < dailyTarget);
   const isTodayFrozen = $derived(habit ? habit.freezeDays.includes(todayFreezeKey) : false);
   const heatmapDetails = $derived.by(() => {
     if (!habit) {
@@ -145,30 +154,29 @@
   </div>
 {:else}
   <div class="min-h-screen bg-bg-primary">
-    <section class="sticky top-0 z-20 border-b border-border bg-bg-primary/95 px-4 py-4 backdrop-blur-sm" style:padding-top="calc(var(--safe-area-inset-top, 0px) + 1rem)">
-      <div class="mx-auto flex max-w-4xl flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div class="flex min-w-0 items-start gap-3">
+    <section class="sticky top-0 z-20 border-b border-border bg-bg-primary/95 px-4 backdrop-blur-sm" style:padding-top="calc(var(--safe-area-inset-top, 0px) + 1rem); padding-bottom: 1rem;">
+      <div class="mx-auto flex max-w-2xl flex-col gap-3 sm:flex-row sm:items-center">
+        <div class="flex min-w-0 flex-1 items-center gap-3">
           <button
             type="button"
-            class="mt-0.5 rounded-full border border-border p-2 text-muted transition hover:border-accent hover:text-foreground"
+            class="-ml-1 flex-shrink-0 p-1 text-muted transition-colors hover:text-foreground"
             onclick={() => {
               void goto(resolve<'/(protected)/dashboard'>('/(protected)/dashboard', {}));
             }}
             aria-label="Back to dashboard"
           >
-            <ArrowLeft size={14} />
+            <ArrowLeft size={16} />
           </button>
 
-          <div class="min-w-0">
-            <div class="flex items-center gap-3">
-              <span class="text-2xl">{habit.icon}</span>
-              <div class="min-w-0">
-                <p class="text-[10px] font-mono uppercase tracking-[0.25em] text-muted">{habit.archived ? 'Archived habit' : 'Habit detail'}</p>
-                <h1 class="truncate text-xl font-semibold text-foreground">{habit.name}</h1>
-              </div>
-            </div>
+          <span class="flex-shrink-0 text-xl">{habit.icon}</span>
+
+          <div class="min-w-0 flex-1">
+            <h1 class="break-words text-base font-semibold text-foreground sm:truncate">{habit.name}</h1>
             {#if habit.description}
-              <p class="mt-2 max-w-2xl text-sm text-muted">{habit.description}</p>
+              <div class="flex min-w-0 items-center gap-1">
+                <p class="truncate text-[11px] text-muted">{habit.description}</p>
+                <DescriptionTooltip description={habit.description} />
+              </div>
             {/if}
           </div>
         </div>
@@ -176,132 +184,99 @@
         <div class="flex flex-wrap items-center gap-2 sm:justify-end">
           <button
             type="button"
-            class={`inline-flex h-9 w-9 items-center justify-center rounded-full border transition ${habit.archived ? 'border-accent-secondary/40 bg-accent-secondary/10 text-accent-secondary' : 'border-border text-muted hover:border-accent hover:text-foreground'}`}
+            class={`rounded border p-1.5 transition-colors ${habit.archived ? 'border-accent-secondary/30 bg-accent-secondary/10 text-accent-secondary hover:bg-accent-secondary/20' : 'border-border text-muted hover:border-border-hover hover:text-foreground'}`}
             onclick={handleToggleArchive}
             aria-label={habit.archived ? 'Unarchive habit' : 'Archive habit'}
+            title={habit.archived ? 'Unarchive' : 'Archive'}
           >
             {#if habit.archived}
-              <ArchiveRestore size={14} />
+              <ArchiveRestore size={13} />
             {:else}
-              <Archive size={14} />
+              <Archive size={13} />
             {/if}
           </button>
 
           <a
-            class="inline-flex h-9 w-9 items-center justify-center rounded-full border border-border text-muted transition hover:border-accent hover:text-foreground"
+            class="rounded border border-border p-1.5 text-muted transition-colors hover:border-border-hover hover:text-foreground"
             href={resolve('/(protected)/habit/[id]/edit', { id: habit.id })}
             aria-label="Edit habit"
           >
-            <Pencil size={14} />
+            <Pencil size={13} />
           </a>
 
           <button
             type="button"
-            class={`inline-flex h-9 w-9 items-center justify-center rounded-full border transition ${isTodayFrozen ? 'border-accent bg-accent/10 text-accent' : 'border-border text-muted hover:border-accent hover:text-foreground'}`}
+            class="rounded border px-3 py-1.5 text-xs font-mono font-medium transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-40 {completedToday ? 'border-border bg-transparent text-muted' : 'font-bold text-bg-primary'}"
+            style={!completedToday ? `background-color: ${accent.hex}; border-color: ${accent.hex}; box-shadow: 0 0 16px ${accent.glow};` : ''}
+            onclick={() => {
+              void handleIncrementCompletion();
+            }}
+            disabled={!canIncrement}
+            aria-label={completedToday ? 'Habit completed today' : 'Mark as completed today'}
+          >
+            {completedToday ? 'Done' : 'Add +1'}
+          </button>
+
+          <button
+            type="button"
+            class="rounded border border-border px-3 py-1.5 text-xs font-mono font-medium text-muted transition hover:border-border-hover hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
+            onclick={() => {
+              void handleDecrementCompletion();
+            }}
+            disabled={todayCompletionCount <= 0}
+            aria-label="Remove one completion for today"
+          >
+            -1
+          </button>
+
+          <button
+            type="button"
+            class={`inline-flex h-[34px] w-[34px] flex-none items-center justify-center rounded border transition-colors ${isTodayFrozen ? 'border-accent bg-accent/15 text-accent shadow-[0_0_12px_rgba(255,255,255,0.08)]' : 'border-border text-muted hover:border-border-hover hover:text-foreground'}`}
             onclick={() => {
               void toggleFreezeToday();
             }}
             aria-label={isTodayFrozen ? 'Unfreeze today' : 'Freeze today'}
+            title={isTodayFrozen ? 'Unfreeze today' : 'Freeze today'}
           >
-            <Snowflake size={14} />
+            <Snowflake size={11} strokeWidth={2.2} />
           </button>
         </div>
       </div>
     </section>
 
-    <div class="mx-auto max-w-4xl space-y-4 px-4 py-4">
-      <section class="grid gap-4 lg:grid-cols-[1.15fr,0.85fr]">
-        <article class="rounded-3xl border border-border bg-bg-card p-5 shadow-glow-blue-sm">
-          <div class="flex items-center justify-between gap-4">
-            <div>
-              <p class="text-[10px] font-mono uppercase tracking-[0.25em] text-muted">Completion rate</p>
-              <h2 class="mt-2 text-2xl font-semibold text-foreground">{stats.completionRate}%</h2>
-              <p class="mt-2 text-sm text-muted">Current streak {stats.currentStreak}d, longest streak {stats.longestStreak}d.</p>
-            </div>
-            <CompletionRing percentage={stats.completionRate} size={80} strokeWidth={6} color={habit.color} showText={true} />
-          </div>
+    <div class="mx-auto max-w-2xl space-y-4 px-4 py-4">
+      <StatCardGrid {stats} {accent} habitCreatedAt={habit.createdAt} />
+      <AutomatismSection score={stats.automatismScore} {accent} />
+      <TodayBlock {dailyTarget} {todayCompletionCount} {accent} />
 
-          <div class="mt-5 grid gap-3 sm:grid-cols-3">
-            <div class="rounded-2xl border border-border bg-bg-secondary px-4 py-3">
-              <p class="text-[10px] font-mono uppercase tracking-[0.25em] text-muted">Completed days</p>
-              <p class="mt-2 text-xl font-semibold text-foreground">{stats.completedDays}</p>
-            </div>
-            <div class="rounded-2xl border border-border bg-bg-secondary px-4 py-3">
-              <p class="text-[10px] font-mono uppercase tracking-[0.25em] text-muted">Automatism</p>
-              <p class="mt-2 text-xl font-semibold text-foreground">{stats.automatismScore}%</p>
-            </div>
-            <div class="rounded-2xl border border-border bg-bg-secondary px-4 py-3">
-              <p class="text-[10px] font-mono uppercase tracking-[0.25em] text-muted">Target streak</p>
-              <p class="mt-2 text-xl font-semibold text-foreground">{habit.targetStreak}d</p>
-            </div>
-          </div>
-        </article>
-
-        <article class="rounded-3xl border border-border bg-bg-card p-5 shadow-glow-blue-sm">
-          <p class="text-[10px] font-mono uppercase tracking-[0.25em] text-muted">Today</p>
-          <h2 class="mt-2 text-xl font-semibold text-foreground">{todayCompletionCount}/{dailyTarget}</h2>
-          <p class="mt-2 text-sm text-muted">
-            {#if completedToday}
-              Daily target reached.
-            {:else if isTodayFrozen}
-              Today is frozen for this habit.
-            {:else}
-              Add completions or freeze today if you need a recovery day.
-            {/if}
-          </p>
-
-          <div class="mt-5 flex flex-wrap gap-2">
-            <button
-              type="button"
-              class="inline-flex items-center gap-2 rounded-full border border-border px-4 py-2 text-sm font-semibold text-foreground transition hover:border-accent disabled:cursor-not-allowed disabled:opacity-40"
-              onclick={() => {
-                void handleIncrementCompletion();
-              }}
-              disabled={todayCompletionCount >= dailyTarget}
-            >
-              <Plus size={14} />
-              Add +1
-            </button>
-            <button
-              type="button"
-              class="inline-flex items-center gap-2 rounded-full border border-border px-4 py-2 text-sm font-semibold text-muted transition hover:border-accent hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
-              onclick={() => {
-                void handleDecrementCompletion();
-              }}
-              disabled={todayCompletionCount <= 0}
-            >
-              <Minus size={14} />
-              Remove 1
-            </button>
-          </div>
-
-          {#if habit.tags.length > 0}
-            <div class="mt-5 flex flex-wrap gap-2">
-              {#each habit.tags as tag, tIdx (tag + '-' + tIdx)}
-                <span class="rounded-full border border-border bg-bg-secondary px-2.5 py-1 text-[10px] font-mono uppercase tracking-[0.2em] text-muted">
-                  {tag}
-                </span>
-              {/each}
-            </div>
-          {/if}
-        </article>
-      </section>
-
-      <section class="rounded-3xl border border-border bg-bg-card p-5 shadow-glow-blue-sm">
+      <section class="space-y-3 rounded-lg border border-border bg-bg-secondary p-3">
         <div class="flex items-center justify-between gap-3">
-          <div>
-            <p class="text-[10px] font-mono uppercase tracking-[0.25em] text-muted">Activity heatmap</p>
-            <h2 class="mt-2 text-xl font-semibold text-foreground">Last 90 days</h2>
+          <div class="flex items-center gap-2">
+            <h2 class="text-xs font-mono uppercase tracking-wider text-muted">Activity - 90 days</h2>
+            <ChartGuideTooltip
+              title="Habit activity heatmap"
+              summary="This block shows how often this habit was completed over the last 90 days, making consistency and missed stretches easy to spot."
+              focusPoints={[
+                'Bright runs: streaks where the habit was part of your routine.',
+                'Sparse patches: periods where the habit slipped out of context.',
+                'Recent density: whether the habit is getting stronger right now.'
+              ]}
+              variant="grid"
+            />
           </div>
-          <span class="text-[10px] font-mono uppercase tracking-[0.25em] text-muted">{stats.completedDays} completed days</span>
+          <span class="text-[10px] font-mono text-muted">{completionEntryCount} completions</span>
         </div>
 
-        <div class="mt-5">
+        <div class="mx-auto w-full lg:max-w-[560px]">
           <HabitHeatmap completions={habit.completions} dailyTarget={dailyTarget} color={habit.color} dayDetails={heatmapDetails} />
         </div>
       </section>
 
-      <section class="rounded-3xl border border-border bg-bg-card p-5 shadow-glow-blue-sm">
+      <TargetRingSection {stats} {habit} {accent} />
+      <MonthlyRateSection monthlyData={stats.monthlyData} {accent} habitCreatedAt={habit.createdAt} />
+      <WeeklyCompletionsSection weeklyData={stats.weeklyData} {accent} habitCreatedAt={habit.createdAt} />
+
+      <section class="rounded-lg border border-border bg-bg-secondary p-4">
         <div class="flex items-center justify-between gap-3">
           <div>
             <p class="text-[10px] font-mono uppercase tracking-[0.25em] text-muted">Retro calendar</p>
@@ -313,35 +288,34 @@
         </div>
       </section>
 
-      <section class="rounded-3xl border border-border bg-bg-card p-5 shadow-glow-blue-sm">
+      <section class="rounded-lg border border-border bg-bg-secondary p-4">
         <p class="text-[10px] font-mono uppercase tracking-[0.25em] text-muted">Danger zone</p>
         {#if !confirmDelete}
           <button
             type="button"
-            class="mt-4 inline-flex items-center gap-2 rounded-full border border-accent/30 px-4 py-2 text-sm font-semibold text-accent transition hover:border-accent-secondary/40 hover:text-accent-secondary"
+            class="mt-4 inline-flex items-center gap-2 rounded border border-accent/20 px-3 py-2 text-xs font-mono text-accent transition-colors hover:border-accent/40 hover:text-accent-secondary"
             onclick={() => {
               confirmDelete = true;
             }}
           >
-            <Trash2 size={14} />
+            <Trash2 size={12} />
             Delete habit
           </button>
         {:else}
-          <div class="mt-4 flex flex-wrap items-center gap-2">
-            <span class="text-sm text-muted">Delete this habit and remove it from the active list?</span>
+          <div class="mt-4 flex flex-wrap items-center gap-3">
+            <span class="text-xs font-mono text-muted">Are you sure?</span>
             <button
               type="button"
-              class="inline-flex items-center gap-2 rounded-full border border-accent/40 px-4 py-2 text-sm font-semibold text-accent transition hover:bg-accent/10"
+              class="rounded border border-accent/40 px-3 py-1.5 text-xs font-mono text-accent transition-colors hover:bg-accent/10"
               onclick={() => {
                 void handleDelete();
               }}
             >
-              <Trash2 size={14} />
-              Confirm delete
+              Delete
             </button>
             <button
               type="button"
-              class="rounded-full border border-border px-4 py-2 text-sm font-semibold text-muted transition hover:border-accent hover:text-foreground"
+              class="rounded border border-border px-3 py-1.5 text-xs font-mono text-muted transition-colors hover:text-foreground"
               onclick={() => {
                 confirmDelete = false;
               }}

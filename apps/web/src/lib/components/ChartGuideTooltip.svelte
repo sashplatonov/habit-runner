@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { portal } from '$lib/actions/portal';
   import { BarChart3, CircleHelp, Grid2x2, TrendingUp, X } from 'lucide-svelte';
 
   type ChartGuideVariant = 'bars' | 'line' | 'grid' | 'columns';
@@ -14,9 +15,39 @@
   const { title, summary, focusPoints, variant = 'bars', triggerClassName = '' }: Props = $props();
 
   let open = $state(false);
+  let pinned = $state(false);
   let triggerEl = $state<HTMLButtonElement | null>(null);
   let panelEl = $state<HTMLDivElement | null>(null);
   let position = $state({ left: 12, top: 12 });
+  let hoverCloseTimer: ReturnType<typeof setTimeout> | null = null;
+
+  function clearHoverCloseTimer() {
+    if (hoverCloseTimer !== null) {
+      clearTimeout(hoverCloseTimer);
+      hoverCloseTimer = null;
+    }
+  }
+
+  function previewOpen() {
+    if (pinned) return;
+    clearHoverCloseTimer();
+    open = true;
+  }
+
+  function previewClose() {
+    if (pinned) return;
+    clearHoverCloseTimer();
+    hoverCloseTimer = setTimeout(() => {
+      if (!pinned) open = false;
+      hoverCloseTimer = null;
+    }, 90);
+  }
+
+  function closePanel() {
+    clearHoverCloseTimer();
+    pinned = false;
+    open = false;
+  }
 
   function updatePosition() {
     const trigger = triggerEl;
@@ -50,11 +81,11 @@
     function onPointerDown(e: PointerEvent) {
       const target = e.target as Node | null;
       if (triggerEl?.contains(target) || panelEl?.contains(target)) return;
-      open = false;
+      closePanel();
     }
 
     function onKeyDown(e: KeyboardEvent) {
-      if (e.key === 'Escape') open = false;
+      if (e.key === 'Escape') closePanel();
     }
 
     window.addEventListener('pointerdown', onPointerDown);
@@ -62,6 +93,7 @@
 
     return () => {
       cancelAnimationFrame(raf);
+      clearHoverCloseTimer();
       window.removeEventListener('resize', updatePosition);
       window.removeEventListener('scroll', updatePosition, true);
       window.removeEventListener('pointerdown', onPointerDown);
@@ -73,19 +105,41 @@
 <button
   bind:this={triggerEl}
   type="button"
-  onclick={() => { open = !open; }}
-  class="inline-flex items-center justify-center rounded-full border border-accent/20 bg-accent/10 text-accent transition-colors hover:bg-accent/20 {triggerClassName}"
+  onclick={(e) => {
+    e.stopPropagation();
+    clearHoverCloseTimer();
+    if (pinned) {
+      closePanel();
+    } else {
+      pinned = true;
+      open = true;
+    }
+  }}
+  onmouseenter={previewOpen}
+  onmouseleave={previewClose}
+  onfocus={previewOpen}
+  onblur={previewClose}
+  class="inline-flex h-8 w-8 items-center justify-center rounded-full border transition-colors
+    {open ? 'border-accent/50 bg-accent/10 text-accent' : 'border-border bg-bg-card text-muted hover:border-border-hover hover:text-foreground'}
+    {triggerClassName}"
+  aria-expanded={open}
   aria-label="Chart guide: {title}"
 >
-  <CircleHelp size={14} />
+  <CircleHelp size={14} stroke-width={2.1} />
 </button>
 
 {#if open}
   <div
+    use:portal
     bind:this={panelEl}
     class="fixed z-[240] w-72 max-w-[calc(100vw-1.5rem)] rounded-3xl border border-border bg-bg-card p-3 text-left shadow-[0_18px_60px_rgba(0,0,0,0.32)]"
     style:left="{position.left}px"
     style:top="{position.top}px"
+    onclick={(e) => { e.stopPropagation(); }}
+    onkeydown={(e) => { e.stopPropagation(); }}
+    onmouseenter={previewOpen}
+    onmouseleave={previewClose}
+    tabindex="-1"
     role="dialog"
     aria-modal="true"
     aria-label="{title} explanation"
@@ -109,7 +163,7 @@
       </div>
       <button
         type="button"
-        onclick={() => { open = false; }}
+        onclick={(e) => { e.stopPropagation(); closePanel(); }}
         class="inline-flex h-8 w-8 flex-none items-center justify-center rounded-full border border-border bg-bg-primary/70 text-muted transition-colors hover:border-border-hover hover:text-foreground"
         aria-label="Close {title} explanation"
       >
@@ -149,17 +203,18 @@
       </div>
     {/if}
 
-    <!-- Summary -->
-    <p class="mt-3 text-[11px] leading-relaxed text-muted">{summary}</p>
+    <p class="mt-3 text-[11px] leading-5 text-foreground">{summary}</p>
 
-    <!-- Focus points -->
-    <ul class="mt-3 space-y-1.5">
-      {#each focusPoints as point, pi (point + '-' + pi)}
-        <li class="flex items-start gap-2 text-[11px] text-muted">
-          <span class="mt-0.5 h-1.5 w-1.5 shrink-0 rounded-full bg-accent/60"></span>
-          {point}
-        </li>
-      {/each}
-    </ul>
+    <div class="mt-3 rounded-2xl border border-border bg-bg-primary/60 px-3 py-2">
+      <p class="text-[9px] font-mono uppercase tracking-[0.22em] text-muted">Watch for</p>
+      <div class="mt-2 space-y-1.5">
+        {#each focusPoints as point, pi (point + '-' + pi)}
+          <div class="flex items-start gap-2 text-[10px] font-mono text-muted">
+            <span class="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-accent"></span>
+            <span>{point}</span>
+          </div>
+        {/each}
+      </div>
+    </div>
   </div>
 {/if}

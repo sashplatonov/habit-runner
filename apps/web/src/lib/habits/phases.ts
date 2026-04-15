@@ -1,5 +1,4 @@
-import { ActivityIcon, ShieldIcon, StarIcon, ZapIcon } from 'lucide-react';
-import type { LucideIcon } from 'lucide-react';
+import { Activity, Shield, Star, Zap } from 'lucide-svelte';
 
 export interface HabitPhase {
   id: 1 | 2 | 3 | 4;
@@ -9,49 +8,49 @@ export interface HabitPhase {
   hint: string;
   minDays: number;
   maxDays: number | null;
-  icon: LucideIcon;
+  icon: typeof Shield;
 }
 
 export const HABIT_PHASES: HabitPhase[] = [
   {
     id: 1,
-    name: 'Reinforcement',
+    name: 'Fragile',
     range: '1–21',
     description: 'Every day is critical',
     hint: 'Missing = serious setback',
     minDays: 1,
     maxDays: 21,
-    icon: ShieldIcon
+    icon: Shield
   },
   {
     id: 2,
-    name: 'Momentum',
+    name: 'Growing',
     range: '22–66',
-    description: 'Getting easier, stay consistent',
+    description: 'Momentum is forming',
     hint: '3 misses in a row = danger',
     minDays: 22,
     maxDays: 66,
-    icon: ZapIcon
+    icon: Zap
   },
   {
     id: 3,
-    name: 'Automation',
+    name: 'Established',
     range: '67–99',
-    description: 'Running on autopilot',
+    description: 'Running with less friction',
     hint: 'Occasional misses are fine',
     minDays: 67,
     maxDays: 99,
-    icon: ActivityIcon
+    icon: Activity
   },
   {
     id: 4,
-    name: 'Identity',
+    name: 'Infallible',
     range: '100+',
-    description: 'This is who you are',
-    hint: 'Habit is part of your identity',
+    description: 'Habit is part of your identity',
+    hint: 'Habit runs on autopilot',
     minDays: 100,
     maxDays: null,
-    icon: StarIcon
+    icon: Star
   }
 ];
 
