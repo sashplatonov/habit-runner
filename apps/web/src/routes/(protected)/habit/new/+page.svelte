@@ -5,12 +5,13 @@
   import { habitsStore } from '$lib/stores/habits';
   import type { HabitUpsertInput } from '$lib/stores/habits';
 
+  const allHabits = $derived($habitsStore.allHabits);
+
   function handleBack() {
     void goto(resolve<'/(protected)/dashboard'>('/(protected)/dashboard', {}));
   }
 
   async function handleSubmit(payload: HabitUpsertInput) {
-    const allHabits = $habitsStore.allHabits;
     const sortOrder =
       allHabits.length > 0
         ? Math.max(...allHabits.map((habit) => habit.sortOrder ?? 0)) + 1
@@ -28,4 +29,4 @@
   <title>New Habit - Habbit Runner</title>
 </svelte:head>
 
-<HabitForm mode="create" onBack={handleBack} onSubmit={handleSubmit} />
+<HabitForm mode="create" allHabits={allHabits} onBack={handleBack} onSubmit={handleSubmit} />

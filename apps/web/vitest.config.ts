@@ -8,6 +8,7 @@ const dirname = path.dirname(fileURLToPath(import.meta.url));
 export default defineConfig({
   plugins: [sveltekit()],
   resolve: {
+    conditions: ['browser'],
     alias: {
       '@': path.resolve(dirname, 'src')
     }
