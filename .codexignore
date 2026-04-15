@@ -26,3 +26,8 @@ backups/
 # SvelteKit generated output
 .svelte-kit/
 apps/*/.svelte-kit/
+
+# Archive folder - ignore generated artifacts inside archived legacy frontend
+archive/**/node_modules/
+archive/**/dist/
+archive/**/build/
