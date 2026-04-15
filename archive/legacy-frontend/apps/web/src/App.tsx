@@ -1,3 +1,10 @@
+/** 
+ * AGENT NOTE: Legacy main app shell and route map.
+ * Path: archive/legacy-frontend/apps/web/src/App.tsx
+ * Purpose: Declares BrowserRouter routes and app-level providers (sync, auth, theme).
+ * Quick hints: Routes are declared in the <Routes> block. Page components live in `src/pages/`.
+ * Hooks of interest: `useSyncEngine`, `useTheme`, auth session helpers in `src/lib/auth`.
+ */
 import React, { useEffect, useState } from 'react';
 import {
   BrowserRouter,
