@@ -109,6 +109,34 @@ Notes:
 - `docker-compose.local.yml` exposes the web app on `http://localhost:5137`.
 - `docker compose up --build` without `--profile db` assumes `DB_*` points at an already available database.
 
+Local compose modes
+-------------------
+
+This repository provides two compose entrypoints:
+
+- `docker-compose.yml` — default: builds and runs the native Quarkus binary (uses `apps/backend/Dockerfile`).
+- `docker-compose.jvm.yml` — local JVM development (uses `apps/backend/Dockerfile.jvm`).
+
+Run local JVM mode (build + start):
+
+```bash
+cp .env.example .env
+docker compose -f docker-compose.jvm.yml up -d --build --profile db
+```
+
+Run default/native mode (build + start):
+
+Note: native builds require a compatible Mandrel/GraalVM builder image. The default
+builder image is set via the `MANDREL_BUILDER_IMAGE` build-arg in `apps/backend/Dockerfile`. If your
+`pom.xml` Java version differs from the builder, set `MANDREL_BUILDER_IMAGE` accordingly before running.
+
+```bash
+cp .env.example .env
+# Optionally override builder image if needed (example Mandrel image targeting JDK 25):
+# export MANDREL_BUILDER_IMAGE=quay.io/quarkus/ubi9-quarkus-mandrel-builder-image:jdk-25
+docker compose up -d --build --profile db
+```
+
 [↑ Back to top](#top)
 
 ---
