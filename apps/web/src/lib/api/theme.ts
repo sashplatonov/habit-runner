@@ -1,21 +1,8 @@
 import { API_BASE_URL } from '@/lib/core/config';
 import { authenticatedFetch } from '@/lib/auth/session';
-import type { ThemeId } from '@/hooks/useTheme';
+import { THEME_IDS, type ThemeId } from '@/lib/theme/themes';
 import type { UserPreferences } from '@habbit-runner/shared';
 import { getCurrentUserTimeZone } from '@/lib/time/userTimezone';
-
-const THEME_IDS = new Set<ThemeId>([
-  'midnight',
-  'ember',
-  'violet',
-  'matrix',
-  'arctic',
-  'sakura',
-  'lavender',
-  'mint',
-  'peach',
-  'cloud'
-]);
 
 export async function fetchUserPreferences(): Promise<UserPreferences> {
   const response = await authenticatedFetch(

@@ -1,5 +1,6 @@
 const { FlatCompat } = require('@eslint/eslintrc');
 const js = require('@eslint/js');
+const svelte = require('eslint-plugin-svelte');
 
 const compat = new FlatCompat({
   baseDirectory: __dirname,
@@ -7,8 +8,12 @@ const compat = new FlatCompat({
   allConfig: js.configs.all,
 });
 
-module.exports = [
-  ...compat.config({
+const svelteRecommended = Array.isArray(svelte.configs.recommended)
+  ? svelte.configs.recommended
+  : [svelte.configs.recommended];
+
+const scriptConfigs = compat
+  .config({
     env: { browser: true, es2022: true },
     extends: [
       'eslint:recommended',
@@ -48,6 +53,31 @@ module.exports = [
       'react-hooks/set-state-in-effect': 'off',
       'react-hooks/refs': 'off',
     },
-    ignorePatterns: ['dist/', 'node_modules/'],
-  }),
+  })
+  .map((config) => ({
+    ...config,
+    files: ['**/*.{js,jsx,ts,tsx}'],
+  }));
+
+module.exports = [
+  {
+    ignores: ['dist/', 'build/', '.svelte-kit/', 'node_modules/'],
+  },
+  ...scriptConfigs,
+  ...svelteRecommended,
+  {
+    files: ['**/*.svelte', '**/*.svelte.ts', '**/*.svelte.js'],
+    languageOptions: {
+      parserOptions: {
+        parser: require('@typescript-eslint/parser'),
+        projectService: true,
+        extraFileExtensions: ['.svelte'],
+      },
+    },
+    rules: {
+      'no-alert': 'error',
+      'no-console': 'error',
+      'no-debugger': 'error',
+    },
+  },
 ];

@@ -101,7 +101,7 @@ class SyncResourceUnitTest {
     currentUserContext.setUser(new CurrentUser("user-1", "user@example.test"));
     var syncMetricsCollector = new SyncMetricsCollector(new SimpleMeterRegistry());
     var resource = new SyncResource(service, currentUserContext, syncMetricsCollector);
-    // setField(resource, "requestContext", requestContext(traceId));
+    setField(resource, "requestContext", requestContext(traceId));
     return resource;
   }
 

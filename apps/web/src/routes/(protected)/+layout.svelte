@@ -1,0 +1,103 @@
+<script lang="ts">
+  import { browser } from '$app/environment';
+  import { afterNavigate, goto } from '$app/navigation';
+  import { resolve } from '$app/paths';
+  import { onMount } from 'svelte';
+  import type { Snippet } from 'svelte';
+  import type { AuthSession } from '@/lib/auth/session';
+  import {
+    AUTH_SESSION_CLEARED_EVENT,
+    authenticatedFetch,
+    clearAuthSession
+  } from '@/lib/auth/session';
+  import { subscribeToPush, isPushNotificationSupported } from '@/lib/pwa/pushSubscription';
+  import { setCurrentUserId } from '@/lib/storage/db';
+  import { clearCurrentUserTimeZone } from '@/lib/time/userTimezone';
+  import AppLayout from '$lib/components/AppLayout.svelte';
+  import PullToRefresh from '$lib/components/PullToRefresh.svelte';
+  import { habitsStore } from '$lib/stores/habits';
+  import { syncEngineStore } from '$lib/stores/syncEngine';
+  import { themeStore } from '$lib/stores/theme';
+
+  type Props = {
+    data: {
+      authSession: AuthSession;
+    };
+    children: Snippet;
+  };
+
+  let { data, children }: Props = $props();
+  let sessionClearInFlight = false;
+
+  afterNavigate(() => {
+    if (browser) {
+      document.getElementById('main-content')?.focus();
+    }
+  });
+
+  async function handleSessionCleared() {
+    if (sessionClearInFlight) {
+      return;
+    }
+
+    sessionClearInFlight = true;
+    syncEngineStore.setEnabled(false);
+    setCurrentUserId(null);
+    clearCurrentUserTimeZone();
+    await themeStore.setAuthenticated(false);
+    await goto(resolve<'/'>('/', {}), { replaceState: true });
+  }
+
+  async function logout() {
+    clearAuthSession();
+
+    try {
+      await authenticatedFetch('/api/auth/logout', { method: 'POST' });
+    } catch {
+      return;
+    }
+  }
+
+  onMount(() => {
+    sessionClearInFlight = false;
+    setCurrentUserId(data.authSession.userId);
+    habitsStore.setUserId(data.authSession.userId);
+    void themeStore.setAuthenticated(true);
+    syncEngineStore.setEnabled(true);
+
+    const onSessionCleared = () => {
+      void handleSessionCleared();
+    };
+
+    window.addEventListener(AUTH_SESSION_CLEARED_EVENT, onSessionCleared);
+
+    if (
+      isPushNotificationSupported() &&
+      'Notification' in window &&
+      Notification.permission === 'granted'
+    ) {
+      subscribeToPush().catch(() => undefined);
+    }
+
+    return () => {
+      window.removeEventListener(AUTH_SESSION_CLEARED_EVENT, onSessionCleared);
+      syncEngineStore.stop();
+    };
+  });
+</script>
+
+<PullToRefresh
+  enabled={true}
+  isRefreshing={$syncEngineStore.status === 'syncing' && $syncEngineStore.isActive}
+  onRefresh={() => syncEngineStore.syncNow()}
+>
+  <AppLayout
+    theme={$themeStore.theme}
+    onThemeChange={(id) => themeStore.setTheme(id)}
+    onLogout={logout}
+    syncState={$syncEngineStore}
+    onRetrySync={() => syncEngineStore.syncNow()}
+  >
+    {@render children()}
+  </AppLayout>
+</PullToRefresh>

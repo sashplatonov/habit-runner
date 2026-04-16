@@ -58,3 +58,12 @@ apps/*/.env.*
 
 secrets/
 .claude/settings.local.json
+
+# SvelteKit build artifact
+.svelte-kit/
+apps/*/.svelte-kit/
+
+# Archive folder (legacy frontend snapshots) - ignore generated deps/artifacts inside archive
+archive/**/node_modules/
+archive/**/dist/
+archive/**/build/

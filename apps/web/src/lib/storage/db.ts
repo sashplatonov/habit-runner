@@ -2,11 +2,17 @@ import type { Table } from 'dexie';
 import Dexie from 'dexie';
 import type { Habit } from '@/types/habit';
 import type { HabitSchedule, SyncEntity, SyncOpType } from '@habbit-runner/shared';
-import { normalizeSchedule, scheduleFromLegacy } from '@habbit-runner/shared';
 import { normalizeToCompletionKey } from '@/lib/completionKey';
 import { DEFAULT_USER_ID } from '@/lib/core/config';
 import { generateId } from '@/lib/core/id';
 import { nowSyncISO } from '@habbit-runner/shared';
+import {
+  normalizeCompletions,
+  normalizeNumberArray,
+  normalizeStringArray
+} from './habitEntity';
+
+export { habitEntityToDomain } from './habitEntity';
 
 export type OutboxStatus = 'pending' | 'inflight' | 'failed';
 
@@ -102,6 +108,37 @@ type LegacyHabitRecord = Partial<HabitEntity>;
 
 const normalizeCheckinDateKey = normalizeToCompletionKey;
 
+function registerVersion8Schema(database: Dexie) {
+  database.version(8)
+    .stores({
+      habits: 'id, userId, updatedAt, version, sortOrder',
+      checkins: 'id, userId, habitId, date, updatedAt, version, [userId+habitId+date]',
+      tombstones: 'id, userId, entity, entityId, deletedAt',
+      sync_meta: 'id, status',
+      outbox: 'id, userId, entity, type, status',
+      pending_reminders: 'id, userId, habitId, createdAt'
+    })
+    .upgrade(async (transaction) => {
+      const habitsTable = transaction.table('habits') as Table<LegacyHabitRecord, string>;
+
+      await habitsTable.toCollection().modify((record) => {
+        record.tags = normalizeStringArray(record.tags);
+        record.customDays = normalizeNumberArray(record.customDays);
+        record.freezeDays = normalizeStringArray(record.freezeDays);
+        record.completions = normalizeCompletions(record.completions);
+        if (!Object.prototype.hasOwnProperty.call(record, 'archived')) {
+          record.archived = false;
+        }
+        if (!Object.prototype.hasOwnProperty.call(record, 'reminderEnabled')) {
+          record.reminderEnabled = true;
+        }
+        if (!Object.prototype.hasOwnProperty.call(record, 'type')) {
+          record.type = 'positive';
+        }
+      });
+    });
+}
+
 export class HabbitRunnerDb extends Dexie {
   habits!: Table<HabitEntity>;
   checkins!: Table<CheckinEntity>;
@@ -128,10 +165,12 @@ export class HabbitRunnerDb extends Dexie {
         sync_meta: 'id, status',
         outbox: 'id, userId, entity, type, status'
       })
-      .upgrade((transaction) =>
-        transaction.habits.toCollection().modify((record) => {
+      .upgrade((transaction) => {
+        const habitsTable = transaction.table('habits') as Table<LegacyHabitRecord, string>;
+
+        return habitsTable.toCollection().modify((record) => {
           if (record.sortOrder === undefined || record.sortOrder === null) {
-            record.sortOrder = Date.parse(record.createdAt) || Date.now();
+            record.sortOrder = Date.parse(record.createdAt ?? new Date().toISOString()) || Date.now();
           }
           if (!Object.prototype.hasOwnProperty.call(record, 'reminderTime')) {
             record.reminderTime = null;
@@ -142,8 +181,8 @@ export class HabbitRunnerDb extends Dexie {
           if (!Object.prototype.hasOwnProperty.call(record, 'dailyTarget')) {
             record.dailyTarget = 1;
           }
-        })
-      );
+        });
+      });
 
     this.version(3)
       .stores({
@@ -153,13 +192,15 @@ export class HabbitRunnerDb extends Dexie {
         sync_meta: 'id, status',
         outbox: 'id, userId, entity, type, status'
       })
-      .upgrade((transaction) =>
-        transaction.checkins.toCollection().modify((record) => {
+      .upgrade((transaction) => {
+        const checkinsTable = transaction.table('checkins') as Table<LegacyCheckinRecord, string>;
+
+        return checkinsTable.toCollection().modify((record) => {
           if (!Object.prototype.hasOwnProperty.call(record, 'count')) {
             record.count = 1;
           }
-        })
-      );
+        });
+      });
 
     this.version(4)
       .stores({
@@ -169,13 +210,15 @@ export class HabbitRunnerDb extends Dexie {
         sync_meta: 'id, status',
         outbox: 'id, userId, entity, type, status'
       })
-      .upgrade((transaction) =>
-        transaction.habits.toCollection().modify((record) => {
+      .upgrade((transaction) => {
+        const habitsTable = transaction.table('habits') as Table<LegacyHabitRecord, string>;
+
+        return habitsTable.toCollection().modify((record) => {
           if (!Object.prototype.hasOwnProperty.call(record, 'dailyTarget')) {
             record.dailyTarget = 1;
           }
-        })
-      );
+        });
+      });
 
     this.version(5)
       .stores({
@@ -228,38 +271,12 @@ export class HabbitRunnerDb extends Dexie {
       outbox: 'id, userId, entity, type, status',
       pending_reminders: 'id, userId, habitId, createdAt'
     });
+
+    registerVersion8Schema(this);
   }
 }
 
 export const db = new HabbitRunnerDb();
-
-export function habitEntityToDomain(entity: HabitEntity): Habit {
-    return {
-      id: entity.id,
-      name: entity.name,
-      description: entity.description ?? '',
-      color: entity.color as Habit['color'],
-      icon: entity.icon,
-      frequency: entity.frequency as Habit['frequency'],
-      customDays: entity.customDays,
-      targetStreak: entity.targetStreak,
-      dailyTarget: Math.max(1, Math.trunc(entity.dailyTarget ?? 1)),
-      tags: entity.tags,
-      completions: { ...entity.completions },
-      freezeDays: entity.freezeDays ?? [],
-      sortOrder: entity.sortOrder ?? Date.parse(entity.createdAt),
-      reminderTime: entity.reminderTime ?? undefined,
-      reminderEnabled: entity.reminderEnabled ?? true,
-      createdAt: entity.createdAt,
-      updatedAt: entity.updatedAt,
-      version: entity.version,
-      archived: entity.archived,
-      type: entity.type ?? 'positive',
-      schedule:
-        normalizeSchedule(entity.schedule) ??
-        scheduleFromLegacy(entity.frequency as Habit['frequency'], entity.customDays)
-    };
-  }
 
 export function domainToHabitEntity(habit: Habit): HabitEntity {
   const userId = getCurrentUserId();

@@ -2,9 +2,9 @@ import { buildApiUrl } from '../api/url';
 import { authenticatedFetch } from '../auth/session';
 
 /**
- * Convert VAPID public key from URL-safe base64 to Uint8Array
+ * Convert VAPID public key from URL-safe base64 to ArrayBuffer
  */
-function urlBase64ToUint8Array(base64String: string): Uint8Array {
+function urlBase64ToArrayBuffer(base64String: string): ArrayBuffer {
   const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
   const base64 = (base64String + padding)
     .replace(/-/g, '+')
@@ -17,7 +17,9 @@ function urlBase64ToUint8Array(base64String: string): Uint8Array {
     outputArray[i] = rawData.charCodeAt(i);
   }
 
-  return outputArray;
+  const buffer = new ArrayBuffer(outputArray.length);
+  new Uint8Array(buffer).set(outputArray);
+  return buffer;
 }
 
 /**
@@ -86,7 +88,7 @@ export async function subscribeToPush(): Promise<boolean> {
   const vapidData = await vapidResponse.json() as { publicKey: string };
   const subscription = await registration.pushManager.subscribe({
     userVisibleOnly: true,
-    applicationServerKey: urlBase64ToUint8Array(vapidData.publicKey)
+    applicationServerKey: urlBase64ToArrayBuffer(vapidData.publicKey)
   });
 
   const subscribeUrl = buildApiUrl('/notifications/subscribe');
