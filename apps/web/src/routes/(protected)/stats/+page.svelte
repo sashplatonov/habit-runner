@@ -1,19 +1,56 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
   import { resolve } from '$app/paths';
-  import { Flame, Filter, Search, Tag, Zap, TrendingUp, Calendar, Dumbbell, Sprout, Lightbulb, AlertTriangle, Plus } from 'lucide-svelte';
+  import {
+    AlertTriangle,
+    Calendar,
+    Dumbbell,
+    Filter,
+    Flame,
+    Lightbulb,
+    Plus,
+    Search,
+    Sprout,
+    Tag,
+    TrendingDown,
+    TrendingUp,
+    Zap
+  } from 'lucide-svelte';
+  import ChartGuideTooltip from '$lib/components/ChartGuideTooltip.svelte';
   import CompletionRing from '$lib/components/CompletionRing.svelte';
   import EmptyState from '$lib/components/EmptyState.svelte';
   import HabitHeatmap from '$lib/components/HabitHeatmap.svelte';
-  import { toCompletionKey } from '@/lib/completionKey';
-  import { formatAppDate } from '@/lib/i18n';
+  import StatsDailyRateChart from '$lib/components/StatsDailyRateChart.svelte';
+  import StatsTrendChart from '$lib/components/StatsTrendChart.svelte';
   import { formatHabitLabel } from '$lib/habits/formatHabitLabel';
   import { habitsStore } from '$lib/stores/habits';
+  import {
+    INSIGHTS_TOOLTIP,
+    OVERVIEW_SIGNALS_TOOLTIP,
+    YOUR_INVESTMENT_TOOLTIP
+  } from '@/pages/components/blockGuideTooltips';
   import { HABIT_COLOR_THEMES } from '$lib/theme/habit-colors';
-  import { PERIOD_DAY_RANGES, STREAK_THRESHOLDS, STREAK_MESSAGES, WEEKDAY_NA } from '$lib/constants/stats';
-  import type { Habit } from '@/types/habit';
+  import {
+    PERIOD_DISPLAY_NAMES,
+    STREAK_MESSAGES,
+    STREAK_THRESHOLDS,
+    WEEKDAY_NA
+  } from '$lib/constants/stats';
+  import { getInvestmentColor, getInvestmentMessage } from '$lib/stats/StatsView.helpers';
+  import { habitStatusLabel } from '$lib/stats/statsCharts';
+  import {
+    buildDayDetails,
+    buildMergedCompletions,
+    buildPeriodSegments,
+    buildWeekdayStats,
+    cleanupHiddenHabits,
+    filterStatsHabits,
+    generateDailyCompletionData,
+    generateHabitPeriodData,
+    getWindowRange,
+    type PeriodOption
+  } from '$lib/stats/statsPage';
 
-  type PeriodOption = 'week' | 'month' | 'quarter' | 'year';
   type TabId = 'overview' | 'charts' | 'habits' | 'activity';
   type HabitSort = 'rate' | 'streak' | 'name';
 
@@ -43,28 +80,9 @@
 
   const WEEKDAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'] as const;
 
-  function differenceInDays(later: Date, earlier: Date): number {
-    return Math.round((later.getTime() - earlier.getTime()) / (1000 * 60 * 60 * 24));
-  }
-
-  function getCompletionThreshold(habit: Habit): number {
-    return Math.max(1, habit.dailyTarget ?? 1);
-  }
-
-  function habitStatusLabel(completionRate: number, currentStreak: number): { label: string; color: string } {
-    if (completionRate >= 85 && currentStreak >= 7) return { label: 'Strong', color: 'text-accent' };
-    if (completionRate >= 60 || currentStreak >= 3) return { label: 'Steady', color: 'text-accent-secondary' };
-    return { label: 'Struggling', color: 'text-muted' };
-  }
-
   // Window range for the selected period (no Date mutation)
-  const windowRange = $derived.by(() => {
-    const now = new Date();
-    const end = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const days = PERIOD_DAY_RANGES[period] ?? 30;
-    const start = new Date(end.getTime() - (days - 1) * 86_400_000);
-    return { start, end };
-  });
+  const windowRange = $derived.by(() => getWindowRange(period));
+  const periodSegments = $derived.by(() => buildPeriodSegments(period));
 
   // All unique tags from all habits
   const allTags = $derived.by(() => {
@@ -76,24 +94,22 @@
   });
 
   // Filtered habits
-  const filteredHabits = $derived.by(() => {
-    return $habitsStore.allHabits.filter((habit) => {
-      if (statusFilter === 'active' && habit.archived) return false;
-      if (statusFilter === 'archived' && !habit.archived) return false;
-      if (searchQuery) {
-        const q = searchQuery.toLowerCase();
-        if (!habit.name.toLowerCase().includes(q) && !(habit.description ?? '').toLowerCase().includes(q)) return false;
-      }
-      if (selectedTags.length > 0 && !(habit.tags ?? []).some((tag) => selectedTags.includes(tag))) return false;
-      return true;
-    });
+  const filteredHabits = $derived(
+    filterStatsHabits($habitsStore.allHabits, statusFilter, searchQuery, selectedTags)
+  );
+  const visibleHabits = $derived(filteredHabits.filter((habit) => !hiddenHabits.includes(habit.name)));
+
+  $effect(() => {
+    const next = cleanupHiddenHabits(hiddenHabits, filteredHabits);
+    if (next !== hiddenHabits) {
+      hiddenHabits = next;
+    }
   });
 
   // All stats for filtered habits
   const allStats = $derived(
     filteredHabits.map((habit) => ({ habit, stats: habitsStore.getHabitStats(habit.id) }))
   );
-  const statsByHabitId = $derived(new Map(allStats.map((entry) => [entry.habit.id, entry.stats])));
 
   // Summary KPIs
   const avgRate = $derived.by(() => {
@@ -122,57 +138,12 @@
     return entries;
   });
 
-  // Daily completion rate data for bar chart
-  const dailyData = $derived.by(() => {
-    const { start, end } = windowRange;
-    const days = differenceInDays(end, start) + 1;
-    const visible = filteredHabits.filter((h) => !hiddenHabits.includes(h.name));
-    const total = visible.length;
-    return Array.from({ length: days }, (_, i) => {
-      const date = new Date(start.getTime() + i * 86_400_000);
-      const key = toCompletionKey(date);
-      const completed = visible.filter((h) => (h.completions[key] ?? 0) >= getCompletionThreshold(h)).length;
-      return {
-        label: period === 'week'
-          ? formatAppDate(date, { weekday: 'short' })
-          : formatAppDate(date, { month: 'short', day: 'numeric' }),
-        rate: total > 0 ? Math.round((completed / total) * 100) : 0
-      };
-    });
-  });
+  const dailyData = $derived.by(() => (
+    generateDailyCompletionData(visibleHabits, windowRange.start, windowRange.end, period, periodSegments)
+  ));
+  const habitPeriodData = $derived.by(() => generateHabitPeriodData(filteredHabits, periodSegments));
 
-  // Weekday stats
-  const weekdayStats = $derived.by(() => {
-    const { start, end } = windowRange;
-    const counts = [0, 0, 0, 0, 0, 0, 0];
-    const activeDays: string[] = [];
-    const spanDays = differenceInDays(end, start) + 1;
-    for (let i = 0; i < spanDays; i++) {
-      const date = new Date(start.getTime() + i * 86_400_000);
-      const key = toCompletionKey(date);
-      const isCompleted = filteredHabits.some((h) => (h.completions[key] ?? 0) >= getCompletionThreshold(h));
-      if (isCompleted) {
-        counts[date.getDay()] += 1;
-        if (!activeDays.includes(key)) activeDays.push(key);
-      }
-    }
-    let bestIndex = 0;
-    let worstIndex = -1;
-    for (let i = 0; i < 7; i++) {
-      if (counts[i] > counts[bestIndex]) bestIndex = i;
-      if (counts[i] > 0 && (worstIndex === -1 || counts[i] < counts[worstIndex])) worstIndex = i;
-    }
-    const totalActiveDays = activeDays.length;
-    const investmentPercent = Math.round((totalActiveDays / Math.max(1, spanDays)) * 100);
-    return {
-      bestWeekday: counts[bestIndex] > 0 ? WEEKDAY_NAMES[bestIndex] : WEEKDAY_NA,
-      worstWeekday: worstIndex >= 0 ? WEEKDAY_NAMES[worstIndex] : WEEKDAY_NA,
-      counts,
-      investmentPercent,
-      totalActiveDays,
-      spanDays
-    };
-  });
+  const weekdayStats = $derived.by(() => buildWeekdayStats(filteredHabits, windowRange.start, windowRange.end));
 
   // Generated insights (3 cards)
   const insights = $derived.by(() => {
@@ -181,12 +152,16 @@
       ? allStats.reduce((best, next) => next.stats.longestStreak > best.stats.longestStreak ? next : best, allStats[0])
       : null;
     const days = streakLeader?.stats.longestStreak ?? 0;
+    let streakIcon = Lightbulb;
     let streakBody: string;
     if (days >= STREAK_THRESHOLDS.AUTOMATISM_MIN) {
+      streakIcon = Flame;
       streakBody = STREAK_MESSAGES.AUTOMATISM(formatHabitLabel(streakLeader!.habit), days);
     } else if (days >= STREAK_THRESHOLDS.MOMENTUM_MIN) {
+      streakIcon = Dumbbell;
       streakBody = STREAK_MESSAGES.MOMENTUM_ENCOURAGEMENT(days, formatHabitLabel(streakLeader!.habit));
     } else if (days > 0) {
+      streakIcon = Sprout;
       streakBody = STREAK_MESSAGES.EARLY_STAGE(days);
     } else {
       streakBody = STREAK_MESSAGES.NO_STREAK;
@@ -210,51 +185,47 @@
     }
 
     // Momentum insight
+    const improvedCount = habitPeriodData.length > 1
+      ? filteredHabits.reduce((sum, habit) => {
+          const lastEntry = habitPeriodData[habitPeriodData.length - 1];
+          const previousEntry = habitPeriodData[habitPeriodData.length - 2];
+          const current = Number(lastEntry?.[habit.name] ?? 0);
+          const previous = Number(previousEntry?.[habit.name] ?? 0);
+          return current > previous ? sum + 1 : sum;
+        }, 0)
+      : 0;
+    const total = filteredHabits.length;
+
     let momentumBody: string;
-    if (allStats.length === 0) {
-      momentumBody = 'Add habits and start completing them to unlock momentum insights.';
-    } else if (avgRate >= 80) {
-      momentumBody = 'Strong consistency across the board. Keep the rhythm.';
-    } else if (avgRate >= 50) {
-      momentumBody = 'Good base. Push consistency on your lowest-performing habits.';
+    let momentumIcon = Lightbulb;
+    if (total === 0) {
+      momentumBody = 'No habits to measure yet.';
+    } else if (improvedCount === total) {
+      momentumIcon = Zap;
+      momentumBody = `All ${total} habits improving this ${PERIOD_DISPLAY_NAMES[period]} - excellent momentum!`;
+    } else if (improvedCount === 0) {
+      momentumIcon = TrendingDown;
+      momentumBody = `No habits improved this ${PERIOD_DISPLAY_NAMES[period]}. Focus on one habit to break the trend.`;
     } else {
-      momentumBody = 'Low average rate. Pick one core habit to focus on this week.';
+      momentumIcon = TrendingUp;
+      momentumBody = `${improvedCount} of ${total} habits improved. Push the other ${total - improvedCount} forward.`;
     }
 
     return [
-      { id: 'streak', title: 'Best streak', body: streakBody, icon: Flame },
+      { id: 'streak', title: 'Best streak', body: streakBody, icon: streakIcon },
       { id: 'weekday', title: 'Weekday shift', body: weekdayBody, icon: weekdayDiff > 50 ? AlertTriangle : Calendar },
-      { id: 'momentum', title: 'Momentum', body: momentumBody, icon: avgRate >= 80 ? Dumbbell : avgRate >= 50 ? Sprout : Lightbulb }
+      { id: 'momentum', title: 'Momentum', body: momentumBody, icon: momentumIcon }
     ];
   });
 
-  // Merged completions for activity tab
-  const mergedCompletions = $derived.by(() => {
-    const merged: Record<string, number> = {};
-    filteredHabits.forEach((h) => {
-      Object.entries(h.completions).forEach(([date, count]) => {
-        merged[date] = (merged[date] ?? 0) + (count ?? 0);
-      });
-    });
-    return merged;
-  });
-
-  const dayDetails = $derived.by(() => {
-    const details: Record<string, string[]> = {};
-    filteredHabits.forEach((h) => {
-      const label = formatHabitLabel(h);
-      Object.entries(h.completions).forEach(([date, count]) => {
-        if ((count ?? 0) <= 0) return;
-        if (!details[date]) details[date] = [];
-        details[date].push(label);
-      });
-    });
-    return details;
-  });
+  const mergedCompletions = $derived.by(() => buildMergedCompletions(filteredHabits));
+  const dayDetails = $derived.by(() => buildDayDetails(filteredHabits));
 
   const aggregateTarget = $derived(
     Math.max(1, filteredHabits.reduce((s, h) => s + Math.max(1, h.dailyTarget ?? 1), 0))
   );
+  const investmentColor = $derived(getInvestmentColor(weekdayStats.investmentPercent));
+  const investmentMessage = $derived(getInvestmentMessage(weekdayStats.investmentPercent, weekdayStats.worstWeekday));
 
   function handleSortChange(key: HabitSort) {
     if (habitSort === key) {
@@ -345,48 +316,50 @@
       <!-- Filter panel -->
       {#if filtersOpen}
         <div class="border-t border-border px-4 py-3">
-          <div class="mx-auto max-w-6xl space-y-4">
-            <div class="flex flex-col gap-3 sm:flex-row">
-              <!-- Search input -->
-              <div class="relative flex-1">
-                <Search size={14} class="absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
-                <input
-                  type="text"
-                  placeholder="Search habits..."
-                  bind:value={searchQuery}
-                  class="w-full rounded-lg border border-border bg-bg-card py-2 pl-9 pr-3 text-sm text-foreground placeholder:text-muted focus:border-accent/50 focus:outline-none"
-                />
-              </div>
-              <!-- Status filter -->
-              <div class="flex rounded-lg border border-border bg-bg-card p-1">
-                {#each (['all', 'active', 'archived'] as const) as s, si (s + '-' + si)}
-                  <button
-                    type="button"
-                    onclick={() => { statusFilter = s; }}
-                    class="rounded-md px-3 py-1 text-xs font-mono capitalize transition-colors {statusFilter === s ? 'bg-border text-foreground' : 'text-muted hover:text-foreground'}"
-                  >
-                    {s}
-                  </button>
-                {/each}
-              </div>
-            </div>
-            <!-- Tags -->
-            {#if allTags.length > 0}
-              <div class="flex items-start gap-2">
-                <Tag size={14} class="mt-1 shrink-0 text-muted" />
-                <div class="flex flex-wrap gap-1.5">
-                  {#each allTags as tag, ti (tag + '-' + ti)}
+          <div class="mx-auto max-w-6xl">
+            <div class="rounded-lg border border-border bg-bg-secondary p-4 space-y-4">
+              <div class="flex flex-col gap-3 sm:flex-row">
+                <div class="relative flex-1">
+                  <Search size={14} class="absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
+                  <input
+                    type="text"
+                    placeholder="Search habits..."
+                    bind:value={searchQuery}
+                    class="w-full rounded-lg border border-border bg-bg-card py-2 pl-9 pr-3 text-sm text-foreground placeholder:text-muted focus:border-accent/50 focus:outline-none"
+                  />
+                </div>
+                <div class="flex rounded-lg border border-border bg-bg-card p-1">
+                  {#each (['all', 'active', 'archived'] as const) as s, si (s + '-' + si)}
                     <button
                       type="button"
-                      onclick={() => toggleTag(tag)}
-                      class="rounded border px-2 py-1 text-[10px] font-mono transition-colors {selectedTags.includes(tag) ? 'border-accent/30 bg-accent/10 text-accent' : 'border-border bg-bg-card text-muted hover:text-foreground'}"
+                      onclick={() => { statusFilter = s; }}
+                      class="rounded-md px-3 py-1 text-xs font-mono capitalize transition-colors {statusFilter === s ? 'bg-border text-foreground' : 'text-muted hover:text-foreground'}"
                     >
-                      #{tag}
+                      {s}
                     </button>
                   {/each}
                 </div>
               </div>
-            {/if}
+
+              <div class="flex items-start gap-2">
+                <Tag size={14} class="mt-1 shrink-0 text-muted" />
+                {#if allTags.length > 0}
+                  <div class="flex flex-wrap gap-1.5">
+                    {#each allTags as tag, ti (tag + '-' + ti)}
+                      <button
+                        type="button"
+                        onclick={() => toggleTag(tag)}
+                        class="rounded border px-2 py-1 text-[10px] font-mono transition-colors {selectedTags.includes(tag) ? 'border-accent/30 bg-accent/10 text-accent' : 'border-border bg-bg-card text-muted hover:text-foreground'}"
+                      >
+                        #{tag}
+                      </button>
+                    {/each}
+                  </div>
+                {:else}
+                  <span class="text-[11px] font-mono text-muted">No tags yet</span>
+                {/if}
+              </div>
+            </div>
           </div>
         </div>
       {/if}
@@ -402,7 +375,10 @@
           <div class="grid gap-4 md:grid-cols-[2fr,1fr]">
             <!-- Overview signals -->
             <div class="space-y-2">
-              <h2 class="text-xs font-mono uppercase tracking-wider text-muted">Overview signals</h2>
+              <div class="flex items-center gap-2">
+                <h2 class="text-xs font-mono uppercase tracking-wider text-muted">Overview signals</h2>
+                <ChartGuideTooltip {...OVERVIEW_SIGNALS_TOOLTIP} triggerClassName="h-7 w-7" />
+              </div>
               <div class="grid grid-cols-2 gap-3 md:grid-cols-4">
                 <div class="rounded-lg border border-border bg-bg-secondary p-3">
                   <div class="mb-2 flex items-center gap-1">
@@ -439,7 +415,10 @@
             <div class="rounded-lg border border-border bg-bg-secondary p-4 space-y-4">
               <div class="flex items-center justify-between">
                 <div>
-                  <h2 class="text-xs font-mono uppercase tracking-wider text-muted">Your Investment</h2>
+                  <div class="flex items-center gap-2">
+                    <h2 class="text-xs font-mono uppercase tracking-wider text-muted">Your Investment</h2>
+                    <ChartGuideTooltip {...YOUR_INVESTMENT_TOOLTIP} triggerClassName="h-7 w-7" />
+                  </div>
                   <p class="mt-1 text-[10px] italic text-muted">Progress across habits this window</p>
                 </div>
                 <div class="text-2xl font-mono font-bold text-accent">{weekdayStats.investmentPercent}%</div>
@@ -461,12 +440,16 @@
               <div class="h-1.5 overflow-hidden rounded-full bg-border">
                 <div class="h-full bg-accent transition-all duration-1000" style:width="{weekdayStats.investmentPercent}%" style:box-shadow="0 0 10px var(--glow)"></div>
               </div>
+              <p class="text-[10px] font-mono text-center" style:color={investmentColor}>{investmentMessage}</p>
             </div>
           </div>
 
           <!-- Insights row -->
           <div class="space-y-2">
-            <h2 class="text-xs font-mono uppercase tracking-wider text-muted">Insights</h2>
+            <div class="flex items-center gap-2">
+              <h2 class="text-xs font-mono uppercase tracking-wider text-muted">Insights</h2>
+              <ChartGuideTooltip {...INSIGHTS_TOOLTIP} triggerClassName="h-7 w-7" />
+            </div>
             <div class="grid gap-4 md:grid-cols-3">
               {#each insights as insight (insight.id)}
                 <div class="rounded-lg border border-border bg-bg-secondary p-4 space-y-2">
@@ -500,87 +483,31 @@
           </div>
 
           <div class="grid gap-4 md:grid-cols-2">
-            <!-- Daily completion rate (bar chart via HTML/CSS) -->
-            <div class="rounded-lg border border-border bg-bg-secondary p-4">
-              <div class="mb-3 flex items-center justify-between">
-                <h2 class="text-xs font-mono uppercase tracking-wider text-muted">Daily completion rate</h2>
-                <span class="text-[10px] font-mono text-accent">{avgRate}% avg</span>
-              </div>
-              {#if dailyData.length > 0}
-                <div class="flex h-[150px] items-end gap-[2px]">
-                  {#each dailyData as d, di (d.label + '-' + di)}
-                    <div
-                      class="group relative flex flex-1 flex-col items-center justify-end"
-                      title="{d.label}: {d.rate}%"
-                    >
-                      <div
-                        class="w-full rounded-t-sm bg-accent transition-all duration-300"
-                        style:height="{Math.max(2, d.rate * 1.5)}px"
-                        style:box-shadow="0 0 4px var(--glow)"
-                      ></div>
-                    </div>
-                  {/each}
-                </div>
-                <!-- X axis labels (only show every Nth to avoid crowding) -->
-                {#if dailyData.length <= 14}
-                  <div class="mt-2 flex gap-[2px]">
-                    {#each dailyData as d, di (d.label + '-' + di)}
-                      <div class="flex-1 truncate text-center text-[8px] font-mono text-muted">{d.label}</div>
-                    {/each}
-                  </div>
-                {:else}
-                  <div class="mt-2 flex justify-between">
-                    <span class="text-[8px] font-mono text-muted">{dailyData[0]?.label ?? ''}</span>
-                    <span class="text-[8px] font-mono text-muted">{dailyData[Math.floor(dailyData.length / 2)]?.label ?? ''}</span>
-                    <span class="text-[8px] font-mono text-muted">{dailyData[dailyData.length - 1]?.label ?? ''}</span>
-                  </div>
-                {/if}
-              {:else}
-                <p class="py-8 text-center text-xs text-muted">No data for this period</p>
-              {/if}
-            </div>
-
-            <!-- Period trend per habit (stacked bar view) -->
-            <div class="rounded-lg border border-border bg-bg-secondary p-4 space-y-4">
-              <div class="flex items-center justify-between gap-3 flex-wrap">
-                <h2 class="text-xs font-mono uppercase tracking-wider text-muted">Per-habit performance</h2>
-                <div class="flex flex-wrap gap-1.5 max-w-full">
-                  {#each filteredHabits as habit (habit.id)}
-                    <button
-                      type="button"
-                      onclick={() => toggleHabitVisibility(habit.name)}
-                      class="rounded-full border px-2 py-1 text-[9px] font-mono transition-colors {hiddenHabits.includes(habit.name) ? 'border-border bg-bg-card text-muted' : 'border-accent/40 bg-accent/10 text-accent'}"
-                    >
-                      {formatHabitLabel(habit)}
-                    </button>
-                  {/each}
-                </div>
-              </div>
-              <div class="space-y-2">
-                {#each filteredHabits.filter((h) => !hiddenHabits.includes(h.name)) as habit (habit.id)}
-                  {@const stats = statsByHabitId.get(habit.id)}
-                  {@const color = HABIT_COLOR_THEMES[habit.color]?.hex ?? 'var(--accent)'}
-                  <div class="flex items-center gap-2">
-                    <span class="w-4 shrink-0 text-sm">{habit.icon}</span>
-                    <span class="w-16 shrink-0 truncate text-[10px] font-mono text-muted">{habit.name}</span>
-                    <div class="h-5 min-w-0 flex-1 overflow-hidden rounded-sm bg-border">
-                      <div
-                        class="h-full rounded-sm transition-all duration-500"
-                        style:width="{stats?.completionRate ?? 0}%"
-                        style:background-color={color}
-                        style:box-shadow="0 0 6px {color}60"
-                      ></div>
-                    </div>
-                    <span class="w-8 shrink-0 text-right text-[10px] font-mono" style:color={color}>{stats?.completionRate ?? 0}%</span>
-                  </div>
-                {/each}
-              </div>
-            </div>
+            <StatsDailyRateChart {avgRate} {dailyData} {period} />
+            <StatsTrendChart
+              {habitPeriodData}
+              {filteredHabits}
+              {hiddenHabits}
+              {toggleHabitVisibility}
+              {period}
+            />
           </div>
 
           <!-- Weekday breakdown -->
           <div class="rounded-lg border border-border bg-bg-secondary p-4">
-            <h2 class="mb-4 text-xs font-mono uppercase tracking-wider text-muted">Weekday breakdown</h2>
+            <div class="mb-4 flex min-w-0 items-center gap-2">
+              <h2 class="min-w-0 text-xs font-mono uppercase tracking-wider text-muted">Weekday breakdown</h2>
+              <ChartGuideTooltip
+                title="Weekly breakdown"
+                summary="This compact view compares recent weekly volume for every habit so you can see which ones stay active and which ones fade out."
+                focusPoints={[
+                  'Bar height: how many days the habit was completed that week.',
+                  'Latest bars: whether the habit is strengthening or cooling off now.',
+                  'Right-side percent: overall completion rate for quick ranking.'
+                ]}
+                variant="columns"
+              />
+            </div>
             <div class="flex gap-2">
               {#each WEEKDAY_NAMES as day, di (day + '-' + di)}
                 {@const count = weekdayStats.counts[di] ?? 0}
@@ -606,7 +533,19 @@
       {:else if activeTab === 'habits'}
         <div class="space-y-4">
           <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <h2 class="text-xs font-mono uppercase tracking-wider text-muted">Habit performance</h2>
+            <div class="flex min-w-0 items-center gap-2">
+              <h2 class="text-xs font-mono uppercase tracking-wider text-muted">Habit performance</h2>
+              <ChartGuideTooltip
+                title="Habit performance"
+                summary="This ranking helps you compare habits by outcome, so you can see which routines are solid and which ones need intervention first."
+                focusPoints={[
+                  'Completion rate: the fastest signal of reliability.',
+                  'Current streak: whether the habit still has live momentum.',
+                  'Status labels: quick flags for strong, steady, or struggling habits.'
+                ]}
+                variant="columns"
+              />
+            </div>
             <!-- Sort controls -->
             <div class="flex flex-wrap items-center gap-2 text-[11px] font-mono">
               <span class="text-muted">Sort by</span>
@@ -616,7 +555,7 @@
                   onclick={() => handleSortChange(key)}
                   class="rounded-full px-3 py-1 text-[10px] transition-colors {habitSort === key ? 'bg-border text-foreground' : 'text-muted hover:text-foreground'}"
                 >
-                  {key}{#if habitSort === key}&nbsp;{habitSortDir === 'desc' ? '↓' : '↑'}{/if}
+                  {key}
                 </button>
               {/each}
             </div>
@@ -627,7 +566,7 @@
             <div class="rounded-lg border border-border bg-bg-secondary p-4 space-y-2">
               {#each sortedStats as entry, i (entry.habit.id)}
                 {@const color = HABIT_COLOR_THEMES[entry.habit.color]?.hex ?? 'var(--accent)'}
-                {@const status = habitStatusLabel(entry.stats.completionRate, entry.stats.currentStreak)}
+                {@const status = habitStatusLabel(entry.stats.completionRate, entry.stats.currentStreak, entry.stats.longestStreak)}
                 <button
                   type="button"
                   class="w-full flex items-center gap-3 rounded-lg p-2.5 text-left transition-colors hover:bg-bg-card"
@@ -639,7 +578,7 @@
                     <div class="flex items-center justify-between gap-2">
                       <span class="truncate text-xs font-medium text-foreground">{entry.habit.name}</span>
                       <div class="flex shrink-0 items-center gap-2">
-                        <span class="text-[9px] font-mono {status.color}">{status.label}</span>
+                        <span class="text-[9px] font-mono" style:color={status.color}>{status.label}</span>
                         <span class="text-[10px] font-mono" style:color={color}>{entry.stats.completionRate}%</span>
                       </div>
                     </div>
@@ -666,7 +605,19 @@
 
             <!-- Weekly breakdown -->
             <div class="min-w-0 rounded-lg border border-border bg-bg-secondary p-4">
-              <h2 class="mb-3 text-xs font-mono uppercase tracking-wider text-muted">Weekly breakdown</h2>
+              <div class="mb-3 flex min-w-0 items-center gap-2">
+                <h2 class="min-w-0 text-xs font-mono uppercase tracking-wider text-muted">Weekly breakdown</h2>
+                <ChartGuideTooltip
+                  title="Weekly breakdown"
+                  summary="This compact view compares recent weekly volume for every habit so you can see which ones stay active and which ones fade out."
+                  focusPoints={[
+                    'Bar height: how many days the habit was completed that week.',
+                    'Latest bars: whether the habit is strengthening or cooling off now.',
+                    'Right-side percent: overall completion rate for quick ranking.'
+                  ]}
+                  variant="columns"
+                />
+              </div>
               <div class="space-y-3">
                 {#each allStats as entry (entry.habit.id)}
                   {@const color = HABIT_COLOR_THEMES[entry.habit.color]?.hex ?? 'var(--accent)'}
@@ -696,7 +647,19 @@
       {:else if activeTab === 'activity'}
         <div class="rounded-lg border border-border bg-bg-secondary p-3 space-y-3">
           <div class="flex items-center justify-between">
-            <h2 class="text-xs font-mono uppercase tracking-wider text-muted">Activity — 90 days</h2>
+            <div class="flex items-center gap-2">
+              <h2 class="text-xs font-mono uppercase tracking-wider text-muted">Activity — 90 days</h2>
+              <ChartGuideTooltip
+                title="Activity heatmap"
+                summary="This heatmap compresses 90 days of execution into one grid, so you can see consistency, streak clusters, and dead zones at a glance."
+                focusPoints={[
+                  'Brighter cells: heavier completion volume on that day.',
+                  'Repeated empty columns: missed stretches that break rhythm.',
+                  'Dense recent activity: a strong sign your routine is becoming durable.'
+                ]}
+                variant="grid"
+              />
+            </div>
             <span class="text-[10px] font-mono text-muted">{filteredHabits.length} habits</span>
           </div>
           <HabitHeatmap
