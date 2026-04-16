@@ -184,7 +184,7 @@
     const background = getDayBackground(day, maxValue);
     const completed = day.count >= maxValue;
     const { monthOpacity, monthHighlight } = getMonthMeta(day, monthCount);
-    const baseBorderColor = day.scheduled ? accent.hex : 'var(--border)';
+    const baseBorderColor = day.scheduled ? accent.hex : 'var(--border-dashed, var(--border))';
     const borderStyle = day.scheduled ? 'solid' : 'dashed';
     const weekendHighlight = day.isWeekend && !day.isFuture && !day.isEmpty;
     const boxShadow = buildDayBoxShadow(completed, weekendHighlight, monthHighlight);

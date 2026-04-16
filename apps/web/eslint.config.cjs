@@ -61,7 +61,7 @@ const scriptConfigs = compat
 
 module.exports = [
   {
-    ignores: ['dist/', 'build/', '.svelte-kit/', 'node_modules/'],
+    ignores: ['dist/', 'build/', '.svelte-kit/', 'node_modules/', 'scripts/'],
   },
   ...scriptConfigs,
   ...svelteRecommended,
