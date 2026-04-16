@@ -1106,8 +1106,8 @@
                       <div class="flex min-w-0 flex-1 items-center gap-3 text-left">
                         <span class="flex-shrink-0 text-xl leading-none">{habit.icon}</span>
                         <div class="min-w-0 flex-1">
-                          <div class="flex items-center gap-1 truncate">
-                            <p class="truncate text-sm font-semibold text-foreground {completed ? 'opacity-60 line-through' : ''}">{habit.name}</p>
+                          <div class="flex items-center gap-1 overflow-hidden">
+                            <p class="min-w-0 truncate text-sm font-semibold text-foreground {completed ? 'opacity-60 line-through' : ''}">{habit.name}</p>
                             {#if tgt > 1}
                               <span class="flex-shrink-0 rounded bg-accent/10 px-1 py-0.5 text-[10px] font-mono text-accent-secondary">×{tgt}</span>
                             {/if}
@@ -1331,8 +1331,8 @@
                     <div class="flex flex-1 items-center gap-3 text-left min-w-0">
                       <span class="text-xl leading-none flex-shrink-0">{habit.icon}</span>
                       <div class="min-w-0 flex-1">
-                        <div class="flex items-center gap-1 truncate">
-                          <p class="truncate text-sm font-semibold text-foreground {completed ? 'opacity-60 line-through' : ''}">{habit.name}</p>
+                        <div class="flex items-center gap-1 overflow-hidden">
+                          <p class="min-w-0 truncate text-sm font-semibold text-foreground {completed ? 'opacity-60 line-through' : ''}">{habit.name}</p>
                           {#if tgt > 1}
                             <span class="flex-shrink-0 text-[10px] font-mono px-1 rounded bg-accent/10 text-accent-secondary">×{tgt}</span>
                           {/if}

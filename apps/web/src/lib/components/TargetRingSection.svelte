@@ -12,7 +12,7 @@
 
   const { stats, habit, accent }: Props = $props();
 
-  const targetStreak = $derived(Math.max(1, habit.targetStreak));
+  const targetStreak = $derived(Math.max(1, habit.targetStreak ?? 30));
   const remainingDays = $derived(Math.max(0, targetStreak - stats.currentStreak));
   const progressWidth = $derived(Math.min(100, (stats.currentStreak / targetStreak) * 100));
   const streakHint = $derived.by(() => {

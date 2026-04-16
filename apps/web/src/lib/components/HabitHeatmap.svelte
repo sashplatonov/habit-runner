@@ -2,7 +2,7 @@
   import { addDaysToCalendarDate, calendarDateToDate } from '@habbit-runner/shared';
   import { formatAppDate } from '@/lib/i18n';
   import type { HabitColor } from '@/types/habit';
-  import { formatDate } from '$lib/habits/habitStats';
+  import { toCompletionKey, completionKeyToCalendarDate, calendarDateToCompletionKey } from '@/lib/completionKey';
   import { DEFAULT_HABIT_COLOR, HABIT_COLOR_THEMES } from '$lib/theme/habit-colors';
 
   const FILL_OPACITIES = [0, 0.22, 0.46, 0.72, 1] as const;
@@ -61,20 +61,19 @@
   }
 
   function buildWeeks(entries: Record<string, number>, target: number): Cell[][] {
-    const today = formatDate(new Date());
+    const today = completionKeyToCalendarDate(toCompletionKey(new Date()));
     const rangeStart = addDaysToCalendarDate(today, -(DAYS - 1));
     const rangeStartDate = calendarDateToDate(rangeStart);
     const dayOfWeek = (rangeStartDate.getUTCDay() + 6) % 7;
     const gridStart = addDaysToCalendarDate(rangeStart, -dayOfWeek);
     const weeks: Cell[][] = [];
     let cursor = gridStart;
-
     while (cursor <= today) {
       const week: Cell[] = [];
       for (let day = 0; day < 7; day += 1) {
         week.push({
           date: cursor,
-          intensity: getIntensity(entries[cursor] ?? 0, target),
+          intensity: getIntensity(entries[calendarDateToCompletionKey(cursor)] ?? 0, target),
           isToday: cursor === today,
           isOutOfRange: cursor > today || cursor < rangeStart
         });
