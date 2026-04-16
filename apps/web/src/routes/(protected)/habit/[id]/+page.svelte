@@ -276,17 +276,7 @@
       <MonthlyRateSection monthlyData={stats.monthlyData} {accent} habitCreatedAt={habit.createdAt} />
       <WeeklyCompletionsSection weeklyData={stats.weeklyData} {accent} habitCreatedAt={habit.createdAt} />
 
-      <section class="rounded-lg border border-border bg-bg-secondary p-4">
-        <div class="flex items-center justify-between gap-3">
-          <div>
-            <p class="text-[10px] font-mono uppercase tracking-[0.25em] text-muted">Retro calendar</p>
-            <h2 class="mt-2 text-xl font-semibold text-foreground">Edit past records</h2>
-          </div>
-        </div>
-        <div class="mt-5">
-          <HabitRetroCalendar {habit} {accent} onUpdate={handleRetroUpdate} />
-        </div>
-      </section>
+      <HabitRetroCalendar {habit} {accent} onUpdate={handleRetroUpdate} />
 
       <section class="rounded-lg border border-border bg-bg-secondary p-4">
         <p class="text-[10px] font-mono uppercase tracking-[0.25em] text-muted">Danger zone</p>

@@ -73,10 +73,10 @@
 
   // ─── State ────────────────────────────────────────────────────────────────────
   let addingTemplate   = $state<string | null>(null);
-  let filter           = $state<DashboardFilter>(lsGet<DashboardFilter>(LS_FILTER, 'all'));
+  let filter           = $state<DashboardFilter>(lsGet<DashboardFilter>(LS_FILTER, 'pending'));
   let searchQuery      = $state('');
   let sortMode         = $state<SortMode>(lsGet<SortMode>(LS_SORT, 'custom'));
-  let viewDensity      = $state<ViewDensity>(lsGet<ViewDensity>(LS_DENSITY, 'compact'));
+  let viewDensity      = $state<ViewDensity>(lsGet<ViewDensity>(LS_DENSITY, 'comfortable'));
   let heroCollapsed    = $state<boolean>(lsGet<boolean>(LS_COLLAPSED, false));
   let selectedTags     = $state<string[]>(lsGet<string[]>(LS_TAGS, []));
   let menuOpen         = $state(false);
@@ -149,13 +149,18 @@
   const daysSinceLast       = $derived(getDaysSinceLastCompletion(activeHabits));
   const showComebackBanner  = $derived(daysSinceLast >= 2 && todayRate < 100);
 
-  const motivationText = $derived(() => {
-    if (todayRate >= 100) { return 'Perfect day! All habits completed.'; }
-    if (todayRate >= 75)  { return 'Almost there! Just a bit more.'; }
-    if (todayRate >= 50)  { return "More than half done! You're on a roll."; }
-    if (todayRate >= 25)  { return 'Good start! Keep the momentum going.'; }
-    if (todayRate > 0)    { return 'Almost halfway there. One step at a time.'; }
-    return 'Make the first move — pick one habit to complete right now.';
+  const motivationText = $derived.by(() => {
+    const remaining = scheduledToday.length - completedTodayCount;
+    if (todayRate >= 100) {
+      return null;
+    }
+    if (todayRate >= 50) {
+      return `Almost there - ${remaining} left!`;
+    }
+    if (todayRate > 0) {
+      return `Keep going - ${remaining} to go`;
+    }
+    return 'Start your streak';
   });
 
   const allTags = $derived.by(() => {
@@ -615,69 +620,69 @@
   <div class="min-h-screen bg-bg-primary">
 
     <!-- ═══════════ HERO ═══════════════════════════════════════════════════════ -->
-    <section class="border-b border-border bg-bg-secondary/50 backdrop-blur-sm">
-      <div class="mx-auto max-w-2xl">
-
-        <!-- Summary bar (always visible) -->
-        <div class="flex items-center justify-between px-4 py-3">
-          <div class="flex items-center gap-3 min-w-0">
-            <div>
-              <p class="text-[10px] font-mono uppercase tracking-widest text-muted leading-none">{dateStr}</p>
-              <div class="mt-1 flex items-center gap-2">
-                <CompletionRing percentage={todayRate} size={32} strokeWidth={2.5} showText={true} />
-                <span class="text-xs font-mono text-muted">{completedTodayCount}/{scheduledToday.length} done</span>
-                {#if overallStreak > 0}
-                  <span class="flex items-center gap-0.5 text-[11px] font-mono text-accent-secondary">
-                    <Flame size={10} />{overallStreak}d
-                  </span>
-                {/if}
-              </div>
+    <section class="border-b border-border bg-bg-primary">
+      <div class="px-4 py-3" style="padding-top: calc(var(--safe-area-inset-top, 0px) + 1rem);">
+        <div class="mx-auto flex max-w-2xl items-center justify-between">
+          <div class="min-w-0 flex-1">
+            <div class="mb-1 flex items-center gap-2">
+              <p class="text-[11px] font-mono uppercase tracking-widest text-muted">{dateStr}</p>
+              <ChartGuideTooltip
+                title="Your dashboard"
+                summary="A bird's eye view of today's progress. The ring shows how many scheduled habits you've completed so far."
+                focusPoints={[
+                  "Completion ring: percentage of today's mandatory habits done.",
+                  'Streak: your longest active habit streak.',
+                  'Progress bar below shows daily momentum.'
+                ]}
+                variant="bars"
+                triggerClassName="h-7 w-7"
+              />
             </div>
-            <ChartGuideTooltip
-              title="Your dashboard"
-              summary="A bird's eye view of today's progress. The ring shows how many scheduled habits you've completed so far."
-              focusPoints={[
-                "Completion ring: percentage of today's mandatory habits done.",
-                'Streak: your longest active habit streak.',
-                'Progress bar below shows daily momentum.'
-              ]}
-              variant="bars"
-              triggerClassName="h-7 w-7 opacity-60 hover:opacity-100"
-            />
+
+            <div class="flex items-center gap-3">
+              <CompletionRing percentage={todayRate} size={28} strokeWidth={3.5} />
+              <div class="text-[12px] font-semibold text-foreground">{completedTodayCount}/{scheduledToday.length || 0}</div>
+              {#if overallStreak > 0}
+                <div class="flex items-center gap-1 text-[12px] font-mono text-accent-secondary">
+                  <Flame size={14} />
+                  <span>{overallStreak}d</span>
+                </div>
+              {/if}
+            </div>
           </div>
-          <div class="flex items-center gap-1">
-            <!-- Overflow menu (Export CSV) -->
+
+          <div class="flex items-center gap-2">
             <div class="relative">
               <button
                 type="button"
                 onclick={() => { menuOpen = !menuOpen; }}
-                class="flex h-8 w-8 items-center justify-center rounded-lg text-muted hover:bg-bg-card hover:text-foreground transition"
+                class="flex h-9 w-9 items-center justify-center rounded-xl border border-border bg-bg-secondary transition hover:border-accent"
                 aria-label="Dashboard options"
                 aria-expanded={menuOpen}
               >
-                <MoreHorizontal size={16} />
+                <MoreHorizontal size={18} />
               </button>
               {#if menuOpen}
                 <!-- svelte-ignore a11y_no_static_element_interactions -->
                 <div
-                  class="absolute right-0 top-full mt-1 z-50 w-40 rounded-xl border border-border bg-bg-secondary shadow-lg py-1"
+                  class="absolute right-0 top-full z-20 mt-2 w-36 rounded-2xl border border-border bg-bg-card shadow-xl"
                   onmouseleave={() => { menuOpen = false; }}
                 >
                   <button
                     type="button"
                     onclick={exportCSV}
-                    class="w-full px-3 py-2 text-left text-sm text-foreground hover:bg-bg-card transition"
+                    class="w-full px-3 py-2 text-left text-xs font-semibold uppercase tracking-widest text-foreground transition hover:bg-bg-secondary"
                   >
                     Export CSV
                   </button>
                 </div>
               {/if}
             </div>
-            <!-- Collapse toggle -->
+
             <button
               type="button"
               onclick={() => { heroCollapsed = !heroCollapsed; }}
-              class="flex h-8 w-8 items-center justify-center rounded-lg text-muted hover:bg-bg-card hover:text-foreground transition"
+              class="flex h-9 w-9 items-center justify-center rounded-xl border border-border bg-bg-secondary transition hover:border-accent"
               aria-label={heroCollapsed ? 'Expand hero' : 'Collapse hero'}
               aria-expanded={!heroCollapsed}
             >
@@ -685,60 +690,69 @@
             </button>
           </div>
         </div>
+      </div>
 
-        <!-- Expanded panel -->
-        {#if !heroCollapsed}
-          <div class="px-4 pb-4 animate-slide-down-fade origin-top">
-            {#if showComebackBanner}
-              <div class="mb-3 flex items-center gap-2 rounded-xl border border-accent-secondary/30 bg-accent-secondary/5 px-3 py-2 animate-comeback">
-                <span class="text-base" role="img" aria-label="wave">👋</span>
-                <p class="text-xs font-mono text-accent-secondary">
-                  Welcome back! {daysSinceLast} day{daysSinceLast > 1 ? 's' : ''} since your last completion — let's get back on track.
-                </p>
-              </div>
-            {/if}
+      <div class="overflow-hidden transition-all duration-300" style:max-height={heroCollapsed ? '0px' : '1200px'} aria-hidden={heroCollapsed}>
+        <div class="px-4 pb-4">
+          <div class="mx-auto max-w-2xl">
+            <div class="mb-3 flex items-center gap-5">
+              <CompletionRing percentage={todayRate} size={88} strokeWidth={7} />
+              <div class="flex flex-1 flex-col gap-2">
+                {#if motivationText}
+                  <p class={`text-xs font-mono tracking-wide ${todayRate >= 50 ? 'text-accent-secondary' : 'text-muted'}`}>
+                    {motivationText}
+                  </p>
+                {/if}
 
-            <div class="flex items-start gap-5">
-              <CompletionRing percentage={todayRate} size={88} strokeWidth={6} showText={true} />
-              <div class="flex-1 min-w-0">
-                <p class="text-sm font-semibold text-foreground leading-snug">{motivationText()}</p>
-                <div class="mt-3 grid grid-cols-3 gap-2">
+                <div class="grid grid-cols-3 gap-2">
                   <div class="rounded-xl border border-border bg-bg-card px-3 py-2">
-                    <div class="mb-1 flex items-center gap-1">
+                    <div class="mb-1 flex items-center gap-1.5">
                       <Zap size={10} class="text-accent" />
                       <span class="text-[10px] font-mono uppercase tracking-wider text-muted">Active</span>
                     </div>
-                    <span class="text-base font-mono font-bold text-foreground">{activeHabits.length}</span>
+                    <span class="text-lg font-mono font-bold text-foreground">{activeHabits.length}</span>
                   </div>
                   <div class="rounded-xl border border-border bg-bg-card px-3 py-2">
-                    <div class="mb-1 flex items-center gap-1">
+                    <div class="mb-1 flex items-center gap-1.5">
                       <Flame size={10} class="text-accent-secondary" />
                       <span class="text-[10px] font-mono uppercase tracking-wider text-muted">Streak</span>
                     </div>
-                    <span class="text-base font-mono font-bold text-accent-secondary">{overallStreak}d</span>
+                    <span class="text-lg font-mono font-bold text-accent-secondary">{overallStreak}d</span>
                   </div>
                   <div class="rounded-xl border border-border bg-bg-card px-3 py-2">
-                    <div class="mb-1 flex items-center gap-1">
+                    <div class="mb-1 flex items-center gap-1.5">
                       <TrendingUp size={10} class="text-accent-secondary" />
                       <span class="text-[10px] font-mono uppercase tracking-wider text-muted">Done</span>
                     </div>
-                    <span class="text-base font-mono font-bold text-accent-secondary">{completedTodayCount}</span>
+                    <span class="text-lg font-mono font-bold text-accent-secondary">{completedTodayCount}</span>
                   </div>
                 </div>
               </div>
             </div>
 
-            <!-- Progress bar -->
-            <div class="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-border/50">
+            <div class="mb-3 h-[3px] overflow-hidden rounded-full bg-border">
               <div
-                class="h-full rounded-full transition-all duration-700 animate-progress-glow"
-                style:width="{todayRate}%"
-                style:background="linear-gradient(90deg, var(--accent), var(--accent-secondary))"
+                class={`h-full rounded-full transition-all duration-700 ${todayRate >= 100 ? 'animate-progress-glow' : ''}`}
+                style:width={`${Math.min(todayRate, 100)}%`}
+                style:background={todayRate >= 100
+                  ? 'linear-gradient(90deg, var(--accent-secondary), var(--accent))'
+                  : 'linear-gradient(90deg, var(--accent), var(--accent-secondary))'}
+                style:box-shadow="0 0 8px var(--glow)"
               ></div>
             </div>
 
+            {#if showComebackBanner}
+              <div class="animate-comeback-slide mb-3 flex items-center gap-3 rounded-xl border border-accent/30 bg-accent/5 px-4 py-2.5">
+                <span class="text-lg" role="img" aria-label="welcome back">👋</span>
+                <div>
+                  <p class="text-sm font-semibold text-foreground">Welcome back!</p>
+                  <p class="text-[11px] font-mono text-muted">You've been away for {daysSinceLast} days. Let's start fresh today!</p>
+                </div>
+              </div>
+            {/if}
+
             {#if todayRate >= 100}
-              <div class="mt-3 flex items-center gap-3 rounded-xl border border-accent-secondary/30 bg-accent-secondary/5 px-4 py-2.5">
+              <div class="animate-slide-down-fade mb-3 flex items-center gap-3 rounded-xl border border-accent-secondary/30 bg-accent-secondary/5 px-4 py-2.5">
                 <span class="text-lg" role="img" aria-label="celebration">🎉</span>
                 <div>
                   <p class="text-sm font-semibold text-foreground">Perfect day!</p>
@@ -747,8 +761,7 @@
               </div>
             {/if}
           </div>
-        {/if}
-
+        </div>
       </div>
     </section>
 
@@ -917,13 +930,13 @@
         </div>
 
       {:else if viewDensity === 'comfortable'}
-        <!-- Grid (tile) view -->
-        {#each groupedHabits as group (group.tag ?? 'all')}
-          {#if group.tag}
-            <h3 class="mb-2 mt-4 text-[10px] font-mono uppercase tracking-widest text-muted first:mt-0">#{group.tag}</h3>
-          {/if}
-          <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5">
-            {#each group.habits as habit, idx (habit.id)}
+        <div
+          class={`mx-auto w-full max-w-6xl px-4 py-3 sm:px-6 ${selectedTags.length === 0 ? 'grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5' : ''}`}
+          role="list"
+          aria-label="Habit list"
+        >
+          {#if selectedTags.length === 0}
+            {#each filteredHabits as habit, idx (habit.id)}
               <HabitTile
                 {habit}
                 {todayKey}
@@ -933,17 +946,259 @@
                 onDetail={() => navigateToDetail(habit.id)}
               />
             {/each}
-          </div>
-        {/each}
+          {:else}
+            {#each groupedHabits as group (group.tag ?? 'all')}
+              {#if group.tag}
+                <div class="col-span-full">
+                  <div class="mt-2 flex items-center gap-2 px-1 first:mt-0">
+                    <span class="h-1.5 w-1.5 rounded-full bg-accent"></span>
+                    <h3 class="text-[10px] font-mono font-bold uppercase tracking-widest text-muted">{group.tag}</h3>
+                  </div>
+                  <div class="mt-2 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+                    {#each group.habits as habit, idx (habit.id)}
+                      <HabitTile
+                        {habit}
+                        {todayKey}
+                        {todayDate}
+                        appearanceIndex={idx}
+                        onToggle={() => void toggleHabit(habit)}
+                        onDetail={() => navigateToDetail(habit.id)}
+                      />
+                    {/each}
+                  </div>
+                </div>
+              {/if}
+            {/each}
+          {/if}
+        </div>
 
       {:else}
-        <!-- List (compact) view -->
-        {#each groupedHabits as group (group.tag ?? 'all')}
-          {#if group.tag}
-            <h3 class="mb-2 mt-4 text-[10px] font-mono uppercase tracking-widest text-muted first:mt-0">#{group.tag}</h3>
-          {/if}
-          <ul class="space-y-2" role="list">
-            {#each group.habits as habit, idx (habit.id)}
+        <div class="mx-auto flex w-full max-w-2xl flex-col px-4 py-3 sm:px-6" style="gap: 0.25rem;" role="list" aria-label="Habit list">
+          {#if selectedTags.length === 0}
+            <ul class="space-y-1" role="list">
+              {#each filteredHabits as habit, idx (habit.id)}
+                {@const accent = HABIT_COLOR_THEMES[habit.color]}
+                {@const tgt = Math.max(1, habit.dailyTarget ?? 1)}
+                {@const todayCount = habit.completions[todayKey] ?? 0}
+                {@const completed = todayCount >= tgt}
+                {@const status = getScheduleStatusForDate(habit, todayDate)}
+                {@const isFrozen = status === 'frozen'}
+                {@const isScheduled = isMandatoryToday(habit, todayDate)}
+                {@const streak = calculateScheduledStreak(habit, habit.completions).current}
+                {@const completionRate = calculateScheduledCompletionRate(habit, habit.completions)}
+                {@const last7 = buildLast7(habit)}
+                {@const hint = computeTileHint(habit, completionRate, streak)}
+                {@const phase = getHabitPhase(streak)}
+                {@const isAnimating = animatingHabitId === habit.id}
+                {@const dropHintPosition = dropHint?.habitId === habit.id ? dropHint.position : null}
+                {@const showDropAbove = dropHintPosition === 'above'}
+                {@const showDropBelow = dropHintPosition === 'below'}
+                {@const dropTransformClass = dropHintPosition === 'above' ? '-translate-y-2' : dropHintPosition === 'below' ? 'translate-y-2' : ''}
+                {@const isSwipeRow = swipeHabitId === habit.id}
+                {@const indicatorOpacity = isSwipeRow ? Math.min(1, Math.abs(swipeOffset) / 120) : 0}
+                {@const indicatorColor = swipeDirection === 'right' ? 'rgba(16, 185, 129, 0.25)' : swipeDirection === 'left' ? 'rgba(59, 130, 246, 0.25)' : 'transparent'}
+                {@const inlineTags = habit.tags.slice(0, 3)}
+                {@const extraTagCount = Math.max(0, habit.tags.length - inlineTags.length)}
+                <li
+                  data-habit-id={habit.id}
+                  role="listitem"
+                  class="group relative transition-all duration-200 animate-fade-slide-up
+                    {dragId && dragId !== habit.id ? 'opacity-50 scale-[0.97]' : ''}
+                    {dragId === habit.id ? 'ring-2 ring-accent/40 rounded-2xl' : ''}
+                    {dropTransformClass}"
+                  style:animation-delay="{Math.min(idx, 12) * 0.05}s"
+                  draggable={isDragActive()}
+                  ondragstart={(e) => isDragActive() && onDragStart(e, habit.id)}
+                  ondragover={(e) => isDragActive() && onDragOver(e, habit.id)}
+                  ondragleave={(e) => isDragActive() && onDragLeave(e)}
+                  ondrop={(e) => isDragActive() && void onDrop(e, habit.id)}
+                  ondragend={() => isDragActive() && onDragEnd()}
+                  ontouchstart={(e) => onRowTouchStart(e, habit.id)}
+                  ontouchmove={(e) => onRowTouchMove(e, habit)}
+                  ontouchend={onRowTouchEnd}
+                  ontouchcancel={onRowTouchEnd}
+                >
+                  {#if showDropAbove}
+                    <div class="absolute -top-1 inset-x-0 h-0.5 rounded-full bg-gradient-to-r from-transparent via-accent to-transparent animate-progress-glow z-10 pointer-events-none"></div>
+                  {/if}
+                  {#if showDropBelow}
+                    <div class="absolute -bottom-1 inset-x-0 h-0.5 rounded-full bg-gradient-to-r from-transparent via-accent to-transparent animate-progress-glow z-10 pointer-events-none"></div>
+                  {/if}
+
+                  <div
+                    class="habit-card-inner flex items-center rounded-2xl border bg-bg-card px-4 py-3 transition-all duration-150 cursor-pointer overflow-hidden
+                      {dragOverId === habit.id ? 'border-accent/50' : 'border-border hover:border-border-hover'}
+                      {isFrozen ? 'opacity-75' : ''}"
+                    role="button"
+                    tabindex="0"
+                    aria-label="{habit.name}, {completed ? 'completed' : 'not completed'}"
+                    style:transform={isSwipeRow ? `translateX(${swipeOffset}px)` : 'translateX(0px)'}
+                    style:transition={isSwipeRow && isSwipingGesture ? 'none' : 'transform 0.2s ease-out'}
+                    style:touch-action="pan-y"
+                    style:will-change="transform"
+                    style:width="100%"
+                    onclick={() => navigateToDetail(habit.id)}
+                    onkeydown={(e) => {
+                      if (e.key === 'Enter') { e.preventDefault(); navigateToDetail(habit.id); }
+                      else if (e.key === ' ') { e.preventDefault(); void toggleHabit(habit); }
+                    }}
+                  >
+                    <span class="absolute inset-y-0 left-0 w-1 rounded-l-2xl pointer-events-none" style:background={accent.hex}></span>
+                    <span
+                      class="habit-card-swipe-indicator"
+                      style:opacity={indicatorOpacity}
+                      style:background-color={indicatorColor}
+                    ></span>
+
+                    <div class="relative z-10 flex w-full items-center gap-3">
+                      {#if isDragActive()}
+                        <button
+                          type="button"
+                          class="flex-shrink-0 cursor-grab active:cursor-grabbing text-border/60 hover:text-muted transition-colors touch-none"
+                          aria-label="Reorder {habit.name}"
+                          onclick={(e) => { e.stopPropagation(); }}
+                          ontouchstart={(e) => onGripTouchStart(e, habit.id)}
+                        >
+                          <GripVertical size={14} />
+                        </button>
+                      {/if}
+
+                      <div class="relative flex-shrink-0">
+                        {#if isAnimating}
+                          {#each animParticles as p (p.id)}
+                            <span
+                              class="confetti-particle"
+                              style="--tx: {p.tx}px; --ty: {p.ty}px; background: {p.color}; left: 50%; top: 50%; margin-left: -3px; margin-top: -3px;"
+                            ></span>
+                          {/each}
+                        {/if}
+                        <button
+                          type="button"
+                          aria-label="{completed ? 'Undo' : 'Complete'} {habit.name}"
+                          onclick={(e) => { e.stopPropagation(); void toggleHabit(habit); }}
+                          disabled={isFrozen}
+                          class="relative flex h-8 w-8 items-center justify-center rounded-xl border-[1.5px] transition-all duration-200 overflow-hidden
+                            {completed ? `${accent.bgClass} ${accent.borderClass}` : isScheduled ? 'border-border-hover hover:border-muted' : isFrozen ? 'border-border bg-bg-secondary text-muted cursor-not-allowed opacity-60' : 'border border-dashed border-border/40 text-muted hover:border-border'}
+                            {isAnimating ? 'animate-check-pulse animate-glow-burst' : ''}"
+                          style={completed && !isFrozen ? `box-shadow: 0 0 12px ${accent.glow}` : ''}
+                        >
+                          {#if tgt > 1}
+                            {@const prog = Math.min(Math.max(todayCount, 0), tgt) / tgt}
+                            <span class="absolute inset-[2px] rounded-full pointer-events-none overflow-hidden" aria-hidden="true">
+                              <span
+                                class="absolute inset-y-0 left-0 rounded-full transition-all duration-300"
+                                style="width: {prog * 100}%; background: linear-gradient(90deg, {accent.hex}55, {accent.hex});"
+                              ></span>
+                            </span>
+                          {/if}
+                          {#if isFrozen}
+                            <SnowflakeIcon size={13} class="text-muted z-10 relative" />
+                          {:else if completed}
+                            <svg viewBox="0 0 12 12" class="h-4 w-4 z-10 relative {accent.textClass}">
+                              <path d="M2 6l3 3 5-5" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                          {:else if tgt > 1}
+                            <span class="text-[10px] font-mono z-10 relative" style="color: {accent.hex}">{todayCount}/{tgt}</span>
+                          {/if}
+                        </button>
+                      </div>
+
+                      <div class="flex min-w-0 flex-1 items-center gap-3 text-left">
+                        <span class="flex-shrink-0 text-xl leading-none">{habit.icon}</span>
+                        <div class="min-w-0 flex-1">
+                          <div class="flex items-center gap-1 truncate">
+                            <p class="truncate text-sm font-semibold text-foreground {completed ? 'opacity-60 line-through' : ''}">{habit.name}</p>
+                            {#if tgt > 1}
+                              <span class="flex-shrink-0 rounded bg-accent/10 px-1 py-0.5 text-[10px] font-mono text-accent-secondary">×{tgt}</span>
+                            {/if}
+                            {#if habit.description}
+                              <span class="flex-shrink-0"><DescriptionTooltip description={habit.description} /></span>
+                            {/if}
+                            {#if inlineTags.length > 0}
+                              <div class="hidden flex-shrink-0 items-center gap-1 sm:flex">
+                                {#each inlineTags as tag, ti (tag + '-' + ti)}
+                                  <span class="whitespace-nowrap rounded bg-accent/10 px-1 py-0.5 text-[10px] font-mono text-accent-secondary">#{tag}</span>
+                                {/each}
+                                {#if extraTagCount > 0}
+                                  <span class="rounded bg-accent/10 px-1 py-0.5 text-[10px] font-mono text-accent-secondary">+{extraTagCount}</span>
+                                {/if}
+                              </div>
+                            {/if}
+                          </div>
+
+                          {#if isFrozen}
+                            <span class="inline-flex items-center gap-0.5 text-[10px] font-mono text-muted">
+                              <SnowflakeIcon size={8} /> Frozen
+                            </span>
+                          {:else if !isScheduled}
+                            <span class="inline-flex items-center gap-0.5 text-[10px] font-mono text-muted">
+                              <Moon size={8} /> Not today
+                            </span>
+                          {/if}
+
+                          {#if hint}
+                            {@const hc = hint.type === 'good' ? 'text-accent' : hint.type === 'warn' ? 'text-accent-secondary' : 'text-muted'}
+                            <p class="mt-0.5 truncate text-[10px] font-mono {hc}">{hint.text}</p>
+                          {/if}
+                        </div>
+                      </div>
+
+                      <div class="flex flex-shrink-0 items-center gap-2">
+                        <ChartGuideTooltip
+                          title={`${habit.name} row`}
+                          summary="This row condenses one habit into a fast scan: current status, short-term history, completion rate, and a direct action button."
+                          focusPoints={[
+                            'Status and tags: see whether the habit is due, frozen, or off-schedule today.',
+                            'Right-side metrics: streak, rate ring, and recent bars reveal momentum.',
+                            'Toggle button: update today without leaving the dashboard.'
+                          ]}
+                          variant="columns"
+                          triggerClassName="hidden h-7 w-7 sm:inline-flex"
+                        />
+                        {#if streak > 0}
+                          <span class="hidden items-center gap-0.5 text-[10px] font-mono text-accent-secondary sm:flex">
+                            {#if habit.type === 'negative'}
+                              <Trophy size={10} />
+                            {:else if phase.id === 1}
+                              <Shield size={10} />
+                            {:else if phase.id === 2}
+                              <Zap size={10} />
+                            {:else if phase.id === 3}
+                              <Activity size={10} />
+                            {:else}
+                              <Star size={10} />
+                            {/if}
+                            {streak}
+                          </span>
+                        {/if}
+                        <CompletionRing percentage={completionRate} size={26} strokeWidth={2.5} color={habit.color} showText={false} />
+                        <div class="hidden h-4 items-end gap-[2px] sm:flex">
+                          {#each last7 as done, lj ('' + lj)}
+                            <div
+                              class="w-[3px] rounded-sm transition-all"
+                              style="height: {done ? '100%' : '30%'}; background-color: {done ? accent.hex : 'var(--border)'}; opacity: {0.4 + lj * 0.09}"
+                            ></div>
+                          {/each}
+                        </div>
+                        <div class="hidden lg:block">
+                          <MiniHeatmap completions={habit.completions} dailyTarget={habit.dailyTarget} color={habit.color} />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </li>
+              {/each}
+            </ul>
+          {:else}
+            {#each groupedHabits as group (group.tag ?? 'all')}
+              {#if group.tag}
+                <div class="mb-3 space-y-1">
+                  <div class="flex items-center gap-2 px-1">
+                    <span class="h-1.5 w-1.5 rounded-full bg-accent"></span>
+                    <h3 class="text-[10px] font-mono font-bold uppercase tracking-widest text-muted">{group.tag}</h3>
+                  </div>
+                  <ul class="space-y-1" role="list">
+                    {#each group.habits as habit, idx (habit.id)}
               {@const accent = HABIT_COLOR_THEMES[habit.color]}
               {@const tgt = Math.max(1, habit.dailyTarget ?? 1)}
               {@const todayCount = habit.completions[todayKey] ?? 0}
@@ -1157,10 +1412,14 @@
                     </div>
                   </div>
                 </div>
-              </li>
+                </li>
+                    {/each}
+                  </ul>
+                </div>
+              {/if}
             {/each}
-          </ul>
-        {/each}
+          {/if}
+        </div>
       {/if}
     </div>
 
