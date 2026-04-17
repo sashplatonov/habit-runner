@@ -46,8 +46,8 @@ services:
         MANDREL_BUILDER_IMAGE: ${MANDREL_BUILDER_IMAGE:-quay.io/quarkus/ubi9-quarkus-mandrel-builder-image:jdk-25}
     init: true
     environment:
-      DB_HOST: db
-      DB_PORT: 5432
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT}
       DB_NAME: ${DB_NAME:-habbit_runner}
       DB_USER: ${DB_USER:-habbit}
       DB_PASSWORD: ${DB_PASSWORD:-password}
