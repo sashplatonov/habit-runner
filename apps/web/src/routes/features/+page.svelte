@@ -3,15 +3,24 @@
   import PublicSeoHead from '$lib/components/PublicSeoHead.svelte';
   import PublicNav from '$lib/components/PublicNav.svelte';
   import PublicFooter from '$lib/components/PublicFooter.svelte';
-  import { PUBLIC_FEATURES_SEO, PUBLIC_SITE_ORIGIN, buildCanonicalUrl } from '$lib/seo/publicPages';
+  import { PUBLIC_FEATURES_SEO } from '$lib/seo/publicPages';
+</script>
 
-  const softwareSchema = {
+<PublicSeoHead
+  title={PUBLIC_FEATURES_SEO.title}
+  description={PUBLIC_FEATURES_SEO.description}
+  keywords={PUBLIC_FEATURES_SEO.keywords}
+  pathname={PUBLIC_FEATURES_SEO.pathname}
+/>
+
+<svelte:head>
+  <script type="application/ld+json">{JSON.stringify({
     '@context': 'https://schema.org',
     '@type': 'SoftwareApplication',
     name: 'Habbit Runner',
     applicationCategory: 'ProductivityApplication',
     operatingSystem: 'Web, Android, iOS',
-    url: PUBLIC_SITE_ORIGIN,
+    url: 'https://habbit-runner.app',
     description: PUBLIC_FEATURES_SEO.description,
     featureList: [
       'Offline-first habit tracking with IndexedDB storage',
@@ -30,33 +39,15 @@
       price: '0',
       priceCurrency: 'USD'
     }
-  };
-
-  const breadcrumbSchema = {
+  }).replace(/</g, '\u003c')}</script>
+  <script type="application/ld+json">{JSON.stringify({
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
     itemListElement: [
-      { '@type': 'ListItem', position: 1, name: 'Home', item: PUBLIC_SITE_ORIGIN },
-      {
-        '@type': 'ListItem',
-        position: 2,
-        name: 'Features',
-        item: buildCanonicalUrl('/features')
-      }
+      { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://habbit-runner.app' },
+      { '@type': 'ListItem', position: 2, name: 'Features', item: 'https://habbit-runner.app/features' }
     ]
-  };
-</script>
-
-<PublicSeoHead
-  title={PUBLIC_FEATURES_SEO.title}
-  description={PUBLIC_FEATURES_SEO.description}
-  keywords={PUBLIC_FEATURES_SEO.keywords}
-  pathname={PUBLIC_FEATURES_SEO.pathname}
-/>
-
-<svelte:head>
-  <script type="application/ld+json">{JSON.stringify(softwareSchema).replace(/</g, '\\u003c')}</script>
-  <script type="application/ld+json">{JSON.stringify(breadcrumbSchema).replace(/</g, '\\u003c')}</script>
+  }).replace(/</g, '\\u003c')}</script>
 </svelte:head>
 
 <div class="min-h-screen bg-white text-slate-900">

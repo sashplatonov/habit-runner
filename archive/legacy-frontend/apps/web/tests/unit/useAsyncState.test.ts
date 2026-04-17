@@ -3,7 +3,7 @@ import { vi, describe, it, expect } from 'vitest';
 import { useAsyncState } from '@/hooks/useAsyncState';
 
 // ---------------------------------------------------------------------------
-// P3.1: useAsyncState hook tests
+// P3.1: useAsyncState hook tests (archived React tests)
 // ---------------------------------------------------------------------------
 
 describe('useAsyncState', () => {
@@ -55,5 +55,3 @@ describe('useAsyncState', () => {
     expect(result.current.data).toBeNull();
   });
 });
-
-

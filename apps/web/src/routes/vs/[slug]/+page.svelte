@@ -1,27 +1,28 @@
 <script lang="ts">
-  import { resolve } from '$app/paths';
   import PublicSeoHead from '$lib/components/PublicSeoHead.svelte';
   import PublicNav from '$lib/components/PublicNav.svelte';
   import PublicFooter from '$lib/components/PublicFooter.svelte';
-  import { PUBLIC_SITE_ORIGIN } from '$lib/seo/publicPages';
+  import { resolve } from '$app/paths';
+  // import { PUBLIC_SITE_ORIGIN } from '$lib/seo/publicPages';
   import type { PageData } from './$types';
 
-  let { data }: { data: PageData } = $props();
+  export let data: PageData;
   const { competitor } = data;
 
-  const pageUrl = `${PUBLIC_SITE_ORIGIN}/vs/${competitor.slug}`;
+  // const pageUrl = `${PUBLIC_SITE_ORIGIN}/vs/${competitor.slug}`;
 
-  const seoConfig = {
-    title: competitor.tagline,
-    description: competitor.description,
-    url: pageUrl,
-    keywords: competitor.keywords,
-    type: 'article' as const,
-    publishedAt: '2026-04-16',
-    modifiedAt: '2026-04-16'
-  };
+  
+</script>
 
-  const articleSchema = {
+<PublicSeoHead
+  title={competitor.tagline}
+  description={competitor.description}
+  keywords={competitor.keywords}
+  pathname={`/vs/${competitor.slug}`}
+ />
+
+<svelte:head>
+  <script type="application/ld+json">{JSON.stringify({
     '@context': 'https://schema.org',
     '@type': 'Article',
     headline: competitor.tagline,
@@ -31,9 +32,8 @@
     dateModified: '2026-04-16',
     author: { '@type': 'Organization', name: 'Habbit Runner', url: PUBLIC_SITE_ORIGIN },
     publisher: { '@type': 'Organization', name: 'Habbit Runner', url: PUBLIC_SITE_ORIGIN }
-  };
-
-  const breadcrumbSchema = {
+  }).replace(/</g, '\\u003c')}</script>
+  <script type="application/ld+json">{JSON.stringify({
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
     itemListElement: [
@@ -41,14 +41,7 @@
       { '@type': 'ListItem', position: 2, name: 'Comparisons', item: `${PUBLIC_SITE_ORIGIN}/vs` },
       { '@type': 'ListItem', position: 3, name: `vs ${competitor.name}`, item: pageUrl }
     ]
-  };
-</script>
-
-<PublicSeoHead {seoConfig} />
-
-<svelte:head>
-  <script type="application/ld+json">{JSON.stringify(articleSchema)}</script>
-  <script type="application/ld+json">{JSON.stringify(breadcrumbSchema)}</script>
+  }).replace(/</g, '\\u003c')}</script>
 </svelte:head>
 
 <div class="min-h-screen bg-white text-gray-900">
@@ -171,18 +164,18 @@
       <h2 class="mb-2 text-2xl font-bold">Try Habbit Runner — Free</h2>
       <p class="mb-6 text-violet-100">No App Store. No subscription. Works offline from day one.</p>
       <a
-        href={resolve('/')}
-        class="inline-block rounded-xl bg-white px-8 py-3 font-semibold text-violet-700 transition hover:bg-violet-50"
-      >
-        Get Started
-      </a>
+            href={resolve('/', {})}
+            class="inline-block rounded-xl bg-white px-8 py-3 font-semibold text-violet-700 transition hover:bg-violet-50"
+          >
+            Get Started
+          </a>
     </section>
 
     <!-- Internal links -->
     <nav class="mt-10 flex flex-wrap justify-center gap-4 text-sm text-violet-600" aria-label="Related pages">
-      <a href={resolve('/features')} class="hover:underline">All Features</a>
-      <a href={resolve('/about')} class="hover:underline">About Habbit Runner</a>
-      <a href={resolve('/blog')} class="hover:underline">Blog</a>
+      <a href={resolve('/features', {})} class="hover:underline">All Features</a>
+      <a href={resolve('/about', {})} class="hover:underline">About Habbit Runner</a>
+      <a href={resolve('/blog', {})} class="hover:underline">Blog</a>
     </nav>
   </div>
   </main>

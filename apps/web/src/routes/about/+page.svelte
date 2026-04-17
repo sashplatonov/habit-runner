@@ -3,18 +3,8 @@
   import PublicNav from '$lib/components/PublicNav.svelte';
   import PublicFooter from '$lib/components/PublicFooter.svelte';
   import { resolve } from '$app/paths';
-  import { PUBLIC_ABOUT_SEO, PUBLIC_SITE_ORIGIN } from '$lib/seo/publicPages';
+  import { PUBLIC_ABOUT_SEO } from '$lib/seo/publicPages';
 
-  const organizationSchema = {
-    '@context': 'https://schema.org',
-    '@type': 'Organization',
-    name: 'Habbit Runner',
-    url: PUBLIC_SITE_ORIGIN,
-    logo: `${PUBLIC_SITE_ORIGIN}/og-image.svg`,
-    description:
-      'Habbit Runner is an offline-first habit tracker PWA built for daily consistency and streak analytics.',
-    sameAs: []
-  };
 </script>
 
 <PublicSeoHead
@@ -22,10 +12,19 @@
   description={PUBLIC_ABOUT_SEO.description}
   keywords={PUBLIC_ABOUT_SEO.keywords}
   pathname={PUBLIC_ABOUT_SEO.pathname}
-/>
+ />
 
 <svelte:head>
-  <script type="application/ld+json">{JSON.stringify(organizationSchema).replace(/</g, '\\u003c')}</script>
+  <script type="application/ld+json">{JSON.stringify({
+    '@context': 'https://schema.org',
+    '@type': 'Organization',
+    name: 'Habbit Runner',
+    url: 'https://habbit-runner.app',
+    logo: 'https://habbit-runner.app/og-image.svg',
+    description:
+      'Habbit Runner is an offline-first habit tracker PWA built for daily consistency and streak analytics.',
+    sameAs: []
+  }).replace(/</g, '\u003c')}</script>
 </svelte:head>
 
 <div class="min-h-screen bg-white text-slate-900">

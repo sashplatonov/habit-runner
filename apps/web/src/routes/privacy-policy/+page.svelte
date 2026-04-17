@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { resolve } from '$app/paths';
+  // import { resolve } from '$app/paths';
   import PublicSeoHead from '$lib/components/PublicSeoHead.svelte';
   import PublicNav from '$lib/components/PublicNav.svelte';
   import PublicFooter from '$lib/components/PublicFooter.svelte';

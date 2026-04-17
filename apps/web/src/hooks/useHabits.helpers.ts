@@ -1,20 +1,20 @@
 import type { CheckinEntity } from '@/lib/storage/db';
-import { normalizeToCompletionKey } from '@/lib/completionKey';
 
-export type CheckinCompletionMap = Record<string, Record<string, number>>;
+function normalizeDateKey(date: string): string {
+  // Normalize legacy date-only strings to UTC ISO without milliseconds
+  const iso = new Date(date).toISOString();
+  return iso.replace('.000', '');
+}
 
-export function buildCompletionsByHabitId(
-  checkins: CheckinEntity[] = []
-): CheckinCompletionMap {
-  const map: CheckinCompletionMap = {};
-  for (const checkin of checkins) {
-    if (!checkin.done) {
-      continue;
-    }
-    const habitMap = map[checkin.habitId] ?? {};
-    const completionKey = normalizeToCompletionKey(checkin.date);
-    habitMap[completionKey] = (habitMap[completionKey] ?? 0) + Math.max(1, checkin.count ?? 1);
-    map[checkin.habitId] = habitMap;
+export function buildCompletionsByHabitId(checkins: CheckinEntity[]): Record<string, Record<string, number>> {
+  const map: Record<string, Record<string, number>> = {};
+  for (const checkin of checkins ?? []) {
+    if (!checkin.done) {continue;}
+    const habitId = checkin.habitId;
+    const dateKey = normalizeDateKey(checkin.date);
+    const count = Math.max(1, Math.trunc(checkin.count ?? 1));
+    map[habitId] = map[habitId] ?? {};
+    map[habitId][dateKey] = (map[habitId][dateKey] ?? 0) + count;
   }
   return map;
 }
