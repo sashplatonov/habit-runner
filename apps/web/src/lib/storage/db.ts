@@ -280,6 +280,17 @@ export const db = new HabbitRunnerDb();
 
 export function domainToHabitEntity(habit: Habit): HabitEntity {
   const userId = getCurrentUserId();
+  function clone<T>(v: T | undefined): T | undefined {
+    if (v === undefined) return undefined;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const sc = (globalThis as any).structuredClone;
+    if (typeof sc === 'function') {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      return sc(v) as T;
+    }
+    throw new Error('structuredClone is not available in this environment. Please run on Node 18+/modern browser or provide a polyfill.');
+  }
+
   return {
     id: habit.id,
     userId,
@@ -290,9 +301,9 @@ export function domainToHabitEntity(habit: Habit): HabitEntity {
     frequency: habit.frequency,
     targetStreak: habit.targetStreak,
     dailyTarget: Math.max(1, Math.trunc(habit.dailyTarget ?? 1)),
-    tags: habit.tags,
-    customDays: habit.customDays,
-    schedule: habit.schedule,
+    tags: clone(habit.tags) ?? [],
+    customDays: clone(habit.customDays),
+    schedule: clone(habit.schedule),
     archived: habit.archived,
     completions: {},
     createdAt: habit.createdAt,
@@ -301,7 +312,7 @@ export function domainToHabitEntity(habit: Habit): HabitEntity {
     sortOrder: habit.sortOrder ?? Date.parse(habit.createdAt),
     reminderTime: habit.reminderTime ?? null,
     reminderEnabled: habit.reminderEnabled ?? true,
-    freezeDays: habit.freezeDays ?? [],
+    freezeDays: clone(habit.freezeDays) ?? [],
     type: habit.type ?? 'positive'
   };
 }

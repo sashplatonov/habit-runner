@@ -35,6 +35,15 @@ import { completionKeyToCalendarDate } from '$lib/completionKey';
 import { buildCompletionsByHabitId } from '@/hooks/useHabits.helpers';
 import { dexieLiveQuery } from '$lib/stores/dexieLiveQuery';
 
+function requireStructuredClone<T>(value: T): T {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const sc = (globalThis as any).structuredClone;
+  if (typeof sc !== 'function') {
+    throw new Error('structuredClone is not available in this environment. Please run on Node 18+/modern browser or provide a polyfill.');
+  }
+  return sc(value) as T;
+}
+
 type ToggleCompletionResult = { habitId: string; date: string; count: number };
 type AdvanceCompletionResult = ToggleCompletionResult & { previousCount: number; target: number };
 export type HabitUpsertInput = Omit<Habit, 'id' | 'completions' | 'createdAt'> & { sortOrder?: number; reminderTime?: string | null };
@@ -205,7 +214,13 @@ async function persistHabitWithSyncFallback(habit: Habit, action: 'upsert' | 'de
   }
 
   const entry = createOutboxEntry('habit', action, habit as unknown as Record<string, unknown>);
-  await syncEntriesWithFallback([entry]);
+  // Sync failure is non-fatal: data is already persisted in IndexedDB above.
+  // The background sync engine will pick it up on the next cycle.
+  try {
+    await syncEntriesWithFallback([entry]);
+  } catch {
+    // ignore
+  }
 }
 
 async function updateHabitAfterCheckinChange(habitId: string, timestamp: string) {
@@ -281,20 +296,21 @@ async function toggleCompletionImpl(
 }
 
 async function addHabitImpl(data: HabitUpsertInput) {
+  const safeData = requireStructuredClone<HabitUpsertInput>(data);
   const now = nowSyncISO();
   const newHabit: Habit = {
-    ...data,
-    id: createHabitId(data.name),
+    ...safeData,
+    id: createHabitId(safeData.name),
     completions: {},
-    dailyTarget: Math.max(1, Math.trunc(data.dailyTarget ?? 1)),
+    dailyTarget: Math.max(1, Math.trunc(safeData.dailyTarget ?? 1)),
     createdAt: now,
     updatedAt: now,
     version: 1,
-    sortOrder: data.sortOrder ?? Date.now(),
-    reminderTime: data.reminderTime ?? undefined,
-    reminderEnabled: data.reminderEnabled ?? true,
-    archived: data.archived ?? false,
-    freezeDays: data.freezeDays ?? []
+    sortOrder: safeData.sortOrder ?? Date.now(),
+    reminderTime: safeData.reminderTime ?? undefined,
+    reminderEnabled: safeData.reminderEnabled ?? true,
+    archived: safeData.archived ?? false,
+    freezeDays: safeData.freezeDays ?? []
   };
   await persistHabitWithSyncFallback(newHabit, 'upsert');
   return newHabit.id;
@@ -307,9 +323,10 @@ async function updateHabitImpl(id: string, data: Partial<Habit>) {
   }
 
   const existing = habitEntityToDomain(entity);
+  const safeData = requireStructuredClone<Partial<Habit>>(data);
   const updatedHabit: Habit = {
     ...existing,
-    ...data,
+    ...safeData,
     updatedAt: nowSyncISO(),
     version: (entity.version ?? 0) + 1
   };

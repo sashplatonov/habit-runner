@@ -12,6 +12,7 @@
   const habit = $derived(allHabits.find((entry) => entry.id === page.params.id) ?? null);
 
   let isResolvingHabit = $state(true);
+  let saveError = $state<string | null>(null);
 
   onMount(() => {
     const timerId = window.setTimeout(() => {
@@ -32,8 +33,17 @@
       return;
     }
 
-    await habitsStore.updateHabit(habit.id, payload);
-    await goto(resolve('/app/(protected)/habit/[id]', { id: habit.id }));
+    saveError = null;
+    const habitId = habit.id;
+
+    try {
+      await habitsStore.updateHabit(habitId, payload);
+    } catch (err) {
+      saveError = err instanceof Error ? err.message : 'Failed to save habit';
+      return;
+    }
+
+    await goto(resolve('/app/(protected)/habit/[id]', { id: habitId }));
   }
 </script>
 
@@ -62,5 +72,12 @@
     </EmptyState>
   </div>
 {:else}
+  {#if saveError}
+    <div class="mx-auto max-w-lg px-4 pt-4">
+      <p class="rounded-lg border border-accent-secondary/40 bg-accent-secondary/10 px-3 py-2 text-xs font-mono text-accent-secondary" role="alert">
+        {saveError}
+      </p>
+    </div>
+  {/if}
   <HabitForm mode="edit" habit={habit} allHabits={allHabits} onBack={handleBack} onSubmit={handleSubmit} />
 {/if}
