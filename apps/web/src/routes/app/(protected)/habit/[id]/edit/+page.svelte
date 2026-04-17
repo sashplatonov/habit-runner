@@ -24,7 +24,7 @@
   });
 
   function handleBack() {
-    void goto(resolve('/(protected)/habit/[id]', { id: page.params.id }));
+    void goto(resolve('/app/(protected)/habit/[id]', { id: page.params.id }));
   }
 
   async function handleSubmit(payload: HabitUpsertInput) {
@@ -33,7 +33,7 @@
     }
 
     await habitsStore.updateHabit(habit.id, payload);
-    await goto(resolve('/(protected)/habit/[id]', { id: habit.id }));
+    await goto(resolve('/app/(protected)/habit/[id]', { id: habit.id }));
   }
 </script>
 
@@ -54,7 +54,7 @@
       {#snippet action()}
         <a
           class="inline-flex items-center justify-center rounded-full border border-border px-4 py-2 text-xs font-semibold uppercase tracking-widest text-accent transition hover:border-accent-secondary/50"
-          href={resolve<'/(protected)/dashboard'>('/(protected)/dashboard', {})}
+          href={resolve<'/app/(protected)/dashboard'>('/app/(protected)/dashboard', {})}
         >
           Back to dashboard
         </a>

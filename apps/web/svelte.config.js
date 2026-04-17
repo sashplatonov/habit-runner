@@ -17,6 +17,12 @@ const config = {
     }),
     alias: {
       '@': path.resolve(dirname, 'src')
+    },
+    serviceWorker: {
+      register: false
+    },
+    prerender: {
+      entries: ['*', '/sitemap.xml']
     }
   }
 };

@@ -1,4 +1,5 @@
 <script lang="ts">
+  import JsonLdHead from '$lib/components/JsonLdHead.svelte';
   import {
     buildCanonicalUrl,
     buildFaqSchema,
@@ -6,6 +7,7 @@
     buildSoftwareSchema,
     buildWebsiteSchema,
     PUBLIC_OG_IMAGE_URL,
+    PUBLIC_SITE_ORIGIN,
     type FaqItem
   } from '$lib/seo/publicPages';
 
@@ -19,7 +21,10 @@
 
   let { title, description, keywords, pathname, faq = [] }: Props = $props();
 
+  const metaKeywords = $derived(keywords);
   const canonicalUrl = $derived(buildCanonicalUrl(pathname));
+  const hreflangUrl = $derived(`${PUBLIC_SITE_ORIGIN}${pathname}`);
+  const isRoot = $derived(pathname === '/');
   const structuredData = $derived.by(() => {
     const schemas: unknown[] = [
       buildOrganizationSchema(),
@@ -42,9 +47,13 @@
 <svelte:head>
   <title>{title}</title>
   <meta name="description" content={description} />
-  <meta name="keywords" content={keywords} />
+  <meta name="keywords" content={metaKeywords} />
   <meta name="robots" content="index, follow" />
   <link rel="canonical" href={canonicalUrl} />
+  <link rel="alternate" hreflang="en" href={hreflangUrl} />
+  {#if isRoot}
+    <link rel="alternate" hreflang="x-default" href={PUBLIC_SITE_ORIGIN + '/'} />
+  {/if}
 
   <meta property="og:title" content={title} />
   <meta property="og:description" content={description} />
@@ -58,8 +67,8 @@
   <meta name="twitter:title" content={title} />
   <meta name="twitter:description" content={description} />
   <meta name="twitter:image" content={PUBLIC_OG_IMAGE_URL} />
-
-  {#each structuredData as schema (schema.id)}
-    <script type="application/ld+json">{schema.payload}</script>
-  {/each}
 </svelte:head>
+
+{#each structuredData as schema (schema.id)}
+  <JsonLdHead payload={schema.payload} />
+{/each}

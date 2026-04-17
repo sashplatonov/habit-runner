@@ -5,6 +5,8 @@
   import { ArrowRight, CheckCircle2 } from 'lucide-svelte';
   import { startOAuthLogin } from '$lib/auth/oauth';
   import { readAuthSession } from '$lib/auth/session';
+  import PublicNav from '$lib/components/PublicNav.svelte';
+  import PublicFooter from '$lib/components/PublicFooter.svelte';
   import PublicSeoHead from '$lib/components/PublicSeoHead.svelte';
   import { PUBLIC_SEO_PAGES, type PublicSeoIntent } from '$lib/seo/publicPages';
 
@@ -18,7 +20,7 @@
 
   onMount(() => {
     if (readAuthSession()) {
-      void goto(resolve<'/(protected)/dashboard'>('/(protected)/dashboard', {}), { replaceState: true });
+      void goto(resolve<'/app/(protected)/dashboard'>('/app/(protected)/dashboard', {}), { replaceState: true });
     }
   });
 </script>
@@ -32,23 +34,7 @@
 />
 
 <div class="min-h-screen bg-white text-slate-900">
-  <header class="border-b border-slate-200 bg-white">
-    <div class="mx-auto flex w-full max-w-6xl items-center justify-between px-4 py-4 sm:px-6">
-      <a href={resolve<'/'>('/', {})} class="flex items-center gap-2.5 text-sm font-semibold text-slate-900">
-        <img src="/app-icon.svg" alt="Habbit Runner" class="h-8 w-8 flex-shrink-0 rounded-lg object-contain" />
-        Habbit Runner
-      </a>
-      <button
-        type="button"
-        onclick={() => {
-          startOAuthLogin();
-        }}
-        class="rounded-lg border border-cyan-300 bg-cyan-50 px-3 py-2 text-xs font-semibold text-cyan-700 transition-colors hover:bg-cyan-100"
-      >
-        Continue with Google
-      </button>
-    </div>
-  </header>
+  <PublicNav />
 
   <main class="mx-auto w-full max-w-6xl px-4 py-12 sm:px-6">
     <div class="max-w-3xl">
@@ -60,6 +46,8 @@
         <a href={resolve<'/habit-tracker'>('/habit-tracker', {})} class="rounded border border-slate-300 bg-white px-3 py-1.5 text-xs text-slate-700">Habit Tracker</a>
         <a href={resolve<'/streak-tracker'>('/streak-tracker', {})} class="rounded border border-slate-300 bg-white px-3 py-1.5 text-xs text-slate-700">Streak Tracker</a>
         <a href={resolve<'/daily-routine-planner'>('/daily-routine-planner', {})} class="rounded border border-slate-300 bg-white px-3 py-1.5 text-xs text-slate-700">Daily Routine Planner</a>
+        <a href={resolve<'/features'>('/features', {})} class="rounded border border-slate-300 bg-white px-3 py-1.5 text-xs text-slate-700">Features</a>
+        <a href={resolve<'/blog'>('/blog', {})} class="rounded border border-slate-300 bg-white px-3 py-1.5 text-xs text-slate-700">Blog</a>
       </div>
 
       <div class="mt-8 grid gap-3">
@@ -108,4 +96,5 @@
       </div>
     </div>
   </main>
+  <PublicFooter />
 </div>

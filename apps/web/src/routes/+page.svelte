@@ -10,7 +10,7 @@
   onMount(() => {
     if (readAuthSession()) {
       redirecting = true;
-      void goto(resolve<'/(protected)/dashboard'>('/(protected)/dashboard', {}), { replaceState: true });
+      void goto(resolve<'/app/(protected)/dashboard'>('/app/(protected)/dashboard', {}), { replaceState: true });
     }
   });
 </script>

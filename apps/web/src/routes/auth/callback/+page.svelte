@@ -25,7 +25,7 @@
           return;
         }
 
-  await goto(resolve<'/(protected)/dashboard'>('/(protected)/dashboard', {}), { replaceState: true });
+  await goto(resolve<'/app/(protected)/dashboard'>('/app/(protected)/dashboard', {}), { replaceState: true });
       } catch {
         if (cancelled) {
           return;
@@ -54,7 +54,7 @@
     {#if failed}
       <a
         class="mt-5 inline-flex items-center rounded-full border border-border px-4 py-2 text-sm text-foreground transition hover:border-accent hover:text-accent"
-        href={resolve<'/(protected)/dashboard'>('/(protected)/dashboard', {})}
+        href={resolve<'/app/(protected)/dashboard'>('/app/(protected)/dashboard', {})}
       >
         Return home
       </a>

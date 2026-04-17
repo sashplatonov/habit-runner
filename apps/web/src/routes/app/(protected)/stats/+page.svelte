@@ -262,7 +262,7 @@
       {#snippet action()}
         <a
           class="inline-flex items-center justify-center rounded-full border border-border px-4 py-2 text-xs font-semibold uppercase tracking-widest text-accent transition hover:border-accent-secondary/50"
-          href={resolve<'/(protected)/habit/new'>('/(protected)/habit/new', {})}
+          href={resolve<'/app/(protected)/habit/new'>('/app/(protected)/habit/new', {})}
         >
           Create your first habit
         </a>
@@ -570,7 +570,7 @@
                 <button
                   type="button"
                   class="w-full flex items-center gap-3 rounded-lg p-2.5 text-left transition-colors hover:bg-bg-card"
-                  onclick={() => void goto(resolve('/(protected)/habit/[id]', { id: entry.habit.id }))}
+                  onclick={() => void goto(resolve('/app/(protected)/habit/[id]', { id: entry.habit.id }))}
                 >
                   <span class="w-4 shrink-0 text-[10px] font-mono text-muted">{i + 1}</span>
                   <span class="text-base">{entry.habit.icon}</span>

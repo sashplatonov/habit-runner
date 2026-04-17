@@ -322,11 +322,11 @@
 
   // ─── Navigation ───────────────────────────────────────────────────────────────
   function navigateToDetail(habitId: string) {
-    void goto(resolve('/(protected)/habit/[id]', { id: habitId }));
+    void goto(resolve('/app/(protected)/habit/[id]', { id: habitId }));
   }
 
   function navigateToNewHabit() {
-    void goto(resolve<'/(protected)/habit/new'>('/(protected)/habit/new', {}));
+    void goto(resolve<'/app/(protected)/habit/new'>('/app/(protected)/habit/new', {}));
   }
 
   // ─── Drag-and-drop ────────────────────────────────────────────────────────────
@@ -603,7 +603,7 @@
         archived: false,
         sortOrder
       });
-      await goto(resolve('/(protected)/habit/[id]', { id: habitId }));
+      await goto(resolve('/app/(protected)/habit/[id]', { id: habitId }));
     } finally {
       addingTemplate = null;
     }

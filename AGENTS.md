@@ -58,5 +58,14 @@ The root `.codexignore`/`.claudeignore` lists the directories that agents should
 - Environment/secrets: `.env`, `.env.*`, `apps/*/.env*`, `secrets/`, and `backups/`
 - Ignore tooling scaffolds that already dress these directories (e.g., `.claude/`, `.codex/`, `.dokploy/`) unless the task explicitly targets them.
 
+## AI Agent Operational Rules
+
+- **Do not remove environment variables**: Never delete or silently change `environment` entries in `docker-compose.yml` or `ARG`/`ENV` declarations in `Dockerfile` without an explicit review and approval from a maintainer.
+- **Verify usage before modifying**: Search the repository for each env name (for example, `rg -n 'VITE_|DB_|JWT_|GOOGLE_OAUTH|VAPID_'`) to confirm references in code, docs, and build scripts before making edits.
+- **Preserve backward compatibility**: If a variable must be renamed or removed, provide a migration path (legacy aliases, defaults, or deprecation notes), update `.env.example`, and include release notes in the PR.
+- **Run validations after changes**: Execute `docker compose config` (with the same `-f` stack files and profiles used in CI/dev) and run frontend build checks `cd apps/web && npm run build` or `npm run check` to detect missing build-time args.
+- **Document and log changes**: Add a short entry to `ai-fix-log.md` (or `docs/`) summarizing the change, risk assessment, and rollback instructions.
+- **Immediate remediation on regressions**: If a change causes a regression (e.g., missing envs or broken builds), revert the change, restore the envs, and open a PR that clearly explains the fix and mitigation steps.
+
 ## Communication Guidelines
 - Final summaries and high-level recap bullets when responding should be written in Russian, even if other sections of the message use English for commands or file references.

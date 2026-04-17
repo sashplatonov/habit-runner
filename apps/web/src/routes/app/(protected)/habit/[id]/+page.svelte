@@ -65,7 +65,7 @@
       });
     }
 
-    await goto(resolve<'/(protected)/dashboard'>('/(protected)/dashboard', {}));
+    await goto(resolve<'/app/(protected)/dashboard'>('/app/(protected)/dashboard', {}));
   }
 
   function handleToggleArchive() {
@@ -145,7 +145,7 @@
       {#snippet action()}
         <a
           class="inline-flex items-center justify-center rounded-full border border-border px-4 py-2 text-xs font-semibold uppercase tracking-widest text-accent transition hover:border-accent-secondary/50"
-          href={resolve<'/(protected)/dashboard'>('/(protected)/dashboard', {})}
+          href={resolve<'/app/(protected)/dashboard'>('/app/(protected)/dashboard', {})}
         >
           Back to dashboard
         </a>
@@ -161,7 +161,7 @@
             type="button"
             class="-ml-1 flex-shrink-0 p-1 text-muted transition-colors hover:text-foreground"
             onclick={() => {
-              void goto(resolve<'/(protected)/dashboard'>('/(protected)/dashboard', {}));
+              void goto(resolve<'/app/(protected)/dashboard'>('/app/(protected)/dashboard', {}));
             }}
             aria-label="Back to dashboard"
           >
@@ -198,7 +198,7 @@
 
           <a
             class="rounded border border-border p-1.5 text-muted transition-colors hover:border-border-hover hover:text-foreground"
-            href={resolve('/(protected)/habit/[id]/edit', { id: habit.id })}
+            href={resolve('/app/(protected)/habit/[id]/edit', { id: habit.id })}
             aria-label="Edit habit"
           >
             <Pencil size={13} />

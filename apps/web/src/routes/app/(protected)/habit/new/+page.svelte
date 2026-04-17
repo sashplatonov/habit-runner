@@ -8,7 +8,7 @@
   const allHabits = $derived($habitsStore.allHabits);
 
   function handleBack() {
-    void goto(resolve<'/(protected)/dashboard'>('/(protected)/dashboard', {}));
+    void goto(resolve<'/app/(protected)/dashboard'>('/app/(protected)/dashboard', {}));
   }
 
   async function handleSubmit(payload: HabitUpsertInput) {
@@ -21,7 +21,7 @@
       sortOrder
     });
 
-    await goto(resolve('/(protected)/habit/[id]', { id: habitId }));
+    await goto(resolve('/app/(protected)/habit/[id]', { id: habitId }));
   }
 </script>
 

@@ -1,0 +1,198 @@
+<script lang="ts">
+  import { resolve } from '$app/paths';
+  import PublicSeoHead from '$lib/components/PublicSeoHead.svelte';
+  import PublicNav from '$lib/components/PublicNav.svelte';
+  import PublicFooter from '$lib/components/PublicFooter.svelte';
+  import { PUBLIC_FEATURES_SEO, PUBLIC_SITE_ORIGIN, buildCanonicalUrl } from '$lib/seo/publicPages';
+
+  const softwareSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'SoftwareApplication',
+    name: 'Habbit Runner',
+    applicationCategory: 'ProductivityApplication',
+    operatingSystem: 'Web, Android, iOS',
+    url: PUBLIC_SITE_ORIGIN,
+    description: PUBLIC_FEATURES_SEO.description,
+    featureList: [
+      'Offline-first habit tracking with IndexedDB storage',
+      'Background sync with conflict resolution',
+      'Streak tracking: current streak and longest streak',
+      'Push notifications for habit reminders',
+      'Google OAuth sign-in',
+      'Daily routine planning with targets',
+      'Weekly and monthly completion analytics',
+      'Progressive Web App — installable without App Store',
+      'Dashboard with live completion rate',
+      'Undo last action support'
+    ],
+    offers: {
+      '@type': 'Offer',
+      price: '0',
+      priceCurrency: 'USD'
+    }
+  };
+
+  const breadcrumbSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Home', item: PUBLIC_SITE_ORIGIN },
+      {
+        '@type': 'ListItem',
+        position: 2,
+        name: 'Features',
+        item: buildCanonicalUrl('/features')
+      }
+    ]
+  };
+</script>
+
+<PublicSeoHead
+  title={PUBLIC_FEATURES_SEO.title}
+  description={PUBLIC_FEATURES_SEO.description}
+  keywords={PUBLIC_FEATURES_SEO.keywords}
+  pathname={PUBLIC_FEATURES_SEO.pathname}
+/>
+
+<svelte:head>
+  <script type="application/ld+json">{JSON.stringify(softwareSchema).replace(/</g, '\\u003c')}</script>
+  <script type="application/ld+json">{JSON.stringify(breadcrumbSchema).replace(/</g, '\\u003c')}</script>
+</svelte:head>
+
+<div class="min-h-screen bg-white text-slate-900">
+  <PublicNav maxWidth="max-w-5xl" />
+
+  <main class="mx-auto w-full max-w-5xl px-4 py-12 sm:px-6">
+    <nav class="mb-6 flex items-center gap-2 text-xs text-slate-500">
+      <a href={resolve<'/'>('/', {})} class="hover:text-slate-900">Home</a>
+      <span>/</span>
+      <span class="text-slate-900">Features</span>
+    </nav>
+
+    <h1 class="text-3xl font-semibold leading-tight text-slate-900 sm:text-4xl">
+      Habbit Runner Features
+    </h1>
+    <p class="mt-4 max-w-2xl text-base text-slate-600">
+      Everything you need to build consistent daily habits — offline, fast, and without app store
+      friction.
+    </p>
+
+    <div class="mt-10 space-y-12">
+      <!-- Offline-First -->
+      <section>
+        <h2 class="text-xl font-semibold text-slate-900">Offline-First Storage</h2>
+        <p class="mt-3 text-sm text-slate-600">
+          All habit data, check-ins, and settings are stored locally on your device using IndexedDB
+          via Dexie. The app works fully without an internet connection — you can track habits,
+          review your streak, and check stats even on a plane.
+        </p>
+        <ul class="mt-4 space-y-2 text-sm text-slate-600">
+          <li class="flex gap-2"><span class="mt-0.5 text-emerald-600">✓</span> Habits and check-ins stored in IndexedDB</li>
+          <li class="flex gap-2"><span class="mt-0.5 text-emerald-600">✓</span> Full stats available without internet</li>
+          <li class="flex gap-2"><span class="mt-0.5 text-emerald-600">✓</span> No data loss on connectivity interruptions</li>
+        </ul>
+        <div class="mt-4">
+          <a href={resolve<'/habit-tracker'>('/habit-tracker', {})} class="text-xs text-cyan-700 underline">See habit tracker details →</a>
+        </div>
+      </section>
+
+      <!-- Background Sync -->
+      <section>
+        <h2 class="text-xl font-semibold text-slate-900">Background Sync</h2>
+        <p class="mt-3 text-sm text-slate-600">
+          Changes made offline are queued in an outbox and synced automatically when you reconnect.
+          The sync engine uses a pull-push-pull cycle with last-write-wins conflict resolution based
+          on timestamps.
+        </p>
+        <ul class="mt-4 space-y-2 text-sm text-slate-600">
+          <li class="flex gap-2"><span class="mt-0.5 text-emerald-600">✓</span> Automatic sync on reconnect</li>
+          <li class="flex gap-2"><span class="mt-0.5 text-emerald-600">✓</span> Conflict resolution with exponential backoff retry</li>
+          <li class="flex gap-2"><span class="mt-0.5 text-emerald-600">✓</span> Sync status visible in dashboard</li>
+        </ul>
+      </section>
+
+      <!-- Streak Tracking -->
+      <section>
+        <h2 class="text-xl font-semibold text-slate-900">Streak Tracking</h2>
+        <p class="mt-3 text-sm text-slate-600">
+          Every habit shows your current streak and longest streak. Identify where you break
+          patterns and recover with data-backed insight.
+        </p>
+        <ul class="mt-4 space-y-2 text-sm text-slate-600">
+          <li class="flex gap-2"><span class="mt-0.5 text-emerald-600">✓</span> Current streak per habit</li>
+          <li class="flex gap-2"><span class="mt-0.5 text-emerald-600">✓</span> Longest streak history</li>
+          <li class="flex gap-2"><span class="mt-0.5 text-emerald-600">✓</span> Weekly and monthly completion rate trends</li>
+        </ul>
+        <div class="mt-4">
+          <a href={resolve<'/streak-tracker'>('/streak-tracker', {})} class="text-xs text-cyan-700 underline">See streak tracker details →</a>
+        </div>
+      </section>
+
+      <!-- Push Notifications -->
+      <section>
+        <h2 class="text-xl font-semibold text-slate-900">Push Notifications</h2>
+        <p class="mt-3 text-sm text-slate-600">
+          Enable reminders per habit through your browser's web push API. No native app required.
+          Notifications work on Android Chrome, desktop Chrome/Edge, and Safari 16.4+ on iOS.
+        </p>
+        <ul class="mt-4 space-y-2 text-sm text-slate-600">
+          <li class="flex gap-2"><span class="mt-0.5 text-emerald-600">✓</span> Per-habit reminder scheduling</li>
+          <li class="flex gap-2"><span class="mt-0.5 text-emerald-600">✓</span> Works without native app installation</li>
+          <li class="flex gap-2"><span class="mt-0.5 text-emerald-600">✓</span> Revocable at any time from browser settings</li>
+        </ul>
+      </section>
+
+      <!-- Daily Routine -->
+      <section>
+        <h2 class="text-xl font-semibold text-slate-900">Daily Routine Planning</h2>
+        <p class="mt-3 text-sm text-slate-600">
+          Define structured routines with daily or custom frequencies. Set targets, assign tags, and
+          track execution through a clean dashboard.
+        </p>
+        <ul class="mt-4 space-y-2 text-sm text-slate-600">
+          <li class="flex gap-2"><span class="mt-0.5 text-emerald-600">✓</span> Custom frequency (daily, weekly, etc.)</li>
+          <li class="flex gap-2"><span class="mt-0.5 text-emerald-600">✓</span> Daily target with completion ring</li>
+          <li class="flex gap-2"><span class="mt-0.5 text-emerald-600">✓</span> Tags and categorization</li>
+        </ul>
+        <div class="mt-4">
+          <a href={resolve<'/daily-routine-planner'>('/daily-routine-planner', {})} class="text-xs text-cyan-700 underline">See daily routine planner details →</a>
+        </div>
+      </section>
+
+      <!-- PWA -->
+      <section>
+        <h2 class="text-xl font-semibold text-slate-900">Progressive Web App</h2>
+        <p class="mt-3 text-sm text-slate-600">
+          Install Habbit Runner directly from your browser. No App Store, no Play Store download
+          required. Works as a standalone app on your home screen.
+        </p>
+        <ul class="mt-4 space-y-2 text-sm text-slate-600">
+          <li class="flex gap-2"><span class="mt-0.5 text-emerald-600">✓</span> Installable on Android, iOS, and desktop</li>
+          <li class="flex gap-2"><span class="mt-0.5 text-emerald-600">✓</span> Standalone display mode</li>
+          <li class="flex gap-2"><span class="mt-0.5 text-emerald-600">✓</span> Automatic updates via service worker</li>
+        </ul>
+      </section>
+
+      <!-- Privacy -->
+      <section>
+        <h2 class="text-xl font-semibold text-slate-900">Privacy-First Design</h2>
+        <p class="mt-3 text-sm text-slate-600">
+          Your data lives on your device first. No advertising. No data selling. Sync requires
+          sign-in and is opt-in via Google OAuth.
+        </p>
+      </section>
+    </div>
+
+    <div class="mt-12 rounded-2xl border border-cyan-200 bg-cyan-50 p-6">
+      <h2 class="text-lg font-semibold text-slate-900">Compare Habbit Runner</h2>
+      <p class="mt-2 text-sm text-slate-600">See how Habbit Runner compares to other habit trackers.</p>
+      <div class="mt-4 flex flex-wrap gap-3">
+        <a href={resolve<'/vs/habitica'>('/vs/habitica', {})} class="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs text-slate-700 hover:border-slate-400">vs Habitica</a>
+        <a href={resolve<'/vs/streaks-app'>('/vs/streaks-app', {})} class="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs text-slate-700 hover:border-slate-400">vs Streaks App</a>
+        <a href={resolve<'/vs/beeminder'>('/vs/beeminder', {})} class="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs text-slate-700 hover:border-slate-400">vs Beeminder</a>
+      </div>
+    </div>
+  </main>
+
+  <PublicFooter maxWidth="max-w-5xl" />
+</div>

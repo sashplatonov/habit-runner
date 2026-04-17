@@ -42,33 +42,33 @@
 
 | ID | Задача | Приоритет | Сложность | Зависимости | Спринт |
 |---|---|---|---|---|---|
-| SEO-01 | Исправить robots.txt | P0-CRITICAL | XS | — | 1 |
-| SEO-02 | Создать llms.txt | P0-CRITICAL | XS | — | 1 |
-| SEO-03 | Расширить FAQ на главной | P1-HIGH | S | — | 1 |
-| SEO-04 | Добавить hreflang meta | P1-HIGH | S | — | 1 |
-| SEO-05 | Страница /about | P1-HIGH | M | — | 1 |
-| SEO-06 | Страница /privacy-policy | P1-HIGH | M | — | 1 |
-| SEO-07 | GSC verification meta tag | P1-HIGH | XS | SEO-05 | 1 |
-| SEO-08 | Динамический sitemap.xml | P1-HIGH | M | — | 2 |
-| SEO-09 | Страница /features | P1-HIGH | M | SEO-08 | 2 |
-| SEO-10 | Web Vitals reporting | P1-HIGH | M | — | 2 |
-| SEO-11 | AggregateRating в schema | P2-MEDIUM | S | — | 2 |
-| SEO-12 | PWA screenshots в manifest | P2-MEDIUM | S | — | 2 |
-| SEO-13 | beforeinstallprompt оптимизация | P2-MEDIUM | M | — | 2 |
-| SEO-14 | Инфраструктура блога | P2-MEDIUM | L | SEO-08 | 3 |
-| SEO-15 | Первый блог-пост: "best offline habit tracker" | P2-MEDIUM | M | SEO-14 | 3 |
-| SEO-16 | Первый блог-пост: технический dev.to | P2-MEDIUM | M | SEO-14 | 3 |
-| SEO-17 | Страницы сравнения /vs/[competitor] × 3 | P2-MEDIUM | L | SEO-09, SEO-14 | 3 |
-| SEO-18 | ProductHunt + AlternativeTo листинг | P2-MEDIUM | S | SEO-05 | 3 |
-| SEO-19 | GA4 интеграция | P3-LOW | M | — | 4 |
-| SEO-20 | TWA Google Play через Bubblewrap | P3-LOW | L | SEO-12 | 4 |
-| SEO-21 | Lighthouse CI в GitHub Actions | P3-LOW | M | SEO-10 | 4 |
+| SEO-01 | ✅ Исправить robots.txt | P0-CRITICAL | XS | — | 1 |
+| SEO-02 | ✅ Создать llms.txt | P0-CRITICAL | XS | — | 1 |
+| SEO-03 | ✅ Расширить FAQ на главной | P1-HIGH | S | — | 1 |
+| SEO-04 | ✅ Добавить hreflang meta | P1-HIGH | S | — | 1 |
+| SEO-05 | ✅ Страница /about | P1-HIGH | M | — | 1 |
+| SEO-06 | ✅ Страница /privacy-policy | P1-HIGH | M | — | 1 |
+| SEO-07 | ✅ GSC verification meta tag | P1-HIGH | XS | SEO-05 | 1 |
+| SEO-08 | ✅ Динамический sitemap.xml | P1-HIGH | M | — | 2 |
+| SEO-09 | ✅ Страница /features | P1-HIGH | M | SEO-08 | 2 |
+| SEO-10 | ✅ Web Vitals reporting | P1-HIGH | M | — | 2 |
+| SEO-11 | ⏭️ AggregateRating в schema | P2-MEDIUM | S | — | 2 |
+| SEO-12 | ✅ PWA screenshots в manifest | P2-MEDIUM | S | — | 2 |
+| SEO-13 | ✅ beforeinstallprompt оптимизация | P2-MEDIUM | M | — | 2 |
+| SEO-14 | ✅ Инфраструктура блога | P2-MEDIUM | L | SEO-08 | 3 |
+| SEO-15 | ✅ Первый блог-пост: "best offline habit tracker" | P2-MEDIUM | M | SEO-14 | 3 |
+| SEO-16 | ✅ Первый блог-пост: технический dev.to | P2-MEDIUM | M | SEO-14 | 3 |
+| SEO-17 | ✅ Страницы сравнения /vs/[competitor] × 3 | P2-MEDIUM | L | SEO-09, SEO-14 | 3 |
+| SEO-18 | ✅ ProductHunt + AlternativeTo листинг | P2-MEDIUM | S | SEO-05 | 3 |
+| SEO-19 | ✅ GA4 интеграция | P3-LOW | M | — | 4 |
+| SEO-20 | ⏭️ TWA Google Play через Bubblewrap | P3-LOW | L | SEO-12 | 4 |
+| SEO-21 | ✅ Lighthouse CI в GitHub Actions | P3-LOW | M | SEO-10 | 4 |
 
 ---
 
 ## Спринт 1 — Критические исправления (Неделя 1)
 
-### SEO-01 — Исправить robots.txt
+### ✅ SEO-01 — Исправить robots.txt
 
 **Приоритет:** P0-CRITICAL  
 **Сложность:** XS (5 мин)  
@@ -102,7 +102,7 @@ Sitemap: https://habbit-runner.app/sitemap.xml
 
 ---
 
-### SEO-02 — Создать llms.txt
+### ✅ SEO-02 — Создать llms.txt
 
 **Приоритет:** P0-CRITICAL  
 **Сложность:** XS  
@@ -121,7 +121,7 @@ Sitemap: https://habbit-runner.app/sitemap.xml
 
 ---
 
-### SEO-03 — Расширить FAQ на главной
+### ✅ SEO-03 — Расширить FAQ на главной
 
 **Приоритет:** P1-HIGH  
 **Сложность:** S  
@@ -159,7 +159,7 @@ A: Habbit Runner uses a pull-push-pull sync cycle. When you come back online, it
 
 ---
 
-### SEO-04 — Добавить hreflang meta
+### ✅ SEO-04 — Добавить hreflang meta
 
 **Приоритет:** P1-HIGH  
 **Сложность:** S  
@@ -179,7 +179,7 @@ A: Habbit Runner uses a pull-push-pull sync cycle. When you come back online, it
 
 ---
 
-### SEO-05 — Страница /about
+### ✅ SEO-05 — Страница /about
 
 **Приоритет:** P1-HIGH  
 **Сложность:** M  
@@ -204,7 +204,7 @@ A: Habbit Runner uses a pull-push-pull sync cycle. When you come back online, it
 
 ---
 
-### SEO-06 — Страница /privacy-policy
+### ✅ SEO-06 — Страница /privacy-policy
 
 **Приоритет:** P1-HIGH  
 **Сложность:** M  
@@ -226,7 +226,7 @@ A: Habbit Runner uses a pull-push-pull sync cycle. When you come back online, it
 
 ---
 
-### SEO-07 — Google Search Console verification
+### ✅ SEO-07 — Google Search Console verification
 
 **Приоритет:** P1-HIGH  
 **Сложность:** XS  
@@ -248,7 +248,7 @@ A: Habbit Runner uses a pull-push-pull sync cycle. When you come back online, it
 
 ## Спринт 2 — SEO-фундамент (Неделя 2–3)
 
-### SEO-08 — Динамический sitemap.xml
+### ✅ SEO-08 — Динамический sitemap.xml
 
 **Приоритет:** P1-HIGH  
 **Сложность:** M  
@@ -293,7 +293,7 @@ export async function GET() {
 
 ---
 
-### SEO-09 — Страница /features
+### ✅ SEO-09 — Страница /features
 
 **Приоритет:** P1-HIGH  
 **Сложность:** M  
@@ -317,7 +317,7 @@ export async function GET() {
 
 ---
 
-### SEO-10 — Web Vitals reporting
+### ✅ SEO-10 — Web Vitals reporting
 
 **Приоритет:** P1-HIGH  
 **Сложность:** M  
@@ -341,7 +341,7 @@ export async function GET() {
 
 ---
 
-### SEO-11 — AggregateRating в schema
+### ⏭️ SEO-11 — AggregateRating в schema
 
 **Приоритет:** P2-MEDIUM  
 **Сложность:** S  
@@ -361,7 +361,7 @@ export async function GET() {
 
 ---
 
-### SEO-12 — PWA screenshots в manifest
+### ✅ SEO-12 — PWA screenshots в manifest
 
 **Приоритет:** P2-MEDIUM  
 **Сложность:** S  
@@ -381,7 +381,7 @@ export async function GET() {
 
 ---
 
-### SEO-13 — beforeinstallprompt оптимизация
+### ✅ SEO-13 — beforeinstallprompt оптимизация
 
 **Приоритет:** P2-MEDIUM  
 **Сложность:** M  
@@ -406,7 +406,7 @@ export async function GET() {
 
 ## Спринт 3 — Контент-инфраструктура (Месяц 2)
 
-### SEO-14 — Инфраструктура блога
+### ✅ SEO-14 — Инфраструктура блога
 
 **Приоритет:** P2-MEDIUM  
 **Сложность:** L  
@@ -442,7 +442,7 @@ export async function GET() {
 
 ---
 
-### SEO-15 — Пост: "Best Offline Habit Tracker 2025"
+### ✅ SEO-15 — Пост: "Best Offline Habit Tracker 2025"
 
 **Приоритет:** P2-MEDIUM  
 **Сложность:** M  
@@ -474,7 +474,7 @@ H2: Frequently Asked Questions
 
 ---
 
-### SEO-16 — Технический пост на Dev.to
+### ✅ SEO-16 — Технический пост на Dev.to
 
 **Приоритет:** P2-MEDIUM  
 **Сложность:** M  
@@ -497,7 +497,7 @@ H2: Frequently Asked Questions
 
 ---
 
-### SEO-17 — Страницы сравнения /vs/[competitor]
+### ✅ SEO-17 — Страницы сравнения /vs/[competitor]
 
 **Приоритет:** P2-MEDIUM  
 **Сложность:** L  
@@ -531,7 +531,7 @@ H2: Verdict
 
 ---
 
-### SEO-18 — ProductHunt + AlternativeTo листинг
+### ✅ SEO-18 — ProductHunt + AlternativeTo листинг
 
 **Приоритет:** P2-MEDIUM  
 **Сложность:** S  
@@ -557,7 +557,7 @@ H2: Verdict
 
 ## Спринт 4 — Аналитика и масштаб (Месяц 3+)
 
-### SEO-19 — GA4 интеграция
+### ✅ SEO-19 — GA4 интеграция
 
 **Приоритет:** P3-LOW  
 **Сложность:** M  
@@ -580,7 +580,7 @@ H2: Verdict
 
 ---
 
-### SEO-20 — TWA Google Play через Bubblewrap
+### ⏭️ SEO-20 — TWA Google Play через Bubblewrap
 
 **Приоритет:** P3-LOW  
 **Сложность:** L  
@@ -601,7 +601,7 @@ H2: Verdict
 
 ---
 
-### SEO-21 — Lighthouse CI в GitHub Actions
+### ✅ SEO-21 — Lighthouse CI в GitHub Actions
 
 **Приоритет:** P3-LOW  
 **Сложность:** M  
