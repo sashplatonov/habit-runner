@@ -4,12 +4,11 @@ WORKDIR /workspace
 
 # Copy only the app sources (context will be apps/backend)
 COPY .mvn .mvn
-COPY mvnw mvnw
+COPY --chmod=0755 mvnw mvnw
 COPY pom.xml .
 COPY checkstyle checkstyle
 COPY src src
 
-RUN chmod +x mvnw
 RUN ./mvnw -B -DskipTests package
 
 # Normalize produced jar to a known location. Prefer the Quarkus run jar if present.

@@ -4,11 +4,9 @@ WORKDIR /workspace
 
 # Copy only the parts needed for a reproducible build (context: apps/backend)
 COPY .mvn/ .mvn/
-COPY mvnw ./mvnw
+COPY --chmod=0755 mvnw ./mvnw
 COPY pom.xml ./pom.xml
 COPY src ./src
-
-RUN chmod +x mvnw
 # Build native image. The default MANDREL_BUILDER_IMAGE targets JDK 25 and
 # includes Mandrel's native-image toolchain; if you need a different image,
 # override `MANDREL_BUILDER_IMAGE` via build-arg.
