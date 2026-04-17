@@ -13,7 +13,7 @@
     "dev": "npm run sync:svelte && npx vite dev",
     "dev:web": "npm run dev",
     "monorepo:dev": "turbo dev",
-    "dev:server": "cd ../backend && ./mvnw quarkus:dev",
+    "dev:server": "bash ./scripts/dev-server.sh",
     "dev:all": "npm run dev --workspaces --if-present",
     "build": "npm run sync:svelte && npx vite build",
     "monorepo:build": "turbo build",

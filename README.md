@@ -67,26 +67,21 @@ The Vite dev server uses `http://localhost:3000` by default unless `VITE_API_BAS
 ```bash
 docker compose --profile db up -d db
 
-export DB_HOST=localhost
-export DB_PORT=5432
-export DB_NAME=habbit_runner
-export DB_USER=habbit
-export DB_PASSWORD=password
-export DB_SCHEMA=habbit_runner
-export API_PORT=3000
-export AUTH_SECRET=change-me
-export ACCESS_TOKEN_TTL_SECONDS=3600
-export REFRESH_TOKEN_EXPIRES_DAYS=30
-export JWT_ISSUER=habittracker-local
-export API_PUBLIC_URL=http://localhost:3000
-export OAUTH_DEFAULT_RETURN_TO=http://localhost:5173
-export CORS_ORIGINS=http://localhost:5173
 export GOOGLE_OAUTH_CLIENT_ID=...
 export GOOGLE_OAUTH_CLIENT_SECRET=...
 
 cd apps/backend
-./mvnw quarkus:dev
+./mvnw clean quarkus:dev
 ```
+
+The backend `%dev` profile now supplies the standard local defaults automatically:
+
+- Postgres at `localhost:5432`
+- API at `http://localhost:3000`
+- frontend return origin `http://localhost:5173`
+- DB connection details and auth secrets can come from your shell env or a sourced local env file
+
+If you keep local secrets in the workspace root `.env`, `cd apps/web && npm run dev:server` loads that file before starting Quarkus, lets those env values override the `%dev` fallbacks, and on macOS tries Java 25 via `java_home` with an SDKMAN fallback. OAuth still requires the corresponding local redirect URI to be registered in Google Cloud.
 
 If you do not need sign-in or push notifications while working on UI-only flows, the frontend can still run with sync disabled via `VITE_SYNC_ENABLED=false`.
 
@@ -104,6 +99,7 @@ docker compose --profile db up --build
 ```
 
 Notes:
+
 - `db` starts only when the `db` profile is enabled.
 - `api` is reachable externally through the `web` nginx proxy at `/api`.
 - `docker-compose.local.yml` exposes the web app on `http://localhost:5137`.

@@ -23,6 +23,8 @@ services:
       POSTGRES_INITDB_ARGS: "--locale=C --encoding=UTF8"
     volumes:
       - habbit_runner_pgdata:/var/lib/postgresql
+    ports:
+      - "${DB_PORT:-5432}:5432"
     healthcheck:
       test: ["CMD-SHELL","pg_isready -U ${DB_USER:-habbit} -d ${DB_NAME:-habbit_runner}"]
       interval: 5s
@@ -49,8 +51,8 @@ services:
       ACCESS_TOKEN_EXPIRES_IN: ${ACCESS_TOKEN_EXPIRES_IN:-3600}
       ACCESS_TOKEN_TTL_SECONDS: ${ACCESS_TOKEN_TTL_SECONDS:-3600}
       REFRESH_TOKEN_EXPIRES_DAYS: ${REFRESH_TOKEN_EXPIRES_DAYS:-30}
-      API_PUBLIC_URL: ${API_PUBLIC_URL:-http://localhost:5137}
-      OAUTH_DEFAULT_RETURN_TO: ${OAUTH_DEFAULT_RETURN_TO:-http://localhost:5137/auth/callback}
+      API_PUBLIC_URL: ${API_PUBLIC_URL:-http://localhost:5137/api}
+      OAUTH_DEFAULT_RETURN_TO: ${OAUTH_DEFAULT_RETURN_TO:-http://localhost:5137}
       GOOGLE_OAUTH_CLIENT_ID: ${GOOGLE_OAUTH_CLIENT_ID:-}
       GOOGLE_OAUTH_CLIENT_SECRET: ${GOOGLE_OAUTH_CLIENT_SECRET:-}
       CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:5137}

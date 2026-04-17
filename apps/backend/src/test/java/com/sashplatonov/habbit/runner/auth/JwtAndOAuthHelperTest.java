@@ -74,6 +74,18 @@ class JwtAndOAuthHelperTest {
   }
 
   @Test
+  void shouldReturnPreviewProxyCallbackUrlWhenApiPublicUrlTargetsLocalWebProxy() {
+    var helper = new OAuthHelper(TestConfigFactory.authConfig(
+        "different-secret",
+        "habittracker-local",
+        "http://localhost:5137/api",
+        "http://localhost:5137"
+    ));
+
+    assertEquals("http://localhost:5137/api/auth/google/callback", helper.getCallbackUrl());
+  }
+
+  @Test
   void shouldExposeReturnToFromOAuthStartQueryRecord() {
     var query = new OAuthStartQuery("/dashboard");
 

@@ -4,6 +4,7 @@ import path from 'node:path';
 import fs from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
+import { buildPreviewProxyUrl, resolvePreviewApiTarget } from './preview-static-config.mjs';
 
 const dirname = path.dirname(fileURLToPath(import.meta.url));
 const rootDir = path.resolve(dirname, '..');
@@ -28,7 +29,10 @@ function readArg(name, fallback) {
 const host = readArg('host', '127.0.0.1');
 const port = Number(readArg('port', '4173'));
 // Optional proxy target for API requests (e.g. --proxy-api http://localhost:3000)
-const proxyApiTarget = readArg('proxy-api', process.env.PROXY_API_TARGET || '');
+const proxyApiTarget = resolvePreviewApiTarget(
+  host,
+  readArg('proxy-api', process.env.PROXY_API_TARGET || '')
+);
 
 const mimeTypes = new Map([
   ['.css', 'text/css; charset=utf-8'],
@@ -75,7 +79,7 @@ async function handleRequest(req, res) {
   try {
     // If a proxy target is configured and the request is for /api, forward it.
     if (proxyApiTarget && req.url && req.url.startsWith('/api')) {
-      const target = new URL(req.url, proxyApiTarget);
+      const target = new URL(buildPreviewProxyUrl(req.url, proxyApiTarget));
       const client = target.protocol === 'https:' ? https : http;
 
       const proxyReq = client.request({
