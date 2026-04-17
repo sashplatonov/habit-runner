@@ -52,6 +52,7 @@
 
   let hydratedKey = $state('');
   let isSaving = $state(false);
+  let saveError = $state<string | null>(null);
   let hasAcknowledgedSoftLimit = $state(false);
   let errors = $state<Record<string, string>>({});
   let name = $state('');
@@ -342,28 +343,33 @@
     }
 
     isSaving = true;
+    saveError = null;
     try {
       const normalizedTags = normalizeTags(tagInput, tags);
       const legacyScheduleFields = buildLegacyScheduleFields(schedule);
 
-      await onSubmit({
-        name: name.trim(),
-        description: description.trim(),
-        color,
-        icon,
-        tags: normalizedTags,
-        frequency: legacyScheduleFields.frequency,
-        ...(legacyScheduleFields.customDays ? { customDays: legacyScheduleFields.customDays } : {}),
-        targetStreak,
-        dailyTarget: Math.max(1, Math.trunc(dailyTarget)),
-        type,
-        archived: habit?.archived ?? false,
-        schedule,
-        ...(reminderTime ? { reminderTime } : {}),
-        reminderEnabled,
-        freezeDays: habit?.freezeDays ?? [],
-        sortOrder: habit?.sortOrder ?? 0
-      });
+      await onSubmit(
+        $state.snapshot({
+          name: name.trim(),
+          description: description.trim(),
+          color,
+          icon,
+          tags: normalizedTags,
+          frequency: legacyScheduleFields.frequency,
+          ...(legacyScheduleFields.customDays ? { customDays: legacyScheduleFields.customDays } : {}),
+          targetStreak,
+          dailyTarget: Math.max(1, Math.trunc(dailyTarget)),
+          type,
+          archived: habit?.archived ?? false,
+          schedule,
+          ...(reminderTime ? { reminderTime } : {}),
+          reminderEnabled,
+          freezeDays: habit?.freezeDays ?? [],
+          sortOrder: habit?.sortOrder ?? 0
+        }) as HabitUpsertInput
+      );
+    } catch (err) {
+      saveError = err instanceof Error ? err.message : 'Something went wrong. Please try again.';
     } finally {
       isSaving = false;
     }
@@ -435,6 +441,14 @@
       </button>
     </div>
   </div>
+
+  {#if saveError}
+    <div class="mx-auto max-w-lg px-4 pb-2">
+      <p class="rounded-lg border border-accent-secondary/40 bg-accent-secondary/10 px-3 py-2 text-xs font-mono text-accent-secondary" role="alert">
+        {saveError}
+      </p>
+    </div>
+  {/if}
 
   <div class="mx-auto max-w-lg space-y-5 px-4 py-6">
     <div class="flex gap-3">

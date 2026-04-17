@@ -376,3 +376,51 @@ a:focus-visible,
   z-index: 0;
   transition: opacity 0.2s ease, background 0.2s ease;
 }
+
+/* Minimal 'prose' styles so Markdown-generated HTML is readable
+   This mirrors basic Tailwind Typography behavior without adding the plugin */
+.prose {
+  color: inherit;
+  font-size: 1rem;
+  line-height: 1.7;
+}
+.prose p {
+  margin: 0 0 1em;
+}
+.prose h1,
+.prose h2,
+.prose h3,
+.prose h4,
+.prose h5,
+.prose h6 {
+  color: inherit;
+  margin-top: 1.2em;
+  margin-bottom: 0.5em;
+  font-weight: 600;
+  line-height: 1.2;
+}
+.prose h1 { font-size: 1.875rem; }
+.prose h2 { font-size: 1.5rem; }
+.prose h3 { font-size: 1.25rem; }
+.prose ul,
+.prose ol {
+  margin: 0 0 1em 1.25rem;
+}
+.prose pre {
+  background: rgba(0,0,0,0.04);
+  padding: 0.75rem 1rem;
+  border-radius: 0.5rem;
+  overflow: auto;
+}
+.prose code {
+  background: rgba(0,0,0,0.04);
+  padding: 0.15rem 0.35rem;
+  border-radius: 0.25rem;
+  font-family: inherit;
+}
+.prose blockquote {
+  margin: 0 0 1em;
+  padding-left: 1rem;
+  border-left: 3px solid rgba(0,0,0,0.06);
+  color: inherit;
+}

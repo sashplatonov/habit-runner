@@ -38,6 +38,22 @@ public final class TestConfigFactory {
     ));
   }
 
+  public static AuthConfig authConfig(
+      String secret,
+      String issuer,
+      String apiPublicUrl,
+      String oauthDefaultReturnTo
+  ) {
+    return authConfig(new AuthConfigOptions(
+        secret,
+        issuer,
+        apiPublicUrl,
+        oauthDefaultReturnTo,
+        DEFAULT_CLIENT_ID,
+        DEFAULT_CLIENT_SECRET
+    ));
+  }
+
   private static AuthConfig authConfig(AuthConfigOptions options) {
     return new AuthConfig() {
       @Override

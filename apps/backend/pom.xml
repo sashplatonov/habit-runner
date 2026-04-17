@@ -9,7 +9,12 @@
     <version>1.0.0-SNAPSHOT</version>
 
     <properties>
-        <java.version>25</java.version>
+           <!-- IMPORTANT: Keep `java.version` set to 25. CI and production
+               environments require Java 25. Do NOT change this value
+               automatically. For local development on earlier JDKs,
+               override the compiler release at build time, for example:
+               `./mvnw -DskipTests clean package -Dmaven.compiler.release=17` -->
+           <java.version>25</java.version>
         <maven.compiler.release>${java.version}</maven.compiler.release>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>

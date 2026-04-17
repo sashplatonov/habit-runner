@@ -27,8 +27,8 @@
 
   const darkThemes = $derived(THEMES.filter((candidate) => candidate.group === 'dark'));
   const lightThemes = $derived(THEMES.filter((candidate) => candidate.group === 'light'));
-  const dashboardHref = resolve<'/(protected)/dashboard'>('/(protected)/dashboard', {});
-  const statsHref = resolve<'/(protected)/stats'>('/(protected)/stats', {});
+  const dashboardHref = resolve<'/app/(protected)/dashboard'>('/app/(protected)/dashboard', {});
+  const statsHref = resolve<'/app/(protected)/stats'>('/app/(protected)/stats', {});
   const isDashboard = $derived(page.url.pathname === dashboardHref);
   const isStats = $derived(page.url.pathname === statsHref);
 
@@ -45,7 +45,7 @@
 
   async function focusSearch() {
     if (!isDashboard) {
-      await goto(resolve<'/(protected)/dashboard#habit-search'>('/(protected)/dashboard#habit-search', {}));
+      await goto(resolve<'/app/(protected)/dashboard#habit-search'>('/app/(protected)/dashboard#habit-search', {}));
     }
 
     window.setTimeout(() => {
@@ -64,7 +64,7 @@
 >
   <a
     class={`flex-1 flex flex-col items-center justify-center gap-1 transition-colors ${isDashboard ? 'text-accent' : 'text-muted'}`}
-    href={resolve<'/(protected)/dashboard'>('/(protected)/dashboard', {})}
+    href={resolve<'/app/(protected)/dashboard'>('/app/(protected)/dashboard', {})}
     aria-label="Dashboard"
     aria-current={isDashboard ? 'page' : undefined}
   >
@@ -76,7 +76,7 @@
 
   <a
     class={`flex-1 flex flex-col items-center justify-center gap-1 transition-colors ${isStats ? 'text-accent' : 'text-muted'}`}
-    href={resolve<'/(protected)/stats'>('/(protected)/stats', {})}
+    href={resolve<'/app/(protected)/stats'>('/app/(protected)/stats', {})}
     aria-label="Stats"
     aria-current={isStats ? 'page' : undefined}
   >
@@ -90,7 +90,7 @@
     <a
       class="flex h-[52px] w-[52px] items-center justify-center rounded-2xl bg-accent text-bg-primary"
       style:box-shadow="0 0 20px var(--glow), 0 8px 16px rgba(0,0,0,0.4)"
-      href={resolve<'/(protected)/habit/new'>('/(protected)/habit/new', {})}
+      href={resolve<'/app/(protected)/habit/new'>('/app/(protected)/habit/new', {})}
       aria-label="New habit"
     >
       <PlusIcon size={24} />

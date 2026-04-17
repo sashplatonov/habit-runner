@@ -25,6 +25,7 @@ public abstract class HabitSettingsFields extends HabitIdentityFields {
   public boolean archived;
 
   @Column(name = "sortOrder", nullable = false)
+  @JdbcTypeCode(SqlTypes.BIGINT)
   public BigInteger sortOrder;
 
   @Column(name = "reminderTime")

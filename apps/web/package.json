@@ -13,7 +13,7 @@
     "dev": "npm run sync:svelte && npx vite dev",
     "dev:web": "npm run dev",
     "monorepo:dev": "turbo dev",
-    "dev:server": "cd ../backend && ./mvnw quarkus:dev",
+    "dev:server": "bash ./scripts/dev-server.sh",
     "dev:all": "npm run dev --workspaces --if-present",
     "build": "npm run sync:svelte && npx vite build",
     "monorepo:build": "turbo build",
@@ -26,7 +26,7 @@
     "lint": "npm run check:svelte-keys && npm run check:runtime-undefined && eslint src tests --ext .js,.ts,.svelte --max-warnings 0",
     "lint:fix": "npm run check:runtime-undefined && eslint src tests --ext .js,.ts,.svelte --fix --max-warnings 0",
     "monorepo:lint": "turbo lint",
-    "preview": "npm run sync:svelte && npx vite preview",
+    "preview": "node ./scripts/preview-static.mjs",
     "test": "npm run sync:svelte && vitest run",
     "test:unit": "npm run sync:svelte && vitest run",
     "test:coverage": "npm run sync:svelte && vitest run --coverage",
@@ -43,8 +43,11 @@
     "@types/canvas-confetti": "^1.9.0",
     "canvas-confetti": "^1.9.4",
     "dexie": "^4.3.0",
+    "gray-matter": "^4.0.3",
     "lucide-svelte": "^0.577.0",
-    "nanoid": "^5.1.6"
+    "marked": "^18.0.0",
+    "nanoid": "^5.1.6",
+    "web-vitals": "^5.2.0"
   },
   "optionalDependencies": {
     "@rollup/rollup-linux-arm64-musl": "4.59.0",
@@ -69,7 +72,6 @@
     "eslint-plugin-react-hooks": "^7.0.1",
     "eslint-plugin-svelte": "^3.17.0",
     "jsdom": "^22.1.0",
-    
     "postcss": "latest",
     "svelte": "^5.55.3",
     "svelte-check": "^4.4.6",

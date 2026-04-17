@@ -17,6 +17,11 @@ COPY . ./
 # Build-time args — must be declared here so Vite embeds them into the JS bundle.
 # Values are supplied via docker-compose build.args (or CI build-args).
 ARG VITE_API_BASE_URL
+ARG VITE_SYNC_ENABLED
+ARG VITE_DEFAULT_USER_ID
+ARG VITE_GSC_VERIFICATION_TOKEN
+ARG VITE_BING_VERIFICATION_TOKEN
+ARG VITE_GA4_MEASUREMENT_ID
 # ── Grafana Faro RUM ─────────────────────────────────────────────────────────
 ARG VITE_FARO_URL
 ARG VITE_FARO_APP_NAME
@@ -31,8 +36,8 @@ RUN npm run sync:svelte
 RUN mkdir -p .svelte-kit/output/client && npx tsc src/service-worker.ts --outFile .svelte-kit/output/client/service-worker.js || true
 
 # Run vite build directly (skip npm prebuild lifecycle to avoid lint/checks in this stage)
-# Disable PWA plugin in this environment to avoid injectManifest timing/path issues
-RUN SKIP_LINT=1 SKIP_PWA=1 npx vite build
+# Enable PWA plugin during Docker build so the service worker and manifest are included
+RUN npx vite build
 
 FROM nginx:1.27-alpine AS runtime
 COPY --from=build /app/build /usr/share/nginx/html

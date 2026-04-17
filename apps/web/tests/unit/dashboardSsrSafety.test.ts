@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 
-const dashboardFilePath = path.resolve(__dirname, '../../src/routes/(protected)/dashboard/+page.svelte');
+const dashboardFilePath = path.resolve(__dirname, "../../src/routes/app/(protected)/dashboard/+page.svelte");
 const habitTileFilePath = path.resolve(__dirname, '../../src/lib/components/HabitTile.svelte');
 
 describe('dashboard SSR safety', () => {

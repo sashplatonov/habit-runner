@@ -15,6 +15,7 @@
 ## ⚙️ What lives here <a name="what-lives-here"></a>
 
 This directory contains the active Habbit Runner backend:
+
 - Quarkus 3 application
 - Hibernate ORM with Panache
 - Flyway migrations
@@ -34,16 +35,26 @@ cd /Users/sash/Dev/Projects/habbit-runner
 docker compose --profile db up -d db
 ```
 
-Export the required env in your shell, then run:
+For the standard local dev path, Quarkus uses the `%dev` profile only for local fallback defaults:
+
+- backend listens on `http://localhost:3000`
+- frontend stays on `http://localhost:5173`
+- the Compose `db` profile publishes PostgreSQL on `localhost:5432`
+- DB/auth secrets can be provided by your shell env or by sourcing a local env file before startup
+
+With Java 25 selected, run:
 
 ```bash
 cd /Users/sash/Dev/Projects/habbit-runner/apps/backend
-./mvnw quarkus:dev
+./mvnw clean quarkus:dev
 ```
 
 Important:
-- backend config is read from environment variables;
-- this repo does not auto-load `apps/backend/.env`;
+
+- if you override the local defaults, export env vars in your shell before starting Quarkus;
+- `cd /Users/sash/Dev/Projects/habbit-runner/apps/web && npm run dev:server` is the repo helper that sources the root `.env`, lets those values override the `%dev` fallbacks, and on macOS tries Java 25 via `java_home` with an SDKMAN fallback;
+- Google OAuth redirect URIs still need to be registered for the local backend origin you use;
+- `JAVA_HOME` should point to Java 25 for this module;
 - Flyway migrations run on startup.
 
 [↑ Back to top](#top)
@@ -71,6 +82,7 @@ docker build -t habbit-backend:local -f Dockerfile.jvm .
 ## 🧾 Environment contract <a name="environment-contract"></a>
 
 Required core variables:
+
 - `DB_HOST`
 - `DB_PORT`
 - `DB_NAME`
@@ -86,7 +98,10 @@ Required core variables:
 - `OAUTH_DEFAULT_RETURN_TO`
 - `CORS_ORIGINS`
 
+Local `%dev` defaults cover these values for the common host-based setup, so they are only required when you need to override the standard local ports/credentials or when running outside the dev profile.
+
 Optional feature variables:
+
 - `GOOGLE_OAUTH_CLIENT_ID`
 - `GOOGLE_OAUTH_CLIENT_SECRET`
 - `VAPID_PUBLIC_KEY`

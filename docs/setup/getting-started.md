@@ -22,6 +22,7 @@
 - A Google Cloud project if you need real OAuth login
 
 Important repo note:
+
 - there is no root `package.json`, so npm commands run from `apps/web`;
 - backend configuration comes from shell environment or Docker Compose, not from an auto-loaded `apps/backend/.env`.
 
@@ -75,26 +76,37 @@ Start a local Postgres instance first. The easiest repo-native path is the Compo
 docker compose --profile db up -d db
 ```
 
-Export backend env vars in your shell:
+For the standard local setup, the backend dev profile now provides matching defaults automatically:
+
+- `DB_HOST=localhost`
+- `DB_PORT=5432`
+- `DB_NAME=habbit_runner`
+- `DB_USER=habbit`
+- `DB_PASSWORD=password`
+- `DB_SCHEMA=habbit_runner`
+- `API_PORT=3000`
+- `AUTH_SECRET=change-me`
+- `ACCESS_TOKEN_TTL_SECONDS=3600`
+- `REFRESH_TOKEN_EXPIRES_DAYS=30`
+- `JWT_ISSUER=habittracker-local`
+- `API_PUBLIC_URL=http://localhost:3000`
+- `OAUTH_DEFAULT_RETURN_TO=http://localhost:5173`
+- `CORS_ORIGINS=http://localhost:5173`
+
+DB/auth secrets should come from your shell environment or from a local env file that you source before starting Quarkus.
+
+Repo helper for that flow:
 
 ```bash
-export DB_HOST=localhost
-export DB_PORT=5432
-export DB_NAME=habbit_runner
-export DB_USER=habbit
-export DB_PASSWORD=password
-export DB_SCHEMA=habbit_runner
-export API_PORT=3000
-export AUTH_SECRET=change-me
-export ACCESS_TOKEN_EXPIRES_IN=1h
-export ACCESS_TOKEN_TTL_SECONDS=3600
-export REFRESH_TOKEN_EXPIRES_DAYS=30
-export JWT_ISSUER=habittracker-local
-export API_PUBLIC_URL=http://localhost:3000
-export OAUTH_DEFAULT_RETURN_TO=http://localhost:5173
-export CORS_ORIGINS=http://localhost:5173
-export GOOGLE_OAUTH_CLIENT_ID=...
-export GOOGLE_OAUTH_CLIENT_SECRET=...
+cd apps/web
+npm run dev:server
+```
+
+That helper sources the workspace root `.env` when it exists, overrides the host-dev callback/origin values back to `3000` and `5173`, and on macOS tries Java 25 via `java_home` with an SDKMAN fallback.
+
+Only export variables when you need to override those defaults or enable optional integrations:
+
+```bash
 VAPID_PUBLIC_KEY=
 VAPID_PRIVATE_KEY=
 export VAPID_SUBJECT=mailto:admin@localhost
@@ -104,7 +116,7 @@ Then run Quarkus dev mode:
 
 ```bash
 cd apps/backend
-./mvnw quarkus:dev
+./mvnw clean quarkus:dev
 ```
 
 Useful backend commands:
@@ -116,8 +128,10 @@ cd apps/backend
 ```
 
 Notes:
+
 - Flyway migrations run automatically on backend startup.
-- `DB_SCHEMA` is required by the current Quarkus config path.
+- the Compose `db` profile now publishes PostgreSQL on `localhost:5432` for host-based Quarkus runs;
+- `JAVA_HOME` should point to Java 25 before starting the backend;
 - If OAuth is not configured, UI-only work can still proceed with sync disabled or with limited unauthenticated screens.
 
 [↑ Back to top](#top)
@@ -154,6 +168,7 @@ docker compose down -v
 ```
 
 Current Compose behavior:
+
 - `db` is behind the `db` profile;
 - `api` is exposed only to the internal Docker network;
 - browser traffic reaches the backend through the `web` nginx proxy at `/api`;
@@ -169,6 +184,7 @@ Current Compose behavior:
 2. Create a Web application client.
 3. Add these redirect URIs as needed:
    - local backend: `http://localhost:3000/auth/google/callback`
+   - local preview proxy: `http://localhost:5137/api/auth/google/callback`
    - docker through nginx: `https://yourdomain.com/api/auth/google/callback`
 4. Set:
    - `GOOGLE_OAUTH_CLIENT_ID`
@@ -177,7 +193,10 @@ Current Compose behavior:
    - `OAUTH_DEFAULT_RETURN_TO`
 5. Restart the backend after changing auth configuration.
 
+For this repository's host-based dev flow, the callback URI must match `API_PUBLIC_URL`. If your root `.env` points local auth through the preview proxy, use `http://localhost:5137/api/auth/google/callback`; if you talk to the backend directly, use `http://localhost:3000/auth/google/callback`.
+
 Use matching origins:
+
 - local frontend: `http://localhost:5173`
 - docker default local web origin: `http://localhost` or `http://localhost:5137` depending on which compose file you use
 

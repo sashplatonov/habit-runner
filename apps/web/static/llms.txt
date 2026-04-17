@@ -1,0 +1,53 @@
+# Habbit Runner
+
+> Habbit Runner is an offline-first habit tracker Progressive Web App (PWA) with sync, streak analytics, and push notifications.
+
+## Product Overview
+
+Habbit Runner helps users build and maintain daily habits through clear progress tracking, streak analytics, and reliable offline support. No app store download required — install directly from any modern browser.
+
+## Key Features
+
+- **Offline-first**: All data stored locally using IndexedDB (Dexie). Works fully without internet connection.
+- **Background sync**: Pull-push-pull sync cycle automatically syncs changes when reconnecting.
+- **Streak tracking**: Current streak, longest streak, completion rate, and trend analytics per habit.
+- **Daily routine planner**: Define daily targets, set reminders, track routines for work and personal goals.
+- **Push notifications**: Web push reminders for individual habits, no native app required.
+- **Google OAuth**: Secure sign-in with Google. JWT access tokens + refresh tokens.
+- **PWA installable**: Install from browser on desktop and mobile. Works on Android, iOS (Safari 16.4+), and desktop Chrome/Edge.
+- **Privacy-focused**: No advertising. No PII sharing with third parties. Data stays on your device first.
+
+## Site Structure
+
+- `/` — Main landing page with product overview and FAQ
+- `/habit-tracker` — Habit tracker feature page
+- `/streak-tracker` — Streak tracking feature page
+- `/daily-routine-planner` — Daily routine planning feature page
+- `/features` — Full feature list
+- `/about` — About the product and team
+- `/privacy-policy` — Privacy policy
+- `/blog` — Blog with guides and technical articles
+- `/vs/habitica` — Habbit Runner vs Habitica comparison
+- `/vs/streaks-app` — Habbit Runner vs Streaks App comparison
+- `/vs/beeminder` — Habbit Runner vs Beeminder comparison
+
+## Technology Stack
+
+- **Frontend**: SvelteKit 5, TypeScript, Tailwind CSS, Vite PWA
+- **Offline storage**: Dexie (IndexedDB wrapper)
+- **Backend**: Quarkus (Java), Flyway, PostgreSQL
+- **Auth**: Google OAuth 2.0, JWT tokens
+- **Deployment**: Docker, static PWA build
+
+## Target Audience
+
+People who want to build consistent daily habits with measurable progress: founders, creators, athletes, students, and professionals building daily discipline.
+
+## Pricing
+
+Free to use. Core habit tracking, streak monitoring, and dashboard analytics available at no cost.
+
+## Contact
+
+Website: https://habbit-runner.app
+Privacy Policy: https://habbit-runner.app/privacy-policy

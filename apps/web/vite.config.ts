@@ -103,7 +103,7 @@ export default defineConfig({
       strategies: 'injectManifest',
       srcDir: 'src',
       registerType: 'autoUpdate',
-      injectRegister: 'auto',
+      injectRegister: false,
       manifest: {
         name: 'Habbit Runner',
         short_name: 'HabitRunner',
@@ -141,6 +141,21 @@ export default defineConfig({
             sizes: '512x512',
             type: 'image/png',
             purpose: 'maskable'
+          }
+        ],
+        screenshots: [
+          {
+            src: 'screenshots/desktop.png',
+            sizes: '1280x720',
+            type: 'image/png',
+            label: 'Habbit Runner — Habit Tracker Dashboard'
+          },
+          {
+            src: 'screenshots/mobile.png',
+            sizes: '390x844',
+            type: 'image/png',
+            form_factor: 'narrow',
+            label: 'Habbit Runner — Mobile View'
           }
         ]
       }

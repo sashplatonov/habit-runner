@@ -1,4 +1,9 @@
 User-agent: *
 Allow: /
 
+Disallow: /app/
+Disallow: /api/
+Disallow: /sync/
+Disallow: /auth/
+
 Sitemap: https://habbit-runner.app/sitemap.xml

@@ -44,23 +44,30 @@
 
 <div class="min-h-screen bg-white text-slate-900">
   <header class="sticky top-0 z-20 border-b border-slate-200/90 bg-white/95 backdrop-blur">
-    <div class="mx-auto flex w-full max-w-6xl items-center justify-between px-4 py-4 sm:px-6">
-      <div class="flex items-center gap-3">
+    <div class="mx-auto flex w-full max-w-6xl items-center gap-4 px-4 py-4 sm:px-6">
+      <a href={resolve<'/'>('/', {})} class="flex flex-shrink-0 items-center gap-3">
         <img src="/app-icon.svg" alt="Habbit Runner" class="h-9 w-9 flex-shrink-0 rounded-xl object-contain" />
-        <div>
+        <div class="hidden sm:block">
           <p class="text-sm font-semibold text-slate-900">Habbit Runner</p>
           <p class="text-xs text-slate-500">Habit tracking with real progress analytics</p>
         </div>
+      </a>
+      <nav class="hidden flex-1 items-center gap-5 sm:flex" aria-label="Main navigation">
+        <a href={resolve<'/features'>('/features', {})} class="text-xs font-medium text-slate-600 transition-colors hover:text-slate-900">Features</a>
+        <a href={resolve<'/blog'>('/blog', {})} class="text-xs font-medium text-slate-600 transition-colors hover:text-slate-900">Blog</a>
+        <a href={resolve<'/about'>('/about', {})} class="text-xs font-medium text-slate-600 transition-colors hover:text-slate-900">About</a>
+      </nav>
+      <div class="ml-auto">
+        <button
+          type="button"
+          onclick={() => {
+            startOAuthLogin();
+          }}
+          class="rounded-lg border border-cyan-300 bg-cyan-50 px-3 py-2 text-xs font-semibold text-cyan-700 transition-colors hover:bg-cyan-100"
+        >
+          Continue with Google
+        </button>
       </div>
-      <button
-        type="button"
-        onclick={() => {
-          startOAuthLogin();
-        }}
-        class="rounded-lg border border-cyan-300 bg-cyan-50 px-3 py-2 text-xs font-semibold text-cyan-700 transition-colors hover:bg-cyan-100"
-      >
-        Continue with Google
-      </button>
     </div>
   </header>
 
@@ -201,25 +208,59 @@
     </section>
   </main>
 
-  <footer class="mx-auto flex w-full max-w-6xl flex-col gap-3 px-4 py-6 text-xs text-slate-600 sm:flex-row sm:items-center sm:justify-between sm:px-6">
-    <p>Built for clarity and consistent daily execution.</p>
-    <div class="flex items-center gap-3">
-      <button
-        type="button"
-        onclick={() => {
-          startOAuthLogin();
-        }}
-        class="rounded border border-slate-300 bg-white px-3 py-1.5 text-slate-700 transition-colors hover:border-cyan-300 hover:text-cyan-700"
-      >
-        Sign in
-      </button>
-      <button
-        type="button"
-        onclick={showAuthHelp}
-        class="rounded border border-slate-300 bg-white px-3 py-1.5 text-slate-700 transition-colors hover:border-slate-400 hover:text-slate-900"
-      >
-        Sign-in not working?
-      </button>
+  <footer class="border-t border-slate-200 bg-[#f8fafc] px-4 py-10 sm:px-6">
+    <div class="mx-auto w-full max-w-6xl">
+      <div class="grid grid-cols-2 gap-8 sm:grid-cols-4">
+        <div>
+          <p class="text-xs font-semibold uppercase tracking-widest text-slate-500">Product</p>
+          <ul class="mt-3 space-y-2">
+            <li><a href={resolve<'/features'>('/features', {})} class="text-xs text-slate-600 transition-colors hover:text-slate-900">Features</a></li>
+            <li><a href={resolve<'/blog'>('/blog', {})} class="text-xs text-slate-600 transition-colors hover:text-slate-900">Blog</a></li>
+            <li><a href={resolve<'/about'>('/about', {})} class="text-xs text-slate-600 transition-colors hover:text-slate-900">About</a></li>
+          </ul>
+        </div>
+        <div>
+          <p class="text-xs font-semibold uppercase tracking-widest text-slate-500">Tools</p>
+          <ul class="mt-3 space-y-2">
+            <li><a href={resolve<'/habit-tracker'>('/habit-tracker', {})} class="text-xs text-slate-600 transition-colors hover:text-slate-900">Habit Tracker</a></li>
+            <li><a href={resolve<'/streak-tracker'>('/streak-tracker', {})} class="text-xs text-slate-600 transition-colors hover:text-slate-900">Streak Tracker</a></li>
+            <li><a href={resolve<'/daily-routine-planner'>('/daily-routine-planner', {})} class="text-xs text-slate-600 transition-colors hover:text-slate-900">Daily Routine Planner</a></li>
+          </ul>
+        </div>
+        <div>
+          <p class="text-xs font-semibold uppercase tracking-widest text-slate-500">Compare</p>
+          <ul class="mt-3 space-y-2">
+            <li><a href={resolve<'/vs/[slug]'>('/vs/[slug]', { slug: 'habitica' })} class="text-xs text-slate-600 transition-colors hover:text-slate-900">vs Habitica</a></li>
+            <li><a href={resolve<'/vs/[slug]'>('/vs/[slug]', { slug: 'streaks-app' })} class="text-xs text-slate-600 transition-colors hover:text-slate-900">vs Streaks</a></li>
+            <li><a href={resolve<'/vs/[slug]'>('/vs/[slug]', { slug: 'beeminder' })} class="text-xs text-slate-600 transition-colors hover:text-slate-900">vs Beeminder</a></li>
+          </ul>
+        </div>
+        <div>
+          <p class="text-xs font-semibold uppercase tracking-widest text-slate-500">Legal</p>
+          <ul class="mt-3 space-y-2">
+            <li><a href={resolve<'/privacy-policy'>('/privacy-policy', {})} class="text-xs text-slate-600 transition-colors hover:text-slate-900">Privacy Policy</a></li>
+          </ul>
+          <div class="mt-6 flex flex-col gap-2">
+            <button
+              type="button"
+              onclick={() => {
+                startOAuthLogin();
+              }}
+              class="rounded border border-slate-300 bg-white px-3 py-1.5 text-xs text-slate-700 transition-colors hover:border-cyan-300 hover:text-cyan-700"
+            >
+              Sign in
+            </button>
+            <button
+              type="button"
+              onclick={showAuthHelp}
+              class="rounded border border-slate-300 bg-white px-3 py-1.5 text-xs text-slate-700 transition-colors hover:border-slate-400 hover:text-slate-900"
+            >
+              Sign-in not working?
+            </button>
+          </div>
+        </div>
+      </div>
+      <p class="mt-8 text-xs text-slate-400">Built for clarity and consistent daily execution.</p>
     </div>
   </footer>
 

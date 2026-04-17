@@ -146,3 +146,33 @@ export function trackSyncFailed(type: 'pull' | 'push', error: unknown): void {
   _faro.api.pushError(error instanceof Error ? error : new Error(message));
 }
 
+export type WebVitalEvent = {
+  name: string;
+  value: number;
+  rating: string;
+  id: string;
+  url: string;
+};
+
+export function trackWebVital(metric: WebVitalEvent): void {
+  if (!isEnabled() || !_faro) {
+    return;
+  }
+
+  _faro.api.pushEvent(
+    'web_vital',
+    {
+      name: metric.name,
+      value: String(metric.value),
+      rating: metric.rating,
+      id: metric.id,
+      url: metric.url,
+    },
+    'performance'
+  );
+  _faro.api.pushMeasurement({
+    type: `web_vital_${metric.name.toLowerCase()}`,
+    values: { value: metric.value },
+  });
+}
+

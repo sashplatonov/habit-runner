@@ -29,8 +29,8 @@
 
   const darkThemes = $derived(THEMES.filter((candidate) => candidate.group === 'dark'));
   const lightThemes = $derived(THEMES.filter((candidate) => candidate.group === 'light'));
-  const dashboardHref = resolve<'/(protected)/dashboard'>('/(protected)/dashboard', {});
-  const statsHref = resolve<'/(protected)/stats'>('/(protected)/stats', {});
+  const dashboardHref = resolve<'/app/(protected)/dashboard'>('/app/(protected)/dashboard', {});
+  const statsHref = resolve<'/app/(protected)/stats'>('/app/(protected)/stats', {});
 
   function isActive(path: string) {
     return page.url.pathname === path || (path !== dashboardHref && page.url.pathname.startsWith(path));
@@ -64,7 +64,7 @@
 
   <a
     class="mb-4 flex items-center gap-2 rounded-xl border border-accent/30 bg-accent/10 px-3 py-2.5 text-sm font-semibold text-accent transition-all duration-200 hover:bg-accent/20 hover:shadow-[0_0_16px_var(--glow)]"
-    href={resolve<'/(protected)/habit/new'>('/(protected)/habit/new', {})}
+    href={resolve<'/app/(protected)/habit/new'>('/app/(protected)/habit/new', {})}
   >
     <PlusIcon size={16} />
     New Habit
