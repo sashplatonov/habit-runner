@@ -20,7 +20,7 @@ Offline-first habit tracker with a React PWA frontend, a Quarkus backend, Google
 - Frontend lives in `apps/web` and owns the JavaScript workspace, shared package, tests, and build scripts.
 - Backend lives in `apps/backend` and is a Quarkus 3 + Flyway + PostgreSQL service.
 - There is no root `package.json` in the current checkout, so frontend npm commands run from `apps/web`.
-- Docker Compose is rooted at the repository root and uses `apps/web/Dockerfile` plus `apps/backend/Dockerfile.jvm`.
+- Docker Compose is rooted at the repository root and uses `apps/web/Dockerfile` plus `apps/backend/Dockerfile`.
 - The local Compose database service is behind the `db` profile, so full local stack startup requires `--profile db`.
 
 [↑ Back to top](#top)
@@ -110,27 +110,27 @@ Local compose modes
 
 This repository provides two compose entrypoints:
 
-- `docker-compose.yml` — default: builds and runs the native Quarkus binary (uses `apps/backend/Dockerfile`).
-- `docker-compose.jvm.yml` — local JVM development (uses `apps/backend/Dockerfile.jvm`).
+- `docker-compose.yml` — default: builds and runs the JVM Quarkus runner (uses `apps/backend/Dockerfile`).
+- `docker-compose.native.yml` — native mode (uses `apps/backend/Dockerfile.native`).
 
 Run local JVM mode (build + start):
 
 ```bash
 cp .env.example .env
-docker compose -f docker-compose.jvm.yml up -d --build --profile db
+docker compose up -d --build --profile db
 ```
 
-Run default/native mode (build + start):
+Run native mode (build + start):
 
 Note: native builds require a compatible Mandrel/GraalVM builder image. The default
-builder image is set via the `MANDREL_BUILDER_IMAGE` build-arg in `apps/backend/Dockerfile`. If your
+builder image is set via the `MANDREL_BUILDER_IMAGE` build-arg in `apps/backend/Dockerfile.native`. If your
 `pom.xml` Java version differs from the builder, set `MANDREL_BUILDER_IMAGE` accordingly before running.
 
 ```bash
 cp .env.example .env
 # Optionally override builder image if needed (example Mandrel image targeting JDK 25):
 # export MANDREL_BUILDER_IMAGE=quay.io/quarkus/ubi9-quarkus-mandrel-builder-image:jdk-25
-docker compose up -d --build --profile db
+docker compose -f docker-compose.native.yml up -d --build --profile db
 ```
 
 [↑ Back to top](#top)

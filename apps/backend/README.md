@@ -69,10 +69,16 @@ cd /Users/sash/Dev/Projects/habbit-runner/apps/backend
 ./mvnw package -DskipTests
 ```
 
-Docker image build used by the repo:
+Docker image build used by the repo (JVM default):
 
 ```bash
-docker build -t habbit-backend:local -f Dockerfile.jvm .
+docker build -t habbit-backend:local -f Dockerfile .
+```
+
+Native image build (uses `.native` suffix for tags):
+
+```bash
+docker build -t habbit-backend:local.native -f Dockerfile.native .
 ```
 
 [↑ Back to top](#top)
