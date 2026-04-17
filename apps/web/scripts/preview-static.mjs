@@ -1,4 +1,5 @@
 import http from 'node:http';
+import https from 'node:https';
 import path from 'node:path';
 import fs from 'node:fs/promises';
 import { existsSync } from 'node:fs';
@@ -26,6 +27,8 @@ function readArg(name, fallback) {
 
 const host = readArg('host', '127.0.0.1');
 const port = Number(readArg('port', '4173'));
+// Optional proxy target for API requests (e.g. --proxy-api http://localhost:3000)
+const proxyApiTarget = readArg('proxy-api', process.env.PROXY_API_TARGET || '');
 
 const mimeTypes = new Map([
   ['.css', 'text/css; charset=utf-8'],
@@ -70,6 +73,26 @@ function toBuildPath(urlPath) {
 
 async function handleRequest(req, res) {
   try {
+    // If a proxy target is configured and the request is for /api, forward it.
+    if (proxyApiTarget && req.url && req.url.startsWith('/api')) {
+      const target = new URL(req.url, proxyApiTarget);
+      const client = target.protocol === 'https:' ? https : http;
+
+      const proxyReq = client.request({
+        hostname: target.hostname,
+        port: target.port || (target.protocol === 'https:' ? 443 : 80),
+        path: `${target.pathname}${target.search || ''}`,
+        method: req.method,
+        headers: { ...req.headers, host: target.host },
+      }, (proxyRes) => {
+        res.writeHead(proxyRes.statusCode || 502, proxyRes.headers);
+        proxyRes.pipe(res, { end: true });
+      });
+
+      req.pipe(proxyReq, { end: true });
+      return;
+    }
+
     const filePath = toBuildPath(req.url ?? '/');
     const ext = path.extname(filePath);
     const body = await fs.readFile(filePath);
