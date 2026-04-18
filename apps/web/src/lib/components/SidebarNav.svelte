@@ -11,18 +11,14 @@
     SunIcon
   } from 'lucide-svelte';
   import { THEMES, type ThemeId } from '$lib/theme/themes';
-  import type { SyncEngineSnapshot } from '$lib/stores/syncEngine';
-  import SyncStatus from '$lib/components/SyncStatus.svelte';
 
   type Props = {
     theme: ThemeId;
     onThemeChange: (id: ThemeId) => void | Promise<void>;
     onLogout?: () => void | Promise<void>;
-    syncState?: SyncEngineSnapshot;
-    onRetrySync?: () => void | Promise<void>;
   };
 
-  let { theme, onThemeChange, onLogout, syncState, onRetrySync }: Props = $props();
+  let { theme, onThemeChange, onLogout }: Props = $props();
 
   let isThemeOpen = $state(false);
   let themeElement = $state<HTMLDivElement | null>(null);
@@ -59,8 +55,6 @@
     <img src="/app-icon.svg" alt="Habbit Runner" class="h-8 w-8 flex-shrink-0 rounded-lg object-contain" />
     <span class="text-sm font-bold tracking-tight">Habbit Runner</span>
   </a>
-
-  <SyncStatus syncState={syncState} onRetry={onRetrySync} />
 
   <a
     class="mb-4 flex items-center gap-2 rounded-xl border border-accent/30 bg-accent/10 px-3 py-2.5 text-sm font-semibold text-accent transition-all duration-200 hover:bg-accent/20 hover:shadow-[0_0_16px_var(--glow)]"

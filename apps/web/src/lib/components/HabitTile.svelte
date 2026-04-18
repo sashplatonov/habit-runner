@@ -222,7 +222,7 @@
           onclick={handleToggle}
           disabled={isFrozen}
           class="w-8 h-8 rounded-xl border-[1.5px] flex items-center justify-center transition-all duration-200 relative overflow-hidden
-            {completed ? `${accent.bgClass} ${accent.borderClass}` : scheduledToday ? 'border-border-hover hover:border-muted' : isFrozen ? 'border-border bg-bg-secondary text-muted cursor-not-allowed opacity-60' : 'border border-dashed border-border/40 text-muted hover:border-border'}
+            {completed ? `${accent.bgClass} ${accent.borderClass}` : scheduledToday ? 'border-border-hover hover:border-muted' : isFrozen ? 'border-border bg-bg-secondary text-muted cursor-not-allowed opacity-60' : 'border border-dashed border-border text-muted hover:border-muted'}
             {animating ? 'animate-check-pulse animate-glow-burst' : ''}"
           style={completed && !isFrozen ? `box-shadow: 0 0 12px ${accent.glow}` : ''}
           aria-label="{scheduledToday ? `Mark ${habit.name} as ${completed ? 'incomplete' : 'complete'}` : isFrozen ? 'Frozen today' : `Manual completion for ${habit.name}`}"

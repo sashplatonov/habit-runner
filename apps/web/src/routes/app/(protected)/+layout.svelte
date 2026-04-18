@@ -95,8 +95,6 @@
     theme={$themeStore.theme}
     onThemeChange={(id) => themeStore.setTheme(id)}
     onLogout={logout}
-    syncState={$syncEngineStore}
-    onRetrySync={() => syncEngineStore.syncNow()}
   >
     {@render children()}
   </AppLayout>
