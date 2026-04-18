@@ -1,10 +1,11 @@
 ---
 title: "Best Offline Habit Tracker Apps in 2025"
 description: "Compare the best offline-first habit tracker apps that work without internet. Full breakdown of features, privacy, and PWA support."
-publishedAt: "2026-04-16"
+publishedAt: "2026-03-14"
 author: "Habbit Runner Team"
 keywords: "offline habit tracker, habit tracker without internet, best habit tracker 2025, pwa habit tracker"
 readingTimeMinutes: 8
+coverImage: /blog/best-offline-habit-tracker.svg
 ---
 
 ## Why Offline Support Matters for Habit Tracking

@@ -2,6 +2,7 @@
   import { resolve } from '$app/paths';
   import { ArrowRight, CheckCircle2, Sparkles } from 'lucide-svelte';
   import { startOAuthLogin } from '$lib/auth/oauth';
+  import PublicNav from '$lib/components/PublicNav.svelte';
   import PublicPreviewCarousel from '$lib/components/PublicPreviewCarousel.svelte';
   import PublicSeoHead from '$lib/components/PublicSeoHead.svelte';
   import { PUBLIC_LANDING_SEO } from '$lib/seo/publicPages';
@@ -43,33 +44,17 @@
 />
 
 <div class="min-h-screen bg-white text-slate-900">
-  <header class="sticky top-0 z-20 border-b border-slate-200/90 bg-white/95 backdrop-blur">
-    <div class="mx-auto flex w-full max-w-6xl items-center gap-4 px-4 py-4 sm:px-6">
-      <a href={resolve<'/'>('/', {})} class="flex flex-shrink-0 items-center gap-3">
-        <img src="/app-icon.svg" alt="Habbit Runner" class="h-9 w-9 flex-shrink-0 rounded-xl object-contain" />
-        <div class="hidden sm:block">
-          <p class="text-sm font-semibold text-slate-900">Habbit Runner</p>
-          <p class="text-xs text-slate-500">Habit tracking with real progress analytics</p>
-        </div>
-      </a>
-      <nav class="hidden flex-1 items-center gap-5 sm:flex" aria-label="Main navigation">
-        <a href={resolve<'/features'>('/features', {})} class="text-xs font-medium text-slate-600 transition-colors hover:text-slate-900">Features</a>
-        <a href={resolve<'/blog'>('/blog', {})} class="text-xs font-medium text-slate-600 transition-colors hover:text-slate-900">Blog</a>
-        <a href={resolve<'/about'>('/about', {})} class="text-xs font-medium text-slate-600 transition-colors hover:text-slate-900">About</a>
-      </nav>
-      <div class="ml-auto">
-        <button
-          type="button"
-          onclick={() => {
-            startOAuthLogin();
-          }}
-          class="rounded-lg border border-cyan-300 bg-cyan-50 px-3 py-2 text-xs font-semibold text-cyan-700 transition-colors hover:bg-cyan-100"
-        >
-          Continue with Google
-        </button>
-      </div>
-    </div>
-  </header>
+  <PublicNav>
+    {#snippet cta()}
+      <button
+        type="button"
+        onclick={() => { startOAuthLogin(); }}
+        class="hidden sm:inline-flex rounded-lg border border-cyan-300 bg-cyan-50 px-3 py-2 text-xs font-semibold text-cyan-700 transition-colors hover:bg-cyan-100"
+      >
+        Continue with Google
+      </button>
+    {/snippet}
+  </PublicNav>
 
   <main>
     <section class="border-b border-slate-200 bg-[radial-gradient(circle_at_top,rgba(186,230,253,0.65),transparent_58%),linear-gradient(180deg,#ffffff_0%,#f8fafc_100%)]">
@@ -94,7 +79,7 @@
               }}
               class="inline-flex items-center gap-2 rounded-lg border border-cyan-300 bg-cyan-50 px-4 py-2.5 text-sm font-semibold text-cyan-700 transition-all hover:bg-cyan-100"
             >
-              Start now
+              Continue with Google
               <ArrowRight size={15} />
             </button>
             <button

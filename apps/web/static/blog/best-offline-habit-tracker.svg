@@ -1,0 +1,75 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-label="Best Offline Habit Tracker">
+  <defs>
+    <linearGradient id="bg" x1="0" x2="1" y1="0" y2="1"><stop offset="0%" stop-color="#f0f9ff"/><stop offset="100%" stop-color="#f8fafc"/></linearGradient>
+    <linearGradient id="phone" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stop-color="#1e293b"/><stop offset="100%" stop-color="#0f172a"/></linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <circle cx="200" cy="500" r="180" fill="#0ea5e9" opacity="0.07"/>
+  <circle cx="980" cy="150" r="150" fill="#10b981" opacity="0.07"/>
+
+  <!-- phone body -->
+  <rect x="440" y="60" width="320" height="460" rx="32" fill="url(#phone)"/>
+  <rect x="460" y="82" width="280" height="416" rx="18" fill="#1e293b"/>
+  <rect x="556" y="68" width="88" height="10" rx="5" fill="#0f172a"/>
+  <rect x="470" y="92" width="260" height="396" rx="14" fill="#0f172a"/>
+
+  <!-- app screen -->
+  <rect x="482" y="104" width="236" height="372" rx="10" fill="#0f172a"/>
+  <!-- status: offline badge -->
+  <rect x="492" y="112" width="90" height="22" rx="8" fill="#374151"/>
+  <circle cx="504" cy="123" r="5" fill="#6b7280"/>
+  <line x1="501" y1="120" x2="507" y2="126" stroke="#ef4444" stroke-width="2"/>
+  <text x="524" y="127" font-family="monospace,sans-serif" font-size="11" fill="#9ca3af">offline</text>
+
+  <!-- habit list on screen -->
+  <text x="600" y="158" font-family="Inter,sans-serif" font-size="11" fill="#d1d5db" text-anchor="middle">Today's habits</text>
+  <rect x="494" y="168" width="212" height="30" rx="8" fill="#1d4ed8"/>
+  <text x="560" y="187" font-family="Inter,sans-serif" font-size="11" fill="#bfdbfe">Morning walk</text>
+  <text x="680" y="187" font-family="Inter,sans-serif" font-size="13" fill="#34d399" text-anchor="middle">✓</text>
+  <rect x="494" y="206" width="212" height="30" rx="8" fill="#065f46"/>
+  <text x="560" y="225" font-family="Inter,sans-serif" font-size="11" fill="#a7f3d0">Read 20 min</text>
+  <text x="680" y="225" font-family="Inter,sans-serif" font-size="13" fill="#34d399" text-anchor="middle">✓</text>
+  <rect x="494" y="244" width="212" height="30" rx="8" fill="#1e293b" stroke="#334155" stroke-width="1"/>
+  <text x="560" y="263" font-family="Inter,sans-serif" font-size="11" fill="#64748b">Meditate</text>
+  <text x="680" y="263" font-family="Inter,sans-serif" font-size="13" fill="#94a3b8" text-anchor="middle">○</text>
+  <rect x="494" y="282" width="212" height="30" rx="8" fill="#1e293b" stroke="#334155" stroke-width="1"/>
+  <text x="560" y="301" font-family="Inter,sans-serif" font-size="11" fill="#64748b">Drink water</text>
+  <text x="680" y="301" font-family="Inter,sans-serif" font-size="13" fill="#94a3b8" text-anchor="middle">○</text>
+
+  <!-- streak -->
+  <rect x="494" y="330" width="212" height="50" rx="10" fill="#1c1917"/>
+  <text x="548" y="350" font-family="Inter,sans-serif" font-size="10" fill="#a78bfa">🔥 Current streak</text>
+  <text x="600" y="370" font-family="Inter,sans-serif" font-size="20" font-weight="700" fill="#fbbf24" text-anchor="middle">42 days</text>
+
+  <!-- wifi-off icon above phone -->
+  <circle cx="600" cy="44" r="16" fill="#fef2f2"/>
+  <text x="600" y="51" font-family="Arial,sans-serif" font-size="16" fill="#ef4444" text-anchor="middle">✗</text>
+
+  <!-- feature callouts -->
+  <rect x="60" y="200" width="310" height="65" rx="16" fill="#ffffff" stroke="#bae6fd" stroke-width="2"/>
+  <text x="215" y="226" font-family="Inter,Arial,sans-serif" font-size="15" fill="#0369a1" text-anchor="middle" font-weight="600">Works without internet</text>
+  <text x="215" y="249" font-family="Inter,Arial,sans-serif" font-size="13" fill="#0284c7" text-anchor="middle">data stored locally in IndexedDB</text>
+
+  <rect x="60" y="300" width="310" height="65" rx="16" fill="#ffffff" stroke="#bbf7d0" stroke-width="2"/>
+  <text x="215" y="326" font-family="Inter,Arial,sans-serif" font-size="15" fill="#065f46" text-anchor="middle" font-weight="600">Syncs when back online</text>
+  <text x="215" y="349" font-family="Inter,Arial,sans-serif" font-size="13" fill="#047857" text-anchor="middle">conflict-free merge</text>
+
+  <rect x="60" y="400" width="310" height="65" rx="16" fill="#ffffff" stroke="#fde68a" stroke-width="2"/>
+  <text x="215" y="426" font-family="Inter,Arial,sans-serif" font-size="15" fill="#78350f" text-anchor="middle" font-weight="600">PWA — installable</text>
+  <text x="215" y="449" font-family="Inter,Arial,sans-serif" font-size="13" fill="#92400e" text-anchor="middle">add to home screen</text>
+
+  <rect x="830" y="200" width="310" height="65" rx="16" fill="#ffffff" stroke="#c4b5fd" stroke-width="2"/>
+  <text x="985" y="226" font-family="Inter,Arial,sans-serif" font-size="15" fill="#5b21b6" text-anchor="middle" font-weight="600">No account needed</text>
+  <text x="985" y="249" font-family="Inter,Arial,sans-serif" font-size="13" fill="#7c3aed" text-anchor="middle">open and track instantly</text>
+
+  <rect x="830" y="300" width="310" height="65" rx="16" fill="#ffffff" stroke="#a5f3fc" stroke-width="2"/>
+  <text x="985" y="326" font-family="Inter,Arial,sans-serif" font-size="15" fill="#0e7490" text-anchor="middle" font-weight="600">Privacy first</text>
+  <text x="985" y="349" font-family="Inter,Arial,sans-serif" font-size="13" fill="#0891b2" text-anchor="middle">your habits stay on device</text>
+
+  <rect x="830" y="400" width="310" height="65" rx="16" fill="#ffffff" stroke="#bbf7d0" stroke-width="2"/>
+  <text x="985" y="426" font-family="Inter,Arial,sans-serif" font-size="15" fill="#065f46" text-anchor="middle" font-weight="600">Zero data loss</text>
+  <text x="985" y="449" font-family="Inter,Arial,sans-serif" font-size="13" fill="#047857" text-anchor="middle">outbox syncs in background</text>
+
+  <text x="600" y="557" font-family="Inter,Arial,sans-serif" font-size="38" font-weight="700" fill="#0f172a" text-anchor="middle">Best Offline Habit Tracker</text>
+  <text x="600" y="596" font-family="Inter,Arial,sans-serif" font-size="20" fill="#64748b" text-anchor="middle">Track habits anywhere — no signal required</text>
+</svg>

@@ -2,18 +2,12 @@ package com.sashplatonov.habbit.runner.model;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
-import jakarta.persistence.Id;
 import jakarta.persistence.MappedSuperclass;
-import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
 @MappedSuperclass
-public abstract class HabitIdentityFields extends PanacheEntityBase {
-  @Id
-  @Column(nullable = false)
-  public String id;
-
+public abstract class HabitIdentityFields extends UuidAuditedEntityBase {
   @Column(name = "userId", nullable = false)
   public String userId;
 

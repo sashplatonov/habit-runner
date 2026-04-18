@@ -71,6 +71,65 @@ class AuthPersistenceCoverageTest extends AuthenticatedApiTestSupport {
   }
 
   @Test
+  void shouldKeepUserCreatedAtStableAndAdvanceUpdatedAtWhenPreferencesChange() throws Exception {
+    var initialCreatedAt = Instant.parse("2026-04-09T08:00:00Z");
+    var initialUpdatedAt = Instant.parse("2026-04-09T08:05:00Z");
+    var userId = inTransaction(() -> {
+      var entity = new UserEntity();
+      entity.email = UUID.randomUUID() + "@example.test";
+      entity.theme = "cloud";
+      entity.timezone = "Europe/Berlin";
+      entity.markCreatedAt(initialCreatedAt);
+      entity.setUpdatedAt(initialUpdatedAt);
+      entity.persist();
+      return entity.id;
+    });
+
+    inTransaction(() -> preferencesService.updateUserPreferences(
+        userId,
+        new UpdatePreferencesRequest("matrix", "America/New_York")
+    ));
+
+    UserEntity stored = inTransaction(() -> UserEntity.<UserEntity>findById(userId));
+
+    assertEquals(initialCreatedAt, stored.createdAtValue());
+    assertTrue(stored.updatedAtValue().isAfter(initialUpdatedAt));
+  }
+
+  @Test
+  void shouldKeepRefreshTokenCreatedAtStableAndAdvanceUpdatedAtWhenRevoked() throws Exception {
+    var initialCreatedAt = Instant.parse("2026-04-09T08:00:00Z");
+    var initialUpdatedAt = Instant.parse("2026-04-09T08:05:00Z");
+    var userId = inTransaction(() -> {
+      var entity = new UserEntity();
+      entity.email = UUID.randomUUID() + "@example.test";
+      entity.theme = "cloud";
+      entity.persist();
+      return entity.id;
+    });
+    var token = "refresh-" + UUID.randomUUID();
+
+    inTransaction(() -> {
+      var entity = new RefreshTokenEntity();
+      entity.token = token;
+      entity.userId = userId;
+      entity.revoked = false;
+      entity.setCreatedAt(initialCreatedAt);
+      entity.setUpdatedAt(initialUpdatedAt);
+      entity.setExpiry(Instant.parse("2026-05-09T08:00:00Z"));
+      entity.persist();
+    });
+
+    inTransaction(() -> refreshTokenService.revoke(token));
+
+    RefreshTokenEntity stored = inTransaction(() -> RefreshTokenEntity.<RefreshTokenEntity>find("token", token).firstResult());
+
+    assertEquals(initialCreatedAt, stored.createdAtValue());
+    assertTrue(stored.updatedAtValue().isAfter(initialUpdatedAt));
+    assertTrue(stored.revoked);
+  }
+
+  @Test
   void shouldReadAndUpdatePreferencesThroughRealPersistenceService() throws Exception {
     var user = inTransaction(() -> {
       var entity = new UserEntity();

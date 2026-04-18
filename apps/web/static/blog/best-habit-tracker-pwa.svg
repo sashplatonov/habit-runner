@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-label="Best Habit Tracker PWA">
+  <defs>
+    <linearGradient id="bg" x1="0" x2="1" y1="0" y2="1"><stop offset="0%" stop-color="#f0f9ff"/><stop offset="100%" stop-color="#eff6ff"/></linearGradient>
+    <linearGradient id="screen" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stop-color="#0ea5e9"/><stop offset="100%" stop-color="#6366f1"/></linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <circle cx="200" cy="500" r="160" fill="#38bdf8" opacity="0.10"/>
+  <circle cx="1000" cy="130" r="140" fill="#818cf8" opacity="0.10"/>
+
+  <!-- phone frame -->
+  <rect x="440" y="80" width="320" height="440" rx="32" fill="#1e293b" stroke="#334155" stroke-width="3"/>
+  <rect x="455" y="105" width="290" height="390" rx="16" fill="url(#screen)"/>
+
+  <!-- app content on screen -->
+  <rect x="465" y="115" width="270" height="50" rx="12" fill="rgba(255,255,255,0.15)"/>
+  <text x="600" y="146" font-family="Inter,Arial,sans-serif" font-size="16" font-weight="700" fill="#ffffff" text-anchor="middle">Habbit Runner</text>
+
+  <rect x="465" y="175" width="270" height="90" rx="12" fill="rgba(255,255,255,0.12)"/>
+  <text x="530" y="208" font-family="Inter,Arial,sans-serif" font-size="30" font-weight="800" fill="#ffffff">82%</text>
+  <rect x="475" y="222" width="250" height="10" rx="5" fill="rgba(255,255,255,0.2)"/>
+  <rect x="475" y="222" width="205" height="10" rx="5" fill="#34d399"/>
+  <text x="475" y="252" font-family="Inter,Arial,sans-serif" font-size="13" fill="rgba(255,255,255,0.8)">9 / 11 habits today</text>
+
+  <rect x="465" y="275" width="130" height="80" rx="12" fill="rgba(255,255,255,0.12)"/>
+  <text x="530" y="308" font-family="Inter,Arial,sans-serif" font-size="26" font-weight="700" fill="#fbbf24" text-anchor="middle">🔥 14</text>
+  <text x="530" y="332" font-family="Inter,Arial,sans-serif" font-size="12" fill="rgba(255,255,255,0.7)" text-anchor="middle">streak days</text>
+
+  <rect x="605" y="275" width="130" height="80" rx="12" fill="rgba(255,255,255,0.12)"/>
+  <text x="670" y="308" font-family="Inter,Arial,sans-serif" font-size="22" font-weight="700" fill="#34d399" text-anchor="middle">76%</text>
+  <text x="670" y="332" font-family="Inter,Arial,sans-serif" font-size="12" fill="rgba(255,255,255,0.7)" text-anchor="middle">consistency</text>
+
+  <!-- nav bar at bottom -->
+  <rect x="465" y="375" width="270" height="110" rx="12" fill="rgba(255,255,255,0.08)"/>
+  <text x="600" y="410" font-family="Inter,Arial,sans-serif" font-size="13" fill="rgba(255,255,255,0.6)" text-anchor="middle">Dashboard · Stats · Habits</text>
+
+  <!-- install arrow badge -->
+  <circle cx="840" cy="200" r="64" fill="#ffffff" stroke="#bae6fd" stroke-width="3"/>
+  <path d="M840 170 L840 205" stroke="#0284c7" stroke-width="7" stroke-linecap="round"/>
+  <path d="M820 195 L840 218 L860 195" fill="none" stroke="#0284c7" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="824" y="220" width="32" height="5" rx="2.5" fill="#0284c7"/>
+
+  <!-- install label -->
+  <rect x="790" y="285" width="100" height="36" rx="18" fill="#0284c7"/>
+  <text x="840" y="308" font-family="Inter,Arial,sans-serif" font-size="14" font-weight="600" fill="#ffffff" text-anchor="middle">Install PWA</text>
+
+  <!-- wifi indicator -->
+  <circle cx="360" cy="300" r="48" fill="#ecfdf5" stroke="#d1fae5" stroke-width="2"/>
+  <path d="M340 308 C350 292 370 292 380 308" fill="none" stroke="#059669" stroke-width="4" stroke-linecap="round"/>
+  <path d="M330 318 C345 296 355 296 360 292 C365 296 375 296 390 318" fill="none" stroke="#10b981" stroke-width="4" stroke-linecap="round"/>
+  <circle cx="360" cy="316" r="5" fill="#059669"/>
+
+  <text x="600" y="560" font-family="Inter,Arial,sans-serif" font-size="38" font-weight="700" fill="#0f172a" text-anchor="middle">Best Habit Tracker PWA</text>
+  <text x="600" y="598" font-family="Inter,Arial,sans-serif" font-size="20" fill="#64748b" text-anchor="middle">Installable, offline-first, no app store needed</text>
+</svg>

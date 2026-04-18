@@ -49,6 +49,11 @@
     <div class="mt-10 space-y-6">
       {#each data.posts as post (post.id)}
         <article class="rounded-2xl border border-slate-200 bg-white p-5 hover:border-slate-300 transition-colors">
+          {#if post.coverImage}
+            <a href={resolve<'/blog/[slug]'>('/blog/[slug]', { slug: post.slug })} tabindex="-1" aria-hidden="true">
+              <img src={post.coverImage} alt={post.title} class="w-full h-44 object-cover rounded-xl mb-4" loading="lazy" width="1200" height="630" />
+            </a>
+          {/if}
           <a href={resolve<'/blog/[slug]'>('/blog/[slug]', { slug: post.slug })}>
             <h2 class="text-lg font-semibold text-slate-900 hover:text-cyan-700 transition-colors">
               {post.title}

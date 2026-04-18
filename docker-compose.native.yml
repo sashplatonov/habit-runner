@@ -1,6 +1,7 @@
-# Local, self-contained compose for JVM-mode local development. Uses
-# `apps/backend/Dockerfile.jvm` which bundles a Quarkus run JAR and includes curl
-# for container healthchecks.
+# Local, self-contained compose for native-mode local development. This file is
+# intended to be safe to run via `docker compose -f docker-compose.native.yml up -d --build`.
+# If your project Java version is newer than the default Mandrel builder, set
+# the `MANDREL_BUILDER_IMAGE` env var (or change the `build.args.MANDREL_BUILDER_IMAGE` below).
 
 x-service-defaults: &service_defaults
   restart: unless-stopped
@@ -37,11 +38,16 @@ services:
     <<: *service_defaults
     build:
       context: ./apps/backend
-      dockerfile: Dockerfile.jvm
+      dockerfile: Dockerfile.native
+      args:
+        # Override this if you need a different Mandrel/Graal builder image.
+        # Default uses a Mandrel builder image targeting JDK 25 that includes
+        # the native-image toolchain.
+        MANDREL_BUILDER_IMAGE: ${MANDREL_BUILDER_IMAGE:-quay.io/quarkus/ubi9-quarkus-mandrel-builder-image:jdk-25}
     init: true
     environment:
-      DB_HOST: db
-      DB_PORT: 5432
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT}
       DB_NAME: ${DB_NAME:-habbit_runner}
       DB_USER: ${DB_USER:-habbit}
       DB_PASSWORD: ${DB_PASSWORD:-password}
@@ -69,14 +75,12 @@ services:
     expose:
       - "${API_PORT:-8080}"
       - "9000"
-    healthcheck:
-      test: ["CMD-SHELL","curl -f http://127.0.0.1:9000/q/health >/dev/null 2>&1 || exit 1"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
-      start_period: 15s
+    # NOTE: native runtime images often don't include curl/wget — therefore
+    # we do NOT declare an HTTP healthcheck here. If you add a runtime image
+    # that contains curl, you can add a healthcheck similar to the JVM compose.
     networks:
       - backend
+      - dokploy-ipv6
 
   web:
     <<: *service_defaults
@@ -101,8 +105,7 @@ services:
     environment:
       API_PORT: ${API_PORT:-8080}
     depends_on:
-      api:
-        condition: service_healthy
+      - api
     healthcheck:
       test: ["CMD-SHELL","wget -q -O /dev/null http://127.0.0.1:80 || exit 1"]
       interval: 10s
@@ -120,3 +123,7 @@ volumes:
 networks:
   backend:
     driver: bridge
+  # ⚠️ DO NOT REMOVE: dokploy-ipv6 — Dokploy external network for IPv6 routing.
+  # Required for Dokploy reverse-proxy to reach the backend.
+  dokploy-ipv6:
+    external: true

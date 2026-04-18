@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-label="Habit Tracker for Busy Parents">
+  <defs>
+    <linearGradient id="bg" x1="0" x2="1" y1="0" y2="1"><stop offset="0%" stop-color="#fdf4ff"/><stop offset="100%" stop-color="#fef3c7"/></linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <circle cx="120" cy="120" r="120" fill="#e879f9" opacity="0.10"/>
+  <circle cx="1080" cy="520" r="140" fill="#f59e0b" opacity="0.12"/>
+
+  <!-- clock -->
+  <circle cx="340" cy="270" r="140" fill="#ffffff" stroke="#e2e8f0" stroke-width="3"/>
+  <circle cx="340" cy="270" r="8" fill="#0f172a"/>
+  <!-- hour markers -->
+  <line x1="340" y1="145" x2="340" y2="165" stroke="#0f172a" stroke-width="4" stroke-linecap="round"/>
+  <line x1="340" y1="375" x2="340" y2="395" stroke="#0f172a" stroke-width="4" stroke-linecap="round"/>
+  <line x1="215" y1="270" x2="235" y2="270" stroke="#0f172a" stroke-width="4" stroke-linecap="round"/>
+  <line x1="445" y1="270" x2="465" y2="270" stroke="#0f172a" stroke-width="4" stroke-linecap="round"/>
+  <!-- hour hand -->
+  <line x1="340" y1="270" x2="340" y2="195" stroke="#0f172a" stroke-width="6" stroke-linecap="round"/>
+  <!-- minute hand -->
+  <line x1="340" y1="270" x2="400" y2="230" stroke="#0f172a" stroke-width="4" stroke-linecap="round"/>
+  <!-- busy segments -->
+  <path d="M340 270 L340 160 A110 110 0 0 1 450 270Z" fill="#fef3c7" opacity="0.7"/>
+  <path d="M340 270 L450 270 A110 110 0 0 1 340 380Z" fill="#fee2e2" opacity="0.5"/>
+
+  <!-- family figures (abstract) -->
+  <!-- parent 1 -->
+  <circle cx="680" cy="240" r="36" fill="#a855f7"/>
+  <path d="M620 390 L680 340 L740 390" fill="#a855f7" opacity="0.8"/>
+  <!-- parent 2 -->
+  <circle cx="800" cy="240" r="36" fill="#ec4899"/>
+  <path d="M740 390 L800 340 L860 390" fill="#ec4899" opacity="0.8"/>
+  <!-- child -->
+  <circle cx="740" cy="320" r="22" fill="#fbbf24"/>
+  <path d="M710 400 L740 370 L770 400" fill="#fbbf24" opacity="0.8"/>
+
+  <!-- heart badge -->
+  <circle cx="740" cy="220" r="36" fill="#fef2f2" stroke="#fecaca" stroke-width="2"/>
+  <path d="M728 222 C728 214 740 210 740 220 C740 210 752 214 752 222 C752 230 740 238 740 238 C740 238 728 230 728 222Z" fill="#ef4444"/>
+
+  <!-- habit panel -->
+  <rect x="580" y="410" width="440" height="120" rx="20" fill="#ffffff" stroke="#e2e8f0" stroke-width="2"/>
+  <text x="800" y="445" font-family="Inter,Arial,sans-serif" font-size="15" fill="#64748b" text-anchor="middle" font-weight="600">2-minute habits — just do the minimum</text>
+  <circle cx="620" cy="475" r="12" fill="#10b981"/>
+  <path d="M614 475 L619 480 L629 468" fill="none" stroke="#fff" stroke-width="2.5"/>
+  <text x="645" y="480" font-family="Inter,Arial,sans-serif" font-size="15" fill="#334155">Morning hydration</text>
+  <circle cx="620" cy="502" r="12" fill="#10b981"/>
+  <path d="M614 502 L619 507 L629 495" fill="none" stroke="#fff" stroke-width="2.5"/>
+  <text x="645" y="507" font-family="Inter,Arial,sans-serif" font-size="15" fill="#334155">1-minute stretch</text>
+
+  <text x="600" y="568" font-family="Inter,Arial,sans-serif" font-size="36" font-weight="700" fill="#0f172a" text-anchor="middle">Habit Tracker for Busy Parents</text>
+  <text x="600" y="606" font-family="Inter,Arial,sans-serif" font-size="20" fill="#78716c" text-anchor="middle">Small habits that fit into a packed family schedule</text>
+</svg>

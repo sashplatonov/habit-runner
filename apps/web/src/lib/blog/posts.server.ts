@@ -29,6 +29,7 @@ function parsePost(slug: string, raw: string): BlogPost {
     readingTimeMinutes: data['readingTimeMinutes'] as number,
     content: html,
     category: (data['category'] as string) || undefined,
+    coverImage: (data['coverImage'] as string) || undefined,
   };
 }
 

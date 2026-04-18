@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-label="Habit Tracker for ADHD">
+  <defs>
+    <linearGradient id="bg" x1="0" x2="1" y1="0" y2="1"><stop offset="0%" stop-color="#fffbeb"/><stop offset="100%" stop-color="#f0fdf4"/></linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+
+  <!-- concentric focus rings -->
+  <circle cx="600" cy="270" r="220" fill="none" stroke="#fde68a" stroke-width="2" opacity="0.6"/>
+  <circle cx="600" cy="270" r="180" fill="none" stroke="#fcd34d" stroke-width="3" opacity="0.7"/>
+  <circle cx="600" cy="270" r="140" fill="none" stroke="#f59e0b" stroke-width="4" opacity="0.8"/>
+  <circle cx="600" cy="270" r="100" fill="none" stroke="#d97706" stroke-width="5"/>
+  <circle cx="600" cy="270" r="60" fill="#fef3c7" stroke="#f59e0b" stroke-width="6"/>
+
+  <!-- single habit in center -->
+  <circle cx="600" cy="270" r="50" fill="#f59e0b"/>
+  <text x="600" y="263" font-family="Inter,Arial,sans-serif" font-size="13" font-weight="700" fill="#ffffff" text-anchor="middle">ONE</text>
+  <text x="600" y="281" font-family="Inter,Arial,sans-serif" font-size="13" font-weight="700" fill="#ffffff" text-anchor="middle">THING</text>
+
+  <!-- distraction items outside the rings, faded -->
+  <text x="200" y="130" font-family="Inter,Arial,sans-serif" font-size="13" fill="#94a3b8" opacity="0.5">email</text>
+  <text x="900" y="120" font-family="Inter,Arial,sans-serif" font-size="13" fill="#94a3b8" opacity="0.5">social media</text>
+  <text x="140" y="400" font-family="Inter,Arial,sans-serif" font-size="13" fill="#94a3b8" opacity="0.5">notifications</text>
+  <text x="940" y="410" font-family="Inter,Arial,sans-serif" font-size="13" fill="#94a3b8" opacity="0.5">Slack</text>
+  <text x="300" y="500" font-family="Inter,Arial,sans-serif" font-size="13" fill="#94a3b8" opacity="0.4">TV</text>
+  <text x="820" y="490" font-family="Inter,Arial,sans-serif" font-size="13" fill="#94a3b8" opacity="0.4">YouTube</text>
+
+  <!-- principle cards -->
+  <rect x="80" y="200" width="200" height="62" rx="14" fill="#fef9c3" stroke="#fde68a" stroke-width="2"/>
+  <text x="180" y="225" font-family="Inter,Arial,sans-serif" font-size="14" fill="#78350f" text-anchor="middle" font-weight="600">1 habit at a time</text>
+  <text x="180" y="247" font-family="Inter,Arial,sans-serif" font-size="12" fill="#92400e" text-anchor="middle">no habit stacks</text>
+
+  <rect x="80" y="296" width="200" height="62" rx="14" fill="#d1fae5" stroke="#6ee7b7" stroke-width="2"/>
+  <text x="180" y="321" font-family="Inter,Arial,sans-serif" font-size="14" fill="#065f46" text-anchor="middle" font-weight="600">Visual streaks</text>
+  <text x="180" y="343" font-family="Inter,Arial,sans-serif" font-size="12" fill="#047857" text-anchor="middle">dopamine loop ✓</text>
+
+  <rect x="920" y="200" width="200" height="62" rx="14" fill="#fef9c3" stroke="#fde68a" stroke-width="2"/>
+  <text x="1020" y="225" font-family="Inter,Arial,sans-serif" font-size="14" fill="#78350f" text-anchor="middle" font-weight="600">Reminders at cue</text>
+  <text x="1020" y="247" font-family="Inter,Arial,sans-serif" font-size="12" fill="#92400e" text-anchor="middle">not generic alerts</text>
+
+  <rect x="920" y="296" width="200" height="62" rx="14" fill="#dbeafe" stroke="#93c5fd" stroke-width="2"/>
+  <text x="1020" y="321" font-family="Inter,Arial,sans-serif" font-size="14" fill="#1e3a8a" text-anchor="middle" font-weight="600">2-minute rule</text>
+  <text x="1020" y="343" font-family="Inter,Arial,sans-serif" font-size="12" fill="#1d4ed8" text-anchor="middle">lower the bar</text>
+
+  <text x="600" y="553" font-family="Inter,Arial,sans-serif" font-size="36" font-weight="700" fill="#0f172a" text-anchor="middle">Habit Tracker for ADHD</text>
+  <text x="600" y="592" font-family="Inter,Arial,sans-serif" font-size="20" fill="#64748b" text-anchor="middle">Focus on one thing. Track without overwhelm.</text>
+</svg>

@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-label="Best Streak Tracker Apps">
+  <defs>
+    <linearGradient id="bg" x1="0" x2="1" y1="0" y2="1"><stop offset="0%" stop-color="#fff7ed"/><stop offset="100%" stop-color="#fef3c7"/></linearGradient>
+    <linearGradient id="fire1" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stop-color="#f97316"/><stop offset="100%" stop-color="#dc2626"/></linearGradient>
+    <linearGradient id="fire2" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stop-color="#fb923c"/><stop offset="100%" stop-color="#f97316"/></linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <!-- decorative dots -->
+  <circle cx="80" cy="80" r="120" fill="#fbbf24" opacity="0.12"/>
+  <circle cx="1130" cy="560" r="150" fill="#f97316" opacity="0.10"/>
+  <!-- streak counters -->
+  <rect x="220" y="155" width="220" height="280" rx="28" fill="#ffffff" stroke="#fed7aa" stroke-width="2"/>
+  <path d="M330 210 C320 230 300 255 310 285 C315 300 325 308 330 320 C335 308 345 300 350 285 C360 255 340 230 330 210Z" fill="url(#fire1)"/>
+  <path d="M330 255 C325 265 318 278 322 292 C325 300 328 304 330 312 C332 304 335 300 338 292 C342 278 335 265 330 255Z" fill="#fbbf24"/>
+  <text x="330" y="380" font-family="Inter,Arial,sans-serif" font-size="56" font-weight="800" fill="#0f172a" text-anchor="middle">7</text>
+  <text x="330" y="410" font-family="Inter,Arial,sans-serif" font-size="18" fill="#78716c" text-anchor="middle">day streak</text>
+
+  <rect x="490" y="115" width="220" height="320" rx="28" fill="#ffffff" stroke="#fed7aa" stroke-width="2"/>
+  <path d="M600 160 C588 185 562 215 575 252 C581 270 593 280 600 296 C607 280 619 270 625 252 C638 215 612 185 600 160Z" fill="url(#fire1)"/>
+  <path d="M600 210 C594 225 585 243 590 260 C594 271 598 277 600 287 C602 277 606 271 610 260 C615 243 606 225 600 210Z" fill="#fbbf24"/>
+  <text x="600" y="380" font-family="Inter,Arial,sans-serif" font-size="56" font-weight="800" fill="#0f172a" text-anchor="middle">21</text>
+  <text x="600" y="410" font-family="Inter,Arial,sans-serif" font-size="18" fill="#78716c" text-anchor="middle">day streak</text>
+
+  <rect x="760" y="155" width="220" height="280" rx="28" fill="#ffffff" stroke="#fed7aa" stroke-width="2"/>
+  <path d="M870 210 C860 230 840 255 850 285 C855 300 865 308 870 320 C875 308 885 300 890 285 C900 255 880 230 870 210Z" fill="url(#fire2)"/>
+  <path d="M870 255 C865 265 858 278 862 292 C865 300 868 304 870 312 C872 304 875 300 878 292 C882 278 875 265 870 255Z" fill="#fef08a"/>
+  <text x="870" y="380" font-family="Inter,Arial,sans-serif" font-size="56" font-weight="800" fill="#0f172a" text-anchor="middle">100</text>
+  <text x="870" y="410" font-family="Inter,Arial,sans-serif" font-size="18" fill="#78716c" text-anchor="middle">day streak</text>
+
+  <!-- title -->
+  <text x="600" y="530" font-family="Inter,Arial,sans-serif" font-size="38" font-weight="700" fill="#0f172a" text-anchor="middle">Best Streak Tracker Apps</text>
+  <text x="600" y="570" font-family="Inter,Arial,sans-serif" font-size="20" fill="#78716c" text-anchor="middle">Compare apps that keep your streaks alive</text>
+</svg>

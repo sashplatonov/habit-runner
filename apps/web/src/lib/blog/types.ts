@@ -10,4 +10,5 @@ export type BlogPost = {
   readingTimeMinutes: number;
   content: string;
   category?: string;
+  coverImage?: string;
 };

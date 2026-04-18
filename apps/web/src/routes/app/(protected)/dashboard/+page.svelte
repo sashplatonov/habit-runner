@@ -28,6 +28,7 @@
   import RemindersPanel from '$lib/components/RemindersPanel.svelte';
   import ChartGuideTooltip from '$lib/components/ChartGuideTooltip.svelte';
   import DescriptionTooltip from '$lib/components/DescriptionTooltip.svelte';
+  import SyncStatus from '$lib/components/SyncStatus.svelte';
   import type { OnboardingTemplate } from '$lib/components/onboarding';
   import { formatAppDate } from '@/lib/i18n';
   import {
@@ -38,6 +39,7 @@
   } from '$lib/habits/schedule';
   import { formatDate, getDaysSinceLastCompletion } from '$lib/habits/habitStats';
   import { habitsStore } from '$lib/stores/habits';
+  import { syncEngineStore } from '$lib/stores/syncEngine';
   import { HABIT_COLOR_THEMES } from '$lib/theme/habit-colors';
   import { getHabitPhase, isPhaseTransition } from '$lib/habits/phases';
   import { computeTileHint } from '$lib/habits/tileHint';
@@ -80,6 +82,16 @@
   let heroCollapsed    = $state<boolean>(lsGet<boolean>(LS_COLLAPSED, false));
   let selectedTags     = $state<string[]>(lsGet<string[]>(LS_TAGS, []));
   let menuOpen         = $state(false);
+  let menuElement      = $state<HTMLDivElement | null>(null);
+  let showSyncModal    = $state(false);
+
+  function handleMenuWindowClick(event: MouseEvent) {
+    if (!menuOpen) return;
+    const target = event.target;
+    if (menuElement && target instanceof Node && !menuElement.contains(target)) {
+      menuOpen = false;
+    }
+  }
 
   let animatingHabitId = $state<string | null>(null);
   let animParticles    = $state<{ id: number; tx: number; ty: number; color: string }[]>([]);
@@ -165,7 +177,8 @@
 
   const allTags = $derived.by(() => {
     const seen: string[] = [];
-    activeHabits.forEach((h) => h.tags.forEach((t) => { if (!seen.includes(t)) { seen.push(t); } }));
+    const tagSource = filter === 'archived' ? $habitsStore.allHabits.filter((h) => h.archived) : activeHabits;
+    tagSource.forEach((h) => h.tags.forEach((t) => { if (!seen.includes(t)) { seen.push(t); } }));
     return seen.sort();
   });
 
@@ -206,6 +219,31 @@
   });
 
   // ─── Helpers ─────────────────────────────────────────────────────────────────
+  function statusColor(currentStatus?: string) {
+    switch (currentStatus) {
+      case 'syncing':
+        return 'bg-accent';
+      case 'error':
+        return 'bg-red-500';
+      case 'offline':
+        return 'bg-amber-500';
+      default:
+        return 'bg-green-500';
+    }
+  }
+
+  function getStatusLabel(currentStatus?: string) {
+    switch (currentStatus) {
+      case 'syncing':
+        return 'Syncing...';
+      case 'offline':
+        return 'Offline - changes queued';
+      case 'error':
+        return 'Sync error';
+      default:
+        return 'Synced';
+    }
+  }
   function buildLast7(habit: Habit) {
     return Array.from({ length: 7 }, (_, i) => {
       const key = formatDate(new Date(todayDate.getTime() + (i - 6) * 86_400_000));
@@ -610,6 +648,8 @@
   }
 </script>
 
+<svelte:window on:mousedown={handleMenuWindowClick} on:keydown={(e: KeyboardEvent) => { if (e.key === 'Escape' && showSyncModal) { showSyncModal = false; } }} />
+
 <svelte:head>
   <title>Dashboard - Habbit Runner</title>
 </svelte:head>
@@ -652,7 +692,7 @@
           </div>
 
           <div class="flex items-center gap-2">
-            <div class="relative">
+            <div class="relative" bind:this={menuElement}>
               <button
                 type="button"
                 onclick={() => { menuOpen = !menuOpen; }}
@@ -663,15 +703,40 @@
                 <MoreHorizontal size={18} />
               </button>
               {#if menuOpen}
-                <!-- svelte-ignore a11y_no_static_element_interactions -->
                 <div
-                  class="absolute right-0 top-full z-20 mt-2 w-36 rounded-2xl border border-border bg-bg-card shadow-xl"
-                  onmouseleave={() => { menuOpen = false; }}
+                  class="absolute right-0 top-full z-20 mt-2 min-w-[220px] rounded-2xl border border-border bg-bg-card shadow-xl overflow-hidden"
                 >
+                  <div class="px-3 pt-3 pb-1">
+                    <div class="text-xs font-mono uppercase tracking-widest text-muted">Status</div>
+                    <div class="mt-2 flex items-center justify-between">
+                      <div class="flex items-center gap-2 min-w-0">
+                        <span aria-hidden="true" class={`inline-block h-2.5 w-2.5 rounded-full ${statusColor($syncEngineStore.status)}`}></span>
+                        <div class="truncate text-xs font-mono text-muted">{getStatusLabel($syncEngineStore.status)}</div>
+                      </div>
+                    </div>
+
+                    <div class="mt-3 space-y-1">
+                      <button
+                        type="button"
+                        onclick={() => { menuOpen = false; showSyncModal = true; }}
+                        class="w-full rounded-md px-3 py-2 text-left text-sm text-foreground hover:bg-bg-secondary"
+                      >
+                        Logs
+                      </button>
+                      <button
+                        type="button"
+                        onclick={() => { menuOpen = false; void syncEngineStore.syncNow(); }}
+                        class="w-full rounded-md px-3 py-2 text-left text-sm text-foreground hover:bg-bg-secondary"
+                      >
+                        Retry
+                      </button>
+                    </div>
+                  </div>
+                  <div class="h-px bg-border"></div>
                   <button
                     type="button"
                     onclick={exportCSV}
-                    class="w-full px-3 py-2 text-left text-xs font-semibold uppercase tracking-widest text-foreground transition hover:bg-bg-secondary"
+                    class="w-full px-3 py-2.5 text-left text-xs font-semibold uppercase tracking-widest text-foreground transition hover:bg-bg-secondary"
                   >
                     Export CSV
                   </button>
@@ -1078,7 +1143,7 @@
                           onclick={(e) => { e.stopPropagation(); void toggleHabit(habit); }}
                           disabled={isFrozen}
                           class="relative flex h-8 w-8 items-center justify-center rounded-xl border-[1.5px] transition-all duration-200 overflow-hidden
-                            {completed ? `${accent.bgClass} ${accent.borderClass}` : isScheduled ? 'border-border-hover hover:border-muted' : isFrozen ? 'border-border bg-bg-secondary text-muted cursor-not-allowed opacity-60' : 'border border-dashed border-border/40 text-muted hover:border-border'}
+                            {completed ? `${accent.bgClass} ${accent.borderClass}` : isScheduled ? 'border-border-hover hover:border-muted' : isFrozen ? 'border-border bg-bg-secondary text-muted cursor-not-allowed opacity-60' : 'border border-dashed border-border text-muted hover:border-muted'}
                             {isAnimating ? 'animate-check-pulse animate-glow-burst' : ''}"
                           style={completed && !isFrozen ? `box-shadow: 0 0 12px ${accent.glow}` : ''}
                         >
@@ -1144,17 +1209,6 @@
                       </div>
 
                       <div class="flex flex-shrink-0 items-center gap-2">
-                        <ChartGuideTooltip
-                          title={`${habit.name} row`}
-                          summary="This row condenses one habit into a fast scan: current status, short-term history, completion rate, and a direct action button."
-                          focusPoints={[
-                            'Status and tags: see whether the habit is due, frozen, or off-schedule today.',
-                            'Right-side metrics: streak, rate ring, and recent bars reveal momentum.',
-                            'Toggle button: update today without leaving the dashboard.'
-                          ]}
-                          variant="columns"
-                          triggerClassName="hidden h-7 w-7 sm:inline-flex"
-                        />
                         {#if streak > 0}
                           <span class="hidden items-center gap-0.5 text-[10px] font-mono text-accent-secondary sm:flex">
                             {#if habit.type === 'negative'}
@@ -1302,7 +1356,7 @@
                         onclick={(e) => { e.stopPropagation(); void toggleHabit(habit); }}
                         disabled={isFrozen}
                         class="relative flex h-8 w-8 items-center justify-center rounded-xl border-[1.5px] transition-all duration-200 overflow-hidden
-                          {completed ? `${accent.bgClass} ${accent.borderClass}` : isScheduled ? 'border-border-hover hover:border-muted' : isFrozen ? 'border-border bg-bg-secondary text-muted cursor-not-allowed opacity-60' : 'border border-dashed border-border/40 text-muted hover:border-border'}
+                          {completed ? `${accent.bgClass} ${accent.borderClass}` : isScheduled ? 'border-border-hover hover:border-muted' : isFrozen ? 'border-border bg-bg-secondary text-muted cursor-not-allowed opacity-60' : 'border border-dashed border-border text-muted hover:border-muted'}
                           {isAnimating ? 'animate-check-pulse animate-glow-burst' : ''}"
                         style={completed && !isFrozen ? `box-shadow: 0 0 12px ${accent.glow}` : ''}
                       >
@@ -1370,17 +1424,6 @@
 
                     <!-- Right metrics -->
                     <div class="flex flex-shrink-0 items-center gap-2">
-                      <ChartGuideTooltip
-                        title={`${habit.name} row`}
-                        summary="This row condenses one habit into a fast scan: current status, short-term history, completion rate, and a direct action button."
-                        focusPoints={[
-                          'Status and tags: see whether the habit is due, frozen, or off-schedule today.',
-                          'Right-side metrics: streak, rate ring, and recent bars reveal momentum.',
-                          'Toggle button: update today without leaving the dashboard.'
-                        ]}
-                        variant="columns"
-                        triggerClassName="hidden h-7 w-7 sm:inline-flex"
-                      />
                       {#if streak > 0}
                         <span class="hidden items-center gap-0.5 text-[10px] font-mono text-accent-secondary sm:flex">
                           {#if habit.type === 'negative'}
@@ -1424,4 +1467,30 @@
     </div>
 
   </div>
+  {#if showSyncModal}
+    <div class="fixed inset-0 z-[90] flex items-center justify-center">
+      <button type="button" class="absolute inset-0 bg-black/40" aria-label="Close status modal" onclick={() => (showSyncModal = false)}></button>
+      <div
+        role="dialog"
+        aria-modal="true"
+        class="relative w-1/3 max-w-[900px] rounded-2xl border border-border bg-bg-card p-4 shadow-xl"
+      >
+        <div class="flex items-start justify-between">
+          <h3 class="text-lg font-semibold">Status</h3>
+          <button
+            type="button"
+            class="-mr-2 rounded-md p-2 text-muted hover:text-foreground"
+            aria-label="Close status modal"
+            onclick={() => (showSyncModal = false)}
+          >
+            Close
+          </button>
+        </div>
+
+        <div class="mt-3">
+          <SyncStatus syncState={$syncEngineStore} onRetry={() => syncEngineStore.syncNow()} openLogs={true} />
+        </div>
+      </div>
+    </div>
+  {/if}
 {/if}

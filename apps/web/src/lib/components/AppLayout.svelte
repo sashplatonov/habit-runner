@@ -1,7 +1,6 @@
 <script lang="ts">
   import type { Snippet } from 'svelte';
   import type { ThemeId } from '$lib/theme/themes';
-  import type { SyncEngineSnapshot } from '$lib/stores/syncEngine';
   import SidebarNav from '$lib/components/SidebarNav.svelte';
   import BottomNav from '$lib/components/BottomNav.svelte';
 
@@ -9,12 +8,10 @@
     theme: ThemeId;
     onThemeChange: (id: ThemeId) => void | Promise<void>;
     onLogout?: () => void | Promise<void>;
-    syncState?: SyncEngineSnapshot;
-    onRetrySync?: () => void | Promise<void>;
     children: Snippet;
   };
 
-  let { theme, onThemeChange, onLogout, syncState, onRetrySync, children }: Props = $props();
+  let { theme, onThemeChange, onLogout, children }: Props = $props();
 </script>
 
 <div class="min-h-screen bg-bg-primary">
@@ -29,8 +26,6 @@
     {theme}
     {onThemeChange}
     {onLogout}
-    {syncState}
-    onRetrySync={onRetrySync}
   />
 
   <div class="sm:ml-[220px]">

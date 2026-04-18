@@ -9,11 +9,12 @@
   type Props = {
     syncState?: SyncEngineSnapshot;
     onRetry?: () => void | Promise<void>;
+    openLogs?: boolean;
   };
 
   const MAX_VISIBLE_SYNC_LOGS = 8;
 
-  let { syncState, onRetry }: Props = $props();
+  let { syncState, onRetry, openLogs = false }: Props = $props();
   let showLogs = $state(false);
   let logs = $state<ClientLogEntry[]>([]);
 
@@ -89,6 +90,10 @@
   }
 
   onMount(() => {
+    // allow parent to request logs be visible when embedding in a modal
+    if (openLogs) {
+      showLogs = true;
+    }
     logs = readSyncLogs();
 
     const onClientLog = () => {
@@ -144,16 +149,16 @@
   {/if}
 
   {#if showLogs}
-    <div class="mt-2 rounded-xl border border-white/10 bg-black/20 p-2">
+    <div class="mt-2 rounded-xl border border-border bg-bg-secondary p-2">
       <div class="mb-2 text-[10px] font-mono uppercase tracking-[0.18em] text-muted">
         Recent sync logs
       </div>
       {#if visibleLogs.length === 0}
         <div class="text-[11px] font-mono text-muted">No sync logs yet</div>
       {:else}
-        <div class="space-y-2">
+        <div class="max-h-48 space-y-2 overflow-y-auto">
           {#each visibleLogs as entry (`${entry.timestamp}:${entry.event}`)}
-            <div class="rounded-lg bg-white/5 px-2 py-1.5">
+            <div class="rounded-lg bg-bg-card px-2 py-1.5">
               <div class="flex items-center gap-2 text-[11px] font-mono">
                 <span class="text-foreground">{entry.event}</span>
                 <span class="text-muted/80">{new Date(entry.timestamp).toLocaleTimeString()}</span>
