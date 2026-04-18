@@ -1,6 +1,5 @@
 import type { Habit } from '@/types/habit';
 import { buildCompletionsByHabitId } from '@/hooks/useHabits.helpers';
-import { completionKeyToCalendarDate } from '$lib/completionKey';
 import { formatDate } from '$lib/habits/habitStats';
 import { habitEntityToDomain, type CheckinEntity, type HabitEntity } from '$lib/storage/db';
 
@@ -33,8 +32,7 @@ function buildHabitFromEntity(
 
   return {
     ...domain,
-    completions,
-    freezeDays: (domain.freezeDays ?? []).map((date) => completionKeyToCalendarDate(date))
+    completions
   };
 }
 

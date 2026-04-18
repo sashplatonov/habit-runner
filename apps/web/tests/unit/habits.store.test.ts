@@ -67,10 +67,17 @@ vi.mock('$lib/sync/writeThrough', () => ({
 import { createHabitsStore } from '$lib/stores/habits';
 import * as dbModule from '$lib/storage/db';
 
+const dbModuleWithMocks = dbModule as typeof dbModule & {
+  __mocks: {
+    mockGet: ReturnType<typeof vi.fn>;
+    mockPersist: ReturnType<typeof vi.fn>;
+  };
+};
+
 describe('habits store - updateHabit', () => {
   beforeEach(() => {
-    dbModule.__mocks.mockGet.mockReset();
-    dbModule.__mocks.mockPersist.mockReset();
+    dbModuleWithMocks.__mocks.mockGet.mockReset();
+    dbModuleWithMocks.__mocks.mockPersist.mockReset();
   });
 
   it('persists updated habit to DB', async () => {
@@ -95,13 +102,13 @@ describe('habits store - updateHabit', () => {
       type: 'positive'
     };
 
-    dbModule.__mocks.mockGet.mockResolvedValue(entity);
+    dbModuleWithMocks.__mocks.mockGet.mockResolvedValue(entity);
 
     const store = createHabitsStore('test-user');
     await store.updateHabit('habit-1', { name: 'New name', dailyTarget: 2 });
 
-    expect(dbModule.__mocks.mockPersist).toHaveBeenCalled();
-    const persisted = dbModule.__mocks.mockPersist.mock.calls[0][0];
+    expect(dbModuleWithMocks.__mocks.mockPersist).toHaveBeenCalled();
+    const persisted = dbModuleWithMocks.__mocks.mockPersist.mock.calls[0][0];
     expect(persisted.id).toBe('habit-1');
     expect(persisted.name).toBe('New name');
     expect(persisted.dailyTarget).toBe(2);

@@ -3,15 +3,10 @@
   import PublicNav from '$lib/components/PublicNav.svelte';
   import PublicFooter from '$lib/components/PublicFooter.svelte';
   import { resolve } from '$app/paths';
-  import { PUBLIC_SITE_ORIGIN } from '$lib/seo/publicPages';
   import type { PageData } from './$types';
 
   export let data: PageData;
   const { competitor } = data;
-
-  const pageUrl = `${PUBLIC_SITE_ORIGIN}/vs/${competitor.slug}`;
-
-  
 </script>
 
 <PublicSeoHead
@@ -27,19 +22,19 @@
     '@type': 'Article',
     headline: competitor.tagline,
     description: competitor.description,
-    url: pageUrl,
+    url: `https://habbit-runner.app/vs/${competitor.slug}`,
     datePublished: '2026-04-16',
     dateModified: '2026-04-16',
-    author: { '@type': 'Organization', name: 'Habbit Runner', url: PUBLIC_SITE_ORIGIN },
-    publisher: { '@type': 'Organization', name: 'Habbit Runner', url: PUBLIC_SITE_ORIGIN }
+    author: { '@type': 'Organization', name: 'Habbit Runner', url: 'https://habbit-runner.app' },
+    publisher: { '@type': 'Organization', name: 'Habbit Runner', url: 'https://habbit-runner.app' }
   }).replace(/</g, '\\u003c')}</script>
   <script type="application/ld+json">{JSON.stringify({
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
     itemListElement: [
-      { '@type': 'ListItem', position: 1, name: 'Home', item: PUBLIC_SITE_ORIGIN },
-      { '@type': 'ListItem', position: 2, name: 'Comparisons', item: `${PUBLIC_SITE_ORIGIN}/vs` },
-      { '@type': 'ListItem', position: 3, name: `vs ${competitor.name}`, item: pageUrl }
+      { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://habbit-runner.app' },
+      { '@type': 'ListItem', position: 2, name: 'Comparisons', item: 'https://habbit-runner.app/vs' },
+      { '@type': 'ListItem', position: 3, name: `vs ${competitor.name}`, item: `https://habbit-runner.app/vs/${competitor.slug}` }
     ]
   }).replace(/</g, '\\u003c')}</script>
 </svelte:head>

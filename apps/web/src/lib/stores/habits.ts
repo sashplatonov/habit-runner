@@ -18,16 +18,14 @@ import {
   type HabitEntity
 } from '$lib/storage/db';
 import { createHabitsSnapshot, type HabitsSnapshot } from '$lib/stores/habits.snapshot';
+import {
+  getHabitStats as getHabitStatsImpl,
+  getTodayCompletionRate as getTodayCompletionRateImpl
+} from '$lib/stores/habits.metrics';
 import { syncEntriesWithFallback } from '$lib/sync/writeThrough';
 import { scheduleSyncCycle } from '$lib/sync/syncEngine';
 import { createHabitId } from '$lib/core/habit-id';
-import {
-  formatDate
-} from '$lib/habits/habitStats';
-import {
-  calculateScheduledCompletionRate,
-  calculateScheduledStreak
-} from '$lib/habits/schedule';
+import { formatDate } from '$lib/habits/habitStats';
 import { completionKeyToCalendarDate } from '$lib/completionKey';
 import { dexieLiveQuery } from '$lib/stores/dexieLiveQuery';
 
@@ -369,53 +367,6 @@ async function advanceCompletionCountImpl(
       target
     };
   });
-}
-
-function getTodayCompletionRateImpl(habits: Habit[]): number {
-  if (habits.length === 0) {
-    return 0;
-  }
-
-  const today = formatDate(new Date());
-  const completed = habits.filter((habit) => (
-    (habit.completions[today] ?? 0) >= Math.max(1, habit.dailyTarget ?? 1)
-  )).length;
-  return Math.round((completed / habits.length) * 100);
-}
-
-function getHabitStatsImpl(habitId: string, allHabits: Habit[]): HabitStats {
-  const habit = allHabits.find((item) => item.id === habitId);
-  if (!habit) {
-    return {
-      totalDays: 0,
-      completedDays: 0,
-      currentStreak: 0,
-      longestStreak: 0,
-      completionRate: 0,
-      automatismScore: 0,
-      weeklyData: [],
-      monthlyData: []
-    };
-  }
-
-  const dailyTarget = Math.max(1, habit.dailyTarget ?? 1);
-  const { current, longest } = calculateScheduledStreak(habit, habit.completions, new Date());
-  const completionRate = calculateScheduledCompletionRate(habit, habit.completions, new Date());
-  const totalDays = Math.max(
-    1,
-    Math.ceil((Date.now() - new Date(habit.createdAt).getTime()) / 86400000)
-  );
-
-  return {
-    totalDays,
-    completedDays: Object.values(habit.completions).filter((count) => count >= dailyTarget).length,
-    currentStreak: current,
-    longestStreak: longest,
-    completionRate,
-    automatismScore: Math.round((current / Math.max(1, totalDays)) * 100),
-    weeklyData: [],
-    monthlyData: []
-  };
 }
 
 export function createHabitsStore(initialUserId = getCurrentUserId()): HabitsStore {
