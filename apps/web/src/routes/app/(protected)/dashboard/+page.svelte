@@ -657,12 +657,13 @@
 {#if $habitsStore.habits.length === 0}
   <Onboarding onCreateCustom={navigateToNewHabit} onTemplateSelect={handleTemplateSelect} activeTemplate={addingTemplate} />
 {:else}
-  <div class="min-h-screen bg-bg-primary">
+  <div class="min-h-screen bg-transparent">
 
     <!-- ═══════════ HERO ═══════════════════════════════════════════════════════ -->
-    <section class="border-b border-border bg-bg-primary">
-      <div class="px-4 py-3" style="padding-top: calc(var(--safe-area-inset-top, 0px) + 1rem);">
-        <div class="mx-auto flex max-w-2xl items-center justify-between">
+    <section class="bg-transparent px-4 pt-4 sm:px-6">
+      <div class="mx-auto max-w-6xl rounded-[2rem] border border-border bg-bg-secondary/88 shadow-[0_26px_70px_rgba(15,23,42,0.1)] backdrop-blur-xl">
+      <div class="px-4 py-3 sm:px-6" style="padding-top: calc(var(--safe-area-inset-top, 0px) + 1rem);">
+        <div class="mx-auto flex max-w-none items-center justify-between">
           <div class="min-w-0 flex-1">
             <div class="mb-1 flex items-center gap-2">
               <p class="text-[11px] font-mono uppercase tracking-widest text-muted">{dateStr}</p>
@@ -757,11 +758,13 @@
         </div>
       </div>
 
-      <div class="overflow-hidden transition-all duration-300" style:max-height={heroCollapsed ? '0px' : '1200px'} aria-hidden={heroCollapsed}>
-        <div class="px-4 pb-4">
-          <div class="mx-auto max-w-2xl">
-            <div class="mb-3 flex items-center gap-5">
-              <CompletionRing percentage={todayRate} size={88} strokeWidth={7} />
+        <div class="overflow-hidden transition-all duration-300" style:max-height={heroCollapsed ? '0px' : '1200px'} aria-hidden={heroCollapsed}>
+        <div class="px-4 pb-5 sm:px-6">
+          <div class="mx-auto max-w-none">
+            <div class="mb-4 flex flex-col gap-4 sm:flex-row sm:items-center sm:gap-5">
+              <div class="mx-auto sm:mx-0">
+                <CompletionRing percentage={todayRate} size={88} strokeWidth={7} />
+              </div>
               <div class="flex flex-1 flex-col gap-2">
                 {#if motivationText}
                   <p class={`text-xs font-mono tracking-wide ${todayRate >= 50 ? 'text-accent-secondary' : 'text-muted'}`}>
@@ -828,11 +831,12 @@
           </div>
         </div>
       </div>
+      </div>
     </section>
 
     <!-- ═══════════ CONTROLS BAR (sticky) ════════════════════════════════════ -->
-    <div class="sticky top-0 z-[70] border-b border-border bg-bg-primary/90 backdrop-blur-sm">
-      <div class="mx-auto max-w-2xl px-4">
+    <div class="sticky top-0 z-[70] bg-transparent px-4 pb-3 pt-2 sm:px-6">
+      <div class="mx-auto max-w-6xl rounded-[1.75rem] border border-border bg-bg-secondary/88 px-4 shadow-[0_22px_56px_rgba(15,23,42,0.1)] backdrop-blur-xl sm:px-6">
 
         <div class="flex items-center gap-2 pt-3">
           <span class="text-[10px] font-mono uppercase tracking-wider text-muted">Dashboard filters</span>
@@ -850,13 +854,13 @@
         </div>
 
         <!-- Filter tabs -->
-        <div class="flex items-center gap-0 pt-1">
-          <div class="flex flex-1 overflow-x-auto">
+        <div class="flex items-center gap-2 pt-2">
+          <div class="flex flex-1 overflow-x-auto pb-1">
             {#each (['pending', 'all', 'done', 'archived'] as const) as f ('tab-' + f)}
               <button
                 type="button"
                 onclick={() => { filter = f; }}
-                class="relative flex-shrink-0 px-3 py-2.5 text-[11px] font-mono uppercase tracking-wider transition-colors border-b-[2px] whitespace-nowrap
+                class="relative flex min-h-11 flex-shrink-0 items-center px-3 py-2.5 text-[11px] font-mono uppercase tracking-wider transition-colors border-b-[2px] whitespace-nowrap
                   {filter === f ? 'border-accent text-accent font-bold' : 'border-transparent text-muted hover:text-foreground'}"
               >
                 {f}
@@ -870,7 +874,7 @@
           </div>
           <button
             type="button"
-            class="ml-2 flex-shrink-0 flex items-center justify-center w-8 h-8 rounded-full bg-accent text-bg-primary transition hover:opacity-90"
+            class="ml-auto flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-[1rem] bg-accent text-bg-primary transition hover:opacity-90"
             aria-label="Add habit"
             onclick={navigateToNewHabit}
           >
@@ -879,14 +883,14 @@
         </div>
 
         <!-- Search + sort + density -->
-        <div class="flex items-center gap-2 py-2">
+        <div class="flex flex-col gap-2 py-3 sm:flex-row sm:items-center">
           <div class="relative flex-1">
             <Search size={13} class="absolute left-3 top-1/2 -translate-y-1/2 text-muted pointer-events-none" />
             <input
               type="search"
               placeholder="Search habits..."
               bind:value={searchQuery}
-              class="w-full rounded-xl border border-border bg-bg-secondary py-2 pl-8 pr-8 text-sm text-foreground placeholder:text-muted focus:border-accent focus:outline-none"
+              class="w-full rounded-xl border border-border bg-bg-secondary py-2.5 pl-8 pr-8 text-sm text-foreground placeholder:text-muted focus:border-accent focus:outline-none"
             />
             {#if searchQuery}
               <button
@@ -898,55 +902,57 @@
             {/if}
           </div>
           <!-- Sort toggle -->
-          <div class="flex items-center gap-1 flex-shrink-0">
-            <div class="flex rounded-xl border border-border bg-bg-secondary overflow-hidden text-[11px] font-mono">
-              <button
-                type="button"
-                onclick={() => { sortMode = 'custom'; }}
-                class="flex items-center gap-1 px-2.5 py-1.5 transition {sortMode === 'custom' ? 'bg-accent/15 text-accent' : 'text-muted hover:text-foreground'}"
-                title="Custom order — drag to reorder"
-              >
-                <AlignLeft size={11} />
-                <span class="hidden sm:inline">Custom</span>
-              </button>
-              <button
-                type="button"
-                onclick={() => { sortMode = 'smart'; }}
-                class="flex items-center gap-1 px-2.5 py-1.5 transition {sortMode === 'smart' ? 'bg-accent/15 text-accent' : 'text-muted hover:text-foreground'}"
-                title="Smart sort — prioritises habits needing attention (behavioral science: Lally, Dai, Baumeister)"
-              >
-                <SlidersHorizontal size={11} />
-                <span class="hidden sm:inline">Smart</span>
-              </button>
+          <div class="flex items-center justify-between gap-2 sm:flex-shrink-0">
+            <div class="flex min-w-0 items-center gap-1">
+              <div class="flex overflow-hidden rounded-xl border border-border bg-bg-secondary text-[11px] font-mono">
+                <button
+                  type="button"
+                  onclick={() => { sortMode = 'custom'; }}
+                  class="flex min-h-10 items-center gap-1 px-3 py-2 transition {sortMode === 'custom' ? 'bg-accent/15 text-accent' : 'text-muted hover:text-foreground'}"
+                  title="Custom order — drag to reorder"
+                >
+                  <AlignLeft size={11} />
+                  <span class="hidden sm:inline">Custom</span>
+                </button>
+                <button
+                  type="button"
+                  onclick={() => { sortMode = 'smart'; }}
+                  class="flex min-h-10 items-center gap-1 px-3 py-2 transition {sortMode === 'smart' ? 'bg-accent/15 text-accent' : 'text-muted hover:text-foreground'}"
+                  title="Smart sort — prioritises habits needing attention (behavioral science: Lally, Dai, Baumeister)"
+                >
+                  <SlidersHorizontal size={11} />
+                  <span class="hidden sm:inline">Smart</span>
+                </button>
+              </div>
+              <ChartGuideTooltip
+                title="Smart Sort"
+                summary="Habits are ranked by how much attention they need right now, based on behavioural science research. The most fragile habits always appear first."
+                focusPoints={[
+                  'Young habits (<21 days): maximally fragile - Lally et al., 2010.',
+                  'Low 30-day completion rate signals a habit losing traction.',
+                  'Recent miss (1-3 days ago) is the highest abandonment risk signal.',
+                  'Evening reminders rank higher due to ego depletion - Baumeister.',
+                  "Negative habits (DON'T do X) are inherently harder than positive ones."
+                ]}
+                variant="columns"
+                triggerClassName="h-10 w-10"
+              />
             </div>
-            <ChartGuideTooltip
-              title="Smart Sort"
-              summary="Habits are ranked by how much attention they need right now, based on behavioural science research. The most fragile habits always appear first."
-              focusPoints={[
-                'Young habits (<21 days): maximally fragile - Lally et al., 2010.',
-                'Low 30-day completion rate signals a habit losing traction.',
-                'Recent miss (1-3 days ago) is the highest abandonment risk signal.',
-                'Evening reminders rank higher due to ego depletion - Baumeister.',
-                "Negative habits (DON'T do X) are inherently harder than positive ones."
-              ]}
-              variant="columns"
-              triggerClassName="h-6 w-6"
-            />
-          </div>
-          <!-- Density toggle -->
-          <div class="flex flex-shrink-0 rounded-xl border border-border bg-bg-secondary overflow-hidden">
-            <button
-              type="button"
-              onclick={() => { viewDensity = 'compact'; }}
-              class="flex h-8 w-8 items-center justify-center transition {viewDensity === 'compact' ? 'bg-accent/15 text-accent' : 'text-muted hover:text-foreground'}"
-              aria-label="List view"
-            ><List size={13} /></button>
-            <button
-              type="button"
-              onclick={() => { viewDensity = 'comfortable'; }}
-              class="flex h-8 w-8 items-center justify-center transition {viewDensity === 'comfortable' ? 'bg-accent/15 text-accent' : 'text-muted hover:text-foreground'}"
-              aria-label="Grid view"
-            ><LayoutGrid size={13} /></button>
+
+            <div class="flex flex-shrink-0 overflow-hidden rounded-xl border border-border bg-bg-secondary">
+              <button
+                type="button"
+                onclick={() => { viewDensity = 'compact'; }}
+                class="flex h-10 w-10 items-center justify-center transition {viewDensity === 'compact' ? 'bg-accent/15 text-accent' : 'text-muted hover:text-foreground'}"
+                aria-label="List view"
+              ><List size={13} /></button>
+              <button
+                type="button"
+                onclick={() => { viewDensity = 'comfortable'; }}
+                class="flex h-10 w-10 items-center justify-center transition {viewDensity === 'comfortable' ? 'bg-accent/15 text-accent' : 'text-muted hover:text-foreground'}"
+                aria-label="Grid view"
+              ><LayoutGrid size={13} /></button>
+            </div>
           </div>
         </div>
 
@@ -957,7 +963,7 @@
               <button
                 type="button"
                 onclick={() => toggleTag(tag)}
-                class="flex-shrink-0 rounded-full px-2.5 py-1 text-[10px] font-mono transition
+                class="flex-shrink-0 rounded-full px-3 py-1.5 text-[10px] font-mono transition
                   {selectedTags.includes(tag) ? 'bg-accent/15 text-accent border border-accent/40' : 'border border-border text-muted hover:text-foreground hover:border-border-hover'}"
               >#{tag}</button>
             {/each}
@@ -965,7 +971,7 @@
               <button
                 type="button"
                 onclick={() => { selectedTags = []; }}
-                class="flex-shrink-0 flex items-center gap-1 rounded-full border border-border px-2.5 py-1 text-[10px] font-mono text-muted hover:text-foreground transition"
+                class="flex-shrink-0 flex items-center gap-1 rounded-full border border-border px-3 py-1.5 text-[10px] font-mono text-muted hover:text-foreground transition"
               ><X size={9} />Clear</button>
             {/if}
           </div>
@@ -978,9 +984,9 @@
     <RemindersPanel />
 
     <!-- ═══════════ HABIT LIST ════════════════════════════════════════════════ -->
-    <div class="mx-auto px-4 py-3 sm:px-6 {viewDensity === 'comfortable' ? 'max-w-6xl' : 'max-w-2xl'}">
+    <div class="mx-auto px-4 py-4 sm:px-6 {viewDensity === 'comfortable' ? 'max-w-6xl' : 'max-w-5xl'}">
       {#if filteredHabits.length === 0}
-        <div class="py-16 text-center text-muted">
+        <div class="rounded-[1.75rem] border border-border bg-bg-secondary/88 py-16 text-center text-muted shadow-[0_20px_54px_rgba(15,23,42,0.08)]">
           <p class="text-4xl mb-3">
             {filter === 'pending' ? '🎉' : filter === 'done' ? '✨' : filter === 'archived' ? '🗂️' : '👋'}
           </p>
@@ -996,7 +1002,7 @@
 
       {:else if viewDensity === 'comfortable'}
         <div
-          class={`mx-auto w-full max-w-6xl px-4 py-3 sm:px-6 ${selectedTags.length === 0 ? 'grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5' : ''}`}
+          class={`${selectedTags.length === 0 ? 'grid gap-4 [grid-template-columns:repeat(auto-fit,minmax(18rem,1fr))]' : ''}`}
           role="list"
           aria-label="Habit list"
         >
@@ -1019,7 +1025,7 @@
                     <span class="h-1.5 w-1.5 rounded-full bg-accent"></span>
                     <h3 class="text-[10px] font-mono font-bold uppercase tracking-widest text-muted">{group.tag}</h3>
                   </div>
-                  <div class="mt-2 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+                  <div class="mt-3 grid gap-4 [grid-template-columns:repeat(auto-fit,minmax(18rem,1fr))]">
                     {#each group.habits as habit, idx (habit.id)}
                       <HabitTile
                         {habit}
@@ -1038,7 +1044,7 @@
         </div>
 
       {:else}
-        <div class="mx-auto flex w-full max-w-2xl flex-col px-4 py-3 sm:px-6" style="gap: 0.25rem;" role="list" aria-label="Habit list">
+        <div class="mx-auto flex w-full max-w-5xl flex-col" style="gap: 0.5rem;" role="list" aria-label="Habit list">
           {#if selectedTags.length === 0}
             <ul class="space-y-1" role="list">
               {#each filteredHabits as habit, idx (habit.id)}

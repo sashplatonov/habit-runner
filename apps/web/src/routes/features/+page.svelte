@@ -50,7 +50,7 @@
   }).replace(/</g, '\\u003c')}</script>
 </svelte:head>
 
-<div class="min-h-screen bg-white text-slate-900">
+<div class="min-h-screen bg-[linear-gradient(180deg,#f8fbff_0%,#eef4fb_52%,#f7fbff_100%)] text-slate-900">
   <PublicNav maxWidth="max-w-5xl" />
 
   <main class="mx-auto w-full max-w-5xl px-4 py-12 sm:px-6">
@@ -60,17 +60,20 @@
       <span class="text-slate-900">Features</span>
     </nav>
 
-    <h1 class="text-3xl font-semibold leading-tight text-slate-900 sm:text-4xl">
-      Habbit Runner Features
-    </h1>
-    <p class="mt-4 max-w-2xl text-base text-slate-600">
-      Everything you need to build consistent daily habits — offline, fast, and without app store
-      friction.
-    </p>
+    <section class="overflow-hidden rounded-[2rem] border border-slate-200/80 bg-white/92 p-6 shadow-[0_24px_80px_rgba(15,23,42,0.1)] sm:p-8">
+      <p class="text-[10px] uppercase tracking-[0.28em] text-slate-400">Product capabilities</p>
+      <h1 class="mt-4 text-4xl font-semibold leading-[1.05] tracking-tight text-slate-950 sm:text-5xl">
+        Habbit Runner Features
+      </h1>
+      <p class="mt-4 max-w-2xl text-base leading-7 text-slate-600">
+        Everything you need to build consistent daily habits — offline, fast, and without app store
+        friction.
+      </p>
+    </section>
 
     <div class="mt-10 space-y-12">
       <!-- Offline-First -->
-      <section>
+      <section class="rounded-[1.75rem] border border-slate-200/80 bg-white/92 p-6 shadow-[0_18px_50px_rgba(15,23,42,0.08)]">
         <h2 class="text-xl font-semibold text-slate-900">Offline-First Storage</h2>
         <p class="mt-3 text-sm text-slate-600">
           All habit data, check-ins, and settings are stored locally on your device using IndexedDB
@@ -88,7 +91,7 @@
       </section>
 
       <!-- Background Sync -->
-      <section>
+      <section class="rounded-[1.75rem] border border-slate-200/80 bg-white/92 p-6 shadow-[0_18px_50px_rgba(15,23,42,0.08)]">
         <h2 class="text-xl font-semibold text-slate-900">Background Sync</h2>
         <p class="mt-3 text-sm text-slate-600">
           Changes made offline are queued in an outbox and synced automatically when you reconnect.
@@ -103,7 +106,7 @@
       </section>
 
       <!-- Streak Tracking -->
-      <section>
+      <section class="rounded-[1.75rem] border border-slate-200/80 bg-white/92 p-6 shadow-[0_18px_50px_rgba(15,23,42,0.08)]">
         <h2 class="text-xl font-semibold text-slate-900">Streak Tracking</h2>
         <p class="mt-3 text-sm text-slate-600">
           Every habit shows your current streak and longest streak. Identify where you break
@@ -120,7 +123,7 @@
       </section>
 
       <!-- Push Notifications -->
-      <section>
+      <section class="rounded-[1.75rem] border border-slate-200/80 bg-white/92 p-6 shadow-[0_18px_50px_rgba(15,23,42,0.08)]">
         <h2 class="text-xl font-semibold text-slate-900">Push Notifications</h2>
         <p class="mt-3 text-sm text-slate-600">
           Enable reminders per habit through your browser's web push API. No native app required.
@@ -134,7 +137,7 @@
       </section>
 
       <!-- Daily Routine -->
-      <section>
+      <section class="rounded-[1.75rem] border border-slate-200/80 bg-white/92 p-6 shadow-[0_18px_50px_rgba(15,23,42,0.08)]">
         <h2 class="text-xl font-semibold text-slate-900">Daily Routine Planning</h2>
         <p class="mt-3 text-sm text-slate-600">
           Define structured routines with daily or custom frequencies. Set targets, assign tags, and
@@ -151,7 +154,7 @@
       </section>
 
       <!-- PWA -->
-      <section>
+      <section class="rounded-[1.75rem] border border-slate-200/80 bg-white/92 p-6 shadow-[0_18px_50px_rgba(15,23,42,0.08)]">
         <h2 class="text-xl font-semibold text-slate-900">Progressive Web App</h2>
         <p class="mt-3 text-sm text-slate-600">
           Install Habbit Runner directly from your browser. No App Store, no Play Store download
@@ -165,7 +168,7 @@
       </section>
 
       <!-- Privacy -->
-      <section>
+      <section class="rounded-[1.75rem] border border-slate-200/80 bg-white/92 p-6 shadow-[0_18px_50px_rgba(15,23,42,0.08)]">
         <h2 class="text-xl font-semibold text-slate-900">Privacy-First Design</h2>
         <p class="mt-3 text-sm text-slate-600">
           Your data lives on your device first. No advertising. No data selling. Sync requires
@@ -174,13 +177,13 @@
       </section>
     </div>
 
-    <div class="mt-12 rounded-2xl border border-cyan-200 bg-cyan-50 p-6">
+    <div class="mt-12 rounded-[1.75rem] border border-sky-100 bg-[linear-gradient(135deg,rgba(49,105,255,0.08),rgba(16,179,154,0.08))] p-6 shadow-[0_18px_50px_rgba(15,23,42,0.08)]">
       <h2 class="text-lg font-semibold text-slate-900">Compare Habbit Runner</h2>
       <p class="mt-2 text-sm text-slate-600">See how Habbit Runner compares to other habit trackers.</p>
       <div class="mt-4 flex flex-wrap gap-3">
-        <a href={resolve<'/vs/habitica'>('/vs/habitica', {})} class="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs text-slate-700 hover:border-slate-400">vs Habitica</a>
-        <a href={resolve<'/vs/streaks-app'>('/vs/streaks-app', {})} class="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs text-slate-700 hover:border-slate-400">vs Streaks App</a>
-        <a href={resolve<'/vs/beeminder'>('/vs/beeminder', {})} class="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs text-slate-700 hover:border-slate-400">vs Beeminder</a>
+        <a href={resolve<'/vs/habitica'>('/vs/habitica', {})} class="rounded-full border border-slate-300 bg-white px-3 py-2 text-xs text-slate-700 shadow-sm transition-all hover:-translate-y-0.5 hover:border-slate-400">vs Habitica</a>
+        <a href={resolve<'/vs/streaks-app'>('/vs/streaks-app', {})} class="rounded-full border border-slate-300 bg-white px-3 py-2 text-xs text-slate-700 shadow-sm transition-all hover:-translate-y-0.5 hover:border-slate-400">vs Streaks App</a>
+        <a href={resolve<'/vs/beeminder'>('/vs/beeminder', {})} class="rounded-full border border-slate-300 bg-white px-3 py-2 text-xs text-slate-700 shadow-sm transition-all hover:-translate-y-0.5 hover:border-slate-400">vs Beeminder</a>
       </div>
     </div>
   </main>

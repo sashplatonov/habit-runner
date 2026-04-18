@@ -153,9 +153,9 @@
     </EmptyState>
   </div>
 {:else}
-  <div class="min-h-screen bg-bg-primary">
-    <section class="sticky top-0 z-20 border-b border-border bg-bg-primary/95 px-4 backdrop-blur-sm" style:padding-top="calc(var(--safe-area-inset-top, 0px) + 1rem); padding-bottom: 1rem;">
-      <div class="mx-auto flex max-w-2xl flex-col gap-3 sm:flex-row sm:items-center">
+  <div class="min-h-screen bg-transparent">
+    <section class="sticky top-0 z-20 bg-transparent px-4 pt-4 sm:px-6" style:padding-top="calc(var(--safe-area-inset-top, 0px) + 1rem);">
+      <div class="mx-auto flex max-w-5xl flex-col gap-3 rounded-[1.75rem] border border-border bg-bg-secondary/90 px-4 py-4 shadow-[0_24px_60px_rgba(15,23,42,0.1)] backdrop-blur-xl sm:flex-row sm:items-center sm:px-5">
         <div class="flex min-w-0 flex-1 items-center gap-3">
           <button
             type="button"
@@ -244,12 +244,16 @@
       </div>
     </section>
 
-    <div class="mx-auto max-w-2xl space-y-4 px-4 py-4">
-      <StatCardGrid {stats} {accent} habitCreatedAt={habit.createdAt} />
-      <AutomatismSection score={stats.automatismScore} {accent} />
-      <TodayBlock {dailyTarget} {todayCompletionCount} {accent} />
+    <div class="mx-auto max-w-5xl space-y-4 px-4 py-4 sm:px-6">
+      <div class="grid gap-4 xl:grid-cols-[1.12fr,0.88fr]">
+        <div class="space-y-4">
+          <StatCardGrid {stats} {accent} habitCreatedAt={habit.createdAt} />
+          <AutomatismSection score={stats.automatismScore} {accent} />
+          <TodayBlock {dailyTarget} {todayCompletionCount} {accent} />
+        </div>
 
-      <section class="space-y-3 rounded-lg border border-border bg-bg-secondary p-3">
+        <div class="space-y-4">
+      <section class="space-y-3 rounded-[1.5rem] border border-border bg-bg-card/92 p-4 shadow-[0_18px_50px_rgba(15,23,42,0.08)]">
         <div class="flex items-center justify-between gap-3">
           <div class="flex items-center gap-2">
             <h2 class="text-xs font-mono uppercase tracking-wider text-muted">Activity - 90 days</h2>
@@ -272,13 +276,18 @@
         </div>
       </section>
 
-      <TargetRingSection {stats} {habit} {accent} />
-      <MonthlyRateSection monthlyData={stats.monthlyData} {accent} habitCreatedAt={habit.createdAt} />
-      <WeeklyCompletionsSection weeklyData={stats.weeklyData} {accent} habitCreatedAt={habit.createdAt} />
+          <TargetRingSection {stats} {habit} {accent} />
+        </div>
+      </div>
+
+      <div class="grid gap-4 xl:grid-cols-2">
+        <MonthlyRateSection monthlyData={stats.monthlyData} {accent} habitCreatedAt={habit.createdAt} />
+        <WeeklyCompletionsSection weeklyData={stats.weeklyData} {accent} habitCreatedAt={habit.createdAt} />
+      </div>
 
       <HabitRetroCalendar {habit} {accent} onUpdate={handleRetroUpdate} />
 
-      <section class="rounded-lg border border-border bg-bg-secondary p-4">
+      <section class="rounded-[1.5rem] border border-border bg-bg-card/92 p-5 shadow-[0_18px_50px_rgba(15,23,42,0.08)]">
         <p class="text-[10px] font-mono uppercase tracking-[0.25em] text-muted">Danger zone</p>
         {#if !confirmDelete}
           <button

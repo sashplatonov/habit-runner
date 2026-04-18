@@ -33,62 +33,82 @@
   faq={content.faq}
 />
 
-<div class="min-h-screen bg-white text-slate-900">
+<div class="min-h-screen bg-[linear-gradient(180deg,#f8fbff_0%,#eef4fb_52%,#f7fbff_100%)] text-slate-900">
   <PublicNav />
 
   <main class="mx-auto w-full max-w-6xl px-4 py-12 sm:px-6">
-    <div class="max-w-3xl">
-      <h1 class="text-3xl font-semibold leading-tight text-slate-900 sm:text-4xl">{content.h1}</h1>
-      <p class="mt-4 text-base text-slate-600">{content.description}</p>
+    <section class="overflow-hidden rounded-[2rem] border border-slate-200/80 bg-white/92 p-6 shadow-[0_24px_80px_rgba(15,23,42,0.1)] sm:p-8">
+      <p class="text-[10px] uppercase tracking-[0.28em] text-slate-400">Practical guide</p>
+      <div class="mt-4 grid gap-8 lg:grid-cols-[1.15fr,0.85fr] lg:items-start">
+        <div>
+          <h1 class="max-w-3xl text-4xl font-semibold leading-[1.05] tracking-tight text-slate-950 sm:text-5xl">{content.h1}</h1>
+          <p class="mt-4 max-w-2xl text-base leading-7 text-slate-600">{content.description}</p>
 
-      <div class="mt-6 flex flex-wrap gap-2">
-        <a href={resolve<'/'>('/', {})} class="rounded border border-slate-300 bg-white px-3 py-1.5 text-xs text-slate-700">Home</a>
-        <a href={resolve<'/habit-tracker'>('/habit-tracker', {})} class="rounded border border-slate-300 bg-white px-3 py-1.5 text-xs text-slate-700">Habit Tracker</a>
-        <a href={resolve<'/streak-tracker'>('/streak-tracker', {})} class="rounded border border-slate-300 bg-white px-3 py-1.5 text-xs text-slate-700">Streak Tracker</a>
-        <a href={resolve<'/daily-routine-planner'>('/daily-routine-planner', {})} class="rounded border border-slate-300 bg-white px-3 py-1.5 text-xs text-slate-700">Daily Routine Planner</a>
-        <a href={resolve<'/features'>('/features', {})} class="rounded border border-slate-300 bg-white px-3 py-1.5 text-xs text-slate-700">Features</a>
-        <a href={resolve<'/blog'>('/blog', {})} class="rounded border border-slate-300 bg-white px-3 py-1.5 text-xs text-slate-700">Blog</a>
+          <div class="mt-6 flex flex-wrap gap-2">
+            <a href={resolve<'/'>('/', {})} class="rounded-full border border-slate-300 bg-white px-3 py-1.5 text-xs text-slate-700 shadow-sm">Home</a>
+            <a href={resolve<'/habit-tracker'>('/habit-tracker', {})} class="rounded-full border border-slate-300 bg-white px-3 py-1.5 text-xs text-slate-700 shadow-sm">Habit Tracker</a>
+            <a href={resolve<'/streak-tracker'>('/streak-tracker', {})} class="rounded-full border border-slate-300 bg-white px-3 py-1.5 text-xs text-slate-700 shadow-sm">Streak Tracker</a>
+            <a href={resolve<'/daily-routine-planner'>('/daily-routine-planner', {})} class="rounded-full border border-slate-300 bg-white px-3 py-1.5 text-xs text-slate-700 shadow-sm">Daily Routine Planner</a>
+            <a href={resolve<'/features'>('/features', {})} class="rounded-full border border-slate-300 bg-white px-3 py-1.5 text-xs text-slate-700 shadow-sm">Features</a>
+            <a href={resolve<'/blog'>('/blog', {})} class="rounded-full border border-slate-300 bg-white px-3 py-1.5 text-xs text-slate-700 shadow-sm">Blog</a>
+          </div>
+        </div>
+
+        <div class="rounded-[1.5rem] border border-sky-100 bg-[linear-gradient(135deg,rgba(49,105,255,0.08),rgba(16,179,154,0.08))] p-5">
+          <p class="text-[10px] uppercase tracking-[0.24em] text-slate-400">Why it matters</p>
+          <p class="mt-3 text-xl font-semibold tracking-tight text-slate-950">The same product language used in the app should hold on public pages too.</p>
+          <p class="mt-3 text-sm leading-6 text-slate-600">These pages now act as clear editorial entry points instead of feeling like placeholder documentation.</p>
+        </div>
       </div>
 
-      <div class="mt-8 grid gap-3">
+      <div class="mt-8 grid gap-3 sm:grid-cols-2">
         {#each content.bullets as item, i (item + '-' + i)}
-          <div class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">
-            <CheckCircle2 size={14} class="mb-2 text-emerald-600" />
+          <div class="rounded-[1.25rem] border border-slate-200/80 bg-slate-50/90 px-4 py-4 text-sm text-slate-700 shadow-[0_12px_32px_rgba(15,23,42,0.05)]">
+            <CheckCircle2 size={14} class="mb-3 text-emerald-600" />
             {item}
           </div>
         {/each}
       </div>
+    </section>
 
-      <section class="mt-10 rounded-2xl border border-slate-200 bg-slate-50 p-5">
-        <h2 class="text-xl font-semibold text-slate-900">About The Product Team</h2>
-        <p class="mt-3 text-sm text-slate-600">
+    <div class="mt-8 grid gap-6 lg:grid-cols-[0.95fr,1.05fr]">
+      <section class="rounded-[1.75rem] border border-slate-200/80 bg-white/90 p-6 shadow-[0_20px_54px_rgba(15,23,42,0.08)]">
+        <h2 class="text-xl font-semibold text-slate-950">About The Product Team</h2>
+        <p class="mt-3 text-sm leading-6 text-slate-600">
           Habbit Runner is built by engineers focused on reliability, clear metrics, and practical
           habit workflows. Product updates prioritize stability, measurable progress, and simple
           daily execution.
         </p>
       </section>
 
-      <section class="mt-10">
-        <h2 class="text-xl font-semibold text-slate-900">FAQ</h2>
+      <section class="rounded-[1.75rem] border border-slate-200/80 bg-white/90 p-6 shadow-[0_20px_54px_rgba(15,23,42,0.08)]">
+        <h2 class="text-xl font-semibold text-slate-950">FAQ</h2>
         <div class="mt-4 space-y-3">
           {#each content.faq as item, j (item.question + '-' + j)}
-            <details class="rounded-xl border border-slate-200 bg-white p-4">
+            <details class="rounded-[1.25rem] border border-slate-200/80 bg-white p-4 shadow-[0_10px_28px_rgba(15,23,42,0.04)]">
               <summary class="cursor-pointer text-sm font-semibold text-slate-900">
                 {item.question}
               </summary>
-              <p class="mt-2 text-sm text-slate-600">{item.answer}</p>
+              <p class="mt-2 text-sm leading-6 text-slate-600">{item.answer}</p>
             </details>
           {/each}
         </div>
       </section>
+    </div>
 
-      <div class="mt-10">
+    <div class="mt-8 rounded-[1.75rem] border border-slate-900 bg-slate-950 p-6 text-white shadow-[0_24px_60px_rgba(15,23,42,0.18)]">
+      <p class="text-[10px] uppercase tracking-[0.24em] text-sky-200">Try the product</p>
+      <div class="mt-3 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h2 class="text-2xl font-semibold tracking-tight">Move from reading to doing.</h2>
+          <p class="mt-2 max-w-2xl text-sm text-slate-300">Open the app, set one habit, and keep the loop tight enough to survive real life.</p>
+        </div>
         <button
           type="button"
           onclick={() => {
             startOAuthLogin();
           }}
-          class="inline-flex items-center gap-2 rounded-lg border border-cyan-300 bg-cyan-50 px-4 py-2.5 text-sm font-semibold text-cyan-700 transition-all hover:bg-cyan-100"
+          class="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white px-5 py-2.5 text-sm font-semibold text-slate-950 transition-all hover:-translate-y-0.5 hover:bg-sky-50"
         >
           Start Using Habbit Runner
           <ArrowRight size={15} />

@@ -27,18 +27,22 @@
   }).replace(/</g, '\u003c')}</script>
 </svelte:head>
 
-<div class="min-h-screen bg-white text-slate-900">
+<div class="min-h-screen bg-[linear-gradient(180deg,#f8fbff_0%,#eef4fb_52%,#f7fbff_100%)] text-slate-900">
   <PublicNav maxWidth="max-w-5xl" />
 
   <main class="mx-auto w-full max-w-5xl px-4 py-12 sm:px-6">
-    <div class="max-w-3xl">
-      <h1 class="text-3xl font-semibold leading-tight text-slate-900 sm:text-4xl">
+    <section class="max-w-4xl overflow-hidden rounded-[2rem] border border-slate-200/80 bg-white/92 p-6 shadow-[0_24px_80px_rgba(15,23,42,0.1)] sm:p-8">
+      <p class="text-[10px] uppercase tracking-[0.28em] text-slate-400">About the product</p>
+      <h1 class="mt-4 text-4xl font-semibold leading-[1.05] tracking-tight text-slate-950 sm:text-5xl">
         About Habbit Runner
       </h1>
-      <p class="mt-4 text-base text-slate-600">
+      <p class="mt-4 max-w-2xl text-base leading-7 text-slate-600">
         Habbit Runner is an offline-first habit tracker Progressive Web App built for people who
         want clear progress data without noise.
       </p>
+    </section>
+
+    <div class="mt-10 max-w-4xl">
 
       <section class="mt-10">
         <h2 class="text-xl font-semibold text-slate-900">Mission</h2>
@@ -56,28 +60,28 @@
       <section class="mt-10">
         <h2 class="text-xl font-semibold text-slate-900">Technology</h2>
         <div class="mt-4 grid gap-3 sm:grid-cols-2">
-          <div class="rounded-xl border border-slate-200 bg-slate-50 p-4">
+          <div class="rounded-[1.5rem] border border-slate-200/80 bg-white/92 p-5 shadow-[0_14px_38px_rgba(15,23,42,0.06)]">
             <p class="text-sm font-semibold text-slate-900">Offline-First Architecture</p>
             <p class="mt-2 text-xs text-slate-600">
               All data lives in IndexedDB (via Dexie) on your device. The app works fully offline
               and syncs changes when you reconnect.
             </p>
           </div>
-          <div class="rounded-xl border border-slate-200 bg-slate-50 p-4">
+          <div class="rounded-[1.5rem] border border-slate-200/80 bg-white/92 p-5 shadow-[0_14px_38px_rgba(15,23,42,0.06)]">
             <p class="text-sm font-semibold text-slate-900">Progressive Web App</p>
             <p class="mt-2 text-xs text-slate-600">
               Install directly from your browser. No App Store required. Works on Android, iOS
               (Safari 16.4+), and desktop Chrome/Edge.
             </p>
           </div>
-          <div class="rounded-xl border border-slate-200 bg-slate-50 p-4">
+          <div class="rounded-[1.5rem] border border-slate-200/80 bg-white/92 p-5 shadow-[0_14px_38px_rgba(15,23,42,0.06)]">
             <p class="text-sm font-semibold text-slate-900">Secure Sync</p>
             <p class="mt-2 text-xs text-slate-600">
               Pull-push-pull sync cycle with conflict resolution based on timestamps. JWT tokens
               over HTTPS.
             </p>
           </div>
-          <div class="rounded-xl border border-slate-200 bg-slate-50 p-4">
+          <div class="rounded-[1.5rem] border border-slate-200/80 bg-white/92 p-5 shadow-[0_14px_38px_rgba(15,23,42,0.06)]">
             <p class="text-sm font-semibold text-slate-900">Built With</p>
             <p class="mt-2 text-xs text-slate-600">
               SvelteKit 5, TypeScript, Tailwind CSS, Dexie, Quarkus (Java), PostgreSQL, Flyway.
