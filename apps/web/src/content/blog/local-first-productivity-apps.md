@@ -5,6 +5,7 @@ publishedAt: "2026-03-30"
 author: "Habbit Runner Team"
 keywords: "local-first apps, local-first software, local-first productivity, local data storage apps, offline-first productivity apps"
 readingTimeMinutes: 7
+coverImage: /blog/local-first-productivity-apps.svg
 ---
 
 Most software today is cloud-first: your data lives on a server. You access it through an app or browser, but you don't really own it in any meaningful sense.

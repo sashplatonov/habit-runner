@@ -5,6 +5,7 @@ publishedAt: "2026-04-11"
 author: "Habbit Runner Team"
 keywords: "habit tracking stops working, habit tracker motivation, why habit apps fail, habit tracking plateau, habit system refresh"
 readingTimeMinutes: 6
+coverImage: /blog/why-habit-tracking-stops-working.svg
 ---
 
 Habit tracking tends to work very well at first. You set up the app, add your habits, and the act of logging completions adds just enough positive feedback to keep you going.

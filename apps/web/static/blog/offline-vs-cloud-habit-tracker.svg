@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-label="Offline vs Cloud Habit Tracker">
+  <defs>
+    <linearGradient id="bg" x1="0" x2="1" y1="0" y2="1"><stop offset="0%" stop-color="#f8fafc"/><stop offset="100%" stop-color="#e0f2fe"/></linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+
+  <!-- left panel: offline/local -->
+  <rect x="80" y="110" width="470" height="370" rx="28" fill="#ffffff" stroke="#cbd5e1" stroke-width="2"/>
+  <rect x="80" y="110" width="470" height="60" rx="28" fill="#f0fdf4"/>
+  <rect x="80" y="152" width="470" height="18" fill="#f0fdf4"/>
+  <text x="315" y="150" font-family="Inter,Arial,sans-serif" font-size="22" font-weight="700" fill="#166534" text-anchor="middle">📱 Offline-first</text>
+  <!-- phone shape -->
+  <rect x="245" y="195" width="140" height="220" rx="16" fill="#f8fafc" stroke="#94a3b8" stroke-width="2"/>
+  <rect x="255" y="210" width="120" height="175" rx="8" fill="#ecfdf5"/>
+  <!-- habit list inside phone -->
+  <circle cx="275" cy="235" r="9" fill="#10b981"/><text x="293" y="239" font-family="Inter,Arial,sans-serif" font-size="12" fill="#065f46">Morning run</text>
+  <circle cx="275" cy="258" r="9" fill="#10b981"/><text x="293" y="262" font-family="Inter,Arial,sans-serif" font-size="12" fill="#065f46">Read 20 min</text>
+  <circle cx="275" cy="281" r="9" fill="#e2e8f0"/><text x="293" y="285" font-family="Inter,Arial,sans-serif" font-size="12" fill="#94a3b8">Meditate</text>
+  <!-- wifi-off icon -->
+  <path d="M320 345 L340 325 M345 330 L360 315 M310 320 L355 365" fill="none" stroke="#ef4444" stroke-width="3" stroke-linecap="round"/>
+  <text x="360" y="352" font-family="Inter,Arial,sans-serif" font-size="14" fill="#ef4444">offline</text>
+  <!-- pros list -->
+  <text x="180" y="445" font-family="Inter,Arial,sans-serif" font-size="15" fill="#16a34a">✓ Works anywhere</text>
+  <text x="180" y="468" font-family="Inter,Arial,sans-serif" font-size="15" fill="#16a34a">✓ No account needed</text>
+  <text x="180" y="491" font-family="Inter,Arial,sans-serif" font-size="15" fill="#16a34a">✓ Private by default</text>
+
+  <!-- VS divider -->
+  <circle cx="600" cy="295" r="40" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="2"/>
+  <text x="600" y="302" font-family="Inter,Arial,sans-serif" font-size="22" font-weight="800" fill="#475569" text-anchor="middle">VS</text>
+
+  <!-- right panel: cloud -->
+  <rect x="650" y="110" width="470" height="370" rx="28" fill="#ffffff" stroke="#cbd5e1" stroke-width="2"/>
+  <rect x="650" y="110" width="470" height="60" rx="28" fill="#eff6ff"/>
+  <rect x="650" y="152" width="470" height="18" fill="#eff6ff"/>
+  <text x="885" y="150" font-family="Inter,Arial,sans-serif" font-size="22" font-weight="700" fill="#1d4ed8" text-anchor="middle">☁️ Cloud-first</text>
+  <!-- cloud shape -->
+  <ellipse cx="885" cy="240" rx="80" ry="45" fill="#dbeafe" stroke="#93c5fd" stroke-width="2"/>
+  <ellipse cx="840" cy="255" rx="50" ry="35" fill="#dbeafe" stroke="#93c5fd" stroke-width="2"/>
+  <ellipse cx="930" cy="255" rx="50" ry="35" fill="#dbeafe" stroke="#93c5fd" stroke-width="2"/>
+  <rect x="860" y="280" width="50" height="60" rx="0" fill="#bfdbfe"/>
+  <!-- sync arrows -->
+  <path d="M855 350 C855 375 915 375 915 350" fill="none" stroke="#3b82f6" stroke-width="3" stroke-linecap="round"/>
+  <polygon points="850,355 855,342 862,355" fill="#3b82f6"/>
+  <polygon points="920,355 915,342 908,355" fill="#3b82f6"/>
+  <!-- cons list -->
+  <text x="750" y="445" font-family="Inter,Arial,sans-serif" font-size="15" fill="#1d4ed8">✓ Multi-device sync</text>
+  <text x="750" y="468" font-family="Inter,Arial,sans-serif" font-size="15" fill="#94a3b8">~ Needs internet</text>
+  <text x="750" y="491" font-family="Inter,Arial,sans-serif" font-size="15" fill="#94a3b8">~ Account required</text>
+
+  <text x="600" y="548" font-family="Inter,Arial,sans-serif" font-size="36" font-weight="700" fill="#0f172a" text-anchor="middle">Offline vs Cloud Habit Tracker</text>
+  <text x="600" y="585" font-family="Inter,Arial,sans-serif" font-size="19" fill="#64748b" text-anchor="middle">Which model fits your privacy and reliability needs?</text>
+</svg>

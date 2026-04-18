@@ -5,6 +5,7 @@ publishedAt: "2026-03-02"
 author: "Habbit Runner Team"
 keywords: "stay consistent with habits, habit consistency tips, maintain habits when busy, habit routine busy schedule, keep habits during travel"
 readingTimeMinutes: 7
+coverImage: /blog/how-to-stay-consistent-with-habits.svg
 ---
 
 Most habit advice is written for ideal conditions. Wake up at 6am, have a calm morning, complete your routine before the day starts.

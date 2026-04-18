@@ -5,6 +5,7 @@ publishedAt: "2026-04-07"
 author: "Habbit Runner Team"
 keywords: "habit tracker ADHD, ADHD habit tracking, ADHD routine app, habit app for ADHD, ADHD daily habits"
 readingTimeMinutes: 7
+coverImage: /blog/habit-tracker-for-adhd.svg
 ---
 
 Most habit tracking advice assumes a working memory that reliably reminds you what to do, consistent motivation, and a daily schedule that doesn't change much.

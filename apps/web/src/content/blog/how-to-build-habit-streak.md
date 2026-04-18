@@ -5,6 +5,7 @@ publishedAt: "2026-01-17"
 author: "Habbit Runner Team"
 keywords: "habit streak, build habit streak, maintain streak, long-term habit streak, streak tips"
 readingTimeMinutes: 6
+coverImage: /blog/how-to-build-habit-streak.svg
 ---
 
 A habit streak is a count of consecutive days you've completed something. A 30-day reading streak. A 90-day workout streak. A 200-day meditation streak.

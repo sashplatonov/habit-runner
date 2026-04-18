@@ -86,6 +86,9 @@
         <span>{post.author}</span>
       </div>
       <p class="mt-4 text-base text-slate-600">{post.description}</p>
+      {#if post.coverImage}
+        <img src={post.coverImage} alt={post.title} class="mt-6 w-full rounded-2xl border border-slate-200" loading="eager" width="1200" height="630" />
+      {/if}
     </header>
 
     {#if post.content}

@@ -5,6 +5,7 @@ publishedAt: "2026-01-09"
 author: "Habbit Runner Team"
 keywords: "morning routine, habit building, consistent routine, morning habits, daily routine tips"
 readingTimeMinutes: 6
+coverImage: /blog/how-to-build-consistent-morning-routine.svg
 ---
 
 A morning routine sounds simple: wake up, do the things, feel great. Yet most people abandon theirs within two weeks.

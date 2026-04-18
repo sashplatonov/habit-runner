@@ -5,6 +5,7 @@ publishedAt: "2026-02-02"
 author: "Habbit Runner Team"
 keywords: "habit tracker busy parents, habits for parents, parent daily routine, habit tracking with kids, parent self-care habits"
 readingTimeMinutes: 6
+coverImage: /blog/habit-tracker-for-busy-parents.svg
 ---
 
 Every habit tracking system assumes some baseline of available time and predictable schedule. Parenting removes both.

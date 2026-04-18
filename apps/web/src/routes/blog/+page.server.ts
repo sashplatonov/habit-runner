@@ -15,6 +15,7 @@ export function load() {
       author: post.author,
       readingTimeMinutes: post.readingTimeMinutes,
       keywords: post.keywords,
+      coverImage: post.coverImage,
     })),
   };
 }

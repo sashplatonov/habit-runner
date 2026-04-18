@@ -5,6 +5,7 @@ publishedAt: "2026-02-22"
 author: "Habbit Runner Team"
 keywords: "habit tracker without internet, offline habit tracking, habit app no wifi, habit tracker airplane mode, no internet habit app"
 readingTimeMinutes: 6
+coverImage: /blog/habit-tracker-without-internet.svg
 ---
 
 You're on the subway. Your phone has no signal. You just finished your morning workout and want to log it.

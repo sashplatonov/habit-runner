@@ -5,6 +5,7 @@ publishedAt: "2026-02-10"
 author: "Habbit Runner Team"
 keywords: "minimalist habit tracker, simple habit tracking app, clean habit tracker, habit tracker without clutter, minimal productivity app"
 readingTimeMinutes: 6
+coverImage: /blog/minimalist-habit-tracker.svg
 ---
 
 Habit apps have a paradox: the more features they add, the harder it becomes to build actual habits. Gamification, social leaderboards, complex analytics, streaks with elaborate unlock mechanics — all of it adds cognitive overhead to something that should be simple.

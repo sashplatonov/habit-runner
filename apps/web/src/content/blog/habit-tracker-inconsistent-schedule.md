@@ -5,6 +5,7 @@ publishedAt: "2026-01-25"
 author: "Habbit Runner Team"
 keywords: "habit tracker inconsistent schedule, habit tracking shift work, freelancer habits, variable schedule routine, flexible habit tracking"
 readingTimeMinutes: 6
+coverImage: /blog/habit-tracker-inconsistent-schedule.svg
 ---
 
 Most habit advice starts with "pick a consistent time each day." That's useful if your day has consistent times. For shift workers, freelancers, contractors, and anyone with a variable schedule, it's not practical advice.

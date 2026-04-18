@@ -5,6 +5,7 @@ publishedAt: "2026-03-14"
 author: "Habbit Runner Team"
 keywords: "offline habit tracker, habit tracker without internet, best habit tracker 2025, pwa habit tracker"
 readingTimeMinutes: 8
+coverImage: /blog/best-offline-habit-tracker.svg
 ---
 
 ## Why Offline Support Matters for Habit Tracking

@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-label="No Signup Habit Tracker">
+  <defs>
+    <linearGradient id="bg" x1="0" x2="1" y1="0" y2="1"><stop offset="0%" stop-color="#f0fdf4"/><stop offset="100%" stop-color="#ecfeff"/></linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <circle cx="100" cy="100" r="120" fill="#34d399" opacity="0.10"/>
+  <circle cx="1100" cy="540" r="140" fill="#06b6d4" opacity="0.10"/>
+
+  <!-- comparison: signup required vs no signup -->
+  <!-- left: traditional sign-up flow -->
+  <rect x="80" y="120" width="440" height="380" rx="24" fill="#ffffff" stroke="#e2e8f0" stroke-width="2"/>
+  <rect x="80" y="120" width="440" height="52" rx="24" fill="#fee2e2"/>
+  <rect x="80" y="154" width="440" height="18" fill="#fee2e2"/>
+  <text x="300" y="153" font-family="Inter,Arial,sans-serif" font-size="16" font-weight="700" fill="#7f1d1d" text-anchor="middle">Traditional app</text>
+
+  <text x="300" y="210" font-family="Inter,Arial,sans-serif" font-size="14" fill="#94a3b8" text-anchor="middle">Step 1</text>
+  <rect x="140" y="220" width="320" height="40" rx="10" fill="#f1f5f9" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="300" y="245" font-family="Inter,Arial,sans-serif" font-size="14" fill="#475569" text-anchor="middle">Enter email address</text>
+
+  <text x="300" y="280" font-family="Inter,Arial,sans-serif" font-size="14" fill="#94a3b8" text-anchor="middle">Step 2</text>
+  <rect x="140" y="290" width="320" height="40" rx="10" fill="#f1f5f9" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="300" y="315" font-family="Inter,Arial,sans-serif" font-size="14" fill="#475569" text-anchor="middle">Create password</text>
+
+  <text x="300" y="350" font-family="Inter,Arial,sans-serif" font-size="14" fill="#94a3b8" text-anchor="middle">Step 3</text>
+  <rect x="140" y="360" width="320" height="40" rx="10" fill="#f1f5f9" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="300" y="385" font-family="Inter,Arial,sans-serif" font-size="14" fill="#475569" text-anchor="middle">Confirm email…</text>
+
+  <text x="300" y="430" font-family="Inter,Arial,sans-serif" font-size="14" fill="#94a3b8" text-anchor="middle">Step 4</text>
+  <rect x="140" y="438" width="320" height="40" rx="10" fill="#f1f5f9" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="300" y="462" font-family="Inter,Arial,sans-serif" font-size="14" fill="#475569" text-anchor="middle">Onboarding survey…</text>
+
+  <!-- right: no signup -->
+  <rect x="680" y="120" width="440" height="380" rx="24" fill="#ffffff" stroke="#6ee7b7" stroke-width="2"/>
+  <rect x="680" y="120" width="440" height="52" rx="24" fill="#d1fae5"/>
+  <rect x="680" y="154" width="440" height="18" fill="#d1fae5"/>
+  <text x="900" y="153" font-family="Inter,Arial,sans-serif" font-size="16" font-weight="700" fill="#065f46" text-anchor="middle">No-signup app</text>
+
+  <!-- direct access -->
+  <circle cx="900" cy="310" r="100" fill="#ecfdf5" stroke="#6ee7b7" stroke-width="2"/>
+  <!-- open lock icon -->
+  <rect x="864" y="295" width="72" height="56" rx="10" fill="#d1fae5" stroke="#34d399" stroke-width="2"/>
+  <path d="M882 295 C882 270 918 270 918 295" fill="none" stroke="#34d399" stroke-width="8" stroke-linecap="round"/>
+  <path d="M918 280 L918 268" fill="none" stroke="#94a3b8" stroke-width="8" stroke-linecap="round"/>
+  <circle cx="900" cy="320" r="10" fill="#059669"/>
+  <rect x="896" y="320" width="8" height="14" rx="4" fill="#059669"/>
+
+  <!-- tap & go badge -->
+  <rect x="800" y="430" width="200" height="52" rx="16" fill="#059669"/>
+  <text x="900" y="462" font-family="Inter,Arial,sans-serif" font-size="17" font-weight="700" fill="#ffffff" text-anchor="middle">Open → Track ✓</text>
+
+  <text x="600" y="557" font-family="Inter,Arial,sans-serif" font-size="38" font-weight="700" fill="#0f172a" text-anchor="middle">No Signup Habit Tracker</text>
+  <text x="600" y="595" font-family="Inter,Arial,sans-serif" font-size="20" fill="#64748b" text-anchor="middle">Skip the onboarding. Start tracking in 10 seconds.</text>
+</svg>

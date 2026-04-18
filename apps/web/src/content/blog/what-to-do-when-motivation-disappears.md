@@ -5,6 +5,7 @@ publishedAt: "2026-02-18"
 author: "Habbit Runner Team"
 keywords: "motivation disappears habits, habit without motivation, low motivation days, staying consistent without motivation, habit on bad days"
 readingTimeMinutes: 6
+coverImage: /blog/what-to-do-when-motivation-disappears.svg
 ---
 
 Motivation comes and goes. Most people know this intellectually. In practice, it still catches them off guard.

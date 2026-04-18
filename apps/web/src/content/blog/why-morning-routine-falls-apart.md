@@ -5,6 +5,7 @@ publishedAt: "2026-02-26"
 author: "Habbit Runner Team"
 keywords: "morning routine fails, why morning routine doesn't work, fix morning routine, consistent morning habits, morning routine problems"
 readingTimeMinutes: 7
+coverImage: /blog/why-morning-routine-falls-apart.svg
 ---
 
 Most morning routine failures happen before the morning even starts.

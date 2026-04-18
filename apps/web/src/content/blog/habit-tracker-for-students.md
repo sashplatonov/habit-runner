@@ -5,6 +5,7 @@ publishedAt: "2026-03-06"
 author: "Habbit Runner Team"
 keywords: "habit tracker for students, student daily habits, study routine habits, college habit tracking, student productivity habits"
 readingTimeMinutes: 6
+coverImage: /blog/habit-tracker-for-students.svg
 ---
 
 Student life has a schedule that changes every term. Classes shift, exam periods create intense demands, breaks disrupt routines, and the social environment is constantly variable.

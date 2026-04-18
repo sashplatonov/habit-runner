@@ -5,6 +5,7 @@ publishedAt: "2026-04-15"
 author: "Habbit Runner Team"
 keywords: "recover after breaking streak, habit streak recovery, restart habit streak, missed habit day, broken habit chain"
 readingTimeMinutes: 5
+coverImage: /blog/how-to-recover-after-breaking-streak.svg
 ---
 You had a 47-day reading streak. Then a chaotic week happened, and you missed three days.
 

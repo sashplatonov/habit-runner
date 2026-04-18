@@ -5,6 +5,7 @@ publishedAt: "2026-01-13"
 author: "Habbit Runner Team"
 keywords: "habit tracking while traveling, travel habits, maintain routine travel, offline habit tracker travel, habit routine on the road"
 readingTimeMinutes: 6
+coverImage: /blog/how-to-track-habits-while-traveling.svg
 ---
 
 Travel is one of the most reliable disruptors of habits. Your schedule changes, your environment is different, your sleep is off, and the equipment and spaces you usually rely on aren't available.

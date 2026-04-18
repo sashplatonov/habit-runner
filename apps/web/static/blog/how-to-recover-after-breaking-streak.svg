@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-label="How to Recover After Breaking a Streak">
+  <defs>
+    <linearGradient id="bg" x1="0" x2="1" y1="0" y2="1"><stop offset="0%" stop-color="#fff7ed"/><stop offset="100%" stop-color="#f0fdf4"/></linearGradient>
+    <linearGradient id="arrow" x1="0" x2="1" y1="0" y2="0"><stop offset="0%" stop-color="#ef4444"/><stop offset="100%" stop-color="#10b981"/></linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <circle cx="600" cy="300" r="220" fill="#f97316" opacity="0.06"/>
+
+  <!-- broken chain left side -->
+  <ellipse cx="100" cy="290" rx="46" ry="28" fill="none" stroke="#94a3b8" stroke-width="14"/>
+  <line x1="146" y1="290" x2="190" y2="290" stroke="#94a3b8" stroke-width="8"/>
+  <ellipse cx="240" cy="290" rx="46" ry="28" fill="none" stroke="#94a3b8" stroke-width="14"/>
+  <line x1="286" y1="290" x2="330" y2="290" stroke="#94a3b8" stroke-width="8"/>
+  <ellipse cx="380" cy="290" rx="46" ry="28" fill="none" stroke="#94a3b8" stroke-width="14"/>
+  <!-- break gap with lightning bolt -->
+  <line x1="426" y1="285" x2="440" y2="270" stroke="#ef4444" stroke-width="6"/>
+  <line x1="440" y1="270" x2="430" y2="293" stroke="#ef4444" stroke-width="6"/>
+  <line x1="430" y1="293" x2="445" y2="310" stroke="#ef4444" stroke-width="6"/>
+  <circle cx="435" cy="290" r="22" fill="#fee2e2" opacity="0.8"/>
+  <text x="435" y="296" font-family="Inter,Arial,sans-serif" font-size="16" fill="#ef4444" text-anchor="middle">✗</text>
+
+  <!-- restart arrow (curved, going from break to new chain) -->
+  <path d="M480,290 C510,200 680,200 710,290" fill="none" stroke="url(#arrow)" stroke-width="8" stroke-linecap="round"/>
+  <!-- arrowhead -->
+  <polygon points="710,290 690,272 730,272" fill="#10b981"/>
+  <!-- restart label -->
+  <text x="600" y="192" font-family="Inter,Arial,sans-serif" font-size="15" fill="#059669" text-anchor="middle" font-weight="600">recovery</text>
+  <text x="600" y="213" font-family="Inter,Arial,sans-serif" font-size="13" fill="#10b981" text-anchor="middle">start again today</text>
+
+  <!-- new chain right side -->
+  <ellipse cx="760" cy="290" rx="46" ry="28" fill="none" stroke="#10b981" stroke-width="14"/>
+  <line x1="806" y1="290" x2="850" y2="290" stroke="#10b981" stroke-width="8"/>
+  <ellipse cx="900" cy="290" rx="46" ry="28" fill="none" stroke="#10b981" stroke-width="14"/>
+  <line x1="946" y1="290" x2="990" y2="290" stroke="#10b981" stroke-width="8"/>
+  <ellipse cx="1040" cy="290" rx="46" ry="28" fill="none" stroke="#10b981" stroke-width="14"/>
+  <line x1="1086" y1="290" x2="1110" y2="290" stroke="#10b981" stroke-width="8" stroke-dasharray="6"/>
+
+  <!-- days labels -->
+  <text x="240" y="338" font-family="Inter,Arial,sans-serif" font-size="13" fill="#64748b" text-anchor="middle">Day 21</text>
+  <text x="380" y="338" font-family="Inter,Arial,sans-serif" font-size="13" fill="#ef4444" text-anchor="middle">missed</text>
+  <text x="760" y="338" font-family="Inter,Arial,sans-serif" font-size="13" fill="#059669" text-anchor="middle">Day 1*</text>
+  <text x="900" y="338" font-family="Inter,Arial,sans-serif" font-size="13" fill="#059669" text-anchor="middle">Day 2*</text>
+  <text x="1040" y="338" font-family="Inter,Arial,sans-serif" font-size="13" fill="#059669" text-anchor="middle">Day 3*</text>
+
+  <!-- rules panel -->
+  <rect x="200" y="380" width="800" height="115" rx="20" fill="#f0fdf4" stroke="#bbf7d0" stroke-width="2"/>
+  <text x="250" y="412" font-family="Inter,Arial,sans-serif" font-size="15" fill="#059669" font-weight="600">Recovery rules:</text>
+  <text x="260" y="436" font-family="Inter,Arial,sans-serif" font-size="14" fill="#047857">1.  A broken streak is not a failed habit — it's data.</text>
+  <text x="260" y="460" font-family="Inter,Arial,sans-serif" font-size="14" fill="#047857">2.  Missing once is allowed. Missing twice is a new habit.</text>
+  <text x="260" y="484" font-family="Inter,Arial,sans-serif" font-size="14" fill="#047857">3.  Identity over score: you are someone who tracks.</text>
+
+  <text x="600" y="549" font-family="Inter,Arial,sans-serif" font-size="35" font-weight="700" fill="#0f172a" text-anchor="middle">How to Recover After Breaking a Streak</text>
+  <text x="600" y="587" font-family="Inter,Arial,sans-serif" font-size="20" fill="#64748b" text-anchor="middle">Missing once isn't failure — here's how to bounce back</text>
+</svg>

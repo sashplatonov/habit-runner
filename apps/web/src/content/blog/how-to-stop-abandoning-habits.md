@@ -5,6 +5,7 @@ publishedAt: "2026-03-10"
 author: "Habbit Runner Team"
 keywords: "why habits fail, stop abandoning habits, habit failure reasons, how to stick to habits, habit design tips"
 readingTimeMinutes: 7
+coverImage: /blog/how-to-stop-abandoning-habits.svg
 ---
 
 You've started the same habit several times. It works for a week or two. Then it stops. You tell yourself you need more discipline, more motivation, a better mindset.

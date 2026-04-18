@@ -5,6 +5,7 @@ publishedAt: "2026-01-21"
 author: "Habbit Runner Team"
 keywords: "offline habit tracker, cloud habit tracker, habit tracker comparison, local-first habit app, habit tracker privacy"
 readingTimeMinutes: 7
+coverImage: /blog/offline-vs-cloud-habit-tracker.svg
 ---
 
 Most habit tracker apps fall into one of two categories: those that store your data on a server and those that store it on your device. This distinction affects privacy, reliability, and how the app behaves when you're not connected.

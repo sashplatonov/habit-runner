@@ -5,6 +5,7 @@ publishedAt: "2026-03-18"
 author: "Habbit Runner Team"
 keywords: "why streaks break, prevent streak breaks, protect habit streak, streak maintenance, habit streak tips"
 readingTimeMinutes: 6
+coverImage: /blog/why-streaks-break.svg
 ---
 
 A streak that breaks at day 43 after months of consistency isn't just bad luck. In most cases, it failed for a reason that could have been predicted — and often prevented.

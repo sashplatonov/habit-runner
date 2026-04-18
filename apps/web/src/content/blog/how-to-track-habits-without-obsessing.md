@@ -5,6 +5,7 @@ publishedAt: "2026-02-14"
 author: "Habbit Runner Team"
 keywords: "habit tracking tips, avoid habit app obsession, healthy habit tracking, habit tracker balance, mindful habit tracking"
 readingTimeMinutes: 6
+coverImage: /blog/how-to-track-habits-without-obsessing.svg
 ---
 
 There's a version of habit tracking that helps you build better routines. There's another version where you spend more time managing the tracker than doing the actual habit.

@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-label="How to Start an Evening Routine">
+  <defs>
+    <linearGradient id="bg" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stop-color="#1e1b4b"/><stop offset="60%" stop-color="#312e81"/><stop offset="100%" stop-color="#1e293b"/></linearGradient>
+    <radialGradient id="moon" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#fef9c3"/><stop offset="100%" stop-color="#fde68a"/></radialGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+
+  <!-- stars -->
+  <circle cx="150" cy="80" r="3" fill="#f8fafc" opacity="0.8"/>
+  <circle cx="300" cy="50" r="2" fill="#f8fafc" opacity="0.6"/>
+  <circle cx="500" cy="90" r="2.5" fill="#f8fafc" opacity="0.7"/>
+  <circle cx="700" cy="40" r="3" fill="#f8fafc" opacity="0.9"/>
+  <circle cx="900" cy="70" r="2" fill="#f8fafc" opacity="0.5"/>
+  <circle cx="1050" cy="55" r="2.5" fill="#f8fafc" opacity="0.7"/>
+  <circle cx="1150" cy="95" r="3" fill="#f8fafc" opacity="0.6"/>
+  <circle cx="420" cy="130" r="2" fill="#f8fafc" opacity="0.5"/>
+  <circle cx="850" cy="120" r="1.5" fill="#f8fafc" opacity="0.6"/>
+  <circle cx="200" cy="160" r="1.5" fill="#f8fafc" opacity="0.4"/>
+
+  <!-- moon -->
+  <circle cx="840" cy="190" r="90" fill="url(#moon)"/>
+  <circle cx="870" cy="165" r="75" fill="#312e81"/>
+
+  <!-- horizon glow -->
+  <ellipse cx="600" cy="580" rx="500" ry="80" fill="#4f46e5" opacity="0.4"/>
+
+  <!-- evening checklist card -->
+  <rect x="140" y="160" width="400" height="340" rx="24" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.15)" stroke-width="1.5"/>
+  <text x="340" y="200" font-family="Inter,Arial,sans-serif" font-size="18" font-weight="600" fill="#e2e8f0" text-anchor="middle">Evening Routine</text>
+
+  <rect x="168" y="220" width="344" height="44" rx="12" fill="rgba(255,255,255,0.08)"/>
+  <circle cx="195" cy="242" r="13" fill="#10b981"/>
+  <path d="M188 242 L193 247 L202 236" fill="none" stroke="#fff" stroke-width="2.5"/>
+  <text x="215" y="247" font-family="Inter,Arial,sans-serif" font-size="16" fill="#e2e8f0">Phone down — 9:00 PM</text>
+
+  <rect x="168" y="272" width="344" height="44" rx="12" fill="rgba(255,255,255,0.08)"/>
+  <circle cx="195" cy="294" r="13" fill="#10b981"/>
+  <path d="M188 294 L193 299 L202 288" fill="none" stroke="#fff" stroke-width="2.5"/>
+  <text x="215" y="299" font-family="Inter,Arial,sans-serif" font-size="16" fill="#e2e8f0">Journal 5 minutes</text>
+
+  <rect x="168" y="324" width="344" height="44" rx="12" fill="rgba(255,255,255,0.08)"/>
+  <circle cx="195" cy="346" r="13" fill="#10b981"/>
+  <path d="M188 346 L193 351 L202 340" fill="none" stroke="#fff" stroke-width="2.5"/>
+  <text x="215" y="351" font-family="Inter,Arial,sans-serif" font-size="16" fill="#e2e8f0">Read 20 minutes</text>
+
+  <rect x="168" y="376" width="344" height="44" rx="12" fill="rgba(255,255,255,0.06)"/>
+  <circle cx="195" cy="398" r="13" fill="rgba(255,255,255,0.15)"/>
+  <text x="215" y="403" font-family="Inter,Arial,sans-serif" font-size="16" fill="#94a3b8">Lights out — 10:00 PM</text>
+
+  <!-- mood stat -->
+  <rect x="168" y="428" width="344" height="52" rx="12" fill="rgba(99,102,241,0.3)" stroke="rgba(129,140,248,0.4)" stroke-width="1.5"/>
+  <text x="340" y="458" font-family="Inter,Arial,sans-serif" font-size="15" fill="#a5b4fc" text-anchor="middle">Morning energy score ↑ after 7 days</text>
+  <text x="340" y="476" font-family="Inter,Arial,sans-serif" font-size="20" font-weight="700" fill="#6366f1" text-anchor="middle">+34%</text>
+
+  <text x="600" y="556" font-family="Inter,Arial,sans-serif" font-size="36" font-weight="700" fill="#f1f5f9" text-anchor="middle">How to Start an Evening Routine</text>
+  <text x="600" y="596" font-family="Inter,Arial,sans-serif" font-size="20" fill="#94a3b8" text-anchor="middle">Wind-down habits that protect your sleep and mornings</text>
+</svg>

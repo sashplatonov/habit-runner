@@ -1,0 +1,67 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-label="How to Build a Consistent Morning Routine">
+  <defs>
+    <linearGradient id="bg" x1="0" x2="1" y1="0" y2="1"><stop offset="0%" stop-color="#fff7ed"/><stop offset="100%" stop-color="#fffbeb"/></linearGradient>
+    <linearGradient id="sun" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stop-color="#fbbf24"/><stop offset="100%" stop-color="#f97316"/></linearGradient>
+    <linearGradient id="sky" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stop-color="#fef3c7"/><stop offset="100%" stop-color="#fed7aa"/></linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+
+  <!-- horizon -->
+  <rect x="0" y="330" width="1200" height="300" fill="url(#sky)" opacity="0.4"/>
+
+  <!-- sun rising from horizon -->
+  <circle cx="600" cy="320" r="110" fill="url(#sun)" opacity="0.25"/>
+  <circle cx="600" cy="320" r="80" fill="url(#sun)" opacity="0.4"/>
+  <circle cx="600" cy="330" r="52" fill="url(#sun)"/>
+  <!-- sun rays -->
+  <g stroke="#f59e0b" stroke-width="4" stroke-linecap="round" opacity="0.7">
+    <line x1="600" y1="258" x2="600" y2="232"/>
+    <line x1="645" y1="271" x2="660" y2="248"/>
+    <line x1="677" y1="305" x2="700" y2="296"/>
+    <line x1="677" y1="355" x2="702" y2="364"/>
+    <line x1="645" y1="389" x2="660" y2="412"/>
+    <line x1="555" y1="271" x2="540" y2="248"/>
+    <line x1="523" y1="305" x2="500" y2="296"/>
+    <line x1="523" y1="355" x2="498" y2="364"/>
+    <line x1="555" y1="389" x2="540" y2="412"/>
+  </g>
+
+  <!-- checklist card -->
+  <rect x="750" y="100" width="380" height="340" rx="24" fill="#ffffff" stroke="#fde68a" stroke-width="2"/>
+  <text x="940" y="136" font-family="Inter,Arial,sans-serif" font-size="16" font-weight="700" fill="#92400e" text-anchor="middle">Morning Checklist</text>
+  <line x1="770" y1="148" x2="1110" y2="148" stroke="#fef3c7" stroke-width="1"/>
+
+  <rect x="774" y="162" width="336" height="38" rx="10" fill="#fef9c3"/>
+  <text x="800" y="184" font-family="Inter,Arial,sans-serif" font-size="15" fill="#78350f">6:00 — Wake &amp; no screen 5 min</text>
+  <text x="1088" y="184" font-family="Inter,Arial,sans-serif" font-size="16" fill="#f59e0b" text-anchor="middle">✓</text>
+
+  <rect x="774" y="210" width="336" height="38" rx="10" fill="#fef9c3"/>
+  <text x="800" y="232" font-family="Inter,Arial,sans-serif" font-size="15" fill="#78350f">6:05 — Glass of water</text>
+  <text x="1088" y="232" font-family="Inter,Arial,sans-serif" font-size="16" fill="#f59e0b" text-anchor="middle">✓</text>
+
+  <rect x="774" y="258" width="336" height="38" rx="10" fill="#fef9c3"/>
+  <text x="800" y="280" font-family="Inter,Arial,sans-serif" font-size="15" fill="#78350f">6:10 — Light movement / stretch</text>
+  <text x="1088" y="280" font-family="Inter,Arial,sans-serif" font-size="16" fill="#f59e0b" text-anchor="middle">✓</text>
+
+  <rect x="774" y="306" width="336" height="38" rx="10" fill="#fff7ed" stroke="#fed7aa" stroke-width="1"/>
+  <text x="800" y="328" font-family="Inter,Arial,sans-serif" font-size="15" fill="#92400e">6:25 — Review 3 daily goals</text>
+  <text x="1088" y="328" font-family="Inter,Arial,sans-serif" font-size="16" fill="#94a3b8" text-anchor="middle">○</text>
+
+  <rect x="774" y="354" width="336" height="38" rx="10" fill="#fff7ed" stroke="#fed7aa" stroke-width="1"/>
+  <text x="800" y="376" font-family="Inter,Arial,sans-serif" font-size="15" fill="#92400e">6:30 — Focused work block</text>
+  <text x="1088" y="376" font-family="Inter,Arial,sans-serif" font-size="16" fill="#94a3b8" text-anchor="middle">○</text>
+
+  <!-- streak badge -->
+  <rect x="774" y="404" width="336" height="26" rx="8" fill="#fef3c7"/>
+  <text x="940" y="420" font-family="Inter,Arial,sans-serif" font-size="13" fill="#92400e" text-anchor="middle" font-weight="600">🔥 18-day morning streak</text>
+
+  <!-- rule card -->
+  <rect x="70" y="370" width="480" height="115" rx="20" fill="#ffffff" stroke="#fde68a" stroke-width="2"/>
+  <text x="100" y="400" font-family="Inter,Arial,sans-serif" font-size="14" fill="#78350f" font-weight="700">3 rules for consistency:</text>
+  <text x="100" y="426" font-family="Inter,Arial,sans-serif" font-size="13" fill="#92400e">1.  Start with 5 minutes, not 60</text>
+  <text x="100" y="450" font-family="Inter,Arial,sans-serif" font-size="13" fill="#92400e">2.  Anchor habits to existing cues</text>
+  <text x="100" y="474" font-family="Inter,Arial,sans-serif" font-size="13" fill="#92400e">3.  Track — even when you skip</text>
+
+  <text x="600" y="555" font-family="Inter,Arial,sans-serif" font-size="34" font-weight="700" fill="#0f172a" text-anchor="middle">How to Build a Consistent Morning Routine</text>
+  <text x="600" y="594" font-family="Inter,Arial,sans-serif" font-size="20" fill="#64748b" text-anchor="middle">A practical system that survives real life</text>
+</svg>

@@ -5,6 +5,7 @@ publishedAt: "2026-02-06"
 author: "Habbit Runner Team"
 keywords: "evening routine, nighttime routine habits, wind down routine, evening habits for better sleep, bedtime routine tips"
 readingTimeMinutes: 7
+coverImage: /blog/how-to-start-evening-routine.svg
 ---
 
 Morning routines get most of the attention, but a well-designed evening routine does something different: it closes the day.

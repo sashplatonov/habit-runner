@@ -5,6 +5,7 @@ publishedAt: "2026-03-22"
 author: "Habbit Runner Team"
 keywords: "no signup habit tracker, habit tracker no registration, habit app no email, anonymous habit tracking, start habit tracker immediately"
 readingTimeMinutes: 5
+coverImage: /blog/no-signup-habit-tracker.svg
 ---
 
 Creating an account takes time, requires trust, and generates email you'll have to manage later. For a habit tracker — something as personal and private as a daily routine — the registration requirement often feels disproportionate.

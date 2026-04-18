@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-label="Habit Tracker No Account Required">
+  <defs>
+    <linearGradient id="bg" x1="0" x2="1" y1="0" y2="1"><stop offset="0%" stop-color="#f0fdf4"/><stop offset="100%" stop-color="#ecfeff"/></linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <circle cx="100" cy="530" r="140" fill="#34d399" opacity="0.10"/>
+  <circle cx="1100" cy="100" r="120" fill="#06b6d4" opacity="0.10"/>
+
+  <!-- central card -->
+  <rect x="350" y="120" width="500" height="360" rx="32" fill="#ffffff" stroke="#d1fae5" stroke-width="2.5"/>
+
+  <!-- no-signup icon: open lock -->
+  <rect x="490" y="195" width="220" height="160" rx="20" fill="#ecfeff" stroke="#67e8f9" stroke-width="2.5"/>
+  <!-- lock shackle open -->
+  <path d="M560 195 C560 155 640 155 640 195" fill="none" stroke="#94a3b8" stroke-width="12" stroke-linecap="round"/>
+  <!-- open shackle right arm goes right -->
+  <path d="M640 195 L640 175" fill="none" stroke="#94a3b8" stroke-width="12" stroke-linecap="round"/>
+  <!-- keyhole -->
+  <circle cx="600" cy="265" r="22" fill="#0891b2"/>
+  <rect x="593" y="265" width="14" height="26" rx="7" fill="#0891b2"/>
+
+  <!-- checkmark badge -->
+  <circle cx="680" cy="185" r="36" fill="#10b981"/>
+  <path d="M663 185 L675 197 L698 171" fill="none" stroke="#ffffff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- text in card -->
+  <text x="600" y="415" font-family="Inter,Arial,sans-serif" font-size="24" font-weight="700" fill="#0f172a" text-anchor="middle">No Account Needed</text>
+  <text x="600" y="445" font-family="Inter,Arial,sans-serif" font-size="16" fill="#64748b" text-anchor="middle">Open the app and start tracking instantly</text>
+
+  <text x="600" y="542" font-family="Inter,Arial,sans-serif" font-size="36" font-weight="700" fill="#0f172a" text-anchor="middle">Habit Tracker Without an Account</text>
+  <text x="600" y="582" font-family="Inter,Arial,sans-serif" font-size="20" fill="#64748b" text-anchor="middle">Privacy-first, no email, no password</text>
+</svg>

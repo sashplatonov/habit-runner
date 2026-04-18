@@ -5,6 +5,7 @@ publishedAt: "2026-01-29"
 author: "Habbit Runner Team"
 keywords: "habit tracker PWA, progressive web app habit tracker, best habit tracker PWA, installable habit app, cross-platform habit tracker"
 readingTimeMinutes: 6
+coverImage: /blog/best-habit-tracker-pwa.svg
 ---
 
 A Progressive Web App (PWA) is a website that installs and behaves like a native app. You add it to your home screen, it opens without a browser tab, it can work offline, and it can receive push notifications.

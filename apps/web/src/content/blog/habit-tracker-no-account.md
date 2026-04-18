@@ -5,6 +5,7 @@ publishedAt: "2026-01-05"
 author: "Habbit Runner Team"
 keywords: "habit tracker no account, habit app without sign up, no login habit tracker, anonymous habit tracking, private habit tracker"
 readingTimeMinutes: 6
+coverImage: /blog/habit-tracker-no-account.svg
 ---
 
 Most apps treat registration as a prerequisite. You want to log a habit, but first you need an email address, a password, and a confirmation link. By the time you've set up the account, the motivation to track has passed.

@@ -5,6 +5,7 @@ publishedAt: "2026-04-03"
 author: "Habbit Runner Team"
 keywords: "private habit tracker, habit tracker privacy, no data collection habit app, local habit tracker, offline habit app"
 readingTimeMinutes: 6
+coverImage: /blog/best-habit-tracker-for-privacy.svg
 ---
 
 Habit tracking is personal. The habits you build — exercise, sleep, medication, mental health practices — reflect details about your life you might not want uploaded to a server by default.

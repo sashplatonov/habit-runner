@@ -5,6 +5,7 @@ publishedAt: "2026-03-26"
 author: "Habbit Runner Team"
 keywords: "productivity system fails, simple productivity system, minimalist productivity, why productivity systems don't work, habit-based productivity"
 readingTimeMinutes: 7
+coverImage: /blog/why-productivity-systems-fail.svg
 ---
 
 There is a point in most productivity system journeys where the system itself becomes the problem.

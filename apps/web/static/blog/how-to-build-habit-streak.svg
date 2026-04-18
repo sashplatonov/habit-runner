@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-label="How to Build a Habit Streak">
+  <defs>
+    <linearGradient id="bg" x1="0" x2="1" y1="0" y2="1"><stop offset="0%" stop-color="#fdf4ff"/><stop offset="100%" stop-color="#f0fdf4"/></linearGradient>
+    <linearGradient id="chain" x1="0" x2="1" y1="0" y2="0"><stop offset="0%" stop-color="#a855f7"/><stop offset="100%" stop-color="#10b981"/></linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <circle cx="150" cy="150" r="130" fill="#c084fc" opacity="0.10"/>
+  <circle cx="1050" cy="500" r="160" fill="#34d399" opacity="0.10"/>
+
+  <!-- chain links growing sequence: Day 1 → Day 7 → Day 21 → Day 100 -->
+  <!-- link 1 -->
+  <ellipse cx="220" cy="300" rx="55" ry="35" fill="none" stroke="#e2e8f0" stroke-width="22"/>
+  <text x="220" y="360" font-family="Inter,Arial,sans-serif" font-size="18" fill="#94a3b8" text-anchor="middle" font-weight="600">Day 1</text>
+  <!-- connector -->
+  <line x1="275" y1="300" x2="355" y2="300" stroke="#e2e8f0" stroke-width="10" stroke-linecap="round"/>
+  <!-- link 2 -->
+  <ellipse cx="430" cy="300" rx="55" ry="35" fill="none" stroke="#a855f7" stroke-width="22"/>
+  <text x="430" y="360" font-family="Inter,Arial,sans-serif" font-size="18" fill="#7c3aed" text-anchor="middle" font-weight="600">Day 7</text>
+  <!-- connector -->
+  <line x1="485" y1="300" x2="565" y2="300" stroke="#a855f7" stroke-width="10" stroke-linecap="round"/>
+  <!-- link 3 -->
+  <ellipse cx="640" cy="300" rx="65" ry="38" fill="none" stroke="#6366f1" stroke-width="24"/>
+  <text x="640" y="362" font-family="Inter,Arial,sans-serif" font-size="18" fill="#4338ca" text-anchor="middle" font-weight="600">Day 21</text>
+  <!-- connector -->
+  <line x1="705" y1="300" x2="785" y2="300" stroke="#10b981" stroke-width="12" stroke-linecap="round"/>
+  <!-- link 4 - biggest -->
+  <ellipse cx="880" cy="300" rx="80" ry="48" fill="none" stroke="#10b981" stroke-width="28"/>
+  <text x="880" y="366" font-family="Inter,Arial,sans-serif" font-size="20" fill="#047857" text-anchor="middle" font-weight="700">Day 100</text>
+  <!-- fire badge -->
+  <circle cx="960" cy="220" r="36" fill="#f97316"/>
+  <path d="M960 206 C955 215 945 225 950 238 C953 244 957 247 960 253 C963 247 967 244 970 238 C975 225 965 215 960 206Z" fill="#fef08a"/>
+
+  <text x="600" y="535" font-family="Inter,Arial,sans-serif" font-size="38" font-weight="700" fill="#0f172a" text-anchor="middle">How to Build a Habit Streak</text>
+  <text x="600" y="575" font-family="Inter,Arial,sans-serif" font-size="20" fill="#64748b" text-anchor="middle">Link one day at a time until it becomes automatic</text>
+</svg>
