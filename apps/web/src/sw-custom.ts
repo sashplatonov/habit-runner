@@ -3,6 +3,8 @@ import { precacheAndRoute } from 'workbox-precaching';
 
 declare const self: ServiceWorkerGlobalScope;
 
+type NotificationOptionsWithImage = NotificationOptions & { image?: string };
+
 // Precache app shell — list injected by vite-plugin-pwa at build time
 precacheAndRoute(self.__WB_MANIFEST);
 
@@ -35,14 +37,16 @@ self.addEventListener('push', (event: PushEvent) => {
         // ignore — proceed without icon cache guarantee
       }
 
-      await self.registration.showNotification(notificationData.title, {
+      const opts: NotificationOptionsWithImage = {
         body: notificationData.body,
         icon: iconUrl,
         badge: iconUrl,
         image: `${origin}/icon-512.png`,
         tag: 'habbit-reminder',
         requireInteraction: false
-      });
+      };
+
+      await self.registration.showNotification(notificationData.title, opts as unknown as NotificationOptions);
     })()
   );
 });
