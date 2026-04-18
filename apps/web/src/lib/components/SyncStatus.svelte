@@ -9,11 +9,12 @@
   type Props = {
     syncState?: SyncEngineSnapshot;
     onRetry?: () => void | Promise<void>;
+    openLogs?: boolean;
   };
 
   const MAX_VISIBLE_SYNC_LOGS = 8;
 
-  let { syncState, onRetry }: Props = $props();
+  let { syncState, onRetry, openLogs = false }: Props = $props();
   let showLogs = $state(false);
   let logs = $state<ClientLogEntry[]>([]);
 
@@ -89,6 +90,10 @@
   }
 
   onMount(() => {
+    // allow parent to request logs be visible when embedding in a modal
+    if (openLogs) {
+      showLogs = true;
+    }
     logs = readSyncLogs();
 
     const onClientLog = () => {
