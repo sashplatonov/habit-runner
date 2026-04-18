@@ -156,7 +156,7 @@
       {#if visibleLogs.length === 0}
         <div class="text-[11px] font-mono text-muted">No sync logs yet</div>
       {:else}
-        <div class="max-h-48 space-y-2 overflow-y-auto">
+        <div class="max-h-36 sm:max-h-48 space-y-2 overflow-y-auto">
           {#each visibleLogs as entry (`${entry.timestamp}:${entry.event}`)}
             <div class="rounded-lg bg-bg-card px-2 py-1.5">
               <div class="flex items-center gap-2 text-[11px] font-mono">
