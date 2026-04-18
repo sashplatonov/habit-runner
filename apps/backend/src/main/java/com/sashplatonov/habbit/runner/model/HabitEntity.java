@@ -6,8 +6,6 @@ import jakarta.persistence.Index;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import java.math.BigInteger;
-import java.time.Instant;
-import java.util.UUID;
 
 @Entity
 @Table(
@@ -17,20 +15,12 @@ import java.util.UUID;
     }
 )
 public class HabitEntity extends HabitSettingsFields {
-  @Column(name = "createdAt", nullable = false)
-  public Instant createdAt;
-
-  @Column(name = "updatedAt", nullable = false)
-  public Instant updatedAt;
-
   @Column(nullable = false)
   public int version;
 
   @PrePersist
   void prePersist() {
-    ensureId();
     initializeDefaults();
-    initializeAuditFields();
   }
 
   private void initializeDefaults() {
@@ -41,21 +31,6 @@ public class HabitEntity extends HabitSettingsFields {
     type = defaultType(type);
     freezeDays = defaultFreezeDays(freezeDays);
     version = Math.max(1, version);
-  }
-
-  private void initializeAuditFields() {
-    createdAt = createdAt != null ? createdAt : Instant.now();
-    updatedAt = updatedAt != null ? updatedAt : createdAt;
-  }
-
-  private void ensureId() {
-    if (!hasText(id)) {
-      id = UUID.randomUUID().toString();
-    }
-  }
-
-  private boolean hasText(String value) {
-    return value != null && !value.isBlank();
   }
 
   private BigInteger defaultSortOrder(BigInteger value) {
@@ -82,24 +57,8 @@ public class HabitEntity extends HabitSettingsFields {
     return sortOrder != null ? sortOrder : BigInteger.ZERO;
   }
 
-  public Instant createdAtValue() {
-    return createdAt;
-  }
-
-  public Instant updatedAtValue() {
-    return updatedAt;
-  }
-
   public int versionValue() {
     return version;
-  }
-
-  public void setCreatedAt(Instant instant) {
-    createdAt = instant;
-  }
-
-  public void setUpdatedAt(Instant instant) {
-    updatedAt = instant;
   }
 
   public void setSortOrder(BigInteger value) {

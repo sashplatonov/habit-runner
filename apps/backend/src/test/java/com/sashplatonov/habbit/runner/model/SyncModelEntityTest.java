@@ -8,6 +8,7 @@ import java.time.LocalDate;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class SyncModelEntityTest {
 
@@ -15,11 +16,26 @@ class SyncModelEntityTest {
   void shouldInitializeTombstoneDefaultsWhenPrePersistRuns() {
     var tombstone = new TombstoneEntity();
 
-    tombstone.prePersist();
+    runPrePersist(tombstone);
 
     assertNotNull(tombstone.id);
     assertEquals(1, tombstone.version);
     assertNotNull(tombstone.deletedAt);
+    assertNotNull(tombstone.createdAt);
+    assertNotNull(tombstone.updatedAt);
+  }
+
+  @Test
+  void shouldAlignTombstoneAuditFieldsWithExplicitDeletedAt() {
+    var deletedAt = Instant.parse("2026-04-09T12:00:00Z");
+    var tombstone = new TombstoneEntity();
+
+    tombstone.setDeletedAt(deletedAt);
+    runPrePersist(tombstone);
+
+    assertEquals(deletedAt, tombstone.deletedAtValue());
+    assertEquals(deletedAt, tombstone.createdAtValue());
+    assertEquals(deletedAt, tombstone.updatedAtValue());
   }
 
   @Test
@@ -29,7 +45,7 @@ class SyncModelEntityTest {
     checkin.version = 0;
     checkin.setCheckinDate(LocalDate.of(2026, 4, 9));
 
-    checkin.prePersist();
+    runPrePersist(checkin);
 
     assertNotNull(checkin.id);
     assertEquals(1, checkin.count);
@@ -37,6 +53,7 @@ class SyncModelEntityTest {
     assertEquals(LocalDate.of(2026, 4, 9), checkin.syncDate());
     assertEquals(checkin.createdAt, checkin.createdAtValue());
     assertEquals(checkin.updatedAt, checkin.updatedAtValue());
+    assertEquals(checkin.createdAt, checkin.updatedAt);
   }
 
   @Test
@@ -58,7 +75,7 @@ class SyncModelEntityTest {
     habit.dailyTarget = 0;
     habit.version = 0;
 
-    habit.prePersist();
+    runPrePersist(habit);
 
     assertNotNull(habit.id);
     assertEquals(1, habit.dailyTarget);
@@ -71,11 +88,60 @@ class SyncModelEntityTest {
   }
 
   @Test
+  void shouldPreserveExplicitUpdatedAtWhenHabitAuditUpdateRuns() {
+    var createdAt = Instant.parse("2026-04-09T12:00:00Z");
+    var manualUpdatedAt = Instant.parse("2026-04-09T12:05:00Z");
+    var habit = new HabitEntity();
+
+    habit.setCreatedAt(createdAt);
+    runPrePersist(habit);
+    habit.setUpdatedAt(manualUpdatedAt);
+    habit.preUpdateAudit();
+
+    assertEquals(createdAt, habit.createdAtValue());
+    assertEquals(manualUpdatedAt, habit.updatedAtValue());
+  }
+
+  @Test
   void shouldInitializeSyncOpLogTimestampWhenPrePersistRuns() {
     var logEntity = new SyncOpLogEntity();
 
-    logEntity.prePersist();
+    logEntity.prePersistAudit();
 
     assertNotNull(logEntity.createdAt);
+    assertNotNull(logEntity.updatedAt);
+    assertEquals(logEntity.createdAt, logEntity.updatedAt);
+  }
+
+  @Test
+  void shouldTouchCheckinUpdatedAtWhenAuditUpdateRunsWithoutChangingCreatedAt() {
+    var createdAt = Instant.parse("2026-04-09T12:00:00Z");
+    var checkin = new CheckinEntity();
+
+    checkin.setAuditTimestamps(createdAt, createdAt);
+    runPrePersist(checkin);
+    checkin.done = true;
+    checkin.preUpdateAudit();
+
+    assertEquals(createdAt, checkin.createdAtValue());
+    assertTrue(checkin.updatedAtValue().isAfter(createdAt));
+  }
+
+  private void runPrePersist(HabitEntity entity) {
+    entity.prePersistAudit();
+    entity.prePersistUuidId();
+    entity.prePersist();
+  }
+
+  private void runPrePersist(CheckinEntity entity) {
+    entity.prePersistAudit();
+    entity.prePersistUuidId();
+    entity.prePersist();
+  }
+
+  private void runPrePersist(TombstoneEntity entity) {
+    entity.prePersistAudit();
+    entity.prePersistUuidId();
+    entity.prePersist();
   }
 }
