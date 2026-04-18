@@ -81,7 +81,7 @@ With a local-first app, this data never leaves your device unless you opt into s
 
 ### Can an offline habit tracker sync to multiple devices?
 
-Yes, if the app is built with optional sync. Habbit Runner supports this — it works fully offline and syncs when you're connected. [Read more about offline habit tracking →](/blog/best-offline-habit-tracker-2025)
+Yes, if the app is built with optional sync. Habbit Runner supports this — it works fully offline and syncs when you're connected. [Read more about offline habit tracking →](/blog/best-offline-habit-tracker)
 
 ### Is offline storage safer than cloud storage?
 

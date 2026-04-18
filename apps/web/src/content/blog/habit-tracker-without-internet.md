@@ -56,7 +56,7 @@ In all of these cases, an offline-capable tracker lets you log immediately rathe
 
 ### Habbit Runner (PWA)
 
-Full offline functionality. The service worker caches the app shell and all data lives in IndexedDB on your device. Works in airplane mode, on the subway, in remote areas. When you reconnect, changes sync automatically. [Read the full comparison of offline habit trackers →](/blog/best-offline-habit-tracker-2025)
+Full offline functionality. The service worker caches the app shell and all data lives in IndexedDB on your device. Works in airplane mode, on the subway, in remote areas. When you reconnect, changes sync automatically. [Read the full comparison of offline habit trackers →](/blog/best-offline-habit-tracker)
 
 ### Loop Habit Tracker (Android)
 
