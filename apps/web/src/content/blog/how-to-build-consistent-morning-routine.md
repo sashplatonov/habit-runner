@@ -1,7 +1,7 @@
 ---
 title: "How to Build a Consistent Morning Routine That Actually Sticks"
 description: "Most morning routines fail because they're too ambitious. Learn how to design a minimal, resilient routine using the three-habit rule."
-publishedAt: "2026-04-16"
+publishedAt: "2026-01-09"
 author: "Habbit Runner Team"
 keywords: "morning routine, habit building, consistent routine, morning habits, daily routine tips"
 readingTimeMinutes: 6
