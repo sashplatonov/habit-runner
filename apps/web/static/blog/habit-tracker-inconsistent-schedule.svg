@@ -1,55 +1,82 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-label="Habit Tracker for Inconsistent Schedule">
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-label="Habit Tracker for Inconsistent Schedules: How to Build Routines Without a Fixed Schedule">
   <defs>
-    <linearGradient id="bg" x1="0" x2="1" y1="0" y2="1"><stop offset="0%" stop-color="#fdf8f0"/><stop offset="100%" stop-color="#fef3c7"/></linearGradient>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#edf8f0" />
+      <stop offset="100%" stop-color="#eefcf9" />
+    </linearGradient>
+    <linearGradient id="panel" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0d1f1b" />
+      <stop offset="100%" stop-color="#1b3b34" />
+    </linearGradient>
+    <pattern id="grid" width="48" height="48" patternUnits="userSpaceOnUse">
+      <path d="M48 0H0V48" fill="none" stroke="rgba(15, 23, 42, 0.07)" stroke-width="1" />
+    </pattern>
+    <filter id="shadowSoft" x="-20%" y="-20%" width="140%" height="150%">
+      <feDropShadow dx="0" dy="20" stdDeviation="24" flood-color="#0f172a" flood-opacity="0.12" />
+    </filter>
+    <filter id="shadowBoard" x="-20%" y="-20%" width="140%" height="150%">
+      <feDropShadow dx="0" dy="24" stdDeviation="28" flood-color="#0f172a" flood-opacity="0.16" />
+    </filter>
+    <clipPath id="boardClip">
+      <rect x="664" y="74" width="476" height="482" rx="42" />
+    </clipPath>
   </defs>
-  <rect width="1200" height="630" fill="url(#bg)"/>
-  <circle cx="100" cy="100" r="140" fill="#fbbf24" opacity="0.12"/>
-  <circle cx="1100" cy="540" r="150" fill="#f59e0b" opacity="0.10"/>
 
-  <!-- calendar grid: 5x4 -->
-  <rect x="250" y="110" width="700" height="380" rx="24" fill="#ffffff" stroke="#fde68a" stroke-width="2"/>
-  <text x="600" y="152" font-family="Inter,Arial,sans-serif" font-size="20" font-weight="600" fill="#0f172a" text-anchor="middle">This Week</text>
+  <rect width="1200" height="630" fill="url(#bg)" />
+  <rect width="1200" height="630" fill="url(#grid)" opacity="0.6" />
+  <circle cx="160" cy="104" r="210" fill="rgba(34, 197, 94, 0.14)" />
+  <circle cx="1040" cy="500" r="250" fill="rgba(20, 184, 166, 0.12)" />
+  <ellipse cx="924" cy="88" rx="200" ry="126" fill="rgba(132, 204, 22, 0.12)" />
+  <path d="M-40 492 C146 390 284 566 512 520 C736 476 870 314 1240 436" fill="none" stroke="rgba(34, 197, 94, 0.12)" stroke-width="42" stroke-linecap="round" />
 
-  <!-- calendar row headers -->
-  <text x="305" y="188" font-family="Inter,Arial,sans-serif" font-size="14" fill="#94a3b8" text-anchor="middle">Mon</text>
-  <text x="420" y="188" font-family="Inter,Arial,sans-serif" font-size="14" fill="#94a3b8" text-anchor="middle">Tue</text>
-  <text x="535" y="188" font-family="Inter,Arial,sans-serif" font-size="14" fill="#94a3b8" text-anchor="middle">Wed</text>
-  <text x="650" y="188" font-family="Inter,Arial,sans-serif" font-size="14" fill="#94a3b8" text-anchor="middle">Thu</text>
-  <text x="765" y="188" font-family="Inter,Arial,sans-serif" font-size="14" fill="#94a3b8" text-anchor="middle">Fri</text>
-  <text x="880" y="188" font-family="Inter,Arial,sans-serif" font-size="14" fill="#94a3b8" text-anchor="middle">Sat</text>
+  <rect x="56" y="56" width="560" height="518" rx="40" fill="rgba(255, 255, 255, 0.74)" stroke="rgba(15, 23, 42, 0.08)" filter="url(#shadowSoft)" />
 
-  <!-- habit 1 row: consistent -->
-  <text x="270" y="228" font-family="Inter,Arial,sans-serif" font-size="13" fill="#64748b">Morning walk</text>
-  <rect x="280" y="205" width="80" height="36" rx="10" fill="#d1fae5"/><text x="320" y="228" font-family="Inter,Arial,sans-serif" font-size="18" text-anchor="middle">✓</text>
-  <rect x="395" y="205" width="80" height="36" rx="10" fill="#d1fae5"/><text x="435" y="228" font-family="Inter,Arial,sans-serif" font-size="18" text-anchor="middle">✓</text>
-  <rect x="510" y="205" width="80" height="36" rx="10" fill="#fef3c7"/><text x="550" y="228" font-family="Inter,Arial,sans-serif" font-size="18" text-anchor="middle">~</text>
-  <rect x="625" y="205" width="80" height="36" rx="10" fill="#d1fae5"/><text x="665" y="228" font-family="Inter,Arial,sans-serif" font-size="18" text-anchor="middle">✓</text>
-  <rect x="740" y="205" width="80" height="36" rx="10" fill="#fee2e2"/><text x="780" y="228" font-family="Inter,Arial,sans-serif" font-size="18" text-anchor="middle">✗</text>
-  <rect x="855" y="205" width="80" height="36" rx="10" fill="#d1fae5"/><text x="895" y="228" font-family="Inter,Arial,sans-serif" font-size="18" text-anchor="middle">✓</text>
+  <rect x="88" y="84" width="190" height="38" rx="19" fill="rgba(255, 255, 255, 0.88)" stroke="rgba(15, 23, 42, 0.08)" />
+  <circle cx="112" cy="103" r="8" fill="#22c55e" />
+  <text x="130" y="109" fill="#0f172a" font-family="'Avenir Next', 'Segoe UI', 'Trebuchet MS', sans-serif" font-size="13" font-weight="700" letter-spacing="0.18em">HABBIT RUNNER BLOG</text>
 
-  <!-- habit 2 row: irregular -->
-  <text x="270" y="280" font-family="Inter,Arial,sans-serif" font-size="13" fill="#64748b">Read 15 min</text>
-  <rect x="280" y="257" width="80" height="36" rx="10" fill="#fee2e2"/><text x="320" y="280" font-family="Inter,Arial,sans-serif" font-size="18" text-anchor="middle">✗</text>
-  <rect x="395" y="257" width="80" height="36" rx="10" fill="#fee2e2"/><text x="435" y="280" font-family="Inter,Arial,sans-serif" font-size="18" text-anchor="middle">✗</text>
-  <rect x="510" y="257" width="80" height="36" rx="10" fill="#d1fae5"/><text x="550" y="280" font-family="Inter,Arial,sans-serif" font-size="18" text-anchor="middle">✓</text>
-  <rect x="625" y="257" width="80" height="36" rx="10" fill="#fef3c7"/><text x="665" y="280" font-family="Inter,Arial,sans-serif" font-size="18" text-anchor="middle">~</text>
-  <rect x="740" y="257" width="80" height="36" rx="10" fill="#d1fae5"/><text x="780" y="280" font-family="Inter,Arial,sans-serif" font-size="18" text-anchor="middle">✓</text>
-  <rect x="855" y="257" width="80" height="36" rx="10" fill="#d1fae5"/><text x="895" y="280" font-family="Inter,Arial,sans-serif" font-size="18" text-anchor="middle">✓</text>
+  <text x="88" y="152" fill="rgba(15, 23, 42, 0.56)" font-family="'Avenir Next', 'Segoe UI', 'Trebuchet MS', sans-serif" font-size="14" font-weight="700" letter-spacing="0.24em">FLEXIBLE ROUTINES</text>
 
-  <!-- habit 3 -->
-  <text x="270" y="332" font-family="Inter,Arial,sans-serif" font-size="13" fill="#64748b">Meditate</text>
-  <rect x="280" y="309" width="80" height="36" rx="10" fill="#d1fae5"/><text x="320" y="332" font-family="Inter,Arial,sans-serif" font-size="18" text-anchor="middle">✓</text>
-  <rect x="395" y="309" width="80" height="36" rx="10" fill="#fee2e2"/><text x="435" y="332" font-family="Inter,Arial,sans-serif" font-size="18" text-anchor="middle">✗</text>
-  <rect x="510" y="309" width="80" height="36" rx="10" fill="#fee2e2"/><text x="550" y="332" font-family="Inter,Arial,sans-serif" font-size="18" text-anchor="middle">✗</text>
-  <rect x="625" y="309" width="80" height="36" rx="10" fill="#d1fae5"/><text x="665" y="332" font-family="Inter,Arial,sans-serif" font-size="18" text-anchor="middle">✓</text>
-  <rect x="740" y="309" width="80" height="36" rx="10" fill="#d1fae5"/><text x="780" y="332" font-family="Inter,Arial,sans-serif" font-size="18" text-anchor="middle">✓</text>
-  <rect x="855" y="309" width="80" height="36" rx="10" fill="#fef3c7"/><text x="895" y="332" font-family="Inter,Arial,sans-serif" font-size="18" text-anchor="middle">~</text>
+  <text x="88" y="226" fill="#0f172a" font-family="'Iowan Old Style', Georgia, 'Times New Roman', serif" font-size="74" font-weight="700"><tspan x="88" dy="0">Flexible</tspan><tspan x="88" dy="72">Rhythms</tspan></text>
 
-  <!-- insight badge -->
-  <rect x="280" y="380" width="640" height="80" rx="16" fill="#fffbeb" stroke="#fde68a" stroke-width="1.5"/>
-  <text x="600" y="415" font-family="Inter,Arial,sans-serif" font-size="16" fill="#92400e" text-anchor="middle" font-weight="600">Good enough is good enough — 4/6 days still builds the habit.</text>
-  <text x="600" y="440" font-family="Inter,Arial,sans-serif" font-size="15" fill="#a16207" text-anchor="middle">Set flexible targets, not all-or-nothing streaks.</text>
+  
+      <g transform="translate(88 430)">
+        <rect width="118" height="34" rx="17" fill="rgba(15, 23, 42, 0.05)" stroke="rgba(15, 23, 42, 0.08)" />
+        <circle cx="18" cy="17" r="4" fill="#22c55e" />
+        <text x="30" y="22" fill="#0f172a" font-family="'Avenir Next', 'Segoe UI', 'Trebuchet MS', sans-serif" font-size="14" font-weight="600">shift work</text>
+      </g>
+      <g transform="translate(218 430)">
+        <rect width="145" height="34" rx="17" fill="rgba(15, 23, 42, 0.05)" stroke="rgba(15, 23, 42, 0.08)" />
+        <circle cx="18" cy="17" r="4" fill="#22c55e" />
+        <text x="30" y="22" fill="#0f172a" font-family="'Avenir Next', 'Segoe UI', 'Trebuchet MS', sans-serif" font-size="14" font-weight="600">variable days</text>
+      </g>
 
-  <text x="600" y="548" font-family="Inter,Arial,sans-serif" font-size="36" font-weight="700" fill="#0f172a" text-anchor="middle">Habit Tracking on an Inconsistent Schedule</text>
-  <text x="600" y="585" font-family="Inter,Arial,sans-serif" font-size="19" fill="#78716c" text-anchor="middle">Flexible systems that survive messy weeks</text>
+  <text x="88" y="470" fill="rgba(15, 23, 42, 0.72)" font-family="'Avenir Next', 'Segoe UI', 'Trebuchet MS', sans-serif" font-size="18" font-weight="600"><tspan x="88" dy="0">Habit Tracker for Inconsistent</tspan><tspan x="88" dy="24">Schedules: How to Build</tspan><tspan x="88" dy="24">Routines Without a Fixed...</tspan></text>
+  <text x="88" y="572" fill="rgba(15, 23, 42, 0.4)" font-family="'Avenir Next', 'Segoe UI', 'Trebuchet MS', sans-serif" font-size="14" font-weight="700" letter-spacing="0.08em">EDITORIAL COVER / HABIT-TRACKER-INCONSISTENT-SCHEDULE</text>
+
+  <g filter="url(#shadowBoard)">
+    <rect x="664" y="74" width="476" height="482" rx="42" fill="url(#panel)" stroke="rgba(255, 255, 255, 0.18)" />
+  </g>
+  <rect x="694" y="104" width="132" height="34" rx="17" fill="rgba(255, 255, 255, 0.08)" stroke="rgba(255, 255, 255, 0.14)" />
+  <text x="720" y="126" fill="#f8fafc" font-family="'Avenir Next', 'Segoe UI', 'Trebuchet MS', sans-serif" font-size="13" font-weight="700" letter-spacing="0.1em">flexible routines</text>
+  <g clip-path="url(#boardClip)">
+    <g transform="translate(619.8965517241379 130.41379310344828) scale(0.8706896551724138)">
+    <path d="M92 342 C142 252 226 270 254 214 C286 152 348 168 382 112 C412 64 504 96 556 160" fill="none" stroke="rgba(34, 197, 94, 0.86)" stroke-width="14" stroke-linecap="round" />
+    <path d="M92 342 C142 252 226 270 254 214 C286 152 348 168 382 112 C412 64 504 96 556 160" fill="none" stroke="rgba(255, 255, 255, 0.42)" stroke-width="4" stroke-linecap="round" stroke-dasharray="2 18" />
+    <circle cx="92" cy="342" r="18" fill="rgba(245, 158, 11, 0.2)" stroke="rgba(245, 158, 11, 0.6)" stroke-width="2" />
+    <circle cx="92" cy="342" r="6" fill="#f59e0b" />
+    <circle cx="254" cy="214" r="18" fill="rgba(20, 184, 166, 0.2)" stroke="rgba(20, 184, 166, 0.56)" stroke-width="2" />
+    <circle cx="254" cy="214" r="6" fill="#14b8a6" />
+    <circle cx="382" cy="112" r="18" fill="rgba(34, 197, 94, 0.2)" stroke="rgba(34, 197, 94, 0.58)" stroke-width="2" />
+    <circle cx="382" cy="112" r="6" fill="#22c55e" />
+    <rect x="128" y="112" width="118" height="58" rx="20" fill="rgba(255, 255, 255, 0.08)" stroke="rgba(255, 255, 255, 0.18)" />
+    <rect x="144" y="130" width="72" height="10" rx="5" fill="rgba(255, 255, 255, 0.68)" />
+    <rect x="144" y="148" width="58" height="8" rx="4" fill="rgba(255, 255, 255, 0.36)" />
+    <rect x="420" y="252" width="124" height="74" rx="22" fill="rgba(255, 255, 255, 0.08)" stroke="rgba(255, 255, 255, 0.18)" />
+    <circle cx="454" cy="290" r="12" fill="rgba(245, 158, 11, 0.28)" />
+    <path d="M450 290 h8 M454 286 v8" stroke="#f59e0b" stroke-width="3" stroke-linecap="round" />
+    <rect x="476" y="278" width="42" height="10" rx="5" fill="rgba(255, 255, 255, 0.62)" />
+    <rect x="476" y="296" width="56" height="8" rx="4" fill="rgba(255, 255, 255, 0.34)" />
+  </g>
+  </g>
 </svg>

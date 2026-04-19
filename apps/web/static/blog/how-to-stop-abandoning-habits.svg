@@ -1,45 +1,82 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-label="How to Stop Abandoning Habits">
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-label="Why You Keep Abandoning Habits (And How to Stop)">
   <defs>
-    <linearGradient id="bg" x1="0" x2="1" y1="0" y2="1"><stop offset="0%" stop-color="#f8fafc"/><stop offset="100%" stop-color="#f0fdf4"/></linearGradient>
-    <linearGradient id="arrow" x1="0" x2="1" y1="0" y2="0"><stop offset="0%" stop-color="#ef4444"/><stop offset="50%" stop-color="#f97316"/><stop offset="100%" stop-color="#10b981"/></linearGradient>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#fff3ec" />
+      <stop offset="100%" stop-color="#fff7d8" />
+    </linearGradient>
+    <linearGradient id="panel" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#231815" />
+      <stop offset="100%" stop-color="#4b2a20" />
+    </linearGradient>
+    <pattern id="grid" width="48" height="48" patternUnits="userSpaceOnUse">
+      <path d="M48 0H0V48" fill="none" stroke="rgba(31, 41, 55, 0.07)" stroke-width="1" />
+    </pattern>
+    <filter id="shadowSoft" x="-20%" y="-20%" width="140%" height="150%">
+      <feDropShadow dx="0" dy="20" stdDeviation="24" flood-color="#0f172a" flood-opacity="0.12" />
+    </filter>
+    <filter id="shadowBoard" x="-20%" y="-20%" width="140%" height="150%">
+      <feDropShadow dx="0" dy="24" stdDeviation="28" flood-color="#0f172a" flood-opacity="0.16" />
+    </filter>
+    <clipPath id="boardClip">
+      <rect x="664" y="74" width="476" height="482" rx="42" />
+    </clipPath>
   </defs>
-  <rect width="1200" height="630" fill="url(#bg)"/>
-  <circle cx="120" cy="500" r="160" fill="#10b981" opacity="0.08"/>
 
-  <!-- U-turn path -->
-  <path d="M180,250 L500,250 Q600,250 600,350 Q600,450 500,450 L260,450" fill="none" stroke="url(#arrow)" stroke-width="14" stroke-linecap="round" stroke-linejoin="round"/>
-  <!-- arrowhead at return -->
-  <polygon points="260,432 220,450 260,468" fill="#10b981"/>
+  <rect width="1200" height="630" fill="url(#bg)" />
+  <rect width="1200" height="630" fill="url(#grid)" opacity="0.6" />
+  <circle cx="160" cy="104" r="210" fill="rgba(251, 113, 133, 0.14)" />
+  <circle cx="1040" cy="500" r="250" fill="rgba(245, 158, 11, 0.12)" />
+  <ellipse cx="924" cy="88" rx="200" ry="126" fill="rgba(249, 115, 22, 0.12)" />
+  <path d="M-40 492 C146 390 284 566 512 520 C736 476 870 314 1240 436" fill="none" stroke="rgba(249, 115, 22, 0.12)" stroke-width="42" stroke-linecap="round" />
 
-  <!-- start label -->
-  <circle cx="180" cy="250" r="28" fill="#ef4444"/>
-  <text x="180" y="256" font-family="Inter,Arial,sans-serif" font-size="16" font-weight="700" fill="#ffffff" text-anchor="middle">quit</text>
+  <rect x="56" y="56" width="560" height="518" rx="40" fill="rgba(255, 255, 255, 0.74)" stroke="rgba(31, 41, 55, 0.08)" filter="url(#shadowSoft)" />
 
-  <!-- return label -->
-  <circle cx="220" cy="450" r="28" fill="#10b981"/>
-  <text x="220" y="456" font-family="Inter,Arial,sans-serif" font-size="13" font-weight="700" fill="#ffffff" text-anchor="middle">back</text>
+  <rect x="88" y="84" width="190" height="38" rx="19" fill="rgba(255, 255, 255, 0.88)" stroke="rgba(31, 41, 55, 0.08)" />
+  <circle cx="112" cy="103" r="8" fill="#f97316" />
+  <text x="130" y="109" fill="#1f2937" font-family="'Avenir Next', 'Segoe UI', 'Trebuchet MS', sans-serif" font-size="13" font-weight="700" letter-spacing="0.18em">HABBIT RUNNER BLOG</text>
 
-  <!-- phases along the curve -->
-  <rect x="530" y="180" width="180" height="56" rx="14" fill="#fef2f2" stroke="#fca5a5" stroke-width="1.5"/>
-  <text x="620" y="208" font-family="Inter,Arial,sans-serif" font-size="15" fill="#7f1d1d" text-anchor="middle" font-weight="600">Abandon point</text>
-  <text x="620" y="228" font-family="Inter,Arial,sans-serif" font-size="13" fill="#991b1b" text-anchor="middle">too hard / forgot</text>
+  <text x="88" y="152" fill="rgba(31, 41, 55, 0.56)" font-family="'Avenir Next', 'Segoe UI', 'Trebuchet MS', sans-serif" font-size="14" font-weight="700" letter-spacing="0.24em">HABIT DESIGN</text>
 
-  <rect x="510" y="440" width="200" height="56" rx="14" fill="#f0fdf4" stroke="#6ee7b7" stroke-width="1.5"/>
-  <text x="610" y="468" font-family="Inter,Arial,sans-serif" font-size="15" fill="#065f46" text-anchor="middle" font-weight="600">Recovery point</text>
-  <text x="610" y="488" font-family="Inter,Arial,sans-serif" font-size="13" fill="#047857" text-anchor="middle">smaller + scheduled</text>
+  <text x="88" y="226" fill="#1f2937" font-family="'Iowan Old Style', Georgia, 'Times New Roman', serif" font-size="74" font-weight="700"><tspan x="88" dy="0">Design It</tspan><tspan x="88" dy="72">To Last</tspan></text>
 
-  <!-- strategies panel -->
-  <rect x="740" y="160" width="380" height="320" rx="20" fill="#ffffff" stroke="#d1fae5" stroke-width="2"/>
-  <text x="930" y="198" font-family="Inter,Arial,sans-serif" font-size="17" font-weight="700" fill="#0f172a" text-anchor="middle">Stop abandoning habits</text>
-  <line x1="760" y1="212" x2="1100" y2="212" stroke="#f0fdf4" stroke-width="1"/>
-  <text x="770" y="244" font-family="Inter,Arial,sans-serif" font-size="15" fill="#059669">✓  Make it smaller</text>
-  <text x="770" y="276" font-family="Inter,Arial,sans-serif" font-size="15" fill="#059669">✓  Attach to existing habit</text>
-  <text x="770" y="308" font-family="Inter,Arial,sans-serif" font-size="15" fill="#059669">✓  Track misses, not just wins</text>
-  <text x="770" y="340" font-family="Inter,Arial,sans-serif" font-size="15" fill="#059669">✓  Reduce to 2-minute version</text>
-  <text x="770" y="372" font-family="Inter,Arial,sans-serif" font-size="15" fill="#059669">✓  Never miss twice in a row</text>
-  <text x="770" y="404" font-family="Inter,Arial,sans-serif" font-size="15" fill="#059669">✓  Review weekly, adjust monthly</text>
-  <text x="770" y="436" font-family="Inter,Arial,sans-serif" font-size="15" fill="#059669">✓  Use freeze days strategically</text>
+  
+      <g transform="translate(88 430)">
+        <rect width="145" height="34" rx="17" fill="rgba(31, 41, 55, 0.05)" stroke="rgba(31, 41, 55, 0.08)" />
+        <circle cx="18" cy="17" r="4" fill="#f97316" />
+        <text x="30" y="22" fill="#1f2937" font-family="'Avenir Next', 'Segoe UI', 'Trebuchet MS', sans-serif" font-size="14" font-weight="600">less friction</text>
+      </g>
+      <g transform="translate(245 430)">
+        <rect width="127" height="34" rx="17" fill="rgba(31, 41, 55, 0.05)" stroke="rgba(31, 41, 55, 0.08)" />
+        <circle cx="18" cy="17" r="4" fill="#f97316" />
+        <text x="30" y="22" fill="#1f2937" font-family="'Avenir Next', 'Segoe UI', 'Trebuchet MS', sans-serif" font-size="14" font-weight="600">small steps</text>
+      </g>
 
-  <text x="600" y="557" font-family="Inter,Arial,sans-serif" font-size="38" font-weight="700" fill="#0f172a" text-anchor="middle">How to Stop Abandoning Habits</text>
-  <text x="600" y="595" font-family="Inter,Arial,sans-serif" font-size="20" fill="#64748b" text-anchor="middle">Break the quit-restart cycle for good</text>
+  <text x="88" y="498" fill="rgba(31, 41, 55, 0.72)" font-family="'Avenir Next', 'Segoe UI', 'Trebuchet MS', sans-serif" font-size="20" font-weight="600"><tspan x="88" dy="0">Why You Keep Abandoning Habits</tspan><tspan x="88" dy="26">(And How to Stop)</tspan></text>
+  <text x="88" y="572" fill="rgba(31, 41, 55, 0.4)" font-family="'Avenir Next', 'Segoe UI', 'Trebuchet MS', sans-serif" font-size="14" font-weight="700" letter-spacing="0.08em">EDITORIAL COVER / HOW-TO-STOP-ABANDONING-HABITS</text>
+
+  <g filter="url(#shadowBoard)">
+    <rect x="664" y="74" width="476" height="482" rx="42" fill="url(#panel)" stroke="rgba(255, 255, 255, 0.18)" />
+  </g>
+  <rect x="694" y="104" width="132" height="34" rx="17" fill="rgba(255, 255, 255, 0.08)" stroke="rgba(255, 255, 255, 0.14)" />
+  <text x="720" y="126" fill="#f8fafc" font-family="'Avenir Next', 'Segoe UI', 'Trebuchet MS', sans-serif" font-size="13" font-weight="700" letter-spacing="0.1em">habit design</text>
+  <g clip-path="url(#boardClip)">
+    <g transform="translate(619.8965517241379 130.41379310344828) scale(0.8706896551724138)">
+    <path d="M92 342 C142 252 226 270 254 214 C286 152 348 168 382 112 C412 64 504 96 556 160" fill="none" stroke="rgba(249, 115, 22, 0.86)" stroke-width="14" stroke-linecap="round" />
+    <path d="M92 342 C142 252 226 270 254 214 C286 152 348 168 382 112 C412 64 504 96 556 160" fill="none" stroke="rgba(255, 255, 255, 0.42)" stroke-width="4" stroke-linecap="round" stroke-dasharray="2 18" />
+    <circle cx="92" cy="342" r="18" fill="rgba(250, 204, 21, 0.2)" stroke="rgba(250, 204, 21, 0.6)" stroke-width="2" />
+    <circle cx="92" cy="342" r="6" fill="#facc15" />
+    <circle cx="254" cy="214" r="18" fill="rgba(251, 113, 133, 0.2)" stroke="rgba(251, 113, 133, 0.56)" stroke-width="2" />
+    <circle cx="254" cy="214" r="6" fill="#fb7185" />
+    <circle cx="382" cy="112" r="18" fill="rgba(249, 115, 22, 0.2)" stroke="rgba(249, 115, 22, 0.58)" stroke-width="2" />
+    <circle cx="382" cy="112" r="6" fill="#f97316" />
+    <rect x="128" y="112" width="118" height="58" rx="20" fill="rgba(255, 255, 255, 0.08)" stroke="rgba(255, 255, 255, 0.18)" />
+    <rect x="144" y="130" width="72" height="10" rx="5" fill="rgba(255, 255, 255, 0.68)" />
+    <rect x="144" y="148" width="58" height="8" rx="4" fill="rgba(255, 255, 255, 0.36)" />
+    <rect x="420" y="252" width="124" height="74" rx="22" fill="rgba(255, 255, 255, 0.08)" stroke="rgba(255, 255, 255, 0.18)" />
+    <circle cx="454" cy="290" r="12" fill="rgba(250, 204, 21, 0.28)" />
+    <path d="M450 290 h8 M454 286 v8" stroke="#facc15" stroke-width="3" stroke-linecap="round" />
+    <rect x="476" y="278" width="42" height="10" rx="5" fill="rgba(255, 255, 255, 0.62)" />
+    <rect x="476" y="296" width="56" height="8" rx="4" fill="rgba(255, 255, 255, 0.34)" />
+  </g>
+  </g>
 </svg>

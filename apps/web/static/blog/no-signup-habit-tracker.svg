@@ -1,53 +1,84 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-label="No Signup Habit Tracker">
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-label="Best Habit Tracker Apps With No Sign-Up Required">
   <defs>
-    <linearGradient id="bg" x1="0" x2="1" y1="0" y2="1"><stop offset="0%" stop-color="#f0fdf4"/><stop offset="100%" stop-color="#ecfeff"/></linearGradient>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#fff1e7" />
+      <stop offset="100%" stop-color="#fff9e9" />
+    </linearGradient>
+    <linearGradient id="panel" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#27170f" />
+      <stop offset="100%" stop-color="#4a2815" />
+    </linearGradient>
+    <pattern id="grid" width="48" height="48" patternUnits="userSpaceOnUse">
+      <path d="M48 0H0V48" fill="none" stroke="rgba(31, 41, 55, 0.07)" stroke-width="1" />
+    </pattern>
+    <filter id="shadowSoft" x="-20%" y="-20%" width="140%" height="150%">
+      <feDropShadow dx="0" dy="20" stdDeviation="24" flood-color="#0f172a" flood-opacity="0.12" />
+    </filter>
+    <filter id="shadowBoard" x="-20%" y="-20%" width="140%" height="150%">
+      <feDropShadow dx="0" dy="24" stdDeviation="28" flood-color="#0f172a" flood-opacity="0.16" />
+    </filter>
+    <clipPath id="boardClip">
+      <rect x="664" y="74" width="476" height="482" rx="42" />
+    </clipPath>
   </defs>
-  <rect width="1200" height="630" fill="url(#bg)"/>
-  <circle cx="100" cy="100" r="120" fill="#34d399" opacity="0.10"/>
-  <circle cx="1100" cy="540" r="140" fill="#06b6d4" opacity="0.10"/>
 
-  <!-- comparison: signup required vs no signup -->
-  <!-- left: traditional sign-up flow -->
-  <rect x="80" y="120" width="440" height="380" rx="24" fill="#ffffff" stroke="#e2e8f0" stroke-width="2"/>
-  <rect x="80" y="120" width="440" height="52" rx="24" fill="#fee2e2"/>
-  <rect x="80" y="154" width="440" height="18" fill="#fee2e2"/>
-  <text x="300" y="153" font-family="Inter,Arial,sans-serif" font-size="16" font-weight="700" fill="#7f1d1d" text-anchor="middle">Traditional app</text>
+  <rect width="1200" height="630" fill="url(#bg)" />
+  <rect width="1200" height="630" fill="url(#grid)" opacity="0.6" />
+  <circle cx="160" cy="104" r="210" fill="rgba(251, 146, 60, 0.14)" />
+  <circle cx="1040" cy="500" r="250" fill="rgba(250, 204, 21, 0.12)" />
+  <ellipse cx="924" cy="88" rx="200" ry="126" fill="rgba(56, 189, 248, 0.12)" />
+  <path d="M-40 492 C146 390 284 566 512 520 C736 476 870 314 1240 436" fill="none" stroke="rgba(251, 146, 60, 0.12)" stroke-width="42" stroke-linecap="round" />
 
-  <text x="300" y="210" font-family="Inter,Arial,sans-serif" font-size="14" fill="#94a3b8" text-anchor="middle">Step 1</text>
-  <rect x="140" y="220" width="320" height="40" rx="10" fill="#f1f5f9" stroke="#e2e8f0" stroke-width="1"/>
-  <text x="300" y="245" font-family="Inter,Arial,sans-serif" font-size="14" fill="#475569" text-anchor="middle">Enter email address</text>
+  <rect x="56" y="56" width="560" height="518" rx="40" fill="rgba(255, 255, 255, 0.74)" stroke="rgba(31, 41, 55, 0.08)" filter="url(#shadowSoft)" />
 
-  <text x="300" y="280" font-family="Inter,Arial,sans-serif" font-size="14" fill="#94a3b8" text-anchor="middle">Step 2</text>
-  <rect x="140" y="290" width="320" height="40" rx="10" fill="#f1f5f9" stroke="#e2e8f0" stroke-width="1"/>
-  <text x="300" y="315" font-family="Inter,Arial,sans-serif" font-size="14" fill="#475569" text-anchor="middle">Create password</text>
+  <rect x="88" y="84" width="190" height="38" rx="19" fill="rgba(255, 255, 255, 0.88)" stroke="rgba(31, 41, 55, 0.08)" />
+  <circle cx="112" cy="103" r="8" fill="#fb923c" />
+  <text x="130" y="109" fill="#1f2937" font-family="'Avenir Next', 'Segoe UI', 'Trebuchet MS', sans-serif" font-size="13" font-weight="700" letter-spacing="0.18em">HABBIT RUNNER BLOG</text>
 
-  <text x="300" y="350" font-family="Inter,Arial,sans-serif" font-size="14" fill="#94a3b8" text-anchor="middle">Step 3</text>
-  <rect x="140" y="360" width="320" height="40" rx="10" fill="#f1f5f9" stroke="#e2e8f0" stroke-width="1"/>
-  <text x="300" y="385" font-family="Inter,Arial,sans-serif" font-size="14" fill="#475569" text-anchor="middle">Confirm email…</text>
+  <text x="88" y="152" fill="rgba(31, 41, 55, 0.56)" font-family="'Avenir Next', 'Segoe UI', 'Trebuchet MS', sans-serif" font-size="14" font-weight="700" letter-spacing="0.24em">LOW-FRICTION APPS</text>
 
-  <text x="300" y="430" font-family="Inter,Arial,sans-serif" font-size="14" fill="#94a3b8" text-anchor="middle">Step 4</text>
-  <rect x="140" y="438" width="320" height="40" rx="10" fill="#f1f5f9" stroke="#e2e8f0" stroke-width="1"/>
-  <text x="300" y="462" font-family="Inter,Arial,sans-serif" font-size="14" fill="#475569" text-anchor="middle">Onboarding survey…</text>
+  <text x="88" y="226" fill="#1f2937" font-family="'Iowan Old Style', Georgia, 'Times New Roman', serif" font-size="74" font-weight="700"><tspan x="88" dy="0">No Sign-Up</tspan><tspan x="88" dy="72">No Delay</tspan></text>
 
-  <!-- right: no signup -->
-  <rect x="680" y="120" width="440" height="380" rx="24" fill="#ffffff" stroke="#6ee7b7" stroke-width="2"/>
-  <rect x="680" y="120" width="440" height="52" rx="24" fill="#d1fae5"/>
-  <rect x="680" y="154" width="440" height="18" fill="#d1fae5"/>
-  <text x="900" y="153" font-family="Inter,Arial,sans-serif" font-size="16" font-weight="700" fill="#065f46" text-anchor="middle">No-signup app</text>
+  
+      <g transform="translate(88 430)">
+        <rect width="154" height="34" rx="17" fill="rgba(31, 41, 55, 0.05)" stroke="rgba(31, 41, 55, 0.08)" />
+        <circle cx="18" cy="17" r="4" fill="#fb923c" />
+        <text x="30" y="22" fill="#1f2937" font-family="'Avenir Next', 'Segoe UI', 'Trebuchet MS', sans-serif" font-size="14" font-weight="600">open instantly</text>
+      </g>
+      <g transform="translate(254 430)">
+        <rect width="118" height="34" rx="17" fill="rgba(31, 41, 55, 0.05)" stroke="rgba(31, 41, 55, 0.08)" />
+        <circle cx="18" cy="17" r="4" fill="#fb923c" />
+        <text x="30" y="22" fill="#1f2937" font-family="'Avenir Next', 'Segoe UI', 'Trebuchet MS', sans-serif" font-size="14" font-weight="600">zero forms</text>
+      </g>
 
-  <!-- direct access -->
-  <circle cx="900" cy="310" r="100" fill="#ecfdf5" stroke="#6ee7b7" stroke-width="2"/>
-  <!-- open lock icon -->
-  <rect x="864" y="295" width="72" height="56" rx="10" fill="#d1fae5" stroke="#34d399" stroke-width="2"/>
-  <path d="M882 295 C882 270 918 270 918 295" fill="none" stroke="#34d399" stroke-width="8" stroke-linecap="round"/>
-  <path d="M918 280 L918 268" fill="none" stroke="#94a3b8" stroke-width="8" stroke-linecap="round"/>
-  <circle cx="900" cy="320" r="10" fill="#059669"/>
-  <rect x="896" y="320" width="8" height="14" rx="4" fill="#059669"/>
+  <text x="88" y="498" fill="rgba(31, 41, 55, 0.72)" font-family="'Avenir Next', 'Segoe UI', 'Trebuchet MS', sans-serif" font-size="20" font-weight="600"><tspan x="88" dy="0">Best Habit Tracker Apps With</tspan><tspan x="88" dy="26">No Sign-Up Required</tspan></text>
+  <text x="88" y="572" fill="rgba(31, 41, 55, 0.4)" font-family="'Avenir Next', 'Segoe UI', 'Trebuchet MS', sans-serif" font-size="14" font-weight="700" letter-spacing="0.08em">EDITORIAL COVER / NO-SIGNUP-HABIT-TRACKER</text>
 
-  <!-- tap & go badge -->
-  <rect x="800" y="430" width="200" height="52" rx="16" fill="#059669"/>
-  <text x="900" y="462" font-family="Inter,Arial,sans-serif" font-size="17" font-weight="700" fill="#ffffff" text-anchor="middle">Open → Track ✓</text>
-
-  <text x="600" y="557" font-family="Inter,Arial,sans-serif" font-size="38" font-weight="700" fill="#0f172a" text-anchor="middle">No Signup Habit Tracker</text>
-  <text x="600" y="595" font-family="Inter,Arial,sans-serif" font-size="20" fill="#64748b" text-anchor="middle">Skip the onboarding. Start tracking in 10 seconds.</text>
+  <g filter="url(#shadowBoard)">
+    <rect x="664" y="74" width="476" height="482" rx="42" fill="url(#panel)" stroke="rgba(255, 255, 255, 0.18)" />
+  </g>
+  <rect x="694" y="104" width="132" height="34" rx="17" fill="rgba(255, 255, 255, 0.08)" stroke="rgba(255, 255, 255, 0.14)" />
+  <text x="720" y="126" fill="#f8fafc" font-family="'Avenir Next', 'Segoe UI', 'Trebuchet MS', sans-serif" font-size="13" font-weight="700" letter-spacing="0.1em">low-friction apps</text>
+  <g clip-path="url(#boardClip)">
+    <g transform="translate(619.5497835497836 123.4935064935065) scale(0.8744588744588745)">
+    <rect x="92" y="84" width="168" height="270" rx="30" fill="rgba(255, 255, 255, 0.08)" stroke="rgba(255, 255, 255, 0.18)" />
+    <rect x="278" y="114" width="142" height="220" rx="28" fill="rgba(255, 255, 255, 0.08)" stroke="rgba(255, 255, 255, 0.18)" />
+    <rect x="434" y="160" width="120" height="176" rx="26" fill="rgba(255, 255, 255, 0.08)" stroke="rgba(255, 255, 255, 0.18)" />
+    <circle cx="146" cy="136" r="22" fill="rgba(251, 146, 60, 0.2)" />
+    <path d="M132 136 h28 M146 122 v28" stroke="#fb923c" stroke-width="5" stroke-linecap="round" />
+    <rect x="122" y="180" width="108" height="12" rx="6" fill="rgba(255, 255, 255, 0.68)" />
+    <rect x="122" y="206" width="88" height="10" rx="5" fill="rgba(255, 255, 255, 0.38)" />
+    <rect x="122" y="230" width="112" height="10" rx="5" fill="rgba(255, 255, 255, 0.38)" />
+    <rect x="122" y="260" width="86" height="52" rx="18" fill="rgba(250, 204, 21, 0.18)" />
+    <path d="M320 158 a32 32 0 0 1 64 0" fill="none" stroke="rgba(250, 204, 21, 0.82)" stroke-width="8" stroke-linecap="round" />
+    <circle cx="352" cy="188" r="10" fill="#facc15" />
+    <rect x="306" y="226" width="86" height="10" rx="5" fill="rgba(255, 255, 255, 0.64)" />
+    <rect x="306" y="248" width="102" height="10" rx="5" fill="rgba(255, 255, 255, 0.36)" />
+    <rect x="306" y="272" width="76" height="10" rx="5" fill="rgba(255, 255, 255, 0.36)" />
+    <circle cx="492" cy="206" r="18" fill="rgba(56, 189, 248, 0.22)" />
+    <path d="M482 206 L490 214 L504 198" fill="none" stroke="#38bdf8" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
+    <rect x="462" y="246" width="66" height="8" rx="4" fill="rgba(255, 255, 255, 0.62)" />
+    <rect x="462" y="264" width="54" height="8" rx="4" fill="rgba(255, 255, 255, 0.34)" />
+  </g>
+  </g>
 </svg>

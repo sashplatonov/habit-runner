@@ -1,52 +1,84 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-label="Habit Tracker for Busy Parents">
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-label="Habit Tracker for Busy Parents: Keeping Routines Alive">
   <defs>
-    <linearGradient id="bg" x1="0" x2="1" y1="0" y2="1"><stop offset="0%" stop-color="#fdf4ff"/><stop offset="100%" stop-color="#fef3c7"/></linearGradient>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#fff1e7" />
+      <stop offset="100%" stop-color="#fff9e9" />
+    </linearGradient>
+    <linearGradient id="panel" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#27170f" />
+      <stop offset="100%" stop-color="#4a2815" />
+    </linearGradient>
+    <pattern id="grid" width="48" height="48" patternUnits="userSpaceOnUse">
+      <path d="M48 0H0V48" fill="none" stroke="rgba(31, 41, 55, 0.07)" stroke-width="1" />
+    </pattern>
+    <filter id="shadowSoft" x="-20%" y="-20%" width="140%" height="150%">
+      <feDropShadow dx="0" dy="20" stdDeviation="24" flood-color="#0f172a" flood-opacity="0.12" />
+    </filter>
+    <filter id="shadowBoard" x="-20%" y="-20%" width="140%" height="150%">
+      <feDropShadow dx="0" dy="24" stdDeviation="28" flood-color="#0f172a" flood-opacity="0.16" />
+    </filter>
+    <clipPath id="boardClip">
+      <rect x="664" y="74" width="476" height="482" rx="42" />
+    </clipPath>
   </defs>
-  <rect width="1200" height="630" fill="url(#bg)"/>
-  <circle cx="120" cy="120" r="120" fill="#e879f9" opacity="0.10"/>
-  <circle cx="1080" cy="520" r="140" fill="#f59e0b" opacity="0.12"/>
 
-  <!-- clock -->
-  <circle cx="340" cy="270" r="140" fill="#ffffff" stroke="#e2e8f0" stroke-width="3"/>
-  <circle cx="340" cy="270" r="8" fill="#0f172a"/>
-  <!-- hour markers -->
-  <line x1="340" y1="145" x2="340" y2="165" stroke="#0f172a" stroke-width="4" stroke-linecap="round"/>
-  <line x1="340" y1="375" x2="340" y2="395" stroke="#0f172a" stroke-width="4" stroke-linecap="round"/>
-  <line x1="215" y1="270" x2="235" y2="270" stroke="#0f172a" stroke-width="4" stroke-linecap="round"/>
-  <line x1="445" y1="270" x2="465" y2="270" stroke="#0f172a" stroke-width="4" stroke-linecap="round"/>
-  <!-- hour hand -->
-  <line x1="340" y1="270" x2="340" y2="195" stroke="#0f172a" stroke-width="6" stroke-linecap="round"/>
-  <!-- minute hand -->
-  <line x1="340" y1="270" x2="400" y2="230" stroke="#0f172a" stroke-width="4" stroke-linecap="round"/>
-  <!-- busy segments -->
-  <path d="M340 270 L340 160 A110 110 0 0 1 450 270Z" fill="#fef3c7" opacity="0.7"/>
-  <path d="M340 270 L450 270 A110 110 0 0 1 340 380Z" fill="#fee2e2" opacity="0.5"/>
+  <rect width="1200" height="630" fill="url(#bg)" />
+  <rect width="1200" height="630" fill="url(#grid)" opacity="0.6" />
+  <circle cx="160" cy="104" r="210" fill="rgba(251, 146, 60, 0.14)" />
+  <circle cx="1040" cy="500" r="250" fill="rgba(250, 204, 21, 0.12)" />
+  <ellipse cx="924" cy="88" rx="200" ry="126" fill="rgba(56, 189, 248, 0.12)" />
+  <path d="M-40 492 C146 390 284 566 512 520 C736 476 870 314 1240 436" fill="none" stroke="rgba(251, 146, 60, 0.12)" stroke-width="42" stroke-linecap="round" />
 
-  <!-- family figures (abstract) -->
-  <!-- parent 1 -->
-  <circle cx="680" cy="240" r="36" fill="#a855f7"/>
-  <path d="M620 390 L680 340 L740 390" fill="#a855f7" opacity="0.8"/>
-  <!-- parent 2 -->
-  <circle cx="800" cy="240" r="36" fill="#ec4899"/>
-  <path d="M740 390 L800 340 L860 390" fill="#ec4899" opacity="0.8"/>
-  <!-- child -->
-  <circle cx="740" cy="320" r="22" fill="#fbbf24"/>
-  <path d="M710 400 L740 370 L770 400" fill="#fbbf24" opacity="0.8"/>
+  <rect x="56" y="56" width="560" height="518" rx="40" fill="rgba(255, 255, 255, 0.74)" stroke="rgba(31, 41, 55, 0.08)" filter="url(#shadowSoft)" />
 
-  <!-- heart badge -->
-  <circle cx="740" cy="220" r="36" fill="#fef2f2" stroke="#fecaca" stroke-width="2"/>
-  <path d="M728 222 C728 214 740 210 740 220 C740 210 752 214 752 222 C752 230 740 238 740 238 C740 238 728 230 728 222Z" fill="#ef4444"/>
+  <rect x="88" y="84" width="190" height="38" rx="19" fill="rgba(255, 255, 255, 0.88)" stroke="rgba(31, 41, 55, 0.08)" />
+  <circle cx="112" cy="103" r="8" fill="#fb923c" />
+  <text x="130" y="109" fill="#1f2937" font-family="'Avenir Next', 'Segoe UI', 'Trebuchet MS', sans-serif" font-size="13" font-weight="700" letter-spacing="0.18em">HABBIT RUNNER BLOG</text>
 
-  <!-- habit panel -->
-  <rect x="580" y="410" width="440" height="120" rx="20" fill="#ffffff" stroke="#e2e8f0" stroke-width="2"/>
-  <text x="800" y="445" font-family="Inter,Arial,sans-serif" font-size="15" fill="#64748b" text-anchor="middle" font-weight="600">2-minute habits — just do the minimum</text>
-  <circle cx="620" cy="475" r="12" fill="#10b981"/>
-  <path d="M614 475 L619 480 L629 468" fill="none" stroke="#fff" stroke-width="2.5"/>
-  <text x="645" y="480" font-family="Inter,Arial,sans-serif" font-size="15" fill="#334155">Morning hydration</text>
-  <circle cx="620" cy="502" r="12" fill="#10b981"/>
-  <path d="M614 502 L619 507 L629 495" fill="none" stroke="#fff" stroke-width="2.5"/>
-  <text x="645" y="507" font-family="Inter,Arial,sans-serif" font-size="15" fill="#334155">1-minute stretch</text>
+  <text x="88" y="152" fill="rgba(31, 41, 55, 0.56)" font-family="'Avenir Next', 'Segoe UI', 'Trebuchet MS', sans-serif" font-size="14" font-weight="700" letter-spacing="0.24em">FAMILY ROUTINES</text>
 
-  <text x="600" y="568" font-family="Inter,Arial,sans-serif" font-size="36" font-weight="700" fill="#0f172a" text-anchor="middle">Habit Tracker for Busy Parents</text>
-  <text x="600" y="606" font-family="Inter,Arial,sans-serif" font-size="20" fill="#78716c" text-anchor="middle">Small habits that fit into a packed family schedule</text>
+  <text x="88" y="226" fill="#1f2937" font-family="'Iowan Old Style', Georgia, 'Times New Roman', serif" font-size="74" font-weight="700"><tspan x="88" dy="0">Small Wins</tspan><tspan x="88" dy="72">Still Count</tspan></text>
+
+  
+      <g transform="translate(88 430)">
+        <rect width="118" height="34" rx="17" fill="rgba(31, 41, 55, 0.05)" stroke="rgba(31, 41, 55, 0.08)" />
+        <circle cx="18" cy="17" r="4" fill="#fb923c" />
+        <text x="30" y="22" fill="#1f2937" font-family="'Avenir Next', 'Segoe UI', 'Trebuchet MS', sans-serif" font-size="14" font-weight="600">low energy</text>
+      </g>
+      <g transform="translate(218 430)">
+        <rect width="109" height="34" rx="17" fill="rgba(31, 41, 55, 0.05)" stroke="rgba(31, 41, 55, 0.08)" />
+        <circle cx="18" cy="17" r="4" fill="#fb923c" />
+        <text x="30" y="22" fill="#1f2937" font-family="'Avenir Next', 'Segoe UI', 'Trebuchet MS', sans-serif" font-size="14" font-weight="600">realistic</text>
+      </g>
+
+  <text x="88" y="470" fill="rgba(31, 41, 55, 0.72)" font-family="'Avenir Next', 'Segoe UI', 'Trebuchet MS', sans-serif" font-size="18" font-weight="600"><tspan x="88" dy="0">Habit Tracker for Busy</tspan><tspan x="88" dy="24">Parents: Keeping Routines</tspan><tspan x="88" dy="24">Alive</tspan></text>
+  <text x="88" y="572" fill="rgba(31, 41, 55, 0.4)" font-family="'Avenir Next', 'Segoe UI', 'Trebuchet MS', sans-serif" font-size="14" font-weight="700" letter-spacing="0.08em">EDITORIAL COVER / HABIT-TRACKER-FOR-BUSY-PARENTS</text>
+
+  <g filter="url(#shadowBoard)">
+    <rect x="664" y="74" width="476" height="482" rx="42" fill="url(#panel)" stroke="rgba(255, 255, 255, 0.18)" />
+  </g>
+  <rect x="694" y="104" width="132" height="34" rx="17" fill="rgba(255, 255, 255, 0.08)" stroke="rgba(255, 255, 255, 0.14)" />
+  <text x="720" y="126" fill="#f8fafc" font-family="'Avenir Next', 'Segoe UI', 'Trebuchet MS', sans-serif" font-size="13" font-weight="700" letter-spacing="0.1em">family routines</text>
+  <g clip-path="url(#boardClip)">
+    <g transform="translate(619.5497835497836 123.4935064935065) scale(0.8744588744588745)">
+    <rect x="92" y="84" width="168" height="270" rx="30" fill="rgba(255, 255, 255, 0.08)" stroke="rgba(255, 255, 255, 0.18)" />
+    <rect x="278" y="114" width="142" height="220" rx="28" fill="rgba(255, 255, 255, 0.08)" stroke="rgba(255, 255, 255, 0.18)" />
+    <rect x="434" y="160" width="120" height="176" rx="26" fill="rgba(255, 255, 255, 0.08)" stroke="rgba(255, 255, 255, 0.18)" />
+    <circle cx="146" cy="136" r="22" fill="rgba(251, 146, 60, 0.2)" />
+    <path d="M132 136 h28 M146 122 v28" stroke="#fb923c" stroke-width="5" stroke-linecap="round" />
+    <rect x="122" y="180" width="108" height="12" rx="6" fill="rgba(255, 255, 255, 0.68)" />
+    <rect x="122" y="206" width="88" height="10" rx="5" fill="rgba(255, 255, 255, 0.38)" />
+    <rect x="122" y="230" width="112" height="10" rx="5" fill="rgba(255, 255, 255, 0.38)" />
+    <rect x="122" y="260" width="86" height="52" rx="18" fill="rgba(250, 204, 21, 0.18)" />
+    <path d="M320 158 a32 32 0 0 1 64 0" fill="none" stroke="rgba(250, 204, 21, 0.82)" stroke-width="8" stroke-linecap="round" />
+    <circle cx="352" cy="188" r="10" fill="#facc15" />
+    <rect x="306" y="226" width="86" height="10" rx="5" fill="rgba(255, 255, 255, 0.64)" />
+    <rect x="306" y="248" width="102" height="10" rx="5" fill="rgba(255, 255, 255, 0.36)" />
+    <rect x="306" y="272" width="76" height="10" rx="5" fill="rgba(255, 255, 255, 0.36)" />
+    <circle cx="492" cy="206" r="18" fill="rgba(56, 189, 248, 0.22)" />
+    <path d="M482 206 L490 214 L504 198" fill="none" stroke="#38bdf8" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
+    <rect x="462" y="246" width="66" height="8" rx="4" fill="rgba(255, 255, 255, 0.62)" />
+    <rect x="462" y="264" width="54" height="8" rx="4" fill="rgba(255, 255, 255, 0.34)" />
+  </g>
+  </g>
 </svg>
