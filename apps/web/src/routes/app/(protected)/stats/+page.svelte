@@ -28,7 +28,7 @@
     INSIGHTS_TOOLTIP,
     OVERVIEW_SIGNALS_TOOLTIP,
     YOUR_INVESTMENT_TOOLTIP
-  } from '@/pages/components/blockGuideTooltips';
+  } from '$lib/habits/blockGuideTooltips';
   import { HABIT_COLOR_THEMES } from '$lib/theme/habit-colors';
   import {
     PERIOD_DISPLAY_NAMES,

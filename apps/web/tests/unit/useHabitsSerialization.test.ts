@@ -1,5 +1,5 @@
 import { expect, test } from 'vitest';
-import { runSerializedCompletionMutation } from '@/hooks/useHabits';
+import { runSerializedCompletionMutation } from '$lib/stores/habits';
 
 test('runSerializedCompletionMutation executes same habit sequentially', async () => {
   const events: string[] = [];

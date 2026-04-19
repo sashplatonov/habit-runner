@@ -3,12 +3,9 @@ import type { OutboxEntry } from '@/lib/storage/db';
 import { buildApiUrl } from '@/lib/api/url';
 import { authenticatedFetch } from '@/lib/auth/session';
 import { logClientError, logClientInfo } from '@/lib/logging/clientLogger';
+import { nowMs } from '$lib/time/perf';
 
 const buildUrl = buildApiUrl;
-
-function nowMs(): number {
-  return typeof performance !== 'undefined' ? performance.now() : Date.now();
-}
 
 function createErrorWithCause(message: string, cause: unknown): Error {
   const error = new Error(message);

@@ -5,7 +5,7 @@
   import { calculateScheduledStreak } from '$lib/habits/schedule';
   import type { Habit } from '@/types/habit';
   import type { HabitUpsertInput } from '$lib/stores/habits';
-  import { COLORS, DAILY_TARGET_OPTIONS, DAY_LABELS, ICONS, SUGGESTED_TAGS } from '@/pages/components/add-edit-habit.constants';
+  import { COLORS, DAILY_TARGET_OPTIONS, DAY_LABELS, ICONS, SUGGESTED_TAGS } from '$lib/habits/constants';
 
   type Props = {
     mode: 'create' | 'edit';

@@ -1,8 +1,4 @@
 services:
-  api:
-    networks:
-      - backend
-
   web:
     ports:
       - "5137:80"

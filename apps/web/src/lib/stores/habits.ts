@@ -29,13 +29,6 @@ import { formatDate } from '$lib/habits/habitStats';
 import { completionKeyToCalendarDate } from '$lib/completionKey';
 import { dexieLiveQuery } from '$lib/stores/dexieLiveQuery';
 
-function requireStructuredClone<T>(value: T): T {
-  if (typeof globalThis.structuredClone !== 'function') {
-    throw new Error('structuredClone is not available in this environment. Please run on Node 18+/modern browser or provide a polyfill.');
-  }
-  return globalThis.structuredClone(value);
-}
-
 type ToggleCompletionResult = { habitId: string; date: string; count: number };
 type AdvanceCompletionResult = ToggleCompletionResult & { previousCount: number; target: number };
 export type HabitUpsertInput = Omit<Habit, 'id' | 'completions' | 'createdAt'> & { sortOrder?: number; reminderTime?: string | null };
@@ -237,7 +230,7 @@ async function toggleCompletionImpl(
 }
 
 async function addHabitImpl(data: HabitUpsertInput) {
-  const safeData = requireStructuredClone<HabitUpsertInput>(data);
+  const safeData = structuredClone(data) as HabitUpsertInput;
   const now = nowSyncISO();
   const newHabit: Habit = {
     ...safeData,
@@ -264,7 +257,7 @@ async function updateHabitImpl(id: string, data: Partial<Habit>) {
   }
 
   const existing = habitEntityToDomain(entity);
-  const safeData = requireStructuredClone<Partial<Habit>>(data);
+  const safeData = structuredClone(data) as Partial<Habit>;
   const updatedHabit: Habit = {
     ...existing,
     ...safeData,

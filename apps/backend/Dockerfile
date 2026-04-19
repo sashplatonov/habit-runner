@@ -21,8 +21,11 @@ RUN set -eux; \
 
 FROM docker.io/library/eclipse-temurin:25-jre AS runtime
 WORKDIR /work
-# Install curl so the docker-compose healthcheck can call Quarkus HTTP health endpoint
-RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
+# Ensure wget is available for the healthcheck
+RUN set -eux; \
+	apt-get update; \
+	apt-get install -y --no-install-recommends wget; \
+	rm -rf /var/lib/apt/lists/*;
 # Copy the full Quarkus application layout so that quarkus-run.jar can load classes from lib/
 COPY --from=build /workspace/target/quarkus-app/ /work/
 
