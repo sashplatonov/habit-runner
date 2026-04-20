@@ -351,3 +351,49 @@ test('isMandatoryToday: monthly_weeks — multiple weeks, mandatory on any match
   expect(isMandatoryToday(habit, new Date('2026-03-20T00:00:00Z'), 'UTC')).toBe(true); // week 4 ✓
   expect(isMandatoryToday(habit, new Date('2026-03-13T00:00:00Z'), 'UTC')).toBe(false); // week 3, not in [2,4]
 });
+
+// ── streaks for non-daily schedules ─────────────────────────────────────────
+
+test('calculateScheduledStreak: weekly_days — skips unscheduled days and keeps streak', () => {
+  const habit = createHabit({
+    schedule: { type: 'weekly_days', weekdays: [1, 3, 5] }, // Mon, Wed, Fri
+    completions: {
+      [isoDate('2026-03-16T00:00:00Z')]: 1, // Mon
+      [isoDate('2026-03-18T00:00:00Z')]: 1, // Wed
+      [isoDate('2026-03-20T00:00:00Z')]: 1 // Fri
+    }
+  });
+
+  const result = calculateScheduledStreak(habit, habit.completions, new Date('2026-03-20T00:00:00Z'));
+  expect(result).toEqual({ current: 3, longest: 3 });
+});
+
+test('calculateScheduledStreak: weekly_days — missing today (scheduled) does not count today but preserves previous streak', () => {
+  const habit = createHabit({
+    schedule: { type: 'weekly_days', weekdays: [1, 3, 5] }, // Mon, Wed, Fri
+    completions: {
+      [isoDate('2026-03-16T00:00:00Z')]: 1, // Mon
+      [isoDate('2026-03-18T00:00:00Z')]: 1 // Wed
+      // missing Fri (2026-03-20)
+    }
+  });
+
+  const result = calculateScheduledStreak(habit, habit.completions, new Date('2026-03-20T00:00:00Z'));
+  expect(result.current).toBe(2);
+});
+
+test('calculateScheduledStreak: freezeDays are treated as skipped and do not break streaks', () => {
+  const calendarKey = isoDate('2026-03-20T00:00:00Z').slice(0, 10);
+  const habit = createHabit({
+    schedule: { type: 'weekly_days', weekdays: [1, 3, 5] },
+    completions: {
+      [isoDate('2026-03-16T00:00:00Z')]: 1, // Mon
+      [isoDate('2026-03-18T00:00:00Z')]: 1 // Wed
+    },
+    freezeDays: [calendarKey]
+  });
+
+  // Today (2026-03-20) is frozen — streak should remain 2
+  const result = calculateScheduledStreak(habit, habit.completions, new Date('2026-03-20T00:00:00Z'));
+  expect(result.current).toBe(2);
+});

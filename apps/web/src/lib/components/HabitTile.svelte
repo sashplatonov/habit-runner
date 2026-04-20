@@ -76,10 +76,11 @@
       });
       particles = newParticles;
 
-      if (isPhaseTransition(streak + 1)) {
-        setTimeout(async () => {
-          try {
-            const launch = await getConfetti();
+      // Small celebratory confetti for every new completion, larger burst on phase transitions
+      setTimeout(async () => {
+        try {
+          const launch = await getConfetti();
+          if (isPhaseTransition(streak + 1)) {
             void launch({
               particleCount: 150,
               spread: 160,
@@ -87,11 +88,20 @@
               colors: ['#FFD700', '#FFA500', accent.hex],
               zIndex: 1000
             });
-          } catch {
-            // ignore errors from confetti (non-critical visual affordance)
+          } else {
+            // gentler confetti for normal completions
+            void launch({
+              particleCount: 40,
+              spread: 110,
+              origin: { y: 0.7 },
+              colors: [accent.hex, '#ffffff'],
+              zIndex: 800
+            });
           }
-        }, 300);
-      }
+        } catch {
+          // ignore confetti errors (visual only)
+        }
+      }, 250);
 
       setTimeout(() => {
         animating = false;

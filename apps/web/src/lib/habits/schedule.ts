@@ -204,12 +204,15 @@ function findStreakStartDate(
   dailyTarget: number,
   timeZone: string
 ): string {
-  const today = toCalendarDate(new Date(), timeZone);
   const cursor = toCalendarDate(referenceDate, timeZone);
-  const isReferenceToday = cursor === today;
-  const isTodayScheduled = !isSkippedStreakDay(habit, schedule, today, timeZone);
-  const isTodayCompleted = isSuccessfulCompletion(habit, completions, toCompletionKey(today, timeZone), dailyTarget);
-  if (!isReferenceToday || !isTodayScheduled || isTodayCompleted) {
+
+  // Decide whether the reference day should be included in streak calculations.
+  // If the reference day is not scheduled or it is already completed, include it as the end.
+  // If the reference day is scheduled but not completed, shift the end one day earlier
+  // so the streak reflects consecutive completed scheduled days prior to the reference.
+  const isCursorScheduled = !isSkippedStreakDay(habit, schedule, cursor, timeZone);
+  const isCursorCompleted = isSuccessfulCompletion(habit, completions, toCompletionKey(cursor, timeZone), dailyTarget);
+  if (!isCursorScheduled || isCursorCompleted) {
     return cursor;
   }
 
