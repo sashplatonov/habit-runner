@@ -1,5 +1,6 @@
 <script lang="ts">
   import { addDaysToCalendarDate, calendarDateToDate } from '@habbit-runner/shared';
+  import { completionKeyToCalendarDate } from '@/lib/completionKey';
   import type { HabitColor } from '@/types/habit';
   import { formatDate } from '$lib/habits/habitStats';
   import { HABIT_COLOR_THEMES } from '$lib/theme/habit-colors';
@@ -13,7 +14,9 @@
   let { completions, dailyTarget = 1, color }: Props = $props();
 
   const days = $derived.by(() => {
-    const todayKey = formatDate(new Date());
+    // formatDate returns a canonical completion key (YYYY-MM-DDT00:00:00Z).
+    // Convert to plain calendar date (YYYY-MM-DD) before using addDaysToCalendarDate.
+    const todayKey = completionKeyToCalendarDate(formatDate(new Date()));
     return Array.from({ length: 30 }, (_, index) => addDaysToCalendarDate(todayKey, -(29 - index)));
   });
   const startDay = $derived(days[0] ? calendarDateToDate(days[0]).getDay() : 0);
