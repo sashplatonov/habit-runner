@@ -1,4 +1,6 @@
 <script lang="ts">
+  type ConfettiFn = typeof import('canvas-confetti');
+
   import { goto } from '$app/navigation';
   import { resolve } from '$app/paths';
   import { page } from '$app/state';
@@ -14,8 +16,11 @@
   import TargetRingSection from '$lib/components/TargetRingSection.svelte';
   import MonthlyRateSection from '$lib/components/MonthlyRateSection.svelte';
   import WeeklyCompletionsSection from '$lib/components/WeeklyCompletionsSection.svelte';
+  import { buildCelebrationParticles, getCelebrationLabel, type CelebrationParticle } from '$lib/habits/completionCelebration';
   import { completionKeyToCalendarDate } from '$lib/completionKey';
   import { formatHabitLabel } from '$lib/habits/formatHabitLabel';
+  import { calculateScheduledStreak } from '$lib/habits/schedule';
+  import { isPhaseTransition } from '$lib/habits/phases';
   import { habitsStore } from '$lib/stores/habits';
   import { getUndoContext } from '$lib/stores/undo';
   import { HABIT_COLOR_THEMES } from '$lib/theme/habit-colors';
@@ -35,6 +40,22 @@
   const completedToday = $derived(todayCompletionCount >= dailyTarget);
   const canIncrement = $derived(todayCompletionCount < dailyTarget);
   const isTodayFrozen = $derived(habit ? habit.freezeDays.includes(todayFreezeKey) : false);
+  let detailConfetti: ConfettiFn | null = null;
+  let detailAnimating = $state(false);
+  let detailCelebrationLabel = $state('');
+  let detailParticles = $state<CelebrationParticle[]>([]);
+  let detailParticleCounter = 0;
+
+  async function getDetailConfetti() {
+    if (detailConfetti) {
+      return detailConfetti;
+    }
+
+    const mod = await import('canvas-confetti') as ConfettiFn & { default?: ConfettiFn };
+    detailConfetti = mod.default ?? mod;
+    return detailConfetti;
+  }
+
   const heatmapDetails = $derived.by(() => {
     if (!habit) {
       return {};
@@ -98,6 +119,68 @@
 
     const previousCount = habit.completions[todayKey] ?? 0;
     const nextCount = Math.min(dailyTarget, previousCount + 1);
+
+    if (nextCount > previousCount) {
+      detailAnimating = true;
+      detailCelebrationLabel = getCelebrationLabel(nextCount, dailyTarget);
+      const burst = buildCelebrationParticles({
+        startId: detailParticleCounter,
+        colors: [accent?.hex ?? '#f8fafc', '#fff7ed', '#fbbf24'],
+        count: 12,
+        spread: 30,
+        lift: 18
+      });
+      detailParticles = burst.particles;
+      detailParticleCounter = burst.nextId;
+
+      const currentStreak = calculateScheduledStreak(habit, habit.completions).current;
+      const isMilestone = nextCount >= dailyTarget && isPhaseTransition(currentStreak + 1);
+      setTimeout(async () => {
+        try {
+          const launch = await getDetailConfetti();
+          if (isMilestone) {
+            void launch({
+              particleCount: 180,
+              spread: 165,
+              startVelocity: 42,
+              origin: { y: 0.18 },
+              colors: [accent?.hex ?? '#f8fafc', '#fbbf24', '#fff7ed'],
+              zIndex: 1000
+            });
+          } else {
+            void launch({
+              particleCount: 24,
+              angle: 60,
+              spread: 82,
+              startVelocity: 28,
+              origin: { x: 0.42, y: 0.2 },
+              colors: [accent?.hex ?? '#f8fafc', '#fff7ed', '#fbbf24'],
+              scalar: 0.86,
+              zIndex: 900
+            });
+            void launch({
+              particleCount: 24,
+              angle: 120,
+              spread: 82,
+              startVelocity: 28,
+              origin: { x: 0.58, y: 0.2 },
+              colors: [accent?.hex ?? '#f8fafc', '#fff7ed', '#fbbf24'],
+              scalar: 0.86,
+              zIndex: 900
+            });
+          }
+        } catch {
+          // ignore confetti errors (visual only)
+        }
+      }, 180);
+
+      setTimeout(() => {
+        detailAnimating = false;
+        detailCelebrationLabel = '';
+        detailParticles = [];
+      }, 900);
+    }
+
     await habitsStore.setCompletionCount(habit.id, todayKey, nextCount);
     undoStore.push({
       message: `Progress ${nextCount}/${dailyTarget}: ${habit.name}`,
@@ -204,18 +287,32 @@
             <Pencil size={13} />
           </a>
 
-          <button
-            type="button"
-            class="rounded border px-3 py-1.5 text-xs font-mono font-medium transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-40 {completedToday ? 'border-border bg-transparent text-muted' : 'font-bold text-bg-primary'}"
-            style={!completedToday ? `background-color: ${accent.hex}; border-color: ${accent.hex}; box-shadow: 0 0 16px ${accent.glow};` : ''}
-            onclick={() => {
-              void handleIncrementCompletion();
-            }}
-            disabled={!canIncrement}
-            aria-label={completedToday ? 'Habit completed today' : 'Mark as completed today'}
-          >
-            {completedToday ? 'Done' : 'Add +1'}
-          </button>
+          <div class="relative">
+            {#if detailAnimating}
+              {#each detailParticles as p (p.id)}
+                <span
+                  class="completion-burst-particle"
+                  style="--tx: {p.tx}px; --ty: {p.ty}px; --particle-size: {p.size}px; --particle-rotate: {p.rotation}deg; --particle-delay: {p.delay}ms; --particle-duration: {p.duration}ms; --particle-color: {p.color}; background: {p.color}; border-radius: {p.radius}; left: 50%; top: 50%; margin-left: calc({p.size}px / -2); margin-top: calc({p.size}px / -2);"
+                ></span>
+              {/each}
+              <span class="completion-status-pop" style="color: {accent.hex}">{detailCelebrationLabel}</span>
+            {/if}
+            <button
+              type="button"
+              class="relative overflow-hidden rounded border px-3 py-1.5 text-xs font-mono font-medium transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-40 {completedToday ? 'border-border bg-transparent text-muted' : 'font-bold text-bg-primary'} {detailAnimating ? 'animate-check-pulse animate-glow-burst' : ''}"
+              style={!completedToday ? `background-color: ${accent.hex}; border-color: ${accent.hex}; box-shadow: 0 0 16px ${accent.glow};` : ''}
+              onclick={() => {
+                void handleIncrementCompletion();
+              }}
+              disabled={!canIncrement}
+              aria-label={completedToday ? 'Habit completed today' : 'Mark as completed today'}
+            >
+              {#if detailAnimating}
+                <span class="completion-sheen" style="--sheen-color: {accent.hex}"></span>
+              {/if}
+              {completedToday ? 'Done' : 'Add +1'}
+            </button>
+          </div>
 
           <button
             type="button"

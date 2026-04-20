@@ -37,6 +37,7 @@
     getScheduleStatusForDate,
     isMandatoryToday
   } from '$lib/habits/schedule';
+  import { buildCelebrationParticles, getCelebrationLabel, type CelebrationParticle } from '$lib/habits/completionCelebration';
   import { formatDate, getDaysSinceLastCompletion } from '$lib/habits/habitStats';
   import { habitsStore } from '$lib/stores/habits';
   import { syncEngineStore } from '$lib/stores/syncEngine';
@@ -94,7 +95,8 @@
   }
 
   let animatingHabitId = $state<string | null>(null);
-  let animParticles    = $state<{ id: number; tx: number; ty: number; color: string }[]>([]);
+  let animParticles    = $state<CelebrationParticle[]>([]);
+  let animLabel        = $state('');
   let particleCounter  = 0;
 
   let dragId     = $state<string | null>(null);
@@ -321,38 +323,74 @@
   }
 
   // ─── Toggle with animation + confetti ────────────────────────────────────────
-  const BURST_COLORS = ['#FFD700', '#FFA500', '#fff', 'var(--accent)'];
+  const BURST_COLORS = ['#fff7ed', '#fbbf24', '#fde68a'];
 
   async function toggleHabit(habit: Habit) {
     const tgt = Math.max(1, habit.dailyTarget ?? 1);
     const cur = habit.completions[todayKey] ?? 0;
 
     if (cur < tgt) {
+      const accent = HABIT_COLOR_THEMES[habit.color];
+      const nextCount = Math.min(tgt, cur + 1);
       animatingHabitId = habit.id;
-      animParticles = Array.from({ length: 8 }, (_, i) => {
-        const angle = (i / 8) * 2 * Math.PI;
-        const dist  = 22 + Math.random() * 16;
-        return {
-          id:    ++particleCounter,
-          tx:    Math.cos(angle) * dist,
-          ty:    Math.sin(angle) * dist - 10,
-          color: BURST_COLORS[i % BURST_COLORS.length]
-        };
+      animLabel = getCelebrationLabel(nextCount, tgt);
+
+      const burst = buildCelebrationParticles({
+        startId: particleCounter,
+        colors: [accent.hex, ...BURST_COLORS],
+        count: 12,
+        spread: 26,
+        lift: 14
       });
+      animParticles = burst.particles;
+      particleCounter = burst.nextId;
 
       const { current } = calculateScheduledStreak(habit, habit.completions);
-      if (isPhaseTransition(current + 1)) {
-        setTimeout(async () => {
-          try {
-            const launch = await getConfetti();
-            void launch({ particleCount: 180, spread: 160, origin: { y: 0.6 }, colors: ['#FFD700', '#FFA500', '#fff'], zIndex: 1000 });
-          } catch {
-            // ignore errors from confetti (non-critical visual affordance)
+      const isMilestone = isPhaseTransition(current + 1);
+      setTimeout(async () => {
+        try {
+          const launch = await getConfetti();
+          if (isMilestone) {
+            void launch({
+              particleCount: 180,
+              spread: 165,
+              startVelocity: 42,
+              origin: { y: 0.6 },
+              colors: [accent.hex, '#fbbf24', '#fff7ed'],
+              zIndex: 1000
+            });
+          } else {
+            void launch({
+              particleCount: 26,
+              angle: 60,
+              spread: 84,
+              startVelocity: 30,
+              origin: { x: 0.42, y: 0.74 },
+              colors: [accent.hex, '#fff7ed', '#fbbf24'],
+              scalar: 0.88,
+              zIndex: 900
+            });
+            void launch({
+              particleCount: 26,
+              angle: 120,
+              spread: 84,
+              startVelocity: 30,
+              origin: { x: 0.58, y: 0.74 },
+              colors: [accent.hex, '#fff7ed', '#fbbf24'],
+              scalar: 0.88,
+              zIndex: 900
+            });
           }
-        }, 300);
-      }
+        } catch {
+          // ignore errors from confetti (non-critical visual affordance)
+        }
+      }, 180);
 
-      setTimeout(() => { animatingHabitId = null; animParticles = []; }, 700);
+      setTimeout(() => {
+        animatingHabitId = null;
+        animParticles = [];
+        animLabel = '';
+      }, 900);
     }
 
     await habitsStore.advanceCompletionCount(habit.id, todayKey);
@@ -1138,10 +1176,11 @@
                         {#if isAnimating}
                           {#each animParticles as p (p.id)}
                             <span
-                              class="confetti-particle"
-                              style="--tx: {p.tx}px; --ty: {p.ty}px; background: {p.color}; left: 50%; top: 50%; margin-left: -3px; margin-top: -3px;"
+                              class="completion-burst-particle"
+                              style="--tx: {p.tx}px; --ty: {p.ty}px; --particle-size: {p.size}px; --particle-rotate: {p.rotation}deg; --particle-delay: {p.delay}ms; --particle-duration: {p.duration}ms; --particle-color: {p.color}; background: {p.color}; border-radius: {p.radius}; left: 50%; top: 50%; margin-left: calc({p.size}px / -2); margin-top: calc({p.size}px / -2);"
                             ></span>
                           {/each}
+                          <span class="completion-status-pop" style="color: {accent.hex}">{animLabel}</span>
                         {/if}
                         <button
                           type="button"
@@ -1153,6 +1192,9 @@
                             {isAnimating ? 'animate-check-pulse animate-glow-burst' : ''}"
                           style={completed && !isFrozen ? `box-shadow: 0 0 12px ${accent.glow}` : ''}
                         >
+                          {#if isAnimating}
+                            <span class="completion-sheen" style="--sheen-color: {accent.hex}"></span>
+                          {/if}
                           {#if tgt > 1}
                             {@const prog = Math.min(Math.max(todayCount, 0), tgt) / tgt}
                             <span class="absolute inset-[2px] rounded-full pointer-events-none overflow-hidden" aria-hidden="true">
@@ -1351,10 +1393,11 @@
                       {#if isAnimating}
                         {#each animParticles as p (p.id)}
                           <span
-                            class="confetti-particle"
-                            style="--tx: {p.tx}px; --ty: {p.ty}px; background: {p.color}; left: 50%; top: 50%; margin-left: -3px; margin-top: -3px;"
+                            class="completion-burst-particle"
+                            style="--tx: {p.tx}px; --ty: {p.ty}px; --particle-size: {p.size}px; --particle-rotate: {p.rotation}deg; --particle-delay: {p.delay}ms; --particle-duration: {p.duration}ms; --particle-color: {p.color}; background: {p.color}; border-radius: {p.radius}; left: 50%; top: 50%; margin-left: calc({p.size}px / -2); margin-top: calc({p.size}px / -2);"
                           ></span>
                         {/each}
+                        <span class="completion-status-pop" style="color: {accent.hex}">{animLabel}</span>
                       {/if}
                       <button
                         type="button"
@@ -1366,6 +1409,9 @@
                           {isAnimating ? 'animate-check-pulse animate-glow-burst' : ''}"
                         style={completed && !isFrozen ? `box-shadow: 0 0 12px ${accent.glow}` : ''}
                       >
+                        {#if isAnimating}
+                          <span class="completion-sheen" style="--sheen-color: {accent.hex}"></span>
+                        {/if}
                         {#if tgt > 1}
                           {@const prog = Math.min(Math.max(todayCount, 0), tgt) / tgt}
                           <span class="absolute inset-[2px] rounded-full pointer-events-none overflow-hidden" aria-hidden="true">

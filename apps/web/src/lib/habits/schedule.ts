@@ -116,6 +116,7 @@ function isSuccessfulCompletion(
 function buildQuotaMatches({
   periodWindow,
   getBoundaries,
+  referenceDate,
   schedule,
   habit,
   completions,
@@ -125,6 +126,7 @@ function buildQuotaMatches({
 }: {
   periodWindow: number;
   getBoundaries: (offset: number) => CalendarRange;
+  referenceDate: Date;
   schedule: HabitSchedule;
   habit: Habit;
   completions: Record<string, number>;
@@ -132,15 +134,11 @@ function buildQuotaMatches({
   periodTarget: number;
   timeZone: string;
 }): (boolean | null)[] {
-  const today = toCalendarDate(new Date(), timeZone);
+  const referenceDay = toCalendarDate(referenceDate, timeZone);
   const meetsTarget: (boolean | null)[] = [];
 
   for (let offset = 0; offset < periodWindow; offset += 1) {
     const { start, end } = getBoundaries(offset);
-    if (end > today) {
-      meetsTarget.push(null);
-      continue;
-    }
 
     let frozenCount = 0;
     for (let cursor = start; cursor <= end; cursor = addDaysToCalendarDate(cursor, 1)) {
@@ -150,7 +148,14 @@ function buildQuotaMatches({
     }
 
     const adjustedTarget = Math.max(0, periodTarget - frozenCount);
-    const completed = countCompletedDaysInRange(completions, start, end, dailyTarget, schedule, timeZone);
+    const evaluationEnd = end > referenceDay ? referenceDay : end;
+    const completed = countCompletedDaysInRange(completions, start, evaluationEnd, dailyTarget, schedule, timeZone);
+
+    if (end > referenceDay && completed < adjustedTarget) {
+      meetsTarget.push(null);
+      continue;
+    }
+
     meetsTarget.push(completed >= adjustedTarget);
   }
 
@@ -159,10 +164,15 @@ function buildQuotaMatches({
 
 function summarizeBooleanStreak(values: (boolean | null)[]): { current: number; longest: number; metCount: number } {
   let current = 0;
+  let currentStarted = false;
   for (const value of values) {
+    if (value === null && !currentStarted) {
+      continue;
+    }
     if (value !== true) {
       break;
     }
+    currentStarted = true;
     current += 1;
   }
 
@@ -487,6 +497,7 @@ function calculateQuotaStreak(
     buildQuotaMatches({
       periodWindow,
       getBoundaries: (offset) => buildWeekBoundaries(referenceDate, offset, timeZone),
+      referenceDate,
       schedule,
       habit,
       completions,
@@ -512,6 +523,7 @@ function calculateMonthlyQuotaStreak(
     buildQuotaMatches({
       periodWindow: MONTH_LOOKBACK,
       getBoundaries: (offset) => buildMonthBoundaries(referenceDate, offset, timeZone),
+      referenceDate,
       schedule,
       habit,
       completions,

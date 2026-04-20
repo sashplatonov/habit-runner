@@ -12,6 +12,7 @@
     getScheduleStatusForDate,
     isMandatoryToday
   } from '$lib/habits/schedule';
+  import { buildCelebrationParticles, getCelebrationLabel, type CelebrationParticle } from '$lib/habits/completionCelebration';
   import { isPhaseTransition, getHabitPhase } from '$lib/habits/phases';
   import type { Habit } from '@/types/habit';
 
@@ -28,10 +29,11 @@
 
   const { habit, todayKey, todayDate, onToggle, onDetail, appearanceIndex = 0 }: Props = $props();
 
-  const CONFETTI_COLORS = ['var(--accent)', 'var(--accent-secondary)', '#fff', 'var(--glow)'];
+  const CONFETTI_COLORS = ['#fff7ed', '#fbbf24', '#fde68a'];
 
   let animating = $state(false);
-  let particles = $state<{ id: number; tx: number; ty: number; color: string }[]>([]);
+  let particles = $state<CelebrationParticle[]>([]);
+  let celebrationLabel = $state('');
   let particleIdCounter = 0;
   let confetti: ConfettiFn | null = null;
 
@@ -64,17 +66,17 @@
 
     if (!completed) {
       animating = true;
-      const newParticles = Array.from({ length: 8 }, (_, i) => {
-        const angle = (i / 8) * 2 * Math.PI;
-        const dist = 20 + Math.random() * 18;
-        return {
-          id: ++particleIdCounter,
-          tx: Math.cos(angle) * dist,
-          ty: Math.sin(angle) * dist - 10,
-          color: CONFETTI_COLORS[i % CONFETTI_COLORS.length]
-        };
+      const nextCount = Math.min(target, todayCount + 1);
+      celebrationLabel = getCelebrationLabel(nextCount, target);
+      const burst = buildCelebrationParticles({
+        startId: particleIdCounter,
+        colors: [accent.hex, ...CONFETTI_COLORS],
+        count: 12,
+        spread: 24,
+        lift: 12
       });
-      particles = newParticles;
+      particleIdCounter = burst.nextId;
+      particles = burst.particles;
 
       // Small celebratory confetti for every new completion, larger burst on phase transitions
       setTimeout(async () => {
@@ -91,10 +93,23 @@
           } else {
             // gentler confetti for normal completions
             void launch({
-              particleCount: 40,
-              spread: 110,
-              origin: { y: 0.7 },
-              colors: [accent.hex, '#ffffff'],
+              particleCount: 24,
+              angle: 60,
+              spread: 82,
+              startVelocity: 28,
+              origin: { x: 0.42, y: 0.72 },
+              colors: [accent.hex, '#fff7ed', '#fbbf24'],
+              scalar: 0.86,
+              zIndex: 800
+            });
+            void launch({
+              particleCount: 24,
+              angle: 120,
+              spread: 82,
+              startVelocity: 28,
+              origin: { x: 0.58, y: 0.72 },
+              colors: [accent.hex, '#fff7ed', '#fbbf24'],
+              scalar: 0.86,
               zIndex: 800
             });
           }
@@ -106,7 +121,8 @@
       setTimeout(() => {
         animating = false;
         particles = [];
-      }, 650);
+        celebrationLabel = '';
+      }, 900);
     }
     onToggle();
   }
@@ -223,10 +239,13 @@
       <div class="relative flex-shrink-0">
         {#each particles as p (p.id)}
           <span
-            class="confetti-particle"
-            style="--tx: {p.tx}px; --ty: {p.ty}px; background: {p.color}; left: 50%; top: 50%; margin-left: -3px; margin-top: -3px;"
+            class="completion-burst-particle"
+            style="--tx: {p.tx}px; --ty: {p.ty}px; --particle-size: {p.size}px; --particle-rotate: {p.rotation}deg; --particle-delay: {p.delay}ms; --particle-duration: {p.duration}ms; --particle-color: {p.color}; background: {p.color}; border-radius: {p.radius}; left: 50%; top: 50%; margin-left: calc({p.size}px / -2); margin-top: calc({p.size}px / -2);"
           ></span>
         {/each}
+        {#if animating}
+          <span class="completion-status-pop" style="color: {accent.hex}">{celebrationLabel}</span>
+        {/if}
         <button
           type="button"
           onclick={handleToggle}
@@ -237,6 +256,9 @@
           style={completed && !isFrozen ? `box-shadow: 0 0 12px ${accent.glow}` : ''}
           aria-label="{scheduledToday ? `Mark ${habit.name} as ${completed ? 'incomplete' : 'complete'}` : isFrozen ? 'Frozen today' : `Manual completion for ${habit.name}`}"
         >
+          {#if animating}
+            <span class="completion-sheen" style="--sheen-color: {accent.hex}"></span>
+          {/if}
           <!-- Multi-target fill bars -->
           {#if target > 1}
             {@const cappedCount = Math.min(Math.max(todayCount, 0), target)}

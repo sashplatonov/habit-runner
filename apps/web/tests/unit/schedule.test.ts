@@ -85,6 +85,47 @@ test('calculateScheduledStreak and rate handle weekly quota schedules', () => {
   expect(rate).toBe(25);
 });
 
+test('calculateScheduledStreak: weekly_quota keeps last completed week while current week is still in progress', () => {
+  const habit = createHabit({
+    schedule: { type: 'weekly_quota', timesPerWeek: 2, weekdays: [1, 2] },
+    completions: {
+      [isoDate('2026-03-02T00:00:00Z')]: 1,
+      [isoDate('2026-03-03T00:00:00Z')]: 1
+    }
+  });
+
+  const result = calculateScheduledStreak(habit, habit.completions, new Date('2026-03-10T00:00:00Z'));
+  expect(result).toEqual({ current: 1, longest: 1 });
+});
+
+test('calculateScheduledStreak: weekly_quota counts the current week once quota is already met before week end', () => {
+  const habit = createHabit({
+    schedule: { type: 'weekly_quota', timesPerWeek: 2, weekdays: [1, 2] },
+    completions: {
+      [isoDate('2026-03-02T00:00:00Z')]: 1,
+      [isoDate('2026-03-03T00:00:00Z')]: 1,
+      [isoDate('2026-03-09T00:00:00Z')]: 1,
+      [isoDate('2026-03-10T00:00:00Z')]: 1
+    }
+  });
+
+  const result = calculateScheduledStreak(habit, habit.completions, new Date('2026-03-10T00:00:00Z'));
+  expect(result).toEqual({ current: 2, longest: 2 });
+});
+
+test('calculateScheduledStreak: monthly_quota keeps last completed month while current month is still in progress', () => {
+  const habit = createHabit({
+    schedule: { type: 'monthly_quota', timesPerMonth: 2 },
+    completions: {
+      [isoDate('2026-02-02T00:00:00Z')]: 1,
+      [isoDate('2026-02-18T00:00:00Z')]: 1
+    }
+  });
+
+  const result = calculateScheduledStreak(habit, habit.completions, new Date('2026-03-10T00:00:00Z'));
+  expect(result).toEqual({ current: 1, longest: 1 });
+});
+
 test('isMandatoryToday ignores meet quota when checkin uses sync ISO without milliseconds', () => {
   const habit = createHabit({
     schedule: { type: 'weekly_quota', timesPerWeek: 1 },
