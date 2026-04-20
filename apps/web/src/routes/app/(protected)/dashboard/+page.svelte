@@ -1282,7 +1282,7 @@
                             ></div>
                           {/each}
                         </div>
-                        <div class="hidden lg:block">
+                        <div class="hidden md:block">
                           <MiniHeatmap completions={habit.completions} dailyTarget={habit.dailyTarget} color={habit.color} />
                         </div>
                       </div>
@@ -1501,7 +1501,7 @@
                           ></div>
                         {/each}
                       </div>
-                      <div class="hidden lg:block">
+                      <div class="hidden md:block">
                         <MiniHeatmap completions={habit.completions} dailyTarget={habit.dailyTarget} color={habit.color} />
                       </div>
                     </div>
