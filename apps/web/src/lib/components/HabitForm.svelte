@@ -5,7 +5,7 @@
   import { calculateScheduledStreak } from '$lib/habits/schedule';
   import type { Habit } from '@/types/habit';
   import type { HabitUpsertInput } from '$lib/stores/habits';
-  import { COLORS, DAILY_TARGET_OPTIONS, DAY_LABELS, ICONS, SUGGESTED_TAGS } from '$lib/habits/constants';
+  import { COLORS, DAILY_TARGET_MIN, DAILY_TARGET_MAX, DAY_LABELS, ICONS, SUGGESTED_TAGS } from '$lib/habits/constants';
 
   type Props = {
     mode: 'create' | 'edit';
@@ -698,18 +698,47 @@
 
     <div class="rounded-[1.75rem] border border-border bg-bg-card/92 p-5 shadow-[0_20px_54px_rgba(15,23,42,0.08)]">
       <p class="mb-2 block text-[10px] font-mono uppercase tracking-wider text-muted">Daily target</p>
-      <div class="flex flex-wrap items-center gap-2">
-        {#each DAILY_TARGET_OPTIONS as value, valueIndex (`${value}-${valueIndex}`)}
-          <button
-            type="button"
-            class={`min-h-11 rounded-lg border px-3.5 py-2 text-[11px] font-mono transition ${dailyTarget === value ? 'border-accent/50 bg-accent/10 text-accent' : 'border-border bg-bg-secondary text-muted hover:border-border-hover'}`}
-            onclick={() => {
-              dailyTarget = value;
-            }}
-          >
-            {value}x/day
-          </button>
-        {/each}
+      <div class="flex items-center gap-4">
+        <div class="relative flex-1 py-3">
+          <div
+            class="slider-track absolute left-0 right-0 top-1/2 h-4 -translate-y-1/2 rounded-full opacity-40 transition-all duration-300"
+            style="background: {selectedColor.hex};"
+          ></div>
+          <div
+            class="slider-progress absolute left-0 top-1/2 h-4 -translate-y-1/2 rounded-full shadow-lg transition-all duration-300"
+            style="background: linear-gradient(90deg, {selectedColor.hex}80, {selectedColor.hex}); width: {((dailyTarget - DAILY_TARGET_MIN) / (DAILY_TARGET_MAX - DAILY_TARGET_MIN)) * 100}%; box-shadow: 0 0 12px {selectedColor.hex}60;"
+          ></div>
+          <input
+            type="range"
+            min={DAILY_TARGET_MIN}
+            max={DAILY_TARGET_MAX}
+            bind:value={dailyTarget}
+            class="slider-input relative z-10 w-full cursor-pointer appearance-none bg-transparent"
+          />
+          <div class="mt-4 flex justify-between px-0.5">
+            {#each Array(DAILY_TARGET_MAX - DAILY_TARGET_MIN + 1) as _, i}
+              <div class="relative flex flex-col items-center">
+                <div
+                  class="mb-1 h-1.5 w-1.5 rounded-full transition-all duration-300"
+                  style="background: {dailyTarget >= DAILY_TARGET_MIN + i ? selectedColor.hex : 'var(--border)'}; box-shadow: {dailyTarget >= DAILY_TARGET_MIN + i ? '0 0 6px ' + selectedColor.hex + '80' : 'none'};"
+                ></div>
+                <span
+                  class="text-[9px] font-mono transition-all duration-300"
+                  style="color: {dailyTarget === DAILY_TARGET_MIN + i ? selectedColor.hex : 'var(--text-muted)'}; font-weight: {dailyTarget === DAILY_TARGET_MIN + i ? 'bold' : 'normal'}; transform: {dailyTarget === DAILY_TARGET_MIN + i ? 'scale(1.3)' : 'scale(1)'};"
+                >
+                  {DAILY_TARGET_MIN + i}
+                </span>
+              </div>
+            {/each}
+          </div>
+        </div>
+        <div
+          class="flex min-w-[75px] flex-col items-center rounded-xl border-2 px-3 py-2 transition-all duration-300"
+          style="border-color: {selectedColor.hex}80; background: {selectedColor.hex}10;"
+        >
+          <span class="text-[9px] font-mono uppercase tracking-wider" style="color: {selectedColor.hex};">target</span>
+          <span class="text-lg font-bold font-mono" style="color: {selectedColor.hex};">{dailyTarget}x</span>
+        </div>
       </div>
       <p class="mt-1 text-[9px] font-mono text-muted">Habit counts as done only when today's completions reach this target.</p>
     </div>
@@ -837,3 +866,65 @@
     </div>
   </div>
 </div>
+
+<style>
+  .slider-input {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 32px;
+    background: transparent;
+    outline: none;
+    cursor: pointer;
+    margin: 0;
+  }
+
+  .slider-track {
+    pointer-events: none;
+    opacity: 0.4;
+  }
+
+  .slider-progress {
+    pointer-events: none;
+  }
+
+  .slider-input::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--bg-card, #0f172a);
+    cursor: pointer;
+    border: 3px solid var(--accent, #00d4ff);
+    box-shadow: 0 0 0 4px rgba(0, 212, 255, 0.3), 0 4px 12px rgba(0, 0, 0, 0.4);
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.3s ease;
+    margin-top: -4px;
+  }
+
+  .slider-input::-webkit-slider-thumb:hover {
+    transform: scale(1.25);
+    box-shadow: 0 0 0 6px rgba(0, 212, 255, 0.4), 0 6px 16px rgba(0, 0, 0, 0.5);
+  }
+
+  .slider-input::-moz-range-thumb {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--bg-card, #0f172a);
+    cursor: pointer;
+    border: 3px solid var(--accent, #00d4ff);
+    box-shadow: 0 0 0 4px rgba(0, 212, 255, 0.3), 0 4px 12px rgba(0, 0, 0, 0.4);
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.3s ease;
+  }
+
+  .slider-input::-moz-range-thumb:hover {
+    transform: scale(1.25);
+    box-shadow: 0 0 0 6px rgba(0, 212, 255, 0.4), 0 6px 16px rgba(0, 0, 0, 0.5);
+  }
+
+  .slider-input::-moz-range-track {
+    background: transparent;
+    border: none;
+  }
+</style>
