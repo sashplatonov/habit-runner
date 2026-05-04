@@ -13,6 +13,14 @@ public abstract class UuidAuditedEntityBase extends AuditedEntityBase {
   @Column(nullable = false)
   public String id;
 
+  public String getId() {
+    return id;
+  }
+
+  public void setId(String id) {
+    this.id = id;
+  }
+
   @PrePersist
   void prePersistUuidId() {
     if (!hasText(id)) {

@@ -95,17 +95,17 @@ class SyncCoordinatorUnitCoverageTest {
 
   private static HabitEntity habit(String id, Instant updatedAt) {
     var habit = new HabitEntity();
-    habit.id = id;
-    habit.userId = "user-1";
-    habit.name = "Habit";
-    habit.color = HabitColor.LEGACY_NORD;
-    habit.icon = "star";
-    habit.frequency = HabitFrequency.DAILY;
-    habit.targetStreak = 1;
-    habit.dailyTarget = 1;
-    habit.archived = false;
-    habit.type = HabitType.POSITIVE;
-    habit.freezeDays = "[]";
+    habit.setId(id);
+    habit.setUserId("user-1");
+    habit.setName("Habit");
+    habit.setColor(HabitColor.LEGACY_NORD);
+    habit.setIcon("star");
+    habit.setFrequency(HabitFrequency.DAILY);
+    habit.setTargetStreak(1);
+    habit.setDailyTarget(1);
+    habit.setArchived(false);
+    habit.setType(HabitType.POSITIVE);
+    habit.setFreezeDays("[]");
     habit.setSortOrder(BigInteger.ZERO);
     habit.setCreatedAt(updatedAt.minusSeconds(60));
     habit.setUpdatedAt(updatedAt);
@@ -115,24 +115,24 @@ class SyncCoordinatorUnitCoverageTest {
 
   private static CheckinEntity checkin(String id, Instant updatedAt) {
     var checkin = new CheckinEntity();
-    checkin.id = id;
-    checkin.habitId = "habit-1";
-    checkin.userId = "user-1";
+    checkin.setId(id);
+    checkin.setHabitId("habit-1");
+    checkin.setUserId("user-1");
     checkin.setCheckinDate(LocalDate.parse("2026-04-10"));
-    checkin.done = true;
-    checkin.count = 1;
+    checkin.setDone(true);
+    checkin.setCount(1);
     checkin.setAuditTimestamps(updatedAt.minusSeconds(60), updatedAt);
-    checkin.version = 1;
+    checkin.setVersion(1);
     return checkin;
   }
 
   private static TombstoneEntity tombstone(String id, Instant deletedAt) {
     var tombstone = new TombstoneEntity();
-    tombstone.id = id;
-    tombstone.userId = "user-1";
-    tombstone.entity = "habit";
-    tombstone.entityId = "habit-1";
-    tombstone.version = 1;
+    tombstone.setId(id);
+    tombstone.setUserId("user-1");
+    tombstone.setEntity("habit");
+    tombstone.setEntityId("habit-1");
+    tombstone.setVersion(1);
     tombstone.setDeletedAt(deletedAt);
     return tombstone;
   }

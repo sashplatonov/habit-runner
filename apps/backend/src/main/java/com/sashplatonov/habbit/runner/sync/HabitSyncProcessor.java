@@ -97,18 +97,18 @@ public class HabitSyncProcessor {
     if (!(existingCandidate instanceof com.sashplatonov.habbit.runner.model.HabitEntity existing)) {
       return false;
     }
-    if (!userId.equals(existing.userId)) {
+    if (!userId.equals(existing.getUserId())) {
       log.debug("Detected habit sync conflict: opId={} habitId={}", command.opId(), command.habitId());
       state.addConflict(SyncConflicts.missingEntity(command.opId(), "habit belongs to another user"));
       return true;
     }
-    if (existing.updatedAtValue().isAfter(command.clientUpdated())) {
+    if (existing.getUpdatedAt().isAfter(command.clientUpdated())) {
       log.debug("Detected habit sync conflict: opId={} habitId={}", command.opId(), command.habitId());
       state.addConflict(SyncConflicts.newerServerValue(
           payloadCodec,
           command.opId(),
           "server already has newer habit",
-          SyncConflicts.serverState(existing.versionValue(), existing.updatedAtValue())
+          SyncConflicts.serverState(existing.getVersion(), existing.getUpdatedAt())
       ));
       return true;
     }

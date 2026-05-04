@@ -21,20 +21,51 @@ public abstract class AuditedEntityBase extends PanacheEntityBase {
   public Instant updatedAt;
 
   @Transient
-  private boolean updatedAtExplicitlySet;
+  public boolean updatedAtExplicitlySet;
+
+  // Methods for test compatibility
+  public Instant createdAtValue() {
+    return createdAt;
+  }
+
+  public Instant updatedAtValue() {
+    return updatedAt;
+  }
+
+  public void setAuditTimestamps(Instant createdAt, Instant updatedAt) {
+    this.createdAt = createdAt;
+    this.updatedAt = updatedAt;
+  }
+
+  // Getters and setters for code that expects them
+  public Instant getCreatedAt() {
+    return createdAt;
+  }
+
+  public void setCreatedAt(Instant createdAt) {
+    this.createdAt = createdAt;
+  }
+
+  public Instant getUpdatedAt() {
+    return updatedAt;
+  }
+
+  public void setUpdatedAt(Instant updatedAt) {
+    this.updatedAt = updatedAt;
+  }
 
   @PrePersist
   void prePersistAudit() {
     var initialTimestamp = defaultAuditTimestamp();
-    createdAt = createdAt != null ? createdAt : initialTimestamp;
-    updatedAt = updatedAt != null ? updatedAt : createdAt;
+    setCreatedAt(getCreatedAt() != null ? getCreatedAt() : initialTimestamp);
+    setUpdatedAt(getUpdatedAt() != null ? getUpdatedAt() : getCreatedAt());
     updatedAtExplicitlySet = false;
   }
 
   @PreUpdate
   void preUpdateAudit() {
-    if (!updatedAtExplicitlySet || updatedAt == null) {
-      updatedAt = Instant.now();
+    if (!updatedAtExplicitlySet || getUpdatedAt() == null) {
+      setUpdatedAt(Instant.now());
     }
     updatedAtExplicitlySet = false;
   }
@@ -48,22 +79,5 @@ public abstract class AuditedEntityBase extends PanacheEntityBase {
 
   protected Instant defaultAuditTimestamp() {
     return Instant.now();
-  }
-
-  public Instant createdAtValue() {
-    return createdAt;
-  }
-
-  public Instant updatedAtValue() {
-    return updatedAt;
-  }
-
-  public void setCreatedAt(Instant instant) {
-    createdAt = instant;
-  }
-
-  public void setUpdatedAt(Instant instant) {
-    updatedAt = instant;
-    updatedAtExplicitlySet = instant != null;
   }
 }

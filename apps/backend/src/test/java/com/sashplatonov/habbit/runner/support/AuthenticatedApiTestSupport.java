@@ -30,9 +30,9 @@ public abstract class AuthenticatedApiTestSupport {
 
     ut.begin();
     var user = new UserEntity();
-    user.id = userId;
-    user.email = email;
-    user.theme = theme;
+    user.setId(userId);
+    user.setEmail(email);
+    user.setTheme(theme);
     user.markCreatedAt(Instant.now());
     user.persist();
     ut.commit();

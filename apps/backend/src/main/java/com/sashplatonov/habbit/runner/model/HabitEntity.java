@@ -1,6 +1,5 @@
 package com.sashplatonov.habbit.runner.model;
 
-import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Index;
 import jakarta.persistence.PrePersist;
@@ -15,22 +14,19 @@ import java.math.BigInteger;
     }
 )
 public class HabitEntity extends HabitSettingsFields {
-  @Column(nullable = false)
-  public int version;
-
   @PrePersist
   void prePersist() {
     initializeDefaults();
   }
 
   private void initializeDefaults() {
-    dailyTarget = Math.max(1, dailyTarget);
-    sortOrder = defaultSortOrder(sortOrder);
-    color = defaultColor(color);
-    frequency = defaultFrequency(frequency);
-    type = defaultType(type);
-    freezeDays = defaultFreezeDays(freezeDays);
-    version = Math.max(1, version);
+    setDailyTarget(Math.max(1, getDailyTarget()));
+    setSortOrder(defaultSortOrder(getSortOrder()));
+    setColor(defaultColor(getColor()));
+    setFrequency(defaultFrequency(getFrequency()));
+    setType(defaultType(getType()));
+    setFreezeDays(defaultFreezeDays(getFreezeDays()));
+    setVersion(Math.max(1, getVersion()));
   }
 
   private BigInteger defaultSortOrder(BigInteger value) {
@@ -51,29 +47,5 @@ public class HabitEntity extends HabitSettingsFields {
 
   private String defaultFreezeDays(String value) {
     return value != null ? value : "[]";
-  }
-
-  public BigInteger sortOrderOrZero() {
-    return sortOrder != null ? sortOrder : BigInteger.ZERO;
-  }
-
-  public int versionValue() {
-    return version;
-  }
-
-  public void setSortOrder(BigInteger value) {
-    sortOrder = value;
-  }
-
-  public void setColor(HabitColor value) {
-    color = value;
-  }
-
-  public void setFrequency(HabitFrequency value) {
-    frequency = value;
-  }
-
-  public void setType(HabitType value) {
-    type = value;
   }
 }

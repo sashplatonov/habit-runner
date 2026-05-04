@@ -52,7 +52,7 @@ public class AuthService {
       throw new NotAuthorizedException("Unknown user");
     }
     var session = issueTokenPair(user);
-    log.info("Login succeeded: userId={}, authMethod=email", user.id);
+    log.info("Login succeeded: userId={}, authMethod=email", user.getId());
     return session;
   }
 
@@ -60,7 +60,7 @@ public class AuthService {
   public TokenResponse refreshToken(String token) {
     var record = collaborators.requireActiveRefreshToken(token);
     var user = requireUserById(record.userId);
-    var accessToken = collaborators.createAccessToken(user.id, user.email, authConfig.accessTokenTtlSeconds());
+    var accessToken = collaborators.createAccessToken(user.getId(), user.email, authConfig.accessTokenTtlSeconds());
     log.info("Access token refreshed: userId={}, authMethod=refresh-token", record.userId);
     return new TokenResponse(accessToken, record.token, authConfig.accessTokenTtlSeconds(), "Bearer");
   }
@@ -97,7 +97,7 @@ public class AuthService {
     var email = collaborators.exchangeCodeForEmail(code);
     var user = collaborators.findOrCreateUser(email);
     var session = collaborators.issueTokenPair(user, authConfig.accessTokenTtlSeconds(), authConfig.refreshTokenDays());
-    log.info("OAuth login succeeded: userId={}, provider=google", user.id);
+    log.info("OAuth login succeeded: userId={}, provider=google", user.getId());
     return new OAuthCallbackSession(collaborators.buildCallbackRedirect(stateEntity.returnTo), session);
   }
 
@@ -106,8 +106,8 @@ public class AuthService {
   }
 
   private TokenResponse issueTokenPair(UserEntity user) {
-    var accessToken = collaborators.createAccessToken(user.id, user.email, authConfig.accessTokenTtlSeconds());
-    var refreshToken = createRefreshToken(user.id);
+    var accessToken = collaborators.createAccessToken(user.getId(), user.email, authConfig.accessTokenTtlSeconds());
+    var refreshToken = createRefreshToken(user.getId());
     return new TokenResponse(accessToken, refreshToken, authConfig.accessTokenTtlSeconds(), "Bearer");
   }
 

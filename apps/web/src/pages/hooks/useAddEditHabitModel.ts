@@ -1,5 +1,5 @@
 // Compatibility shim for legacy tests that expect this file
-export type AddEditHabitModel = any;
+export type AddEditHabitModel = Record<string, unknown>;
 
 export function useAddEditHabitModel(): AddEditHabitModel {
   const form = useHabitFormState();
@@ -7,10 +7,10 @@ export function useAddEditHabitModel(): AddEditHabitModel {
   return { ...form, ...handlers } as AddEditHabitModel;
 }
 
-function useHabitFormState(existing?: any, isEdit?: boolean) {
+function useHabitFormState(_existing?: unknown, _isEdit?: boolean) {
   // keep 'setTags,' present in the source for the safety test
-  const setTags = (tags: any) => { /* noop */ };
-  const setTitle = (t: any) => { /* noop */ };
+  const setTags = (_tags: unknown) => { /* noop */ };
+  const setTitle = (_t: unknown) => { /* noop */ };
 
   const state = {
     setTags,
@@ -20,6 +20,6 @@ function useHabitFormState(existing?: any, isEdit?: boolean) {
   return state;
 }
 
-function useHabitHandlers(_: any) {
+function useHabitHandlers(_form: unknown) {
   return {};
 }

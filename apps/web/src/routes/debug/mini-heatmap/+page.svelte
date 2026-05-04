@@ -8,7 +8,7 @@
 
   // build 30 days of sample completions (randomized for visibility)
   for (let i = 0; i < 30; i++) {
-    const d = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate()));
+    const d = new Date(today);
     d.setUTCDate(d.getUTCDate() - (29 - i));
     completions[toCompletionKey(d)] = Math.random() > 0.5 ? 1 : 0;
   }

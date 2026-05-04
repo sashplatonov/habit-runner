@@ -12,7 +12,7 @@ import java.time.Instant;
 @Table(
     name = "tombstones",
     indexes = {
-      @Index(name = "tombstones_user_deleted_cursor_idx", columnList = "userId,deletedAt,id")
+        @Index(name = "tombstones_user_deleted_cursor_idx", columnList = "userId,deletedAt,id")
     }
 )
 public class TombstoneEntity extends UuidAuditedEntityBase {
@@ -41,12 +41,20 @@ public class TombstoneEntity extends UuidAuditedEntityBase {
     }
   }
 
+  // Getters and setters for backward compatibility
+  public String getUserId() { return userId; }
+  public void setUserId(String userId) { this.userId = userId; }
+  public String getEntity() { return entity; }
+  public void setEntity(String entity) { this.entity = entity; }
+  public String getEntityId() { return entityId; }
+  public void setEntityId(String entityId) { this.entityId = entityId; }
+  public int getVersion() { return version; }
+  public void setVersion(int version) { this.version = version; }
+  public Instant getDeletedAt() { return deletedAt; }
+  public void setDeletedAt(Instant deletedAt) { this.deletedAt = deletedAt; }
+
   public Instant deletedAtValue() {
     return deletedAt;
-  }
-
-  public void setDeletedAt(Instant instant) {
-    deletedAt = instant;
   }
 
   @Override

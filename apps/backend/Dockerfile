@@ -9,7 +9,7 @@ COPY pom.xml .
 COPY checkstyle checkstyle
 COPY src src
 
-RUN ./mvnw -B -DskipTests package
+RUN ./mvnw -B -Dmaven.test.skip=true package
 
 # Normalize produced jar to a known location. Prefer the Quarkus run jar if present.
 RUN set -eux; \

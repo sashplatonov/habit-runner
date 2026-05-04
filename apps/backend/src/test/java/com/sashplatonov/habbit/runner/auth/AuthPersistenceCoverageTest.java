@@ -37,10 +37,10 @@ class AuthPersistenceCoverageTest extends AuthenticatedApiTestSupport {
     var created = inTransaction(() -> userService.findOrCreateUser(email));
     var found = inTransaction(() -> userService.findOrCreateUser(email));
 
-    assertNotNull(created.id);
-    assertEquals(email, created.email);
-    assertEquals("cloud", created.theme);
-    assertEquals(created.id, found.id);
+    assertNotNull(created.getId());
+    assertEquals(email, created.getEmail());
+    assertEquals("cloud", created.getTheme());
+    assertEquals(created.getId(), found.getId());
     assertEquals(1L, UserEntity.count("email", email));
   }
 
@@ -48,8 +48,8 @@ class AuthPersistenceCoverageTest extends AuthenticatedApiTestSupport {
   void shouldCreateRequireAndRevokeRefreshTokensThroughRealPersistenceService() throws Exception {
     var user = inTransaction(() -> {
       var entity = new UserEntity();
-      entity.email = UUID.randomUUID() + "@example.test";
-      entity.theme = "cloud";
+      entity.setEmail(UUID.randomUUID() + "@example.test");
+      entity.setTheme("cloud");
       entity.persist();
       return entity;
     });
@@ -64,9 +64,9 @@ class AuthPersistenceCoverageTest extends AuthenticatedApiTestSupport {
     });
 
     assertEquals(token, createdToken);
-    assertEquals(token, active.token);
-    assertEquals(user.id, stored.userId);
-    assertTrue(stored.revoked);
+    assertEquals(token, active.getToken());
+    assertEquals(user.getId(), stored.getUserId());
+    assertTrue(stored.isRevoked());
     assertThrows(NotAuthorizedException.class, () -> inTransaction(() -> refreshTokenService.requireActive(token)));
   }
 
@@ -76,13 +76,13 @@ class AuthPersistenceCoverageTest extends AuthenticatedApiTestSupport {
     var initialUpdatedAt = Instant.parse("2026-04-09T08:05:00Z");
     var userId = inTransaction(() -> {
       var entity = new UserEntity();
-      entity.email = UUID.randomUUID() + "@example.test";
-      entity.theme = "cloud";
-      entity.timezone = "Europe/Berlin";
+      entity.setEmail(UUID.randomUUID() + "@example.test");
+      entity.setTheme("cloud");
+      entity.setTimezone("Europe/Berlin");
       entity.markCreatedAt(initialCreatedAt);
       entity.setUpdatedAt(initialUpdatedAt);
       entity.persist();
-      return entity.id;
+      return entity.getId();
     });
 
     inTransaction(() -> preferencesService.updateUserPreferences(
@@ -102,8 +102,8 @@ class AuthPersistenceCoverageTest extends AuthenticatedApiTestSupport {
     var initialUpdatedAt = Instant.parse("2026-04-09T08:05:00Z");
     var userId = inTransaction(() -> {
       var entity = new UserEntity();
-      entity.email = UUID.randomUUID() + "@example.test";
-      entity.theme = "cloud";
+      entity.setEmail(UUID.randomUUID() + "@example.test");
+      entity.setTheme("cloud");
       entity.persist();
       return entity.id;
     });

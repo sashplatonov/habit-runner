@@ -116,8 +116,8 @@ class AuthDataAccessTest extends AuthenticatedApiTestSupport {
 
     var result = new UserService().findOrCreateUser(email);
 
-    assertEquals(existing.id, result.id);
-    assertEquals(existing.email, result.email);
+    assertEquals(existing.getId(), result.getId());
+    assertEquals(existing.getEmail(), result.getEmail());
   }
 
   @Test
@@ -127,7 +127,7 @@ class AuthDataAccessTest extends AuthenticatedApiTestSupport {
 
     new AuthGuardFilter(authService, currentUserContext).filter(requestContext("Bearer " + user.accessToken()));
 
-    assertEquals(user.id(), currentUserContext.requireUser().id());
+    assertEquals(user.getId(), currentUserContext.requireUser().getId());
     assertEquals(user.email(), currentUserContext.requireUser().email());
   }
 

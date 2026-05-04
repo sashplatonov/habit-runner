@@ -22,10 +22,10 @@ public class HabitSyncDeleteHandler {
 
   public TombstoneEntity delete(String userId, String habitId, HabitPayloadDto payload) {
     var tombstone = new TombstoneEntity();
-    tombstone.userId = userId;
-    tombstone.entity = "habit";
-    tombstone.entityId = habitId;
-    tombstone.version = payload != null && payload.version() != null ? payload.version() : 1;
+    tombstone.setUserId(userId);
+    tombstone.setEntity("habit");
+    tombstone.setEntityId(habitId);
+    tombstone.setVersion((payload != null && payload.version() != null) ? payload.version() : 1);
     tombstone.setDeletedAt(payloadCodec.nextSyncDate(
         payloadCodec.parseInstantOrNow(payload != null ? payload.updatedAt() : null)
     ));

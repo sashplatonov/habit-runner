@@ -25,7 +25,7 @@ public class CheckinSyncUpsertHandler {
 
   public boolean hasParentConflict(String userId, String habitId, String opId, SyncPushState state) {
     var parent = checkinSyncStore.findHabit(habitId);
-    if (parent != null && userId.equals(parent.userId)) {
+    if (parent != null && userId.equals(parent.getUserId())) {
       return false;
     }
     log.debug("Detected missing parent habit for checkin sync: opId={} habitId={}", opId, habitId);
@@ -38,14 +38,14 @@ public class CheckinSyncUpsertHandler {
   }
 
   public PushConflict conflict(String opId, CheckinEntity existing, Instant clientUpdated, SyncPayloadCodec payloadCodec) {
-    if (existing == null || !existing.updatedAtValue().isAfter(clientUpdated)) {
+    if (existing == null || !existing.getUpdatedAt().isAfter(clientUpdated)) {
       return null;
     }
     return SyncConflicts.newerServerValue(
         payloadCodec,
         opId,
         "server already has newer checkin",
-      SyncConflicts.serverState(existing.version, existing.updatedAtValue())
+        SyncConflicts.serverState(existing.getVersion(), existing.getUpdatedAt())
     );
   }
 
@@ -54,9 +54,9 @@ public class CheckinSyncUpsertHandler {
       return existing;
     }
     var created = new CheckinEntity();
-    created.habitId = habitId;
-    created.userId = userId;
-    created.setCheckinDate(date);
+    created.setHabitId(habitId);
+    created.setUserId(userId);
+    created.setDate(date);
     checkinSyncStore.saveCheckin(created);
     return created;
   }

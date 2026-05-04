@@ -18,11 +18,11 @@ class AuthModelEntityTest {
 
     runPrePersist(user);
 
-    assertNotNull(user.id);
-    assertEquals("cloud", user.theme);
-    assertNotNull(user.createdAt);
-    assertNotNull(user.updatedAt);
-    assertEquals(user.createdAt, user.updatedAt);
+    assertNotNull(user.getId());
+    assertEquals("cloud", user.getTheme());
+    assertNotNull(user.getCreatedAt());
+    assertNotNull(user.getUpdatedAt());
+    assertEquals(user.getCreatedAt(), user.getUpdatedAt());
   }
 
   @Test
@@ -33,8 +33,8 @@ class AuthModelEntityTest {
     user.markCreatedAt(createdAt);
     runPrePersist(user);
 
-    assertEquals(createdAt, user.createdAt);
-    assertEquals(createdAt, user.updatedAt);
+    assertEquals(createdAt, user.getCreatedAt());
+    assertEquals(createdAt, user.getUpdatedAt());
   }
 
   @Test
@@ -48,24 +48,24 @@ class AuthModelEntityTest {
     user.theme = "matrix";
     user.preUpdateAudit();
 
-    var updatedAt = user.updatedAtValue();
+    var updatedAt = user.getUpdatedAt();
 
-    assertEquals(createdAt, user.createdAt);
+    assertEquals(createdAt, user.getCreatedAt());
     assertTrue(updatedAt.isAfter(createdAt));
   }
 
   @Test
   void shouldInitializeRefreshTokenDefaultsAndRemainActiveWhenNotRevoked() {
     var token = new RefreshTokenEntity();
-    token.token = "refresh-token";
+    token.setToken("refresh-token");
     token.setExpiry(Instant.now().plusSeconds(60));
 
     runPrePersist(token);
 
-    assertNotNull(token.id);
-    assertNotNull(token.createdAt);
-    assertNotNull(token.updatedAt);
-    assertEquals(token.createdAt, token.updatedAt);
+    assertNotNull(token.getId());
+    assertNotNull(token.getCreatedAt());
+    assertNotNull(token.getUpdatedAt());
+    assertEquals(token.getCreatedAt(), token.getUpdatedAt());
     assertTrue(token.isActiveAt(Instant.now()));
   }
 
@@ -77,7 +77,7 @@ class AuthModelEntityTest {
 
     token.revoke();
 
-    assertTrue(token.revoked);
+    assertTrue(token.isRevoked());
     assertFalse(token.isActiveAt(Instant.now()));
     assertEquals("refresh-token", token.tokenValue());
   }
@@ -88,11 +88,11 @@ class AuthModelEntityTest {
 
     runPrePersist(subscription);
 
-    assertNotNull(subscription.id);
-    assertNotNull(subscription.createdAt);
-    assertNotNull(subscription.updatedAt);
-    assertEquals(subscription.createdAt, subscription.updatedAt);
-    assertNull(subscription.endpoint);
+    assertNotNull(subscription.getId());
+    assertNotNull(subscription.getCreatedAt());
+    assertNotNull(subscription.getUpdatedAt());
+    assertEquals(subscription.getCreatedAt(), subscription.getUpdatedAt());
+    assertNull(subscription.getEndpoint());
   }
 
   @Test

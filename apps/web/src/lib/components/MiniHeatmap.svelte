@@ -26,13 +26,14 @@
 
   // Debugging aid: log incoming completions and computed days on mount.
   onMount(() => {
+    /* eslint-disable no-console */
     try {
-      console.debug('[MiniHeatmap] completions keys sample:', Object.keys(completions).slice(0, 8));
-      console.debug('[MiniHeatmap] dailyTarget:', dailyTarget, 'color:', color);
-      console.debug('[MiniHeatmap] days:', days);
+      console.log('[MiniHeatmap] Completions:', completions);
+      console.log('[MiniHeatmap] Computed days:', days);
     } catch (e) {
-      console.debug('[MiniHeatmap] onMount log error', e);
+      // Silently ignore mount log errors
     }
+    /* eslint-enable no-console */
   });
 </script>
 

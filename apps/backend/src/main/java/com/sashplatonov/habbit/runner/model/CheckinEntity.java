@@ -14,10 +14,10 @@ import java.time.LocalDate;
 @Table(
     name = "checkins",
     indexes = {
-      @Index(name = "checkins_user_updated_cursor_idx", columnList = "userId,updatedAt,id")
+        @Index(name = "checkins_user_updated_cursor_idx", columnList = "userId,updatedAt,id")
     },
     uniqueConstraints = {
-      @UniqueConstraint(name = "habit_date_unique", columnNames = {"habitId", "date"})
+        @UniqueConstraint(name = "habit_date_unique", columnNames = {"habitId", "date"})
     }
 )
 public class CheckinEntity extends UuidAuditedEntityBase {
@@ -45,8 +45,22 @@ public class CheckinEntity extends UuidAuditedEntityBase {
     version = Math.max(1, version);
   }
 
+  // Getters and setters for backward compatibility
+  public String getHabitId() { return habitId; }
+  public void setHabitId(String habitId) { this.habitId = habitId; }
+  public String getUserId() { return userId; }
+  public void setUserId(String userId) { this.userId = userId; }
+  public LocalDate getDate() { return date; }
+  public void setDate(LocalDate date) { this.date = date; }
+  public boolean isDone() { return done; }
+  public void setDone(boolean done) { this.done = done; }
+  public int getCount() { return count; }
+  public void setCount(int count) { this.count = count; }
+  public int getVersion() { return version; }
+  public void setVersion(int version) { this.version = version; }
+
   public LocalDate syncDate() {
-    return date;
+    return getDate();
   }
 
   public void setAuditTimestamps(Instant created, Instant updated) {
@@ -55,6 +69,6 @@ public class CheckinEntity extends UuidAuditedEntityBase {
   }
 
   public void setCheckinDate(LocalDate value) {
-    date = value;
+    setDate(value);
   }
 }

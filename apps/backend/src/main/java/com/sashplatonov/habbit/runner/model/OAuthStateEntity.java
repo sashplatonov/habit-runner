@@ -18,7 +18,7 @@ public class OAuthStateEntity extends AuditedEntityBase {
   public String returnTo;
 
   @Column(name = "expiresAt", nullable = false)
-  public Instant expiresAt;
+  private Instant expiresAt;
 
   public boolean isExpiredAt(Instant instant) {
     return expiresAt.isBefore(instant);
