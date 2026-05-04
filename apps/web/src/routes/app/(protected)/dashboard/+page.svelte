@@ -743,7 +743,7 @@
               </button>
               {#if menuOpen}
                 <div
-                  class="absolute right-0 top-full z-[90] mt-2 min-w-[220px] rounded-2xl border border-border bg-bg-card shadow-xl overflow-hidden"
+                  class="absolute right-0 top-full z-[9999] mt-2 min-w-[220px] rounded-2xl border border-border bg-bg-card shadow-xl overflow-hidden"
                 >
                   <div class="px-3 pt-3 pb-1">
                     <div class="text-xs font-mono uppercase tracking-widest text-muted">Status</div>
