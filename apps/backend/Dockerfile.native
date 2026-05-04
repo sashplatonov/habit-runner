@@ -10,7 +10,7 @@ COPY src ./src
 # Build native image. The default MANDREL_BUILDER_IMAGE targets JDK 25 and
 # includes Mandrel's native-image toolchain; if you need a different image,
 # override `MANDREL_BUILDER_IMAGE` via build-arg.
-RUN sh ./mvnw -DskipTests -Dnative package
+RUN sh ./mvnw -Dnative package
 
 FROM quay.io/quarkus/quarkus-micro-image:2.0
 WORKDIR /work/
