@@ -696,16 +696,17 @@
       <p class="mt-2 text-[11px] font-mono text-muted">{describeSchedule(schedule)}</p>
     </div>
 
-    <div class="rounded-[1.75rem] border border-border bg-bg-card/92 p-5 shadow-[0_20px_54px_rgba(15,23,42,0.08)]">
-      <p class="mb-2 block text-[10px] font-mono uppercase tracking-wider text-muted">Daily target</p>
-      <div class="flex items-center gap-4">
-        <div class="relative flex-1 py-3">
+    {#if schedule.type === 'daily'}
+    <div class="rounded-[1.75rem] border border-border bg-bg-card/92 p-4 shadow-[0_20px_54px_rgba(15,23,42,0.08)]">
+      <p class="mb-1 block text-[10px] font-mono uppercase tracking-wider text-muted">Daily target</p>
+      <div class="flex items-center gap-3">
+        <div class="relative flex-1 py-1">
           <div
-            class="slider-track absolute left-0 right-0 top-1/2 h-4 -translate-y-1/2 rounded-full opacity-40 transition-all duration-300"
+            class="slider-track absolute left-0 right-0 top-1/2 h-3 -translate-y-1/2 rounded-full opacity-40 transition-all duration-300"
             style="background: {selectedColor.hex};"
           ></div>
           <div
-            class="slider-progress absolute left-0 top-1/2 h-4 -translate-y-1/2 rounded-full shadow-lg transition-all duration-300"
+            class="slider-progress absolute left-0 top-1/2 h-3 -translate-y-1/2 rounded-full shadow-lg transition-all duration-300"
             style="background: linear-gradient(90deg, {selectedColor.hex}80, {selectedColor.hex}); width: {((dailyTarget - DAILY_TARGET_MIN) / (DAILY_TARGET_MAX - DAILY_TARGET_MIN)) * 100}%; box-shadow: 0 0 12px {selectedColor.hex}60;"
           ></div>
           <input
@@ -715,16 +716,16 @@
             bind:value={dailyTarget}
             class="slider-input relative z-10 w-full cursor-pointer appearance-none bg-transparent"
           />
-          <div class="mt-4 flex justify-between px-0.5">
-            {#each Array(DAILY_TARGET_MAX - DAILY_TARGET_MIN + 1) as _, i}
+          <div class="mt-2 flex justify-between px-0.5">
+            {#each Array(DAILY_TARGET_MAX - DAILY_TARGET_MIN + 1) as _, i (DAILY_TARGET_MIN + i)}
               <div class="relative flex flex-col items-center">
                 <div
-                  class="mb-1 h-1.5 w-1.5 rounded-full transition-all duration-300"
-                  style="background: {dailyTarget >= DAILY_TARGET_MIN + i ? selectedColor.hex : 'var(--border)'}; box-shadow: {dailyTarget >= DAILY_TARGET_MIN + i ? '0 0 6px ' + selectedColor.hex + '80' : 'none'};"
+                  class="mb-0.5 h-1 w-1 rounded-full transition-all duration-300"
+                  style="background: {dailyTarget >= DAILY_TARGET_MIN + i ? selectedColor.hex : 'var(--border)'}; box-shadow: {dailyTarget >= DAILY_TARGET_MIN + i ? '0 0 4px ' + selectedColor.hex + '80' : 'none'};"
                 ></div>
                 <span
-                  class="text-[9px] font-mono transition-all duration-300"
-                  style="color: {dailyTarget === DAILY_TARGET_MIN + i ? selectedColor.hex : 'var(--text-muted)'}; font-weight: {dailyTarget === DAILY_TARGET_MIN + i ? 'bold' : 'normal'}; transform: {dailyTarget === DAILY_TARGET_MIN + i ? 'scale(1.3)' : 'scale(1)'};"
+                  class="text-[8px] font-mono transition-all duration-300"
+                  style="color: {dailyTarget === DAILY_TARGET_MIN + i ? selectedColor.hex : 'var(--text-muted)'}; font-weight: {dailyTarget === DAILY_TARGET_MIN + i ? 'bold' : 'normal'}; transform: {dailyTarget === DAILY_TARGET_MIN + i ? 'scale(1.2)' : 'scale(1)'};"
                 >
                   {DAILY_TARGET_MIN + i}
                 </span>
@@ -733,15 +734,15 @@
           </div>
         </div>
         <div
-          class="flex min-w-[75px] flex-col items-center rounded-xl border-2 px-3 py-2 transition-all duration-300"
+          class="flex min-w-[60px] flex-col items-center rounded-lg border-2 px-2 py-1 transition-all duration-300"
           style="border-color: {selectedColor.hex}80; background: {selectedColor.hex}10;"
         >
-          <span class="text-[9px] font-mono uppercase tracking-wider" style="color: {selectedColor.hex};">target</span>
-          <span class="text-lg font-bold font-mono" style="color: {selectedColor.hex};">{dailyTarget}x</span>
+          <span class="text-[8px] font-mono uppercase tracking-wider" style="color: {selectedColor.hex};">target</span>
+          <span class="text-base font-bold font-mono" style="color: {selectedColor.hex};">{dailyTarget}x</span>
         </div>
       </div>
-      <p class="mt-1 text-[9px] font-mono text-muted">Habit counts as done only when today's completions reach this target.</p>
     </div>
+    {/if}
 
     <div class="rounded-[1.75rem] border border-border bg-bg-card/92 p-5 shadow-[0_20px_54px_rgba(15,23,42,0.08)]">
       <p class="mb-2 block text-[10px] font-mono uppercase tracking-wider text-muted">Habit Type</p>
