@@ -59,6 +59,10 @@ public class CheckinEntity extends UuidAuditedEntityBase {
   public int getVersion() { return version; }
   public void setVersion(int version) { this.version = version; }
 
+  public boolean getDone() {
+    return done;
+  }
+
   public LocalDate syncDate() {
     return getDate();
   }

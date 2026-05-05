@@ -81,6 +81,9 @@ public abstract class AuthenticatedApiTestSupport {
   }
 
   public record AuthenticatedUser(String id, String email, String accessToken) {
+    public String getId() {
+      return id;
+    }
   }
 
   @FunctionalInterface

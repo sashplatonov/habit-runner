@@ -52,6 +52,7 @@ public abstract class AuditedEntityBase extends PanacheEntityBase {
 
   public void setUpdatedAt(Instant updatedAt) {
     this.updatedAt = updatedAt;
+    this.updatedAtExplicitlySet = true;
   }
 
   @PrePersist

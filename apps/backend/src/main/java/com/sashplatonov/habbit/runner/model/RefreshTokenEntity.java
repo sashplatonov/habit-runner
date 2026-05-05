@@ -21,6 +21,38 @@ public class RefreshTokenEntity extends UuidAuditedEntityBase {
   @Column(name = "expiresAt", nullable = false)
   public Instant expiresAt;
 
+  public String getToken() {
+    return token;
+  }
+
+  public void setToken(String token) {
+    this.token = token;
+  }
+
+  public String getUserId() {
+    return userId;
+  }
+
+  public void setUserId(String userId) {
+    this.userId = userId;
+  }
+
+  public boolean isRevoked() {
+    return revoked;
+  }
+
+  public void setRevoked(boolean revoked) {
+    this.revoked = revoked;
+  }
+
+  public Instant getExpiresAt() {
+    return expiresAt;
+  }
+
+  public void setExpiresAt(Instant expiresAt) {
+    this.expiresAt = expiresAt;
+  }
+
   public boolean isActiveAt(Instant instant) {
     return !revoked && !expiresAt.isBefore(instant);
   }

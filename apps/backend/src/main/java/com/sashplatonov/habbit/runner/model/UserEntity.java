@@ -19,6 +19,30 @@ public class UserEntity extends UuidAuditedEntityBase {
   @Column
   public String timezone;
 
+  public String getEmail() {
+    return email;
+  }
+
+  public void setEmail(String email) {
+    this.email = email;
+  }
+
+  public String getTheme() {
+    return theme;
+  }
+
+  public void setTheme(String theme) {
+    this.theme = theme;
+  }
+
+  public String getTimezone() {
+    return timezone;
+  }
+
+  public void setTimezone(String timezone) {
+    this.timezone = timezone;
+  }
+
   @PrePersist
   void prePersist() {
     if (theme == null || theme.isBlank()) {

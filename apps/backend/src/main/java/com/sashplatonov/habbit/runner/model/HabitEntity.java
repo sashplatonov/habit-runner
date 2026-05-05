@@ -48,4 +48,12 @@ public class HabitEntity extends HabitSettingsFields {
   private String defaultFreezeDays(String value) {
     return value != null ? value : "[]";
   }
+
+  public BigInteger sortOrderOrZero() {
+    return getSortOrder() != null ? getSortOrder() : BigInteger.ZERO;
+  }
+
+  public int versionValue() {
+    return getVersion();
+  }
 }
