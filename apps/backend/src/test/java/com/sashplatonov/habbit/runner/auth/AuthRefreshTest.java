@@ -3,6 +3,7 @@ package com.sashplatonov.habbit.runner.auth;
 import com.sashplatonov.habbit.runner.model.RefreshTokenEntity;
 import com.sashplatonov.habbit.runner.support.AuthenticatedApiTestSupport;
 import io.quarkus.test.junit.QuarkusTest;
+import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -14,6 +15,7 @@ import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.*;
 
 @QuarkusTest
+@Transactional
 class AuthRefreshTest extends AuthenticatedApiTestSupport {
 
   private String userId;

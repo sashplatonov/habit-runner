@@ -7,6 +7,7 @@ import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.NotAuthorizedException;
 import jakarta.ws.rs.container.ContainerRequestContext;
+import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Proxy;
@@ -19,6 +20,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @QuarkusTest
+@Transactional
 class AuthDataAccessTest extends AuthenticatedApiTestSupport {
 
   private static final Map<Class<?>, Object> PRIMITIVE_DEFAULTS = Map.of(

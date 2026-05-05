@@ -5,6 +5,7 @@ import com.sashplatonov.habbit.runner.model.UserEntity;
 import com.sashplatonov.habbit.runner.support.AuthenticatedApiTestSupport;
 import io.quarkus.test.junit.QuarkusTest;
 import io.restassured.http.ContentType;
+import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -15,6 +16,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @QuarkusTest
+@Transactional
 class AuthThemeResourceTest extends AuthenticatedApiTestSupport {
 
   private String userId;

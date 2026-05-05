@@ -15,6 +15,7 @@ import jakarta.ws.rs.container.ContainerRequestContext;
 import jakarta.ws.rs.core.Response;
 import com.sashplatonov.habbit.runner.support.TestHelpers;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
+import io.quarkus.test.junit.QuarkusTest;
 import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Proxy;
@@ -23,6 +24,11 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import jakarta.transaction.Transactional;
+
+@QuarkusTest
+@Transactional
+@SuppressWarnings({"PMD.TooManyMethods", "PMD.LawOfDemeter"})
 class SyncResourceUnitTest {
 
   @Test

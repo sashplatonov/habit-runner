@@ -11,6 +11,7 @@ import com.sashplatonov.habbit.runner.sync.dto.PushRequestDto;
 import com.sashplatonov.habbit.runner.sync.dto.SyncOpDto;
 import io.quarkus.test.junit.QuarkusTest;
 import io.restassured.http.ContentType;
+import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -28,6 +29,7 @@ import static com.sashplatonov.habbit.runner.sync.SyncTestPayloads.syncOp;
 import static org.hamcrest.Matchers.*;
 
 @QuarkusTest
+@Transactional
 @SuppressWarnings({"PMD.TooManyMethods", "PMD.LawOfDemeter"})
 class SyncResourceTest extends AuthenticatedApiTestSupport {
 
