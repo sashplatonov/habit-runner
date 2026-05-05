@@ -44,6 +44,8 @@ public abstract class AuthenticatedApiTestSupport {
       HabitEntity.deleteAll();
       RefreshTokenEntity.deleteAll();
       UserEntity.deleteAll();
+      TombstoneEntity.deleteAll();
+      SyncOpLogEntity.deleteAll();
       ut.commit();
     } catch (Exception e) {
       rollbackIfNeeded();
