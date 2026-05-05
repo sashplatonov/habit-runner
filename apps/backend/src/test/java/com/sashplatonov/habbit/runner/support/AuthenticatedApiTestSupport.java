@@ -2,10 +2,14 @@ package com.sashplatonov.habbit.runner.support;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
+import com.sashplatonov.habbit.runner.model.CheckinEntity;
+import com.sashplatonov.habbit.runner.model.HabitEntity;
+import com.sashplatonov.habbit.runner.model.RefreshTokenEntity;
 import com.sashplatonov.habbit.runner.model.UserEntity;
 import jakarta.inject.Inject;
 import jakarta.transaction.Status;
 import jakarta.transaction.UserTransaction;
+import org.junit.jupiter.api.AfterEach;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -20,6 +24,29 @@ public abstract class AuthenticatedApiTestSupport {
   @Inject
   protected UserTransaction ut;
 
+  @AfterEach
+  void cleanDatabase() throws Exception {
+    // Clean up test data after each test for isolation
+    boolean transactionOwner = ut.getStatus() != Status.STATUS_ACTIVE;
+    if (transactionOwner) {
+      ut.begin();
+    }
+    try {
+      CheckinEntity.deleteAll();
+      HabitEntity.deleteAll();
+      RefreshTokenEntity.deleteAll();
+      UserEntity.deleteAll();
+      if (transactionOwner) {
+        ut.commit();
+      }
+    } catch (Exception e) {
+      if (transactionOwner) {
+        rollbackIfNeeded();
+      }
+      throw e;
+    }
+  }
+
   protected AuthenticatedUser createAuthenticatedUser() throws Exception {
     return createAuthenticatedUser("cloud");
   }
@@ -28,14 +55,27 @@ public abstract class AuthenticatedApiTestSupport {
     var userId = UUID.randomUUID().toString();
     var email = userId + "@test.com";
 
-    ut.begin();
-    var user = new UserEntity();
-    user.setId(userId);
-    user.setEmail(email);
-    user.setTheme(theme);
-    user.markCreatedAt(Instant.now());
-    user.persist();
-    ut.commit();
+    // Only manage transaction manually if one is not already active (e.g. from @Transactional)
+    boolean transactionOwner = ut.getStatus() != Status.STATUS_ACTIVE;
+    if (transactionOwner) {
+      ut.begin();
+    }
+    try {
+      var user = new UserEntity();
+      user.setId(userId);
+      user.setEmail(email);
+      user.setTheme(theme);
+      user.markCreatedAt(Instant.now());
+      user.persist();
+      if (transactionOwner) {
+        ut.commit();
+      }
+    } catch (Exception e) {
+      if (transactionOwner) {
+        rollbackIfNeeded();
+      }
+      throw e;
+    }
 
     return new AuthenticatedUser(userId, email, generateAccessToken(userId, email));
   }
@@ -59,21 +99,26 @@ public abstract class AuthenticatedApiTestSupport {
   }
 
   protected <T> T inTransaction(TransactionalCallable<T> callable) throws Exception {
-    var committed = false;
-    ut.begin();
+    // Only manage transaction manually if one is not already active (e.g. from @Transactional)
+    boolean transactionOwner = ut.getStatus() != Status.STATUS_ACTIVE;
+    if (transactionOwner) {
+      ut.begin();
+    }
     try {
       var result = callable.call();
-      ut.commit();
-      committed = true;
+      if (transactionOwner) {
+        ut.commit();
+      }
       return result;
-    } finally {
-      if (!committed) {
+    } catch (Exception e) {
+      if (transactionOwner) {
         rollbackIfNeeded();
       }
+      throw e;
     }
   }
 
-  private void rollbackIfNeeded() throws Exception {
+  protected void rollbackIfNeeded() throws Exception {
     var status = ut.getStatus();
     if (status == Status.STATUS_ACTIVE || status == Status.STATUS_MARKED_ROLLBACK) {
       ut.rollback();

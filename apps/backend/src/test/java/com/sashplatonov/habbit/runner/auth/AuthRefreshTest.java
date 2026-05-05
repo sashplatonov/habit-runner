@@ -3,7 +3,7 @@ package com.sashplatonov.habbit.runner.auth;
 import com.sashplatonov.habbit.runner.model.RefreshTokenEntity;
 import com.sashplatonov.habbit.runner.support.AuthenticatedApiTestSupport;
 import io.quarkus.test.junit.QuarkusTest;
-import jakarta.transaction.Transactional;
+import jakarta.transaction.Status;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -15,7 +15,6 @@ import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.*;
 
 @QuarkusTest
-@Transactional
 class AuthRefreshTest extends AuthenticatedApiTestSupport {
 
   private String userId;
@@ -35,9 +34,22 @@ class AuthRefreshTest extends AuthenticatedApiTestSupport {
     rt.token = UUID.randomUUID().toString();
     rt.revoked = revoked;
     rt.setExpiry(expiresAt);
-    ut.begin();
-    rt.persist();
-    ut.commit();
+    // Only manage transaction manually if one is not already active
+    boolean transactionOwner = ut.getStatus() != Status.STATUS_ACTIVE;
+    if (transactionOwner) {
+      ut.begin();
+    }
+    try {
+      rt.persist();
+      if (transactionOwner) {
+        ut.commit();
+      }
+    } catch (Exception e) {
+      if (transactionOwner) {
+        rollbackIfNeeded();
+      }
+      throw e;
+    }
     return rt.tokenValue();
   }
 

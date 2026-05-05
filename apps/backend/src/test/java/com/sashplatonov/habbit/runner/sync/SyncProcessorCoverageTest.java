@@ -11,7 +11,6 @@ import com.sashplatonov.habbit.runner.model.TombstoneEntity;
 import com.sashplatonov.habbit.runner.support.AuthenticatedApiTestSupport;
 import com.sashplatonov.habbit.runner.sync.dto.PushResponseDto;
 import io.quarkus.test.junit.QuarkusTest;
-import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -29,7 +28,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static com.sashplatonov.habbit.runner.sync.SyncTestPayloads.syncOp;
 
 @QuarkusTest
-@Transactional
 @SuppressWarnings({
   "PMD.CouplingBetweenObjects",
   "PMD.ExcessiveMethodLength",

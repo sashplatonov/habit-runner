@@ -14,7 +14,6 @@ import com.sashplatonov.habbit.runner.support.AuthenticatedApiTestSupport;
 import com.sashplatonov.habbit.runner.support.TestConfigFactory;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
-import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -25,7 +24,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import com.sashplatonov.habbit.runner.support.TestHelpers;
 
 @QuarkusTest
-@Transactional
 class NotificationResourceCoverageTest extends AuthenticatedApiTestSupport {
 
 VAPID_PUBLIC_KEY=
