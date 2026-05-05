@@ -14,6 +14,11 @@
 !/checkstyle
 !/checkstyle/**
 
+!/pmd
+!/pmd/**
+!/spotbugs
+!/spotbugs/**
+
 !target/*-runner
 !target/*-runner.jar
 !target/lib/*
