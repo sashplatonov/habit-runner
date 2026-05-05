@@ -5,6 +5,8 @@ import com.auth0.jwt.algorithms.Algorithm;
 import com.sashplatonov.habbit.runner.model.CheckinEntity;
 import com.sashplatonov.habbit.runner.model.HabitEntity;
 import com.sashplatonov.habbit.runner.model.RefreshTokenEntity;
+import com.sashplatonov.habbit.runner.model.SyncOpLogEntity;
+import com.sashplatonov.habbit.runner.model.TombstoneEntity;
 import com.sashplatonov.habbit.runner.model.UserEntity;
 import jakarta.inject.Inject;
 import jakarta.transaction.Status;
