@@ -4,11 +4,15 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.time.Instant;
 
 @Entity
 @Table(name = "users")
+@Getter
+@Setter
 public class UserEntity extends UuidAuditedEntityBase {
   @Column(nullable = false, unique = true)
   public String email;
@@ -18,30 +22,6 @@ public class UserEntity extends UuidAuditedEntityBase {
 
   @Column
   public String timezone;
-
-  public String getEmail() {
-    return email;
-  }
-
-  public void setEmail(String email) {
-    this.email = email;
-  }
-
-  public String getTheme() {
-    return theme;
-  }
-
-  public void setTheme(String theme) {
-    this.theme = theme;
-  }
-
-  public String getTimezone() {
-    return timezone;
-  }
-
-  public void setTimezone(String timezone) {
-    this.timezone = timezone;
-  }
 
   @PrePersist
   void prePersist() {

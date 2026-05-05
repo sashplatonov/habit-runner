@@ -5,6 +5,8 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Index;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.time.Instant;
 
@@ -15,6 +17,8 @@ import java.time.Instant;
         @Index(name = "tombstones_user_deleted_cursor_idx", columnList = "userId,deletedAt,id")
     }
 )
+@Getter
+@Setter
 public class TombstoneEntity extends UuidAuditedEntityBase {
   @Column(name = "userId", nullable = false)
   public String userId;

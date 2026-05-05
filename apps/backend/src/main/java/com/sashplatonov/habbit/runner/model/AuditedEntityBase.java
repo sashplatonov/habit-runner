@@ -9,10 +9,14 @@ import jakarta.persistence.PostUpdate;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Transient;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.time.Instant;
 
 @MappedSuperclass
+@Getter
+@Setter
 public abstract class AuditedEntityBase extends PanacheEntityBase {
   @Column(name = "createdAt", nullable = false, updatable = false)
   public Instant createdAt;
@@ -37,19 +41,7 @@ public abstract class AuditedEntityBase extends PanacheEntityBase {
     this.updatedAt = updatedAt;
   }
 
-  // Getters and setters for code that expects them
-  public Instant getCreatedAt() {
-    return createdAt;
-  }
-
-  public void setCreatedAt(Instant createdAt) {
-    this.createdAt = createdAt;
-  }
-
-  public Instant getUpdatedAt() {
-    return updatedAt;
-  }
-
+  // Custom setter to track explicit updates for audit purposes
   public void setUpdatedAt(Instant updatedAt) {
     this.updatedAt = updatedAt;
     this.updatedAtExplicitlySet = true;

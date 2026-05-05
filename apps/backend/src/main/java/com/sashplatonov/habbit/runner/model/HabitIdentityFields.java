@@ -3,10 +3,14 @@ package com.sashplatonov.habbit.runner.model;
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
 import jakarta.persistence.MappedSuperclass;
+import lombok.Getter;
+import lombok.Setter;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
 @MappedSuperclass
+@Getter
+@Setter
 public abstract class HabitIdentityFields extends UuidAuditedEntityBase {
   @Column(name = "userId", nullable = false)
   public String userId;

@@ -6,8 +6,8 @@ import jakarta.persistence.Index;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
+import lombok.Data;
 
-import java.time.Instant;
 import java.time.LocalDate;
 
 @Entity
@@ -20,6 +20,7 @@ import java.time.LocalDate;
         @UniqueConstraint(name = "habit_date_unique", columnNames = {"habitId", "date"})
     }
 )
+@Data
 public class CheckinEntity extends UuidAuditedEntityBase {
   @Column(name = "habitId", nullable = false)
   public String habitId;
@@ -45,34 +46,16 @@ public class CheckinEntity extends UuidAuditedEntityBase {
     version = Math.max(1, version);
   }
 
-  // Getters and setters for backward compatibility
-  public String getHabitId() { return habitId; }
-  public void setHabitId(String habitId) { this.habitId = habitId; }
-  public String getUserId() { return userId; }
-  public void setUserId(String userId) { this.userId = userId; }
-  public LocalDate getDate() { return date; }
-  public void setDate(LocalDate date) { this.date = date; }
-  public boolean isDone() { return done; }
-  public void setDone(boolean done) { this.done = done; }
-  public int getCount() { return count; }
-  public void setCount(int count) { this.count = count; }
-  public int getVersion() { return version; }
-  public void setVersion(int version) { this.version = version; }
-
-  public boolean getDone() {
-    return done;
-  }
-
   public LocalDate syncDate() {
     return getDate();
   }
 
-  public void setAuditTimestamps(Instant created, Instant updated) {
-    setCreatedAt(created);
-    setUpdatedAt(updated);
-  }
-
   public void setCheckinDate(LocalDate value) {
     setDate(value);
+  }
+
+  // Explicit getter for boolean 'done' for backward compatibility
+  public boolean getDone() {
+    return done;
   }
 }

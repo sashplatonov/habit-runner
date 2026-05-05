@@ -3,6 +3,8 @@ package com.sashplatonov.habbit.runner.model;
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
 import jakarta.persistence.MappedSuperclass;
+import lombok.Getter;
+import lombok.Setter;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
@@ -10,6 +12,8 @@ import java.math.BigInteger;
 import java.time.Instant;
 
 @MappedSuperclass
+@Getter
+@Setter
 public abstract class HabitSettingsFields extends HabitIdentityFields {
   @Column(name = "targetStreak", nullable = false)
   public int targetStreak;
