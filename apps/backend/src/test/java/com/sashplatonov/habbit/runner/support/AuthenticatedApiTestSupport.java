@@ -27,22 +27,26 @@ public abstract class AuthenticatedApiTestSupport {
   @AfterEach
   void cleanDatabase() throws Exception {
     // Clean up test data after each test for isolation
-    boolean transactionOwner = ut.getStatus() != Status.STATUS_ACTIVE;
-    if (transactionOwner) {
-      ut.begin();
+    // Always start a fresh transaction to ensure cleanup works
+    if (ut.getStatus() == Status.STATUS_ACTIVE) {
+      // If a transaction is already active, commit it first to avoid conflicts
+      try {
+        ut.commit();
+      } catch (Exception e) {
+        // Ignore commit errors, try to rollback
+        try { ut.rollback(); } catch (Exception ignored) {}
+      }
     }
+    
+    ut.begin();
     try {
       CheckinEntity.deleteAll();
       HabitEntity.deleteAll();
       RefreshTokenEntity.deleteAll();
       UserEntity.deleteAll();
-      if (transactionOwner) {
-        ut.commit();
-      }
+      ut.commit();
     } catch (Exception e) {
-      if (transactionOwner) {
-        rollbackIfNeeded();
-      }
+      rollbackIfNeeded();
       throw e;
     }
   }
