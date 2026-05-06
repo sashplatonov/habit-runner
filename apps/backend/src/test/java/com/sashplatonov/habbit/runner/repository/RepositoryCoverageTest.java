@@ -117,73 +117,73 @@ class RepositoryCoverageTest extends AuthenticatedApiTestSupport {
       habitRepository.save(firstHabit);
 
       var secondHabit = new HabitEntity();
-      secondHabit.id = UUID.randomUUID().toString();
-      secondHabit.userId = userId;
-      secondHabit.name = "Evening Read";
+      secondHabit.setId(UUID.randomUUID().toString());
+      secondHabit.setUserId(userId);
+      secondHabit.setName("Evening Read");
       secondHabit.setFrequency(HabitFrequency.DAILY);
       secondHabit.setColor(HabitColor.GREEN);
-      secondHabit.icon = "book";
-      secondHabit.dailyTarget = 1;
-      secondHabit.targetStreak = 0;
-      secondHabit.archived = false;
+      secondHabit.setIcon("book");
+      secondHabit.setDailyTarget(1);
+      secondHabit.setTargetStreak(0);
+      secondHabit.setArchived(false);
       secondHabit.setType(HabitType.POSITIVE);
-      secondHabit.version = 2;
+      secondHabit.setVersion(2);
       secondHabit.setSortOrder(BigInteger.ONE);
       secondHabit.setCreatedAt(secondUpdatedAt);
       secondHabit.setUpdatedAt(secondUpdatedAt);
       habitRepository.save(secondHabit);
 
-      assertNotNull(habitRepository.findHabitById(firstHabit.id));
+      assertNotNull(habitRepository.findHabitById(firstHabit.getId()));
       assertEquals(2, habitRepository.findPageForUser(userId, null, null, 10).size());
-      assertEquals(1, habitRepository.findPageForUser(userId, firstUpdatedAt, firstHabit.id, 10).size());
+      assertEquals(1, habitRepository.findPageForUser(userId, firstUpdatedAt, firstHabit.getId(), 10).size());
 
       var firstCheckin = new CheckinEntity();
-      firstCheckin.id = UUID.randomUUID().toString();
-      firstCheckin.habitId = firstHabit.id;
-      firstCheckin.userId = userId;
+      firstCheckin.setId(UUID.randomUUID().toString());
+      firstCheckin.setHabitId(firstHabit.getId());
+      firstCheckin.setUserId(userId);
       firstCheckin.setCheckinDate(LocalDate.of(2026, 4, 10));
-      firstCheckin.done = true;
-      firstCheckin.count = 1;
-      firstCheckin.version = 1;
+      firstCheckin.setDone(true);
+      firstCheckin.setCount(1);
+      firstCheckin.setVersion(1);
       firstCheckin.setAuditTimestamps(firstUpdatedAt, firstUpdatedAt);
       checkinRepository.save(firstCheckin);
 
       var secondCheckin = new CheckinEntity();
-      secondCheckin.id = UUID.randomUUID().toString();
-      secondCheckin.habitId = firstHabit.id;
-      secondCheckin.userId = userId;
+      secondCheckin.setId(UUID.randomUUID().toString());
+      secondCheckin.setHabitId(firstHabit.getId());
+      secondCheckin.setUserId(userId);
       secondCheckin.setCheckinDate(LocalDate.of(2026, 4, 11));
-      secondCheckin.done = true;
-      secondCheckin.count = 1;
-      secondCheckin.version = 2;
+      secondCheckin.setDone(true);
+      secondCheckin.setCount(1);
+      secondCheckin.setVersion(2);
       secondCheckin.setAuditTimestamps(secondUpdatedAt, secondUpdatedAt);
       checkinRepository.save(secondCheckin);
 
-      assertNotNull(checkinRepository.findByHabitDateAndUserId(firstHabit.id, LocalDate.of(2026, 4, 10), userId));
+      assertNotNull(checkinRepository.findByHabitDateAndUserId(firstHabit.getId(), LocalDate.of(2026, 4, 10), userId));
       assertEquals(2, checkinRepository.findPageForUser(userId, null, null, 10).size());
-      assertEquals(1, checkinRepository.findPageForUser(userId, firstUpdatedAt, firstCheckin.id, 10).size());
-      assertEquals(1L, checkinRepository.deleteByHabitIdUserIdAndDate(firstHabit.id, userId, LocalDate.of(2026, 4, 10)));
+      assertEquals(1, checkinRepository.findPageForUser(userId, firstUpdatedAt, firstCheckin.getId(), 10).size());
+      assertEquals(1L, checkinRepository.deleteByHabitIdUserIdAndDate(firstHabit.getId(), userId, LocalDate.of(2026, 4, 10)));
       assertEquals(1L, checkinRepository.deleteByHabitIdAndUserId(firstHabit.id, userId));
 
       var firstTombstone = new TombstoneEntity();
-      firstTombstone.userId = userId;
-      firstTombstone.entity = "habit";
-      firstTombstone.entityId = firstHabit.id;
-      firstTombstone.version = 1;
+      firstTombstone.setUserId(userId);
+      firstTombstone.setEntity("habit");
+      firstTombstone.setEntityId(firstHabit.getId());
+      firstTombstone.setVersion(1);
       firstTombstone.setDeletedAt(firstDeletedAt);
       tombstoneRepository.save(firstTombstone);
 
       var secondTombstone = new TombstoneEntity();
-      secondTombstone.userId = userId;
-      secondTombstone.entity = "checkin";
-      secondTombstone.entityId = secondHabit.id;
-      secondTombstone.version = 2;
+      secondTombstone.setUserId(userId);
+      secondTombstone.setEntity("checkin");
+      secondTombstone.setEntityId(secondHabit.getId());
+      secondTombstone.setVersion(2);
       secondTombstone.setDeletedAt(secondDeletedAt);
       tombstoneRepository.save(secondTombstone);
 
       assertEquals(2, tombstoneRepository.findPageForUser(userId, null, null, 10).size());
-      assertEquals(1, tombstoneRepository.findPageForUser(userId, firstDeletedAt, firstTombstone.id, 10).size());
-      assertEquals(1L, habitRepository.deleteByIdAndUserId(secondHabit.id, userId));
+      assertEquals(1, tombstoneRepository.findPageForUser(userId, firstDeletedAt, firstTombstone.getId(), 10).size());
+      assertEquals(1L, habitRepository.deleteByIdAndUserId(secondHabit.getId(), userId));
     });
   }
 }

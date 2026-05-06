@@ -57,7 +57,7 @@
 <svelte:window onmousedown={handleWindowClick} />
 
 <nav
-  class="fixed bottom-0 left-0 right-0 z-50 flex border-t border-border bg-bg-primary/95 backdrop-blur-sm sm:hidden"
+  class="fixed bottom-0 left-0 right-0 z-40 flex border-t border-border bg-bg-secondary/88 shadow-[0_-18px_40px_rgba(15,23,42,0.12)] backdrop-blur-xl sm:hidden"
   style:height="calc(72px + env(safe-area-inset-bottom))"
   style:padding-bottom="env(safe-area-inset-bottom)"
   aria-label="Mobile navigation"
@@ -88,8 +88,8 @@
 
   <div class="flex flex-[0_0_72px] items-center justify-center">
     <a
-      class="flex h-[52px] w-[52px] items-center justify-center rounded-2xl bg-accent text-bg-primary"
-      style:box-shadow="0 0 20px var(--glow), 0 8px 16px rgba(0,0,0,0.4)"
+      class="flex h-[54px] w-[54px] items-center justify-center rounded-[1.4rem] bg-accent text-bg-primary"
+      style:box-shadow="0 0 20px var(--glow), 0 18px 32px rgba(15,23,42,0.18)"
       href={resolve<'/app/(protected)/habit/new'>('/app/(protected)/habit/new', {})}
       aria-label="New habit"
     >
@@ -130,7 +130,7 @@
 
     {#if isThemeOpen}
       <div
-        class="absolute right-0 z-10 flex w-44 flex-col gap-0.5 rounded-xl border border-border bg-bg-card p-2 shadow-2xl"
+        class="absolute right-0 z-10 flex w-44 flex-col gap-0.5 rounded-[1.5rem] border border-border bg-bg-card p-2 shadow-[0_22px_60px_rgba(15,23,42,0.14)]"
         style:bottom="calc(72px + env(safe-area-inset-bottom))"
       >
         <div class="flex items-center gap-1.5 px-2 py-1">

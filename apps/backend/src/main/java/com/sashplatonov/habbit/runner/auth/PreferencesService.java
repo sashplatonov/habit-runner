@@ -44,13 +44,13 @@ public class PreferencesService {
     var previousTheme = ThemeCatalog.normalize(user.theme);
     var previousTimezone = user.timezone;
 
-    user.theme = ThemeCatalog.normalize(request.theme());
+      user.theme = ThemeCatalog.normalize(request.theme());
     if (request.timezone() != null) {
       user.timezone = request.timezone().isBlank() ? null : request.timezone();
     }
     log.info(
         "User preferences updated: userId={}, themeChanged={}, timezoneChanged={}",
-        user.id,
+        user.getId(),
         !Objects.equals(previousTheme, user.theme),
         !Objects.equals(previousTimezone, user.timezone)
     );

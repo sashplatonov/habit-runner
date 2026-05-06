@@ -1,5 +1,7 @@
 <script lang="ts">
   import { addDaysToCalendarDate, calendarDateToDate } from '@habbit-runner/shared';
+  import { completionKeyToCalendarDate, calendarDateToCompletionKey } from '@/lib/completionKey';
+  import { onMount } from 'svelte';
   import type { HabitColor } from '@/types/habit';
   import { formatDate } from '$lib/habits/habitStats';
   import { HABIT_COLOR_THEMES } from '$lib/theme/habit-colors';
@@ -13,12 +15,26 @@
   let { completions, dailyTarget = 1, color }: Props = $props();
 
   const days = $derived.by(() => {
-    const todayKey = formatDate(new Date());
+    // formatDate returns a canonical completion key (YYYY-MM-DDT00:00:00Z).
+    // Convert to plain calendar date (YYYY-MM-DD) before using addDaysToCalendarDate.
+    const todayKey = completionKeyToCalendarDate(formatDate(new Date()));
     return Array.from({ length: 30 }, (_, index) => addDaysToCalendarDate(todayKey, -(29 - index)));
   });
   const startDay = $derived(days[0] ? calendarDateToDate(days[0]).getDay() : 0);
   const emptyCells = $derived(Array.from({ length: startDay }));
   const palette = $derived(HABIT_COLOR_THEMES[color]);
+
+  // Debugging aid: log incoming completions and computed days on mount.
+  onMount(() => {
+    /* eslint-disable no-console */
+    try {
+      console.log('[MiniHeatmap] Completions:', completions);
+      console.log('[MiniHeatmap] Computed days:', days);
+    } catch (e) {
+      // Silently ignore mount log errors
+    }
+    /* eslint-enable no-console */
+  });
 </script>
 
 <div class="grid grid-flow-col grid-rows-7 gap-[2px]">
@@ -27,9 +43,13 @@
   {/each}
 
   {#each days as dateKey, di (dateKey + '-' + di)}
-    {@const isCompleted = (completions[dateKey] ?? 0) >= dailyTarget}
+    {@const lookupKey = calendarDateToCompletionKey(dateKey)}
+    {@const isCompleted = (completions[lookupKey] ?? 0) >= dailyTarget}
     <div
       class="h-[4px] w-[4px] rounded-[1px] transition-all duration-300"
+      data-date={dateKey}
+      data-lookup-key={lookupKey}
+      data-completed={isCompleted}
       style:background-color={isCompleted ? palette.hex : 'var(--border)'}
       style:box-shadow={isCompleted ? `0 0 4px ${palette.glow}` : 'none'}
       style:opacity={isCompleted ? 1 : 0.5}

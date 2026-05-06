@@ -281,13 +281,14 @@ export const db = new HabbitRunnerDb();
 export function domainToHabitEntity(habit: Habit): HabitEntity {
   const userId = getCurrentUserId();
   function clone<T>(v: T | undefined): T | undefined {
-    if (v === undefined) return undefined;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const sc = (globalThis as any).structuredClone;
-    if (typeof sc === 'function') {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      return sc(v) as T;
+    if (v === undefined) {
+      return undefined;
     }
+
+    if (typeof globalThis.structuredClone === 'function') {
+      return globalThis.structuredClone(v);
+    }
+
     throw new Error('structuredClone is not available in this environment. Please run on Node 18+/modern browser or provide a polyfill.');
   }
 

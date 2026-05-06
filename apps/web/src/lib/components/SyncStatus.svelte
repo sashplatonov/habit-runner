@@ -149,16 +149,29 @@
   {/if}
 
   {#if showLogs}
-    <div class="mt-2 rounded-xl border border-border bg-bg-secondary p-2">
-      <div class="mb-2 text-[10px] font-mono uppercase tracking-[0.18em] text-muted">
-        Recent sync logs
+    <div class="fixed inset-0 z-50 p-4 bg-bg-secondary overflow-auto sm:static sm:p-2 sm:rounded-xl sm:border sm:border-border">
+      <div class="flex items-center justify-between mb-2">
+        <div class="text-[10px] font-mono uppercase tracking-[0.18em] text-muted">
+          Recent sync logs
+        </div>
+        <button
+          type="button"
+          class="sm:hidden rounded-md px-3 py-1 text-[13px] font-mono text-muted hover:text-foreground"
+          aria-label="Close logs"
+          onclick={() => {
+            showLogs = false;
+          }}
+        >
+          Close
+        </button>
       </div>
+
       {#if visibleLogs.length === 0}
         <div class="text-[11px] font-mono text-muted">No sync logs yet</div>
       {:else}
-        <div class="max-h-48 space-y-2 overflow-y-auto">
+        <div class="space-y-2 w-full sm:max-h-48">
           {#each visibleLogs as entry (`${entry.timestamp}:${entry.event}`)}
-            <div class="rounded-lg bg-bg-card px-2 py-1.5">
+            <div class="rounded-lg bg-bg-card px-2 py-1.5 w-full">
               <div class="flex items-center gap-2 text-[11px] font-mono">
                 <span class="text-foreground">{entry.event}</span>
                 <span class="text-muted/80">{new Date(entry.timestamp).toLocaleTimeString()}</span>

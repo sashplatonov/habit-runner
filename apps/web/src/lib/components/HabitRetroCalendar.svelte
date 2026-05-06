@@ -7,7 +7,7 @@
   import { formatDate } from '$lib/habits/habitStats';
   import { isScheduledForDate, resolveHabitSchedule } from '$lib/habits/schedule';
   import type { HabitColorTheme } from '$lib/theme/habit-colors';
-  import { DAY_HEADERS, POPOVER_HEIGHT, POPOVER_WIDTH } from '@/pages/components/HabitRetroCalendar.constants';
+  import { DAY_HEADERS, POPOVER_HEIGHT, POPOVER_WIDTH } from '$lib/habits/retroCalendar.constants';
 
   type Props = {
     habit: Habit;

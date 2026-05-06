@@ -12,6 +12,7 @@ import {
 } from '@/lib/storage/db';
 import { pullChanges, pushChanges } from '@/lib/api/sync';
 import { logClientInfo } from '@/lib/logging/clientLogger';
+import { nowMs, durationMs } from '$lib/time/perf';
 
 export type SyncStatus = 'idle' | 'syncing' | 'offline' | 'error';
 
@@ -28,14 +29,6 @@ let activeSyncRun: Promise<SyncRunResult> | null = null;
 let shouldRerunAfterActiveSync = false;
 let scheduledSyncHandle: number | null = null;
 const SYNC_TRIGGER_DEBOUNCE_MS = 180;
-
-function nowMs(): number {
-  return typeof performance !== 'undefined' ? performance.now() : Date.now();
-}
-
-function durationMs(startedAt: number): number {
-  return Math.round(nowMs() - startedAt);
-}
 
 type SyncCycleMetricsContext = {
   cursorAfterPull: string;

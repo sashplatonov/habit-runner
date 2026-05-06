@@ -85,6 +85,47 @@ test('calculateScheduledStreak and rate handle weekly quota schedules', () => {
   expect(rate).toBe(25);
 });
 
+test('calculateScheduledStreak: weekly_quota keeps last completed week while current week is still in progress', () => {
+  const habit = createHabit({
+    schedule: { type: 'weekly_quota', timesPerWeek: 2, weekdays: [1, 2] },
+    completions: {
+      [isoDate('2026-03-02T00:00:00Z')]: 1,
+      [isoDate('2026-03-03T00:00:00Z')]: 1
+    }
+  });
+
+  const result = calculateScheduledStreak(habit, habit.completions, new Date('2026-03-10T00:00:00Z'));
+  expect(result).toEqual({ current: 1, longest: 1 });
+});
+
+test('calculateScheduledStreak: weekly_quota counts the current week once quota is already met before week end', () => {
+  const habit = createHabit({
+    schedule: { type: 'weekly_quota', timesPerWeek: 2, weekdays: [1, 2] },
+    completions: {
+      [isoDate('2026-03-02T00:00:00Z')]: 1,
+      [isoDate('2026-03-03T00:00:00Z')]: 1,
+      [isoDate('2026-03-09T00:00:00Z')]: 1,
+      [isoDate('2026-03-10T00:00:00Z')]: 1
+    }
+  });
+
+  const result = calculateScheduledStreak(habit, habit.completions, new Date('2026-03-10T00:00:00Z'));
+  expect(result).toEqual({ current: 2, longest: 2 });
+});
+
+test('calculateScheduledStreak: monthly_quota keeps last completed month while current month is still in progress', () => {
+  const habit = createHabit({
+    schedule: { type: 'monthly_quota', timesPerMonth: 2 },
+    completions: {
+      [isoDate('2026-02-02T00:00:00Z')]: 1,
+      [isoDate('2026-02-18T00:00:00Z')]: 1
+    }
+  });
+
+  const result = calculateScheduledStreak(habit, habit.completions, new Date('2026-03-10T00:00:00Z'));
+  expect(result).toEqual({ current: 1, longest: 1 });
+});
+
 test('isMandatoryToday ignores meet quota when checkin uses sync ISO without milliseconds', () => {
   const habit = createHabit({
     schedule: { type: 'weekly_quota', timesPerWeek: 1 },
@@ -350,4 +391,50 @@ test('isMandatoryToday: monthly_weeks — multiple weeks, mandatory on any match
   });
   expect(isMandatoryToday(habit, new Date('2026-03-20T00:00:00Z'), 'UTC')).toBe(true); // week 4 ✓
   expect(isMandatoryToday(habit, new Date('2026-03-13T00:00:00Z'), 'UTC')).toBe(false); // week 3, not in [2,4]
+});
+
+// ── streaks for non-daily schedules ─────────────────────────────────────────
+
+test('calculateScheduledStreak: weekly_days — skips unscheduled days and keeps streak', () => {
+  const habit = createHabit({
+    schedule: { type: 'weekly_days', weekdays: [1, 3, 5] }, // Mon, Wed, Fri
+    completions: {
+      [isoDate('2026-03-16T00:00:00Z')]: 1, // Mon
+      [isoDate('2026-03-18T00:00:00Z')]: 1, // Wed
+      [isoDate('2026-03-20T00:00:00Z')]: 1 // Fri
+    }
+  });
+
+  const result = calculateScheduledStreak(habit, habit.completions, new Date('2026-03-20T00:00:00Z'));
+  expect(result).toEqual({ current: 3, longest: 3 });
+});
+
+test('calculateScheduledStreak: weekly_days — missing today (scheduled) does not count today but preserves previous streak', () => {
+  const habit = createHabit({
+    schedule: { type: 'weekly_days', weekdays: [1, 3, 5] }, // Mon, Wed, Fri
+    completions: {
+      [isoDate('2026-03-16T00:00:00Z')]: 1, // Mon
+      [isoDate('2026-03-18T00:00:00Z')]: 1 // Wed
+      // missing Fri (2026-03-20)
+    }
+  });
+
+  const result = calculateScheduledStreak(habit, habit.completions, new Date('2026-03-20T00:00:00Z'));
+  expect(result.current).toBe(2);
+});
+
+test('calculateScheduledStreak: freezeDays are treated as skipped and do not break streaks', () => {
+  const calendarKey = isoDate('2026-03-20T00:00:00Z').slice(0, 10);
+  const habit = createHabit({
+    schedule: { type: 'weekly_days', weekdays: [1, 3, 5] },
+    completions: {
+      [isoDate('2026-03-16T00:00:00Z')]: 1, // Mon
+      [isoDate('2026-03-18T00:00:00Z')]: 1 // Wed
+    },
+    freezeDays: [calendarKey]
+  });
+
+  // Today (2026-03-20) is frozen — streak should remain 2
+  const result = calculateScheduledStreak(habit, habit.completions, new Date('2026-03-20T00:00:00Z'));
+  expect(result.current).toBe(2);
 });

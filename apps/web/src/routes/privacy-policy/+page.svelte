@@ -15,18 +15,20 @@
   pathname={PUBLIC_PRIVACY_SEO.pathname}
 />
 
-<div class="min-h-screen bg-white text-slate-900">
+<div class="min-h-screen bg-[linear-gradient(180deg,#f8fbff_0%,#eef4fb_52%,#f7fbff_100%)] text-slate-900">
   <PublicNav maxWidth="max-w-5xl" />
 
   <main class="mx-auto w-full max-w-3xl px-4 py-12 sm:px-6">
-    <h1 class="text-3xl font-semibold leading-tight text-slate-900">Privacy Policy</h1>
-    <p class="mt-2 text-xs text-slate-500">Last updated: {lastUpdated}</p>
-    <p class="mt-1 rounded border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-700">
+    <section class="overflow-hidden rounded-[2rem] border border-slate-200/80 bg-white/92 p-6 shadow-[0_24px_80px_rgba(15,23,42,0.1)] sm:p-8">
+      <h1 class="text-3xl font-semibold leading-tight text-slate-900">Privacy Policy</h1>
+      <p class="mt-2 text-xs text-slate-500">Last updated: {lastUpdated}</p>
+      <p class="mt-3 rounded-[1.25rem] border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-700">
       [HUMAN REVIEW REQUIRED] This document is a template. Please review with a qualified legal
       advisor before publishing to ensure GDPR and CCPA compliance for your jurisdiction.
-    </p>
+      </p>
+    </section>
 
-    <div class="prose prose-slate mt-8 max-w-none text-sm">
+    <div class="prose prose-slate mt-8 max-w-none rounded-[1.75rem] border border-slate-200/80 bg-white/92 p-6 text-sm shadow-[0_18px_50px_rgba(15,23,42,0.08)] sm:p-8">
       <section class="mt-6">
         <h2 class="text-lg font-semibold text-slate-900">1. Introduction</h2>
         <p class="mt-2 text-slate-600">

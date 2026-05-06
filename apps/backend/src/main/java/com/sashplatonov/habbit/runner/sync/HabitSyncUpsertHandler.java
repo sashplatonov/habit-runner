@@ -43,8 +43,8 @@ public class HabitSyncUpsertHandler {
     }
 
     var habit = new HabitEntity();
-    habit.id = habitId;
-    habit.userId = userId;
+    habit.setId(habitId);
+    habit.setUserId(userId);
     habit.setCreatedAt(createdAt);
     return habit;
   }
@@ -66,9 +66,9 @@ public class HabitSyncUpsertHandler {
     var description = payload == null ? null : payload.description();
     var icon = payload == null ? null : payload.icon();
 
-    habit.name = resolvedString(name, habit.name, "Habit");
-    habit.description = description;
-    habit.icon = resolvedString(icon, habit.icon, "star");
+    habit.setName(resolvedString(name, habit.getName(), "Habit"));
+    habit.setDescription(description);
+    habit.setIcon(resolvedString(icon, habit.getIcon(), "star"));
   }
 
   private void applyIdentityFields(HabitEntity habit, HabitPayloadDto payload) {
@@ -88,34 +88,38 @@ public class HabitSyncUpsertHandler {
 
   private void applyScheduleFields(HabitEntity habit, HabitPayloadDto payload) {
     if (payload == null) {
-      habit.customDays = valueCodec.normalizeCustomDaysJson(null, jsonCodec);
-      habit.schedule = null;
-      habit.targetStreak = 1;
-      habit.dailyTarget = valueCodec.resolveDailyTarget(null, habit.dailyTarget);
-      habit.setSortOrder(valueCodec.resolveSortOrder(null, habit.sortOrderOrZero()));
-      habit.reminderTime = valueCodec.normalizeReminderTime(null);
-      habit.freezeDays = valueCodec.normalizeFreezeDaysJson(null, habit.freezeDays, jsonCodec);
+      habit.setCustomDays(valueCodec.normalizeCustomDaysJson(null, jsonCodec));
+      habit.setSchedule(null);
+      habit.setTargetStreak(1);
+      habit.setDailyTarget(valueCodec.resolveDailyTarget(null, habit.getDailyTarget()));
+      habit.setSortOrder(valueCodec.resolveSortOrder(null, habit.getSortOrder() != null ? habit.getSortOrder() : java.math.BigInteger.ZERO));
+      habit.setReminderTime(valueCodec.normalizeReminderTime(null));
+      habit.setFreezeDays(valueCodec.normalizeFreezeDaysJson(null, habit.getFreezeDays(), jsonCodec));
       return;
     }
 
-    habit.customDays = valueCodec.normalizeCustomDaysJson(payload.customDays(), jsonCodec);
-    habit.schedule = jsonCodec.jsonOrNull(payload.schedule());
-    habit.targetStreak = payload.targetStreak() != null ? payload.targetStreak() : 1;
-    habit.dailyTarget = valueCodec.resolveDailyTarget(payload.dailyTarget(), habit.dailyTarget);
-    habit.setSortOrder(valueCodec.resolveSortOrder(payload.sortOrder(), habit.sortOrderOrZero()));
-    habit.reminderTime = valueCodec.normalizeReminderTime(payload.reminderTime());
-    habit.reminderEnabled = payload.reminderEnabled() != null ? payload.reminderEnabled() : habit.reminderEnabled;
-    habit.freezeDays = valueCodec.normalizeFreezeDaysJson(payload.freezeDays(), habit.freezeDays, jsonCodec);
+    habit.setCustomDays(valueCodec.normalizeCustomDaysJson(payload.customDays(), jsonCodec));
+    habit.setSchedule(jsonCodec.jsonOrNull(payload.schedule()));
+    habit.setTargetStreak(payload.targetStreak() != null ? payload.targetStreak() : 1);
+    habit.setDailyTarget(valueCodec.resolveDailyTarget(payload.dailyTarget(), habit.getDailyTarget()));
+    var resolvedSortOrder = valueCodec.resolveSortOrder(
+        payload.sortOrder(), 
+        habit.getSortOrder() != null ? habit.getSortOrder() : java.math.BigInteger.ZERO
+    );
+    habit.setSortOrder(resolvedSortOrder);
+    habit.setReminderTime(valueCodec.normalizeReminderTime(payload.reminderTime()));
+    habit.setReminderEnabled(payload.reminderEnabled() != null ? payload.reminderEnabled() : habit.isReminderEnabled());
+    habit.setFreezeDays(valueCodec.normalizeFreezeDaysJson(payload.freezeDays(), habit.getFreezeDays(), jsonCodec));
   }
 
   private void applyMetadataFields(HabitEntity habit, HabitPayloadDto payload) {
     if (payload == null) {
-      habit.tags = null;
-      habit.archived = false;
+      habit.setTags(null);
+      habit.setArchived(false);
       return;
     }
-    habit.tags = jsonCodec.jsonOrNull(payload.tags());
-    habit.archived = Boolean.TRUE.equals(payload.archived());
+    habit.setTags(jsonCodec.jsonOrNull(payload.tags()));
+    habit.setArchived(Boolean.TRUE.equals(payload.archived()));
   }
 
   private void applyAuditFields(
@@ -125,8 +129,8 @@ public class HabitSyncUpsertHandler {
       SyncPayloadCodec payloadCodec
   ) {
     var version = payload == null ? null : payload.version();
-    habit.version = Math.max(habit.version, version != null ? version : 0) + 1;
-    habit.setUpdatedAt(payloadCodec.nextSyncDate(clientUpdated, habit.updatedAtValue()));
+    habit.setVersion(Math.max(habit.getVersion(), version != null ? version :0) + 1);
+    habit.setUpdatedAt(payloadCodec.nextSyncDate(clientUpdated, habit.getUpdatedAt()));
   }
 
   private String resolvedString(String rawValue, String currentValue, String defaultValue) {

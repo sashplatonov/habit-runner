@@ -17,47 +17,27 @@ import {
   type CheckinEntity,
   type HabitEntity
 } from '$lib/storage/db';
+import { createHabitsSnapshot, type HabitsSnapshot } from '$lib/stores/habits.snapshot';
+import {
+  getHabitStats as getHabitStatsImpl,
+  getTodayCompletionRate as getTodayCompletionRateImpl
+} from '$lib/stores/habits.metrics';
 import { syncEntriesWithFallback } from '$lib/sync/writeThrough';
 import { scheduleSyncCycle } from '$lib/sync/syncEngine';
 import { createHabitId } from '$lib/core/habit-id';
-import {
-  buildMonthlyCompletionRates,
-  buildWeeklyCompletionData,
-  countCompletedDays,
-  formatDate
-} from '$lib/habits/habitStats';
-import {
-  calculateAutomatismScore,
-  calculateScheduledCompletionRate,
-  calculateScheduledStreak
-} from '$lib/habits/schedule';
+import { formatDate } from '$lib/habits/habitStats';
 import { completionKeyToCalendarDate } from '$lib/completionKey';
-import { buildCompletionsByHabitId } from '@/hooks/useHabits.helpers';
 import { dexieLiveQuery } from '$lib/stores/dexieLiveQuery';
-
-function requireStructuredClone<T>(value: T): T {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const sc = (globalThis as any).structuredClone;
-  if (typeof sc !== 'function') {
-    throw new Error('structuredClone is not available in this environment. Please run on Node 18+/modern browser or provide a polyfill.');
-  }
-  return sc(value) as T;
-}
 
 type ToggleCompletionResult = { habitId: string; date: string; count: number };
 type AdvanceCompletionResult = ToggleCompletionResult & { previousCount: number; target: number };
 export type HabitUpsertInput = Omit<Habit, 'id' | 'completions' | 'createdAt'> & { sortOrder?: number; reminderTime?: string | null };
 
-export interface HabitsSnapshot {
-  habits: Habit[];
-  allHabits: Habit[];
-  formatDate: typeof formatDate;
-}
-
 export interface HabitsStore extends Readable<HabitsSnapshot> {
   setUserId: (userId: string) => void;
   toggleCompletion: (habitId: string, date?: string) => Promise<ToggleCompletionResult>;
   setCompletionCount: (habitId: string, date: string, count: number) => Promise<ToggleCompletionResult>;
+  incrementCompletionCount: (habitId: string, date: string) => Promise<AdvanceCompletionResult>;
   advanceCompletionCount: (habitId: string, date: string) => Promise<AdvanceCompletionResult>;
   addHabit: (data: HabitUpsertInput) => Promise<string>;
   updateHabit: (id: string, data: Partial<Habit>) => Promise<void>;
@@ -71,51 +51,6 @@ export interface HabitsStore extends Readable<HabitsSnapshot> {
 const completionMutationQueue = new Map<string, Promise<unknown>>();
 
 const normalizeFreezeDayKey = completionKeyToCalendarDate;
-
-function applyFreezeDays(
-  baseCompletions: Record<string, number>,
-  freezeDays: string[] | undefined,
-  dailyTarget: number
-) {
-  (freezeDays ?? []).forEach((date) => {
-    const completionKey = date.includes('T') ? date : `${date}T00:00:00Z`;
-    const existing = baseCompletions[completionKey] ?? 0;
-    baseCompletions[completionKey] = Math.max(dailyTarget, existing);
-  });
-}
-
-function buildHabitFromEntity(
-  entity: HabitEntity,
-  completionsByHabitId: Record<string, Record<string, number>>
-): Habit {
-  const domain = habitEntityToDomain(entity);
-  const dailyTarget = Math.max(1, domain.dailyTarget ?? 1);
-  const completions = { ...(completionsByHabitId[domain.id] ?? {}) };
-  applyFreezeDays(completions, domain.freezeDays, dailyTarget);
-  return {
-    ...domain,
-    completions
-  };
-}
-
-function mapHabits(
-  entities: HabitEntity[],
-  completionsByHabitId: Record<string, Record<string, number>>
-) {
-  return entities.map((entity) => buildHabitFromEntity(entity, completionsByHabitId));
-}
-
-function sortHabitsByOrder(habits: Habit[]) {
-  const sorted = [...habits];
-  return sorted.sort((firstHabit, secondHabit) => {
-    const first = firstHabit.sortOrder ?? 0;
-    const second = secondHabit.sortOrder ?? 0;
-    if (first !== second) {
-      return first - second;
-    }
-    return firstHabit.createdAt.localeCompare(secondHabit.createdAt);
-  });
-}
 
 function getCompletionMutationKey(habitId: string, userId: string): string {
   return `${userId}:${habitId}`;
@@ -296,7 +231,7 @@ async function toggleCompletionImpl(
 }
 
 async function addHabitImpl(data: HabitUpsertInput) {
-  const safeData = requireStructuredClone<HabitUpsertInput>(data);
+  const safeData = structuredClone(data) as HabitUpsertInput;
   const now = nowSyncISO();
   const newHabit: Habit = {
     ...safeData,
@@ -323,7 +258,7 @@ async function updateHabitImpl(id: string, data: Partial<Habit>) {
   }
 
   const existing = habitEntityToDomain(entity);
-  const safeData = requireStructuredClone<Partial<Habit>>(data);
+  const safeData = structuredClone(data) as Partial<Habit>;
   const updatedHabit: Habit = {
     ...existing,
     ...safeData,
@@ -414,11 +349,19 @@ async function advanceCompletionCountImpl(
   date: string,
   allHabits: Habit[]
 ): Promise<AdvanceCompletionResult> {
+  return incrementCompletionCountImpl(habitId, date, allHabits);
+}
+
+async function incrementCompletionCountImpl(
+  habitId: string,
+  date: string,
+  allHabits: Habit[]
+): Promise<AdvanceCompletionResult> {
   const userId = getCurrentUserId();
   return runSerializedCompletionMutation(habitId, userId, async () => {
     const target = await resolveHabitDailyTarget(habitId, allHabits);
     const previousCount = await getPersistedCompletionCount(habitId, date, userId);
-    const nextCount = previousCount >= target ? 0 : previousCount + 1;
+    const nextCount = previousCount + 1;
     const result = await applyCompletionCountChange(habitId, date, nextCount);
     return {
       ...result,
@@ -428,68 +371,8 @@ async function advanceCompletionCountImpl(
   });
 }
 
-function getTodayCompletionRateImpl(habits: Habit[]): number {
-  if (habits.length === 0) {
-    return 0;
-  }
-
-  const today = formatDate(new Date());
-  const completed = habits.filter((habit) => (
-    (habit.completions[today] ?? 0) >= Math.max(1, habit.dailyTarget ?? 1)
-  )).length;
-  return Math.round((completed / habits.length) * 100);
-}
-
-function getHabitStatsImpl(habitId: string, allHabits: Habit[]): HabitStats {
-  const habit = allHabits.find((item) => item.id === habitId);
-  if (!habit) {
-    return {
-      totalDays: 0,
-      completedDays: 0,
-      currentStreak: 0,
-      longestStreak: 0,
-      completionRate: 0,
-      automatismScore: 0,
-      weeklyData: [],
-      monthlyData: []
-    };
-  }
-
-  const dailyTarget = Math.max(1, habit.dailyTarget ?? 1);
-  const { current, longest } = calculateScheduledStreak(habit, habit.completions, new Date());
-  const completionRate = calculateScheduledCompletionRate(habit, habit.completions, new Date());
-  const completedDays = countCompletedDays(habit.completions, dailyTarget);
-  const totalDays = Math.max(
-    1,
-    Math.ceil((Date.now() - new Date(habit.createdAt).getTime()) / 86400000)
-  );
-
-  return {
-    totalDays,
-    completedDays,
-    currentStreak: current,
-    longestStreak: longest,
-    completionRate,
-    automatismScore: calculateAutomatismScore(habit, habit.completions, new Date()),
-    weeklyData: buildWeeklyCompletionData(habit.completions, 12, new Date(), dailyTarget),
-    monthlyData: buildMonthlyCompletionRates(habit.completions, 6, new Date(), dailyTarget)
-  };
-}
-
-function createSnapshot(habitEntities: HabitEntity[], checkinEntities: CheckinEntity[]): HabitsSnapshot {
-  const completionsByHabitId = buildCompletionsByHabitId(checkinEntities);
-  const allHabits = mapHabits(habitEntities, completionsByHabitId);
-  const orderedHabits = sortHabitsByOrder(allHabits);
-
-  return {
-    habits: orderedHabits.filter((habit) => !habit.archived),
-    allHabits: orderedHabits,
-    formatDate
-  };
-}
-
 export function createHabitsStore(initialUserId = getCurrentUserId()): HabitsStore {
-  const store = writable<HabitsSnapshot>(createSnapshot([], []));
+  const store = writable<HabitsSnapshot>(createHabitsSnapshot([], []));
   let currentUserId = initialUserId;
   let latestHabitEntities: HabitEntity[] = [];
   let latestCheckinEntities: CheckinEntity[] = [];
@@ -497,7 +380,7 @@ export function createHabitsStore(initialUserId = getCurrentUserId()): HabitsSto
   let stopCheckinSubscription: () => void = () => undefined;
 
   function refreshSnapshot() {
-    store.set(createSnapshot(latestHabitEntities, latestCheckinEntities));
+    store.set(createHabitsSnapshot(latestHabitEntities, latestCheckinEntities));
   }
 
   function attachQueries() {
@@ -539,6 +422,9 @@ export function createHabitsStore(initialUserId = getCurrentUserId()): HabitsSto
     },
     setCompletionCount(habitId: string, date: string, count: number) {
       return setCompletionCountImpl(habitId, date, count, get(store).allHabits);
+    },
+    incrementCompletionCount(habitId: string, date: string) {
+      return incrementCompletionCountImpl(habitId, date, get(store).allHabits);
     },
     advanceCompletionCount(habitId: string, date: string) {
       return advanceCompletionCountImpl(habitId, date, get(store).allHabits);

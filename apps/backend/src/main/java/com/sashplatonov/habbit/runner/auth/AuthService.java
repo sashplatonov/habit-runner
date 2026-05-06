@@ -12,12 +12,19 @@ import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.NotAuthorizedException;
 import lombok.extern.slf4j.Slf4j;
 
+import java.time.Instant;
+
 @ApplicationScoped
 @Slf4j
-public class AuthService extends AuthServiceSupport {
+public class AuthService {
+
+  protected final AuthConfig authConfig;
+  protected final AuthCollaborators collaborators;
+  protected final UserRepository userRepository;
+  protected final OAuthStateRepository oauthStateRepository;
 
   AuthService() {
-    super();
+    this(null, null, null, null);
   }
 
   protected AuthService(AuthConfig authConfig, AuthCollaborators collaborators) {
@@ -31,7 +38,10 @@ public class AuthService extends AuthServiceSupport {
       UserRepository userRepository,
       OAuthStateRepository oauthStateRepository
   ) {
-    super(authConfig, collaborators, userRepository, oauthStateRepository);
+    this.authConfig = authConfig;
+    this.collaborators = collaborators;
+    this.userRepository = userRepository;
+    this.oauthStateRepository = oauthStateRepository;
   }
 
   @Transactional
@@ -42,7 +52,7 @@ public class AuthService extends AuthServiceSupport {
       throw new NotAuthorizedException("Unknown user");
     }
     var session = issueTokenPair(user);
-    log.info("Login succeeded: userId={}, authMethod=email", user.id);
+    log.info("Login succeeded: userId={}, authMethod=email", user.getId());
     return session;
   }
 
@@ -50,7 +60,7 @@ public class AuthService extends AuthServiceSupport {
   public TokenResponse refreshToken(String token) {
     var record = collaborators.requireActiveRefreshToken(token);
     var user = requireUserById(record.userId);
-    var accessToken = collaborators.createAccessToken(user.id, user.email, authConfig.accessTokenTtlSeconds());
+    var accessToken = collaborators.createAccessToken(user.getId(), user.email, authConfig.accessTokenTtlSeconds());
     log.info("Access token refreshed: userId={}, authMethod=refresh-token", record.userId);
     return new TokenResponse(accessToken, record.token, authConfig.accessTokenTtlSeconds(), "Bearer");
   }
@@ -87,13 +97,17 @@ public class AuthService extends AuthServiceSupport {
     var email = collaborators.exchangeCodeForEmail(code);
     var user = collaborators.findOrCreateUser(email);
     var session = collaborators.issueTokenPair(user, authConfig.accessTokenTtlSeconds(), authConfig.refreshTokenDays());
-    log.info("OAuth login succeeded: userId={}, provider=google", user.id);
+    log.info("OAuth login succeeded: userId={}, provider=google", user.getId());
     return new OAuthCallbackSession(collaborators.buildCallbackRedirect(stateEntity.returnTo), session);
   }
 
+  public int refreshTokenDays() {
+    return authConfig.refreshTokenDays();
+  }
+
   private TokenResponse issueTokenPair(UserEntity user) {
-    var accessToken = collaborators.createAccessToken(user.id, user.email, authConfig.accessTokenTtlSeconds());
-    var refreshToken = createRefreshToken(user.id);
+    var accessToken = collaborators.createAccessToken(user.getId(), user.email, authConfig.accessTokenTtlSeconds());
+    var refreshToken = createRefreshToken(user.getId());
     return new TokenResponse(accessToken, refreshToken, authConfig.accessTokenTtlSeconds(), "Bearer");
   }
 
@@ -123,6 +137,10 @@ public class AuthService extends AuthServiceSupport {
     return userRepository == null ? null : userRepository.findByEmail(email);
   }
 
+  protected UserEntity findUserById(String userId) {
+    return userRepository == null ? null : userRepository.findRequiredById(userId);
+  }
+
   protected UserEntity requireUserById(String userId) {
     var user = findUserById(userId);
     if (user == null) {
@@ -130,6 +148,30 @@ public class AuthService extends AuthServiceSupport {
       throw new NotAuthorizedException("User no longer exists");
     }
     return user;
+  }
+
+  protected OAuthStateEntity findOAuthState(String state) {
+    return oauthStateRepository == null ? null : oauthStateRepository.findById(state);
+  }
+
+  protected void deleteOAuthState(String state) {
+    if (oauthStateRepository != null) {
+      oauthStateRepository.deleteState(state);
+    }
+  }
+
+  protected void storeOAuthState(String state, String returnTo, Instant expiresAt) {
+    var payload = new OAuthStateEntity();
+    payload.state = state;
+    payload.returnTo = returnTo;
+    payload.setExpiry(expiresAt);
+    if (oauthStateRepository != null) {
+      oauthStateRepository.save(payload);
+    }
+  }
+
+  protected Instant now() {
+    return Instant.now();
   }
 
   public record OAuthCallbackSession(String redirectUrl, TokenResponse session) {

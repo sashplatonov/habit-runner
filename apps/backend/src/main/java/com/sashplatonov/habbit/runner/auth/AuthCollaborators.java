@@ -81,8 +81,8 @@ public class AuthCollaborators {
   }
 
   public TokenResponse issueTokenPair(UserEntity user, int accessTtlSeconds, int refreshDays) {
-    var access = createAccessToken(user.id, user.email, accessTtlSeconds);
-    var refresh = createRefreshToken(AuthSupport.randomToken(32), user.id, refreshDays);
+    var access = createAccessToken(user.getId(), user.email, accessTtlSeconds);
+    var refresh = createRefreshToken(AuthSupport.randomToken(32), user.getId(), refreshDays);
     return new TokenResponse(access, refresh, accessTtlSeconds, "Bearer");
   }
 }

@@ -27,7 +27,7 @@ public class UserService {
     }
 
     var createdUser = createUser(email);
-    log.info("Created OAuth user: userId={}, provider=google", createdUser.id);
+    log.info("Created OAuth user: userId={}, provider=google", createdUser.getId());
     return createdUser;
   }
 

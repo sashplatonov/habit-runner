@@ -1,54 +1,81 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-label="How to Recover After Breaking a Streak">
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-label="How to Recover After Breaking a Habit Streak">
   <defs>
-    <linearGradient id="bg" x1="0" x2="1" y1="0" y2="1"><stop offset="0%" stop-color="#fff7ed"/><stop offset="100%" stop-color="#f0fdf4"/></linearGradient>
-    <linearGradient id="arrow" x1="0" x2="1" y1="0" y2="0"><stop offset="0%" stop-color="#ef4444"/><stop offset="100%" stop-color="#10b981"/></linearGradient>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#edf8f0" />
+      <stop offset="100%" stop-color="#eefcf9" />
+    </linearGradient>
+    <linearGradient id="panel" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0d1f1b" />
+      <stop offset="100%" stop-color="#1b3b34" />
+    </linearGradient>
+    <pattern id="grid" width="48" height="48" patternUnits="userSpaceOnUse">
+      <path d="M48 0H0V48" fill="none" stroke="rgba(15, 23, 42, 0.07)" stroke-width="1" />
+    </pattern>
+    <filter id="shadowSoft" x="-20%" y="-20%" width="140%" height="150%">
+      <feDropShadow dx="0" dy="20" stdDeviation="24" flood-color="#0f172a" flood-opacity="0.12" />
+    </filter>
+    <filter id="shadowBoard" x="-20%" y="-20%" width="140%" height="150%">
+      <feDropShadow dx="0" dy="24" stdDeviation="28" flood-color="#0f172a" flood-opacity="0.16" />
+    </filter>
+    <clipPath id="boardClip">
+      <rect x="664" y="74" width="476" height="482" rx="42" />
+    </clipPath>
   </defs>
-  <rect width="1200" height="630" fill="url(#bg)"/>
-  <circle cx="600" cy="300" r="220" fill="#f97316" opacity="0.06"/>
 
-  <!-- broken chain left side -->
-  <ellipse cx="100" cy="290" rx="46" ry="28" fill="none" stroke="#94a3b8" stroke-width="14"/>
-  <line x1="146" y1="290" x2="190" y2="290" stroke="#94a3b8" stroke-width="8"/>
-  <ellipse cx="240" cy="290" rx="46" ry="28" fill="none" stroke="#94a3b8" stroke-width="14"/>
-  <line x1="286" y1="290" x2="330" y2="290" stroke="#94a3b8" stroke-width="8"/>
-  <ellipse cx="380" cy="290" rx="46" ry="28" fill="none" stroke="#94a3b8" stroke-width="14"/>
-  <!-- break gap with lightning bolt -->
-  <line x1="426" y1="285" x2="440" y2="270" stroke="#ef4444" stroke-width="6"/>
-  <line x1="440" y1="270" x2="430" y2="293" stroke="#ef4444" stroke-width="6"/>
-  <line x1="430" y1="293" x2="445" y2="310" stroke="#ef4444" stroke-width="6"/>
-  <circle cx="435" cy="290" r="22" fill="#fee2e2" opacity="0.8"/>
-  <text x="435" y="296" font-family="Inter,Arial,sans-serif" font-size="16" fill="#ef4444" text-anchor="middle">✗</text>
+  <rect width="1200" height="630" fill="url(#bg)" />
+  <rect width="1200" height="630" fill="url(#grid)" opacity="0.6" />
+  <circle cx="160" cy="104" r="210" fill="rgba(34, 197, 94, 0.14)" />
+  <circle cx="1040" cy="500" r="250" fill="rgba(20, 184, 166, 0.12)" />
+  <ellipse cx="924" cy="88" rx="200" ry="126" fill="rgba(132, 204, 22, 0.12)" />
+  <path d="M-40 492 C146 390 284 566 512 520 C736 476 870 314 1240 436" fill="none" stroke="rgba(34, 197, 94, 0.12)" stroke-width="42" stroke-linecap="round" />
 
-  <!-- restart arrow (curved, going from break to new chain) -->
-  <path d="M480,290 C510,200 680,200 710,290" fill="none" stroke="url(#arrow)" stroke-width="8" stroke-linecap="round"/>
-  <!-- arrowhead -->
-  <polygon points="710,290 690,272 730,272" fill="#10b981"/>
-  <!-- restart label -->
-  <text x="600" y="192" font-family="Inter,Arial,sans-serif" font-size="15" fill="#059669" text-anchor="middle" font-weight="600">recovery</text>
-  <text x="600" y="213" font-family="Inter,Arial,sans-serif" font-size="13" fill="#10b981" text-anchor="middle">start again today</text>
+  <rect x="56" y="56" width="560" height="518" rx="40" fill="rgba(255, 255, 255, 0.74)" stroke="rgba(15, 23, 42, 0.08)" filter="url(#shadowSoft)" />
 
-  <!-- new chain right side -->
-  <ellipse cx="760" cy="290" rx="46" ry="28" fill="none" stroke="#10b981" stroke-width="14"/>
-  <line x1="806" y1="290" x2="850" y2="290" stroke="#10b981" stroke-width="8"/>
-  <ellipse cx="900" cy="290" rx="46" ry="28" fill="none" stroke="#10b981" stroke-width="14"/>
-  <line x1="946" y1="290" x2="990" y2="290" stroke="#10b981" stroke-width="8"/>
-  <ellipse cx="1040" cy="290" rx="46" ry="28" fill="none" stroke="#10b981" stroke-width="14"/>
-  <line x1="1086" y1="290" x2="1110" y2="290" stroke="#10b981" stroke-width="8" stroke-dasharray="6"/>
+  <rect x="88" y="84" width="190" height="38" rx="19" fill="rgba(255, 255, 255, 0.88)" stroke="rgba(15, 23, 42, 0.08)" />
+  <circle cx="112" cy="103" r="8" fill="#22c55e" />
+  <text x="130" y="109" fill="#0f172a" font-family="'Avenir Next', 'Segoe UI', 'Trebuchet MS', sans-serif" font-size="13" font-weight="700" letter-spacing="0.18em">HABBIT RUNNER BLOG</text>
 
-  <!-- days labels -->
-  <text x="240" y="338" font-family="Inter,Arial,sans-serif" font-size="13" fill="#64748b" text-anchor="middle">Day 21</text>
-  <text x="380" y="338" font-family="Inter,Arial,sans-serif" font-size="13" fill="#ef4444" text-anchor="middle">missed</text>
-  <text x="760" y="338" font-family="Inter,Arial,sans-serif" font-size="13" fill="#059669" text-anchor="middle">Day 1*</text>
-  <text x="900" y="338" font-family="Inter,Arial,sans-serif" font-size="13" fill="#059669" text-anchor="middle">Day 2*</text>
-  <text x="1040" y="338" font-family="Inter,Arial,sans-serif" font-size="13" fill="#059669" text-anchor="middle">Day 3*</text>
+  <text x="88" y="152" fill="rgba(15, 23, 42, 0.56)" font-family="'Avenir Next', 'Segoe UI', 'Trebuchet MS', sans-serif" font-size="14" font-weight="700" letter-spacing="0.24em">STREAK RECOVERY</text>
 
-  <!-- rules panel -->
-  <rect x="200" y="380" width="800" height="115" rx="20" fill="#f0fdf4" stroke="#bbf7d0" stroke-width="2"/>
-  <text x="250" y="412" font-family="Inter,Arial,sans-serif" font-size="15" fill="#059669" font-weight="600">Recovery rules:</text>
-  <text x="260" y="436" font-family="Inter,Arial,sans-serif" font-size="14" fill="#047857">1.  A broken streak is not a failed habit — it's data.</text>
-  <text x="260" y="460" font-family="Inter,Arial,sans-serif" font-size="14" fill="#047857">2.  Missing once is allowed. Missing twice is a new habit.</text>
-  <text x="260" y="484" font-family="Inter,Arial,sans-serif" font-size="14" fill="#047857">3.  Identity over score: you are someone who tracks.</text>
+  <text x="88" y="226" fill="#0f172a" font-family="'Iowan Old Style', Georgia, 'Times New Roman', serif" font-size="62" font-weight="700"><tspan x="88" dy="0">Start</tspan><tspan x="88" dy="64">Again</tspan><tspan x="88" dy="64">Today</tspan></text>
 
-  <text x="600" y="549" font-family="Inter,Arial,sans-serif" font-size="35" font-weight="700" fill="#0f172a" text-anchor="middle">How to Recover After Breaking a Streak</text>
-  <text x="600" y="587" font-family="Inter,Arial,sans-serif" font-size="20" fill="#64748b" text-anchor="middle">Missing once isn't failure — here's how to bounce back</text>
+  
+      <g transform="translate(88 430)">
+        <rect width="154" height="34" rx="17" fill="rgba(15, 23, 42, 0.05)" stroke="rgba(15, 23, 42, 0.08)" />
+        <circle cx="18" cy="17" r="4" fill="#22c55e" />
+        <text x="30" y="22" fill="#0f172a" font-family="'Avenir Next', 'Segoe UI', 'Trebuchet MS', sans-serif" font-size="14" font-weight="600">gentle restart</text>
+      </g>
+      <g transform="translate(254 430)">
+        <rect width="118" height="34" rx="17" fill="rgba(15, 23, 42, 0.05)" stroke="rgba(15, 23, 42, 0.08)" />
+        <circle cx="18" cy="17" r="4" fill="#22c55e" />
+        <text x="30" y="22" fill="#0f172a" font-family="'Avenir Next', 'Segoe UI', 'Trebuchet MS', sans-serif" font-size="14" font-weight="600">keep going</text>
+      </g>
+
+  <text x="88" y="498" fill="rgba(15, 23, 42, 0.72)" font-family="'Avenir Next', 'Segoe UI', 'Trebuchet MS', sans-serif" font-size="20" font-weight="600"><tspan x="88" dy="0">How to Recover After Breaking</tspan><tspan x="88" dy="26">a Habit Streak</tspan></text>
+  <text x="88" y="572" fill="rgba(15, 23, 42, 0.4)" font-family="'Avenir Next', 'Segoe UI', 'Trebuchet MS', sans-serif" font-size="14" font-weight="700" letter-spacing="0.08em">EDITORIAL COVER / HOW-TO-RECOVER-AFTER-BREAKING-STREAK</text>
+
+  <g filter="url(#shadowBoard)">
+    <rect x="664" y="74" width="476" height="482" rx="42" fill="url(#panel)" stroke="rgba(255, 255, 255, 0.18)" />
+  </g>
+  <rect x="694" y="104" width="132" height="34" rx="17" fill="rgba(255, 255, 255, 0.08)" stroke="rgba(255, 255, 255, 0.14)" />
+  <text x="720" y="126" fill="#f8fafc" font-family="'Avenir Next', 'Segoe UI', 'Trebuchet MS', sans-serif" font-size="13" font-weight="700" letter-spacing="0.1em">streak recovery</text>
+  <g clip-path="url(#boardClip)">
+    <g transform="translate(654.4982935153583 116.4470989761092) scale(0.689419795221843)">
+    <ellipse cx="110" cy="250" rx="44" ry="28" fill="none" stroke="rgba(255, 255, 255, 0.34)" stroke-width="16" />
+    <line x1="154" y1="250" x2="208" y2="250" stroke="rgba(255, 255, 255, 0.32)" stroke-width="10" stroke-linecap="round" />
+    <ellipse cx="248" cy="250" rx="44" ry="28" fill="none" stroke="rgba(255, 255, 255, 0.22)" stroke-width="16" />
+    <circle cx="288" cy="250" r="22" fill="rgba(245, 158, 11, 0.16)" />
+    <path d="M282 244 L294 256 M294 244 L282 256" stroke="#f59e0b" stroke-width="4" stroke-linecap="round" />
+    <path d="M322 218 C356 162 390 154 422 198" fill="none" stroke="rgba(245, 158, 11, 0.86)" stroke-width="10" stroke-linecap="round" />
+    <ellipse cx="362" cy="218" rx="44" ry="28" fill="none" stroke="rgba(34, 197, 94, 0.82)" stroke-width="16" />
+    <line x1="406" y1="218" x2="444" y2="218" stroke="rgba(34, 197, 94, 0.86)" stroke-width="10" stroke-linecap="round" />
+    <ellipse cx="486" cy="218" rx="44" ry="28" fill="none" stroke="rgba(20, 184, 166, 0.8)" stroke-width="16" />
+    <line x1="530" y1="218" x2="566" y2="218" stroke="rgba(20, 184, 166, 0.74)" stroke-width="10" stroke-linecap="round" />
+    <ellipse cx="608" cy="218" rx="44" ry="28" fill="none" stroke="rgba(20, 184, 166, 0.74)" stroke-width="16" />
+    <rect x="188" y="328" width="248" height="94" rx="26" fill="rgba(255, 255, 255, 0.08)" stroke="rgba(255, 255, 255, 0.18)" />
+    <text x="218" y="362" fill="#ecfeff" font-family="'Avenir Next', 'Segoe UI', 'Trebuchet MS', sans-serif" font-size="16" font-weight="700">recovery rules</text>
+    <rect x="218" y="378" width="146" height="8" rx="4" fill="rgba(255, 255, 255, 0.5)" />
+    <rect x="218" y="396" width="124" height="8" rx="4" fill="rgba(255, 255, 255, 0.36)" />
+  </g>
+  </g>
 </svg>

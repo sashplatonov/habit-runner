@@ -2,6 +2,7 @@ import type { PullResponseDto } from '@/types/sync';
 import { pullChanges, pushChanges } from '@/lib/api/sync';
 import { SYNC_DISABLED_REASON, SYNC_ENABLED } from '@/lib/core/config';
 import { logClientInfo } from '@/lib/logging/clientLogger';
+import { nowMs, durationMs } from '$lib/time/perf';
 import {
   applyAcknowledgedPushResponse,
   applyPullResponse,
@@ -51,14 +52,6 @@ const WRITE_THROUGH_COALESCE_MS = 180;
 let writeThroughFlushHandle: number | null = null;
 let activeWriteThroughPromise: Promise<void> | null = null;
 const pendingWriteThroughRequests: QueuedWriteThroughRequest[] = [];
-
-function nowMs(): number {
-  return typeof performance !== 'undefined' ? performance.now() : Date.now();
-}
-
-function durationMs(startedAt: number): number {
-  return Math.round(nowMs() - startedAt);
-}
 
 function buildQueuedResult(
   entries: OutboxEntry[],

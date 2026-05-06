@@ -84,12 +84,12 @@ class SyncPanacheCoverageTest {
     assertEquals(List.of("habit-create"), state.applied());
     assertEquals(1, state.pushedHabits().size());
     var habit = state.pushedHabits().getFirst();
-    assertEquals("habit-1", habit.id);
-    assertEquals("user-1", habit.userId);
-    assertEquals("Deep Focus", habit.name);
-    assertEquals(HabitType.NEGATIVE, habit.type);
+    assertEquals("habit-1", habit.getId());
+    assertEquals("user-1", habit.getUserId());
+    assertEquals("Deep Focus", habit.getName());
+    assertEquals(HabitType.NEGATIVE, habit.getType());
     assertEquals(BigInteger.valueOf(5), habit.sortOrderOrZero());
-    assertEquals(3, habit.version);
+    assertEquals(3, habit.getVersion());
   }
 
   @Test
@@ -148,10 +148,10 @@ class SyncPanacheCoverageTest {
     assertEquals(List.of("habit-delete"), state.applied());
     assertEquals(1, state.pushedTombstones().size());
     var tombstone = state.pushedTombstones().getFirst();
-    assertEquals("checkin".equals(tombstone.entity), false);
-    assertEquals("habit", tombstone.entity);
-    assertEquals("habit-1", tombstone.entityId);
-    assertEquals(7, tombstone.version);
+    assertEquals("checkin".equals(tombstone.getEntity()), false);
+    assertEquals("habit", tombstone.getEntity());
+    assertEquals("habit-1", tombstone.getEntityId());
+    assertEquals(7, tombstone.getVersion());
   }
 
   @Test
@@ -183,10 +183,10 @@ class SyncPanacheCoverageTest {
     assertEquals(List.of("checkin-create"), state.applied());
     assertEquals(1, state.pushedCheckins().size());
     var checkin = state.pushedCheckins().getFirst();
-    assertEquals("habit-1", checkin.habitId);
-    assertTrue(checkin.done);
-    assertEquals(4, checkin.count);
-    assertEquals(4, checkin.version);
+    assertEquals("habit-1", checkin.getHabitId());
+    assertTrue(checkin.getDone());
+    assertEquals(4, checkin.getCount());
+    assertEquals(4, checkin.getVersion());
   }
 
   @Test

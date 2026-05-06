@@ -7,11 +7,17 @@
 !/mvnw
 !/mvnw.cmd
 !/pom.xml
+!/lombok.config
 !/src
 !/src/**
 
 !/checkstyle
 !/checkstyle/**
+
+!/pmd
+!/pmd/**
+!/spotbugs
+!/spotbugs/**
 
 !target/*-runner
 !target/*-runner.jar

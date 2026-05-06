@@ -44,17 +44,15 @@ class AuthPreferencesResourceUnitTest {
   }
 
   private static final class ResourceAuthService extends AuthService {
-    // Only the preferences test needs minimal behavior; avoid unused fields flagged by PMD
-    private String lastLoginEmail;
-    private String lastRefreshToken;
-    private String lastReturnTo;
-    private String lastCode;
-    private String lastState;
-    private String revokedToken;
+    // Only the preferences test needs minimal behavior; unused fields removed to avoid PMD warnings
     private TokenResponse loginResponse;
     private TokenResponse refreshResponse;
     private String googleStartRedirect;
     private AuthService.OAuthCallbackSession googleCallbackRedirect;
+    private String lastCode;
+    private String lastState;
+    private String lastRefreshToken;
+    private String revokedToken;
 
     ResourceAuthService() {
       super(TestConfigFactory.defaultAuthConfig(), new AuthCollaborators(null, null, null, null));
@@ -65,15 +63,18 @@ class AuthPreferencesResourceUnitTest {
     public void setGoogleStartRedirect(String url) { this.googleStartRedirect = url; }
     public void setGoogleCallbackRedirect(AuthService.OAuthCallbackSession s) { this.googleCallbackRedirect = s; }
 
+    public String getLastCode() { return lastCode; }
+    public String getLastState() { return lastState; }
+    public String getLastRefreshToken() { return lastRefreshToken; }
+    public String getRevokedToken() { return revokedToken; }
+
     @Override
     public TokenResponse login(String email) {
-      lastLoginEmail = email;
       return loginResponse;
     }
 
     @Override
     public String createOAuthAuthorizationUrl(String returnTo) {
-      lastReturnTo = returnTo;
       return googleStartRedirect;
     }
 

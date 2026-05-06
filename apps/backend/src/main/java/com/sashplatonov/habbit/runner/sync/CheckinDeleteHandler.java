@@ -33,10 +33,10 @@ public class CheckinDeleteHandler {
 
   public TombstoneEntity delete(CheckinDeleteRequest request) {
     var tombstone = new TombstoneEntity();
-    tombstone.userId = request.userId();
-    tombstone.entity = "checkin";
-    tombstone.entityId = entityId(request);
-    tombstone.version = version(request.payload());
+    tombstone.setUserId(request.userId());
+    tombstone.setEntity("checkin");
+    tombstone.setEntityId(entityId(request));
+    tombstone.setVersion(version(request.payload()));
     tombstone.setDeletedAt(deletedAt(request.payload()));
     saveTombstone(tombstone);
     deleteCheckin(request);

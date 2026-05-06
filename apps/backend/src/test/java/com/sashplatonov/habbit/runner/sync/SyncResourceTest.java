@@ -11,6 +11,7 @@ import com.sashplatonov.habbit.runner.sync.dto.PushRequestDto;
 import com.sashplatonov.habbit.runner.sync.dto.SyncOpDto;
 import io.quarkus.test.junit.QuarkusTest;
 import io.restassured.http.ContentType;
+import jakarta.transaction.Status;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -42,26 +43,39 @@ class SyncResourceTest extends AuthenticatedApiTestSupport {
   }
 
   private HabitEntity createHabit(String habitId, String userId, int version, Instant updatedAt) throws Exception {
-    ut.begin();
-    var habit = new HabitEntity();
-    habit.id = habitId;
-    habit.userId = userId;
-    habit.name = "Test Habit";
-    habit.frequency = HabitFrequency.DAILY;
-    habit.color = HabitColor.LEGACY_NORD;
-    habit.icon = "star";
-    habit.targetStreak = 0;
-    habit.dailyTarget = 1;
-    habit.archived = false;
-    habit.setSortOrder(BigInteger.ZERO);
-    habit.reminderEnabled = false;
-    habit.type = HabitType.POSITIVE;
-    habit.version = version;
-    habit.setCreatedAt(updatedAt);
-    habit.setUpdatedAt(updatedAt);
-    habit.persist();
-    ut.commit();
-    return habit;
+    // Only manage transaction manually if one is not already active
+    boolean transactionOwner = ut.getStatus() != Status.STATUS_ACTIVE;
+    if (transactionOwner) {
+      ut.begin();
+    }
+    try {
+      var habit = new HabitEntity();
+      habit.id = habitId;
+      habit.userId = userId;
+      habit.name = "Test Habit";
+      habit.frequency = HabitFrequency.DAILY;
+      habit.color = HabitColor.LEGACY_NORD;
+      habit.icon = "star";
+      habit.targetStreak = 0;
+      habit.dailyTarget = 1;
+      habit.archived = false;
+      habit.setSortOrder(BigInteger.ZERO);
+      habit.reminderEnabled = false;
+      habit.type = HabitType.POSITIVE;
+      habit.version = version;
+      habit.setCreatedAt(updatedAt);
+      habit.setUpdatedAt(updatedAt);
+      habit.persist();
+      if (transactionOwner) {
+        ut.commit();
+      }
+      return habit;
+    } catch (Exception e) {
+      if (transactionOwner) {
+        rollbackIfNeeded();
+      }
+      throw e;
+    }
   }
 
   // ─── Pull tests ───────────────────────────────────────────────────────────
@@ -264,8 +278,13 @@ class SyncResourceTest extends AuthenticatedApiTestSupport {
     var habitId = UUID.randomUUID().toString();
     createHabit(habitId, userId, 1, Instant.now().minus(1, ChronoUnit.MINUTES));
 
-    ut.begin();
-    var checkin = new CheckinEntity();
+    // Need active transaction for persist()
+    boolean transactionOwner = ut.getStatus() != Status.STATUS_ACTIVE;
+    if (transactionOwner) {
+      ut.begin();
+    }
+    try {
+      var checkin = new CheckinEntity();
     checkin.id = UUID.randomUUID().toString();
     checkin.habitId = habitId;
     checkin.userId = userId;
@@ -275,7 +294,16 @@ class SyncResourceTest extends AuthenticatedApiTestSupport {
     checkin.version = 1;
     checkin.setAuditTimestamps(Instant.now(), Instant.now());
     checkin.persist();
-    ut.commit();
+
+      if (transactionOwner) {
+        ut.commit();
+      }
+    } catch (Exception e) {
+      if (transactionOwner) {
+        rollbackIfNeeded();
+      }
+      throw e;
+    }
 
     var opId = UUID.randomUUID().toString();
     var op = syncOp(
@@ -312,14 +340,28 @@ class SyncResourceTest extends AuthenticatedApiTestSupport {
   @Test
   void shouldReturnConflictWhenCheckinTargetsHabitOwnedByAnotherUser() throws Exception {
     var otherUserId = UUID.randomUUID().toString();
-    ut.begin();
-    var other = new UserEntity();
-    other.id = otherUserId;
-    other.email = otherUserId + "@test.com";
-    other.theme = "cloud";
-    other.markCreatedAt(Instant.now());
-    other.persist();
-    ut.commit();
+    // Need active transaction for persist()
+    boolean transactionOwner = ut.getStatus() != Status.STATUS_ACTIVE;
+    if (transactionOwner) {
+      ut.begin();
+    }
+    try {
+      var other = new UserEntity();
+      other.id = otherUserId;
+      other.email = otherUserId + "@test.com";
+      other.theme = "cloud";
+      other.markCreatedAt(Instant.now());
+      other.persist();
+
+      if (transactionOwner) {
+        ut.commit();
+      }
+    } catch (Exception e) {
+      if (transactionOwner) {
+        rollbackIfNeeded();
+      }
+      throw e;
+    }
 
     var habitId = UUID.randomUUID().toString();
     createHabit(habitId, otherUserId, 1, Instant.now());

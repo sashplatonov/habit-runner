@@ -76,21 +76,21 @@ public class CheckinSyncProcessor {
   }
 
   private void handleDelete(CheckinCommand command, SyncPushState state) {
-    var existing = checkinSyncUpsertHandler.findCheckin(command.habitId(), command.date(), command.userId());
+    var existing = checkinSyncUpsertHandler.findCheckin(command.habitId(), command.date(), command.userId);
     state.addAppliedCheckinDelete(command.opId(), checkinDeleteHandler.delete(
         new CheckinDeleteHandler.CheckinDeleteRequest(
-            command.userId(),
-            command.habitId(),
-            command.date(),
-            existing != null ? existing.id : command.habitId() + ":" + command.date(),
+            command.userId,
+            command.habitId,
+            command.date,
+            existing != null ? existing.getId() : command.habitId + ":" + command.date,
             command.payload()
         )
     ));
   }
 
   private void handleUpsert(CheckinCommand command, SyncPushState state) {
-    var existing = checkinSyncUpsertHandler.findCheckin(command.habitId(), command.date(), command.userId());
-    var conflict = checkinSyncUpsertHandler.conflict(command.opId(), existing, command.clientUpdated(), payloadCodec);
+    var existing = checkinSyncUpsertHandler.findCheckin(command.habitId, command.date, command.userId);
+    var conflict = checkinSyncUpsertHandler.conflict(command.opId(), existing, command.clientUpdated, payloadCodec);
     if (conflict != null) {
       log.debug(
           "Detected checkin sync conflict: opId={} habitId={} date={}",
@@ -114,10 +114,10 @@ public class CheckinSyncProcessor {
 
   private void applyCheckinPayload(CheckinEntity checkin, CheckinCommand command) {
     var payload = command.payload();
-    checkin.done = Boolean.TRUE.equals(payload.done());
-    checkin.count = Math.max(1, payload.count() != null ? payload.count() : 1);
-    checkin.version = Math.max(checkin.version, payload.version() != null ? payload.version() : 0) + 1;
-    checkin.setUpdatedAt(payloadCodec.nextSyncDate(command.clientUpdated(), checkin.updatedAtValue()));
+    checkin.setDone(Boolean.TRUE.equals(payload.done()));
+    checkin.setCount(Math.max(1, payload.count() != null ? payload.count() : 1));
+    checkin.setVersion(Math.max(checkin.getVersion(), payload.version() != null ? payload.version() : 0) + 1);
+    checkin.setUpdatedAt(payloadCodec.nextSyncDate(command.clientUpdated(), checkin.getUpdatedAt()));
   }
 
   private record CheckinCommand(

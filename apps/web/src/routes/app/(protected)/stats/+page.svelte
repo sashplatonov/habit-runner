@@ -28,7 +28,7 @@
     INSIGHTS_TOOLTIP,
     OVERVIEW_SIGNALS_TOOLTIP,
     YOUR_INVESTMENT_TOOLTIP
-  } from '@/pages/components/blockGuideTooltips';
+  } from '$lib/habits/blockGuideTooltips';
   import { HABIT_COLOR_THEMES } from '$lib/theme/habit-colors';
   import {
     PERIOD_DISPLAY_NAMES,
@@ -270,26 +270,26 @@
     </EmptyState>
   </div>
 {:else}
-  <div class="min-h-screen bg-bg-primary">
+  <div class="min-h-screen bg-transparent">
     <!-- Page header -->
-    <div class="border-b border-border px-4 py-4">
-      <div class="mx-auto max-w-6xl">
+    <div class="px-4 pt-4 sm:px-6">
+      <div class="mx-auto max-w-6xl rounded-[1.75rem] border border-border bg-bg-secondary/88 px-4 py-4 shadow-[0_24px_60px_rgba(15,23,42,0.1)] backdrop-blur-xl">
         <p class="text-[10px] font-mono uppercase tracking-widest text-muted">Overview</p>
         <h1 class="mt-1 text-xl font-semibold text-foreground">Statistics</h1>
       </div>
     </div>
 
     <!-- Sticky tab bar -->
-    <div class="sticky top-0 z-30 border-b border-border bg-bg-primary/95 backdrop-blur-sm">
-      <div class="mx-auto max-w-6xl px-4">
-        <div class="flex items-center gap-2 overflow-hidden">
+    <div class="sticky top-0 z-30 bg-transparent px-4 pb-3 pt-2 sm:px-6">
+      <div class="mx-auto max-w-6xl rounded-[1.5rem] border border-border bg-bg-secondary/88 px-4 shadow-[0_22px_56px_rgba(15,23,42,0.1)] backdrop-blur-xl">
+        <div class="flex flex-wrap items-center gap-2 overflow-hidden py-1 sm:flex-nowrap">
           <!-- Tabs -->
           <div class="flex min-w-0 flex-1 items-center overflow-x-auto whitespace-nowrap [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             {#each TABS as tab, ti (tab.id + '-' + ti)}
               <button
                 type="button"
                 onclick={() => { activeTab = tab.id; }}
-                class="relative shrink-0 whitespace-nowrap px-3 py-3 text-[11px] font-mono transition-colors sm:px-4 sm:text-xs {activeTab === tab.id ? 'text-foreground' : 'text-muted hover:text-foreground/70'}"
+                class="relative flex min-h-11 shrink-0 items-center whitespace-nowrap px-3 py-3 text-[11px] font-mono transition-colors sm:px-4 sm:text-xs {activeTab === tab.id ? 'text-foreground' : 'text-muted hover:text-foreground/70'}"
               >
                 {tab.label}
                 {#if activeTab === tab.id}
@@ -304,7 +304,7 @@
               type="button"
               onclick={() => { filtersOpen = !filtersOpen; }}
               aria-label="Toggle filters"
-              class="flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-mono transition-colors sm:px-3 sm:text-xs {filtersOpen ? 'border-accent text-accent' : 'border-border text-muted hover:text-foreground'}"
+              class="flex min-h-10 items-center gap-1.5 rounded-full border px-3 py-2 text-xs font-mono transition-colors {filtersOpen ? 'border-accent text-accent' : 'border-border text-muted hover:text-foreground'}"
             >
               <Filter size={12} />
               <span class="hidden sm:inline">Filters</span>
@@ -315,9 +315,9 @@
 
       <!-- Filter panel -->
       {#if filtersOpen}
-        <div class="border-t border-border px-4 py-3">
+        <div class="border-t border-border px-0 py-3">
           <div class="mx-auto max-w-6xl">
-            <div class="rounded-lg border border-border bg-bg-secondary p-4 space-y-4">
+            <div class="rounded-[1.5rem] border border-border bg-bg-card/92 p-4 shadow-[0_18px_50px_rgba(15,23,42,0.08)] space-y-4">
               <div class="flex flex-col gap-3 sm:flex-row">
                 <div class="relative flex-1">
                   <Search size={14} class="absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
@@ -325,7 +325,7 @@
                     type="text"
                     placeholder="Search habits..."
                     bind:value={searchQuery}
-                    class="w-full rounded-lg border border-border bg-bg-card py-2 pl-9 pr-3 text-sm text-foreground placeholder:text-muted focus:border-accent/50 focus:outline-none"
+                    class="w-full rounded-lg border border-border bg-bg-card py-2.5 pl-9 pr-3 text-sm text-foreground placeholder:text-muted focus:border-accent/50 focus:outline-none"
                   />
                 </div>
                 <div class="flex rounded-lg border border-border bg-bg-card p-1">
@@ -333,7 +333,7 @@
                     <button
                       type="button"
                       onclick={() => { statusFilter = s; }}
-                      class="rounded-md px-3 py-1 text-xs font-mono capitalize transition-colors {statusFilter === s ? 'bg-border text-foreground' : 'text-muted hover:text-foreground'}"
+                      class="rounded-md px-3 py-2 text-xs font-mono capitalize transition-colors {statusFilter === s ? 'bg-border text-foreground' : 'text-muted hover:text-foreground'}"
                     >
                       {s}
                     </button>
@@ -366,7 +366,7 @@
     </div>
 
     <!-- Tab content -->
-    <div class="mx-auto max-w-6xl px-4 py-4">
+    <div class="mx-auto max-w-6xl px-4 py-4 sm:px-6">
 
       <!-- ── TAB: OVERVIEW ──────────────────────────────────────── -->
       {#if activeTab === 'overview'}
@@ -380,28 +380,28 @@
                 <ChartGuideTooltip {...OVERVIEW_SIGNALS_TOOLTIP} triggerClassName="h-7 w-7" />
               </div>
               <div class="grid grid-cols-2 gap-3 md:grid-cols-4">
-                <div class="rounded-lg border border-border bg-bg-secondary p-3">
+                <div class="rounded-[1.35rem] border border-border bg-bg-card/92 p-4 shadow-[0_16px_42px_rgba(15,23,42,0.08)]">
                   <div class="mb-2 flex items-center gap-1">
                     <Zap size={10} class="text-accent" />
                     <span class="text-[9px] font-mono uppercase tracking-wider text-muted">Avg Rate</span>
                   </div>
                   <div class="text-2xl font-mono font-bold text-accent" style:text-shadow="0 0 12px var(--glow)">{avgRate}%</div>
                 </div>
-                <div class="rounded-lg border border-border bg-bg-secondary p-3">
+                <div class="rounded-[1.35rem] border border-border bg-bg-card/92 p-4 shadow-[0_16px_42px_rgba(15,23,42,0.08)]">
                   <div class="mb-2 flex items-center gap-1">
                     <Flame size={10} class="text-accent-secondary" />
                     <span class="text-[9px] font-mono uppercase tracking-wider text-muted">Best</span>
                   </div>
                   <div class="text-2xl font-mono font-bold text-accent-secondary">{bestStreak}d</div>
                 </div>
-                <div class="rounded-lg border border-border bg-bg-secondary p-3">
+                <div class="rounded-[1.35rem] border border-border bg-bg-card/92 p-4 shadow-[0_16px_42px_rgba(15,23,42,0.08)]">
                   <div class="mb-2 flex items-center gap-1">
                     <TrendingUp size={10} class="text-accent-secondary" />
                     <span class="text-[9px] font-mono uppercase tracking-wider text-muted">Total</span>
                   </div>
                   <div class="text-2xl font-mono font-bold text-accent-secondary" style:text-shadow="0 0 12px var(--glow-secondary)">{totalCompletions}</div>
                 </div>
-                <div class="rounded-lg border border-border bg-bg-secondary p-3">
+                <div class="rounded-[1.35rem] border border-border bg-bg-card/92 p-4 shadow-[0_16px_42px_rgba(15,23,42,0.08)]">
                   <div class="mb-2 flex items-center gap-1">
                     <Calendar size={10} class="text-muted" />
                     <span class="text-[9px] font-mono uppercase tracking-wider text-muted">Active</span>
@@ -412,7 +412,7 @@
             </div>
 
             <!-- Investment section -->
-            <div class="rounded-lg border border-border bg-bg-secondary p-4 space-y-4">
+            <div class="rounded-[1.5rem] border border-border bg-bg-card/92 p-5 shadow-[0_18px_50px_rgba(15,23,42,0.08)] space-y-4">
               <div class="flex items-center justify-between">
                 <div>
                   <div class="flex items-center gap-2">
@@ -423,16 +423,16 @@
                 </div>
                 <div class="text-2xl font-mono font-bold text-accent">{weekdayStats.investmentPercent}%</div>
               </div>
-              <div class="grid grid-cols-3 gap-2">
-                <div class="rounded-lg border border-border bg-bg-card p-2 text-center">
+              <div class="grid grid-cols-1 gap-2 sm:grid-cols-3">
+                <div class="rounded-[1rem] border border-border bg-bg-secondary/88 p-2.5 text-center">
                   <p class="text-[8px] font-mono uppercase text-muted">Best Day</p>
                   <p class="text-xs font-mono font-bold {weekdayStats.bestWeekday !== WEEKDAY_NA ? 'text-accent-secondary' : 'text-muted'}">{weekdayStats.bestWeekday !== WEEKDAY_NA ? weekdayStats.bestWeekday : '—'}</p>
                 </div>
-                <div class="rounded-lg border border-border bg-bg-card p-2 text-center">
+                <div class="rounded-[1rem] border border-border bg-bg-secondary/88 p-2.5 text-center">
                   <p class="text-[8px] font-mono uppercase text-muted">Worst Day</p>
                   <p class="text-xs font-mono font-bold {weekdayStats.worstWeekday !== WEEKDAY_NA ? 'text-muted' : 'text-muted/70'}">{weekdayStats.worstWeekday !== WEEKDAY_NA ? weekdayStats.worstWeekday : '—'}</p>
                 </div>
-                <div class="rounded-lg border border-border bg-bg-card p-2 text-center">
+                <div class="rounded-[1rem] border border-border bg-bg-secondary/88 p-2.5 text-center">
                   <p class="text-[8px] font-mono uppercase text-muted">Active Days</p>
                   <p class="text-xs font-mono font-bold text-foreground">{weekdayStats.totalActiveDays}d</p>
                 </div>
@@ -452,7 +452,7 @@
             </div>
             <div class="grid gap-4 md:grid-cols-3">
               {#each insights as insight (insight.id)}
-                <div class="rounded-lg border border-border bg-bg-secondary p-4 space-y-2">
+                <div class="rounded-[1.5rem] border border-border bg-bg-card/92 p-5 shadow-[0_18px_50px_rgba(15,23,42,0.08)] space-y-2">
                   <div class="flex items-center gap-2">
                     <insight.icon size={16} class="shrink-0 text-accent" />
                     <p class="text-[10px] font-mono uppercase tracking-[0.2em] text-muted">{insight.title}</p>
@@ -474,7 +474,7 @@
                 <button
                   type="button"
                   onclick={() => { period = opt.id; }}
-                  class="h-9 w-9 rounded-full text-xs font-mono transition-colors {period === opt.id ? 'bg-foreground text-bg-primary' : 'text-muted hover:text-foreground'}"
+                  class="h-10 w-10 rounded-full text-xs font-mono transition-colors {period === opt.id ? 'bg-foreground text-bg-primary' : 'text-muted hover:text-foreground'}"
                 >
                   {opt.label}
                 </button>
@@ -494,7 +494,7 @@
           </div>
 
           <!-- Weekday breakdown -->
-          <div class="rounded-lg border border-border bg-bg-secondary p-4">
+          <div class="rounded-[1.5rem] border border-border bg-bg-card/92 p-5 shadow-[0_18px_50px_rgba(15,23,42,0.08)]">
             <div class="mb-4 flex min-w-0 items-center gap-2">
               <h2 class="min-w-0 text-xs font-mono uppercase tracking-wider text-muted">Weekday breakdown</h2>
               <ChartGuideTooltip
@@ -553,7 +553,7 @@
                 <button
                   type="button"
                   onclick={() => handleSortChange(key)}
-                  class="rounded-full px-3 py-1 text-[10px] transition-colors {habitSort === key ? 'bg-border text-foreground' : 'text-muted hover:text-foreground'}"
+                  class="rounded-full px-3 py-1.5 text-[10px] transition-colors {habitSort === key ? 'bg-border text-foreground' : 'text-muted hover:text-foreground'}"
                 >
                   {key}
                 </button>
@@ -563,7 +563,7 @@
 
           <div class="grid gap-4 md:grid-cols-[2fr,1fr]">
             <!-- Performance list -->
-            <div class="rounded-lg border border-border bg-bg-secondary p-4 space-y-2">
+            <div class="rounded-[1.5rem] border border-border bg-bg-card/92 p-5 shadow-[0_18px_50px_rgba(15,23,42,0.08)] space-y-2">
               {#each sortedStats as entry, i (entry.habit.id)}
                 {@const color = HABIT_COLOR_THEMES[entry.habit.color]?.hex ?? 'var(--accent)'}
                 {@const status = habitStatusLabel(entry.stats.completionRate, entry.stats.currentStreak, entry.stats.longestStreak)}
@@ -604,7 +604,7 @@
             </div>
 
             <!-- Weekly breakdown -->
-            <div class="min-w-0 rounded-lg border border-border bg-bg-secondary p-4">
+            <div class="min-w-0 rounded-[1.5rem] border border-border bg-bg-card/92 p-5 shadow-[0_18px_50px_rgba(15,23,42,0.08)]">
               <div class="mb-3 flex min-w-0 items-center gap-2">
                 <h2 class="min-w-0 text-xs font-mono uppercase tracking-wider text-muted">Weekly breakdown</h2>
                 <ChartGuideTooltip
@@ -645,8 +645,8 @@
 
       <!-- ── TAB: ACTIVITY ──────────────────────────────────────── -->
       {:else if activeTab === 'activity'}
-        <div class="rounded-lg border border-border bg-bg-secondary p-3 space-y-3">
-          <div class="flex items-center justify-between">
+        <div class="rounded-[1.5rem] border border-border bg-bg-card/92 p-4 shadow-[0_18px_50px_rgba(15,23,42,0.08)] space-y-3">
+          <div class="flex flex-wrap items-center justify-between gap-2">
             <div class="flex items-center gap-2">
               <h2 class="text-xs font-mono uppercase tracking-wider text-muted">Activity — 90 days</h2>
               <ChartGuideTooltip

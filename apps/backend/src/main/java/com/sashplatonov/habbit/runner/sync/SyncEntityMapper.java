@@ -20,21 +20,21 @@ public class SyncEntityMapper {
 
   public SyncCursor habitCursor(HabitEntity habit) {
     return SyncCursor.builder()
-        .updatedAt(habit.updatedAtValue())
+        .updatedAt(habit.updatedAt)
         .id(habit.id)
         .build();
   }
 
   public SyncCursor checkinCursor(CheckinEntity checkin) {
     return SyncCursor.builder()
-        .updatedAt(checkin.updatedAtValue())
+        .updatedAt(checkin.updatedAt)
         .id(checkin.id)
         .build();
   }
 
   public SyncCursor tombstoneCursor(TombstoneEntity tombstone) {
     return SyncCursor.builder()
-        .updatedAt(tombstone.deletedAtValue())
+        .updatedAt(tombstone.deletedAt)
         .id(tombstone.id)
         .build();
   }
@@ -53,10 +53,10 @@ public class SyncEntityMapper {
         .dailyTarget(habit.dailyTarget)
         .tags(jsonCodec.parseStringListOrEmpty(habit.tags))
         .archived(habit.archived)
-        .createdAt(payloadCodec.toSyncIso(habit.createdAtValue()))
-        .updatedAt(payloadCodec.toSyncIso(habit.updatedAtValue()))
-        .version(habit.versionValue())
-        .sortOrder(habit.sortOrderOrZero().intValue())
+        .createdAt(payloadCodec.toSyncIso(habit.createdAt))
+        .updatedAt(payloadCodec.toSyncIso(habit.updatedAt))
+        .version(habit.version)
+        .sortOrder(habit.sortOrder == null ? 0 : habit.sortOrder.intValue())
         .reminderTime(habit.reminderTime)
         .reminderEnabled(habit.reminderEnabled)
         .type(habit.type)
@@ -68,10 +68,10 @@ public class SyncEntityMapper {
     return CheckinDto.builder()
         .id(checkin.id)
         .habitId(checkin.habitId)
-        .date(checkin.syncDate().toString())
+        .date(checkin.date != null ? checkin.date.toString() : null)
         .done(checkin.done)
         .count(checkin.count)
-        .updatedAt(payloadCodec.toSyncIso(checkin.updatedAtValue()))
+        .updatedAt(payloadCodec.toSyncIso(checkin.updatedAt))
         .version(checkin.version)
         .build();
   }
@@ -81,7 +81,7 @@ public class SyncEntityMapper {
         .id(tombstone.id)
         .entity(tombstone.entity)
         .entityId(tombstone.entityId)
-        .deletedAt(payloadCodec.toSyncIso(tombstone.deletedAtValue()))
+        .deletedAt(payloadCodec.toSyncIso(tombstone.deletedAt))
         .version(tombstone.version)
         .build();
   }

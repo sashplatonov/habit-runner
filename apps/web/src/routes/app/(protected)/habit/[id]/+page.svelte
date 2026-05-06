@@ -1,4 +1,6 @@
 <script lang="ts">
+  type ConfettiFn = typeof import('canvas-confetti');
+
   import { goto } from '$app/navigation';
   import { resolve } from '$app/paths';
   import { page } from '$app/state';
@@ -14,8 +16,11 @@
   import TargetRingSection from '$lib/components/TargetRingSection.svelte';
   import MonthlyRateSection from '$lib/components/MonthlyRateSection.svelte';
   import WeeklyCompletionsSection from '$lib/components/WeeklyCompletionsSection.svelte';
+  import { buildCelebrationParticles, getCelebrationLabel, type CelebrationParticle } from '$lib/habits/completionCelebration';
   import { completionKeyToCalendarDate } from '$lib/completionKey';
   import { formatHabitLabel } from '$lib/habits/formatHabitLabel';
+  import { calculateScheduledStreak } from '$lib/habits/schedule';
+  import { isPhaseTransition } from '$lib/habits/phases';
   import { habitsStore } from '$lib/stores/habits';
   import { getUndoContext } from '$lib/stores/undo';
   import { HABIT_COLOR_THEMES } from '$lib/theme/habit-colors';
@@ -32,9 +37,23 @@
   const dailyTarget = $derived(habit ? Math.max(1, habit.dailyTarget ?? 1) : 1);
   const todayCompletionCount = $derived(habit ? (habit.completions[todayKey] ?? 0) : 0);
   const completionEntryCount = $derived(habit ? Object.keys(habit.completions).length : 0);
-  const completedToday = $derived(todayCompletionCount >= dailyTarget);
-  const canIncrement = $derived(todayCompletionCount < dailyTarget);
   const isTodayFrozen = $derived(habit ? habit.freezeDays.includes(todayFreezeKey) : false);
+  let detailConfetti: ConfettiFn | null = null;
+  let detailAnimating = $state(false);
+  let detailCelebrationLabel = $state('');
+  let detailParticles = $state<CelebrationParticle[]>([]);
+  let detailParticleCounter = 0;
+
+  async function getDetailConfetti() {
+    if (detailConfetti) {
+      return detailConfetti;
+    }
+
+    const mod = await import('canvas-confetti') as ConfettiFn & { default?: ConfettiFn };
+    detailConfetti = mod.default ?? mod;
+    return detailConfetti;
+  }
+
   const heatmapDetails = $derived.by(() => {
     if (!habit) {
       return {};
@@ -96,9 +115,69 @@
       return;
     }
 
-    const previousCount = habit.completions[todayKey] ?? 0;
-    const nextCount = Math.min(dailyTarget, previousCount + 1);
-    await habitsStore.setCompletionCount(habit.id, todayKey, nextCount);
+    const result = await habitsStore.incrementCompletionCount(habit.id, todayKey);
+    const nextCount = result.count;
+    const previousCount = result.previousCount;
+
+    detailAnimating = true;
+    detailCelebrationLabel = getCelebrationLabel(nextCount, dailyTarget);
+    const burst = buildCelebrationParticles({
+      startId: detailParticleCounter,
+      colors: [accent?.hex ?? '#f8fafc', '#fff7ed', '#fbbf24'],
+      count: 12,
+      spread: 30,
+      lift: 18
+    });
+    detailParticles = burst.particles;
+    detailParticleCounter = burst.nextId;
+
+    const currentStreak = calculateScheduledStreak(habit, habit.completions).current;
+    const isMilestone = previousCount < dailyTarget && nextCount >= dailyTarget && isPhaseTransition(currentStreak + 1);
+    setTimeout(async () => {
+      try {
+        const launch = await getDetailConfetti();
+        if (isMilestone) {
+          void launch({
+            particleCount: 180,
+            spread: 165,
+            startVelocity: 42,
+            origin: { y: 0.18 },
+            colors: [accent?.hex ?? '#f8fafc', '#fbbf24', '#fff7ed'],
+            zIndex: 1000
+          });
+        } else {
+          void launch({
+            particleCount: 24,
+            angle: 60,
+            spread: 82,
+            startVelocity: 28,
+            origin: { x: 0.42, y: 0.2 },
+            colors: [accent?.hex ?? '#f8fafc', '#fff7ed', '#fbbf24'],
+            scalar: 0.86,
+            zIndex: 900
+          });
+          void launch({
+            particleCount: 24,
+            angle: 120,
+            spread: 82,
+            startVelocity: 28,
+            origin: { x: 0.58, y: 0.2 },
+            colors: [accent?.hex ?? '#f8fafc', '#fff7ed', '#fbbf24'],
+            scalar: 0.86,
+            zIndex: 900
+          });
+        }
+      } catch {
+        // ignore confetti errors (visual only)
+      }
+    }, 180);
+
+    setTimeout(() => {
+      detailAnimating = false;
+      detailCelebrationLabel = '';
+      detailParticles = [];
+    }, 900);
+
     undoStore.push({
       message: `Progress ${nextCount}/${dailyTarget}: ${habit.name}`,
       actionLabel: 'Undo',
@@ -153,9 +232,9 @@
     </EmptyState>
   </div>
 {:else}
-  <div class="min-h-screen bg-bg-primary">
-    <section class="sticky top-0 z-20 border-b border-border bg-bg-primary/95 px-4 backdrop-blur-sm" style:padding-top="calc(var(--safe-area-inset-top, 0px) + 1rem); padding-bottom: 1rem;">
-      <div class="mx-auto flex max-w-2xl flex-col gap-3 sm:flex-row sm:items-center">
+  <div class="min-h-screen bg-transparent">
+    <section class="sticky top-0 z-20 bg-transparent px-4 pt-4 sm:px-6" style:padding-top="calc(var(--safe-area-inset-top, 0px) + 1rem);">
+      <div class="mx-auto flex max-w-5xl flex-col gap-3 rounded-[1.75rem] border border-border bg-bg-secondary/90 px-4 py-4 shadow-[0_24px_60px_rgba(15,23,42,0.1)] backdrop-blur-xl sm:flex-row sm:items-center sm:px-5">
         <div class="flex min-w-0 flex-1 items-center gap-3">
           <button
             type="button"
@@ -204,18 +283,31 @@
             <Pencil size={13} />
           </a>
 
-          <button
-            type="button"
-            class="rounded border px-3 py-1.5 text-xs font-mono font-medium transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-40 {completedToday ? 'border-border bg-transparent text-muted' : 'font-bold text-bg-primary'}"
-            style={!completedToday ? `background-color: ${accent.hex}; border-color: ${accent.hex}; box-shadow: 0 0 16px ${accent.glow};` : ''}
-            onclick={() => {
-              void handleIncrementCompletion();
-            }}
-            disabled={!canIncrement}
-            aria-label={completedToday ? 'Habit completed today' : 'Mark as completed today'}
-          >
-            {completedToday ? 'Done' : 'Add +1'}
-          </button>
+          <div class="relative">
+            {#if detailAnimating}
+              {#each detailParticles as p (p.id)}
+                <span
+                  class="completion-burst-particle"
+                  style="--tx: {p.tx}px; --ty: {p.ty}px; --particle-size: {p.size}px; --particle-rotate: {p.rotation}deg; --particle-delay: {p.delay}ms; --particle-duration: {p.duration}ms; --particle-color: {p.color}; background: {p.color}; border-radius: {p.radius}; left: 50%; top: 50%; margin-left: calc({p.size}px / -2); margin-top: calc({p.size}px / -2);"
+                ></span>
+              {/each}
+              <span class="completion-status-pop" style="color: {accent.hex}">{detailCelebrationLabel}</span>
+            {/if}
+            <button
+              type="button"
+              class="relative overflow-hidden rounded border px-3 py-1.5 text-xs font-mono font-bold text-bg-primary transition-all duration-200 {detailAnimating ? 'animate-check-pulse animate-glow-burst' : ''}"
+              style={`background-color: ${accent.hex}; border-color: ${accent.hex}; box-shadow: 0 0 16px ${accent.glow};`}
+              onclick={() => {
+                void handleIncrementCompletion();
+              }}
+              aria-label={`Add one completion for ${habit.name}`}
+            >
+              {#if detailAnimating}
+                <span class="completion-sheen" style="--sheen-color: {accent.hex}"></span>
+              {/if}
+              Add +1
+            </button>
+          </div>
 
           <button
             type="button"
@@ -244,12 +336,16 @@
       </div>
     </section>
 
-    <div class="mx-auto max-w-2xl space-y-4 px-4 py-4">
-      <StatCardGrid {stats} {accent} habitCreatedAt={habit.createdAt} />
-      <AutomatismSection score={stats.automatismScore} {accent} />
-      <TodayBlock {dailyTarget} {todayCompletionCount} {accent} />
+    <div class="mx-auto max-w-5xl space-y-4 px-4 py-4 sm:px-6">
+      <div class="grid gap-4 xl:grid-cols-[1.12fr,0.88fr]">
+        <div class="space-y-4">
+          <StatCardGrid {stats} {accent} habitCreatedAt={habit.createdAt} />
+          <AutomatismSection score={stats.automatismScore} {accent} />
+          <TodayBlock {dailyTarget} {todayCompletionCount} {accent} />
+        </div>
 
-      <section class="space-y-3 rounded-lg border border-border bg-bg-secondary p-3">
+        <div class="space-y-4">
+      <section class="space-y-3 rounded-[1.5rem] border border-border bg-bg-card/92 p-4 shadow-[0_18px_50px_rgba(15,23,42,0.08)]">
         <div class="flex items-center justify-between gap-3">
           <div class="flex items-center gap-2">
             <h2 class="text-xs font-mono uppercase tracking-wider text-muted">Activity - 90 days</h2>
@@ -272,13 +368,18 @@
         </div>
       </section>
 
-      <TargetRingSection {stats} {habit} {accent} />
-      <MonthlyRateSection monthlyData={stats.monthlyData} {accent} habitCreatedAt={habit.createdAt} />
-      <WeeklyCompletionsSection weeklyData={stats.weeklyData} {accent} habitCreatedAt={habit.createdAt} />
+          <TargetRingSection {stats} {habit} {accent} />
+        </div>
+      </div>
+
+      <div class="grid gap-4 xl:grid-cols-2">
+        <MonthlyRateSection monthlyData={stats.monthlyData} {accent} habitCreatedAt={habit.createdAt} />
+        <WeeklyCompletionsSection weeklyData={stats.weeklyData} {accent} habitCreatedAt={habit.createdAt} />
+      </div>
 
       <HabitRetroCalendar {habit} {accent} onUpdate={handleRetroUpdate} />
 
-      <section class="rounded-lg border border-border bg-bg-secondary p-4">
+      <section class="rounded-[1.5rem] border border-border bg-bg-card/92 p-5 shadow-[0_18px_50px_rgba(15,23,42,0.08)]">
         <p class="text-[10px] font-mono uppercase tracking-[0.25em] text-muted">Danger zone</p>
         {#if !confirmDelete}
           <button

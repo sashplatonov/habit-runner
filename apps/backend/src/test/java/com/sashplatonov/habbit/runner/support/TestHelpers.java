@@ -39,15 +39,15 @@ public final class TestHelpers {
   }
 
   public static HabitFrequency frequencyOf(HabitEntity habit) {
-    return habit.frequency;
+    return habit.getFrequency();
   }
 
   public static HabitColor colorOf(HabitEntity habit) {
-    return habit.color;
+    return habit.getColor();
   }
 
   public static HabitType typeOf(HabitEntity habit) {
-    return habit.type;
+    return habit.getType();
   }
 
   public static Response getVapidPublicKey(NotificationResource resource) {

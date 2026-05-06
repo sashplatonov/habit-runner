@@ -1,75 +1,86 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-label="Best Offline Habit Tracker">
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-label="Best Offline Habit Tracker Apps in 2025">
   <defs>
-    <linearGradient id="bg" x1="0" x2="1" y1="0" y2="1"><stop offset="0%" stop-color="#f0f9ff"/><stop offset="100%" stop-color="#f8fafc"/></linearGradient>
-    <linearGradient id="phone" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stop-color="#1e293b"/><stop offset="100%" stop-color="#0f172a"/></linearGradient>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#f6efe6" />
+      <stop offset="100%" stop-color="#ebf5ff" />
+    </linearGradient>
+    <linearGradient id="panel" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#081225" />
+      <stop offset="100%" stop-color="#162843" />
+    </linearGradient>
+    <pattern id="grid" width="48" height="48" patternUnits="userSpaceOnUse">
+      <path d="M48 0H0V48" fill="none" stroke="rgba(15, 23, 42, 0.07)" stroke-width="1" />
+    </pattern>
+    <filter id="shadowSoft" x="-20%" y="-20%" width="140%" height="150%">
+      <feDropShadow dx="0" dy="20" stdDeviation="24" flood-color="#0f172a" flood-opacity="0.12" />
+    </filter>
+    <filter id="shadowBoard" x="-20%" y="-20%" width="140%" height="150%">
+      <feDropShadow dx="0" dy="24" stdDeviation="28" flood-color="#0f172a" flood-opacity="0.16" />
+    </filter>
+    <clipPath id="boardClip">
+      <rect x="664" y="74" width="476" height="482" rx="42" />
+    </clipPath>
   </defs>
-  <rect width="1200" height="630" fill="url(#bg)"/>
-  <circle cx="200" cy="500" r="180" fill="#0ea5e9" opacity="0.07"/>
-  <circle cx="980" cy="150" r="150" fill="#10b981" opacity="0.07"/>
 
-  <!-- phone body -->
-  <rect x="440" y="60" width="320" height="460" rx="32" fill="url(#phone)"/>
-  <rect x="460" y="82" width="280" height="416" rx="18" fill="#1e293b"/>
-  <rect x="556" y="68" width="88" height="10" rx="5" fill="#0f172a"/>
-  <rect x="470" y="92" width="260" height="396" rx="14" fill="#0f172a"/>
+  <rect width="1200" height="630" fill="url(#bg)" />
+  <rect width="1200" height="630" fill="url(#grid)" opacity="0.6" />
+  <circle cx="160" cy="104" r="210" fill="rgba(56, 189, 248, 0.14)" />
+  <circle cx="1040" cy="500" r="250" fill="rgba(45, 212, 191, 0.12)" />
+  <ellipse cx="924" cy="88" rx="200" ry="126" fill="rgba(245, 158, 11, 0.12)" />
+  <path d="M-40 492 C146 390 284 566 512 520 C736 476 870 314 1240 436" fill="none" stroke="rgba(14, 165, 233, 0.12)" stroke-width="42" stroke-linecap="round" />
 
-  <!-- app screen -->
-  <rect x="482" y="104" width="236" height="372" rx="10" fill="#0f172a"/>
-  <!-- status: offline badge -->
-  <rect x="492" y="112" width="90" height="22" rx="8" fill="#374151"/>
-  <circle cx="504" cy="123" r="5" fill="#6b7280"/>
-  <line x1="501" y1="120" x2="507" y2="126" stroke="#ef4444" stroke-width="2"/>
-  <text x="524" y="127" font-family="monospace,sans-serif" font-size="11" fill="#9ca3af">offline</text>
+  <rect x="56" y="56" width="560" height="518" rx="40" fill="rgba(255, 255, 255, 0.74)" stroke="rgba(15, 23, 42, 0.08)" filter="url(#shadowSoft)" />
 
-  <!-- habit list on screen -->
-  <text x="600" y="158" font-family="Inter,sans-serif" font-size="11" fill="#d1d5db" text-anchor="middle">Today's habits</text>
-  <rect x="494" y="168" width="212" height="30" rx="8" fill="#1d4ed8"/>
-  <text x="560" y="187" font-family="Inter,sans-serif" font-size="11" fill="#bfdbfe">Morning walk</text>
-  <text x="680" y="187" font-family="Inter,sans-serif" font-size="13" fill="#34d399" text-anchor="middle">✓</text>
-  <rect x="494" y="206" width="212" height="30" rx="8" fill="#065f46"/>
-  <text x="560" y="225" font-family="Inter,sans-serif" font-size="11" fill="#a7f3d0">Read 20 min</text>
-  <text x="680" y="225" font-family="Inter,sans-serif" font-size="13" fill="#34d399" text-anchor="middle">✓</text>
-  <rect x="494" y="244" width="212" height="30" rx="8" fill="#1e293b" stroke="#334155" stroke-width="1"/>
-  <text x="560" y="263" font-family="Inter,sans-serif" font-size="11" fill="#64748b">Meditate</text>
-  <text x="680" y="263" font-family="Inter,sans-serif" font-size="13" fill="#94a3b8" text-anchor="middle">○</text>
-  <rect x="494" y="282" width="212" height="30" rx="8" fill="#1e293b" stroke="#334155" stroke-width="1"/>
-  <text x="560" y="301" font-family="Inter,sans-serif" font-size="11" fill="#64748b">Drink water</text>
-  <text x="680" y="301" font-family="Inter,sans-serif" font-size="13" fill="#94a3b8" text-anchor="middle">○</text>
+  <rect x="88" y="84" width="190" height="38" rx="19" fill="rgba(255, 255, 255, 0.88)" stroke="rgba(15, 23, 42, 0.08)" />
+  <circle cx="112" cy="103" r="8" fill="#0ea5e9" />
+  <text x="130" y="109" fill="#0f172a" font-family="'Avenir Next', 'Segoe UI', 'Trebuchet MS', sans-serif" font-size="13" font-weight="700" letter-spacing="0.18em">HABBIT RUNNER BLOG</text>
 
-  <!-- streak -->
-  <rect x="494" y="330" width="212" height="50" rx="10" fill="#1c1917"/>
-  <text x="548" y="350" font-family="Inter,sans-serif" font-size="10" fill="#a78bfa">🔥 Current streak</text>
-  <text x="600" y="370" font-family="Inter,sans-serif" font-size="20" font-weight="700" fill="#fbbf24" text-anchor="middle">42 days</text>
+  <text x="88" y="152" fill="rgba(15, 23, 42, 0.56)" font-family="'Avenir Next', 'Segoe UI', 'Trebuchet MS', sans-serif" font-size="14" font-weight="700" letter-spacing="0.24em">OFFLINE-FIRST GUIDE</text>
 
-  <!-- wifi-off icon above phone -->
-  <circle cx="600" cy="44" r="16" fill="#fef2f2"/>
-  <text x="600" y="51" font-family="Arial,sans-serif" font-size="16" fill="#ef4444" text-anchor="middle">✗</text>
+  <text x="88" y="226" fill="#0f172a" font-family="'Iowan Old Style', Georgia, 'Times New Roman', serif" font-size="74" font-weight="700"><tspan x="88" dy="0">Offline</tspan><tspan x="88" dy="72">By Default</tspan></text>
 
-  <!-- feature callouts -->
-  <rect x="60" y="200" width="310" height="65" rx="16" fill="#ffffff" stroke="#bae6fd" stroke-width="2"/>
-  <text x="215" y="226" font-family="Inter,Arial,sans-serif" font-size="15" fill="#0369a1" text-anchor="middle" font-weight="600">Works without internet</text>
-  <text x="215" y="249" font-family="Inter,Arial,sans-serif" font-size="13" fill="#0284c7" text-anchor="middle">data stored locally in IndexedDB</text>
+  
+      <g transform="translate(88 430)">
+        <rect width="127" height="34" rx="17" fill="rgba(15, 23, 42, 0.05)" stroke="rgba(15, 23, 42, 0.08)" />
+        <circle cx="18" cy="17" r="4" fill="#0ea5e9" />
+        <text x="30" y="22" fill="#0f172a" font-family="'Avenir Next', 'Segoe UI', 'Trebuchet MS', sans-serif" font-size="14" font-weight="600">local-first</text>
+      </g>
+      <g transform="translate(227 430)">
+        <rect width="118" height="34" rx="17" fill="rgba(15, 23, 42, 0.05)" stroke="rgba(15, 23, 42, 0.08)" />
+        <circle cx="18" cy="17" r="4" fill="#0ea5e9" />
+        <text x="30" y="22" fill="#0f172a" font-family="'Avenir Next', 'Segoe UI', 'Trebuchet MS', sans-serif" font-size="14" font-weight="600">sync later</text>
+      </g>
 
-  <rect x="60" y="300" width="310" height="65" rx="16" fill="#ffffff" stroke="#bbf7d0" stroke-width="2"/>
-  <text x="215" y="326" font-family="Inter,Arial,sans-serif" font-size="15" fill="#065f46" text-anchor="middle" font-weight="600">Syncs when back online</text>
-  <text x="215" y="349" font-family="Inter,Arial,sans-serif" font-size="13" fill="#047857" text-anchor="middle">conflict-free merge</text>
+  <text x="88" y="498" fill="rgba(15, 23, 42, 0.72)" font-family="'Avenir Next', 'Segoe UI', 'Trebuchet MS', sans-serif" font-size="20" font-weight="600"><tspan x="88" dy="0">Best Offline Habit Tracker</tspan><tspan x="88" dy="26">Apps in 2025</tspan></text>
+  <text x="88" y="572" fill="rgba(15, 23, 42, 0.4)" font-family="'Avenir Next', 'Segoe UI', 'Trebuchet MS', sans-serif" font-size="14" font-weight="700" letter-spacing="0.08em">EDITORIAL COVER / BEST-OFFLINE-HABIT-TRACKER</text>
 
-  <rect x="60" y="400" width="310" height="65" rx="16" fill="#ffffff" stroke="#fde68a" stroke-width="2"/>
-  <text x="215" y="426" font-family="Inter,Arial,sans-serif" font-size="15" fill="#78350f" text-anchor="middle" font-weight="600">PWA — installable</text>
-  <text x="215" y="449" font-family="Inter,Arial,sans-serif" font-size="13" fill="#92400e" text-anchor="middle">add to home screen</text>
-
-  <rect x="830" y="200" width="310" height="65" rx="16" fill="#ffffff" stroke="#c4b5fd" stroke-width="2"/>
-  <text x="985" y="226" font-family="Inter,Arial,sans-serif" font-size="15" fill="#5b21b6" text-anchor="middle" font-weight="600">No account needed</text>
-  <text x="985" y="249" font-family="Inter,Arial,sans-serif" font-size="13" fill="#7c3aed" text-anchor="middle">open and track instantly</text>
-
-  <rect x="830" y="300" width="310" height="65" rx="16" fill="#ffffff" stroke="#a5f3fc" stroke-width="2"/>
-  <text x="985" y="326" font-family="Inter,Arial,sans-serif" font-size="15" fill="#0e7490" text-anchor="middle" font-weight="600">Privacy first</text>
-  <text x="985" y="349" font-family="Inter,Arial,sans-serif" font-size="13" fill="#0891b2" text-anchor="middle">your habits stay on device</text>
-
-  <rect x="830" y="400" width="310" height="65" rx="16" fill="#ffffff" stroke="#bbf7d0" stroke-width="2"/>
-  <text x="985" y="426" font-family="Inter,Arial,sans-serif" font-size="15" fill="#065f46" text-anchor="middle" font-weight="600">Zero data loss</text>
-  <text x="985" y="449" font-family="Inter,Arial,sans-serif" font-size="13" fill="#047857" text-anchor="middle">outbox syncs in background</text>
-
-  <text x="600" y="557" font-family="Inter,Arial,sans-serif" font-size="38" font-weight="700" fill="#0f172a" text-anchor="middle">Best Offline Habit Tracker</text>
-  <text x="600" y="596" font-family="Inter,Arial,sans-serif" font-size="20" fill="#64748b" text-anchor="middle">Track habits anywhere — no signal required</text>
+  <g filter="url(#shadowBoard)">
+    <rect x="664" y="74" width="476" height="482" rx="42" fill="url(#panel)" stroke="rgba(255, 255, 255, 0.18)" />
+  </g>
+  <rect x="694" y="104" width="132" height="34" rx="17" fill="rgba(255, 255, 255, 0.08)" stroke="rgba(255, 255, 255, 0.14)" />
+  <text x="720" y="126" fill="#f8fafc" font-family="'Avenir Next', 'Segoe UI', 'Trebuchet MS', sans-serif" font-size="13" font-weight="700" letter-spacing="0.1em">offline-first guide</text>
+  <g clip-path="url(#boardClip)">
+    <g transform="translate(693.4507772020725 120.6321243523316) scale(0.8341968911917098)">
+    <circle cx="334" cy="120" r="68" fill="rgba(20, 184, 166, 0.16)" />
+    <circle cx="120" cy="380" r="58" fill="rgba(251, 113, 133, 0.18)" />
+    <rect x="110" y="40" width="220" height="386" rx="34" fill="rgba(6, 17, 31, 0.88)" stroke="rgba(255, 255, 255, 0.22)" />
+    <rect x="126" y="58" width="188" height="348" rx="26" fill="rgba(3, 7, 18, 0.88)" />
+    <rect x="174" y="68" width="92" height="10" rx="5" fill="rgba(255, 255, 255, 0.18)" />
+    <rect x="146" y="96" width="76" height="28" rx="14" fill="rgba(14, 165, 233, 0.18)" stroke="rgba(14, 165, 233, 0.42)" />
+    <circle cx="164" cy="110" r="5" fill="#0ea5e9" />
+    <text x="178" y="115" fill="#dbeafe" font-family="'Avenir Next', 'Segoe UI', 'Trebuchet MS', sans-serif" font-size="12" font-weight="700">offline</text>
+    <rect x="146" y="146" width="148" height="44" rx="18" fill="rgba(14, 165, 233, 0.22)" />
+    <rect x="162" y="160" width="78" height="8" rx="4" fill="#eff6ff" opacity="0.9" />
+    <rect x="162" y="174" width="102" height="6" rx="3" fill="#dbeafe" opacity="0.65" />
+    <circle cx="276" cy="168" r="11" fill="#14b8a6" />
+    <rect x="146" y="204" width="148" height="44" rx="18" fill="rgba(20, 184, 166, 0.2)" />
+    <rect x="162" y="218" width="68" height="8" rx="4" fill="#ecfeff" opacity="0.92" />
+    <rect x="162" y="232" width="108" height="6" rx="3" fill="#d1fae5" opacity="0.65" />
+    <circle cx="276" cy="226" r="11" fill="#fb7185" />
+    <rect x="146" y="274" width="148" height="88" rx="24" fill="rgba(255, 255, 255, 0.06)" stroke="rgba(255, 255, 255, 0.16)" />
+    <path d="M176 338 C192 296 228 282 252 252 C278 286 300 306 314 338" fill="none" stroke="rgba(251, 113, 133, 0.88)" stroke-width="16" stroke-linecap="round" />
+    <circle cx="252" cy="252" r="24" fill="rgba(14, 165, 233, 0.2)" stroke="rgba(14, 165, 233, 0.5)" stroke-width="2" />
+    <circle cx="252" cy="252" r="9" fill="#0ea5e9" />
+  </g>
+  </g>
 </svg>

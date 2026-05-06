@@ -6,20 +6,21 @@ import jakarta.persistence.Index;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
+import lombok.Data;
 
-import java.time.Instant;
 import java.time.LocalDate;
 
 @Entity
 @Table(
     name = "checkins",
     indexes = {
-      @Index(name = "checkins_user_updated_cursor_idx", columnList = "userId,updatedAt,id")
+        @Index(name = "checkins_user_updated_cursor_idx", columnList = "userId,updatedAt,id")
     },
     uniqueConstraints = {
-      @UniqueConstraint(name = "habit_date_unique", columnNames = {"habitId", "date"})
+        @UniqueConstraint(name = "habit_date_unique", columnNames = {"habitId", "date"})
     }
 )
+@Data
 public class CheckinEntity extends UuidAuditedEntityBase {
   @Column(name = "habitId", nullable = false)
   public String habitId;
@@ -46,15 +47,15 @@ public class CheckinEntity extends UuidAuditedEntityBase {
   }
 
   public LocalDate syncDate() {
-    return date;
-  }
-
-  public void setAuditTimestamps(Instant created, Instant updated) {
-    setCreatedAt(created);
-    setUpdatedAt(updated);
+    return getDate();
   }
 
   public void setCheckinDate(LocalDate value) {
-    date = value;
+    setDate(value);
+  }
+
+  // Explicit getter for boolean 'done' for backward compatibility
+  public boolean getDone() {
+    return done;
   }
 }

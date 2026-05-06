@@ -28,12 +28,12 @@ class AuthDelegateCoverageTest {
     var collaborators = new AuthCollaborators(jwtUtil, refreshTokenService, oauthSupport, userService);
 
     var refreshRecord = new RefreshTokenEntity();
-    refreshRecord.token = "refresh-token";
+    refreshRecord.setToken("refresh-token");
     refreshTokenService.setRequireActiveResult(refreshRecord);
 
     var existingUser = new UserEntity();
-    existingUser.id = "user-1";
-    existingUser.email = "user@example.test";
+    existingUser.setId("user-1");
+    existingUser.setEmail("user@example.test");
     userService.setUserResult(existingUser);
 
     assertSame(jwtUtil, collaborators.getJwtUtil());
