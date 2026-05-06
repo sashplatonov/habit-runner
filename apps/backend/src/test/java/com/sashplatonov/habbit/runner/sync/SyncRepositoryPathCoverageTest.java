@@ -241,7 +241,7 @@ class SyncRepositoryPathCoverageTest {
 
   private HabitEntity habit(String habitId, String userId, Instant updatedAt) {
     var habit = new HabitEntity();
-    habit.id = habitId;
+    habit.setId(habitId);
     habit.userId = userId;
     habit.name = "Habit";
     habit.frequency = HabitFrequency.DAILY;

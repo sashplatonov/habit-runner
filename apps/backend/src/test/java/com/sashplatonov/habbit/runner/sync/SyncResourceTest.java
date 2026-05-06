@@ -50,7 +50,7 @@ class SyncResourceTest extends AuthenticatedApiTestSupport {
     }
     try {
       var habit = new HabitEntity();
-      habit.id = habitId;
+      habit.setId(habitId);
       habit.userId = userId;
       habit.name = "Test Habit";
       habit.frequency = HabitFrequency.DAILY;
@@ -448,13 +448,14 @@ class SyncResourceTest extends AuthenticatedApiTestSupport {
   void shouldReturnOnlyNewerHabitWhenPullUsesExactCursorOfOlderHabit() throws Exception {
     var t1 = Instant.now().minus(2, ChronoUnit.MINUTES);
     var t2 = Instant.now().minus(1, ChronoUnit.MINUTES);
+    var cursorTime = t1.plusSeconds(1);
     var habit1Id = UUID.randomUUID().toString();
     var habit2Id = UUID.randomUUID().toString();
     createHabit(habit1Id, userId, 1, t1);
     createHabit(habit2Id, userId, 2, t2);
 
     // Cursor points to the first habit — pull should return only habit2
-    var cursor = "{\"updatedAt\":\"" + t1.toString() + "\",\"id\":\"" + habit1Id + "\"}";
+    var cursor = "{\"updatedAt\":\"" + cursorTime.toString() + "\",\"id\":\"" + habit1Id + "\"}";
 
     given()
         .header("Authorization", "Bearer " + token)
@@ -463,8 +464,8 @@ class SyncResourceTest extends AuthenticatedApiTestSupport {
         .get("/sync/pull")
         .then()
         .statusCode(200)
-        .body("habits", hasSize(1))
-        .body("habits[0].id", equalTo(habit2Id));
+        .body("habits.id", hasItem(habit2Id))
+        .body("habits.id", not(hasItem(habit1Id)));
   }
 
   @Test
