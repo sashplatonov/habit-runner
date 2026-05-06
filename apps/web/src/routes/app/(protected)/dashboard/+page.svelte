@@ -322,78 +322,74 @@
     URL.revokeObjectURL(url);
   }
 
-  // ─── Toggle with animation + confetti ────────────────────────────────────────
+  // ─── Increment with animation + confetti ──────────────────────────────────────
   const BURST_COLORS = ['#fff7ed', '#fbbf24', '#fde68a'];
 
   async function toggleHabit(habit: Habit) {
     const tgt = Math.max(1, habit.dailyTarget ?? 1);
-    const cur = habit.completions[todayKey] ?? 0;
+    const accent = HABIT_COLOR_THEMES[habit.color];
+    const previousStreak = calculateScheduledStreak(habit, habit.completions).current;
+    const result = await habitsStore.incrementCompletionCount(habit.id, todayKey);
+    const nextCount = result.count;
+    const isMilestone = result.previousCount < tgt && nextCount >= tgt && isPhaseTransition(previousStreak + 1);
 
-    if (cur < tgt) {
-      const accent = HABIT_COLOR_THEMES[habit.color];
-      const nextCount = Math.min(tgt, cur + 1);
-      animatingHabitId = habit.id;
-      animLabel = getCelebrationLabel(nextCount, tgt);
+    animatingHabitId = habit.id;
+    animLabel = getCelebrationLabel(nextCount, tgt);
 
-      const burst = buildCelebrationParticles({
-        startId: particleCounter,
-        colors: [accent.hex, ...BURST_COLORS],
-        count: 12,
-        spread: 26,
-        lift: 14
-      });
-      animParticles = burst.particles;
-      particleCounter = burst.nextId;
+    const burst = buildCelebrationParticles({
+      startId: particleCounter,
+      colors: [accent.hex, ...BURST_COLORS],
+      count: 12,
+      spread: 26,
+      lift: 14
+    });
+    animParticles = burst.particles;
+    particleCounter = burst.nextId;
 
-      const { current } = calculateScheduledStreak(habit, habit.completions);
-      const isMilestone = isPhaseTransition(current + 1);
-      setTimeout(async () => {
-        try {
-          const launch = await getConfetti();
-          if (isMilestone) {
-            void launch({
-              particleCount: 180,
-              spread: 165,
-              startVelocity: 42,
-              origin: { y: 0.6 },
-              colors: [accent.hex, '#fbbf24', '#fff7ed'],
-              zIndex: 1000
-            });
-          } else {
-            void launch({
-              particleCount: 26,
-              angle: 60,
-              spread: 84,
-              startVelocity: 30,
-              origin: { x: 0.42, y: 0.74 },
-              colors: [accent.hex, '#fff7ed', '#fbbf24'],
-              scalar: 0.88,
-              zIndex: 900
-            });
-            void launch({
-              particleCount: 26,
-              angle: 120,
-              spread: 84,
-              startVelocity: 30,
-              origin: { x: 0.58, y: 0.74 },
-              colors: [accent.hex, '#fff7ed', '#fbbf24'],
-              scalar: 0.88,
-              zIndex: 900
-            });
-          }
-        } catch {
-          // ignore errors from confetti (non-critical visual affordance)
+    setTimeout(async () => {
+      try {
+        const launch = await getConfetti();
+        if (isMilestone) {
+          void launch({
+            particleCount: 180,
+            spread: 165,
+            startVelocity: 42,
+            origin: { y: 0.6 },
+            colors: [accent.hex, '#fbbf24', '#fff7ed'],
+            zIndex: 1000
+          });
+        } else {
+          void launch({
+            particleCount: 26,
+            angle: 60,
+            spread: 84,
+            startVelocity: 30,
+            origin: { x: 0.42, y: 0.74 },
+            colors: [accent.hex, '#fff7ed', '#fbbf24'],
+            scalar: 0.88,
+            zIndex: 900
+          });
+          void launch({
+            particleCount: 26,
+            angle: 120,
+            spread: 84,
+            startVelocity: 30,
+            origin: { x: 0.58, y: 0.74 },
+            colors: [accent.hex, '#fff7ed', '#fbbf24'],
+            scalar: 0.88,
+            zIndex: 900
+          });
         }
-      }, 180);
+      } catch {
+        // ignore errors from confetti (non-critical visual affordance)
+      }
+    }, 180);
 
-      setTimeout(() => {
-        animatingHabitId = null;
-        animParticles = [];
-        animLabel = '';
-      }, 900);
-    }
-
-    await habitsStore.advanceCompletionCount(habit.id, todayKey);
+    setTimeout(() => {
+      animatingHabitId = null;
+      animParticles = [];
+      animLabel = '';
+    }, 900);
   }
 
   // ─── Navigation ───────────────────────────────────────────────────────────────
@@ -1206,12 +1202,12 @@
                           {/if}
                           {#if isFrozen}
                             <SnowflakeIcon size={13} class="text-muted z-10 relative" />
+                          {:else if tgt > 1}
+                            <span class="text-[10px] font-mono z-10 relative" style="color: {accent.hex}">{todayCount}/{tgt}</span>
                           {:else if completed}
                             <svg viewBox="0 0 12 12" class="h-4 w-4 z-10 relative {accent.textClass}">
                               <path d="M2 6l3 3 5-5" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
                             </svg>
-                          {:else if tgt > 1}
-                            <span class="text-[10px] font-mono z-10 relative" style="color: {accent.hex}">{todayCount}/{tgt}</span>
                           {/if}
                         </button>
                       </div>
@@ -1423,12 +1419,12 @@
                         {/if}
                         {#if isFrozen}
                           <SnowflakeIcon size={13} class="text-muted z-10 relative" />
+                        {:else if tgt > 1}
+                          <span class="text-[10px] font-mono z-10 relative" style="color: {accent.hex}">{todayCount}/{tgt}</span>
                         {:else if completed}
                           <svg viewBox="0 0 12 12" class="h-4 w-4 z-10 relative {accent.textClass}">
                             <path d="M2 6l3 3 5-5" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
                           </svg>
-                        {:else if tgt > 1}
-                          <span class="text-[10px] font-mono z-10 relative" style="color: {accent.hex}">{todayCount}/{tgt}</span>
                         {/if}
                       </button>
                     </div>

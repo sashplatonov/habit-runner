@@ -84,7 +84,7 @@
 
   async function handleMarkDone(reminderId: string, habit: Habit) {
     const today = $habitsStore.formatDate(new Date());
-    await habitsStore.advanceCompletionCount(habit.id, today);
+    await habitsStore.incrementCompletionCount(habit.id, today);
     dismissReminder(reminderId);
   }
 

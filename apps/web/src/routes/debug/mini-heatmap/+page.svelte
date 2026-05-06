@@ -1,14 +1,15 @@
 <script lang="ts">
+  import { SvelteDate } from 'svelte/reactivity';
   import MiniHeatmap from '$lib/components/MiniHeatmap.svelte';
   import { toCompletionKey } from '@/lib/completionKey';
   import type { HabitColor } from '@/types/habit';
 
-  const today = new Date();
+  const today = new SvelteDate();
   const completions: Record<string, number> = {};
 
   // build 30 days of sample completions (randomized for visibility)
   for (let i = 0; i < 30; i++) {
-    const d = new Date(today);
+    const d = new SvelteDate(today.getTime());
     d.setUTCDate(d.getUTCDate() - (29 - i));
     completions[toCompletionKey(d)] = Math.random() > 0.5 ? 1 : 0;
   }

@@ -37,6 +37,7 @@ export interface HabitsStore extends Readable<HabitsSnapshot> {
   setUserId: (userId: string) => void;
   toggleCompletion: (habitId: string, date?: string) => Promise<ToggleCompletionResult>;
   setCompletionCount: (habitId: string, date: string, count: number) => Promise<ToggleCompletionResult>;
+  incrementCompletionCount: (habitId: string, date: string) => Promise<AdvanceCompletionResult>;
   advanceCompletionCount: (habitId: string, date: string) => Promise<AdvanceCompletionResult>;
   addHabit: (data: HabitUpsertInput) => Promise<string>;
   updateHabit: (id: string, data: Partial<Habit>) => Promise<void>;
@@ -348,11 +349,19 @@ async function advanceCompletionCountImpl(
   date: string,
   allHabits: Habit[]
 ): Promise<AdvanceCompletionResult> {
+  return incrementCompletionCountImpl(habitId, date, allHabits);
+}
+
+async function incrementCompletionCountImpl(
+  habitId: string,
+  date: string,
+  allHabits: Habit[]
+): Promise<AdvanceCompletionResult> {
   const userId = getCurrentUserId();
   return runSerializedCompletionMutation(habitId, userId, async () => {
     const target = await resolveHabitDailyTarget(habitId, allHabits);
     const previousCount = await getPersistedCompletionCount(habitId, date, userId);
-    const nextCount = previousCount >= target ? 0 : previousCount + 1;
+    const nextCount = previousCount + 1;
     const result = await applyCompletionCountChange(habitId, date, nextCount);
     return {
       ...result,
@@ -413,6 +422,9 @@ export function createHabitsStore(initialUserId = getCurrentUserId()): HabitsSto
     },
     setCompletionCount(habitId: string, date: string, count: number) {
       return setCompletionCountImpl(habitId, date, count, get(store).allHabits);
+    },
+    incrementCompletionCount(habitId: string, date: string) {
+      return incrementCompletionCountImpl(habitId, date, get(store).allHabits);
     },
     advanceCompletionCount(habitId: string, date: string) {
       return advanceCompletionCountImpl(habitId, date, get(store).allHabits);

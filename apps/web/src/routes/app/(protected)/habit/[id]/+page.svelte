@@ -37,8 +37,6 @@
   const dailyTarget = $derived(habit ? Math.max(1, habit.dailyTarget ?? 1) : 1);
   const todayCompletionCount = $derived(habit ? (habit.completions[todayKey] ?? 0) : 0);
   const completionEntryCount = $derived(habit ? Object.keys(habit.completions).length : 0);
-  const completedToday = $derived(todayCompletionCount >= dailyTarget);
-  const canIncrement = $derived(todayCompletionCount < dailyTarget);
   const isTodayFrozen = $derived(habit ? habit.freezeDays.includes(todayFreezeKey) : false);
   let detailConfetti: ConfettiFn | null = null;
   let detailAnimating = $state(false);
@@ -117,71 +115,69 @@
       return;
     }
 
-    const previousCount = habit.completions[todayKey] ?? 0;
-    const nextCount = Math.min(dailyTarget, previousCount + 1);
+    const result = await habitsStore.incrementCompletionCount(habit.id, todayKey);
+    const nextCount = result.count;
+    const previousCount = result.previousCount;
 
-    if (nextCount > previousCount) {
-      detailAnimating = true;
-      detailCelebrationLabel = getCelebrationLabel(nextCount, dailyTarget);
-      const burst = buildCelebrationParticles({
-        startId: detailParticleCounter,
-        colors: [accent?.hex ?? '#f8fafc', '#fff7ed', '#fbbf24'],
-        count: 12,
-        spread: 30,
-        lift: 18
-      });
-      detailParticles = burst.particles;
-      detailParticleCounter = burst.nextId;
+    detailAnimating = true;
+    detailCelebrationLabel = getCelebrationLabel(nextCount, dailyTarget);
+    const burst = buildCelebrationParticles({
+      startId: detailParticleCounter,
+      colors: [accent?.hex ?? '#f8fafc', '#fff7ed', '#fbbf24'],
+      count: 12,
+      spread: 30,
+      lift: 18
+    });
+    detailParticles = burst.particles;
+    detailParticleCounter = burst.nextId;
 
-      const currentStreak = calculateScheduledStreak(habit, habit.completions).current;
-      const isMilestone = nextCount >= dailyTarget && isPhaseTransition(currentStreak + 1);
-      setTimeout(async () => {
-        try {
-          const launch = await getDetailConfetti();
-          if (isMilestone) {
-            void launch({
-              particleCount: 180,
-              spread: 165,
-              startVelocity: 42,
-              origin: { y: 0.18 },
-              colors: [accent?.hex ?? '#f8fafc', '#fbbf24', '#fff7ed'],
-              zIndex: 1000
-            });
-          } else {
-            void launch({
-              particleCount: 24,
-              angle: 60,
-              spread: 82,
-              startVelocity: 28,
-              origin: { x: 0.42, y: 0.2 },
-              colors: [accent?.hex ?? '#f8fafc', '#fff7ed', '#fbbf24'],
-              scalar: 0.86,
-              zIndex: 900
-            });
-            void launch({
-              particleCount: 24,
-              angle: 120,
-              spread: 82,
-              startVelocity: 28,
-              origin: { x: 0.58, y: 0.2 },
-              colors: [accent?.hex ?? '#f8fafc', '#fff7ed', '#fbbf24'],
-              scalar: 0.86,
-              zIndex: 900
-            });
-          }
-        } catch {
-          // ignore confetti errors (visual only)
+    const currentStreak = calculateScheduledStreak(habit, habit.completions).current;
+    const isMilestone = previousCount < dailyTarget && nextCount >= dailyTarget && isPhaseTransition(currentStreak + 1);
+    setTimeout(async () => {
+      try {
+        const launch = await getDetailConfetti();
+        if (isMilestone) {
+          void launch({
+            particleCount: 180,
+            spread: 165,
+            startVelocity: 42,
+            origin: { y: 0.18 },
+            colors: [accent?.hex ?? '#f8fafc', '#fbbf24', '#fff7ed'],
+            zIndex: 1000
+          });
+        } else {
+          void launch({
+            particleCount: 24,
+            angle: 60,
+            spread: 82,
+            startVelocity: 28,
+            origin: { x: 0.42, y: 0.2 },
+            colors: [accent?.hex ?? '#f8fafc', '#fff7ed', '#fbbf24'],
+            scalar: 0.86,
+            zIndex: 900
+          });
+          void launch({
+            particleCount: 24,
+            angle: 120,
+            spread: 82,
+            startVelocity: 28,
+            origin: { x: 0.58, y: 0.2 },
+            colors: [accent?.hex ?? '#f8fafc', '#fff7ed', '#fbbf24'],
+            scalar: 0.86,
+            zIndex: 900
+          });
         }
-      }, 180);
+      } catch {
+        // ignore confetti errors (visual only)
+      }
+    }, 180);
 
-      setTimeout(() => {
-        detailAnimating = false;
-        detailCelebrationLabel = '';
-        detailParticles = [];
-      }, 900);
-    }
+    setTimeout(() => {
+      detailAnimating = false;
+      detailCelebrationLabel = '';
+      detailParticles = [];
+    }, 900);
 
-    await habitsStore.setCompletionCount(habit.id, todayKey, nextCount);
     undoStore.push({
       message: `Progress ${nextCount}/${dailyTarget}: ${habit.name}`,
       actionLabel: 'Undo',
@@ -299,18 +295,17 @@
             {/if}
             <button
               type="button"
-              class="relative overflow-hidden rounded border px-3 py-1.5 text-xs font-mono font-medium transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-40 {completedToday ? 'border-border bg-transparent text-muted' : 'font-bold text-bg-primary'} {detailAnimating ? 'animate-check-pulse animate-glow-burst' : ''}"
-              style={!completedToday ? `background-color: ${accent.hex}; border-color: ${accent.hex}; box-shadow: 0 0 16px ${accent.glow};` : ''}
+              class="relative overflow-hidden rounded border px-3 py-1.5 text-xs font-mono font-bold text-bg-primary transition-all duration-200 {detailAnimating ? 'animate-check-pulse animate-glow-burst' : ''}"
+              style={`background-color: ${accent.hex}; border-color: ${accent.hex}; box-shadow: 0 0 16px ${accent.glow};`}
               onclick={() => {
                 void handleIncrementCompletion();
               }}
-              disabled={!canIncrement}
-              aria-label={completedToday ? 'Habit completed today' : 'Mark as completed today'}
+              aria-label={`Add one completion for ${habit.name}`}
             >
               {#if detailAnimating}
                 <span class="completion-sheen" style="--sheen-color: {accent.hex}"></span>
               {/if}
-              {completedToday ? 'Done' : 'Add +1'}
+              Add +1
             </button>
           </div>
 
