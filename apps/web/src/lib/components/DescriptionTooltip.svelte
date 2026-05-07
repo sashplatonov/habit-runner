@@ -103,11 +103,17 @@
 
   // Handle touch events for mobile swipe-down to close
   let touchStartY = 0;
+  let touchHandled = false;
   function handleTouchStart(e: TouchEvent) {
+    // Only handle swipe on the drag handle (top bar), not the whole modal
+    const target = e.target as HTMLElement;
+    if (!target.closest('.cursor-grab')) return;
     touchStartY = e.touches[0].clientY;
+    touchHandled = true;
   }
   function handleTouchEnd(e: TouchEvent) {
-    if (!isMobile) return;
+    if (!isMobile || !touchHandled) return;
+    touchHandled = false;
     const touchEndY = e.changedTouches[0].clientY;
     const diff = touchEndY - touchStartY;
     // Swipe down more than 50px to close
@@ -129,13 +135,13 @@
   type="button"
   class="inline-flex h-4 w-4 flex-shrink-0 cursor-help items-center justify-center rounded border border-dashed border-muted font-mono text-[9px] text-muted transition-colors hover:border-foreground hover:text-foreground"
   onmouseenter={() => {
-    if (!show) {
+    if (!isMobile && !show) {
       open();
     }
   }}
   onmouseleave={() => {
-    // Start close timer when leaving trigger
-    if (show && !isHovering) {
+    // Start close timer when leaving trigger (only on desktop)
+    if (!isMobile && show && !isHovering) {
       startCloseTimer();
     }
   }}
@@ -146,6 +152,10 @@
     } else {
       open();
     }
+  }}
+  ontouchstart={(e) => {
+    // Prevent mouseenter from firing on touch devices
+    e.stopPropagation();
   }}
   aria-label="Description"
 >
@@ -163,8 +173,6 @@
       role="dialog"
       aria-label="Description"
       tabindex="-1"
-      ontouchstart={handleTouchStart}
-      ontouchend={handleTouchEnd}
       onclick={(e) => { e.stopPropagation(); }}
       onkeydown={(e) => {
         if (e.key === 'Escape') {
@@ -172,7 +180,7 @@
         }
       }}
     >
-      <div class="flex justify-center pb-1 pt-2 cursor-grab active:cursor-grabbing" role="presentation" aria-hidden="true">
+      <div class="flex justify-center pb-1 pt-2 cursor-grab active:cursor-grabbing" role="presentation" aria-hidden="true" ontouchstart={handleTouchStart} ontouchend={handleTouchEnd}>
         <div class="h-[2px] w-8 rounded-full bg-foreground opacity-25"></div>
       </div>
       <div class="markdown-content break-words px-4 pb-6 text-[11px] leading-[1.6] text-foreground">{@html renderedDescription}</div>
