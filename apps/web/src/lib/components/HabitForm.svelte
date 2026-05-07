@@ -256,7 +256,12 @@
 
   function handleCustomIconInput(event: Event) {
     const value = (event.currentTarget as HTMLInputElement).value;
-    icon = Array.from(value).pop() ?? '';
+    // Use the entire input value as the custom icon.
+    // The input is meant for a single emoji, so we take the whole value.
+    // Modern browsers insert the full emoji (including variation selectors)
+    // when using the OS emoji picker, so this handles multi-code-point
+    // emojis like ✍️ (U+270D + U+FE0F) correctly.
+    icon = value;
   }
 
   function addTag(rawTag: string) {
