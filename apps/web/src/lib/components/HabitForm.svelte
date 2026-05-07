@@ -500,13 +500,13 @@
         </div>
 
         <div>
-          <label class="mb-2 block text-[10px] font-mono uppercase tracking-wider text-muted" for="habit-description">Description</label>
+          <label class="mb-2 block text-[10px] font-mono uppercase tracking-wider text-muted" for="habit-description">Description <span class="text-border-hover">(supports Markdown)</span></label>
           <textarea
             id="habit-description"
             bind:value={description}
             maxlength="400"
             rows="6"
-            placeholder="Brief description..."
+            placeholder="Brief description... (supports **bold**, *italic*, lists, etc.)"
             class="w-full resize-none overflow-y-auto rounded-lg border border-border bg-bg-secondary px-3 py-2.5 text-sm text-foreground placeholder-border-hover transition-all focus:border-accent/50 focus:outline-none focus:shadow-[0_0_12px_var(--glow)]"
           ></textarea>
         </div>

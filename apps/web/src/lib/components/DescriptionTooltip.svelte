@@ -1,5 +1,7 @@
 <script lang="ts">
   import { portal } from '$lib/actions/portal';
+  import { marked } from 'marked';
+  import DOMPurify from 'dompurify';
 
   type Placement = 'above' | 'below';
 
@@ -8,6 +10,15 @@
   };
 
   const { description }: Props = $props();
+
+  const renderedDescription = $derived.by(() => {
+    try {
+      const html = marked.parse(description) as string;
+      return DOMPurify.sanitize(html);
+    } catch {
+      return description;
+    }
+  });
 
   let show = $state(false);
   let ready = $state(false);
@@ -104,7 +115,7 @@
       <div class="flex justify-center pb-1 pt-2">
         <div class="h-[2px] w-8 rounded-full bg-foreground opacity-25"></div>
       </div>
-      <p class="whitespace-pre-wrap break-words px-3 pb-3 text-[11px] leading-[1.6] text-foreground">{description}</p>
+      <div class="markdown-content break-words px-3 pb-3 text-[11px] leading-[1.6] text-foreground">{@html renderedDescription}</div>
     </div>
     <div
       class="absolute left-1/2 h-0 w-0 -translate-x-1/2"
@@ -115,3 +126,67 @@
     ></div>
   </div>
 {/if}
+
+<style>
+  :global(.markdown-content) {
+    word-break: break-word;
+  }
+  :global(.markdown-content p) {
+    margin: 0 0 0.4em;
+  }
+  :global(.markdown-content p:last-child) {
+    margin-bottom: 0;
+  }
+  :global(.markdown-content ul),
+  :global(.markdown-content ol) {
+    margin: 0 0 0.4em;
+    padding-left: 1.2em;
+  }
+  :global(.markdown-content li) {
+    margin-bottom: 0.2em;
+  }
+  :global(.markdown-content code) {
+    background: color-mix(in srgb, var(--accent) 12%, transparent);
+    padding: 0.1em 0.3em;
+    border-radius: 3px;
+    font-size: 0.95em;
+  }
+  :global(.markdown-content pre) {
+    background: color-mix(in srgb, var(--accent) 8%, transparent);
+    padding: 0.5em 0.7em;
+    border-radius: 6px;
+    overflow-x: auto;
+    margin: 0.4em 0;
+    font-size: 0.95em;
+  }
+  :global(.markdown-content pre code) {
+    background: none;
+    padding: 0;
+  }
+  :global(.markdown-content strong) {
+    font-weight: 600;
+  }
+  :global(.markdown-content em) {
+    font-style: italic;
+  }
+  :global(.markdown-content a) {
+    color: var(--accent);
+    text-decoration: underline;
+  }
+  :global(.markdown-content h1),
+  :global(.markdown-content h2),
+  :global(.markdown-content h3) {
+    margin: 0.6em 0 0.3em;
+    font-weight: 600;
+    line-height: 1.3;
+  }
+  :global(.markdown-content h1) { font-size: 1.1em; }
+  :global(.markdown-content h2) { font-size: 1.05em; }
+  :global(.markdown-content h3) { font-size: 1em; }
+  :global(.markdown-content blockquote) {
+    border-left: 3px solid color-mix(in srgb, var(--accent) 40%, transparent);
+    padding-left: 0.6em;
+    margin: 0.4em 0;
+    color: color-mix(in srgb, var(--foreground) 70%, transparent);
+  }
+</style>

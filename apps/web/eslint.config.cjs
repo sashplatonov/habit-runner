@@ -78,6 +78,8 @@ module.exports = [
       'no-alert': 'error',
       'no-console': 'error',
       'no-debugger': 'error',
+      // Allow @html in DescriptionTooltip.svelte since we sanitize with DOMPurify
+      'svelte/no-at-html-tags': 'off',
     },
   },
 ];
