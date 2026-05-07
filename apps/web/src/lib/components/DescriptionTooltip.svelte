@@ -26,6 +26,8 @@
   let anchor = $state({ cx: 0, triggerTop: 0, triggerBottom: 0 });
   let triggerEl = $state<HTMLButtonElement | null>(null);
   let panelEl = $state<HTMLDivElement | null>(null);
+  let closeTimer: ReturnType<typeof setTimeout> | null = null;
+  let isHovering = $state(false);
 
   const isMobile = $derived.by(() => {
     if (typeof window === 'undefined') return false;
@@ -52,6 +54,22 @@
   const top = $derived(isMobile ? undefined : (placement === 'above' ? anchor.triggerTop - 10 : anchor.triggerBottom + 10));
   const transform = $derived(isMobile ? 'none' : (placement === 'above' ? 'translate(-50%, -100%)' : 'translate(-50%, 0)'));
 
+  function clearCloseTimer() {
+    if (closeTimer) {
+      clearTimeout(closeTimer);
+      closeTimer = null;
+    }
+  }
+
+  function startCloseTimer() {
+    clearCloseTimer();
+    closeTimer = setTimeout(() => {
+      if (!isHovering) {
+        show = false;
+      }
+    }, 3000);
+  }
+
   function open() {
     const el = triggerEl;
     if (!el) {
@@ -66,6 +84,12 @@
     placement = 'above';
     ready = false;
     show = true;
+    clearCloseTimer();
+  }
+
+  function close() {
+    show = false;
+    clearCloseTimer();
   }
 
   $effect(() => {
@@ -91,18 +115,34 @@
       show = false;
     }
   }
+
+  // Cleanup timer on destroy
+  $effect(() => {
+    return () => {
+      clearCloseTimer();
+    };
+  });
 </script>
 
 <button
   bind:this={triggerEl}
   type="button"
   class="inline-flex h-4 w-4 flex-shrink-0 cursor-help items-center justify-center rounded border border-dashed border-muted font-mono text-[9px] text-muted transition-colors hover:border-foreground hover:text-foreground"
-  onmouseenter={open}
-  onmouseleave={() => { show = false; }}
+  onmouseenter={() => {
+    if (!show) {
+      open();
+    }
+  }}
+  onmouseleave={() => {
+    // Start close timer when leaving trigger
+    if (show && !isHovering) {
+      startCloseTimer();
+    }
+  }}
   onclick={(e) => {
     e.stopPropagation();
     if (show) {
-      show = false;
+      close();
     } else {
       open();
     }
@@ -159,18 +199,34 @@
       style:overflow-y="auto"
       role="tooltip"
       tabindex="-1"
-      onmouseenter={() => { show = true; }}
-      onmouseleave={() => { show = false; }}
+      onmouseenter={() => {
+        isHovering = true;
+        clearCloseTimer();
+      }}
+      onmouseleave={() => {
+        isHovering = false;
+        startCloseTimer();
+      }}
       onclick={(e) => { e.stopPropagation(); }}
       onkeydown={(e) => {
         if (e.key === 'Escape') {
-          show = false;
+          close();
         }
       }}
     >
       <div class="overflow-hidden rounded-2xl border border-border/60 bg-bg-card shadow-[0_8px_32px_rgba(0,0,0,0.28)] backdrop-blur-sm">
-        <div class="flex justify-center pb-1 pt-2">
-          <div class="h-[2px] w-8 rounded-full bg-foreground opacity-25"></div>
+        <div class="flex items-center justify-between px-3 pt-2 pb-1">
+          <div class="flex justify-center flex-1">
+            <div class="h-[2px] w-8 rounded-full bg-foreground opacity-25"></div>
+          </div>
+          <button
+            type="button"
+            class="ml-2 -mr-1 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded hover:bg-foreground/10"
+            onclick={() => { close(); }}
+            aria-label="Close"
+          >
+            <span class="text-[10px] font-mono leading-none">✕</span>
+          </button>
         </div>
         <div class="markdown-content break-words px-3 pb-3 text-[11px] leading-[1.6] text-foreground">{@html renderedDescription}</div>
       </div>

@@ -253,7 +253,6 @@
             <h1 class="break-words text-base font-semibold text-foreground sm:truncate">{habit.name}</h1>
             {#if habit.description}
               <div class="flex min-w-0 items-center gap-1">
-                <p class="truncate text-[11px] text-muted">{habit.description}</p>
                 <DescriptionTooltip description={habit.description} />
               </div>
             {/if}
