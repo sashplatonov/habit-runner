@@ -256,7 +256,12 @@
 
   function handleCustomIconInput(event: Event) {
     const value = (event.currentTarget as HTMLInputElement).value;
-    icon = Array.from(value).pop() ?? '';
+    // Use the entire input value as the custom icon.
+    // The input is meant for a single emoji, so we take the whole value.
+    // Modern browsers insert the full emoji (including variation selectors)
+    // when using the OS emoji picker, so this handles multi-code-point
+    // emojis like ✍️ (U+270D + U+FE0F) correctly.
+    icon = value;
   }
 
   function addTag(rawTag: string) {
@@ -500,13 +505,13 @@
         </div>
 
         <div>
-          <label class="mb-2 block text-[10px] font-mono uppercase tracking-wider text-muted" for="habit-description">Description</label>
+          <label class="mb-2 block text-[10px] font-mono uppercase tracking-wider text-muted" for="habit-description">Description <span class="text-border-hover">(supports Markdown)</span></label>
           <textarea
             id="habit-description"
             bind:value={description}
             maxlength="400"
             rows="6"
-            placeholder="Brief description..."
+            placeholder="Brief description... (supports **bold**, *italic*, lists, etc.)"
             class="w-full resize-none overflow-y-auto rounded-lg border border-border bg-bg-secondary px-3 py-2.5 text-sm text-foreground placeholder-border-hover transition-all focus:border-accent/50 focus:outline-none focus:shadow-[0_0_12px_var(--glow)]"
           ></textarea>
         </div>

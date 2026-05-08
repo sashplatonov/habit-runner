@@ -40,14 +40,9 @@ function createHabit(overrides: Partial<Habit> = {}): Habit {
 }
 
 describe('HabitForm', () => {
-  beforeEach(() => {
-    vi.useFakeTimers();
-    vi.setSystemTime(new Date('2026-04-15T12:00:00.000Z'));
-  });
-
-  afterEach(() => {
-    vi.useRealTimers();
-  });
+  // Disable fake timers for simplicity; the component does not heavily depend on real timing in these tests.
+  // If needed, individual tests can set up fake timers locally.
+});
 
   it('shows and dismisses the soft-limit warning for over-limit create flows', async () => {
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTimeAsync });
@@ -124,5 +119,123 @@ describe('HabitForm', () => {
       reminderTime: '08:30',
       reminderEnabled: true
     }));
+  });
+
+  describe('emoji handling', () => {
+    it('accepts a simple emoji as custom icon', async () => {
+      const user = userEvent.setup();
+      const onSubmit = vi.fn().mockResolvedValue(undefined);
+
+      render(HabitForm, {
+        props: {
+          mode: 'create',
+          allHabits: [],
+          onBack: vi.fn(),
+          onSubmit
+        }
+      });
+
+      const customIconInput = screen.getByPlaceholderText('Own...') as HTMLInputElement;
+      await user.type(customIconInput, '🎯');
+
+      expect(customIconInput.value).toBe('🎯');
+
+      await user.type(screen.getByLabelText('Name *'), 'Test Habit');
+      await user.click(screen.getByRole('button', { name: 'Create' }));
+
+      await waitFor(() => {
+        expect(onSubmit).toHaveBeenCalledTimes(1);
+      });
+
+      expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({
+        icon: '🎯'
+      }));
+    });
+
+    it('accepts a compound emoji (writing hand with variation selector) as custom icon', async () => {
+      const user = userEvent.setup();
+      const onSubmit = vi.fn().mockResolvedValue(undefined);
+
+      render(HabitForm, {
+        props: {
+          mode: 'create',
+          allHabits: [],
+          onBack: vi.fn(),
+          onSubmit
+        }
+      });
+
+      const customIconInput = screen.getByPlaceholderText('Own...') as HTMLInputElement;
+      // ✍️ is U+270D + U+FE0F (writing hand + variation selector-16)
+      await user.type(customIconInput, '✍️');
+
+      // Should preserve the full compound emoji, not just the last code point
+      expect(customIconInput.value).toBe('✍️');
+
+      await user.type(screen.getByLabelText('Name *'), 'Writing Habit');
+      await user.click(screen.getByRole('button', { name: 'Create' }));
+
+      await waitFor(() => {
+        expect(onSubmit).toHaveBeenCalledTimes(1);
+      });
+
+      expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({
+        icon: '✍️'
+      }));
+    });
+
+    it('accepts a flag emoji (regional indicator pair) as custom icon', async () => {
+      const user = userEvent.setup();
+      const onSubmit = vi.fn().mockResolvedValue(undefined);
+
+      render(HabitForm, {
+        props: {
+          mode: 'create',
+          allHabits: [],
+          onBack: vi.fn(),
+          onSubmit
+        }
+      });
+
+      const customIconInput = screen.getByPlaceholderText('Own...') as HTMLInputElement;
+      // 🇺🇸 is U+1F1FA (regional indicator U) + U+1F1F8 (regional indicator S)
+      await user.type(customIconInput, '🇺🇸');
+
+      expect(customIconInput.value).toBe('🇺🇸');
+
+      await user.type(screen.getByLabelText('Name *'), 'USA Habit');
+      await user.click(screen.getByRole('button', { name: 'Create' }));
+
+      await waitFor(() => {
+        expect(onSubmit).toHaveBeenCalledTimes(1);
+      });
+
+      expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({
+        icon: '🇺🇸'
+      }));
+    });
+
+    it('replaces icon when a preset icon is clicked after typing a custom one', async () => {
+      const user = userEvent.setup();
+      const onSubmit = vi.fn().mockResolvedValue(undefined);
+
+      render(HabitForm, {
+        props: {
+          mode: 'create',
+          allHabits: [],
+          onBack: vi.fn(),
+          onSubmit
+        }
+      });
+
+      const customIconInput = screen.getByPlaceholderText('Own...') as HTMLInputElement;
+      await user.type(customIconInput, '🎯');
+      expect(customIconInput.value).toBe('🎯');
+
+      // Click on the first preset icon (⚡)
+      await user.click(screen.getByRole('button', { name: 'Use ⚡ as habit icon' }));
+
+      expect(customIconInput.value).toBe('');
+    });
   });
 });

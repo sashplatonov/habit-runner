@@ -250,13 +250,12 @@
           <span class="flex-shrink-0 text-xl">{habit.icon}</span>
 
           <div class="min-w-0 flex-1">
-            <h1 class="break-words text-base font-semibold text-foreground sm:truncate">{habit.name}</h1>
-            {#if habit.description}
-              <div class="flex min-w-0 items-center gap-1">
-                <p class="truncate text-[11px] text-muted">{habit.description}</p>
+            <div class="flex items-center gap-1">
+              <h1 class="break-words text-base font-semibold text-foreground sm:truncate">{habit.name}</h1>
+              {#if habit.description}
                 <DescriptionTooltip description={habit.description} />
-              </div>
-            {/if}
+              {/if}
+            </div>
           </div>
         </div>
 

@@ -307,7 +307,7 @@ class SyncProcessorCoverageTest extends AuthenticatedApiTestSupport {
   private HabitEntity createHabit(String habitId, String ownerId, Instant updatedAt) throws Exception {
     return inTransaction(() -> {
       var habit = new HabitEntity();
-      habit.id = habitId;
+      habit.setId(habitId);
       habit.userId = ownerId;
       habit.name = "Persisted Habit";
       habit.frequency = HabitFrequency.DAILY;

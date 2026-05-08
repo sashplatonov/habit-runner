@@ -40,7 +40,8 @@ docs/
 │   ├── github-automation.md
 │   └── reliability-rollout.md
 ├── project/
-│   └── health.md
+│   ├── health.md
+│   └── ui-ux-backlog.md
 └── setup/
     ├── getting-started.md
     └── web-push-setup.md
@@ -62,6 +63,7 @@ docs/
 | [operations/github-automation.md](./operations/github-automation.md) | Renovate state and manual security scan guidance |
 | [monitoring/grafana-cloud.md](./monitoring/grafana-cloud.md) | Grafana Cloud integration notes for the backend |
 | [project/health.md](./project/health.md) | Quality gates, tests, repo-level verification habits |
+| [project/ui-ux-backlog.md](./project/ui-ux-backlog.md) | UI/UX, maintainability, and UI-code quality backlog tied to current `apps/web` files |
 | [features/chart-tooltips.md](./features/chart-tooltips.md) | UX contract for chart guide tooltips |
 
 [↑ Back to top](#top)
