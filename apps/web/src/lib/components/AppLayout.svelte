@@ -37,7 +37,7 @@
     <main
       id="main-content"
       tabindex="-1"
-      class="focus:outline-none sm:!pb-0"
+      class="sm:!pb-0"
       style:padding-top="var(--safe-area-inset-top, 0px)"
       style:padding-bottom="calc(72px + var(--safe-area-inset-bottom, 0px))"
     >

@@ -55,7 +55,7 @@
   <div class="min-h-screen bg-bg-primary">
     <div class="mx-auto max-w-lg px-4 py-12 text-center text-sm font-mono text-muted" role="status" aria-live="polite">
       <h2 class="sr-only">Loading</h2>
-      Loading habit...
+      Loading habit…
     </div>
   </div>
 {:else if !habit}

@@ -2,6 +2,12 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Global focus-visible contract */
+*:focus-visible {
+  outline: 2px solid var(--accent, #00d4ff);
+  outline-offset: 2px;
+}
+
 :root, [data-theme="midnight"] {
   --bg-primary: #080810;
   --bg-secondary: #0f0f1a;

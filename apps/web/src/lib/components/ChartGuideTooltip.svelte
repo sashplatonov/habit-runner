@@ -1,6 +1,7 @@
 <script lang="ts">
   import { portal } from '$lib/actions/portal';
   import { BarChart3, CircleHelp, Grid2x2, TrendingUp, X } from 'lucide-svelte';
+  import { openOverlay, closeActiveOverlay } from '$lib/components/overlays/overlayManager';
 
   type ChartGuideVariant = 'bars' | 'line' | 'grid' | 'columns';
 
@@ -69,7 +70,25 @@
     position = { left, top };
   }
 
+  // Use unified overlay contract for accessibility
+  // Note: overlayManager handles outside-click and Escape automatically
   $effect(() => {
+    if (open && panelEl) {
+      openOverlay({
+        triggerEl,
+        panelEl,
+        open: true,
+        onClose: closePanel,
+        closeOnEscape: true,
+        closeOnOutsideClick: true,
+        trapFocus: true,
+        restoreFocus: true,
+        lockScroll: false,
+      });
+    } else if (!open) {
+      closeActiveOverlay();
+    }
+
     if (!open) return;
 
     // Delay to let panel render
@@ -78,26 +97,11 @@
     window.addEventListener('resize', updatePosition);
     window.addEventListener('scroll', updatePosition, true);
 
-    function onPointerDown(e: PointerEvent) {
-      const target = e.target as Node | null;
-      if (triggerEl?.contains(target) || panelEl?.contains(target)) return;
-      closePanel();
-    }
-
-    function onKeyDown(e: KeyboardEvent) {
-      if (e.key === 'Escape') closePanel();
-    }
-
-    window.addEventListener('pointerdown', onPointerDown);
-    window.addEventListener('keydown', onKeyDown);
-
     return () => {
       cancelAnimationFrame(raf);
       clearHoverCloseTimer();
       window.removeEventListener('resize', updatePosition);
       window.removeEventListener('scroll', updatePosition, true);
-      window.removeEventListener('pointerdown', onPointerDown);
-      window.removeEventListener('keydown', onKeyDown);
     };
   });
 </script>
@@ -135,14 +139,13 @@
     class="fixed z-[240] w-72 max-w-[calc(100vw-1.5rem)] rounded-3xl border border-border bg-bg-card p-3 text-left shadow-[0_18px_60px_rgba(0,0,0,0.32)]"
     style:left="{position.left}px"
     style:top="{position.top}px"
-    onclick={(e) => { e.stopPropagation(); }}
-    onkeydown={(e) => { e.stopPropagation(); }}
-    onmouseenter={previewOpen}
-    onmouseleave={previewClose}
-    tabindex="-1"
     role="dialog"
     aria-modal="true"
     aria-label="{title} explanation"
+    tabindex="-1"
+    onclick={(e) => { e.stopPropagation(); }}
+    onmouseenter={previewOpen}
+    onmouseleave={previewClose}
   >
     <!-- Header -->
     <div class="mb-3 flex items-center gap-2">

@@ -323,9 +323,9 @@
                   <Search size={14} class="absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
                   <input
                     type="text"
-                    placeholder="Search habits..."
+                    placeholder="Search habits…"
                     bind:value={searchQuery}
-                    class="w-full rounded-lg border border-border bg-bg-card py-2.5 pl-9 pr-3 text-sm text-foreground placeholder:text-muted focus:border-accent/50 focus:outline-none"
+                    class="w-full rounded-lg border border-border bg-bg-card py-2.5 pl-9 pr-3 text-sm text-foreground placeholder:text-muted focus:border-accent/50"
                   />
                 </div>
                 <div class="flex rounded-lg border border-border bg-bg-card p-1">

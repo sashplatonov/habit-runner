@@ -3,7 +3,7 @@
     label?: string;
   };
 
-  let { label = 'Loading...' }: Props = $props();
+  let { label = 'Loading…' }: Props = $props();
 </script>
 
 <div class="flex items-center gap-2 py-2 text-xs font-mono text-muted" role="status">

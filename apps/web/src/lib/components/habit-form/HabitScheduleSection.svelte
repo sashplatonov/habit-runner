@@ -206,7 +206,7 @@
             min="1"
             max="7"
             value={schedule.timesPerWeek}
-            class="w-16 rounded-lg border border-border bg-bg-secondary px-3 py-2 text-sm font-mono focus:border-accent/60 focus:outline-none"
+            class="w-16 rounded-lg border border-border bg-bg-secondary px-3 py-2 text-sm font-mono focus:border-accent/60"
             oninput={(event) => {
               setWeeklyQuota(Number((event.currentTarget as HTMLInputElement).value));
             }}
@@ -288,7 +288,7 @@
             min="1"
             max="31"
             value={schedule.timesPerMonth}
-            class="w-20 rounded-lg border border-border bg-bg-secondary px-3 py-2 text-sm font-mono focus:border-accent/60 focus:outline-none"
+            class="w-20 rounded-lg border border-border bg-bg-secondary px-3 py-2 text-sm font-mono focus:border-accent/60"
             oninput={(event) => {
               setMonthlyQuota(Number((event.currentTarget as HTMLInputElement).value));
             }}

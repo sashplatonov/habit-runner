@@ -44,7 +44,7 @@
       max={DAILY_TARGET_MAX}
       value={dailyTarget}
       oninput={handleDailyTargetInput}
-      class="w-20 rounded-lg border border-border bg-bg-secondary px-3 py-2 text-center text-sm font-mono tabular-nums text-foreground transition-all focus:border-accent/50 focus:outline-none"
+      class="w-20 rounded-lg border border-border bg-bg-secondary px-3 py-2 text-center text-sm font-mono tabular-nums text-foreground transition-all focus:border-accent/50"
     />
     <span class="text-[10px] font-mono text-muted">times/day</span>
   </div>
@@ -65,7 +65,7 @@
       max="365"
       value={targetStreak}
       oninput={handleTargetStreakInput}
-      class="w-20 rounded-lg border border-border bg-bg-secondary px-3 py-2 text-center text-sm font-mono tabular-nums text-foreground transition-all focus:border-accent/50 focus:outline-none"
+      class="w-20 rounded-lg border border-border bg-bg-secondary px-3 py-2 text-center text-sm font-mono tabular-nums text-foreground transition-all focus:border-accent/50"
     />
     <span class="text-[10px] font-mono text-muted">days</span>
   </div>

@@ -79,7 +79,7 @@
   function getStatusLabel(currentStatus?: string) {
     switch (currentStatus) {
       case 'syncing':
-        return 'Syncing...';
+        return 'Syncing…';
       case 'offline':
         return 'Offline - changes queued';
       case 'error':

@@ -253,7 +253,7 @@
   function getStatusLabel(currentStatus?: string) {
     switch (currentStatus) {
       case 'syncing':
-        return 'Syncing...';
+        return 'Syncing…';
       case 'offline':
         return 'Offline - changes queued';
       case 'error':
@@ -938,9 +938,9 @@
             <Search size={13} class="absolute left-3 top-1/2 -translate-y-1/2 text-muted pointer-events-none" />
             <input
               type="search"
-              placeholder="Search habits..."
+              placeholder="Search habits…"
               bind:value={searchQuery}
-              class="w-full rounded-xl border border-border bg-bg-secondary py-2.5 pl-8 pr-8 text-sm text-foreground placeholder:text-muted focus:border-accent focus:outline-none"
+              class="w-full rounded-xl border border-border bg-bg-secondary py-2.5 pl-8 pr-8 text-sm text-foreground placeholder:text-muted focus:border-accent"
             />
             {#if searchQuery}
               <button

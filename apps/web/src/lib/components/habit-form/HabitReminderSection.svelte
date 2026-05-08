@@ -19,7 +19,7 @@
       id="habit-reminder"
       type="time"
       bind:value={reminderTime}
-      class="min-h-11 rounded-lg border border-border bg-bg-secondary px-3 py-2 text-sm font-mono transition focus:border-accent/60 focus:outline-none focus:shadow-[0_0_12px_var(--glow)]"
+      class="min-h-11 rounded-lg border border-border bg-bg-secondary px-3 py-2 text-sm font-mono transition focus:border-accent/60 focus:shadow-[0_0_12px_var(--glow)]"
     />
     <button
       type="button"

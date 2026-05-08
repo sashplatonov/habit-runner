@@ -52,7 +52,7 @@
         type="text"
         value={ICONS.includes(icon) ? '' : icon}
         placeholder="Own..."
-        class="w-full rounded-lg border border-border bg-bg-secondary px-2 py-2.5 text-center text-xs font-mono placeholder:text-[10px] focus:border-accent/50 focus:outline-none"
+        class="w-full rounded-lg border border-border bg-bg-secondary px-2 py-2.5 text-center text-xs font-mono placeholder:text-[10px] focus:border-accent/50"
         style={!ICONS.includes(icon) && icon ? `border-color: ${selectedColor.hex}; box-shadow: 0 0 8px ${selectedColor.hex}40;` : ''}
         oninput={handleCustomIconInput}
       />
@@ -68,7 +68,7 @@
         bind:value={name}
         maxlength="40"
         placeholder="e.g. Deep Work"
-        class="w-full rounded-lg border border-border bg-bg-secondary px-3 py-2.5 text-sm font-medium text-foreground placeholder-border-hover transition-all focus:border-accent/50 focus:outline-none focus:shadow-[0_0_12px_var(--glow)]"
+        class="w-full rounded-lg border border-border bg-bg-secondary px-3 py-2.5 text-sm font-medium text-foreground placeholder-border-hover transition-all focus:border-accent/50 focus:shadow-[0_0_12px_var(--glow)]"
         style={errors.name ? 'border-color: var(--accent-secondary);' : ''}
       />
       {#if errors.name}
@@ -84,7 +84,7 @@
         maxlength="400"
         rows="6"
         placeholder="Brief description... (supports **bold**, *italic*, lists, etc.)"
-        class="w-full resize-none overflow-y-auto rounded-lg border border-border bg-bg-secondary px-3 py-2.5 text-sm text-foreground placeholder-border-hover transition-all focus:border-accent/50 focus:outline-none focus:shadow-[0_0_12px_var(--glow)]"
+        class="w-full resize-none overflow-y-auto rounded-lg border border-border bg-bg-secondary px-3 py-2.5 text-sm text-foreground placeholder-border-hover transition-all focus:border-accent/50 focus:shadow-[0_0_12px_var(--glow)]"
       ></textarea>
     </div>
   </div>

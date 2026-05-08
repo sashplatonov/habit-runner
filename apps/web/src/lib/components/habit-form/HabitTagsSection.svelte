@@ -71,7 +71,7 @@
       placeholder="Add tag..."
       maxlength="20"
       disabled={tags.length >= 5}
-      class="flex-1 rounded-lg border border-border bg-bg-secondary px-3 py-2 text-xs font-mono text-foreground placeholder-border-hover transition-all focus:border-accent/50 focus:outline-none disabled:opacity-40"
+      class="flex-1 rounded-lg border border-border bg-bg-secondary px-3 py-2 text-xs font-mono text-foreground placeholder-border-hover transition-all focus:border-accent/50 disabled:opacity-40"
       onkeydown={(event) => {
         if (event.key === 'Enter' || event.key === ',') {
           event.preventDefault();

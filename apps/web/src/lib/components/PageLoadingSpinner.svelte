@@ -3,7 +3,7 @@
     label?: string;
   };
 
-  let { label = 'Loading...' }: Props = $props();
+  let { label = 'Loading…' }: Props = $props();
 </script>
 
 <div class="flex min-h-[200px] flex-col items-center justify-center gap-3 py-12" role="status" aria-label={label}>

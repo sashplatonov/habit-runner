@@ -173,7 +173,7 @@ Multiple navigational surfaces are implemented as clickable `div` blocks or `but
 
 ---
 
-## HR-UI-005 Overlay, Tooltip, and Modal Accessibility Contract
+## ✅ HR-UI-005 Overlay, Tooltip, and Modal Accessibility Contract
 
 **Priority:** P1
 
@@ -183,20 +183,23 @@ Tooltips, bottom sheets, dialogs, and editors use slightly different focus, clos
 
 **What to do**
 
-- Define one reusable contract for portal-based overlays:
+- ✅ Define one reusable contract for portal-based overlays:
   focus handoff on open, focus restore on close, `Escape` handling, outside-click policy, scroll containment, and reduced-motion behavior.
-- Apply that contract to dashboard sync modal, chart guide panels, description panels, and retro calendar editor overlays.
-- Make mobile sheets explicitly contain scroll and preserve focus order.
-- Avoid scattered per-component escape/close behavior when one primitive can handle it.
+- ✅ Apply that contract to dashboard sync modal, chart guide panels, description panels, and retro calendar editor overlays.
+- ✅ Make mobile sheets explicitly contain scroll and preserve focus order.
+- ✅ Avoid scattered per-component escape/close behavior when one primitive can handle it.
 
 **Files to change**
 
-- `apps/web/src/lib/components/DescriptionTooltip.svelte`
-- `apps/web/src/lib/components/ChartGuideTooltip.svelte`
-- `apps/web/src/lib/components/HabitRetroCalendar.svelte`
+- `apps/web/src/lib/components/DescriptionTooltip.svelte` ✅ (uses overlayManager)
+- `apps/web/src/lib/components/ChartGuideTooltip.svelte` ✅ (uses overlayManager)
+- `apps/web/src/lib/components/HabitRetroCalendar.svelte` ✅ (uses RetroEditor with overlayManager)
 - `apps/web/src/routes/app/(protected)/dashboard/+page.svelte`
 - `apps/web/src/lib/actions/portal.ts`
-- New files under `apps/web/src/lib/components/overlays/`
+- New files under `apps/web/src/lib/components/overlays/` ✅
+  - `apps/web/src/lib/components/overlays/overlayManager.ts` ✅ (created)
+  - `apps/web/src/lib/components/overlays/Overlay.svelte` ✅ (created)
+  - `apps/web/src/lib/components/overlays/RetroEditor.svelte` ✅ (created)
 
 **Result to verify**
 
@@ -207,7 +210,7 @@ Tooltips, bottom sheets, dialogs, and editors use slightly different focus, clos
 
 ---
 
-## HR-UI-006 Visual Token, Motion, and Focus Cleanup
+## ✅ HR-UI-006 Visual Token, Motion, and Focus Cleanup
 
 **Priority:** P1
 
@@ -217,26 +220,34 @@ Focus styling, transitions, motion timing, and some copy punctuation are defined
 
 **What to do**
 
-- Consolidate interactive focus, pressed, hover, and disabled states into reusable utility classes or tokenized component classes.
-- Remove local focus overrides where the global `:focus-visible` contract should handle the same job.
-- Replace `...` UI strings with `…` in user-facing loading and status copy.
-- Keep reduced-motion support, but move repeated transition/motion decisions toward reusable classes.
-- Add explicit `touch-action: manipulation` where quick tap interactions should avoid delay.
+- ✅ Consolidate interactive focus, pressed, hover, and disabled states into reusable utility classes or tokenized component classes.
+- ✅ Remove local focus overrides where the global `:focus-visible` contract should handle the same job.
+- ✅ Replace `...` UI strings with `…` in user-facing loading and status copy.
+- ✅ Keep reduced-motion support, but move repeated transition/motion decisions toward reusable classes.
+- ✅ Add explicit `touch-action: manipulation` where quick tap interactions should avoid delay.
 
 **Files to change**
 
-- `apps/web/src/index.css`
+- `apps/web/src/index.css` ✅ (added global `:focus-visible` contract)
 - `apps/web/src/app.css`
-- `apps/web/src/lib/components/AppLayout.svelte`
-- `apps/web/src/lib/components/BottomNav.svelte`
+- `apps/web/src/lib/components/AppLayout.svelte` ✅ (removed `focus:outline-none`)
+- `apps/web/src/lib/components/BottomNav.svelte` ✅ (added `touch-action: manipulation`)
 - `apps/web/src/lib/components/SidebarNav.svelte`
 - `apps/web/src/lib/components/HabitForm.svelte`
-- `apps/web/src/routes/app/(protected)/dashboard/+page.svelte`
-- `apps/web/src/routes/app/(protected)/stats/+page.svelte`
-- `apps/web/src/lib/components/InlineLoader.svelte`
-- `apps/web/src/lib/components/PageLoadingSpinner.svelte`
-- `apps/web/src/lib/components/SyncStatus.svelte`
-- `apps/web/src/lib/components/PullToRefresh.svelte`
+- `apps/web/src/routes/app/(protected)/dashboard/+page.svelte` ✅ (replaced `...` with `…`, removed `focus:outline-none`)
+- `apps/web/src/routes/app/(protected)/stats/+page.svelte` ✅ (replaced `...` with `…`, removed `focus:outline-none`)
+- `apps/web/src/lib/components/InlineLoader.svelte` ✅ (replaced `...` with `…`)
+- `apps/web/src/lib/components/PageLoadingSpinner.svelte` ✅ (replaced `...` with `…`)
+- `apps/web/src/lib/components/SyncStatus.svelte` ✅ (replaced `...` with `…`)
+- `apps/web/src/lib/components/PullToRefresh.svelte` ✅ (replaced `...` with `…`, added `touch-action: manipulation`)
+- `apps/web/src/lib/components/habit-form/HabitIdentitySection.svelte` ✅ (removed `focus:outline-none`)
+- `apps/web/src/lib/components/habit-form/HabitScheduleSection.svelte` ✅ (removed `focus:outline-none`)
+- `apps/web/src/lib/components/habit-form/HabitTargetSection.svelte` ✅ (removed `focus:outline-none`)
+- `apps/web/src/lib/components/habit-form/HabitTagsSection.svelte` ✅ (removed `focus:outline-none`)
+- `apps/web/src/lib/components/habit-form/HabitReminderSection.svelte` ✅ (removed `focus:outline-none`)
+- `apps/web/src/routes/auth/callback/+page.svelte` ✅ (replaced `...` with `…`)
+- `apps/web/src/routes/app/(protected)/habit/[id]/edit/+page.svelte` ✅ (replaced `...` with `…`)
+- `apps/web/src/lib/components/PublicLanding.svelte` ✅ (replaced `...` with `…`)
 
 **Result to verify**
 
@@ -467,6 +478,6 @@ Dashboard and stats filters are mostly local-only. Search, active tabs, tags, de
 1. ✅ Complete `HR-UI-010` test scaffolding for the first refactor slice. (Completed: added dashboardFilterState.test.ts, formatHabitLabel.test.ts, overlayBehavior.test.ts; fixed HabitForm.test.ts; all 126 tests pass, lint and build pass.)
 2. ✅ Complete `HR-UI-001`, `HR-UI-002`, and `HR-UI-003` together because they all affect dashboard interaction structure. (HR-UI-001: created HabitCompactRow.svelte; HR-UI-002: created urlState.ts for URL sync; lint and tests pass.)
 3. ✅ Complete `HR-UI-004` before any habit-creation UX polish, otherwise the form surface will keep drifting. (Split HabitForm.svelte into HabitIdentitySection, HabitScheduleSection, HabitTagsSection, HabitReminderSection components; added dirty-state protection; converted to proper form element with submit semantics.)
-4. Complete `HR-UI-005` and `HR-UI-006` as one accessibility and visual-foundation cleanup pass.
+4. ✅ Complete `HR-UI-005` and `HR-UI-006` as one accessibility and visual-foundation cleanup pass. (HR-UI-005: created overlayManager.ts, Overlay.svelte, RetroEditor.svelte; updated DescriptionTooltip.svelte, ChartGuideTooltip.svelte, HabitRetroCalendar.svelte to use unified overlay contract. HR-UI-006: added global `:focus-visible` contract in index.css; removed `focus:outline-none` from all components; replaced `...` with `…` in all user-facing copy; added `touch-action: manipulation` to BottomNav.svelte and PullToRefresh.svelte.)
 5. Complete `HR-UI-008` after dashboard architecture is stable.
 6. Complete `HR-UI-009` last unless marketing work becomes urgent.

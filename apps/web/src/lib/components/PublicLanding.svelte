@@ -151,7 +151,7 @@
     {#if redirecting}
       <div class="mx-auto mt-6 max-w-6xl px-4 sm:px-6">
         <p class="rounded-[1.75rem] border border-slate-200/80 bg-white/90 px-5 py-4 text-sm text-slate-600 shadow-[0_18px_50px_rgba(15,23,42,0.08)]">
-          Restoring your session and redirecting to the dashboard...
+          Restoring your session and redirecting to the dashboard…
         </p>
       </div>
     {/if}

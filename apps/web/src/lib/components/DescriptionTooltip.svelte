@@ -2,6 +2,7 @@
   import { portal } from '$lib/actions/portal';
   import { marked } from 'marked';
   import DOMPurify from 'dompurify';
+  import { openOverlay, closeActiveOverlay } from '$lib/components/overlays/overlayManager';
 
   type Placement = 'above' | 'below';
 
@@ -92,7 +93,24 @@
     clearCloseTimer();
   }
 
+  // Use unified overlay contract for both desktop and mobile
   $effect(() => {
+    if (show && panelEl) {
+      openOverlay({
+        triggerEl,
+        panelEl,
+        open: true,
+        onClose: close,
+        closeOnEscape: true,
+        closeOnOutsideClick: !isMobile, // mobile uses overlay backdrop for close
+        trapFocus: isMobile, // only trap focus for mobile modal
+        restoreFocus: true,
+        lockScroll: isMobile, // lock scroll only for mobile modal
+      });
+    } else if (!show) {
+      closeActiveOverlay();
+    }
+
     if (!show || !panelEl || isMobile) {
       return;
     }
@@ -122,10 +140,11 @@
     }
   }
 
-  // Cleanup timer on destroy
+  // Cleanup timer and overlay on destroy
   $effect(() => {
     return () => {
       clearCloseTimer();
+      closeActiveOverlay();
     };
   });
 </script>
@@ -172,9 +191,11 @@
       class="fixed inset-x-0 bottom-0 z-[9999] max-h-[70vh] overflow-y-auto rounded-t-2xl border border-border/60 bg-bg-card shadow-[0_8px_32px_rgba(0,0,0,0.28)] backdrop-blur-sm"
       role="dialog"
       aria-label="Description"
+      aria-modal="true"
       tabindex="-1"
       onclick={(e) => { e.stopPropagation(); }}
       onkeydown={(e) => {
+        // Escape is handled by overlayManager, but keep fallback
         if (e.key === 'Escape') {
           show = false;
         }

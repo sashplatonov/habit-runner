@@ -19,6 +19,13 @@
   let pullDistance = $state(0);
   let displayRefreshing = $state(false);
 
+  // Add touch-action: manipulation for fast tap interactions
+  $effect(() => {
+    if (rootElement) {
+      rootElement.style.touchAction = 'manipulation';
+    }
+  });
+
   const pullState = $derived.by(() => {
     if (displayRefreshing) {
       return 'refreshing';
@@ -35,7 +42,7 @@
   const progress = $derived(Math.min(1, pullDistance / PULL_TRIGGER_PX));
   const message = $derived.by(() => {
     if (pullState === 'refreshing') {
-      return 'Syncing data...';
+      return 'Syncing data…';
     }
     if (pullState === 'armed') {
       return 'Release to refresh';

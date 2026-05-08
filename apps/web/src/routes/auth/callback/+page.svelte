@@ -6,7 +6,7 @@
   import { setCurrentUserId } from '@/lib/storage/db';
 
   let failed = false;
-  let message = 'Finishing login...';
+  let message = 'Finishing login…';
 
   onMount(() => {
     let cancelled = false;
