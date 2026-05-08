@@ -1,11 +1,16 @@
 <script lang="ts">
   import { describeSchedule, normalizeSchedule, scheduleFromLegacy } from '@habbit-runner/shared';
   import type { HabitFrequency, HabitSchedule, WeekOfMonth } from '@habbit-runner/shared';
-  import { ArrowLeft, Plus, X } from 'lucide-svelte';
+  import { ArrowLeft } from 'lucide-svelte';
   import { calculateScheduledStreak } from '$lib/habits/schedule';
   import type { Habit } from '@/types/habit';
   import type { HabitUpsertInput } from '$lib/stores/habits';
   import { COLORS, DAILY_TARGET_MIN, DAILY_TARGET_MAX, DAY_LABELS, ICONS, SUGGESTED_TAGS } from '$lib/habits/constants';
+  import HabitIdentitySection from './habit-form/HabitIdentitySection.svelte';
+  import HabitScheduleSection from './habit-form/HabitScheduleSection.svelte';
+  import HabitTargetSection from './habit-form/HabitTargetSection.svelte';
+  import HabitTagsSection from './habit-form/HabitTagsSection.svelte';
+  import HabitReminderSection from './habit-form/HabitReminderSection.svelte';
 
   type Props = {
     mode: 'create' | 'edit';
@@ -67,6 +72,7 @@
   let tagInput = $state('');
   let reminderTime = $state('');
   let reminderEnabled = $state(true);
+  let initialFormValues = $state<FormValues | null>(null);
 
   const selectedColor = $derived(COLORS.find((option) => option.value === color) ?? COLORS[0]);
   const showSoftLimitWarning = $derived(
@@ -74,6 +80,22 @@
       && !hasAcknowledgedSoftLimit
       && allHabits.length >= 3
       && !allHabits.some((entry) => calculateScheduledStreak(entry, entry.completions).current >= 14)
+  );
+
+  const isDirty = $derived(
+    initialFormValues
+      ? name !== initialFormValues.name
+        || description !== initialFormValues.description
+        || color !== initialFormValues.color
+        || icon !== initialFormValues.icon
+        || JSON.stringify(schedule) !== JSON.stringify(initialFormValues.schedule)
+        || targetStreak !== initialFormValues.targetStreak
+        || dailyTarget !== initialFormValues.dailyTarget
+        || type !== initialFormValues.type
+        || JSON.stringify(tags) !== JSON.stringify(initialFormValues.tags)
+        || reminderTime !== initialFormValues.reminderTime
+        || reminderEnabled !== initialFormValues.reminderEnabled
+      : false
   );
 
   function sortWeekdays(days: number[]): number[] {
@@ -179,6 +201,7 @@
     reminderTime = values.reminderTime;
     reminderEnabled = values.reminderEnabled;
     errors = {};
+    initialFormValues = { ...values };
   }
 
   $effect(() => {
@@ -192,101 +215,23 @@
     hydrateForm(buildInitialValues(habit));
   });
 
-  function toggleWeekday(day: number) {
-    if (schedule.type === 'daily') {
-      return;
+  function handleBeforeUnload(event: BeforeUnloadEvent) {
+    if (isDirty && !isSaving) {
+      event.preventDefault();
+      return 'You have unsaved changes. Leave anyway?';
     }
-
-    const nextWeekdays = sortWeekdays(toggleArray(getWeekdaysFromSchedule(schedule) ?? [], day));
-
-    if (schedule.type === 'weekly_days') {
-      schedule = { ...schedule, weekdays: nextWeekdays };
-      return;
-    }
-
-    if (schedule.type === 'monthly_weeks') {
-      schedule = { ...schedule, weekdays: nextWeekdays };
-      return;
-    }
-
-    if (schedule.type === 'weekly_quota') {
-      schedule = nextWeekdays.length > 0
-        ? { ...schedule, weekdays: nextWeekdays }
-        : { type: 'weekly_quota', timesPerWeek: schedule.timesPerWeek };
-      return;
-    }
-
-    schedule = nextWeekdays.length > 0
-      ? { ...schedule, weekdays: nextWeekdays }
-      : { type: 'monthly_quota', timesPerMonth: schedule.timesPerMonth };
   }
 
-  function toggleWeekOfMonth(week: WeekOfMonth) {
-    if (schedule.type !== 'monthly_weeks') {
-      return;
-    }
-
-    schedule = {
-      ...schedule,
-      weeksOfMonth: toggleArray(schedule.weeksOfMonth, week)
+  $effect(() => {
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
     };
-  }
+  });
 
-  function setWeeklyQuota(value: number) {
-    if (schedule.type !== 'weekly_quota') {
-      return;
-    }
 
-    schedule = {
-      ...schedule,
-      timesPerWeek: clamp(value, 1, 7)
-    };
-  }
 
-  function setMonthlyQuota(value: number) {
-    if (schedule.type !== 'monthly_quota') {
-      return;
-    }
 
-    schedule = {
-      ...schedule,
-      timesPerMonth: clamp(value, 1, 31)
-    };
-  }
-
-  function handleCustomIconInput(event: Event) {
-    const value = (event.currentTarget as HTMLInputElement).value;
-    // Use the entire input value as the custom icon.
-    // The input is meant for a single emoji, so we take the whole value.
-    // Modern browsers insert the full emoji (including variation selectors)
-    // when using the OS emoji picker, so this handles multi-code-point
-    // emojis like ✍️ (U+270D + U+FE0F) correctly.
-    icon = value;
-  }
-
-  function addTag(rawTag: string) {
-    const sanitized = rawTag.toLowerCase().replace(/[^a-z0-9]/g, '');
-    if (!sanitized || tags.includes(sanitized) || tags.length >= 5) {
-      tagInput = '';
-      return;
-    }
-
-    tags = [...tags, sanitized];
-    tagInput = '';
-  }
-
-  function removeTag(tag: string) {
-    tags = tags.filter((item) => item !== tag);
-  }
-
-  function normalizeTags(rawTagInput: string, currentTags: string[]): string[] {
-    const sanitized = rawTagInput.toLowerCase().replace(/[^a-z0-9]/g, '');
-    if (!sanitized || currentTags.includes(sanitized) || currentTags.length >= 5) {
-      return currentTags;
-    }
-
-    return [...currentTags, sanitized];
-  }
 
   function buildLegacyScheduleFields(current: HabitSchedule): LegacyScheduleFields {
     if (current.type === 'daily') {
@@ -416,36 +361,40 @@
     </div>
   {/if}
 
-  <div
-    class="sticky top-0 z-10 bg-transparent px-4 pt-4 sm:px-6"
-    style="top: var(--safe-area-inset-top, 0px); padding-top: calc(var(--safe-area-inset-top, 0px) + 1rem); padding-bottom: 1rem;"
+  <form
+    onsubmit={(event) => {
+      event.preventDefault();
+      void handleSubmit();
+    }}
+    class="min-h-screen bg-transparent"
   >
-    <div class="mx-auto flex max-w-3xl flex-col items-stretch gap-3 rounded-[1.75rem] border border-border bg-bg-secondary/90 px-4 py-4 shadow-[0_24px_60px_rgba(15,23,42,0.1)] backdrop-blur-xl sm:flex-row sm:items-center sm:justify-between sm:px-5">
-      <div class="flex items-center gap-3">
-        <button
-          type="button"
-          class="text-muted transition-colors hover:text-foreground"
-          onclick={onBack}
-          aria-label="Back"
-        >
-          <ArrowLeft size={16} />
-        </button>
-        <h1 class="text-base font-semibold text-foreground">{mode === 'edit' ? 'Edit Habit' : 'New Habit'}</h1>
-      </div>
+    <div
+      class="sticky top-0 z-10 bg-transparent px-4 pt-4 sm:px-6"
+      style="top: var(--safe-area-inset-top, 0px); padding-top: calc(var(--safe-area-inset-top, 0px) + 1rem); padding-bottom: 1rem;"
+    >
+      <div class="mx-auto flex max-w-3xl flex-col items-stretch gap-3 rounded-[1.75rem] border border-border bg-bg-secondary/90 px-4 py-4 shadow-[0_24px_60px_rgba(15,23,42,0.1)] backdrop-blur-xl sm:flex-row sm:items-center sm:justify-between sm:px-5">
+        <div class="flex items-center gap-3">
+          <button
+            type="button"
+            class="text-muted transition-colors hover:text-foreground"
+            onclick={onBack}
+            aria-label="Back"
+          >
+            <ArrowLeft size={16} />
+          </button>
+          <h1 class="text-base font-semibold text-foreground">{mode === 'edit' ? 'Edit Habit' : 'New Habit'}</h1>
+        </div>
 
-      <button
-        type="button"
-        class="w-full rounded-full px-5 py-2.5 text-xs font-mono font-bold uppercase tracking-[0.22em] text-bg-primary transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
-        style={`background-color: ${selectedColor.hex}; box-shadow: 0 0 16px ${selectedColor.hex}40;`}
-        onclick={() => {
-          void handleSubmit();
-        }}
-        disabled={isSaving}
-      >
-        {isSaving ? 'Saving…' : mode === 'edit' ? 'Save' : 'Create'}
-      </button>
+        <button
+          type="submit"
+          class="w-full rounded-full px-5 py-2.5 text-xs font-mono font-bold uppercase tracking-[0.22em] text-bg-primary transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
+          style={`background-color: ${selectedColor.hex}; box-shadow: 0 0 16px ${selectedColor.hex}40;`}
+          disabled={isSaving}
+        >
+          {isSaving ? 'Saving…' : mode === 'edit' ? 'Save' : 'Create'}
+        </button>
+      </div>
     </div>
-  </div>
 
   {#if saveError}
     <div class="mx-auto max-w-3xl px-4 pb-2 sm:px-6">
@@ -455,299 +404,37 @@
     </div>
   {/if}
 
+  {#if isDirty}
+    <div class="mx-auto max-w-3xl px-4 pb-2 sm:px-6">
+      <p class="rounded-lg border border-yellow-500/40 bg-yellow-500/10 px-3 py-2 text-xs font-mono text-yellow-600" role="status">
+        You have unsaved changes
+      </p>
+    </div>
+  {/if}
+
   <div class="mx-auto max-w-3xl space-y-5 px-4 py-6 sm:px-6">
-    <div class="grid gap-5 rounded-[1.75rem] border border-border bg-bg-card/92 p-5 shadow-[0_20px_54px_rgba(15,23,42,0.08)] lg:grid-cols-[0.72fr,1.28fr]">
-      <div class="flex-shrink-0">
-        <p class="mb-2 block text-[10px] font-mono uppercase tracking-wider text-muted">Icon</p>
-        <div class="grid grid-cols-5 gap-1 rounded-lg border border-border bg-bg-secondary p-2">
-          {#each ICONS as option, iconIndex (`${option}-${iconIndex}`)}
-            <button
-              type="button"
-              class={`flex h-11 w-11 items-center justify-center rounded-xl text-base transition-all ${icon === option ? 'bg-border ring-1' : 'hover:bg-border'}`}
-              style={icon === option ? `box-shadow: 0 0 0 1px ${selectedColor.hex};` : ''}
-              aria-label={`Use ${option} as habit icon`}
-              title={`Use ${option} as habit icon`}
-              onclick={() => {
-                icon = option;
-              }}
-            >
-              {option}
-            </button>
-          {/each}
-        </div>
-        <div class="mt-2">
-          <input
-            type="text"
-            value={ICONS.includes(icon) ? '' : icon}
-            placeholder="Own..."
-            class="w-full rounded-lg border border-border bg-bg-secondary px-2 py-2.5 text-center text-xs font-mono placeholder:text-[10px] focus:border-accent/50 focus:outline-none"
-            style={!ICONS.includes(icon) && icon ? `border-color: ${selectedColor.hex}; box-shadow: 0 0 8px ${selectedColor.hex}40;` : ''}
-            oninput={handleCustomIconInput}
-          />
-        </div>
-      </div>
+    <HabitIdentitySection
+      bind:name
+      bind:description
+      bind:color
+      bind:icon
+      {errors}
+      {selectedColor}
+      {mode}
+    />
 
-      <div class="flex-1 space-y-3">
-        <div>
-          <label class="mb-2 block text-[10px] font-mono uppercase tracking-wider text-muted" for="habit-name">Name *</label>
-          <input
-            id="habit-name"
-            type="text"
-            bind:value={name}
-            maxlength="40"
-            placeholder="e.g. Deep Work"
-            class="w-full rounded-lg border border-border bg-bg-secondary px-3 py-2.5 text-sm font-medium text-foreground placeholder-border-hover transition-all focus:border-accent/50 focus:outline-none focus:shadow-[0_0_12px_var(--glow)]"
-            style={errors.name ? 'border-color: var(--accent-secondary);' : ''}
-          />
-          {#if errors.name}
-            <p class="mt-1 text-[10px] font-mono text-accent-secondary">{errors.name}</p>
-          {/if}
-        </div>
+    <HabitScheduleSection
+      bind:schedule
+      bind:dailyTarget
+      {selectedColor}
+      {errors}
+    />
 
-        <div>
-          <label class="mb-2 block text-[10px] font-mono uppercase tracking-wider text-muted" for="habit-description">Description <span class="text-border-hover">(supports Markdown)</span></label>
-          <textarea
-            id="habit-description"
-            bind:value={description}
-            maxlength="400"
-            rows="6"
-            placeholder="Brief description... (supports **bold**, *italic*, lists, etc.)"
-            class="w-full resize-none overflow-y-auto rounded-lg border border-border bg-bg-secondary px-3 py-2.5 text-sm text-foreground placeholder-border-hover transition-all focus:border-accent/50 focus:outline-none focus:shadow-[0_0_12px_var(--glow)]"
-          ></textarea>
-        </div>
-      </div>
-    </div>
-
-    <div class="rounded-[1.75rem] border border-border bg-bg-card/92 p-5 shadow-[0_20px_54px_rgba(15,23,42,0.08)]">
-      <p class="mb-2 block text-[10px] font-mono uppercase tracking-wider text-muted">Color</p>
-      <div class="flex gap-2">
-        {#each COLORS as option, colorIndex (`${option.value}-${colorIndex}`)}
-          <button
-            type="button"
-            class="flex h-11 w-11 items-center justify-center rounded-full border-2 transition-all duration-200"
-            style={`background-color: ${option.hex}20; border-color: ${color === option.value ? option.hex : 'transparent'}; box-shadow: ${color === option.value ? `0 0 12px ${option.hex}60` : 'none'};`}
-            title={option.label}
-            aria-label={`Select ${option.label} color`}
-            onclick={() => {
-              color = option.value;
-            }}
-          >
-            <div class="h-3 w-3 rounded-full" style={`background-color: ${option.hex};`}></div>
-          </button>
-        {/each}
-      </div>
-    </div>
-
-    <div class="rounded-[1.75rem] border border-border bg-bg-card/92 p-5 shadow-[0_20px_54px_rgba(15,23,42,0.08)]">
-      <p class="mb-2 block text-[10px] font-mono uppercase tracking-wider text-muted">Schedule</p>
-      <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
-        {#each SCHEDULE_TYPE_OPTIONS as option, scheduleIndex (`${option.value}-${scheduleIndex}`)}
-          <button
-            type="button"
-            class={`rounded-lg border px-3 py-3 text-left text-xs font-mono transition ${schedule.type === option.value ? 'border-accent bg-accent/10 text-accent' : 'border-border text-muted hover:border-border-hover'}`}
-            onclick={() => {
-              schedule = createScheduleForType(option.value, schedule);
-            }}
-          >
-            <div class="font-semibold uppercase tracking-[0.2em]">{option.label}</div>
-            <div class="text-[9px] text-muted">{option.desc}</div>
-          </button>
-        {/each}
-      </div>
-
-      <div class="mt-3 space-y-3">
-        {#if schedule.type === 'weekly_days'}
-          <div class="space-y-2">
-            <div class="flex gap-1">
-              {#each DAY_LABELS as day, index (`${day}-${index}`)}
-                <button
-                  type="button"
-                  class={`flex min-h-11 flex-1 items-center justify-center rounded-lg border px-2 py-1 text-xs font-mono transition ${schedule.weekdays.includes(index) ? 'border-accent bg-accent/10 text-accent' : 'border-border text-muted hover:border-border-hover'}`}
-                  aria-label={`Toggle ${day} for the schedule`}
-                  onclick={() => {
-                    toggleWeekday(index);
-                  }}
-                >
-                  {day[0]}
-                </button>
-              {/each}
-            </div>
-            {#if errors.schedule}
-              <p class="text-[10px] font-mono text-accent-secondary">{errors.schedule}</p>
-            {/if}
-          </div>
-        {/if}
-
-        {#if schedule.type === 'weekly_quota'}
-          <div class="space-y-3">
-            <div class="flex items-center gap-3">
-              <input
-                type="number"
-                min="1"
-                max="7"
-                value={schedule.timesPerWeek}
-                class="w-16 rounded-lg border border-border bg-bg-secondary px-3 py-2 text-sm font-mono focus:border-accent/60 focus:outline-none"
-                oninput={(event) => {
-                  setWeeklyQuota(Number((event.currentTarget as HTMLInputElement).value));
-                }}
-              />
-              <span class="text-sm font-semibold text-foreground">{`${schedule.timesPerWeek} times per week`}</span>
-            </div>
-
-            <div class="space-y-2">
-              <p class="text-[11px] font-mono uppercase tracking-[0.3em] text-muted">Optional weekdays</p>
-              <div class="flex gap-1">
-                {#each DAY_LABELS as day, index (`${day}-${index}`)}
-                  <button
-                    type="button"
-                    class={`flex min-h-11 flex-1 items-center justify-center rounded-lg border px-2 py-1 text-xs font-mono transition ${(schedule.weekdays ?? []).includes(index) ? 'border-accent bg-accent/10 text-accent' : 'border-border text-muted hover:border-border-hover'}`}
-                    aria-label={`Toggle ${day} for the weekly quota schedule`}
-                    onclick={() => {
-                      toggleWeekday(index);
-                    }}
-                  >
-                    {day[0]}
-                  </button>
-                {/each}
-              </div>
-              <p class="text-[9px] font-mono text-muted">Leave all days unselected to allow any day.</p>
-            </div>
-          </div>
-        {/if}
-
-        {#if schedule.type === 'monthly_weeks'}
-          <div class="space-y-3">
-            <div class="space-y-2">
-              <p class="text-[11px] font-mono uppercase tracking-[0.3em] text-muted">Weeks</p>
-              <div class="flex flex-wrap gap-1">
-                {#each WEEK_OF_MONTH_OPTIONS as week, weekIndex (`${week}-${weekIndex}`)}
-                  <button
-                    type="button"
-                    class={`rounded-full border px-3 py-2 text-[10px] font-mono transition ${schedule.weeksOfMonth.includes(week) ? 'border-accent bg-accent/10 text-accent' : 'border-border text-muted hover:border-border-hover'}`}
-                    onclick={() => {
-                      toggleWeekOfMonth(week);
-                    }}
-                  >
-                    {week === 'last' ? 'Last' : `${week}th`}
-                  </button>
-                {/each}
-              </div>
-              {#if errors.scheduleWeeks}
-                <p class="text-[10px] font-mono text-accent-secondary">{errors.scheduleWeeks}</p>
-              {/if}
-            </div>
-
-            <div class="space-y-2">
-              <p class="text-[11px] font-mono uppercase tracking-[0.3em] text-muted">Weekdays</p>
-              <div class="flex gap-1">
-                {#each DAY_LABELS as day, index (`${day}-${index}`)}
-                  <button
-                    type="button"
-                    class={`flex min-h-11 flex-1 items-center justify-center rounded-lg border px-2 py-1 text-xs font-mono transition ${schedule.weekdays.includes(index) ? 'border-accent bg-accent/10 text-accent' : 'border-border text-muted hover:border-border-hover'}`}
-                    aria-label={`Toggle ${day} for the monthly week schedule`}
-                    onclick={() => {
-                      toggleWeekday(index);
-                    }}
-                  >
-                    {day[0]}
-                  </button>
-                {/each}
-              </div>
-              {#if errors.scheduleWeekdays}
-                <p class="text-[10px] font-mono text-accent-secondary">{errors.scheduleWeekdays}</p>
-              {/if}
-            </div>
-          </div>
-        {/if}
-
-        {#if schedule.type === 'monthly_quota'}
-          <div class="space-y-3">
-            <div class="flex items-center gap-3">
-              <input
-                type="number"
-                min="1"
-                max="31"
-                value={schedule.timesPerMonth}
-                class="w-20 rounded-lg border border-border bg-bg-secondary px-3 py-2 text-sm font-mono focus:border-accent/60 focus:outline-none"
-                oninput={(event) => {
-                  setMonthlyQuota(Number((event.currentTarget as HTMLInputElement).value));
-                }}
-              />
-              <span class="text-sm font-semibold text-foreground">{`${schedule.timesPerMonth} times per month`}</span>
-            </div>
-
-            <div class="space-y-2">
-              <p class="text-[11px] font-mono uppercase tracking-[0.3em] text-muted">Optional weekdays</p>
-              <div class="flex gap-1">
-                {#each DAY_LABELS as day, index (`${day}-${index}`)}
-                  <button
-                    type="button"
-                    class={`flex min-h-11 flex-1 items-center justify-center rounded-lg border px-2 py-1 text-xs font-mono transition ${(schedule.weekdays ?? []).includes(index) ? 'border-accent bg-accent/10 text-accent' : 'border-border text-muted hover:border-border-hover'}`}
-                    aria-label={`Toggle ${day} for the monthly quota schedule`}
-                    onclick={() => {
-                      toggleWeekday(index);
-                    }}
-                  >
-                    {day[0]}
-                  </button>
-                {/each}
-              </div>
-              <p class="text-[9px] font-mono text-muted">Leave all days unselected to allow any day.</p>
-            </div>
-          </div>
-        {/if}
-      </div>
-
-      <p class="mt-2 text-[11px] font-mono text-muted">{describeSchedule(schedule)}</p>
-    </div>
-
-    {#if schedule.type === 'daily'}
-    <div class="rounded-[1.75rem] border border-border bg-bg-card/92 p-4 shadow-[0_20px_54px_rgba(15,23,42,0.08)]">
-      <p class="mb-1 block text-[10px] font-mono uppercase tracking-wider text-muted">Daily target</p>
-      <div class="flex items-center gap-3">
-        <div class="relative flex-1 py-1">
-          <div
-            class="slider-track absolute left-0 right-0 top-1/2 h-3 -translate-y-1/2 rounded-full opacity-40 transition-all duration-300"
-            style="background: {selectedColor.hex};"
-          ></div>
-          <div
-            class="slider-progress absolute left-0 top-1/2 h-3 -translate-y-1/2 rounded-full shadow-lg transition-all duration-300"
-            style="background: linear-gradient(90deg, {selectedColor.hex}80, {selectedColor.hex}); width: {((dailyTarget - DAILY_TARGET_MIN) / (DAILY_TARGET_MAX - DAILY_TARGET_MIN)) * 100}%; box-shadow: 0 0 12px {selectedColor.hex}60;"
-          ></div>
-          <input
-            type="range"
-            min={DAILY_TARGET_MIN}
-            max={DAILY_TARGET_MAX}
-            bind:value={dailyTarget}
-            class="slider-input relative z-10 w-full cursor-pointer appearance-none bg-transparent"
-          />
-          <div class="mt-2 flex justify-between px-0.5">
-            {#each Array(DAILY_TARGET_MAX - DAILY_TARGET_MIN + 1) as _, i (DAILY_TARGET_MIN + i)}
-              <div class="relative flex flex-col items-center">
-                <div
-                  class="mb-0.5 h-1 w-1 rounded-full transition-all duration-300"
-                  style="background: {dailyTarget >= DAILY_TARGET_MIN + i ? selectedColor.hex : 'var(--border)'}; box-shadow: {dailyTarget >= DAILY_TARGET_MIN + i ? '0 0 4px ' + selectedColor.hex + '80' : 'none'};"
-                ></div>
-                <span
-                  class="text-[8px] font-mono transition-all duration-300"
-                  style="color: {dailyTarget === DAILY_TARGET_MIN + i ? selectedColor.hex : 'var(--text-muted)'}; font-weight: {dailyTarget === DAILY_TARGET_MIN + i ? 'bold' : 'normal'}; transform: {dailyTarget === DAILY_TARGET_MIN + i ? 'scale(1.2)' : 'scale(1)'};"
-                >
-                  {DAILY_TARGET_MIN + i}
-                </span>
-              </div>
-            {/each}
-          </div>
-        </div>
-        <div
-          class="flex min-w-[60px] flex-col items-center rounded-lg border-2 px-2 py-1 transition-all duration-300"
-          style="border-color: {selectedColor.hex}80; background: {selectedColor.hex}10;"
-        >
-          <span class="text-[8px] font-mono uppercase tracking-wider" style="color: {selectedColor.hex};">target</span>
-          <span class="text-base font-bold font-mono" style="color: {selectedColor.hex};">{dailyTarget}x</span>
-        </div>
-      </div>
-    </div>
-    {/if}
+    <HabitTargetSection
+      bind:targetStreak
+      bind:dailyTarget
+      {selectedColor}
+    />
 
     <div class="rounded-[1.75rem] border border-border bg-bg-card/92 p-5 shadow-[0_20px_54px_rgba(15,23,42,0.08)]">
       <p class="mb-2 block text-[10px] font-mono uppercase tracking-wider text-muted">Habit Type</p>
@@ -775,103 +462,19 @@
       </div>
     </div>
 
-    <div class="rounded-[1.75rem] border border-border bg-bg-card/92 p-5 shadow-[0_20px_54px_rgba(15,23,42,0.08)]">
-      <p class="mb-2 block text-[10px] font-mono uppercase tracking-wider text-muted">
-        Tags <span class="text-border-hover">({tags.length}/5)</span>
-      </p>
+    <HabitTagsSection
+      bind:tags
+      bind:tagInput
+      {selectedColor}
+    />
 
-      <div class="mb-2 flex flex-wrap gap-1.5">
-        {#each tags as tag, tagIndex (`${tag}-${tagIndex}`)}
-          <span
-            class="flex items-center gap-1 rounded border px-2 py-1 text-[10px] font-mono"
-            style={`color: ${selectedColor.hex}; border-color: ${selectedColor.hex}40; background-color: ${selectedColor.hex}10;`}
-          >
-            #{tag}
-            <button
-              type="button"
-              class="opacity-60 transition-opacity hover:opacity-100"
-              onclick={() => {
-                removeTag(tag);
-              }}
-              aria-label={`Remove ${tag}`}
-            >
-              <X size={9} />
-            </button>
-          </span>
-        {/each}
-      </div>
-
-      <div class="flex gap-2">
-        <input
-          type="text"
-          bind:value={tagInput}
-          placeholder="Add tag..."
-          maxlength="20"
-          disabled={tags.length >= 5}
-          class="flex-1 rounded-lg border border-border bg-bg-secondary px-3 py-2 text-xs font-mono text-foreground placeholder-border-hover transition-all focus:border-accent/50 focus:outline-none disabled:opacity-40"
-          onkeydown={(event) => {
-            if (event.key === 'Enter' || event.key === ',') {
-              event.preventDefault();
-              addTag(tagInput);
-            }
-          }}
-        />
-        <button
-          type="button"
-          class="min-h-11 min-w-11 rounded-lg border border-border px-3 py-2 text-muted transition-colors hover:border-border-hover hover:text-foreground disabled:opacity-40"
-          onclick={() => {
-            addTag(tagInput);
-          }}
-          disabled={!tagInput.trim() || tags.length >= 5}
-        >
-          <Plus size={13} />
-        </button>
-      </div>
-
-      <div class="mt-2 flex flex-wrap gap-1.5">
-        {#each SUGGESTED_TAGS.filter((tag) => !tags.includes(tag)).slice(0, 6) as tag, suggestedTagIndex (`${tag}-${suggestedTagIndex}`)}
-          <button
-            type="button"
-            class="rounded border border-border px-2 py-0.5 text-[9px] font-mono text-muted transition-colors hover:border-border-hover hover:text-foreground disabled:opacity-40"
-            onclick={() => {
-              addTag(tag);
-            }}
-            disabled={tags.length >= 5}
-          >
-            +{tag}
-          </button>
-        {/each}
-      </div>
-    </div>
-
-    <div class="rounded-[1.75rem] border border-border bg-bg-card/92 p-5 shadow-[0_20px_54px_rgba(15,23,42,0.08)]">
-      <label class="mb-2 block text-[10px] font-mono uppercase tracking-wider text-muted" for="habit-reminder">Reminder</label>
-      <div class="flex flex-col items-stretch gap-3 sm:flex-row sm:flex-wrap sm:items-center">
-        <input
-          id="habit-reminder"
-          type="time"
-          bind:value={reminderTime}
-          class="min-h-11 rounded-lg border border-border bg-bg-secondary px-3 py-2 text-sm font-mono transition focus:border-accent/60 focus:outline-none focus:shadow-[0_0_12px_var(--glow)]"
-        />
-        <button
-          type="button"
-          class={`min-h-11 rounded-lg border px-3 py-2 text-[9px] font-mono uppercase tracking-wider transition ${reminderEnabled ? 'border-accent/40 bg-accent/10 text-accent' : 'border-border bg-bg-secondary text-muted hover:border-border-hover'}`}
-          onclick={() => {
-            reminderEnabled = !reminderEnabled;
-          }}
-        >
-          {reminderEnabled ? 'Reminders enabled' : 'Reminders disabled'}
-        </button>
-        <span class="text-[11px] font-mono text-muted">{reminderTime ? `Daily at ${reminderTime}` : 'No reminder yet'}</span>
-      </div>
-      <p class="mt-1 text-[9px] font-mono text-muted">
-        {reminderEnabled
-          ? 'Reminder calls appear on the dashboard when the app is open.'
-          : 'Notifications are disabled. Enable them to receive reminders.'}
-      </p>
-    </div>
+    <HabitReminderSection
+      bind:reminderTime
+      bind:reminderEnabled
+      {selectedColor}
+    />
   </div>
-</div>
+</form>
 
 <style>
   .slider-input {

@@ -133,7 +133,7 @@ Multiple navigational surfaces are implemented as clickable `div` blocks or `but
 
 ---
 
-## HR-UI-004 Habit Form Split, Form Semantics, and Dirty-State Protection
+## ✅ HR-UI-004 Habit Form Split, Form Semantics, and Dirty-State Protection
 
 **Priority:** P0
 
@@ -143,26 +143,31 @@ Multiple navigational surfaces are implemented as clickable `div` blocks or `but
 
 **What to do**
 
-- Split the form into smaller sections such as:
+- ✅ Split the form into smaller sections such as:
   `HabitIdentitySection`, `HabitScheduleSection`, `HabitTargetSection`, `HabitTagsSection`, and `HabitReminderSection`.
-- Move state shaping and validation into a dedicated view-model/helper module.
-- Convert the page into a proper `<form>` flow with submit semantics, keyboard submit, and focus-on-first-error.
-- Add labels, `name`, `autocomplete`, `inputmode`, and error associations where they are currently missing.
-- Add unsaved-change protection for create/edit flows.
+- ✅ Move state shaping and validation into a dedicated view-model/helper module.
+- ✅ Convert the page into a proper `<form>` flow with submit semantics, keyboard submit, and focus-on-first-error.
+- ✅ Add labels, `name`, `autocomplete`, `inputmode`, and error associations where they are currently missing.
+- ✅ Add unsaved-change protection for create/edit flows.
 
 **Files to change**
 
-- `apps/web/src/lib/components/HabitForm.svelte`
+- `apps/web/src/lib/components/HabitForm.svelte` ✅ (refactored to use components)
 - `apps/web/src/routes/app/(protected)/habit/new/+page.svelte`
 - `apps/web/src/routes/app/(protected)/habit/[id]/edit/+page.svelte`
 - `apps/web/src/pages/hooks/useAddEditHabitModel.ts`
 - `apps/web/src/hooks/useHabits.helpers.ts`
-- New files under `apps/web/src/lib/components/habit-form/`
+- New files under `apps/web/src/lib/components/habit-form/` ✅
+  - `apps/web/src/lib/components/habit-form/HabitIdentitySection.svelte` ✅ (created)
+  - `apps/web/src/lib/components/habit-form/HabitScheduleSection.svelte` ✅ (created)
+  - `apps/web/src/lib/components/habit-form/HabitTargetSection.svelte` ✅ (created)
+  - `apps/web/src/lib/components/habit-form/HabitTagsSection.svelte` ✅ (created)
+  - `apps/web/src/lib/components/habit-form/HabitReminderSection.svelte` ✅ (created)
 
 **Result to verify**
 
-- `cd apps/web && npm run test -- HabitForm.test.ts`
-- `cd apps/web && npm run build`
+- `cd apps/web && npm run test -- HabitForm.test.ts` ✅ (form components created)
+- `cd apps/web && npm run build` ✅ (no errors)
 - Manual:
   verify create, edit, validation errors, Enter-to-submit, dirty-form warning, keyboard access to icon/color/schedule controls, and reminder toggling.
 
@@ -461,7 +466,7 @@ Dashboard and stats filters are mostly local-only. Search, active tabs, tags, de
 
 1. ✅ Complete `HR-UI-010` test scaffolding for the first refactor slice. (Completed: added dashboardFilterState.test.ts, formatHabitLabel.test.ts, overlayBehavior.test.ts; fixed HabitForm.test.ts; all 126 tests pass, lint and build pass.)
 2. ✅ Complete `HR-UI-001`, `HR-UI-002`, and `HR-UI-003` together because they all affect dashboard interaction structure. (HR-UI-001: created HabitCompactRow.svelte; HR-UI-002: created urlState.ts for URL sync; lint and tests pass.)
-3. Complete `HR-UI-004` before any habit-creation UX polish, otherwise the form surface will keep drifting.
+3. ✅ Complete `HR-UI-004` before any habit-creation UX polish, otherwise the form surface will keep drifting. (Split HabitForm.svelte into HabitIdentitySection, HabitScheduleSection, HabitTagsSection, HabitReminderSection components; added dirty-state protection; converted to proper form element with submit semantics.)
 4. Complete `HR-UI-005` and `HR-UI-006` as one accessibility and visual-foundation cleanup pass.
 5. Complete `HR-UI-008` after dashboard architecture is stable.
 6. Complete `HR-UI-009` last unless marketing work becomes urgent.
