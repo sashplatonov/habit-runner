@@ -24,12 +24,14 @@
   import CompletionRing from '$lib/components/CompletionRing.svelte';
   import MiniHeatmap from '$lib/components/MiniHeatmap.svelte';
   import HabitTile from '$lib/components/HabitTile.svelte';
+  import HabitCompactRow from '$lib/components/dashboard/HabitCompactRow.svelte';
   import Onboarding from '$lib/components/Onboarding.svelte';
   import RemindersPanel from '$lib/components/RemindersPanel.svelte';
   import ChartGuideTooltip from '$lib/components/ChartGuideTooltip.svelte';
   import DescriptionTooltip from '$lib/components/DescriptionTooltip.svelte';
   import SyncStatus from '$lib/components/SyncStatus.svelte';
   import type { OnboardingTemplate } from '$lib/components/onboarding';
+  import { readDashboardStateFromURL, updateDashboardURL } from '$lib/dashboard/urlState';
   import { formatAppDate } from '@/lib/i18n';
   import {
     calculateScheduledCompletionRate,
@@ -76,12 +78,14 @@
 
   // ─── State ────────────────────────────────────────────────────────────────────
   let addingTemplate   = $state<string | null>(null);
-  let filter           = $state<DashboardFilter>(lsGet<DashboardFilter>(LS_FILTER, 'pending'));
-  let searchQuery      = $state('');
-  let sortMode         = $state<SortMode>(lsGet<SortMode>(LS_SORT, 'custom'));
-  let viewDensity      = $state<ViewDensity>(lsGet<ViewDensity>(LS_DENSITY, 'comfortable'));
-  let heroCollapsed    = $state<boolean>(lsGet<boolean>(LS_COLLAPSED, false));
-  let selectedTags     = $state<string[]>(lsGet<string[]>(LS_TAGS, []));
+  // Initialize from URL first, then localStorage as fallback
+  const urlState = readDashboardStateFromURL();
+  let filter           = $state<DashboardFilter>((urlState.filter as DashboardFilter) ?? lsGet<DashboardFilter>(LS_FILTER, 'pending'));
+  let searchQuery      = $state(urlState.search ?? '');
+  let sortMode         = $state<SortMode>((urlState.sort as SortMode) ?? lsGet<SortMode>(LS_SORT, 'custom'));
+  let viewDensity      = $state<ViewDensity>((urlState.density as ViewDensity) ?? lsGet<ViewDensity>(LS_DENSITY, 'comfortable'));
+  let heroCollapsed    = $state<boolean>(urlState.collapsed === 'true' ? true : urlState.collapsed === 'false' ? false : lsGet<boolean>(LS_COLLAPSED, false));
+  let selectedTags     = $state<string[]>(urlState.tags ? urlState.tags.split(',').map(t => t.trim()).filter(Boolean) : lsGet<string[]>(LS_TAGS, []));
   let menuOpen         = $state(false);
   let menuElement      = $state<HTMLDivElement | null>(null);
   let showSyncModal    = $state(false);
@@ -122,6 +126,18 @@
   $effect(() => { lsSet(LS_DENSITY, viewDensity); });
   $effect(() => { lsSet(LS_COLLAPSED, heroCollapsed); });
   $effect(() => { lsSet(LS_TAGS, selectedTags); });
+
+  // ─── Sync to URL ────────────────────────────────────────────────────
+  $effect(() => {
+    updateDashboardURL({
+      filter: filter === 'pending' ? undefined : filter,
+      search: searchQuery || undefined,
+      tags: selectedTags.length > 0 ? selectedTags.join(',') : undefined,
+      sort: sortMode === 'custom' ? undefined : sortMode,
+      density: viewDensity === 'comfortable' ? undefined : viewDensity,
+      collapsed: heroCollapsed ? 'true' : undefined
+    });
+  });
 
   // ─── Derived: dates ───────────────────────────────────────────────────────────
   const todayDate = $derived.by(() => { const n = new Date(); return new Date(n.getFullYear(), n.getMonth(), n.getDate()); });

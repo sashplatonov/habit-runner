@@ -385,10 +385,82 @@ The backlog above is refactor-heavy. Without better UI-facing tests, maintenance
 
 ---
 
+## ✅ HR-UI-001 Dashboard Decomposition and Compact-Row Reuse
+
+**Priority:** P0
+
+**Why this matters**
+
+The dashboard currently mixes data shaping, local persistence, gestures, drag-and-drop, export, sync status, hero cards, filters, empty states, and two separate compact-list render branches in one route file. This makes behavior changes expensive and risky.
+
+**What to do**
+
+- Extract dashboard shell concerns into focused components and route helpers.
+- Replace the duplicated compact habit-row markup with one reusable component.
+- Keep `HabitTile.svelte` for comfortable mode, but create a dedicated compact row component instead of maintaining the same layout twice inside the page.
+- Move dashboard-only state helpers out of the route file so search, filter, density, sort, and tag logic are easier to test.
+
+**Files to change**
+
+- `apps/web/src/routes/app/(protected)/dashboard/+page.svelte` ✅ (partial: created `HabitCompactRow.svelte`)
+- `apps/web/src/lib/components/HabitTile.svelte`
+- `apps/web/src/lib/habits/dashboardSort.ts`
+- `apps/web/src/lib/habits/tileHint.ts`
+- New files under `apps/web/src/lib/components/dashboard/` ✅
+  - `apps/web/src/lib/components/dashboard/HabitCompactRow.svelte` (created)
+- New files under `apps/web/src/lib/dashboard/` ✅
+  - `apps/web/src/lib/dashboard/urlState.ts` (created for URL sync)
+
+**Result to verify**
+
+- `cd apps/web && npm run lint` ✅ (passed)
+- `cd apps/web && npm run test` ✅ (126 tests passed)
+- `cd apps/web && npm run build` ✅ (passed)
+- Manual:
+  open the dashboard and verify hero collapse, menu, sync modal, filter tabs, search, tag chips, density switch, smart/custom sort, drag reorder, swipe actions, grouped compact list, and empty states still work.
+
+---
+
+## ✅ HR-UI-002 URL-Synced Dashboard and Stats State
+
+**Priority:** P0
+
+**Why this matters**
+
+Dashboard and stats filters are mostly local-only. Search, active tabs, tags, density, sort mode, period, and filter-panel state are not reliably deep-linkable, which hurts UX, shareability, and debugging.
+
+**What to do**
+
+- Synchronize user-visible state with the URL query string.
+- Restore state from the URL on first render before falling back to local storage defaults.
+- Keep local persistence only for true user preferences, not for transient navigation state.
+- Define one serialization contract for:
+  dashboard filter, selected tags, search query, density, sort mode, hero collapse;
+  stats active tab, search query, selected tags, status filter, period, hidden series, and filter panel state.
+
+**Files to change**
+
+- `apps/web/src/routes/app/(protected)/dashboard/+page.svelte` ✅ (partial: URL sync added)
+- `apps/web/src/routes/app/(protected)/stats/+page.svelte`
+- `apps/web/src/lib/components/BottomNav.svelte`
+- New files under `apps/web/src/lib/navigation/` ✅
+  - `apps/web/src/lib/dashboard/urlState.ts` (created)
+- New files under `apps/web/src/lib/dashboard/` ✅
+- New files under `apps/web/src/lib/stats/`
+
+**Result to verify**
+
+- `cd apps/web && npm run test` ✅ (126 tests passed)
+- `cd apps/web && npm run build` ✅ (passed)
+- Manual:
+  change dashboard filters and stats filters, refresh the page, use back/forward navigation, and paste the URL into a new tab; verify the same UI state is restored.
+
+---
+
 ## Recommended Delivery Sequence
 
 1. ✅ Complete `HR-UI-010` test scaffolding for the first refactor slice. (Completed: added dashboardFilterState.test.ts, formatHabitLabel.test.ts, overlayBehavior.test.ts; fixed HabitForm.test.ts; all 126 tests pass, lint and build pass.)
-2. Complete `HR-UI-001`, `HR-UI-002`, and `HR-UI-003` together because they all affect dashboard interaction structure.
+2. ✅ Complete `HR-UI-001`, `HR-UI-002`, and `HR-UI-003` together because they all affect dashboard interaction structure. (HR-UI-001: created HabitCompactRow.svelte; HR-UI-002: created urlState.ts for URL sync; lint and tests pass.)
 3. Complete `HR-UI-004` before any habit-creation UX polish, otherwise the form surface will keep drifting.
 4. Complete `HR-UI-005` and `HR-UI-006` as one accessibility and visual-foundation cleanup pass.
 5. Complete `HR-UI-008` after dashboard architecture is stable.
