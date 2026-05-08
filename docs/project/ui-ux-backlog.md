@@ -292,7 +292,7 @@ The repository guideline says habit names in UI, tooltips, previews, and analyti
 
 ---
 
-## HR-UI-008 Stats Page Decomposition and Shared Analytics Sections
+## ✅ HR-UI-008 Stats Page Decomposition and Shared Analytics Sections
 
 **Priority:** P1
 
@@ -302,14 +302,14 @@ The stats route currently owns tabs, filters, KPI layout, charts, insights, habi
 
 **What to do**
 
-- Split the stats page into reusable sections with stable props:
+- ✅ Split the stats page into reusable sections with stable props:
   `StatsHeader`, `StatsTabs`, `StatsFilters`, `OverviewSignals`, `InvestmentPanel`, `InsightsGrid`, `ChartPanel`, `HabitPerformanceList`.
-- Move sorting/filtering derivations out of the route file and into testable helpers.
-- Normalize empty states, truncation rules, and navigation behavior across analytics blocks.
+- ✅ Move sorting/filtering derivations out of the route file and into testable helpers.
+- ✅ Normalize empty states, truncation rules, and navigation behavior across analytics blocks.
 
 **Files to change**
 
-- `apps/web/src/routes/app/(protected)/stats/+page.svelte`
+- `apps/web/src/routes/app/(protected)/stats/+page.svelte` ✅ (decomposed into components)
 - `apps/web/src/lib/components/StatsDailyRateChart.svelte`
 - `apps/web/src/lib/components/StatsTrendChart.svelte`
 - `apps/web/src/lib/components/MonthlyRateSection.svelte`
@@ -317,7 +317,15 @@ The stats route currently owns tabs, filters, KPI layout, charts, insights, habi
 - `apps/web/src/lib/components/StatCardGrid.svelte`
 - `apps/web/src/lib/stats/statsPage.ts`
 - `apps/web/src/lib/stats/StatsView.helpers.ts`
-- New files under `apps/web/src/lib/components/stats/`
+- New files under `apps/web/src/lib/components/stats/` ✅
+  - `apps/web/src/lib/components/stats/StatsHeader.svelte` ✅ (created)
+  - `apps/web/src/lib/components/stats/StatsTabs.svelte` ✅ (created)
+  - `apps/web/src/lib/components/stats/StatsFilters.svelte` ✅ (created)
+  - `apps/web/src/lib/components/stats/OverviewSignals.svelte` ✅ (created)
+  - `apps/web/src/lib/components/stats/InvestmentPanel.svelte` ✅ (created)
+  - `apps/web/src/lib/components/stats/InsightsGrid.svelte` ✅ (created)
+  - `apps/web/src/lib/components/stats/ChartPanel.svelte` ✅ (created)
+  - `apps/web/src/lib/components/stats/HabitPerformanceList.svelte` ✅ (created)
 
 **Result to verify**
 
@@ -479,5 +487,5 @@ Dashboard and stats filters are mostly local-only. Search, active tabs, tags, de
 2. ✅ Complete `HR-UI-001`, `HR-UI-002`, and `HR-UI-003` together because they all affect dashboard interaction structure. (HR-UI-001: created HabitCompactRow.svelte; HR-UI-002: created urlState.ts for URL sync; lint and tests pass.)
 3. ✅ Complete `HR-UI-004` before any habit-creation UX polish, otherwise the form surface will keep drifting. (Split HabitForm.svelte into HabitIdentitySection, HabitScheduleSection, HabitTagsSection, HabitReminderSection components; added dirty-state protection; converted to proper form element with submit semantics.)
 4. ✅ Complete `HR-UI-005` and `HR-UI-006` as one accessibility and visual-foundation cleanup pass. (HR-UI-005: created overlayManager.ts, Overlay.svelte, RetroEditor.svelte; updated DescriptionTooltip.svelte, ChartGuideTooltip.svelte, HabitRetroCalendar.svelte to use unified overlay contract. HR-UI-006: added global `:focus-visible` contract in index.css; removed `focus:outline-none` from all components; replaced `...` with `…` in all user-facing copy; added `touch-action: manipulation` to BottomNav.svelte and PullToRefresh.svelte.)
-5. Complete `HR-UI-008` after dashboard architecture is stable.
+5. ✅ Complete `HR-UI-008` after dashboard architecture is stable. (Split stats page into reusable components: StatsHeader, StatsTabs, StatsFilters, OverviewSignals, InvestmentPanel, InsightsGrid, ChartPanel, HabitPerformanceList; moved sorting/filtering logic to testable helpers; normalized empty states and navigation.)
 6. Complete `HR-UI-009` last unless marketing work becomes urgent.
