@@ -1,5 +1,6 @@
 <script lang="ts">
   import { resolve } from '$app/paths';
+  import { goto } from '$app/navigation';
   import { ArrowRight, CheckCircle2, Sparkles } from 'lucide-svelte';
   import { startOAuthLogin } from '$lib/auth/oauth';
   import PublicNav from '$lib/components/PublicNav.svelte';
@@ -33,7 +34,7 @@
   }
 
   function handleCtaClick() {
-    window.location.href = resolve('/', {});
+    goto(resolve('/', {}));
   }
 
   function showAuthHelp() {
@@ -53,13 +54,7 @@
 />
 
 <div class="min-h-screen bg-[linear-gradient(180deg,#f8fbff_0%,#eef4fb_46%,#f7fbff_100%)] text-slate-900">
-  {#snippet ctaSnippet()}
-    <PublicCta onclick={handleCtaClick} variant="primary" size="sm">
-      Continue with Google <ArrowRight size={15} />
-    </PublicCta>
-  {/snippet}
-
-  <PublicNav {ctaSnippet} />
+  <PublicNav />
 
   <main>
     <section class="border-b border-slate-200/80 bg-[radial-gradient(circle_at_top_left,rgba(49,105,255,0.18),transparent_34%),radial-gradient(circle_at_85%_15%,rgba(16,179,154,0.16),transparent_24%),linear-gradient(180deg,#f9fcff_0%,#eef4fb_100%)]">

@@ -1,6 +1,7 @@
 <script lang="ts">
   import { page } from '$app/state';
   import { resolve } from '$app/paths';
+  import { goto } from '$app/navigation';
   import type { Snippet } from 'svelte';
 
   type Props = {
@@ -68,12 +69,13 @@
       {#if cta}
         {@render cta()}
       {:else}
-        <a
-          href={resolve<'/'>('/', {})}
+        <button
+          type="button"
+          onclick={() => { goto(resolve('/', {})); }}
           class="rounded-full border border-sky-200 bg-white px-4 py-2 text-xs font-semibold text-slate-900 shadow-[0_12px_24px_rgba(15,23,42,0.08)] transition-all hover:-translate-y-0.5 hover:border-sky-300 hover:text-sky-700"
         >
           Get Started
-        </a>
+        </button>
       {/if}
     </div>
   </div>
