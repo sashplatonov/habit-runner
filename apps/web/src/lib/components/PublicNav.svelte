@@ -1,8 +1,8 @@
 <script lang="ts">
   import { page } from '$app/state';
   import { resolve } from '$app/paths';
-  import { goto } from '$app/navigation';
   import type { Snippet } from 'svelte';
+  import { startOAuthLogin } from '$lib/auth/oauth';
 
   type Props = {
     cta?: Snippet;
@@ -71,7 +71,7 @@
       {:else}
         <button
           type="button"
-          onclick={() => { goto(resolve('/', {})); }}
+          onclick={startOAuthLogin}
           class="rounded-full border border-sky-200 bg-white px-4 py-2 text-xs font-semibold text-slate-900 shadow-[0_12px_24px_rgba(15,23,42,0.08)] transition-all hover:-translate-y-0.5 hover:border-sky-300 hover:text-sky-700"
         >
           Get Started
