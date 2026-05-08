@@ -336,7 +336,7 @@ The stats route currently owns tabs, filters, KPI layout, charts, insights, habi
 
 ---
 
-## HR-UI-009 Public Landing and Marketing Surface Cleanup
+## ✅ HR-UI-009 Public Landing and Marketing Surface Cleanup
 
 **Priority:** P2
 
@@ -346,20 +346,25 @@ The public landing page is visually strong, but the structure is still monolithi
 
 **What to do**
 
-- Split the landing page into smaller marketing sections and shared CTA primitives.
-- Standardize the sign-in CTA, secondary CTA, and auth-help pattern across public surfaces.
-- Review heading hierarchy, focus order, button/link semantics, and copy consistency on the public pages.
-- Reuse shared marketing section wrappers instead of repeating the same border/shadow/radius patterns in large templates.
+- ✅ Split the landing page into smaller marketing sections and shared CTA primitives.
+- ✅ Standardize the sign-in CTA, secondary CTA, and auth-help pattern across public surfaces.
+- ✅ Review heading hierarchy, focus order, button/link semantics, and copy consistency on the public pages.
+- ✅ Reuse shared marketing section wrappers instead of repeating the same border/shadow/radius patterns in large templates.
 
 **Files to change**
 
-- `apps/web/src/lib/components/PublicLanding.svelte`
-- `apps/web/src/lib/components/PublicNav.svelte`
-- `apps/web/src/lib/components/PublicFooter.svelte`
+- `apps/web/src/lib/components/PublicLanding.svelte` ✅ (refactored to use shared components)
+- `apps/web/src/lib/components/PublicNav.svelte` ✅ (uses PublicCta)
+- `apps/web/src/lib/components/PublicFooter.svelte` ✅ (created with shared CTAs)
 - `apps/web/src/lib/components/PublicPreviewCarousel.svelte`
 - `apps/web/src/lib/components/PublicSeoPage.svelte`
 - `apps/web/src/routes/+page.svelte`
-- New files under `apps/web/src/lib/components/public/`
+- New files under `apps/web/src/lib/components/public/` ✅
+  - `apps/web/src/lib/components/public/PublicCta.svelte` ✅ (created)
+  - `apps/web/src/lib/components/public/PublicFeatureCard.svelte` ✅ (created)
+  - `apps/web/src/lib/components/public/PublicFaq.svelte` ✅ (created)
+  - `apps/web/src/lib/components/public/PublicSection.svelte` ✅ (created)
+  - `apps/web/src/lib/components/PublicFooter.svelte` ✅ (created)
 
 **Result to verify**
 
@@ -488,4 +493,4 @@ Dashboard and stats filters are mostly local-only. Search, active tabs, tags, de
 3. ✅ Complete `HR-UI-004` before any habit-creation UX polish, otherwise the form surface will keep drifting. (Split HabitForm.svelte into HabitIdentitySection, HabitScheduleSection, HabitTagsSection, HabitReminderSection components; added dirty-state protection; converted to proper form element with submit semantics.)
 4. ✅ Complete `HR-UI-005` and `HR-UI-006` as one accessibility and visual-foundation cleanup pass. (HR-UI-005: created overlayManager.ts, Overlay.svelte, RetroEditor.svelte; updated DescriptionTooltip.svelte, ChartGuideTooltip.svelte, HabitRetroCalendar.svelte to use unified overlay contract. HR-UI-006: added global `:focus-visible` contract in index.css; removed `focus:outline-none` from all components; replaced `...` with `…` in all user-facing copy; added `touch-action: manipulation` to BottomNav.svelte and PullToRefresh.svelte.)
 5. ✅ Complete `HR-UI-008` after dashboard architecture is stable. (Split stats page into reusable components: StatsHeader, StatsTabs, StatsFilters, OverviewSignals, InvestmentPanel, InsightsGrid, ChartPanel, HabitPerformanceList; moved sorting/filtering logic to testable helpers; normalized empty states and navigation.)
-6. Complete `HR-UI-009` last unless marketing work becomes urgent.
+6. ✅ Complete `HR-UI-009` last unless marketing work becomes urgent. (Split landing page into reusable components: PublicCta, PublicFeatureCard, PublicFaq, PublicSection, PublicFooter; standardized CTAs and auth-help patterns; reused shared marketing sections.)
