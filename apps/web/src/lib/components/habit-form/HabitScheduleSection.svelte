@@ -14,7 +14,7 @@
   }: {
     schedule: HabitSchedule;
     dailyTarget: number;
-    selectedColor: { value: string; label: string; hex: string };
+    selectedColor: { hex: string };
     errors: Record<string, string>;
   } = $props();
 

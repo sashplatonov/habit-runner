@@ -81,7 +81,9 @@ function handleKeyDown(e: KeyboardEvent, opts: OverlayOptions) {
 }
 
 function handlePointerDown(e: PointerEvent, opts: OverlayOptions) {
-  if (opts.closeOnOutsideClick === false) return;
+  if (opts.closeOnOutsideClick === false) {
+    return;
+  }
   const target = e.target as Node | null;
   if (target && opts.panelEl && !opts.panelEl.contains(target) && !opts.triggerEl?.contains(target)) {
     opts.onClose();
@@ -89,12 +91,16 @@ function handlePointerDown(e: PointerEvent, opts: OverlayOptions) {
 }
 
 function lockBodyScroll() {
-  if (typeof document === 'undefined') return;
+  if (typeof document === 'undefined') {
+    return;
+  }
   document.body.style.overflow = 'hidden';
 }
 
 function unlockBodyScroll() {
-  if (typeof document === 'undefined') return;
+  if (typeof document === 'undefined') {
+    return;
+  }
   document.body.style.overflow = '';
 }
 
@@ -122,7 +128,9 @@ export function openOverlay(opts: OverlayOptions) {
 
   // Focus the panel or first focusable element
   requestAnimationFrame(() => {
-    if (!opts.panelEl) return;
+    if (!opts.panelEl) {
+      return;
+    }
     const focusable = getFocusableElements(opts.panelEl);
     if (focusable.length > 0) {
       focusable[0].focus();
@@ -133,10 +141,12 @@ export function openOverlay(opts: OverlayOptions) {
 }
 
 export function closeActiveOverlay() {
-  if (!activeOverlay) return;
+  if (!activeOverlay) { return; }
 
   const cleanup = (activeOverlay as OverlayOptions & { _cleanup?: () => void })._cleanup;
-  if (cleanup) cleanup();
+  if (cleanup) {
+    cleanup();
+  }
 
   if (activeOverlay.lockScroll) {
     unlockBodyScroll();

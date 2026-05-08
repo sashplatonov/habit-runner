@@ -17,6 +17,18 @@
 
   const habitCount = $derived(habits.length);
   const activeCount = $derived(habits.filter(h => !h.archived).length);
+  
+  function getPeriodButtonClass(periodId: string) {
+    const isActive = period === periodId;
+    return {
+      'rounded-lg border px-2.5 py-1.5 text-[10px] font-mono uppercase tracking-[0.2em] transition-colors': true,
+      'bg-accent/10': isActive,
+      'border-accent/30': isActive,
+      'border-border': !isActive,
+      'text-accent': isActive,
+      'text-muted': !isActive
+    };
+  }
 </script>
 
 <div class="flex items-center justify-between gap-2">
@@ -31,12 +43,7 @@
       <button
         type="button"
         onclick={() => onPeriodChange(opt.id)}
-        class="rounded-lg border px-2.5 py-1.5 text-[10px] font-mono uppercase tracking-[0.2em] transition-colors"
-        class:bg-accent/10={period === opt.id}
-        class:border-accent/30={period === opt.id}
-        class:border-border={period !== opt.id}
-        class:text-accent={period === opt.id}
-        class:text-muted={period !== opt.id}
+        class={getPeriodButtonClass(opt.id)}
         aria-pressed={period === opt.id}
         aria-label="Period: {periodDisplayNames[opt.id] ?? opt.label}"
       >

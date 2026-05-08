@@ -3,12 +3,10 @@
 
   let {
     reminderTime = $bindable(''),
-    reminderEnabled = $bindable(true),
-    selectedColor
+    reminderEnabled = $bindable(true)
   }: {
     reminderTime: string;
     reminderEnabled: boolean;
-    selectedColor: { value: string; label: string; hex: string };
   } = $props();
 </script>
 

@@ -24,6 +24,18 @@ export const FREQUENCIES: {
   { value: 'custom', label: 'Custom', desc: 'Choose days' }
 ];
 
+export const SCHEDULE_TYPE_OPTIONS: {
+  value: string;
+  label: string;
+  desc: string;
+}[] = [
+  { value: 'daily', label: 'Daily', desc: 'Every day' },
+  { value: 'weekly_days', label: 'Days of week', desc: 'Pick weekdays' },
+  { value: 'weekly_quota', label: 'Weekly quota', desc: 'Set weekly target' },
+  { value: 'monthly_quota', label: 'Monthly quota', desc: 'Set monthly target' },
+  { value: 'monthly_weeks', label: 'Monthly weeks', desc: 'Pick weeks of month' }
+];
+
 export const ICONS = [
   '⚡',
   '🏃',

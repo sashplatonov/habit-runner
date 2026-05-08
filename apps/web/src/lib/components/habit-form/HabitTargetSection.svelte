@@ -9,7 +9,7 @@
   }: {
     targetStreak: number;
     dailyTarget: number;
-    selectedColor: { value: string; label: string; hex: string };
+    selectedColor: { hex: string };
   } = $props();
 
   function clamp(value: number, min: number, max: number): number {

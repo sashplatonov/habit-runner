@@ -32,6 +32,10 @@
     });
   }
 
+  function handleCtaClick() {
+    window.location.href = resolve('/', {});
+  }
+
   function showAuthHelp() {
     noticeMessage = 'OAuth is not configured. Export backend Google OAuth env vars (or set them in root .env for Docker) and restart the API.';
     window.setTimeout(() => {
@@ -49,13 +53,13 @@
 />
 
 <div class="min-h-screen bg-[linear-gradient(180deg,#f8fbff_0%,#eef4fb_46%,#f7fbff_100%)] text-slate-900">
-  <PublicNav
-    cta={() => (
-      <PublicCta href={resolve('/', {})} variant="primary" size="sm">
-        Continue with Google <ArrowRight size={15} />
-      </PublicCta>
-    )}
-  />
+  {#snippet ctaSnippet()}
+    <PublicCta onclick={handleCtaClick} variant="primary" size="sm">
+      Continue with Google <ArrowRight size={15} />
+    </PublicCta>
+  {/snippet}
+
+  <PublicNav {ctaSnippet} />
 
   <main>
     <section class="border-b border-slate-200/80 bg-[radial-gradient(circle_at_top_left,rgba(49,105,255,0.18),transparent_34%),radial-gradient(circle_at_85%_15%,rgba(16,179,154,0.16),transparent_24%),linear-gradient(180deg,#f9fcff_0%,#eef4fb_100%)]">
@@ -168,14 +172,8 @@
     </section>
   </main>
 
-  <PublicFooter
-    cta={() => (
-      <PublicCta href={resolve('/', {})} variant="ghost" size="sm">
-        Get Started
-      </PublicCta>
-    )}
-  />
-
+  <PublicFooter />
+  
   {#if noticeMessage}
     <div class="fixed bottom-4 left-1/2 z-40 -translate-x-1/2 rounded-full border border-emerald-300 bg-emerald-50/95 px-4 py-2 text-xs text-emerald-700 shadow-[0_18px_40px_rgba(16,185,129,0.18)] backdrop-blur-sm">
       {noticeMessage}

@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { goto } from '$app/navigation';
+  import { resolve } from '$app/paths';
   import type { Snippet } from 'svelte';
 
   type Props = {
@@ -11,6 +13,15 @@
   };
 
   const { href, onclick, variant = 'primary', size = 'md', class: className = '', children }: Props = $props();
+  const resolvedHref = $derived(href ? resolve(href, {}) : undefined);
+  
+  function handleClick() {
+    if (href) {
+      goto(resolve(href, {}));
+    } else if (onclick) {
+      onclick();
+    }
+  }
 
   const variants = {
     primary: 'border-sky-200 bg-slate-950 text-white shadow-[0_18px_36px_rgba(15,23,42,0.16)] hover:-translate-y-0.5 hover:bg-sky-700',
@@ -25,19 +36,10 @@
   };
 </script>
 
-{#if href}
-  <a
-    href={href}
-    class="inline-flex items-center justify-center gap-2 rounded-full font-semibold uppercase tracking-widest transition-all {variants[variant]} {sizes[size]} {className}"
-  >
-    {@render children()}
-  </a>
-{:else}
-  <button
-    type="button"
-    onclick={onclick}
-    class="inline-flex items-center justify-center gap-2 rounded-full font-semibold uppercase tracking-widest transition-all {variants[variant]} {sizes[size]} {className}"
-  >
-    {@render children()}
-  </button>
-{/if}
+<button
+  type="button"
+  onclick={handleClick}
+  class="inline-flex items-center justify-center gap-2 rounded-full font-semibold uppercase tracking-widest transition-all {variants[variant]} {sizes[size]} {className}"
+>
+  {@render children()}
+</button>

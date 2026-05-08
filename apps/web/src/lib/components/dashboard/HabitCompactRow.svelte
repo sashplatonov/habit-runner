@@ -6,7 +6,7 @@
   import { computeTileHint } from '$lib/habits/tileHint';
   import { calculateScheduledStreak, calculateScheduledCompletionRate } from '$lib/habits/schedule';
   import { getScheduleStatusForDate, isMandatoryToday } from '$lib/habits/schedule';
-  import { formatDate } from '$lib/i18n';
+  import { formatAppDate } from '$lib/i18n';
   import { buildCelebrationParticles, getCelebrationLabel } from '$lib/habits/completionCelebration';
   import CompletionRing from '$lib/components/CompletionRing.svelte';
   import MiniHeatmap from '$lib/components/MiniHeatmap.svelte';
@@ -56,7 +56,7 @@
   $: streak = calculateScheduledStreak(habit, habit.completions).current;
   $: completionRate = calculateScheduledCompletionRate(habit, habit.completions);
   $: last7 = Array.from({ length: 7 }, (_, i) => {
-    const key = formatDate(new Date(todayDate.getTime() + (i - 6) * 86_400_000));
+    const key = formatAppDate(new Date(todayDate.getTime() + (i - 6) * 86_400_000));
     return (habit.completions[key] ?? 0) >= tgt;
   });
   $: hint = computeTileHint(habit, completionRate, streak);

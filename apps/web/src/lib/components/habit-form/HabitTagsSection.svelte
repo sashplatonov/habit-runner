@@ -10,7 +10,7 @@
   }: {
     tags: string[];
     tagInput: string;
-    selectedColor: { value: string; label: string; hex: string };
+    selectedColor: { hex: string };
   } = $props();
 
   function addTag(rawTag: string) {

@@ -1,7 +1,7 @@
 <script lang="ts">
   import { describeSchedule, normalizeSchedule, scheduleFromLegacy } from '@habbit-runner/shared';
   import type { HabitFrequency, HabitSchedule, WeekOfMonth } from '@habbit-runner/shared';
-  import { ArrowLeft } from 'lucide-svelte';
+  import { ArrowLeft, Plus } from 'lucide-svelte';
   import { calculateScheduledStreak } from '$lib/habits/schedule';
   import type { Habit } from '@/types/habit';
   import type { HabitUpsertInput } from '$lib/stores/habits';
@@ -285,6 +285,14 @@
     return nextErrors;
   }
 
+  function normalizeTags(rawTagInput: string, currentTags: string[]): string[] {
+    const sanitized = rawTagInput.toLowerCase().replace(/[^a-z0-9]/g, '');
+    if (!sanitized || currentTags.includes(sanitized) || currentTags.length >= 5) {
+      return currentTags;
+    }
+    return [...currentTags, sanitized];
+  }
+
   async function handleSubmit() {
     const nextErrors = validate();
     errors = nextErrors;
@@ -326,8 +334,7 @@
   }
 </script>
 
-<div class="min-h-screen bg-transparent">
-  {#if showSoftLimitWarning}
+{#if showSoftLimitWarning}
     <div class="fixed inset-0 z-[100] flex items-center justify-center bg-bg-primary/80 p-4 backdrop-blur-sm">
       <div class="w-full max-w-sm rounded-3xl border border-border bg-bg-secondary p-6 shadow-2xl">
         <div class="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-accent/10">
@@ -471,7 +478,6 @@
     <HabitReminderSection
       bind:reminderTime
       bind:reminderEnabled
-      {selectedColor}
     />
   </div>
 </form>

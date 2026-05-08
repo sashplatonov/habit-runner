@@ -26,6 +26,7 @@
   }: Props = $props();
 
   let searchInput = $state<HTMLInputElement | null>(null);
+  const hasTags = $derived(allTags.length > 0);
 
   function clearAll() {
     onSearchChange('');
@@ -36,6 +37,40 @@
   const hasActiveFilters = $derived(
     searchQuery !== '' || statusFilter !== 'all' || selectedTags.length > 0
   );
+
+  function getFilterButtonClass() {
+    const isActive = filtersOpen || hasActiveFilters;
+    return {
+      'relative flex h-9 w-9 items-center justify-center rounded-lg border transition-colors': true,
+      'border-accent/50': isActive,
+      'border-border': !isActive,
+      'bg-accent/10': filtersOpen
+    };
+  }
+
+  function getStatusButtonClass(status: string) {
+    const isActive = statusFilter === status;
+    return {
+      'rounded-lg border px-2.5 py-1 text-[10px] font-mono uppercase tracking-[0.2em] transition-colors': true,
+      'bg-accent/10': isActive,
+      'border-accent/30': isActive,
+      'border-border': !isActive,
+      'text-accent': isActive,
+      'text-muted': !isActive
+    };
+  }
+
+  function getTagButtonClass(tag: string) {
+    const isSelected = selectedTags.includes(tag);
+    return {
+      'rounded-full border px-2.5 py-1 text-[10px] font-mono transition-colors': true,
+      'bg-accent/10': isSelected,
+      'border-accent/30': isSelected,
+      'border-border': !isSelected,
+      'text-accent': isSelected,
+      'text-muted': !isSelected
+    };
+  }
 </script>
 
 <div class="flex items-center gap-2">
@@ -54,19 +89,11 @@
   <button
     type="button"
     onclick={onToggleFilters}
-    class="relative flex h-9 w-9 items-center justify-center rounded-lg border transition-colors"
-    class:border-accent/50={filtersOpen || hasActiveFilters}
-    class:border-border={!filtersOpen && !hasActiveFilters}
-    class:bg-accent/10={filtersOpen}
+    class={getFilterButtonClass()}
     aria-expanded={filtersOpen}
     aria-label="Toggle filters panel"
   >
-    <Filter size={14} class={hasActiveFilters ? 'text-accent' : 'text-muted'} />
-    {#if hasActiveFilters}
-      <span class="absolute -right-0.5 -top-0.5 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-accent text-[8px] font-bold text-bg-primary">
-        {(selectedTags.length + (statusFilter !== 'all' ? 1 : 0) + (searchQuery ? 1 : 0)}
-      </span>
-    {/if}
+    <Filter size={14} class="text-muted" />
   </button>
 </div>
 
@@ -75,16 +102,11 @@
     <!-- Status filter -->
     <div class="flex items-center gap-2">
       <span class="text-[9px] font-mono uppercase tracking-[0.3em] text-muted">Status</span>
-      {#each ['all', 'active', 'archived'] as status}
+      {#each ['all', 'active', 'archived'] as status, i (status + '-' + i)}
         <button
           type="button"
           onclick={() => onStatusFilterChange(status as 'all' | 'active' | 'archived')}
-          class="rounded-lg border px-2.5 py-1 text-[10px] font-mono uppercase tracking-[0.2em] transition-colors"
-          class:bg-accent/10={statusFilter === status}
-          class:border-accent/30={statusFilter === status}
-          class:border-border={statusFilter !== status}
-          class:text-accent={statusFilter === status}
-          class:text-muted={statusFilter !== status}
+          class={getStatusButtonClass(status)}
           aria-pressed={statusFilter === status}
         >
           {status}
@@ -93,23 +115,18 @@
     </div>
 
     <!-- Tags filter -->
-    {#if allTags.length > 0}
+    {#if hasTags}
       <div>
         <div class="mb-1.5 flex items-center gap-2">
           <Tag size={12} class="text-muted" />
           <span class="text-[9px] font-mono uppercase tracking-[0.3em] text-muted">Tags</span>
         </div>
         <div class="flex flex-wrap gap-1.5">
-          {#each allTags as tag (tag)}
+          {#each allTags as tag, i (tag + '-' + i)}
             <button
               type="button"
               onclick={() => onToggleTag(tag)}
-              class="rounded-full border px-2.5 py-1 text-[10px] font-mono transition-colors"
-              class:bg-accent/10={selectedTags.includes(tag)}
-              class:border-accent/30={selectedTags.includes(tag)}
-              class:border-border={!selectedTags.includes(tag)}
-              class:text-accent={selectedTags.includes(tag)}
-              class:text-muted={!selectedTags.includes(tag)}
+              class={getTagButtonClass(tag)}
               aria-pressed={selectedTags.includes(tag)}
             >
               {tag}
