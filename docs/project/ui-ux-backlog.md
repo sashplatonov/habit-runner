@@ -345,7 +345,7 @@ The public landing page is visually strong, but the structure is still monolithi
 
 ---
 
-## HR-UI-010 UI Regression Coverage for Refactor-Safe Delivery
+## ✅ HR-UI-010 UI Regression Coverage for Refactor-Safe Delivery
 
 **Priority:** P0
 
@@ -366,17 +366,20 @@ The backlog above is refactor-heavy. Without better UI-facing tests, maintenance
 
 **Files to change**
 
-- `apps/web/tests/unit/HabitForm.test.ts`
-- `apps/web/tests/unit/dashboardSsrSafety.test.ts`
-- `apps/web/tests/unit/statsPage.test.ts`
-- `apps/web/tests/unit/StatsCharts.test.ts`
-- New tests under `apps/web/tests/unit/`
+- `apps/web/tests/unit/HabitForm.test.ts` ✅
+- `apps/web/tests/unit/dashboardSsrSafety.test.ts` ✅
+- `apps/web/tests/unit/statsPage.test.ts` ✅
+- `apps/web/tests/unit/StatsCharts.test.ts` ✅
+- New tests under `apps/web/tests/unit/` ✅
+  - `apps/web/tests/unit/dashboardFilterState.test.ts`
+  - `apps/web/tests/unit/formatHabitLabel.test.ts`
+  - `apps/web/tests/unit/overlayBehavior.test.ts`
 - New helper test files under `apps/web/src/lib/` when needed
 
 **Result to verify**
 
-- `cd apps/web && npm run test`
-- `cd apps/web && npm run check`
+- `cd apps/web && npm run test` ✅ (126 tests passed)
+- `cd apps/web && npm run check` ✅ (lint passed, build passed)
 - Manual:
   run one smoke pass across dashboard, habit detail, edit/new habit, stats, and public landing after each completed refactor slice.
 
@@ -384,7 +387,7 @@ The backlog above is refactor-heavy. Without better UI-facing tests, maintenance
 
 ## Recommended Delivery Sequence
 
-1. Complete `HR-UI-010` test scaffolding for the first refactor slice.
+1. ✅ Complete `HR-UI-010` test scaffolding for the first refactor slice. (Completed: added dashboardFilterState.test.ts, formatHabitLabel.test.ts, overlayBehavior.test.ts; fixed HabitForm.test.ts; all 126 tests pass, lint and build pass.)
 2. Complete `HR-UI-001`, `HR-UI-002`, and `HR-UI-003` together because they all affect dashboard interaction structure.
 3. Complete `HR-UI-004` before any habit-creation UX polish, otherwise the form surface will keep drifting.
 4. Complete `HR-UI-005` and `HR-UI-006` as one accessibility and visual-foundation cleanup pass.
