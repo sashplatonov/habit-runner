@@ -72,6 +72,7 @@
     { id: 'habits' as TabId, label: 'Habits' },
     { id: 'activity' as TabId, label: 'Activity' }
   ] as const;
+  const WEEKDAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'] as const;
 
   // Window range for the selected period (no Date mutation)
   const windowRange = $derived.by(() => getWindowRange(period));
