@@ -1,7 +1,20 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
   import { resolve } from '$app/paths';
-  import { Plus } from 'lucide-svelte';
+  import {
+    AlertTriangle,
+    Calendar,
+    Dumbbell,
+    Flame,
+    Lightbulb,
+    Plus,
+    Sprout,
+    TrendingDown,
+    TrendingUp,
+    Zap
+  } from 'lucide-svelte';
+  import EmptyState from '$lib/components/EmptyState.svelte';
+  import HabitHeatmap from '$lib/components/HabitHeatmap.svelte';
   import { habitsStore } from '$lib/stores/habits';
   import { formatHabitLabel } from '$lib/habits/formatHabitLabel';
   import {
