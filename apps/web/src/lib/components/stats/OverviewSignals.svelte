@@ -1,20 +1,16 @@
 <script lang="ts">
-  import type { Habit } from '@/types/habit';
-  import { formatHabitLabel } from '$lib/habits/formatHabitLabel';
+  import ChartGuideTooltip from '$lib/components/ChartGuideTooltip.svelte';
+  import { OVERVIEW_SIGNALS_TOOLTIP } from '$lib/habits/blockGuideTooltips';
+  import { Calendar, Flame, TrendingUp, Zap } from 'lucide-svelte';
   import { habitsStore } from '$lib/stores/habits';
-  import { STREAK_MESSAGES, STREAK_THRESHOLDS } from '$lib/constants/stats';
-  import { Lightbulb, Flame, Dumbbell, Sprout } from 'lucide-svelte';
-  import type { PeriodOption } from '$lib/stats/statsPage';
-  import { PERIOD_DISPLAY_NAMES } from '$lib/constants/stats';
+  import type { Habit } from '@/types/habit';
 
   type Props = {
     habits: Habit[];
-    period: PeriodOption;
   };
 
-  const { habits, period }: Props = $props();
+  const { habits }: Props = $props();
 
-  // Summary KPIs
   const allStats = $derived(
     habits.map((habit) => ({ habit, stats: habitsStore.getHabitStats(habit.id) }))
   );
@@ -26,58 +22,41 @@
   const bestStreak = $derived(allStats.length > 0 ? Math.max(...allStats.map((e) => e.stats.longestStreak)) : 0);
   const totalCompletions = $derived(allStats.reduce((s, e) => s + e.stats.completedDays, 0));
   const currentStreaks = $derived(allStats.filter((e) => e.stats.currentStreak > 0).length);
-
-  // Streak insight
-  const streakLeader = $derived(allStats.length > 0
-    ? allStats.reduce((best, next) => next.stats.longestStreak > best.stats.longestStreak ? next : best, allStats[0])
-    : null
-  );
-  const days = $derived(streakLeader?.stats.longestStreak ?? 0);
-  const streakIcon = $derived(
-    days >= STREAK_THRESHOLDS.AUTOMATISM_MIN ? Flame :
-    days >= STREAK_THRESHOLDS.MOMENTUM_MIN ? Dumbbell : Sprout
-  );
-  const streakBody = $derived.by(() => {
-    if (days >= STREAK_THRESHOLDS.AUTOMATISM_MIN) {
-      return STREAK_MESSAGES.AUTOMATISM(formatHabitLabel(streakLeader!.habit), days);
-    } else if (days >= STREAK_THRESHOLDS.MOMENTUM_MIN) {
-      return STREAK_MESSAGES.MOMENTUM_ENCOURAGEMENT(days, formatHabitLabel(streakLeader!.habit));
-    } else if (days > 0) {
-      return STREAK_MESSAGES.EARLY_STAGE(days);
-    }
-    return STREAK_MESSAGES.NO_STREAK;
-  });
 </script>
 
-<div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-  <!-- KPI cards -->
-  <div class="rounded-2xl border border-border bg-bg-card p-3">
-    <p class="text-[9px] font-mono uppercase tracking-[0.3em] text-muted">Avg Rate</p>
-    <p class="text-xl font-bold text-foreground">{avgRate}<span class="ml-0.5 text-sm font-normal text-muted">%</span></p>
+<div class="space-y-2">
+  <div class="flex items-center gap-2">
+    <h2 class="text-xs font-mono uppercase tracking-wider text-muted">Overview signals</h2>
+    <ChartGuideTooltip {...OVERVIEW_SIGNALS_TOOLTIP} triggerClassName="h-7 w-7" />
   </div>
-  <div class="rounded-2xl border border-border bg-bg-card p-3">
-    <p class="text-[9px] font-mono uppercase tracking-[0.3em] text-muted">Best Streak</p>
-    <p class="text-xl font-bold text-foreground">{bestStreak}<span class="ml-0.5 text-sm font-normal text-muted">days</span></p>
-  </div>
-  <div class="rounded-2xl border border-border bg-bg-card p-3">
-    <p class="text-[9px] font-mono uppercase tracking-[0.3em] text-muted">Completions</p>
-    <p class="text-xl font-bold text-foreground">{totalCompletions}</p>
-  </div>
-  <div class="rounded-2xl border border-border bg-bg-card p-3">
-    <p class="text-[9px] font-mono uppercase tracking-[0.3em] text-muted">Active Streaks</p>
-    <p class="text-xl font-bold text-foreground">{currentStreaks}<span class="ml-0.5 text-sm font-normal text-muted">/{habits.length}</span></p>
+  <div class="grid grid-cols-2 gap-3 md:grid-cols-4">
+    <div class="rounded-[1.35rem] border border-border bg-bg-card/92 p-4 shadow-[0_16px_42px_rgba(15,23,42,0.08)]">
+      <div class="mb-2 flex items-center gap-1">
+        <Zap size={10} class="text-accent" />
+        <span class="text-[9px] font-mono uppercase tracking-wider text-muted">Avg Rate</span>
+      </div>
+      <div class="text-2xl font-mono font-bold text-accent" style:text-shadow="0 0 12px var(--glow)">{avgRate}%</div>
+    </div>
+    <div class="rounded-[1.35rem] border border-border bg-bg-card/92 p-4 shadow-[0_16px_42px_rgba(15,23,42,0.08)]">
+      <div class="mb-2 flex items-center gap-1">
+        <Flame size={10} class="text-accent-secondary" />
+        <span class="text-[9px] font-mono uppercase tracking-wider text-muted">Best</span>
+      </div>
+      <div class="text-2xl font-mono font-bold text-accent-secondary">{bestStreak}d</div>
+    </div>
+    <div class="rounded-[1.35rem] border border-border bg-bg-card/92 p-4 shadow-[0_16px_42px_rgba(15,23,42,0.08)]">
+      <div class="mb-2 flex items-center gap-1">
+        <TrendingUp size={10} class="text-accent-secondary" />
+        <span class="text-[9px] font-mono uppercase tracking-wider text-muted">Total</span>
+      </div>
+      <div class="text-2xl font-mono font-bold text-accent-secondary" style:text-shadow="0 0 12px var(--glow-secondary)">{totalCompletions}</div>
+    </div>
+    <div class="rounded-[1.35rem] border border-border bg-bg-card/92 p-4 shadow-[0_16px_42px_rgba(15,23,42,0.08)]">
+      <div class="mb-2 flex items-center gap-1">
+        <Calendar size={10} class="text-muted" />
+        <span class="text-[9px] font-mono uppercase tracking-wider text-muted">Active</span>
+      </div>
+      <div class="text-2xl font-mono font-bold text-foreground">{currentStreaks}</div>
+    </div>
   </div>
 </div>
-
-<!-- Streak insight -->
-{#if streakLeader}
-  <div class="flex items-start gap-3 rounded-2xl border border-border bg-bg-card p-3">
-    <div class="flex h-8 w-8 items-center justify-center rounded-xl bg-accent/10 text-accent">
-      <svelte:component this={streakIcon} size={14} />
-    </div>
-    <div>
-      <p class="text-[9px] font-mono uppercase tracking-[0.3em] text-muted">Best streak</p>
-      <p class="text-xs leading-relaxed text-foreground">{streakBody}</p>
-    </div>
-  </div>
-{/if}

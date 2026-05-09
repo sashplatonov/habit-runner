@@ -37,7 +37,6 @@
     getWindowRange,
     type PeriodOption
   } from '$lib/stats/statsPage';
-  import StatsHeader from '$lib/components/stats/StatsHeader.svelte';
   import StatsTabs from '$lib/components/stats/StatsTabs.svelte';
   import StatsFilters from '$lib/components/stats/StatsFilters.svelte';
   import OverviewSignals from '$lib/components/stats/OverviewSignals.svelte';
@@ -58,13 +57,6 @@
   let habitSort = $state<HabitSort>('rate');
   let habitSortDir = $state<'asc' | 'desc'>('desc');
   let hiddenHabits = $state<string[]>([]);
-
-  const PERIOD_OPTIONS = [
-    { id: 'week' as PeriodOption, label: 'W' },
-    { id: 'month' as PeriodOption, label: 'M' },
-    { id: 'quarter' as PeriodOption, label: 'Q' },
-    { id: 'year' as PeriodOption, label: 'Y' }
-  ] as const;
 
   const TABS = [
     { id: 'overview' as TabId, label: 'Overview' },
@@ -305,20 +297,9 @@
       <!-- TAB: OVERVIEW -->
       {#if activeTab === 'overview'}
         <div class="space-y-4">
-          <StatsHeader
-            habits={filteredHabits}
-            period={period}
-            onPeriodChange={(p) => period = p}
-            periodOptions={PERIOD_OPTIONS}
-            periodDisplayNames={PERIOD_DISPLAY_NAMES}
-          />
           <div class="grid gap-4 md:grid-cols-[2fr,1fr]">
-            <OverviewSignals habits={filteredHabits} period={period} />
-            <InvestmentPanel
-              weekdayStats={weekdayStats}
-              period={period}
-              periodDisplayNames={PERIOD_DISPLAY_NAMES}
-            />
+            <OverviewSignals habits={filteredHabits} />
+            <InvestmentPanel weekdayStats={weekdayStats} />
           </div>
           <InsightsGrid insights={insights} />
         </div>
@@ -327,13 +308,15 @@
       {:else if activeTab === 'charts'}
         <div class="space-y-4">
           <ChartPanel
-            habits={filteredHabits}
+            avgRate={avgRate}
+            filteredHabits={filteredHabits}
+            hiddenHabits={hiddenHabits}
+            toggleHabitVisibility={toggleHabitVisibility}
             period={period}
             dailyData={dailyData}
             habitPeriodData={habitPeriodData}
-            mergedCompletions={mergedCompletions}
-            dayDetails={dayDetails}
-            aggregateTarget={aggregateTarget}
+            weekdayStats={weekdayStats}
+            onPeriodChange={(p) => period = p}
           />
         </div>
 
@@ -342,6 +325,7 @@
         <div class="space-y-4">
           <HabitPerformanceList
             entries={sortedStats}
+            allStats={allStats}
             sortDir={habitSortDir}
             onSortChange={handleSortChange}
             hiddenHabits={hiddenHabits}
@@ -359,9 +343,9 @@
             <span class="text-[10px] font-mono text-muted">{filteredHabits.length} habits</span>
           </div>
           <HabitHeatmap
-            habits={filteredHabits}
-            {habitPeriodData}
-            period={period}
+            completions={mergedCompletions}
+            dailyTarget={aggregateTarget}
+            dayDetails={dayDetails}
           />
         </div>
       {/if}

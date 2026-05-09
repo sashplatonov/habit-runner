@@ -1,92 +1,94 @@
 <script lang="ts">
   import StatsDailyRateChart from '$lib/components/StatsDailyRateChart.svelte';
   import StatsTrendChart from '$lib/components/StatsTrendChart.svelte';
-  import HabitHeatmap from '$lib/components/HabitHeatmap.svelte';
-  import type { Habit } from '@/types/habit';
-  import type { PeriodOption } from '$lib/stats/statsPage';
-  import { PERIOD_DISPLAY_NAMES } from '$lib/constants/stats';
-  import {
-    OVERVIEW_SIGNALS_TOOLTIP,
-    YOUR_INVESTMENT_TOOLTIP,
-    INSIGHTS_TOOLTIP
-  } from '$lib/habits/blockGuideTooltips';
   import ChartGuideTooltip from '$lib/components/ChartGuideTooltip.svelte';
+  import type { Habit } from '@/types/habit';
+  import type { PeriodOption, WeekdayStats } from '$lib/stats/statsPage';
 
   type Props = {
-    habits: Habit[];
-    period: PeriodOption;
-    dailyData: any;
-    habitPeriodData: any;
-    mergedCompletions: any;
-    dayDetails: any;
-    aggregateTarget: number;
+    avgRate: number;
+    dailyData: Array<{ day: string; axisLabel: string; completed: number; total: number; rate: number }>;
+    habitPeriodData: Array<Record<string, string | number>>;
+    filteredHabits: Habit[];
     hiddenHabits: string[];
-    onToggleVisibility: (name: string) => void;
+    toggleHabitVisibility: (name: string) => void;
+    period: PeriodOption;
+    weekdayStats: WeekdayStats;
+    onPeriodChange: (period: PeriodOption) => void;
   };
 
   const {
-    habits,
-    period,
+    avgRate,
     dailyData,
     habitPeriodData,
-    mergedCompletions,
-    dayDetails,
-    aggregateTarget,
+    filteredHabits,
     hiddenHabits,
-    onToggleVisibility,
+    toggleHabitVisibility,
+    period,
+    weekdayStats,
+    onPeriodChange
   }: Props = $props();
+
+  const WEEKDAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'] as const;
 </script>
 
 <div class="space-y-4">
-  <!-- Daily Rate Chart -->
-  <div class="rounded-2xl border border-border bg-bg-card p-3">
-    <div class="mb-3 flex items-center justify-between">
-      <div>
-        <p class="text-[9px] font-mono uppercase tracking-[0.3em] text-muted">Daily Rate</p>
-        <p class="text-xs text-muted">{PERIOD_DISPLAY_NAMES[period] ?? period} completion rate</p>
-      </div>
-      <ChartGuideTooltip {...OVERVIEW_SIGNALS_TOOLTIP} triggerClassName="h-7 w-7" />
+  <div class="flex justify-end">
+    <div class="flex items-center gap-1 rounded-full border border-border bg-bg-card px-1 py-1">
+      {#each (['week', 'month', 'quarter', 'year'] as const) as opt, pIdx (opt + '-' + pIdx)}
+        <button
+          type="button"
+          class="h-10 w-10 rounded-full text-xs font-mono transition-colors {period === opt ? 'bg-foreground text-bg-primary' : 'text-muted hover:text-foreground'}"
+          onclick={() => onPeriodChange(opt)}
+        >
+          {opt === 'week' ? 'W' : opt === 'month' ? 'M' : opt === 'quarter' ? 'Q' : 'Y'}
+        </button>
+      {/each}
     </div>
-    <StatsDailyRateChart
-      avgRate={habits.length > 0 ? habits.reduce((s, h) => s + (h.stats?.completionRate ?? 0), 0) / habits.length : 0}
-      dailyData={dailyData}
-      {period}
-      chartHeight={180}
-    />
   </div>
 
-  <!-- Trend Chart -->
-  <div class="rounded-2xl border border-border bg-bg-card p-3">
-    <div class="mb-3 flex items-center justify-between">
-      <div>
-        <p class="text-[9px] font-mono uppercase tracking-[0.3em] text-muted">Trend</p>
-        <p class="text-xs text-muted">Completion trend over time</p>
-      </div>
-      <ChartGuideTooltip {...INSIGHTS_TOOLTIP} triggerClassName="h-7 w-7" />
-    </div>
+  <div class="grid gap-4 md:grid-cols-2">
+    <StatsDailyRateChart {avgRate} {dailyData} {period} />
     <StatsTrendChart
-      habitPeriodData={habitPeriodData}
-      filteredHabits={habits}
-      hiddenHabits={hiddenHabits}
-      toggleHabitVisibility={onToggleVisibility}
+      {habitPeriodData}
+      {filteredHabits}
+      {hiddenHabits}
+      {toggleHabitVisibility}
       {period}
-      chartHeight={200}
     />
   </div>
 
-  <!-- Heatmap -->
-  <div class="rounded-2xl border border-border bg-bg-card p-3">
-    <div class="mb-3 flex items-center justify-between">
-      <div>
-        <p class="text-[9px] font-mono uppercase tracking-[0.3em] text-muted">Heatmap</p>
-        <p class="text-xs text-muted">Activity distribution</p>
-      </div>
-      <ChartGuideTooltip {...YOUR_INVESTMENT_TOOLTIP} triggerClassName="h-7 w-7" />
+  <div class="rounded-[1.5rem] border border-border bg-bg-card/92 p-5 shadow-[0_18px_50px_rgba(15,23,42,0.08)]">
+    <div class="mb-4 flex min-w-0 items-center gap-2">
+      <h2 class="min-w-0 text-xs font-mono uppercase tracking-wider text-muted">Weekday breakdown</h2>
+      <ChartGuideTooltip
+        title="Weekly breakdown"
+        summary="This compact view compares recent weekly volume for every habit so you can see which ones stay active and which ones fade out."
+        focusPoints={[
+          'Bar height: how many days the habit was completed that week.',
+          'Latest bars: whether the habit is strengthening or cooling off now.',
+          'Right-side percent: overall completion rate for quick ranking.'
+        ]}
+        variant="columns"
+      />
     </div>
-    <HabitHeatmap
-      habits={habits}
-      {habitPeriodData}
-      {period}
-    />
+    <div class="flex gap-2">
+      {#each WEEKDAY_NAMES as day, di (day + '-' + di)}
+        {@const count = weekdayStats.counts[di] ?? 0}
+        {@const maxCount = Math.max(1, ...weekdayStats.counts)}
+        {@const isActive = count > 0}
+        <div class="flex flex-1 flex-col items-center gap-2">
+          <div class="relative h-20 w-full overflow-hidden rounded-sm bg-border">
+            <div
+              class="absolute bottom-0 w-full rounded-sm bg-accent transition-all duration-500"
+              style:height={`${(count / maxCount) * 100}%`}
+              style:box-shadow="0 0 6px var(--glow)"
+            ></div>
+          </div>
+          <span class="text-[9px] font-mono {isActive ? 'text-foreground' : 'text-muted'}">{day}</span>
+          <span class="text-[8px] font-mono text-muted">{count}</span>
+        </div>
+      {/each}
+    </div>
   </div>
 </div>
