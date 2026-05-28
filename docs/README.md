@@ -61,7 +61,8 @@ docs/
 | [setup/web-push-setup.md](./setup/web-push-setup.md) | VAPID setup, notification verification |
 | [operations/reliability-rollout.md](./operations/reliability-rollout.md) | Health checks, rollout checklist, rollback notes |
 | [operations/github-automation.md](./operations/github-automation.md) | Renovate state and manual security scan guidance |
-| [monitoring/grafana-cloud.md](./monitoring/grafana-cloud.md) | Grafana Cloud integration notes for the backend |
+| [monitoring/newrelic.md](./monitoring/newrelic.md) | New Relic backend observability baseline and rollout guardrails |
+| [monitoring/grafana-cloud.md](./monitoring/grafana-cloud.md) | Legacy Grafana Cloud integration notes for the backend |
 | [project/health.md](./project/health.md) | Quality gates, tests, repo-level verification habits |
 | [project/ui-ux-backlog.md](./project/ui-ux-backlog.md) | UI/UX, maintainability, and UI-code quality backlog tied to current `apps/web` files |
 | [features/chart-tooltips.md](./features/chart-tooltips.md) | UX contract for chart guide tooltips |

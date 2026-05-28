@@ -157,7 +157,7 @@
             <artifactId>mockito-junit-jupiter</artifactId>
             <scope>test</scope>
         </dependency>
-        <!-- Structured JSON output to stdout; Grafana Agent tails Docker container logs and pushes to Loki -->
+        <!-- Structured JSON output to stdout; New Relic reads the container logs when log forwarding is enabled -->
     </dependencies>
 
     <build>

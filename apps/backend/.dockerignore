@@ -18,6 +18,8 @@
 !/pmd/**
 !/spotbugs
 !/spotbugs/**
+!/ops
+!/ops/**
 
 !target/*-runner
 !target/*-runner.jar

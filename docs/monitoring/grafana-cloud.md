@@ -7,15 +7,17 @@
 - [🚀 Run](#run)
 - [🧪 Validate](#validate)
 
-This repository now uses:
+This repository used to use:
 - frontend RUM sent directly to Grafana Faro (F1),
 - backend Prometheus metrics scraped by an Alloy sidecar in docker-compose and pushed to Grafana Cloud Mimir (B3).
+
+New Relic is the default backend observability path. Treat this document as the legacy/optional Grafana path only and do not enable both defaults together.
 
 ## 🎯 Scope <a name="scope"></a>
 
 - Frontend: direct browser telemetry to Faro.
-- Backend: `/q/metrics` scraped by sidecar collector.
-- No host-level Grafana Agent setup required.
+- Backend: `/q/metrics` scraped by the legacy sidecar collector.
+- No host-level Grafana Agent setup required for the legacy path.
 
 [↑ Back to top](#top)
 
@@ -27,6 +29,8 @@ This repository now uses:
    - `GRAFANA_MIMIR_URL`
    - `GRAFANA_MIMIR_USERNAME`
    - `GRAFANA_METRICS_API_KEY`
+
+If New Relic is enabled, keep this path disabled unless you are intentionally operating the legacy metrics pipeline.
 
 [↑ Back to top](#top)
 
