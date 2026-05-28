@@ -12,7 +12,9 @@
 This repo uses New Relic as the default backend observability path:
 
 - Java agent inside `apps/backend`
+- Browser agent inside `apps/web`
 - JSON ECS logs on stdout
+- browser logs and JS errors sent from the SvelteKit client when browser config is present
 - log forwarding stays disabled until the log volume review is done
 - Grafana Alloy remains optional legacy tooling for the old metrics path only
 
@@ -21,6 +23,7 @@ This repo uses New Relic as the default backend observability path:
 ## 🎯 Scope <a name="scope"></a>
 
 - Backend APM, JVM telemetry, and logs-in-context for `habittracker-api`
+- Browser page views, JS errors, and client-side logs for the web app
 - no second default log pipeline
 - legacy Alloy/Mimir assets are optional and should not be enabled in parallel with the New Relic default path
 
@@ -37,14 +40,20 @@ Runtime:
 - `NEW_RELIC_APPLICATION_LOGGING_FORWARDING_ENABLED=false`
 - `NEW_RELIC_APPLICATION_LOGGING_FORWARDING_MAX_SAMPLES_STORED=10000`
 - `NEW_RELIC_APPLICATION_LOGGING_LOCAL_DECORATING_ENABLED=false`
+- `VITE_NEW_RELIC_BROWSER_ENABLED=false`
+- `VITE_NEW_RELIC_BROWSER_INFO=` copied from the Browser app `NREUM.info` snippet
+- `VITE_NEW_RELIC_BROWSER_INIT=` copied from the Browser app `NREUM.init` snippet
+- `VITE_NEW_RELIC_BROWSER_LOADER_CONFIG=` copied from the Browser app `NREUM.loader_config` snippet
 
 Notes:
 
 - keep the license key out of git
+- browser config is build-time data for the frontend image, so populate it before `apps/web` is built
 - keep forwarding off until the log volume review says the stack is safe for the free plan
 - keep local decorating off when forwarding is on
 - Quarkus does not expose the servlet-container JMX pool set that powers the built-in APM `Threads` tab, so the image now ships a custom JMX extension under `/opt/newrelic/extensions`.
 - Query custom JVM/thread metrics in New Relic from the `Metric` event with names like `JMX/Runtime/Threads/ThreadCount`.
+- Browser logs arrive in the New Relic `Logs` UI and can be filtered by browser app name plus the custom `event` attribute.
 
 [↑ Back to top](#top)
 
@@ -56,7 +65,10 @@ Notes:
 2. `NEW_RELIC_AGENT_ENABLED=true` with forwarding off
    - first rollout mode
    - APM and JVM telemetry only
-3. `NEW_RELIC_AGENT_ENABLED=true` with forwarding on
+3. frontend browser config present with `VITE_NEW_RELIC_BROWSER_ENABLED=true`
+   - Browser page views, JS errors, and client logs enabled
+   - configure from the Browser app copy/paste snippet before building the web image
+4. `NEW_RELIC_AGENT_ENABLED=true` with forwarding on
    - only after log volume review
    - keep `debug,trace` denied
    - keep the sample cap explicit
@@ -74,6 +86,8 @@ docker compose --env-file .env.example --profile db up --build
 Checks:
 
 - backend entity appears in New Relic APM
+- browser entity appears in New Relic Browser after opening the web app
+- frontend logs appear in New Relic `Logs`
 - custom thread metrics appear in New Relic `Metric` data after a few scrape intervals
 - logs include the application name and deployment environment
 - Alloy documentation remains clearly marked as optional/legacy

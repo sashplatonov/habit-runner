@@ -1,5 +1,6 @@
 import { initFaro } from '$lib/observability/faro';
 import { installGlobalClientLogging, logClientError } from '$lib/logging/clientLogger';
+import { initNewRelicBrowser, noticeBrowserError } from '$lib/observability/newrelic';
 import { reportWebVital } from '$lib/observability/webVitals';
 import { onCLS, onFCP, onINP, onLCP, onTTFB, type Metric } from 'web-vitals';
 
@@ -40,6 +41,7 @@ export async function init(): Promise<void> {
   }
 
   initialized = true;
+  await initNewRelicBrowser();
   installGlobalClientLogging();
   await initFaro();
   void registerServiceWorker();
@@ -62,6 +64,12 @@ type ClientErrorInput = {
 };
 
 export function handleError({ error, event, message, status }: ClientErrorInput) {
+  const context = {
+    event: 'sveltekit.client_error',
+    path: event.url.pathname,
+    status
+  };
+
   logClientError('sveltekit.client_error', message, {
     error:
       error instanceof Error
@@ -73,9 +81,9 @@ export function handleError({ error, event, message, status }: ClientErrorInput)
         : {
             value: String(error),
           },
-    path: event.url.pathname,
-    status,
+    ...context
   });
+  noticeBrowserError(error, context);
 
   return {
     message,

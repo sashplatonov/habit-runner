@@ -1,3 +1,5 @@
+import { logBrowser, noticeBrowserError } from '$lib/observability/newrelic';
+
 type LogLevel = 'info' | 'warn' | 'error';
 
 type LogPayload = {
@@ -24,6 +26,7 @@ function write(level: LogLevel, payload: LogPayload) {
     return;
   }
 
+  logBrowser(level, payload.event, payload.message, payload.context);
   window.dispatchEvent(new CustomEvent('app-client-log', { detail: logEntry }));
   try {
     const existing = window.localStorage.getItem(CLIENT_LOG_STORAGE_KEY);
@@ -77,20 +80,35 @@ export function installGlobalClientLogging() {
     const detail = (event as CustomEvent<Record<string, unknown>>).detail;
     logClientError('ui.error_boundary', 'UI render failed', detail);
   };
+  const onUnhandledError = (event: ErrorEvent) => {
+    const context = {
+      source: event.filename,
+      line: event.lineno,
+      column: event.colno
+    };
+    logClientError('ui.window_error', event.message || 'Unhandled window error', context);
+    if (event.error) {
+      noticeBrowserError(event.error, context);
+    }
+  };
   const onUnhandledRejection = (event: PromiseRejectionEvent) => {
-    logClientError('ui.unhandled_rejection', 'Unhandled promise rejection', {
+    const context = {
       reason:
         event.reason instanceof Error
           ? { message: event.reason.message, stack: event.reason.stack }
           : String(event.reason)
-    });
+    };
+    logClientError('ui.unhandled_rejection', 'Unhandled promise rejection', context);
+    noticeBrowserError(event.reason, context);
   };
 
   window.addEventListener('app-ui-error', onUiError);
+  window.addEventListener('error', onUnhandledError);
   window.addEventListener('unhandledrejection', onUnhandledRejection);
 
   return () => {
     window.removeEventListener('app-ui-error', onUiError);
+    window.removeEventListener('error', onUnhandledError);
     window.removeEventListener('unhandledrejection', onUnhandledRejection);
   };
 }

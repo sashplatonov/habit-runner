@@ -39,6 +39,7 @@
     "@grafana/faro-web-sdk": "^2.3.1",
     "@grafana/faro-web-tracing": "^2.3.1",
     "@habbit-runner/shared": "*",
+    "@newrelic/browser-agent": "^1.315.0",
     "@sindresorhus/slugify": "^3.0.0",
     "@types/canvas-confetti": "^1.9.0",
     "canvas-confetti": "^1.9.4",

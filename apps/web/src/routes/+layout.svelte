@@ -3,7 +3,7 @@
   import { afterNavigate } from '$app/navigation';
   import '../app.css';
   import { readAuthSession } from '@/lib/auth/session';
-  import { installGlobalClientLogging } from '@/lib/logging/clientLogger';
+  import { setBrowserPageViewName } from '$lib/observability/newrelic';
   import UndoToast from '$lib/components/UndoToast.svelte';
   import { themeStore } from '$lib/stores/theme';
   import { setUndoContext } from '$lib/stores/undo';
@@ -20,6 +20,7 @@
   afterNavigate(({ to }) => {
     if (to?.url) {
       trackPageView(to.url.href);
+      setBrowserPageViewName(to.url.pathname);
     }
   });
 
@@ -39,8 +40,6 @@
         trackPwaInstalled();
       });
     }
-
-    return installGlobalClientLogging();
   });
 </script>
 
