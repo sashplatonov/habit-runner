@@ -39,6 +39,7 @@ RUN set -eux; \
 # Copy the full Quarkus application layout so that quarkus-run.jar can load classes from lib/
 COPY --from=build /workspace/target/quarkus-app/ /work/
 COPY ops/newrelic/newrelic.yml /opt/newrelic/newrelic.yml
+COPY ops/newrelic/extensions/ /opt/newrelic/extensions/
 
 EXPOSE 8080
 # Run the Quarkus runner jar from the quarkus-app directory
