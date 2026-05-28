@@ -30,6 +30,11 @@ ARG VITE_FARO_ENVIRONMENT
 ARG VITE_FARO_SAMPLING_RATE
 ARG VITE_FARO_PERSISTENT_SESSIONS
 ARG VITE_FARO_ENABLED
+# ── New Relic Browser ────────────────────────────────────────────────────────
+ARG VITE_NEW_RELIC_BROWSER_ENABLED
+ARG VITE_NEW_RELIC_BROWSER_INFO
+ARG VITE_NEW_RELIC_BROWSER_INIT
+ARG VITE_NEW_RELIC_BROWSER_LOADER_CONFIG
 # Compile service worker source to a JS file expected by workbox injectManifest
 # Ensure SvelteKit sync runs to populate .svelte-kit, then compile the service worker
 RUN npm run sync:svelte
