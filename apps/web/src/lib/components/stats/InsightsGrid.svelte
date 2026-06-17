@@ -29,9 +29,10 @@
     </div>
     <div class="grid gap-3 md:grid-cols-3">
       {#each insights as insight (insight.id)}
+        {@const Icon = getIcon(insight)}
         <div class="rounded-[1.5rem] border border-border bg-bg-card/92 p-5 shadow-[0_18px_50px_rgba(15,23,42,0.08)] space-y-2">
           <div class="flex items-center gap-2">
-            <svelte:component this={getIcon(insight)} size={16} class="shrink-0 text-accent" />
+            <Icon size={16} class="shrink-0 text-accent" />
             <p class="text-[10px] font-mono uppercase tracking-[0.2em] text-muted">{insight.title}</p>
           </div>
           <p class="text-sm text-foreground">{insight.body}</p>

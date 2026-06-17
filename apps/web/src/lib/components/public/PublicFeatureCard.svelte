@@ -12,7 +12,7 @@
 <div class="rounded-2xl border border-slate-200 bg-slate-50/90 p-4 {className}">
   {#if Icon}
     <div class="mb-3 text-slate-600">
-      <svelte:component this={Icon} size={20} />
+      <Icon size={20} />
     </div>
   {/if}
   <h3 class="text-2xl font-semibold tracking-tight text-slate-950">{title}</h3>

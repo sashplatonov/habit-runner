@@ -35,7 +35,6 @@
   export let appearanceIndex: number;
   export let isDragActive: boolean;
   export let dragId: string | null;
-  export let dragOverId: string | null;
   export let dropHint: DropHint;
   export let animatingHabitId: string | null;
   export let animParticles: CelebrationParticle[];

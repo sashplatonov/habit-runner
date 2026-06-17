@@ -50,6 +50,10 @@
     open = false;
   }
 
+  function handlePanelKeydown(event: KeyboardEvent) {
+    event.stopPropagation();
+  }
+
   function updatePosition() {
     const trigger = triggerEl;
     const panel = panelEl;
@@ -144,6 +148,7 @@
     aria-label="{title} explanation"
     tabindex="-1"
     onclick={(e) => { e.stopPropagation(); }}
+    onkeydown={handlePanelKeydown}
     onmouseenter={previewOpen}
     onmouseleave={previewClose}
   >
