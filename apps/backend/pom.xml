@@ -31,6 +31,7 @@
         <spotbugs-plugin.version>4.9.8.3</spotbugs-plugin.version>
         <assertj.version>3.27.3</assertj.version>
         <mapstruct.version>1.6.3</mapstruct.version>
+        <mockito.version>5.21.0</mockito.version>
         <skipITs>true</skipITs>
     </properties>
 
@@ -150,11 +151,13 @@
         <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-core</artifactId>
+            <version>${mockito.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-junit-jupiter</artifactId>
+            <version>${mockito.version}</version>
             <scope>test</scope>
         </dependency>
         <!-- Structured JSON output to stdout; New Relic reads the container logs when log forwarding is enabled -->
@@ -208,7 +211,7 @@
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>${surefire-plugin.version}</version>
                 <configuration>
-                    <argLine>@{argLine} --enable-preview</argLine>
+                    <argLine>@{argLine} -Xshare:off -javaagent:${settings.localRepository}/org/mockito/mockito-core/${mockito.version}/mockito-core-${mockito.version}.jar --enable-preview</argLine>
                     <systemPropertyVariables>
                         <java.util.logging.manager>org.jboss.logmanager.LogManager</java.util.logging.manager>
                         <maven.home>${maven.home}</maven.home>
