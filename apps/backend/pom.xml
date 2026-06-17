@@ -20,18 +20,18 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <quarkus.platform.group-id>io.quarkus.platform</quarkus.platform.group-id>
         <quarkus.platform.artifact-id>quarkus-bom</quarkus.platform.artifact-id>
-        <quarkus.platform.version>3.34.3</quarkus.platform.version>
+        <quarkus.platform.version>3.36.2</quarkus.platform.version>
         <compiler-plugin.version>3.15.0</compiler-plugin.version>
-        <surefire-plugin.version>3.5.4</surefire-plugin.version>
+        <surefire-plugin.version>3.5.6</surefire-plugin.version>
         <jacoco.version>0.8.14</jacoco.version>
         <jacoco.minimum.line.coverage>0.80</jacoco.minimum.line.coverage>
-        <pmd-plugin.version>3.26.0</pmd-plugin.version>
-        <pmd.version>7.23.0</pmd.version>
+        <pmd-plugin.version>3.28.0</pmd-plugin.version>
+        <pmd.version>7.25.0</pmd.version>
         <checkstyle-plugin.version>3.6.0</checkstyle-plugin.version>
         <spotbugs-plugin.version>4.9.8.3</spotbugs-plugin.version>
-        <assertj.version>3.27.3</assertj.version>
+        <assertj.version>3.27.7</assertj.version>
         <mapstruct.version>1.6.3</mapstruct.version>
-        <mockito.version>5.21.0</mockito.version>
+        <mockito.version>5.23.0</mockito.version>
         <skipITs>true</skipITs>
     </properties>
 
