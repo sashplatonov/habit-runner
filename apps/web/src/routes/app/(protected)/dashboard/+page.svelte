@@ -32,6 +32,7 @@
   import SyncStatus from '$lib/components/SyncStatus.svelte';
   import type { OnboardingTemplate } from '$lib/components/onboarding';
   import { readDashboardStateFromURL, updateDashboardURL } from '$lib/dashboard/urlState';
+  import { normalizeDashboardFilter, shouldShowDashboardOnboarding, type DashboardFilter } from '$lib/dashboard/viewState';
   import { formatAppDate } from '@/lib/i18n';
   import {
     calculateScheduledCompletionRate,
@@ -50,7 +51,6 @@
   import type { Habit } from '@/types/habit';
 
   // ─── Types ────────────────────────────────────────────────────────────────────
-  type DashboardFilter = 'pending' | 'all' | 'done' | 'archived';
   type SortMode = 'custom' | 'smart';
   type ViewDensity = 'comfortable' | 'compact';
   type DropHint = { habitId: string; position: 'above' | 'below' };
@@ -153,6 +153,9 @@
 
   // ─── Derived: habit lists ─────────────────────────────────────────────────────
   const activeHabits = $derived($habitsStore.habits);
+  const archivedHabits = $derived($habitsStore.allHabits.filter((habit) => habit.archived));
+  const totalHabits = $derived($habitsStore.allHabits.length);
+  const showOnboarding = $derived(shouldShowDashboardOnboarding(totalHabits));
 
   const scheduledToday = $derived(activeHabits.filter((h) => isMandatoryToday(h, todayDate)));
 
@@ -234,6 +237,13 @@
     return selectedTags
       .map((tag) => ({ tag, habits: filteredHabits.filter((h) => h.tags.includes(tag)) }))
       .filter((g) => g.habits.length > 0);
+  });
+
+  $effect(() => {
+    const normalizedFilter = normalizeDashboardFilter(filter, activeHabits.length, archivedHabits.length);
+    if (normalizedFilter !== filter) {
+      filter = normalizedFilter;
+    }
   });
 
   // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -704,7 +714,7 @@
   <title>Dashboard - Habbit Runner</title>
 </svelte:head>
 
-{#if $habitsStore.habits.length === 0}
+{#if showOnboarding}
   <Onboarding onCreateCustom={navigateToNewHabit} onTemplateSelect={handleTemplateSelect} activeTemplate={addingTemplate} />
 {:else}
   <div class="min-h-screen bg-transparent">
