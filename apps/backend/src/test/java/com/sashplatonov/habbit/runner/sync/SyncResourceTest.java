@@ -419,6 +419,37 @@ class SyncResourceTest extends AuthenticatedApiTestSupport {
   // ─── Guardrail tests ──────────────────────────────────────────────────────
 
   @Test
+  void shouldReturn400WhenPushPayloadIncludesDescriptionOverMaxLength() {
+    var longDescription = "x".repeat(10001);
+    var op = syncOp(
+        UUID.randomUUID().toString(),
+        "habit",
+        "upsert",
+        Map.of(
+            "id", UUID.randomUUID().toString(),
+            "name", "Habit with long description",
+            "description", longDescription,
+            "frequency", "daily",
+            "version", 1,
+            "updatedAt", Instant.now().toString()
+        ),
+        Instant.now().toString()
+    );
+
+    given()
+        .header("Authorization", "Bearer " + token)
+        .contentType(ContentType.JSON)
+        .body(pushRequest(op))
+        .when()
+        .post("/sync/push")
+        .then()
+        .statusCode(400)
+        .body("status", equalTo(400))
+        .body("title", equalTo("Constraint Violation"))
+        .body("detail", containsString("size must be between 0 and 10000"));
+  }
+
+  @Test
   void shouldReturn400WhenPushPayloadExceedsMaxOpCount() {
     var ops = IntStream.range(0, 501).mapToObj(i -> syncOp(
         UUID.randomUUID().toString(),

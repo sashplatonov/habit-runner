@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.sashplatonov.habbit.runner.model.HabitColor;
 import com.sashplatonov.habbit.runner.model.HabitFrequency;
 import com.sashplatonov.habbit.runner.model.HabitType;
+import jakarta.validation.constraints.Size;
 import lombok.Builder;
 
 import java.util.List;
@@ -12,7 +13,7 @@ import java.util.List;
 public record HabitPayloadDto(
     String id,
     String name,
-    String description,
+    @Size(max = 10000) String description,
     HabitColor color,
     String icon,
     HabitFrequency frequency,

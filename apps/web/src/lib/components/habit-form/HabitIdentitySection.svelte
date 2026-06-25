@@ -81,7 +81,7 @@
       <textarea
         id="habit-description"
         bind:value={description}
-        maxlength="400"
+        maxlength="10000"
         rows="6"
         placeholder="Brief description... (supports **bold**, *italic*, lists, etc.)"
         class="w-full resize-none overflow-y-auto rounded-lg border border-border bg-bg-secondary px-3 py-2.5 text-sm text-foreground placeholder-border-hover transition-all focus:border-accent/50 focus:shadow-[0_0_12px_var(--glow)]"
