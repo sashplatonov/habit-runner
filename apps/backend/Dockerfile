@@ -1,15 +1,24 @@
+# syntax=docker/dockerfile:1.7
 # JVM build for local development
 FROM docker.io/library/eclipse-temurin:25-jdk AS build
 WORKDIR /workspace
 
-# Copy only the app sources (context will be apps/backend)
+ENV MAVEN_OPTS="-XX:MaxRAMPercentage=70 -XX:ActiveProcessorCount=1"
+
+# Copy build metadata first so Maven dependencies can stay cached across source changes.
 COPY .mvn .mvn
 COPY --chmod=0755 mvnw mvnw
 COPY pom.xml .
 COPY checkstyle checkstyle
+COPY pmd pmd
+COPY spotbugs spotbugs
+
+RUN --mount=type=cache,target=/root/.m2 ./mvnw -B -T1 -Dmaven.test.skip=true dependency:go-offline
+
+# Copy application sources after dependency warmup to avoid invalidating the cache on every change.
 COPY src src
 
-RUN ./mvnw -B package
+RUN --mount=type=cache,target=/root/.m2 ./mvnw -B -T1 -Djacoco.skip=true -Dtest.jvm.argline.extra="-XX:ActiveProcessorCount=2 -XX:MaxRAMPercentage=70" package
 
 # Normalize produced jar to a known location. Prefer the Quarkus run jar if present.
 RUN set -eux; \

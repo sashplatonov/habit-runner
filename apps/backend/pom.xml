@@ -33,6 +33,7 @@
         <mapstruct.version>1.6.3</mapstruct.version>
         <mockito.version>5.23.0</mockito.version>
         <skipITs>true</skipITs>
+        <test.jvm.argline.extra></test.jvm.argline.extra>
     </properties>
 
     <dependencyManagement>
@@ -211,7 +212,7 @@
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>${surefire-plugin.version}</version>
                 <configuration>
-                    <argLine>@{argLine} -Xshare:off -javaagent:${settings.localRepository}/org/mockito/mockito-core/${mockito.version}/mockito-core-${mockito.version}.jar --enable-preview</argLine>
+                    <argLine>@{argLine} ${test.jvm.argline.extra} -Xshare:off -javaagent:${settings.localRepository}/org/mockito/mockito-core/${mockito.version}/mockito-core-${mockito.version}.jar --enable-preview</argLine>
                     <systemPropertyVariables>
                         <java.util.logging.manager>org.jboss.logmanager.LogManager</java.util.logging.manager>
                         <maven.home>${maven.home}</maven.home>
@@ -314,7 +315,7 @@
                     </execution>
                 </executions>
                 <configuration>
-                    <argLine>@{argLine} --enable-preview</argLine>
+                    <argLine>@{argLine} ${test.jvm.argline.extra} --enable-preview</argLine>
                     <systemPropertyVariables>
                         <native.image.path>${project.build.directory}/${project.build.finalName}-runner</native.image.path>
                         <java.util.logging.manager>org.jboss.logmanager.LogManager</java.util.logging.manager>

@@ -8,6 +8,7 @@ import com.sashplatonov.habbit.runner.model.RefreshTokenEntity;
 import com.sashplatonov.habbit.runner.model.SyncOpLogEntity;
 import com.sashplatonov.habbit.runner.model.TombstoneEntity;
 import com.sashplatonov.habbit.runner.model.UserEntity;
+import jakarta.persistence.EntityManager;
 import jakarta.inject.Inject;
 import jakarta.transaction.Status;
 import jakarta.transaction.UserTransaction;
@@ -26,6 +27,9 @@ public abstract class AuthenticatedApiTestSupport {
   @Inject
   protected UserTransaction ut;
 
+  @Inject
+  protected EntityManager entityManager;
+
   @AfterEach
   void cleanDatabase() throws Exception {
     // Clean up test data after each test for isolation
@@ -42,12 +46,14 @@ public abstract class AuthenticatedApiTestSupport {
     
     ut.begin();
     try {
-      CheckinEntity.deleteAll();
-      HabitEntity.deleteAll();
-      RefreshTokenEntity.deleteAll();
-      UserEntity.deleteAll();
-      TombstoneEntity.deleteAll();
-      SyncOpLogEntity.deleteAll();
+      entityManager.createNativeQuery("SET REFERENTIAL_INTEGRITY FALSE").executeUpdate();
+      entityManager.createNativeQuery("TRUNCATE TABLE checkins").executeUpdate();
+      entityManager.createNativeQuery("TRUNCATE TABLE habits").executeUpdate();
+      entityManager.createNativeQuery("TRUNCATE TABLE refresh_tokens").executeUpdate();
+      entityManager.createNativeQuery("TRUNCATE TABLE users").executeUpdate();
+      entityManager.createNativeQuery("TRUNCATE TABLE tombstones").executeUpdate();
+      entityManager.createNativeQuery("TRUNCATE TABLE sync_op_logs").executeUpdate();
+      entityManager.createNativeQuery("SET REFERENTIAL_INTEGRITY TRUE").executeUpdate();
       ut.commit();
     } catch (Exception e) {
       rollbackIfNeeded();
