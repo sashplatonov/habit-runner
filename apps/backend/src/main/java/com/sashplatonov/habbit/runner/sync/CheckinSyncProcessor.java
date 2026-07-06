@@ -7,9 +7,6 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
 
-import java.time.Instant;
-import java.time.LocalDate;
-
 @ApplicationScoped
 @Slf4j
 public class CheckinSyncProcessor {
@@ -78,7 +75,7 @@ public class CheckinSyncProcessor {
   private void handleDelete(CheckinCommand command, SyncPushState state) {
     var existing = checkinSyncUpsertHandler.findCheckin(command.habitId(), command.date(), command.userId());
     state.addAppliedCheckinDelete(command.opId(), checkinDeleteHandler.delete(
-        new CheckinDeleteHandler.CheckinDeleteRequest(
+        new CheckinDeleteRequest(
             command.userId(),
             command.habitId(),
             command.date(),
@@ -118,15 +115,5 @@ public class CheckinSyncProcessor {
     checkin.setCount(Math.max(1, payload.count() != null ? payload.count() : 1));
     checkin.setVersion(Math.max(checkin.getVersion(), payload.version() != null ? payload.version() : 0) + 1);
     checkin.setUpdatedAt(payloadCodec.nextSyncDate(command.clientUpdated(), checkin.getUpdatedAt()));
-  }
-
-  private record CheckinCommand(
-      String userId,
-      String opId,
-      String habitId,
-      LocalDate date,
-      CheckinPayloadDto payload,
-      Instant clientUpdated
-  ) {
   }
 }

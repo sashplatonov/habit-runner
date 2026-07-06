@@ -2,7 +2,6 @@ package com.sashplatonov.habbit.runner.api;
 
 import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.Validation;
-import jakarta.validation.constraints.NotBlank;
 import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.NotAuthorizedException;
 import jakarta.ws.rs.NotFoundException;
@@ -161,12 +160,6 @@ class ApiSupportTest {
       return new ConstraintViolationException(violations);
     }
   }
-
-  
-
-  private record ValidationPayload(@NotBlank String value) {
-  }
-
   private static <T> T proxy(Class<T> type, Map<String, Object> values) {
     return (T) Proxy.newProxyInstance(
         type.getClassLoader(),

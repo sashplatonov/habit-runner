@@ -66,6 +66,9 @@ The root `.codexignore`/`.claudeignore` lists the directories that agents should
 - **Run validations after changes**: Execute `docker compose config` (with the same `-f` stack files and profiles used in CI/dev) and run frontend build checks `cd apps/web && npm run build` or `npm run check` to detect missing build-time args.
 - **Document and log changes**: Add a short entry to `ai-fix-log.md` (or `docs/`) summarizing the change, risk assessment, and rollback instructions.
 - **Immediate remediation on regressions**: If a change causes a regression (e.g., missing envs or broken builds), revert the change, restore the envs, and open a PR that clearly explains the fix and mitigation steps.
+- **No nested Java types**: Do not introduce inner or nested Java classes, records, enums, or interfaces in production or test code. Extract each type into its own top-level file in the most specific package available.
+- **No lint suppressions**: Do not add or keep `@SuppressWarnings`, `NOPMD`, SpotBugs exclude filters, JaCoCo excludes, Checkstyle ignore rules, or plugin `failOnError=false` switches as a workaround for code quality findings. Fix the code or package structure instead.
+- **One top-level responsibility per file**: Keep Java files focused on a single top-level type and move helper implementations into dedicated package-private files when they deserve their own lifecycle or tests.
 
 ## Communication Guidelines
 - Final summaries and high-level recap bullets when responding should be written in Russian, even if other sections of the message use English for commands or file references.

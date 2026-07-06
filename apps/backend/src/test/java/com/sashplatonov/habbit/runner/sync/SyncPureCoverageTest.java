@@ -150,10 +150,10 @@ class SyncPureCoverageTest {
 
     assertSame(pullResponse, actualPull);
     assertSame(pushResponse, actualPush);
-    assertEquals("user-1", pullProcessor.userId);
-    assertEquals("cursor-1", pullProcessor.since);
-    assertEquals("user-1", pushProcessor.userId);
-    assertEquals(ops, pushProcessor.ops);
+    assertEquals("user-1", pullProcessor.getUserId());
+    assertEquals("cursor-1", pullProcessor.getSince());
+    assertEquals("user-1", pushProcessor.getUserId());
+    assertEquals(ops, pushProcessor.getOps());
   }
 
   private HabitEntity habitEntity(String id, Instant updatedAt) {
@@ -204,41 +204,5 @@ class SyncPureCoverageTest {
     tombstone.version = 6;
     tombstone.setDeletedAt(deletedAt);
     return tombstone;
-  }
-
-  private static final class StubSyncPullProcessor extends SyncPullProcessor {
-    private final PullResponseDto response;
-    private String userId;
-    private String since;
-
-    StubSyncPullProcessor(PullResponseDto response) {
-      super(null, null);
-      this.response = response;
-    }
-
-    @Override
-    public PullResponseDto pull(String userId, String since) {
-      this.userId = userId;
-      this.since = since;
-      return response;
-    }
-  }
-
-  private static final class StubSyncPushProcessor extends SyncPushProcessor {
-    private final PushResponseDto response;
-    private String userId;
-    private List<SyncOpDto> ops;
-
-    StubSyncPushProcessor(PushResponseDto response) {
-      super(null, null, null);
-      this.response = response;
-    }
-
-    @Override
-    public PushResponseDto push(String userId, List<SyncOpDto> ops) {
-      this.userId = userId;
-      this.ops = ops;
-      return response;
-    }
   }
 }

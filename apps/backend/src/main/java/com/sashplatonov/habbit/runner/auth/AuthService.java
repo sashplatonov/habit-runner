@@ -21,16 +21,6 @@ public class AuthService {
   protected final UserAccess userAccess;
   protected final OAuthStateAccess oauthStateAccess;
 
-  protected interface UserAccess {
-    UserEntity findByEmail(String email);
-    UserEntity findRequiredById(String userId);
-  }
-
-  protected interface OAuthStateAccess {
-    OAuthStateEntity consume(String state);
-    void save(OAuthStateEntity payload);
-  }
-
   AuthService() {
     this(null, null, null, null);
   }
@@ -159,6 +149,4 @@ public class AuthService {
     return Instant.now();
   }
 
-  public record OAuthCallbackSession(String redirectUrl, TokenResponse session) {
-  }
 }

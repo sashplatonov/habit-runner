@@ -29,13 +29,6 @@ import static org.mockito.Mockito.when;
 
 @QuarkusTest
 @Transactional
-@SuppressWarnings({
-  "PMD.CouplingBetweenObjects",
-  "PMD.TooManyMethods",
-  "PMD.ExcessiveParameterList",
-  "PMD.SimplifiableTestAssertion",
-  "PMD.LawOfDemeter"
-})
 class SyncPanacheCoverageTest {
 
   private SyncPayloadCodec payloadCodec;

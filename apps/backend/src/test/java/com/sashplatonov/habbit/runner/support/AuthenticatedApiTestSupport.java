@@ -128,20 +128,4 @@ public abstract class AuthenticatedApiTestSupport {
       rollbackIfNeeded();
     }
   }
-
-  public record AuthenticatedUser(String id, String email, String accessToken) {
-    public String getId() {
-      return id;
-    }
-  }
-
-  @FunctionalInterface
-  protected interface TransactionalCallable<T> {
-    T call() throws Exception;
-  }
-
-  @FunctionalInterface
-  protected interface TransactionalRunnable {
-    void run() throws Exception;
-  }
 }

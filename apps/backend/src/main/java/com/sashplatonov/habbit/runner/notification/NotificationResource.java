@@ -1,7 +1,9 @@
 package com.sashplatonov.habbit.runner.notification;
 
 import com.sashplatonov.habbit.runner.api.ErrorResponse;
+import com.sashplatonov.habbit.runner.api.OperationFailure;
 import com.sashplatonov.habbit.runner.api.OperationResult;
+import com.sashplatonov.habbit.runner.api.OperationSuccess;
 import com.sashplatonov.habbit.runner.auth.CurrentUserContext;
 import com.sashplatonov.habbit.runner.auth.RequireAuth;
 import com.sashplatonov.habbit.runner.notification.dto.PushSubscriptionEndpointRequest;
@@ -91,21 +93,21 @@ public class NotificationResource {
     }
     var userId = currentUserContext.requireUser().id();
     var result = notificationService.unsubscribe(userId, body);
-    if (result instanceof OperationResult.Success<Void>) {
+    if (result instanceof OperationSuccess<Void>) {
       return Response.noContent().build();
     }
-    var failure = (OperationResult.Failure<Void>) result;
+    var failure = (OperationFailure<Void>) result;
     var error = failure.toErrorResponse();
     return Response.status(error.status()).entity(error).build();
   }
 
   private <T> Response toResponse(OperationResult<T> result, Response.Status status, boolean created) {
-    if (result instanceof OperationResult.Success<T> success) {
+    if (result instanceof OperationSuccess<T> success) {
       return created
           ? Response.status(status).entity(success.value()).build()
           : Response.ok(success.value()).build();
     }
-    var failure = (OperationResult.Failure<T>) result;
+    var failure = (OperationFailure<T>) result;
     var error = failure.toErrorResponse();
     return Response.status(error.status()).entity(error).build();
   }

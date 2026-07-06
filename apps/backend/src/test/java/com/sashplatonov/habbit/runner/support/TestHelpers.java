@@ -16,7 +16,6 @@ import com.sashplatonov.habbit.runner.notification.NotificationResource;
  * test classes can call these helpers instead of reaching through foreign
  * objects directly which triggers LawOfDemeter checks in PMD.
  */
-@SuppressWarnings("PMD.LawOfDemeter")
 public final class TestHelpers {
 
   private TestHelpers() {}
@@ -25,7 +24,6 @@ public final class TestHelpers {
     return response.getMediaType();
   }
 
-  @SuppressWarnings("unchecked")
   public static <T> T entityOf(Response response) {
     return (T) response.getEntity();
   }

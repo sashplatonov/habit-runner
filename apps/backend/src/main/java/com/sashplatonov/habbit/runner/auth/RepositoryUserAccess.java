@@ -6,7 +6,7 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
 @ApplicationScoped
-class RepositoryUserAccess implements AuthService.UserAccess {
+class RepositoryUserAccess implements UserAccess {
   private final UserRepository userRepository;
 
   @Inject

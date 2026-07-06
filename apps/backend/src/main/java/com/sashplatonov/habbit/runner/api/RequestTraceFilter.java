@@ -7,7 +7,6 @@ import jakarta.ws.rs.container.ContainerRequestFilter;
 import jakarta.ws.rs.container.ContainerResponseContext;
 import jakarta.ws.rs.container.ContainerResponseFilter;
 import jakarta.ws.rs.ext.Provider;
-import jakarta.ws.rs.core.MultivaluedMap;
 import org.slf4j.MDC;
 
 import java.util.UUID;
@@ -72,24 +71,5 @@ public class RequestTraceFilter implements ContainerRequestFilter, ContainerResp
     }
     var traceId = segments[1];
     return traceId.matches("[0-9a-fA-F]{32}") ? traceId : null;
-  }
-
-  private static final class ResponseHeaders {
-    private final ContainerResponseContext responseContext;
-
-    private ResponseHeaders(ContainerResponseContext responseContext) {
-      this.responseContext = responseContext;
-    }
-
-    private void putIfMissing(String name, String value) {
-      var headers = headers();
-      if (headers.getFirst(name) == null) {
-        headers.putSingle(name, value);
-      }
-    }
-
-    private MultivaluedMap<String, Object> headers() {
-      return responseContext.getHeaders();
-    }
   }
 }

@@ -28,7 +28,6 @@ import static com.sashplatonov.habbit.runner.sync.SyncTestPayloads.syncOp;
 import static org.hamcrest.Matchers.*;
 
 @QuarkusTest
-@SuppressWarnings({"PMD.TooManyMethods", "PMD.LawOfDemeter"})
 class SyncResourceTest extends AuthenticatedApiTestSupport {
 
   private String userId;

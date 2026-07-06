@@ -101,14 +101,4 @@ public final class TestConfigFactory {
   public static NotificationConfig notificationConfig(String vapidPublicKey) {
     return () -> Optional.ofNullable(vapidPublicKey);
   }
-
-  private record AuthConfigOptions(
-      String secret,
-      String issuer,
-      String apiPublicUrl,
-      String oauthDefaultReturnTo,
-      String googleClientId,
-      String googleClientSecret
-  ) {
-  }
 }

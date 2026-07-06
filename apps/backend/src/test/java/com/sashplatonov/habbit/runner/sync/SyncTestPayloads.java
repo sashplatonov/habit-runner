@@ -17,7 +17,6 @@ final class SyncTestPayloads {
   private SyncTestPayloads() {
   }
 
-  @SuppressWarnings("PMD.ExcessiveParameterList")
   static SyncOpDto syncOp(String id, String entity, String type, Map<String, Object> payload, String clientTime) {
     return SyncOpDto.builder()
         .id(id)

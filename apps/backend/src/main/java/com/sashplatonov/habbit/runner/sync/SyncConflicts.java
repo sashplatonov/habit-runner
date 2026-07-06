@@ -36,7 +36,4 @@ final class SyncConflicts {
   static ServerState serverState(int version, Instant updatedAt) {
     return new ServerState(version, updatedAt);
   }
-
-  record ServerState(int version, Instant updatedAt) {
-  }
 }

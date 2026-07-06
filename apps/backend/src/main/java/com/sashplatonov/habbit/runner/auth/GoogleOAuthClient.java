@@ -172,10 +172,4 @@ public class GoogleOAuthClient {
   private String urlEncode(String value) {
     return URLEncoder.encode(value, StandardCharsets.UTF_8);
   }
-
-  private record GoogleTokenResponse(String access_token) {
-  }
-
-  private record GoogleUserInfoResponse(String email) {
-  }
 }

@@ -187,29 +187,6 @@ public class GlobalExceptionMapper implements ExceptionMapper<Exception> {
     return new UnknownStatus(statusCode);
   }
 
-  private static final class UnknownStatus implements Response.StatusType {
-    private final int statusCode;
-
-    private UnknownStatus(int statusCode) {
-      this.statusCode = statusCode;
-    }
-
-    @Override
-    public int getStatusCode() {
-      return statusCode;
-    }
-
-    @Override
-    public Response.Status.Family getFamily() {
-      return Response.Status.Family.familyOf(statusCode);
-    }
-
-    @Override
-    public String getReasonPhrase() {
-      return "Unknown code";
-    }
-  }
-
   private static String title(Response.StatusType status) {
     var reason = status.getReasonPhrase();
     if (reason == null || reason.isBlank() || "Unknown code".equalsIgnoreCase(reason)) {

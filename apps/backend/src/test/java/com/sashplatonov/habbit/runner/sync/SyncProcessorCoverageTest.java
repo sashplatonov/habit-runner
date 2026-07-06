@@ -28,12 +28,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static com.sashplatonov.habbit.runner.sync.SyncTestPayloads.syncOp;
 
 @QuarkusTest
-@SuppressWarnings({
-  "PMD.CouplingBetweenObjects",
-  "PMD.ExcessiveMethodLength",
-  "PMD.LawOfDemeter",
-  "PMD.UnnecessaryFullyQualifiedName"
-})
 class SyncProcessorCoverageTest extends AuthenticatedApiTestSupport {
 
   private String userId;
@@ -284,9 +278,9 @@ class SyncProcessorCoverageTest extends AuthenticatedApiTestSupport {
 
   @Test
   void shouldRoutePushOperationsThroughPushProcessor() throws Exception {
-    var habitRecorder = new RecordingHabitSyncProcessor();
-    var checkinRecorder = new RecordingCheckinSyncProcessor();
-    var resultFactory = new RecordingResultFactory();
+    var habitRecorder = new ProcessorRecordingHabitSyncProcessor();
+    var checkinRecorder = new ProcessorRecordingCheckinSyncProcessor();
+    var resultFactory = new ProcessorRecordingResultFactory();
     var pushProcessor = new SyncPushProcessor(habitRecorder, checkinRecorder, resultFactory);
     var ops = List.of(
         syncOp(" ", "habit", "upsert", Map.of(), Instant.now().toString()),
@@ -297,9 +291,9 @@ class SyncProcessorCoverageTest extends AuthenticatedApiTestSupport {
 
     PushResponseDto response = inTransaction(() -> pushProcessor.push(userId, ops));
 
-    assertEquals(List.of("habit-op"), habitRecorder.opIds);
-    assertEquals(List.of("checkin-op"), checkinRecorder.opIds);
-    assertEquals(List.of("habit-op", "checkin-op"), resultFactory.lastState.applied());
+    assertEquals(List.of("habit-op"), habitRecorder.getOpIds());
+    assertEquals(List.of("checkin-op"), checkinRecorder.getOpIds());
+    assertEquals(List.of("habit-op", "checkin-op"), resultFactory.getLastState().applied());
     assertEquals(3L, SyncOpLogEntity.count());
     assertEquals(List.of("habit-op", "checkin-op"), response.applied());
   }
@@ -353,87 +347,5 @@ class SyncProcessorCoverageTest extends AuthenticatedApiTestSupport {
       tombstone.persist();
       return tombstone;
     });
-  }
-
-  private static final class RecordingHabitSyncProcessor extends HabitSyncProcessor {
-    private final List<String> opIds = new ArrayList<>();
-
-    RecordingHabitSyncProcessor() {
-      this(new SyncPayloadCodec(new ObjectMapper()));
-    }
-
-    private RecordingHabitSyncProcessor(SyncPayloadCodec payloadCodec) {
-      super(payloadCodec, new SyncValueCodec(), new SyncPayloadMapperImpl());
-    }
-
-    @Override
-    public void apply(String userId, com.sashplatonov.habbit.runner.sync.dto.SyncOpDto op, SyncPushState state) {
-      opIds.add(op.id());
-      var habit = new HabitEntity();
-      habit.id = op.id() + "-habit";
-      habit.userId = userId;
-      habit.name = "Recorded Habit";
-      habit.frequency = HabitFrequency.DAILY;
-      habit.color = HabitColor.LEGACY_NORD;
-      habit.icon = "star";
-      habit.targetStreak = 1;
-      habit.dailyTarget = 1;
-      habit.archived = false;
-      habit.type = HabitType.POSITIVE;
-      habit.freezeDays = "[]";
-      habit.version = 1;
-      habit.setCreatedAt(Instant.parse("2026-04-10T12:00:00Z"));
-      habit.setUpdatedAt(Instant.parse("2026-04-10T12:00:00Z"));
-      state.addAppliedHabit(op.id(), habit);
-    }
-  }
-
-  private static final class RecordingCheckinSyncProcessor extends CheckinSyncProcessor {
-    private final List<String> opIds = new ArrayList<>();
-
-    RecordingCheckinSyncProcessor() {
-      this(new SyncPayloadCodec(new ObjectMapper()));
-    }
-
-    private RecordingCheckinSyncProcessor(SyncPayloadCodec payloadCodec) {
-      super(payloadCodec, new CheckinDeleteHandler(payloadCodec), new SyncPayloadMapperImpl());
-    }
-
-    @Override
-    public void apply(String userId, com.sashplatonov.habbit.runner.sync.dto.SyncOpDto op, SyncPushState state) {
-      opIds.add(op.id());
-      var checkin = new CheckinEntity();
-      checkin.id = op.id() + "-checkin";
-      checkin.habitId = "habit-1";
-      checkin.userId = userId;
-      checkin.setCheckinDate(LocalDate.parse("2026-04-10"));
-      checkin.done = true;
-      checkin.count = 1;
-      checkin.version = 1;
-      checkin.setAuditTimestamps(Instant.parse("2026-04-10T12:00:00Z"), Instant.parse("2026-04-10T12:00:00Z"));
-      state.addAppliedCheckin(op.id(), checkin);
-    }
-  }
-
-  private static final class RecordingResultFactory extends SyncPushResultFactory {
-    private SyncPushState lastState;
-
-    RecordingResultFactory() {
-      super(new SyncPayloadCodec(new ObjectMapper()), new SyncEntityMapper(new SyncPayloadCodec(new ObjectMapper())));
-    }
-
-    @Override
-    public com.sashplatonov.habbit.runner.sync.dto.PushResponseDto create(SyncPushState state) {
-      lastState = state;
-        return com.sashplatonov.habbit.runner.sync.dto.PushResponseDto.builder()
-            .applied(state.applied())
-            .conflicts(state.conflicts())
-            .habits(List.of())
-            .checkins(List.of())
-            .tombstones(List.of())
-            .nextCursor(null)
-            .serverTime("2026-04-10T12:00:00Z")
-            .build();
-    }
   }
 }

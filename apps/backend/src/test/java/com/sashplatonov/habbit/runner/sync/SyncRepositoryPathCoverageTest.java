@@ -29,13 +29,6 @@ import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-@SuppressWarnings({
-  "PMD.TooManyMethods",
-  "PMD.CouplingBetweenObjects",
-  "PMD.LawOfDemeter",
-  "PMD.ExcessiveParameterList",
-  "PMD.UnusedPrivateField"
-})
 class SyncRepositoryPathCoverageTest {
 
   private final SyncPayloadCodec payloadCodec = new SyncPayloadCodec(new ObjectMapper().findAndRegisterModules());
@@ -45,13 +38,13 @@ class SyncRepositoryPathCoverageTest {
 
   @Test
   void shouldUseRepositoriesWhenPullingEntities() {
-    var habitRepository = new StubHabitRepository();
-    var checkinRepository = new StubCheckinRepository();
-    var tombstoneRepository = new StubTombstoneRepository();
+    var habitRepository = new RepositoryPathStubHabitRepository();
+    var checkinRepository = new RepositoryPathStubCheckinRepository();
+    var tombstoneRepository = new RepositoryPathStubTombstoneRepository();
     var updatedAt = Instant.parse("2026-04-10T10:00:00Z");
-    habitRepository.page = List.of(habit("habit-1", "user-1", updatedAt));
-    checkinRepository.page = List.of(checkin("checkin-1", "habit-1", "user-1", LocalDate.of(2026, 4, 10), updatedAt));
-    tombstoneRepository.page = List.of(tombstone("user-1", "habit", "habit-1", updatedAt.plusSeconds(60)));
+    habitRepository.setPage(List.of(habit("habit-1", "user-1", updatedAt)));
+    checkinRepository.setPage(List.of(checkin("checkin-1", "habit-1", "user-1", LocalDate.of(2026, 4, 10), updatedAt)));
+    tombstoneRepository.setPage(List.of(tombstone("user-1", "habit", "habit-1", updatedAt.plusSeconds(60))));
     var processor = new SyncPullProcessor(
         payloadCodec,
         entityMapper,
@@ -60,10 +53,10 @@ class SyncRepositoryPathCoverageTest {
 
     PullResponseDto response = processor.pull("user-1", "{\"updatedAt\":\"2026-04-10T10:00:00Z\",\"id\":\"cursor-1\"}");
 
-    assertEquals("user-1", habitRepository.lastUserId);
-    assertEquals("cursor-1", habitRepository.lastCursorId);
-    assertEquals("user-1", checkinRepository.lastUserId);
-    assertEquals("cursor-1", tombstoneRepository.lastCursorId);
+    assertEquals("user-1", habitRepository.getLastUserId());
+    assertEquals("cursor-1", habitRepository.getLastCursorId());
+    assertEquals("user-1", checkinRepository.getLastUserId());
+    assertEquals("cursor-1", tombstoneRepository.getLastCursorId());
     assertEquals(1, response.habits().size());
     assertEquals(1, response.checkins().size());
     assertEquals(1, response.tombstones().size());
@@ -73,9 +66,9 @@ class SyncRepositoryPathCoverageTest {
 
   @Test
   void shouldUseRepositoriesWhenApplyingHabitOperations() {
-    var habitRepository = new StubHabitRepository();
-    var checkinRepository = new StubCheckinRepository();
-    var tombstoneRepository = new StubTombstoneRepository();
+    var habitRepository = new RepositoryPathStubHabitRepository();
+    var checkinRepository = new RepositoryPathStubCheckinRepository();
+    var tombstoneRepository = new RepositoryPathStubTombstoneRepository();
     var habitSyncStore = new HabitSyncStore(habitRepository, checkinRepository, tombstoneRepository);
     var processor = new HabitSyncProcessor(
       payloadCodec,
@@ -119,10 +112,10 @@ class SyncRepositoryPathCoverageTest {
 
     assertEquals(1, state.applied().size());
     assertEquals(1, state.pushedHabits().size());
-    assertEquals("habit-1", habitRepository.savedHabit.id);
+    assertEquals("habit-1", habitRepository.getSavedHabit().id);
 
     var conflictState = new SyncPushState();
-    habitRepository.existingHabit = habit("habit-1", "other-user", Instant.parse("2026-04-10T10:01:00Z"));
+    habitRepository.setExistingHabit(habit("habit-1", "other-user", Instant.parse("2026-04-10T10:01:00Z")));
     processor.apply("user-1", upsert, conflictState);
     assertEquals(1, conflictState.conflicts().size());
 
@@ -137,17 +130,17 @@ class SyncRepositoryPathCoverageTest {
     processor.apply("user-1", delete, deleteState);
 
     assertEquals(1, deleteState.applied().size());
-    assertEquals("habit-1", habitRepository.deletedHabitId);
-    assertEquals("habit-1", checkinRepository.deletedByHabitId);
-    assertEquals("habit-1", tombstoneRepository.savedTombstone.entityId);
+    assertEquals("habit-1", habitRepository.getDeletedHabitId());
+    assertEquals("habit-1", checkinRepository.getDeletedByHabitId());
+    assertEquals("habit-1", tombstoneRepository.getSavedTombstone().entityId);
   }
 
   @Test
   void shouldUseRepositoriesWhenApplyingCheckinOperations() {
-    var habitRepository = new StubHabitRepository();
-    var checkinRepository = new StubCheckinRepository();
-    var tombstoneRepository = new StubTombstoneRepository();
-    habitRepository.existingHabit = habit("habit-1", "user-1", Instant.parse("2026-04-10T10:00:00Z"));
+    var habitRepository = new RepositoryPathStubHabitRepository();
+    var checkinRepository = new RepositoryPathStubCheckinRepository();
+    var tombstoneRepository = new RepositoryPathStubTombstoneRepository();
+    habitRepository.setExistingHabit(habit("habit-1", "user-1", Instant.parse("2026-04-10T10:00:00Z")));
     var deleteHandler = new CheckinDeleteHandler(payloadCodec, tombstoneRepository, checkinRepository);
     var checkinSyncStore = new CheckinSyncStore(checkinRepository, habitRepository);
     var processor = new CheckinSyncProcessor(
@@ -178,20 +171,20 @@ class SyncRepositoryPathCoverageTest {
 
     assertEquals(1, upsertState.applied().size());
     assertEquals(1, upsertState.pushedCheckins().size());
-    assertEquals("habit-1", checkinRepository.savedCheckin.habitId);
+    assertEquals("habit-1", checkinRepository.getSavedCheckin().habitId);
 
     var conflictState = new SyncPushState();
-    checkinRepository.existingCheckin = checkin("checkin-1", "habit-1", "user-1", LocalDate.of(2026, 4, 10), Instant.parse("2026-04-10T10:05:00Z"));
+    checkinRepository.setExistingCheckin(checkin("checkin-1", "habit-1", "user-1", LocalDate.of(2026, 4, 10), Instant.parse("2026-04-10T10:05:00Z")));
     processor.apply("user-1", upsert, conflictState);
     assertEquals(1, conflictState.conflicts().size());
 
     var missingParentState = new SyncPushState();
-    habitRepository.existingHabit = null;
-    checkinRepository.existingCheckin = null;
+    habitRepository.setExistingHabit(null);
+    checkinRepository.setExistingCheckin(null);
     processor.apply("user-1", upsert, missingParentState);
     assertEquals(1, missingParentState.conflicts().size());
 
-    habitRepository.existingHabit = habit("habit-1", "user-1", Instant.parse("2026-04-10T10:00:00Z"));
+    habitRepository.setExistingHabit(habit("habit-1", "user-1", Instant.parse("2026-04-10T10:00:00Z")));
     var delete = SyncTestPayloads.syncOp(
         "op-checkin-delete",
         "checkin",
@@ -209,20 +202,20 @@ class SyncRepositoryPathCoverageTest {
     processor.apply("user-1", delete, deleteState);
 
     assertEquals(1, deleteState.applied().size());
-    assertEquals("habit-1", checkinRepository.deletedByHabitId);
-    assertEquals(LocalDate.of(2026, 4, 10), checkinRepository.deletedDate);
-    assertEquals("checkin", tombstoneRepository.savedTombstone.entity);
+    assertEquals("habit-1", checkinRepository.getDeletedByHabitId());
+    assertEquals(LocalDate.of(2026, 4, 10), checkinRepository.getDeletedDate());
+    assertEquals("checkin", tombstoneRepository.getSavedTombstone().entity);
   }
 
   @Test
   void shouldUseRepositoryBackedDeduplicationWhenPushingOperations() {
-    var habitProcessor = new CountingHabitSyncProcessor(payloadCodec, valueCodec, payloadMapper);
-    var checkinProcessor = new CountingCheckinSyncProcessor(payloadCodec, new CheckinDeleteHandler(payloadCodec), payloadMapper);
+    var habitProcessor = new RepositoryPathCountingHabitSyncProcessor(payloadCodec, valueCodec, payloadMapper);
+    var checkinProcessor = new RepositoryPathCountingCheckinSyncProcessor(payloadCodec, new CheckinDeleteHandler(payloadCodec), payloadMapper);
     var processor = new SyncPushProcessor(
         habitProcessor,
         checkinProcessor,
         new SyncPushResultFactory(payloadCodec, entityMapper),
-        new StubSyncOpLogRepository()
+        new RepositoryPathStubSyncOpLogRepository()
     );
     var now = Instant.parse("2026-04-10T10:00:00Z").toString();
     var habitOp = SyncTestPayloads.syncOp("op-1", "habit", "upsert", Map.of("id", "habit-1", "name", "Read", "frequency", "daily", "updatedAt", now, "version", 1), now);
@@ -232,8 +225,8 @@ class SyncRepositoryPathCoverageTest {
 
     PushResponseDto response = processor.push("user-1", List.of(habitOp, duplicateHabitOp, checkinOp, unknownOp));
 
-    assertEquals(1, habitProcessor.applyCount);
-    assertEquals(1, checkinProcessor.applyCount);
+    assertEquals(1, habitProcessor.getApplyCount());
+    assertEquals(1, checkinProcessor.getApplyCount());
     assertEquals(2, response.applied().size());
     assertEquals(1, response.habits().size());
     assertEquals(1, response.checkins().size());
@@ -280,159 +273,5 @@ class SyncRepositoryPathCoverageTest {
     tombstone.version = 1;
     tombstone.setDeletedAt(deletedAt);
     return tombstone;
-  }
-
-  private static final class StubHabitRepository extends HabitRepository {
-    private HabitEntity existingHabit;
-    private HabitEntity savedHabit;
-    private String deletedHabitId;
-    private String lastUserId;
-    private Instant lastUpdatedAt;
-    private String lastCursorId;
-    private List<HabitEntity> page = List.of();
-
-    @Override
-    public HabitEntity findHabitById(String habitId) {
-      return existingHabit;
-    }
-
-    @Override
-    public List<HabitEntity> findPageForUser(String userId, Instant updatedAt, String cursorId, int pageSize) {
-      lastUserId = userId;
-      lastUpdatedAt = updatedAt;
-      lastCursorId = cursorId;
-      return page;
-    }
-
-    @Override
-    public void save(HabitEntity entity) {
-      savedHabit = entity;
-      existingHabit = entity;
-    }
-
-    @Override
-    public long deleteByIdAndUserId(String habitId, String userId) {
-      deletedHabitId = habitId;
-      return 1L;
-    }
-  }
-
-  private static final class StubCheckinRepository extends CheckinRepository {
-    private CheckinEntity existingCheckin;
-    private CheckinEntity savedCheckin;
-    private String deletedByHabitId;
-    private LocalDate deletedDate;
-    private String lastUserId;
-    private Instant lastUpdatedAt;
-    private String lastCursorId;
-    private List<CheckinEntity> page = List.of();
-
-    @Override
-    public CheckinEntity findByHabitDateAndUserId(String habitId, LocalDate date, String userId) {
-      return existingCheckin;
-    }
-
-    @Override
-    public List<CheckinEntity> findPageForUser(String userId, Instant updatedAt, String cursorId, int pageSize) {
-      lastUserId = userId;
-      lastUpdatedAt = updatedAt;
-      lastCursorId = cursorId;
-      return page;
-    }
-
-    @Override
-    public void save(CheckinEntity entity) {
-      savedCheckin = entity;
-      existingCheckin = entity;
-    }
-
-    @Override
-    public long deleteByHabitIdAndUserId(String habitId, String userId) {
-      deletedByHabitId = habitId;
-      return 1L;
-    }
-
-    @Override
-    public long deleteByHabitIdUserIdAndDate(String habitId, String userId, LocalDate date) {
-      deletedByHabitId = habitId;
-      deletedDate = date;
-      return 1L;
-    }
-  }
-
-  private static final class StubTombstoneRepository extends TombstoneRepository {
-    private TombstoneEntity savedTombstone;
-    private String lastUserId;
-    private Instant lastUpdatedAt;
-    private String lastCursorId;
-    private List<TombstoneEntity> page = List.of();
-
-    @Override
-    public List<TombstoneEntity> findPageForUser(String userId, Instant deletedAt, String cursorId, int pageSize) {
-      lastUserId = userId;
-      lastUpdatedAt = deletedAt;
-      lastCursorId = cursorId;
-      return page;
-    }
-
-    @Override
-    public void save(TombstoneEntity entity) {
-      savedTombstone = entity;
-    }
-  }
-
-  private static final class StubSyncOpLogRepository extends SyncOpLogRepository {
-    private final Set<String> seen = new HashSet<>();
-
-    @Override
-    public boolean createIfAbsent(SyncOpLogEntity entity) {
-      return seen.add(entity.opId);
-    }
-  }
-
-  private static final class CountingHabitSyncProcessor extends HabitSyncProcessor {
-    private int applyCount;
-
-    CountingHabitSyncProcessor(
-        SyncPayloadCodec payloadCodec,
-        SyncValueCodec valueCodec,
-        SyncPayloadMapper payloadMapper
-    ) {
-      super(payloadCodec, valueCodec, payloadMapper);
-    }
-
-    @Override
-    public void apply(String userId, SyncOpDto op, SyncPushState state) {
-      applyCount++;
-      state.addAppliedHabit(op.id(), new SyncRepositoryPathCoverageTest().habit(
-          UUID.randomUUID().toString(),
-          userId,
-          Instant.parse("2026-04-10T10:00:00Z")
-      ));
-    }
-  }
-
-  private static final class CountingCheckinSyncProcessor extends CheckinSyncProcessor {
-    private int applyCount;
-
-    CountingCheckinSyncProcessor(
-        SyncPayloadCodec payloadCodec,
-        CheckinDeleteHandler checkinDeleteHandler,
-        SyncPayloadMapper payloadMapper
-    ) {
-      super(payloadCodec, checkinDeleteHandler, payloadMapper);
-    }
-
-    @Override
-    public void apply(String userId, SyncOpDto op, SyncPushState state) {
-      applyCount++;
-      state.addAppliedCheckin(op.id(), new SyncRepositoryPathCoverageTest().checkin(
-          UUID.randomUUID().toString(),
-          "habit-1",
-          userId,
-          LocalDate.of(2026, 4, 10),
-          Instant.parse("2026-04-10T10:00:00Z")
-      ));
-    }
   }
 }

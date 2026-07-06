@@ -20,7 +20,7 @@ class AuthResourceUnitTest {
     authService.setLoginResponse(new TokenResponse("access-1", "refresh-1", 3600, "Bearer"));
     authService.setRefreshResponse(new TokenResponse("access-2", "refresh-2", 3600, "Bearer"));
     authService.setGoogleStartRedirect("https://accounts.example.test/start");
-    authService.setGoogleCallbackRedirect(new AuthService.OAuthCallbackSession(
+    authService.setGoogleCallbackRedirect(new OAuthCallbackSession(
       "https://app.example.test/callback",
       new TokenResponse("access-3", "refresh-3", 3600, "Bearer")
     ));
@@ -32,22 +32,22 @@ class AuthResourceUnitTest {
     var refresh = resource.refresh("refresh-1");
     var logout = resource.logout("refresh-1");
 
-    assertEquals("user@example.test", authService.lastLoginEmail);
+    assertEquals("user@example.test", authService.getLastLoginEmail());
     AuthSessionResponse loginSession = TestHelpers.entityOf(login);
     assertSession(loginSession, "user-1", "user@example.test");
     assertCookiesPresent(login.getCookies());
-    assertEquals("/dashboard", authService.lastReturnTo);
+    assertEquals("/dashboard", authService.getLastReturnTo());
     assertRedirect(googleStart, "https://accounts.example.test/start");
-    assertEquals("code-123", authService.lastCode);
-    assertEquals("state-123", authService.lastState);
+    assertEquals("code-123", authService.getLastCode());
+    assertEquals("state-123", authService.getLastState());
     assertRedirect(googleCallback, "https://app.example.test/callback");
     assertCookiesPresent(googleCallback.getCookies());
     AuthSessionResponse refreshSession = TestHelpers.entityOf(refresh);
     assertSession(refreshSession, "user-1", "user@example.test");
     assertCookiesPresent(refresh.getCookies());
-    assertEquals("refresh-1", authService.lastRefreshToken);
+    assertEquals("refresh-1", authService.getLastRefreshToken());
     assertEquals(204, TestHelpers.statusOf(logout));
-    assertEquals("refresh-1", authService.revokedToken);
+    assertEquals("refresh-1", authService.getRevokedToken());
   }
 
 
@@ -80,63 +80,4 @@ class AuthResourceUnitTest {
     assertTrue(cookies.containsKey(AuthCookieBuilder.REFRESH_TOKEN_COOKIE));
     assertTrue(cookies.containsKey(AuthCookieBuilder.CSRF_TOKEN_COOKIE));
   }
-
-  private static final class ResourceAuthService extends AuthService {
-    private String lastLoginEmail;
-    private String lastRefreshToken;
-    private String lastReturnTo;
-    private String lastCode;
-    private String lastState;
-    private String revokedToken;
-    private TokenResponse loginResponse;
-    private TokenResponse refreshResponse;
-    private String googleStartRedirect;
-    private AuthService.OAuthCallbackSession googleCallbackRedirect;
-
-    ResourceAuthService() {
-      super(TestConfigFactory.defaultAuthConfig(), new AuthCollaborators(null, null, null, null));
-    }
-
-    public void setLoginResponse(TokenResponse r) { this.loginResponse = r; }
-    public void setRefreshResponse(TokenResponse r) { this.refreshResponse = r; }
-    public void setGoogleStartRedirect(String url) { this.googleStartRedirect = url; }
-    public void setGoogleCallbackRedirect(AuthService.OAuthCallbackSession s) { this.googleCallbackRedirect = s; }
-
-    @Override
-    public TokenResponse login(String email) {
-      lastLoginEmail = email;
-      return loginResponse;
-    }
-
-    @Override
-    public String createOAuthAuthorizationUrl(String returnTo) {
-      lastReturnTo = returnTo;
-      return googleStartRedirect;
-    }
-
-    @Override
-    public AuthService.OAuthCallbackSession handleOAuthCallbackSession(String code, String state) {
-      lastCode = code;
-      lastState = state;
-      return googleCallbackRedirect;
-    }
-
-    @Override
-    public TokenResponse refreshToken(String token) {
-      lastRefreshToken = token;
-      return refreshResponse;
-    }
-
-    @Override
-    public void revokeToken(String token) {
-      revokedToken = token;
-    }
-
-    @Override
-    public CurrentUser verifyAccessToken(String token) {
-      return new CurrentUser("user-1", "user@example.test");
-    }
-  }
-
-  
 }

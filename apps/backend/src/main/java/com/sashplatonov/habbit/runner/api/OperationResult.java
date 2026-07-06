@@ -1,22 +1,13 @@
 package com.sashplatonov.habbit.runner.api;
 
 public sealed interface OperationResult<T>
-    permits OperationResult.Success, OperationResult.Failure {
+    permits OperationSuccess, OperationFailure {
 
-  static <T> Success<T> success(T value) {
-    return new Success<>(value);
+  static <T> OperationSuccess<T> success(T value) {
+    return new OperationSuccess<>(value);
   }
 
-  static <T> Failure<T> failure(ErrorResponse error) {
-    return new Failure<>(error);
-  }
-
-  record Success<T>(T value) implements OperationResult<T> {
-  }
-
-  record Failure<T>(ErrorResponse error) implements OperationResult<T> {
-    public ErrorResponse toErrorResponse() {
-      return error;
-    }
+  static <T> OperationFailure<T> failure(ErrorResponse error) {
+    return new OperationFailure<>(error);
   }
 }

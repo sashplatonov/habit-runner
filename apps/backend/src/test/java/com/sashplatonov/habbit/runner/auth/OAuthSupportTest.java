@@ -1,7 +1,5 @@
 package com.sashplatonov.habbit.runner.auth;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.sashplatonov.habbit.runner.support.TestConfigFactory;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -17,8 +15,8 @@ class OAuthSupportTest {
     var authorizationUrl = support.buildAuthorizationUrl("state-123");
 
     assertEquals("https://accounts.example.test/auth?state=state-123", authorizationUrl);
-    assertEquals("state-123", client.lastState);
-    assertEquals("https://api.example.test/auth/google/callback", client.lastCallbackUrl);
+    assertEquals("state-123", client.getLastState());
+    assertEquals("https://api.example.test/auth/google/callback", client.getLastCallbackUrl());
   }
 
   @Test
@@ -30,8 +28,8 @@ class OAuthSupportTest {
     var email = support.exchangeCodeForEmail("oauth-code");
 
     assertEquals("oauth@example.test", email);
-    assertEquals("oauth-code", client.lastCode);
-    assertEquals("https://api.example.test/auth/google/callback", client.lastCallbackUrl);
+    assertEquals("oauth-code", client.getLastCode());
+    assertEquals("https://api.example.test/auth/google/callback", client.getLastCallbackUrl());
   }
 
   @Test
@@ -46,57 +44,7 @@ class OAuthSupportTest {
     assertEquals("https://client.example.test", normalized);
     assertEquals("https://client.example.test/auth/callback?ok=true", redirect);
     assertEquals("https://api.example.test/auth/google/callback", callbackUrl);
-    assertEquals("https://client.example.test/path", helper.lastReturnTo);
-    assertEquals("https://client.example.test", helper.lastRedirectBase);
-  }
-
-  private static final class RecordingGoogleOAuthClient extends GoogleOAuthClient {
-    private String lastState;
-    private String lastCallbackUrl;
-    private String lastCode;
-
-    private RecordingGoogleOAuthClient() {
-      super(TestConfigFactory.defaultAuthConfig(), new ObjectMapper());
-    }
-
-    @Override
-    public String buildAuthorizationUrl(String state, String callbackUrl) {
-      lastState = state;
-      lastCallbackUrl = callbackUrl;
-      return "https://accounts.example.test/auth?state=" + state;
-    }
-
-    @Override
-    public String exchangeCodeForEmail(String code, String callbackUrl) {
-      lastCode = code;
-      lastCallbackUrl = callbackUrl;
-      return "oauth@example.test";
-    }
-  }
-
-  private static final class RecordingOAuthHelper extends OAuthHelper {
-    private String lastReturnTo;
-    private String lastRedirectBase;
-
-    private RecordingOAuthHelper() {
-      super(TestConfigFactory.defaultAuthConfig());
-    }
-
-    @Override
-    public String normalizeReturnTo(String returnTo) {
-      lastReturnTo = returnTo;
-      return "https://client.example.test";
-    }
-
-    @Override
-    public String buildCallbackRedirect(String returnTo) {
-      lastRedirectBase = returnTo;
-      return returnTo + "/auth/callback?ok=true";
-    }
-
-    @Override
-    public String getCallbackUrl() {
-      return "https://api.example.test/auth/google/callback";
-    }
+    assertEquals("https://client.example.test/path", helper.getLastReturnTo());
+    assertEquals("https://client.example.test", helper.getLastRedirectBase());
   }
 }

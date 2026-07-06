@@ -1,6 +1,7 @@
 package com.sashplatonov.habbit.runner.notification;
 
-import com.sashplatonov.habbit.runner.api.OperationResult;
+import com.sashplatonov.habbit.runner.api.OperationFailure;
+import com.sashplatonov.habbit.runner.api.OperationSuccess;
 import com.sashplatonov.habbit.runner.model.PushSubscriptionEntity;
 import com.sashplatonov.habbit.runner.notification.dto.PushSubscriptionEndpointRequest;
 import com.sashplatonov.habbit.runner.notification.dto.PushSubscriptionKeys;
@@ -24,7 +25,7 @@ class NotificationServiceUnitCoverageTest {
 
     var result = service.getVapidPublicKey();
 
-    var failure = assertInstanceOf(OperationResult.Failure.class, result);
+    var failure = assertInstanceOf(OperationFailure.class, result);
     var failureErr = failure.toErrorResponse();
     assertEquals(503, failureErr.status());
     assertEquals("VAPID_PUBLIC_KEY_MISSING", failureErr.errorCode());
@@ -39,30 +40,30 @@ class NotificationServiceUnitCoverageTest {
         new PushSubscriptionKeys("p256dh-key", "auth-key")
     );
 
-    var vapid = assertInstanceOf(OperationResult.Success.class, service.getVapidPublicKey());
+    var vapid = assertInstanceOf(OperationSuccess.class, service.getVapidPublicKey());
     var vapidValue = assertInstanceOf(VapidPublicKeyResponse.class, vapid.value());
     assertEquals("public-key", vapidValue.publicKey());
 
-    var created = assertInstanceOf(OperationResult.Success.class, service.subscribe("user-1", request));
+    var created = assertInstanceOf(OperationSuccess.class, service.subscribe("user-1", request));
     assertEquals(new SubscriptionStatusResponse(true), assertInstanceOf(SubscriptionStatusResponse.class, created.value()));
     assertEquals("user-1", repository.getSavedUserId());
     assertEquals("https://push.example/subscriptions/1", repository.getSavedEndpoint());
 
     repository.promoteSavedToExisting();
-    var alreadyOwned = assertInstanceOf(OperationResult.Success.class, service.subscribe("user-1", request));
+    var alreadyOwned = assertInstanceOf(OperationSuccess.class, service.subscribe("user-1", request));
     assertEquals(new SubscriptionStatusResponse(true), assertInstanceOf(SubscriptionStatusResponse.class, alreadyOwned.value()));
 
     var foreign = new PushSubscriptionEntity();
     foreign.userId = "other-user";
     foreign.endpoint = request.endpoint();
     repository.setExisting(foreign);
-    var subscribeConflict = assertInstanceOf(OperationResult.Failure.class, service.subscribe("user-1", request));
+    var subscribeConflict = assertInstanceOf(OperationFailure.class, service.subscribe("user-1", request));
     var subscribeErr = subscribeConflict.toErrorResponse();
     assertEquals(409, subscribeErr.status());
     assertEquals("SUBSCRIPTION_ENDPOINT_CONFLICT", subscribeErr.errorCode());
 
     var unsubscribeConflict = assertInstanceOf(
-        OperationResult.Failure.class,
+        OperationFailure.class,
         service.unsubscribe("user-1", new PushSubscriptionEndpointRequest(request.endpoint()))
     );
     var unsubscribeErr = unsubscribeConflict.toErrorResponse();
@@ -71,41 +72,10 @@ class NotificationServiceUnitCoverageTest {
 
     repository.promoteSavedToExisting();
     var removed = assertInstanceOf(
-        OperationResult.Success.class,
+        OperationSuccess.class,
         service.unsubscribe("user-1", new PushSubscriptionEndpointRequest(request.endpoint()))
     );
     assertNull(removed.value());
     assertEquals(request.endpoint(), repository.getDeletedEndpoint());
-  }
-
-  private static final class StubPushSubscriptionRepository extends PushSubscriptionRepository {
-    private PushSubscriptionEntity existing;
-    private PushSubscriptionEntity savedEntity;
-    private String deletedEndpoint;
-
-    @Override
-    public PushSubscriptionEntity findByEndpoint(String endpoint) {
-      return existing;
-    }
-
-    @Override
-    public void save(PushSubscriptionEntity entity) {
-      savedEntity = entity;
-      existing = entity;
-    }
-
-    @Override
-    public long deleteByEndpoint(String endpoint) {
-      deletedEndpoint = endpoint;
-      existing = null;
-      return 1L;
-    }
-
-    public PushSubscriptionEntity getSavedEntity() { return savedEntity; }
-    public void setExisting(PushSubscriptionEntity e) { existing = e; }
-    public String getDeletedEndpoint() { return deletedEndpoint; }
-    public String getSavedUserId() { return savedEntity == null ? null : savedEntity.userId; }
-    public String getSavedEndpoint() { return savedEntity == null ? null : savedEntity.endpoint; }
-    public void promoteSavedToExisting() { existing = savedEntity; }
   }
 }

@@ -8,8 +8,6 @@ import com.sashplatonov.habbit.runner.sync.dto.CheckinPayloadDto;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
-import java.time.LocalDate;
-
 @ApplicationScoped
 public class CheckinDeleteHandler {
   private final SyncPayloadCodec payloadCodec;
@@ -78,12 +76,4 @@ public class CheckinDeleteHandler {
     );
   }
 
-  record CheckinDeleteRequest(
-      String userId,
-      String habitId,
-      LocalDate date,
-      String fallbackEntityId,
-      CheckinPayloadDto payload
-  ) {
-  }
 }

@@ -28,7 +28,6 @@ import jakarta.transaction.Transactional;
 
 @QuarkusTest
 @Transactional
-@SuppressWarnings({"PMD.TooManyMethods", "PMD.LawOfDemeter"})
 class SyncResourceUnitTest {
 
   @Test
@@ -45,8 +44,8 @@ class SyncResourceUnitTest {
 
     var response = resource.pull("cursor-1");
 
-    assertEquals("user-1", service.lastPullUserId);
-    assertEquals("cursor-1", service.lastPullSince);
+    assertEquals("user-1", service.getLastPullUserId());
+    assertEquals("cursor-1", service.getLastPullSince());
     assertResponse(response, service.getPullResponse(), "trace-pull");
   }
 
@@ -66,8 +65,8 @@ class SyncResourceUnitTest {
 
       var response = resource.push(PushRequestDto.builder().ops(List.of()).build());
 
-    assertEquals("user-1", service.lastPushUserId);
-    assertEquals(List.of(), service.lastPushOps);
+    assertEquals("user-1", service.getLastPushUserId());
+    assertEquals(List.of(), service.getLastPushOps());
     assertResponse(response, service.getPushResponse(), "trace-push-empty");
   }
 
@@ -98,8 +97,8 @@ class SyncResourceUnitTest {
 
     var response = resource.push(PushRequestDto.builder().ops(List.of(op)).build());
 
-    assertEquals(List.of(op), service.lastPushOps);
-    assertResponse(response, service.pushResponse, "trace-push-conflict");
+    assertEquals(List.of(op), service.getLastPushOps());
+    assertResponse(response, service.getPushResponse(), "trace-push-conflict");
   }
 
   private SyncResource resource(StubSyncService service, String traceId) {
@@ -141,35 +140,4 @@ class SyncResourceUnitTest {
     }
   }
 
-  private static final class StubSyncService implements SyncService {
-    private String lastPullUserId;
-    private String lastPullSince;
-    private String lastPushUserId;
-    private List<SyncOpDto> lastPushOps = List.of();
-    private PullResponseDto pullResponse;
-    private PushResponseDto pushResponse;
-    public void setPullResponse(PullResponseDto r) { this.pullResponse = r; }
-    public void setPushResponse(PushResponseDto r) { this.pushResponse = r; }
-    public PullResponseDto getPullResponse() { return pullResponse; }
-    public PushResponseDto getPushResponse() { return pushResponse; }
-    public String getLastPullUserId() { return lastPullUserId; }
-    public String getLastPullSince() { return lastPullSince; }
-    public String getLastPushUserId() { return lastPushUserId; }
-    public List<SyncOpDto> getLastPushOps() { return lastPushOps; }
-
-    @Override
-    public PullResponseDto pull(String userId, String since) {
-      lastPullUserId = userId;
-      lastPullSince = since;
-      return pullResponse;
-    }
-
-    @Override
-    public PushResponseDto push(String userId, List<SyncOpDto> ops) {
-      lastPushUserId = userId;
-      lastPushOps = ops;
-      return pushResponse;
-    }
-
-  }
 }
