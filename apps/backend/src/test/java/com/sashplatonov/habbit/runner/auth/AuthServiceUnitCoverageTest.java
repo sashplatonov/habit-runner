@@ -294,28 +294,34 @@ class AuthServiceUnitCoverageTest {
     }
 
     @Override
-    protected UserEntity findUserByEmail(String email) {
-      return userByEmail;
+    protected UserAccess userAccess() {
+      return new UserAccess() {
+        @Override
+        public UserEntity findByEmail(String email) {
+          return userByEmail;
+        }
+
+        @Override
+        public UserEntity findRequiredById(String userId) {
+          return userById;
+        }
+      };
     }
 
     @Override
-    protected UserEntity findUserById(String userId) {
-      return userById;
-    }
+    protected OAuthStateAccess oauthStateAccess() {
+      return new OAuthStateAccess() {
+        @Override
+        public OAuthStateEntity consume(String state) {
+          deletedState = state;
+          return oauthState;
+        }
 
-    @Override
-    protected OAuthStateEntity findOAuthState(String state) {
-      return oauthState;
-    }
-
-    @Override
-    protected void deleteOAuthState(String state) {
-      deletedState = state;
-    }
-
-    @Override
-    protected void storeOAuthState(String state, String returnTo, Instant expiresAt) {
-      storedState = new StoredState(state, returnTo, expiresAt);
+        @Override
+        public void save(OAuthStateEntity payload) {
+          storedState = new StoredState(payload.state, payload.returnTo, payload.expiry());
+        }
+      };
     }
 
     @Override

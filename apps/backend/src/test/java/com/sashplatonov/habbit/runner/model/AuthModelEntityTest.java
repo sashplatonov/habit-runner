@@ -48,7 +48,7 @@ class AuthModelEntityTest {
     user.theme = "matrix";
     user.preUpdateAudit();
 
-    var updatedAt = user.getUpdatedAt();
+    var updatedAt = user.updatedAtValue();
 
     assertEquals(createdAt, user.getCreatedAt());
     assertTrue(updatedAt.isAfter(createdAt));

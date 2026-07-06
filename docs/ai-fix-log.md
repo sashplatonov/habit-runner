@@ -1,5 +1,12 @@
 # AI Fix Log
 
+## 2026-07-06
+- Refactored backend auth, sync, and test-support code so the Maven `verify` quality gate passes again without relaxing PMD rules.
+- Split `AuthService` repository access behind auth-specific adapters, simplified transactional test helpers, and cleaned up sync/model hotspots that were triggering PMD violations.
+- Verification: `cd apps/backend && ./mvnw -B -ntp verify`
+- Risk: medium. The changes preserve the current tests and contracts, but they touch shared auth and persistence helper paths used across many backend flows.
+- Rollback: revert the backend auth/model/sync/test-support refactor files changed on 2026-07-06 and rerun `cd apps/backend && ./mvnw -B -ntp verify`.
+
 ## 2026-05-09
 - Restored the stats page UI and behavior after the recent refactor split.
 - Brought back the lost charts, weekday breakdown, habit ranking, investment panel, and activity heatmap wiring.

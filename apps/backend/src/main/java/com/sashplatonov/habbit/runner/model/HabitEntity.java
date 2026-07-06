@@ -2,8 +2,11 @@ package com.sashplatonov.habbit.runner.model;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Index;
+import jakarta.persistence.Column;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
+import lombok.Getter;
+import lombok.Setter;
 import java.math.BigInteger;
 
 @Entity
@@ -13,7 +16,12 @@ import java.math.BigInteger;
       @Index(name = "habits_user_updated_cursor_idx", columnList = "userId,updatedAt,id")
     }
 )
+@Getter
+@Setter
 public class HabitEntity extends HabitSettingsFields {
+  @Column(nullable = false)
+  public int version;
+
   @PrePersist
   void prePersist() {
     initializeDefaults();

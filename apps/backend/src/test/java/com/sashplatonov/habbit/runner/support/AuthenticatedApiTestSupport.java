@@ -2,15 +2,14 @@ package com.sashplatonov.habbit.runner.support;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
-import com.sashplatonov.habbit.runner.model.CheckinEntity;
-import com.sashplatonov.habbit.runner.model.HabitEntity;
-import com.sashplatonov.habbit.runner.model.RefreshTokenEntity;
-import com.sashplatonov.habbit.runner.model.SyncOpLogEntity;
-import com.sashplatonov.habbit.runner.model.TombstoneEntity;
 import com.sashplatonov.habbit.runner.model.UserEntity;
-import jakarta.persistence.EntityManager;
 import jakarta.inject.Inject;
+import jakarta.persistence.EntityManager;
+import jakarta.transaction.HeuristicMixedException;
+import jakarta.transaction.HeuristicRollbackException;
+import jakarta.transaction.RollbackException;
 import jakarta.transaction.Status;
+import jakarta.transaction.SystemException;
 import jakarta.transaction.UserTransaction;
 import org.junit.jupiter.api.AfterEach;
 
@@ -32,20 +31,8 @@ public abstract class AuthenticatedApiTestSupport {
 
   @AfterEach
   void cleanDatabase() throws Exception {
-    // Clean up test data after each test for isolation
-    // Always start a fresh transaction to ensure cleanup works
-    if (ut.getStatus() == Status.STATUS_ACTIVE) {
-      // If a transaction is already active, commit it first to avoid conflicts
-      try {
-        ut.commit();
-      } catch (Exception e) {
-        // Ignore commit errors, try to rollback
-        try { ut.rollback(); } catch (Exception ignored) {}
-      }
-    }
-    
-    ut.begin();
-    try {
+    finishActiveTransaction();
+    inTransaction(() -> {
       entityManager.createNativeQuery("SET REFERENTIAL_INTEGRITY FALSE").executeUpdate();
       entityManager.createNativeQuery("TRUNCATE TABLE checkins").executeUpdate();
       entityManager.createNativeQuery("TRUNCATE TABLE habits").executeUpdate();
@@ -54,11 +41,8 @@ public abstract class AuthenticatedApiTestSupport {
       entityManager.createNativeQuery("TRUNCATE TABLE tombstones").executeUpdate();
       entityManager.createNativeQuery("TRUNCATE TABLE sync_op_logs").executeUpdate();
       entityManager.createNativeQuery("SET REFERENTIAL_INTEGRITY TRUE").executeUpdate();
-      ut.commit();
-    } catch (Exception e) {
-      rollbackIfNeeded();
-      throw e;
-    }
+      return null;
+    });
   }
 
   protected AuthenticatedUser createAuthenticatedUser() throws Exception {
@@ -69,27 +53,15 @@ public abstract class AuthenticatedApiTestSupport {
     var userId = UUID.randomUUID().toString();
     var email = userId + "@test.com";
 
-    // Only manage transaction manually if one is not already active (e.g. from @Transactional)
-    boolean transactionOwner = ut.getStatus() != Status.STATUS_ACTIVE;
-    if (transactionOwner) {
-      ut.begin();
-    }
-    try {
+    inTransaction(() -> {
       var user = new UserEntity();
       user.setId(userId);
       user.setEmail(email);
       user.setTheme(theme);
       user.markCreatedAt(Instant.now());
       user.persist();
-      if (transactionOwner) {
-        ut.commit();
-      }
-    } catch (Exception e) {
-      if (transactionOwner) {
-        rollbackIfNeeded();
-      }
-      throw e;
-    }
+      return null;
+    });
 
     return new AuthenticatedUser(userId, email, generateAccessToken(userId, email));
   }
@@ -113,22 +85,22 @@ public abstract class AuthenticatedApiTestSupport {
   }
 
   protected <T> T inTransaction(TransactionalCallable<T> callable) throws Exception {
-    // Only manage transaction manually if one is not already active (e.g. from @Transactional)
     boolean transactionOwner = ut.getStatus() != Status.STATUS_ACTIVE;
     if (transactionOwner) {
       ut.begin();
     }
+    boolean committed = false;
     try {
       var result = callable.call();
       if (transactionOwner) {
         ut.commit();
+        committed = true;
       }
       return result;
-    } catch (Exception e) {
-      if (transactionOwner) {
+    } finally {
+      if (transactionOwner && !committed) {
         rollbackIfNeeded();
       }
-      throw e;
     }
   }
 
@@ -136,6 +108,24 @@ public abstract class AuthenticatedApiTestSupport {
     var status = ut.getStatus();
     if (status == Status.STATUS_ACTIVE || status == Status.STATUS_MARKED_ROLLBACK) {
       ut.rollback();
+    }
+  }
+
+  private void finishActiveTransaction() throws Exception {
+    if (ut.getStatus() != Status.STATUS_ACTIVE) {
+      return;
+    }
+    try {
+      ut.commit();
+    } catch (
+        RollbackException
+            | HeuristicMixedException
+            | HeuristicRollbackException
+            | SecurityException
+            | IllegalStateException
+            | SystemException ex
+    ) {
+      rollbackIfNeeded();
     }
   }
 

@@ -27,4 +27,8 @@ public class OAuthStateEntity extends AuditedEntityBase {
   public void setExpiry(Instant instant) {
     expiresAt = instant;
   }
+
+  public Instant expiry() {
+    return expiresAt;
+  }
 }

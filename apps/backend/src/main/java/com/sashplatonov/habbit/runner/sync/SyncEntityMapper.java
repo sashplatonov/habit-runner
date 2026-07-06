@@ -56,7 +56,7 @@ public class SyncEntityMapper {
         .createdAt(payloadCodec.toSyncIso(habit.createdAt))
         .updatedAt(payloadCodec.toSyncIso(habit.updatedAt))
         .version(habit.version)
-        .sortOrder(habit.sortOrder == null ? 0 : habit.sortOrder.intValue())
+        .sortOrder(sortOrderValue(habit))
         .reminderTime(habit.reminderTime)
         .reminderEnabled(habit.reminderEnabled)
         .type(habit.type)
@@ -68,7 +68,7 @@ public class SyncEntityMapper {
     return CheckinDto.builder()
         .id(checkin.id)
         .habitId(checkin.habitId)
-        .date(checkin.date != null ? checkin.date.toString() : null)
+        .date(checkinDateValue(checkin))
         .done(checkin.done)
         .count(checkin.count)
         .updatedAt(payloadCodec.toSyncIso(checkin.updatedAt))
@@ -84,5 +84,14 @@ public class SyncEntityMapper {
         .deletedAt(payloadCodec.toSyncIso(tombstone.deletedAt))
         .version(tombstone.version)
         .build();
+  }
+
+  private int sortOrderValue(HabitEntity habit) {
+    return habit.sortOrderOrZero().intValue();
+  }
+
+  private String checkinDateValue(CheckinEntity checkin) {
+    var date = checkin.syncDate();
+    return date != null ? date.toString() : null;
   }
 }

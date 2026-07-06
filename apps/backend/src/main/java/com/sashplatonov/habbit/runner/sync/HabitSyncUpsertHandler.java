@@ -5,6 +5,7 @@ import com.sashplatonov.habbit.runner.sync.dto.HabitPayloadDto;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
+import java.math.BigInteger;
 import java.time.Instant;
 
 @ApplicationScoped
@@ -92,7 +93,7 @@ public class HabitSyncUpsertHandler {
       habit.setSchedule(null);
       habit.setTargetStreak(1);
       habit.setDailyTarget(valueCodec.resolveDailyTarget(null, habit.getDailyTarget()));
-      habit.setSortOrder(valueCodec.resolveSortOrder(null, habit.getSortOrder() != null ? habit.getSortOrder() : java.math.BigInteger.ZERO));
+      habit.setSortOrder(valueCodec.resolveSortOrder(null, currentSortOrder(habit)));
       habit.setReminderTime(valueCodec.normalizeReminderTime(null));
       habit.setFreezeDays(valueCodec.normalizeFreezeDaysJson(null, habit.getFreezeDays(), jsonCodec));
       return;
@@ -102,11 +103,7 @@ public class HabitSyncUpsertHandler {
     habit.setSchedule(jsonCodec.jsonOrNull(payload.schedule()));
     habit.setTargetStreak(payload.targetStreak() != null ? payload.targetStreak() : 1);
     habit.setDailyTarget(valueCodec.resolveDailyTarget(payload.dailyTarget(), habit.getDailyTarget()));
-    var resolvedSortOrder = valueCodec.resolveSortOrder(
-        payload.sortOrder(), 
-        habit.getSortOrder() != null ? habit.getSortOrder() : java.math.BigInteger.ZERO
-    );
-    habit.setSortOrder(resolvedSortOrder);
+    habit.setSortOrder(valueCodec.resolveSortOrder(payload.sortOrder(), currentSortOrder(habit)));
     habit.setReminderTime(valueCodec.normalizeReminderTime(payload.reminderTime()));
     habit.setReminderEnabled(payload.reminderEnabled() != null ? payload.reminderEnabled() : habit.isReminderEnabled());
     habit.setFreezeDays(valueCodec.normalizeFreezeDaysJson(payload.freezeDays(), habit.getFreezeDays(), jsonCodec));
@@ -142,5 +139,9 @@ public class HabitSyncUpsertHandler {
       return currentValue;
     }
     return defaultValue;
+  }
+
+  private BigInteger currentSortOrder(HabitEntity habit) {
+    return habit.sortOrderOrZero();
   }
 }

@@ -3,8 +3,6 @@ package com.sashplatonov.habbit.runner.auth;
 import com.sashplatonov.habbit.runner.auth.dto.TokenResponse;
 import com.sashplatonov.habbit.runner.model.OAuthStateEntity;
 import com.sashplatonov.habbit.runner.model.UserEntity;
-import com.sashplatonov.habbit.runner.repository.OAuthStateRepository;
-import com.sashplatonov.habbit.runner.repository.UserRepository;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
@@ -20,8 +18,18 @@ public class AuthService {
 
   protected final AuthConfig authConfig;
   protected final AuthCollaborators collaborators;
-  protected final UserRepository userRepository;
-  protected final OAuthStateRepository oauthStateRepository;
+  protected final UserAccess userAccess;
+  protected final OAuthStateAccess oauthStateAccess;
+
+  protected interface UserAccess {
+    UserEntity findByEmail(String email);
+    UserEntity findRequiredById(String userId);
+  }
+
+  protected interface OAuthStateAccess {
+    OAuthStateEntity consume(String state);
+    void save(OAuthStateEntity payload);
+  }
 
   AuthService() {
     this(null, null, null, null);
@@ -35,18 +43,18 @@ public class AuthService {
   public AuthService(
       AuthConfig authConfig,
       AuthCollaborators collaborators,
-      UserRepository userRepository,
-      OAuthStateRepository oauthStateRepository
+      UserAccess userAccess,
+      OAuthStateAccess oauthStateAccess
   ) {
     this.authConfig = authConfig;
     this.collaborators = collaborators;
-    this.userRepository = userRepository;
-    this.oauthStateRepository = oauthStateRepository;
+    this.userAccess = userAccess;
+    this.oauthStateAccess = oauthStateAccess;
   }
 
   @Transactional
   public TokenResponse login(String email) {
-    var user = findUserByEmail(email);
+    var user = userAccess().findByEmail(email);
     if (user == null) {
       log.warn("Login rejected: authMethod=email, reason=unknown-user");
       throw new NotAuthorizedException("Unknown user");
@@ -81,7 +89,11 @@ public class AuthService {
   @Transactional
   public String createOAuthAuthorizationUrl(String returnTo) {
     var state = AuthSupport.randomToken(16);
-    storeOAuthState(state, collaborators.normalizeReturnTo(returnTo), now().plusSeconds(600));
+    var payload = new OAuthStateEntity();
+    payload.state = state;
+    payload.returnTo = collaborators.normalizeReturnTo(returnTo);
+    payload.setExpiry(now().plusSeconds(600));
+    oauthStateAccess().save(payload);
     return collaborators.buildAuthorizationUrl(state);
   }
 
@@ -93,7 +105,11 @@ public class AuthService {
   @Transactional
   public OAuthCallbackSession handleOAuthCallbackSession(String code, String state) {
     validateOAuthCallbackInput(code, state);
-    var stateEntity = consumeOAuthState(state);
+    var stateEntity = oauthStateAccess().consume(state);
+    if (stateEntity == null || stateEntity.isExpiredAt(now())) {
+      log.warn("event=oauth_callback_failed, provider=google, reason=invalid-or-expired-state");
+      throw new NotAuthorizedException("Invalid or expired OAuth state");
+    }
     var email = collaborators.exchangeCodeForEmail(code);
     var user = collaborators.findOrCreateUser(email);
     var session = collaborators.issueTokenPair(user, authConfig.accessTokenTtlSeconds(), authConfig.refreshTokenDays());
@@ -107,13 +123,12 @@ public class AuthService {
 
   private TokenResponse issueTokenPair(UserEntity user) {
     var accessToken = collaborators.createAccessToken(user.getId(), user.email, authConfig.accessTokenTtlSeconds());
-    var refreshToken = createRefreshToken(user.getId());
+    var refreshToken = collaborators.createRefreshToken(
+        AuthSupport.randomToken(32),
+        user.getId(),
+        authConfig.refreshTokenDays()
+    );
     return new TokenResponse(accessToken, refreshToken, authConfig.accessTokenTtlSeconds(), "Bearer");
-  }
-
-  private String createRefreshToken(String userId) {
-    var token = AuthSupport.randomToken(32);
-    return collaborators.createRefreshToken(token, userId, authConfig.refreshTokenDays());
   }
 
   private void validateOAuthCallbackInput(String code, String state) {
@@ -123,26 +138,8 @@ public class AuthService {
     }
   }
 
-  protected OAuthStateEntity consumeOAuthState(String state) {
-    var stateEntity = findOAuthState(state);
-    deleteOAuthState(state);
-    if (stateEntity == null || stateEntity.isExpiredAt(now())) {
-      log.warn("event=oauth_callback_failed, provider=google, reason=invalid-or-expired-state");
-      throw new NotAuthorizedException("Invalid or expired OAuth state");
-    }
-    return stateEntity;
-  }
-
-  protected UserEntity findUserByEmail(String email) {
-    return userRepository == null ? null : userRepository.findByEmail(email);
-  }
-
-  protected UserEntity findUserById(String userId) {
-    return userRepository == null ? null : userRepository.findRequiredById(userId);
-  }
-
   protected UserEntity requireUserById(String userId) {
-    var user = findUserById(userId);
+    var user = userAccess().findRequiredById(userId);
     if (user == null) {
       log.warn("Refresh token rejected: userId={}, reason=user-not-found", userId);
       throw new NotAuthorizedException("User no longer exists");
@@ -150,24 +147,12 @@ public class AuthService {
     return user;
   }
 
-  protected OAuthStateEntity findOAuthState(String state) {
-    return oauthStateRepository == null ? null : oauthStateRepository.findById(state);
+  protected UserAccess userAccess() {
+    return userAccess;
   }
 
-  protected void deleteOAuthState(String state) {
-    if (oauthStateRepository != null) {
-      oauthStateRepository.deleteState(state);
-    }
-  }
-
-  protected void storeOAuthState(String state, String returnTo, Instant expiresAt) {
-    var payload = new OAuthStateEntity();
-    payload.state = state;
-    payload.returnTo = returnTo;
-    payload.setExpiry(expiresAt);
-    if (oauthStateRepository != null) {
-      oauthStateRepository.save(payload);
-    }
+  protected OAuthStateAccess oauthStateAccess() {
+    return oauthStateAccess;
   }
 
   protected Instant now() {

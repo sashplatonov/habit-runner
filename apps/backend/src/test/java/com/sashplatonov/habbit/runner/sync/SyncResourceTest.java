@@ -11,7 +11,6 @@ import com.sashplatonov.habbit.runner.sync.dto.PushRequestDto;
 import com.sashplatonov.habbit.runner.sync.dto.SyncOpDto;
 import io.quarkus.test.junit.QuarkusTest;
 import io.restassured.http.ContentType;
-import jakarta.transaction.Status;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -43,12 +42,7 @@ class SyncResourceTest extends AuthenticatedApiTestSupport {
   }
 
   private HabitEntity createHabit(String habitId, String userId, int version, Instant updatedAt) throws Exception {
-    // Only manage transaction manually if one is not already active
-    boolean transactionOwner = ut.getStatus() != Status.STATUS_ACTIVE;
-    if (transactionOwner) {
-      ut.begin();
-    }
-    try {
+    return inTransaction(() -> {
       var habit = new HabitEntity();
       habit.setId(habitId);
       habit.userId = userId;
@@ -66,16 +60,8 @@ class SyncResourceTest extends AuthenticatedApiTestSupport {
       habit.setCreatedAt(updatedAt);
       habit.setUpdatedAt(updatedAt);
       habit.persist();
-      if (transactionOwner) {
-        ut.commit();
-      }
       return habit;
-    } catch (Exception e) {
-      if (transactionOwner) {
-        rollbackIfNeeded();
-      }
-      throw e;
-    }
+    });
   }
 
   // ─── Pull tests ───────────────────────────────────────────────────────────
@@ -278,32 +264,19 @@ class SyncResourceTest extends AuthenticatedApiTestSupport {
     var habitId = UUID.randomUUID().toString();
     createHabit(habitId, userId, 1, Instant.now().minus(1, ChronoUnit.MINUTES));
 
-    // Need active transaction for persist()
-    boolean transactionOwner = ut.getStatus() != Status.STATUS_ACTIVE;
-    if (transactionOwner) {
-      ut.begin();
-    }
-    try {
+    inTransaction(() -> {
       var checkin = new CheckinEntity();
-    checkin.id = UUID.randomUUID().toString();
-    checkin.habitId = habitId;
-    checkin.userId = userId;
-    checkin.setCheckinDate(LocalDate.of(2025, 1, 1));
-    checkin.done = true;
-    checkin.count = 1;
-    checkin.version = 1;
-    checkin.setAuditTimestamps(Instant.now(), Instant.now());
-    checkin.persist();
-
-      if (transactionOwner) {
-        ut.commit();
-      }
-    } catch (Exception e) {
-      if (transactionOwner) {
-        rollbackIfNeeded();
-      }
-      throw e;
-    }
+      checkin.id = UUID.randomUUID().toString();
+      checkin.habitId = habitId;
+      checkin.userId = userId;
+      checkin.setCheckinDate(LocalDate.of(2025, 1, 1));
+      checkin.done = true;
+      checkin.count = 1;
+      checkin.version = 1;
+      checkin.setAuditTimestamps(Instant.now(), Instant.now());
+      checkin.persist();
+      return null;
+    });
 
     var opId = UUID.randomUUID().toString();
     var op = syncOp(
@@ -340,28 +313,15 @@ class SyncResourceTest extends AuthenticatedApiTestSupport {
   @Test
   void shouldReturnConflictWhenCheckinTargetsHabitOwnedByAnotherUser() throws Exception {
     var otherUserId = UUID.randomUUID().toString();
-    // Need active transaction for persist()
-    boolean transactionOwner = ut.getStatus() != Status.STATUS_ACTIVE;
-    if (transactionOwner) {
-      ut.begin();
-    }
-    try {
+    inTransaction(() -> {
       var other = new UserEntity();
       other.id = otherUserId;
       other.email = otherUserId + "@test.com";
       other.theme = "cloud";
       other.markCreatedAt(Instant.now());
       other.persist();
-
-      if (transactionOwner) {
-        ut.commit();
-      }
-    } catch (Exception e) {
-      if (transactionOwner) {
-        rollbackIfNeeded();
-      }
-      throw e;
-    }
+      return null;
+    });
 
     var habitId = UUID.randomUUID().toString();
     createHabit(habitId, otherUserId, 1, Instant.now());

@@ -76,21 +76,21 @@ public class CheckinSyncProcessor {
   }
 
   private void handleDelete(CheckinCommand command, SyncPushState state) {
-    var existing = checkinSyncUpsertHandler.findCheckin(command.habitId(), command.date(), command.userId);
+    var existing = checkinSyncUpsertHandler.findCheckin(command.habitId(), command.date(), command.userId());
     state.addAppliedCheckinDelete(command.opId(), checkinDeleteHandler.delete(
         new CheckinDeleteHandler.CheckinDeleteRequest(
-            command.userId,
-            command.habitId,
-            command.date,
-            existing != null ? existing.getId() : command.habitId + ":" + command.date,
+            command.userId(),
+            command.habitId(),
+            command.date(),
+            existing != null ? existing.getId() : command.habitId() + ":" + command.date(),
             command.payload()
         )
     ));
   }
 
   private void handleUpsert(CheckinCommand command, SyncPushState state) {
-    var existing = checkinSyncUpsertHandler.findCheckin(command.habitId, command.date, command.userId);
-    var conflict = checkinSyncUpsertHandler.conflict(command.opId(), existing, command.clientUpdated, payloadCodec);
+    var existing = checkinSyncUpsertHandler.findCheckin(command.habitId(), command.date(), command.userId());
+    var conflict = checkinSyncUpsertHandler.conflict(command.opId(), existing, command.clientUpdated(), payloadCodec);
     if (conflict != null) {
       log.debug(
           "Detected checkin sync conflict: opId={} habitId={} date={}",

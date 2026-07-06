@@ -38,14 +38,15 @@ public class CheckinSyncUpsertHandler {
   }
 
   public PushConflict conflict(String opId, CheckinEntity existing, Instant clientUpdated, SyncPayloadCodec payloadCodec) {
-    if (existing == null || !existing.getUpdatedAt().isAfter(clientUpdated)) {
+    var existingUpdatedAt = existing == null ? null : existing.updatedAtValue();
+    if (existingUpdatedAt == null || !existingUpdatedAt.isAfter(clientUpdated)) {
       return null;
     }
     return SyncConflicts.newerServerValue(
         payloadCodec,
         opId,
         "server already has newer checkin",
-        SyncConflicts.serverState(existing.getVersion(), existing.getUpdatedAt())
+        SyncConflicts.serverState(existing.getVersion(), existingUpdatedAt)
     );
   }
 
