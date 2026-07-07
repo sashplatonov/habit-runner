@@ -35,7 +35,7 @@ public class HabitServiceImpl implements HabitService {
 
   @Override
   public List<HabitResponseDto> findAll(String userId) {
-    return habitRepository.findListForUser(userId, HabitRepository.DEFAULT_LIST_LIMIT).stream()
+    return habitRepository.findListForUser(userId).stream()
         .map(habitMapper::toResponse)
         .toList();
   }

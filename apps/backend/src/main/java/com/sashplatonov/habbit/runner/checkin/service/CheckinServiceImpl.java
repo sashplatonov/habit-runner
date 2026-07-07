@@ -34,7 +34,7 @@ public class CheckinServiceImpl implements CheckinService {
 
   @Override
   public List<CheckinResponseDto> findAll(String userId) {
-    return checkinRepository.findListForUser(userId, CheckinRepository.DEFAULT_LIST_LIMIT).stream()
+    return checkinRepository.findListForUser(userId).stream()
         .map(checkinMapper::toResponse)
         .toList();
   }

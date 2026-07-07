@@ -12,10 +12,17 @@ import java.util.List;
 @ApplicationScoped
 public class CheckinRepository implements PanacheRepositoryBase<CheckinEntity, String> {
   public static final int DEFAULT_LIST_LIMIT = 200;
+  public static final int DEFAULT_SYNC_PAGE_SIZE = 200;
+  private static final int MAX_PAGE_SIZE = 200;
+
+  public List<CheckinEntity> findListForUser(String userId) {
+    return findListForUser(userId, DEFAULT_LIST_LIMIT);
+  }
 
   public List<CheckinEntity> findListForUser(String userId, int limit) {
+    var pageSize = boundedPageSize(limit);
     return find("userId = ?1 ORDER BY date ASC, id ASC", userId)
-        .page(0, limit)
+        .page(0, pageSize)
         .list();
   }
 
@@ -23,10 +30,15 @@ public class CheckinRepository implements PanacheRepositoryBase<CheckinEntity, S
     return find("habitId = ?1 and date = ?2 and userId = ?3", habitId, date, userId).firstResult();
   }
 
+  public List<CheckinEntity> findSyncPageForUser(String userId) {
+    return findSyncPageForUser(userId, null, null, DEFAULT_SYNC_PAGE_SIZE);
+  }
+
   public List<CheckinEntity> findSyncPageForUser(String userId, Instant updatedAt, String cursorId, int pageSize) {
+    var boundedPageSize = boundedPageSize(pageSize);
     if (updatedAt == null || cursorId == null) {
       return find("userId = ?1 ORDER BY updatedAt ASC, id ASC", userId)
-          .page(0, pageSize)
+          .page(0, boundedPageSize)
           .list();
     }
     return find(
@@ -34,11 +46,11 @@ public class CheckinRepository implements PanacheRepositoryBase<CheckinEntity, S
         userId,
         updatedAt,
         cursorId
-    ).page(0, pageSize).list();
+    ).page(0, boundedPageSize).list();
   }
 
   public List<CheckinEntity> findAllByUserId(String userId) {
-    return findListForUser(userId, DEFAULT_LIST_LIMIT);
+    return findListForUser(userId);
   }
 
   public List<CheckinEntity> findPageForUser(String userId, Instant updatedAt, String cursorId, int pageSize) {
@@ -58,5 +70,9 @@ public class CheckinRepository implements PanacheRepositoryBase<CheckinEntity, S
   @Transactional
   public long deleteByHabitIdUserIdAndDate(String habitId, String userId, LocalDate date) {
     return delete("habitId = ?1 and userId = ?2 and date = ?3", habitId, userId, date);
+  }
+
+  private int boundedPageSize(int requestedSize) {
+    return Math.max(1, Math.min(requestedSize, MAX_PAGE_SIZE));
   }
 }

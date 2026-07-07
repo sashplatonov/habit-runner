@@ -11,10 +11,17 @@ import java.util.List;
 @ApplicationScoped
 public class HabitRepository implements PanacheRepositoryBase<HabitEntity, String> {
   public static final int DEFAULT_LIST_LIMIT = 200;
+  public static final int DEFAULT_SYNC_PAGE_SIZE = 200;
+  private static final int MAX_PAGE_SIZE = 200;
+
+  public List<HabitEntity> findListForUser(String userId) {
+    return findListForUser(userId, DEFAULT_LIST_LIMIT);
+  }
 
   public List<HabitEntity> findListForUser(String userId, int limit) {
+    var pageSize = boundedPageSize(limit);
     return find("userId = ?1 ORDER BY sortOrder ASC, createdAt ASC, id ASC", userId)
-        .page(0, limit)
+        .page(0, pageSize)
         .list();
   }
 
@@ -26,10 +33,15 @@ public class HabitRepository implements PanacheRepositoryBase<HabitEntity, Strin
     return find("id = ?1 and userId = ?2", habitId, userId).firstResult();
   }
 
+  public List<HabitEntity> findSyncPageForUser(String userId) {
+    return findSyncPageForUser(userId, null, null, DEFAULT_SYNC_PAGE_SIZE);
+  }
+
   public List<HabitEntity> findSyncPageForUser(String userId, Instant updatedAt, String cursorId, int pageSize) {
+    var boundedPageSize = boundedPageSize(pageSize);
     if (updatedAt == null || cursorId == null) {
       return find("userId = ?1 ORDER BY updatedAt ASC, id ASC", userId)
-          .page(0, pageSize)
+          .page(0, boundedPageSize)
           .list();
     }
     return find(
@@ -37,11 +49,11 @@ public class HabitRepository implements PanacheRepositoryBase<HabitEntity, Strin
         userId,
         updatedAt,
         cursorId
-    ).page(0, pageSize).list();
+    ).page(0, boundedPageSize).list();
   }
 
   public List<HabitEntity> findAllByUserId(String userId) {
-    return findListForUser(userId, DEFAULT_LIST_LIMIT);
+    return findListForUser(userId);
   }
 
   public List<HabitEntity> findPageForUser(String userId, Instant updatedAt, String cursorId, int pageSize) {
@@ -56,5 +68,9 @@ public class HabitRepository implements PanacheRepositoryBase<HabitEntity, Strin
   @Transactional
   public long deleteByIdAndUserId(String habitId, String userId) {
     return delete("id = ?1 and userId = ?2", habitId, userId);
+  }
+
+  private int boundedPageSize(int requestedSize) {
+    return Math.max(1, Math.min(requestedSize, MAX_PAGE_SIZE));
   }
 }

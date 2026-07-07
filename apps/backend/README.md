@@ -121,6 +121,28 @@ Optional feature variables:
 
 ---
 
+## 🗄️ DB access contract <a name="db-access-contract"></a>
+
+Repository access is intentionally bounded:
+
+- list reads use the default page size in `apps/backend/src/main/java/com/sashplatonov/habbit/runner/repository/HabitRepository.java` and `apps/backend/src/main/java/com/sashplatonov/habbit/runner/repository/CheckinRepository.java`;
+- sync reads use cursor semantics based on `updatedAt` plus `id` and stay page-limited;
+- list and sync limits are explicit in repository code so the service layer does not rely on implicit database defaults.
+
+Production datasource tuning is also explicit in `apps/backend/src/main/resources/application.properties`:
+
+- `quarkus.datasource.jdbc.min-size=2`
+- `quarkus.datasource.jdbc.max-size=16`
+- `quarkus.datasource.jdbc.acquisition-timeout=5S`
+- `quarkus.datasource.jdbc.idle-removal-interval=5M`
+- `quarkus.datasource.jdbc.background-validation-interval=1M`
+
+Adjust these values only after observing real concurrency and connection wait behavior under production-like load.
+
+[↑ Back to top](#top)
+
+---
+
 ## 🌐 Key endpoints <a name="key-endpoints"></a>
 
 - `GET /q/health`
