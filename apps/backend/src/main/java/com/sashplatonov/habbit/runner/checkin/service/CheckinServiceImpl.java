@@ -7,6 +7,7 @@ import com.sashplatonov.habbit.runner.checkin.dto.CheckinUpsertRequestDto;
 import com.sashplatonov.habbit.runner.model.CheckinEntity;
 import com.sashplatonov.habbit.runner.checkin.support.CheckinMutationSupport;
 import com.sashplatonov.habbit.runner.habit.support.HabitMutationSupport;
+import com.sashplatonov.habbit.runner.metrics.instrumentation.ServiceMetricsInstrumentation;
 import com.sashplatonov.habbit.runner.repository.CheckinRepository;
 import com.sashplatonov.habbit.runner.repository.HabitRepository;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -21,15 +22,18 @@ public class CheckinServiceImpl implements CheckinService {
   private final CheckinRepository checkinRepository;
   private final HabitRepository habitRepository;
   private final CheckinMapper checkinMapper;
+  private final ServiceMetricsInstrumentation serviceMetricsInstrumentation;
 
   public CheckinServiceImpl(
       CheckinRepository checkinRepository,
       HabitRepository habitRepository,
-      CheckinMapper checkinMapper
+      CheckinMapper checkinMapper,
+      ServiceMetricsInstrumentation serviceMetricsInstrumentation
   ) {
     this.checkinRepository = checkinRepository;
     this.habitRepository = habitRepository;
     this.checkinMapper = checkinMapper;
+    this.serviceMetricsInstrumentation = serviceMetricsInstrumentation;
   }
 
   @Override
@@ -47,59 +51,63 @@ public class CheckinServiceImpl implements CheckinService {
       String date,
       CheckinUpsertRequestDto request
   ) {
-    var habit = habitRepository.findByIdAndUserId(habitId, userId);
-    if (habit == null) {
-      return notFound("Habit not found", "HABIT_NOT_FOUND");
-    }
-
-    var parsedDate = parseDate(date);
-    if (parsedDate == null) {
-      return invalidDate();
-    }
-
-    if (!Boolean.TRUE.equals(request.done())) {
-      var deleted = checkinRepository.deleteByHabitIdUserIdAndDate(habitId, userId, parsedDate);
-      if (deleted == 0) {
-        return notFound("Checkin not found", "CHECKIN_NOT_FOUND");
+    return serviceMetricsInstrumentation.measureMutation(() -> {
+      var habit = habitRepository.findByIdAndUserId(habitId, userId);
+      if (habit == null) {
+        return notFound("Habit not found", "HABIT_NOT_FOUND");
       }
-      return OperationResult.success(null);
-    }
 
-    var existing = checkinRepository.findByHabitDateAndUserId(habitId, parsedDate, userId);
-    var checkin = existing != null ? existing : new CheckinEntity();
-    if (existing == null) {
-      checkin.setHabitId(habitId);
-      checkin.setUserId(userId);
-      checkin.setDate(parsedDate);
-    }
-    checkin.setDone(true);
-    CheckinMutationSupport.normalize(checkin);
-    if (existing == null) {
-      checkinRepository.save(checkin);
-    } else {
-      CheckinMutationSupport.touch(checkin);
-    }
-    HabitMutationSupport.touch(habit);
-    return OperationResult.success(checkinMapper.toResponse(checkin));
+      var parsedDate = parseDate(date);
+      if (parsedDate == null) {
+        return invalidDate();
+      }
+
+      if (!Boolean.TRUE.equals(request.done())) {
+        var deleted = checkinRepository.deleteByHabitIdUserIdAndDate(habitId, userId, parsedDate);
+        if (deleted == 0) {
+          return notFound("Checkin not found", "CHECKIN_NOT_FOUND");
+        }
+        return OperationResult.success(null);
+      }
+
+      var existing = checkinRepository.findByHabitDateAndUserId(habitId, parsedDate, userId);
+      var checkin = existing != null ? existing : new CheckinEntity();
+      if (existing == null) {
+        checkin.setHabitId(habitId);
+        checkin.setUserId(userId);
+        checkin.setDate(parsedDate);
+      }
+      checkin.setDone(true);
+      CheckinMutationSupport.normalize(checkin);
+      if (existing == null) {
+        checkinRepository.save(checkin);
+      } else {
+        CheckinMutationSupport.touch(checkin);
+      }
+      HabitMutationSupport.touch(habit);
+      return OperationResult.success(checkinMapper.toResponse(checkin));
+    });
   }
 
   @Override
   @Transactional
   public OperationResult<Void> delete(String userId, String habitId, String date) {
-    var habit = habitRepository.findByIdAndUserId(habitId, userId);
-    if (habit == null) {
-      return notFound("Habit not found", "HABIT_NOT_FOUND");
-    }
-    var parsedDate = parseDate(date);
-    if (parsedDate == null) {
-      return invalidDateVoid();
-    }
-    var deleted = checkinRepository.deleteByHabitIdUserIdAndDate(habitId, userId, parsedDate);
-    if (deleted == 0) {
-      return notFound("Checkin not found", "CHECKIN_NOT_FOUND");
-    }
-    HabitMutationSupport.touch(habit);
-    return OperationResult.success(null);
+    return serviceMetricsInstrumentation.measureMutation(() -> {
+      var habit = habitRepository.findByIdAndUserId(habitId, userId);
+      if (habit == null) {
+        return notFound("Habit not found", "HABIT_NOT_FOUND");
+      }
+      var parsedDate = parseDate(date);
+      if (parsedDate == null) {
+        return invalidDateVoid();
+      }
+      var deleted = checkinRepository.deleteByHabitIdUserIdAndDate(habitId, userId, parsedDate);
+      if (deleted == 0) {
+        return notFound("Checkin not found", "CHECKIN_NOT_FOUND");
+      }
+      HabitMutationSupport.touch(habit);
+      return OperationResult.success(null);
+    });
   }
 
   private LocalDate parseDate(String value) {

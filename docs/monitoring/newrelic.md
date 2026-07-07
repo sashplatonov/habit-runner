@@ -50,7 +50,7 @@ New Relic dashboards should be built from:
 - APM service/entity health
 - JVM and HTTP telemetry
 - log search by `traceId`, `service.name`, and `deployment.environment`
-- custom business metrics from `apps/backend/src/main/java/com/sashplatonov/habbit/runner/metrics/ObservabilityConfig.java` are exported through the New Relic Micrometer registry
+- custom business metrics from `apps/backend/src/main/java/com/sashplatonov/habbit/runner/metrics/instrumentation/ServiceMetricsInstrumentation.java` are exported through the New Relic Micrometer registry
 
 [↑ Back to top](#top)
 

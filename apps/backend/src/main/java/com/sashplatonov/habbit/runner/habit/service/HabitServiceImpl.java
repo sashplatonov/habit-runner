@@ -8,6 +8,7 @@ import com.sashplatonov.habbit.runner.habit.dto.HabitStatusUpdateRequestDto;
 import com.sashplatonov.habbit.runner.habit.dto.HabitUpdateRequestDto;
 import com.sashplatonov.habbit.runner.model.HabitEntity;
 import com.sashplatonov.habbit.runner.habit.support.HabitMutationSupport;
+import com.sashplatonov.habbit.runner.metrics.instrumentation.ServiceMetricsInstrumentation;
 import com.sashplatonov.habbit.runner.repository.CheckinRepository;
 import com.sashplatonov.habbit.runner.repository.HabitRepository;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -22,15 +23,18 @@ public class HabitServiceImpl implements HabitService {
   private final HabitRepository habitRepository;
   private final CheckinRepository checkinRepository;
   private final HabitMapper habitMapper;
+  private final ServiceMetricsInstrumentation serviceMetricsInstrumentation;
 
   public HabitServiceImpl(
       HabitRepository habitRepository,
       CheckinRepository checkinRepository,
-      HabitMapper habitMapper
+      HabitMapper habitMapper,
+      ServiceMetricsInstrumentation serviceMetricsInstrumentation
   ) {
     this.habitRepository = habitRepository;
     this.checkinRepository = checkinRepository;
     this.habitMapper = habitMapper;
+    this.serviceMetricsInstrumentation = serviceMetricsInstrumentation;
   }
 
   @Override
@@ -43,43 +47,48 @@ public class HabitServiceImpl implements HabitService {
   @Override
   @Transactional
   public OperationResult<HabitResponseDto> create(String userId, HabitCreateRequestDto request) {
-    log.debug("Creating habit userId={} habitId={}", userId, request.id());
-    var existing = habitRepository.findHabitById(request.id());
-    if (existing != null && !userId.equals(existing.getUserId())) {
-      return OperationResult.failure(new ErrorResponse(
-          "https://habbit-runner.dev/errors/habit-conflict",
-          "Conflict",
-          409,
-          "Habit id already belongs to another user",
-          "HABIT_CONFLICT"
-      ));
-    }
+    return serviceMetricsInstrumentation.measureMutation(() -> {
+      log.debug("Creating habit userId={} habitId={}", userId, request.id());
+      var existing = habitRepository.findHabitById(request.id());
+      if (existing != null && !userId.equals(existing.getUserId())) {
+        return OperationResult.failure(new ErrorResponse(
+            "https://habbit-runner.dev/errors/habit-conflict",
+            "Conflict",
+            409,
+            "Habit id already belongs to another user",
+            "HABIT_CONFLICT"
+        ));
+      }
 
-    var habit = existing != null ? existing : new HabitEntity();
-    habitMapper.applyCreate(request, habit);
-    habit.setId(request.id());
-    habit.setUserId(userId);
-    HabitMutationSupport.normalize(habit);
-    HabitMutationSupport.touch(habit);
-    if (existing == null) {
-      habitRepository.save(habit);
-    }
-    return OperationResult.success(habitMapper.toResponse(habit));
+      var habit = existing != null ? existing : new HabitEntity();
+      habitMapper.applyCreate(request, habit);
+      habit.setId(request.id());
+      habit.setUserId(userId);
+      HabitMutationSupport.normalize(habit);
+      HabitMutationSupport.touch(habit);
+      if (existing == null) {
+        habitRepository.save(habit);
+        serviceMetricsInstrumentation.recordHabitCreated();
+      }
+      return OperationResult.success(habitMapper.toResponse(habit));
+    });
   }
 
   @Override
   @Transactional
   public OperationResult<HabitResponseDto> update(String userId, String habitId, HabitUpdateRequestDto request) {
-    log.debug("Updating habit userId={} habitId={}", userId, habitId);
-    var habit = habitRepository.findByIdAndUserId(habitId, userId);
-    if (habit == null) {
-      return notFound();
-    }
+    return serviceMetricsInstrumentation.measureMutation(() -> {
+      log.debug("Updating habit userId={} habitId={}", userId, habitId);
+      var habit = habitRepository.findByIdAndUserId(habitId, userId);
+      if (habit == null) {
+        return notFound();
+      }
 
-    habitMapper.applyUpdate(request, habit);
-    HabitMutationSupport.normalize(habit);
-    HabitMutationSupport.touch(habit);
-    return OperationResult.success(habitMapper.toResponse(habit));
+      habitMapper.applyUpdate(request, habit);
+      HabitMutationSupport.normalize(habit);
+      HabitMutationSupport.touch(habit);
+      return OperationResult.success(habitMapper.toResponse(habit));
+    });
   }
 
   @Override
@@ -89,33 +98,38 @@ public class HabitServiceImpl implements HabitService {
       String habitId,
       HabitStatusUpdateRequestDto request
   ) {
-    log.debug("Updating habit status userId={} habitId={} archived={}", userId, habitId, request.archived());
-    var habit = habitRepository.findByIdAndUserId(habitId, userId);
-    if (habit == null) {
-      return notFound();
-    }
+    return serviceMetricsInstrumentation.measureMutation(() -> {
+      log.debug("Updating habit status userId={} habitId={} archived={}", userId, habitId, request.archived());
+      var habit = habitRepository.findByIdAndUserId(habitId, userId);
+      if (habit == null) {
+        return notFound();
+      }
 
-    habit.setArchived(Boolean.TRUE.equals(request.archived()));
-    HabitMutationSupport.touch(habit);
-    return OperationResult.success(habitMapper.toResponse(habit));
+      habit.setArchived(Boolean.TRUE.equals(request.archived()));
+      HabitMutationSupport.touch(habit);
+      return OperationResult.success(habitMapper.toResponse(habit));
+    });
   }
 
   @Override
   @Transactional
   public OperationResult<Void> delete(String userId, String habitId) {
-    log.debug("Deleting habit userId={} habitId={}", userId, habitId);
-    checkinRepository.deleteByHabitIdAndUserId(habitId, userId);
-    var deleted = habitRepository.deleteByIdAndUserId(habitId, userId);
-    if (deleted == 0) {
-      return OperationResult.failure(new ErrorResponse(
-          "https://habbit-runner.dev/errors/habit-not-found",
-          "Not Found",
-          404,
-          "Habit not found",
-          "HABIT_NOT_FOUND"
-      ));
-    }
-    return OperationResult.success(null);
+    return serviceMetricsInstrumentation.measureMutation(() -> {
+      log.debug("Deleting habit userId={} habitId={}", userId, habitId);
+      checkinRepository.deleteByHabitIdAndUserId(habitId, userId);
+      var deleted = habitRepository.deleteByIdAndUserId(habitId, userId);
+      if (deleted == 0) {
+        return OperationResult.failure(new ErrorResponse(
+            "https://habbit-runner.dev/errors/habit-not-found",
+            "Not Found",
+            404,
+            "Habit not found",
+            "HABIT_NOT_FOUND"
+        ));
+      }
+      serviceMetricsInstrumentation.recordHabitDeleted();
+      return OperationResult.success(null);
+    });
   }
 
   private OperationResult<HabitResponseDto> notFound() {

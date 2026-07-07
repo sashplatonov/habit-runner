@@ -223,12 +223,10 @@
                 <artifactId>jacoco-maven-plugin</artifactId>
                 <version>${jacoco.version}</version>
                 <configuration>
-                    <!-- ObservabilityConfig registers Micrometer meters at container startup;
-                         it only executes when the management interface is active (production/dev).
-                         Tests disable the management interface to avoid port conflicts, so this
-                         config-only class is excluded from the coverage gate. -->
+                    <!-- ServiceMetricsInstrumentation registers Micrometer meters at container startup.
+                         The bean is configuration-only, so it is excluded from the coverage gate. -->
                     <excludes>
-                        <exclude>**/ObservabilityConfig.class</exclude>
+                        <exclude>**/ServiceMetricsInstrumentation.class</exclude>
                     </excludes>
                 </configuration>
                 <executions>

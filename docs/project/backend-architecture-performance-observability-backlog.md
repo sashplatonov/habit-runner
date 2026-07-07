@@ -14,7 +14,7 @@
 
 - feature-пакеты (`auth`, `habit`, `checkin`, `notification`) смешаны с общими `model` и `repository`;
 - `apps/backend/src/main/resources/application.properties` уже включает JSON-логи, health checks и New Relic metric export;
-- `apps/backend/src/main/java/com/sashplatonov/habbit/runner/metrics/ObservabilityConfig.java` регистрирует несколько бизнес-метрик, но метрики не оформлены как полноценный service-level контракт;
+- `apps/backend/src/main/java/com/sashplatonov/habbit/runner/metrics/instrumentation/ServiceMetricsInstrumentation.java` регистрирует несколько бизнес-метрик, но метрики не оформлены как полноценный service-level контракт;
 - каталоги `apps/backend/src/main/java/com/sashplatonov/habbit/runner/config`, `health`, `mutation` сейчас не оформлены как полноценные модули и требуют либо наполнения, либо явного упрощения структуры.
 
 ## Ограничение текущего этапа
@@ -338,15 +338,15 @@
 
 ## 5. Метрики для New Relic dashboard
 
-### [ ] P1-13. Перевести бизнес-метрики на отдельный service-level instrumentation слой
+### [x] P1-13. Перевести бизнес-метрики на отдельный service-level instrumentation слой
 
 Пути:
 
-- `apps/backend/src/main/java/com/sashplatonov/habbit/runner/metrics/ObservabilityConfig.java`
-- `apps/backend/src/main/java/com/sashplatonov/habbit/runner/habit/HabitServiceImpl.java`
-- `apps/backend/src/main/java/com/sashplatonov/habbit/runner/checkin/CheckinServiceImpl.java`
-- `apps/backend/src/main/java/com/sashplatonov/habbit/runner/auth/AuthService.java`
-- `apps/backend/src/main/java/com/sashplatonov/habbit/runner/notification/NotificationServiceImpl.java`
+- `apps/backend/src/main/java/com/sashplatonov/habbit/runner/metrics/instrumentation/ServiceMetricsInstrumentation.java`
+- `apps/backend/src/main/java/com/sashplatonov/habbit/runner/habit/service/HabitServiceImpl.java`
+- `apps/backend/src/main/java/com/sashplatonov/habbit/runner/checkin/service/CheckinServiceImpl.java`
+- `apps/backend/src/main/java/com/sashplatonov/habbit/runner/auth/service/AuthService.java`
+- `apps/backend/src/main/java/com/sashplatonov/habbit/runner/notification/service/NotificationServiceImpl.java`
 
 Архитектурное решение:
 
@@ -364,7 +364,7 @@
 
 Пути:
 
-- `apps/backend/src/main/java/com/sashplatonov/habbit/runner/metrics/ObservabilityConfig.java`
+- `apps/backend/src/main/java/com/sashplatonov/habbit/runner/metrics/instrumentation/ServiceMetricsInstrumentation.java`
 - `apps/backend/src/main/java/com/sashplatonov/habbit/runner/habit/HabitServiceImpl.java`
 - `apps/backend/src/main/java/com/sashplatonov/habbit/runner/checkin/CheckinServiceImpl.java`
 - `apps/backend/src/main/java/com/sashplatonov/habbit/runner/auth/AuthService.java`
@@ -400,7 +400,7 @@
 
 Пути:
 
-- `apps/backend/src/main/java/com/sashplatonov/habbit/runner/metrics/ObservabilityConfig.java`
+- `apps/backend/src/main/java/com/sashplatonov/habbit/runner/metrics/instrumentation/ServiceMetricsInstrumentation.java`
 - `apps/backend/src/main/java/com/sashplatonov/habbit/runner/auth/GoogleOAuthClient.java`
 - `apps/backend/src/main/java/com/sashplatonov/habbit/runner/habit/HabitServiceImpl.java`
 - `apps/backend/src/main/java/com/sashplatonov/habbit/runner/checkin/CheckinServiceImpl.java`
