@@ -8,6 +8,7 @@ import com.sashplatonov.habbit.runner.auth.support.AuthCollaborators;
 import com.sashplatonov.habbit.runner.auth.support.OAuthCallbackSession;
 import com.sashplatonov.habbit.runner.auth.support.AuthSupport;
 import com.sashplatonov.habbit.runner.auth.dto.TokenResponse;
+import com.sashplatonov.habbit.runner.infrastructure.http.TraceContextSupport;
 import com.sashplatonov.habbit.runner.model.OAuthStateEntity;
 import com.sashplatonov.habbit.runner.model.UserEntity;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -53,11 +54,11 @@ public class AuthService {
   public TokenResponse login(String email) {
     var user = userAccess().findByEmail(email);
     if (user == null) {
-      log.warn("Login rejected: authMethod=email, reason=unknown-user");
+      log.warn("Login rejected: authMethod=email, traceId={}, reason=unknown-user", TraceContextSupport.traceIdOrUnknown());
       throw new NotAuthorizedException("Unknown user");
     }
     var session = issueTokenPair(user);
-    log.info("Login succeeded: userId={}, authMethod=email", user.getId());
+    log.info("Login succeeded: userId={}, authMethod=email, traceId={}", user.getId(), TraceContextSupport.traceIdOrUnknown());
     return session;
   }
 
@@ -66,7 +67,11 @@ public class AuthService {
     var record = collaborators.requireActiveRefreshToken(token);
     var user = requireUserById(record.userId);
     var accessToken = collaborators.createAccessToken(user.getId(), user.email, authConfig.accessTokenTtlSeconds());
-    log.info("Access token refreshed: userId={}, authMethod=refresh-token", record.userId);
+    log.info(
+        "Access token refreshed: userId={}, authMethod=refresh-token, traceId={}",
+        record.userId,
+        TraceContextSupport.traceIdOrUnknown()
+    );
     return new TokenResponse(accessToken, record.token, authConfig.accessTokenTtlSeconds(), "Bearer");
   }
 
@@ -104,13 +109,20 @@ public class AuthService {
     validateOAuthCallbackInput(code, state);
     var stateEntity = oauthStateAccess().consume(state);
     if (stateEntity == null || stateEntity.isExpiredAt(now())) {
-      log.warn("event=oauth_callback_failed, provider=google, reason=invalid-or-expired-state");
+      log.warn(
+          "event=oauth_callback_failed, provider=google, traceId={}, reason=invalid-or-expired-state",
+          TraceContextSupport.traceIdOrUnknown()
+      );
       throw new NotAuthorizedException("Invalid or expired OAuth state");
     }
     var email = collaborators.exchangeCodeForEmail(code);
     var user = collaborators.findOrCreateUser(email);
     var session = collaborators.issueTokenPair(user, authConfig.accessTokenTtlSeconds(), authConfig.refreshTokenDays());
-    log.info("OAuth login succeeded: userId={}, provider=google", user.getId());
+    log.info(
+        "OAuth login succeeded: userId={}, provider=google, traceId={}",
+        user.getId(),
+        TraceContextSupport.traceIdOrUnknown()
+    );
     return new OAuthCallbackSession(collaborators.buildCallbackRedirect(stateEntity.returnTo), session);
   }
 
@@ -130,7 +142,10 @@ public class AuthService {
 
   private void validateOAuthCallbackInput(String code, String state) {
     if (code == null || code.isBlank() || state == null || state.isBlank()) {
-      log.warn("OAuth callback rejected: provider=google, reason=missing-parameters");
+      log.warn(
+          "OAuth callback rejected: provider=google, traceId={}, reason=missing-parameters",
+          TraceContextSupport.traceIdOrUnknown()
+      );
       throw new BadRequestException("Missing OAuth callback parameters");
     }
   }
@@ -138,7 +153,11 @@ public class AuthService {
   protected UserEntity requireUserById(String userId) {
     var user = userAccess().findRequiredById(userId);
     if (user == null) {
-      log.warn("Refresh token rejected: userId={}, reason=user-not-found", userId);
+      log.warn(
+          "Refresh token rejected: userId={}, traceId={}, reason=user-not-found",
+          userId,
+          TraceContextSupport.traceIdOrUnknown()
+      );
       throw new NotAuthorizedException("User no longer exists");
     }
     return user;

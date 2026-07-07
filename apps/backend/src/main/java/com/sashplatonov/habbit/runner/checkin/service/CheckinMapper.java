@@ -5,11 +5,12 @@ import com.sashplatonov.habbit.runner.model.CheckinEntity;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingConstants;
+import org.mapstruct.Builder;
 
 import java.time.Instant;
 import java.time.LocalDate;
 
-@Mapper(componentModel = MappingConstants.ComponentModel.CDI)
+@Mapper(componentModel = MappingConstants.ComponentModel.CDI, builder = @Builder(disableBuilder = true))
 public interface CheckinMapper {
   @Mapping(target = "date", expression = "java(toDateString(entity.getDate()))")
   @Mapping(target = "createdAt", expression = "java(toInstantString(entity.getCreatedAt()))")

@@ -24,12 +24,14 @@ import com.sashplatonov.habbit.runner.auth.support.OAuthCallbackSession;
 import com.sashplatonov.habbit.runner.auth.support.OAuthHelper;
 import com.sashplatonov.habbit.runner.auth.support.OAuthSupport;
 import com.sashplatonov.habbit.runner.auth.support.ThemeCatalog;
+import com.sashplatonov.habbit.runner.api.RequestTraceFilter;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sashplatonov.habbit.runner.support.TestConfigFactory;
 import com.sashplatonov.habbit.runner.support.FakeHttpClient;
 import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.NotAuthorizedException;
 import org.junit.jupiter.api.Test;
+import org.slf4j.MDC;
 
 import java.io.IOException;
 import java.util.Optional;
@@ -79,6 +81,24 @@ class GoogleOAuthClientTest {
     assertEquals("POST", httpClient.requestAt(0).method());
     assertEquals("GET", httpClient.requestAt(1).method());
     assertTrue(httpClient.requestAt(1).headers().firstValue("Authorization").orElseThrow().startsWith("Bearer token-123"));
+  }
+
+  @Test
+  void shouldPropagateTraceIdToGoogleRequests() {
+    var httpClient = new FakeHttpClient()
+        .enqueueResponse(200, "{\"access_token\":\"token-123\"}")
+        .enqueueResponse(200, "{\"email\":\"user@example.test\"}");
+    var client = new GoogleOAuthClient(TestConfigFactory.defaultAuthConfig(), objectMapper, httpClient);
+    MDC.put("traceId", "trace-123");
+
+    try {
+      client.exchangeCodeForEmail("code-123", "https://app.example.test/auth/callback");
+
+      assertEquals("trace-123", httpClient.requestAt(0).headers().firstValue(RequestTraceFilter.TRACE_ID_HEADER).orElseThrow());
+      assertEquals("trace-123", httpClient.requestAt(1).headers().firstValue(RequestTraceFilter.TRACE_ID_HEADER).orElseThrow());
+    } finally {
+      MDC.remove("traceId");
+    }
   }
 
   @Test

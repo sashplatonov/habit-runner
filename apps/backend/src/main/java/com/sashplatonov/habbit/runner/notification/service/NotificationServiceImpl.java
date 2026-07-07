@@ -6,6 +6,7 @@ import com.sashplatonov.habbit.runner.notification.dto.PushSubscriptionEndpointR
 import com.sashplatonov.habbit.runner.notification.dto.PushSubscriptionRequest;
 import com.sashplatonov.habbit.runner.notification.dto.SubscriptionStatusResponse;
 import com.sashplatonov.habbit.runner.notification.dto.VapidPublicKeyResponse;
+import com.sashplatonov.habbit.runner.infrastructure.http.TraceContextSupport;
 import com.sashplatonov.habbit.runner.repository.PushSubscriptionRepository;
 import jakarta.enterprise.context.ApplicationScoped;
 import lombok.extern.slf4j.Slf4j;
@@ -51,7 +52,11 @@ public class NotificationServiceImpl implements NotificationService {
   public OperationResult<SubscriptionStatusResponse> subscribe(String userId, PushSubscriptionRequest request) {
     var existing = pushSubscriptionRepository.findByEndpoint(request.endpoint());
     if (existing != null && !userId.equals(existing.userId)) {
-      log.warn("event=push_subscription_rejected userId={} reason=endpoint_owned_by_another_user", userId);
+      log.warn(
+          "event=push_subscription_rejected userId={} traceId={} reason=endpoint_owned_by_another_user",
+          userId,
+          TraceContextSupport.traceIdOrUnknown()
+      );
       return OperationResult.failure(
           new com.sashplatonov.habbit.runner.api.ErrorResponse(
               CONFLICT_TYPE,
@@ -69,10 +74,20 @@ public class NotificationServiceImpl implements NotificationService {
       entity.p256dh = request.keys().p256dh();
       entity.auth = request.keys().auth();
       pushSubscriptionRepository.save(entity);
-      log.debug("event=push_subscription_saved userId={} endpoint={} created=true", userId, request.endpoint());
+      log.debug(
+          "event=push_subscription_saved userId={} traceId={} endpoint={} created=true",
+          userId,
+          TraceContextSupport.traceIdOrUnknown(),
+          request.endpoint()
+      );
       return OperationResult.success(new SubscriptionStatusResponse(true));
     }
-    log.debug("event=push_subscription_saved userId={} endpoint={} created=false", userId, request.endpoint());
+    log.debug(
+        "event=push_subscription_saved userId={} traceId={} endpoint={} created=false",
+        userId,
+        TraceContextSupport.traceIdOrUnknown(),
+        request.endpoint()
+    );
     return OperationResult.success(new SubscriptionStatusResponse(true));
   }
 
@@ -82,7 +97,11 @@ public class NotificationServiceImpl implements NotificationService {
     if (deleted == 0) {
       var existing = pushSubscriptionRepository.findByEndpoint(request.endpoint());
       if (existing != null && !userId.equals(existing.userId)) {
-        log.warn("event=push_subscription_unsubscribe_rejected userId={} reason=endpoint_owned_by_another_user", userId);
+        log.warn(
+            "event=push_subscription_unsubscribe_rejected userId={} traceId={} reason=endpoint_owned_by_another_user",
+            userId,
+            TraceContextSupport.traceIdOrUnknown()
+        );
         return OperationResult.failure(
             new com.sashplatonov.habbit.runner.api.ErrorResponse(
                 FORBIDDEN_TYPE,
@@ -95,10 +114,20 @@ public class NotificationServiceImpl implements NotificationService {
       }
     }
     if (deleted == 0) {
-      log.debug("event=push_subscription_removed userId={} endpoint={} removed=false", userId, request.endpoint());
+      log.debug(
+          "event=push_subscription_removed userId={} traceId={} endpoint={} removed=false",
+          userId,
+          TraceContextSupport.traceIdOrUnknown(),
+          request.endpoint()
+      );
       return OperationResult.success(null);
     }
-    log.debug("event=push_subscription_removed userId={} endpoint={} removed=true", userId, request.endpoint());
+    log.debug(
+        "event=push_subscription_removed userId={} traceId={} endpoint={} removed=true",
+        userId,
+        TraceContextSupport.traceIdOrUnknown(),
+        request.endpoint()
+    );
     return OperationResult.success(null);
   }
 }

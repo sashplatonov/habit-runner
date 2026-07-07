@@ -1,6 +1,7 @@
 package com.sashplatonov.habbit.runner.auth.client;
 
 import com.sashplatonov.habbit.runner.auth.config.AuthConfig;
+import com.sashplatonov.habbit.runner.infrastructure.http.TraceContextSupport;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -64,11 +65,21 @@ public class GoogleOAuthClient {
     } catch (NotAuthorizedException | BadRequestException exception) {
       throw exception;
     } catch (IOException exception) {
-      log.error("Google OAuth exchange failed: provider=google, stage=network-io", exception);
+      log.error(
+          "Google OAuth exchange failed: provider=google, traceId={}, stage=network-io, error={}",
+          TraceContextSupport.traceIdOrUnknown(),
+          exception.getMessage(),
+          exception
+      );
       throw new NotAuthorizedException("OAuth exchange error: " + exception.getMessage(), exception);
     } catch (InterruptedException exception) {
       Thread.currentThread().interrupt();
-      log.error("Google OAuth exchange failed: provider=google, stage=interrupted", exception);
+      log.error(
+          "Google OAuth exchange failed: provider=google, traceId={}, stage=interrupted, error={}",
+          TraceContextSupport.traceIdOrUnknown(),
+          exception.getMessage(),
+          exception
+      );
       throw new NotAuthorizedException("OAuth exchange interrupted", exception);
     }
   }
@@ -89,19 +100,25 @@ public class GoogleOAuthClient {
         + "&redirect_uri=" + urlEncode(callbackUrl)
         + "&grant_type=authorization_code";
 
-    var request = HttpRequest.newBuilder()
+    var requestBuilder = HttpRequest.newBuilder()
         .uri(URI.create(TOKEN_URL))
         .header("Content-Type", FORM_CONTENT_TYPE)
         .POST(HttpRequest.BodyPublishers.ofString(body))
-        .timeout(REQUEST_TIMEOUT)
-        .build();
+        .timeout(REQUEST_TIMEOUT);
+    TraceContextSupport.withCorrelationHeaders(requestBuilder);
+    var request = requestBuilder.build();
 
     var startedAt = System.nanoTime();
+    log.debug(
+        "Google OAuth request started: provider=google, traceId={}, stage=token-exchange",
+        TraceContextSupport.traceIdOrUnknown()
+    );
     var response = httpClient.send(request, STRING_BODY_HANDLER);
     var elapsedMs = elapsedMs(startedAt);
     if (response.statusCode() != 200) {
       log.warn(
-          "Google token exchange failed: provider=google, status={}, elapsed={}ms",
+          "Google token exchange failed: provider=google, traceId={}, status={}, elapsed={}ms",
+          TraceContextSupport.traceIdOrUnknown(),
           response.statusCode(),
           elapsedMs
       );
@@ -112,26 +129,41 @@ public class GoogleOAuthClient {
     var tokenResponse = objectMapper.readValue(response.body(), GoogleTokenResponse.class);
     var accessToken = tokenResponse.access_token();
     if (accessToken == null || accessToken.isBlank()) {
-      log.warn("Google token exchange returned no access token: provider=google, elapsed={}ms", elapsedMs);
+      log.warn(
+          "Google token exchange returned no access token: provider=google, traceId={}, elapsed={}ms",
+          TraceContextSupport.traceIdOrUnknown(),
+          elapsedMs
+      );
       throw new NotAuthorizedException("Google did not return an access_token");
     }
+    log.debug(
+        "Google OAuth request completed: provider=google, traceId={}, stage=token-exchange, elapsed={}ms, status=200",
+        TraceContextSupport.traceIdOrUnknown(),
+        elapsedMs
+    );
     return accessToken;
   }
 
   private String fetchEmail(String accessToken) throws IOException, InterruptedException {
-    var request = HttpRequest.newBuilder()
+    var requestBuilder = HttpRequest.newBuilder()
         .uri(URI.create(USER_INFO_URL))
         .header("Authorization", "Bearer " + accessToken)
         .GET()
-        .timeout(REQUEST_TIMEOUT)
-        .build();
+        .timeout(REQUEST_TIMEOUT);
+    TraceContextSupport.withCorrelationHeaders(requestBuilder);
+    var request = requestBuilder.build();
 
     var startedAt = System.nanoTime();
+    log.debug(
+        "Google OAuth request started: provider=google, traceId={}, stage=user-info",
+        TraceContextSupport.traceIdOrUnknown()
+    );
     var response = httpClient.send(request, STRING_BODY_HANDLER);
     var elapsedMs = elapsedMs(startedAt);
     if (response.statusCode() != 200) {
       log.warn(
-          "Google user info request failed: provider=google, status={}, elapsed={}ms",
+          "Google user info request failed: provider=google, traceId={}, status={}, elapsed={}ms",
+          TraceContextSupport.traceIdOrUnknown(),
           response.statusCode(),
           elapsedMs
       );
@@ -142,16 +174,26 @@ public class GoogleOAuthClient {
     var userInfo = objectMapper.readValue(response.body(), GoogleUserInfoResponse.class);
     var email = userInfo.email();
     if (email == null || email.isBlank()) {
-      log.warn("Google user info response did not include email: provider=google, elapsed={}ms", elapsedMs);
+      log.warn(
+          "Google user info response did not include email: provider=google, traceId={}, elapsed={}ms",
+          TraceContextSupport.traceIdOrUnknown(),
+          elapsedMs
+      );
       throw new NotAuthorizedException("Google userinfo did not include email");
     }
+    log.debug(
+        "Google OAuth request completed: provider=google, traceId={}, stage=user-info, elapsed={}ms, status=200",
+        TraceContextSupport.traceIdOrUnknown(),
+        elapsedMs
+    );
     return email;
   }
 
   private void logSlowCall(String operation, long elapsedMs) {
     if (elapsedMs > SLOW_OAUTH_CALL_THRESHOLD_MS) {
       log.warn(
-          "Slow Google OAuth call detected: provider=google, operation={}, elapsed={}ms, threshold={}ms",
+          "Slow Google OAuth call detected: provider=google, traceId={}, operation={}, elapsed={}ms, threshold={}ms",
+          TraceContextSupport.traceIdOrUnknown(),
           operation,
           elapsedMs,
           SLOW_OAUTH_CALL_THRESHOLD_MS

@@ -288,27 +288,32 @@
 - `/q/health/ready` отражает реальные зависимости backend, а не декоративные статусы.
 - Во время рефакторинга тесты не проверяются, только основной compile/validate gate.
 
-### [ ] P1-11. Довести trace/log correlation до полного request и outbound flow
+### [x] P1-11. Довести trace/log correlation до полного request и outbound flow
 
 Пути:
 
 - `apps/backend/src/main/java/com/sashplatonov/habbit/runner/api/RequestTraceFilter.java`
+- `apps/backend/src/main/java/com/sashplatonov/habbit/runner/infrastructure/http/TraceContextSupport.java`
 - `apps/backend/src/main/java/com/sashplatonov/habbit/runner/auth/GoogleOAuthClient.java`
 - `apps/backend/src/main/java/com/sashplatonov/habbit/runner/auth/AuthService.java`
 - `apps/backend/src/main/java/com/sashplatonov/habbit/runner/notification/NotificationServiceImpl.java`
 - `apps/backend/src/main/resources/application.properties`
+- `apps/backend/src/test/java/com/sashplatonov/habbit/runner/auth/GoogleOAuthClientTest.java`
 
 Архитектурное решение:
 
 - Сделать `traceId` обязательной корреляцией не только для inbound логов, но и для outbound HTTP/slow path событий.
 - В `GoogleOAuthClient` передавать correlation headers и единообразно логировать этап, latency и outcome.
 - Стандартизировать именование лог-полей для userId, habitId, endpoint, provider, operation.
+- Общая работа с MDC traceId вынесена в `TraceContextSupport`, чтобы inbound/outbound code использовал один источник корреляции.
 
 Критерии проверки:
 
 - По одной проблемной операции можно собрать цельную цепочку логов по `traceId`.
 - Логи outbound OAuth вызовов содержат единый набор полей и latency.
 - В JSON-логах нет смешения форматов для одинаковых business events.
+- Тест `GoogleOAuthClientTest` проверяет, что traceId уходит в outbound HTTP headers.
+- Во время рефакторинга тесты не проверяются, только основной compile/validate gate.
 
 ### [ ] P2-12. Свести observability-документацию к одному актуальному backend contract
 
