@@ -1,5 +1,6 @@
-package com.sashplatonov.habbit.runner.auth;
+package com.sashplatonov.habbit.runner.auth.support;
 
+import com.sashplatonov.habbit.runner.auth.client.GoogleOAuthClient;
 import jakarta.enterprise.context.ApplicationScoped;
 
 @ApplicationScoped

@@ -1,6 +1,6 @@
 package com.sashplatonov.habbit.runner.support;
 
-import com.sashplatonov.habbit.runner.auth.AuthConfig;
+import com.sashplatonov.habbit.runner.auth.config.AuthConfig;
 import com.sashplatonov.habbit.runner.notification.NotificationConfig;
 
 import java.util.Optional;

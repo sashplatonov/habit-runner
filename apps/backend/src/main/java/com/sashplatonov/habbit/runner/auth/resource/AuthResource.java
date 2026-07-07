@@ -1,5 +1,11 @@
-package com.sashplatonov.habbit.runner.auth;
+package com.sashplatonov.habbit.runner.auth.resource;
 
+import com.sashplatonov.habbit.runner.auth.security.CurrentUserContext;
+import com.sashplatonov.habbit.runner.auth.security.RequireAuth;
+import com.sashplatonov.habbit.runner.auth.service.AuthService;
+import com.sashplatonov.habbit.runner.auth.service.PreferencesService;
+import com.sashplatonov.habbit.runner.auth.support.AuthCookieBuilder;
+import com.sashplatonov.habbit.runner.auth.support.AuthSupport;
 import com.sashplatonov.habbit.runner.api.ApiResponses;
 import com.sashplatonov.habbit.runner.api.ErrorResponse;
 import com.sashplatonov.habbit.runner.auth.dto.AuthSessionResponse;

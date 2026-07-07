@@ -1,8 +1,8 @@
 package com.sashplatonov.habbit.runner.support;
 
-import com.sashplatonov.habbit.runner.auth.AuthCollaborators;
-import com.sashplatonov.habbit.runner.auth.AuthService;
-import com.sashplatonov.habbit.runner.auth.CurrentUser;
+import com.sashplatonov.habbit.runner.auth.support.AuthCollaborators;
+import com.sashplatonov.habbit.runner.auth.service.AuthService;
+import com.sashplatonov.habbit.runner.auth.security.CurrentUser;
 
 public class RecordingAuthService extends AuthService {
   public final CurrentUser verifiedUser;

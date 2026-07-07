@@ -1,5 +1,6 @@
-package com.sashplatonov.habbit.runner.auth;
+package com.sashplatonov.habbit.runner.auth.client;
 
+import com.sashplatonov.habbit.runner.auth.config.AuthConfig;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;

@@ -1,5 +1,6 @@
 package com.sashplatonov.habbit.runner.model;
 
+import com.sashplatonov.habbit.runner.habit.support.HabitMutationSupport;
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Column;
@@ -118,54 +119,10 @@ public class HabitEntity extends UuidAuditedEntityBase {
 
   @PrePersist
   void prePersist() {
-    initializeDefaults();
-  }
-
-  private void initializeDefaults() {
-    setDailyTarget(Math.max(1, getDailyTarget()));
-    setSortOrder(defaultSortOrder(getSortOrder()));
-    setColor(defaultColor(getColor()));
-    setFrequency(defaultFrequency(getFrequency()));
-    setType(defaultType(getType()));
-    setCustomDays(defaultCustomDays(getCustomDays()));
-    setFreezeDays(defaultFreezeDays(getFreezeDays()));
-    setTags(defaultTags(getTags()));
-    setVersion(Math.max(1, getVersion()));
-  }
-
-  private BigInteger defaultSortOrder(BigInteger value) {
-    return value != null ? value : BigInteger.ZERO;
-  }
-
-  private HabitColor defaultColor(HabitColor value) {
-    return value != null ? value : HabitColor.BLUE;
-  }
-
-  private HabitFrequency defaultFrequency(HabitFrequency value) {
-    return value != null ? value : HabitFrequency.DAILY;
-  }
-
-  private HabitType defaultType(HabitType value) {
-    return value != null ? value : HabitType.POSITIVE;
-  }
-
-  private List<Integer> defaultCustomDays(List<Integer> value) {
-    return value != null ? value : List.of();
-  }
-
-  private List<String> defaultTags(List<String> value) {
-    return value != null ? value : List.of();
-  }
-
-  private List<String> defaultFreezeDays(List<String> value) {
-    return value != null ? value : List.of();
+    HabitMutationSupport.normalize(this);
   }
 
   public BigInteger sortOrderOrZero() {
     return getSortOrder() != null ? getSortOrder() : BigInteger.ZERO;
-  }
-
-  public int versionValue() {
-    return getVersion();
   }
 }

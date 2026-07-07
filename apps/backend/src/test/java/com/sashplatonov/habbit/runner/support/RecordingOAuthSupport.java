@@ -1,6 +1,6 @@
 package com.sashplatonov.habbit.runner.support;
 
-import com.sashplatonov.habbit.runner.auth.OAuthSupport;
+import com.sashplatonov.habbit.runner.auth.support.OAuthSupport;
 
 public class RecordingOAuthSupport extends OAuthSupport {
   public RecordingOAuthSupport() {

@@ -1,10 +1,10 @@
-package com.sashplatonov.habbit.runner.auth;
+package com.sashplatonov.habbit.runner.auth.security;
 
-final class BearerTokenExtractor {
+public final class BearerTokenExtractor {
   private BearerTokenExtractor() {
   }
 
-  static String extract(String header) {
+  public static String extract(String header) {
     if (header == null || header.isBlank()) {
       return null;
     }

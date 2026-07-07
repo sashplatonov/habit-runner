@@ -1,5 +1,6 @@
 package com.sashplatonov.habbit.runner.model;
 
+import com.sashplatonov.habbit.runner.checkin.support.CheckinMutationSupport;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Index;
@@ -42,8 +43,7 @@ public class CheckinEntity extends UuidAuditedEntityBase {
 
   @PrePersist
   void prePersist() {
-    count = Math.max(1, count);
-    version = Math.max(1, version);
+    CheckinMutationSupport.normalize(this);
   }
 
   public LocalDate syncDate() {

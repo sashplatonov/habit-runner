@@ -1,4 +1,4 @@
-package com.sashplatonov.habbit.runner.auth;
+package com.sashplatonov.habbit.runner.auth.service;
 
 import com.sashplatonov.habbit.runner.model.RefreshTokenEntity;
 import com.sashplatonov.habbit.runner.repository.RefreshTokenRepository;

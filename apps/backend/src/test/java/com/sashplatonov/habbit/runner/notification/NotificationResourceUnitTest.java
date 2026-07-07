@@ -1,7 +1,7 @@
 package com.sashplatonov.habbit.runner.notification;
 
-import com.sashplatonov.habbit.runner.auth.CurrentUser;
-import com.sashplatonov.habbit.runner.auth.CurrentUserContext;
+import com.sashplatonov.habbit.runner.auth.security.CurrentUser;
+import com.sashplatonov.habbit.runner.auth.security.CurrentUserContext;
 import com.sashplatonov.habbit.runner.api.ErrorResponse;
 import com.sashplatonov.habbit.runner.notification.dto.PushSubscriptionEndpointRequest;
 import com.sashplatonov.habbit.runner.notification.dto.VapidPublicKeyResponse;

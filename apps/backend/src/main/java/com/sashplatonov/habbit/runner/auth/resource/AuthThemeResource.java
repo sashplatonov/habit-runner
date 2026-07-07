@@ -1,5 +1,8 @@
-package com.sashplatonov.habbit.runner.auth;
+package com.sashplatonov.habbit.runner.auth.resource;
 
+import com.sashplatonov.habbit.runner.auth.security.CurrentUserContext;
+import com.sashplatonov.habbit.runner.auth.security.RequireAuth;
+import com.sashplatonov.habbit.runner.auth.service.PreferencesService;
 import com.sashplatonov.habbit.runner.api.ErrorResponse;
 import com.sashplatonov.habbit.runner.auth.dto.ThemeResponse;
 import com.sashplatonov.habbit.runner.auth.dto.UpdatePreferencesRequest;

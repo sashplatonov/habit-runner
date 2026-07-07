@@ -1,7 +1,7 @@
 package com.sashplatonov.habbit.runner.habit;
 
-import com.sashplatonov.habbit.runner.auth.CurrentUser;
-import com.sashplatonov.habbit.runner.auth.CurrentUserContext;
+import com.sashplatonov.habbit.runner.auth.security.CurrentUser;
+import com.sashplatonov.habbit.runner.auth.security.CurrentUserContext;
 import com.sashplatonov.habbit.runner.habit.dto.HabitCreateRequestDto;
 import com.sashplatonov.habbit.runner.habit.dto.HabitResponseDto;
 import com.sashplatonov.habbit.runner.habit.dto.HabitStatusUpdateRequestDto;

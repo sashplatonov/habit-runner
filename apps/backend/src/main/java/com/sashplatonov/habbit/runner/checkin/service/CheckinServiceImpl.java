@@ -5,13 +5,14 @@ import com.sashplatonov.habbit.runner.api.OperationResult;
 import com.sashplatonov.habbit.runner.checkin.dto.CheckinResponseDto;
 import com.sashplatonov.habbit.runner.checkin.dto.CheckinUpsertRequestDto;
 import com.sashplatonov.habbit.runner.model.CheckinEntity;
+import com.sashplatonov.habbit.runner.checkin.support.CheckinMutationSupport;
+import com.sashplatonov.habbit.runner.habit.support.HabitMutationSupport;
 import com.sashplatonov.habbit.runner.repository.CheckinRepository;
 import com.sashplatonov.habbit.runner.repository.HabitRepository;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
 
-import java.time.Instant;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
 import java.util.List;
@@ -72,17 +73,15 @@ public class CheckinServiceImpl implements CheckinService {
       checkin.setHabitId(habitId);
       checkin.setUserId(userId);
       checkin.setDate(parsedDate);
-      checkin.setCreatedAt(Instant.now());
-      checkin.setVersion(1);
     }
     checkin.setDone(true);
-    checkin.setCount(Math.max(1, request.count() != null ? request.count() : 1));
-    checkin.setUpdatedAt(Instant.now());
-    checkin.setVersion(existing == null ? 1 : Math.max(1, existing.getVersion()) + 1);
+    CheckinMutationSupport.normalize(checkin);
     if (existing == null) {
       checkinRepository.save(checkin);
+    } else {
+      CheckinMutationSupport.touch(checkin);
     }
-    touchHabit(habit);
+    HabitMutationSupport.touch(habit);
     return OperationResult.success(checkinMapper.toResponse(checkin));
   }
 
@@ -101,13 +100,8 @@ public class CheckinServiceImpl implements CheckinService {
     if (deleted == 0) {
       return notFound("Checkin not found", "CHECKIN_NOT_FOUND");
     }
-    touchHabit(habit);
+    HabitMutationSupport.touch(habit);
     return OperationResult.success(null);
-  }
-
-  private void touchHabit(com.sashplatonov.habbit.runner.model.HabitEntity habit) {
-    habit.setUpdatedAt(Instant.now());
-    habit.setVersion(Math.max(1, habit.getVersion()) + 1);
   }
 
   private LocalDate parseDate(String value) {

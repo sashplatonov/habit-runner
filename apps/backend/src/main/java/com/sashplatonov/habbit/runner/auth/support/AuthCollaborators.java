@@ -1,5 +1,9 @@
-package com.sashplatonov.habbit.runner.auth;
+package com.sashplatonov.habbit.runner.auth.support;
 
+import com.sashplatonov.habbit.runner.auth.security.CurrentUser;
+import com.sashplatonov.habbit.runner.auth.security.JwtUtil;
+import com.sashplatonov.habbit.runner.auth.service.RefreshTokenService;
+import com.sashplatonov.habbit.runner.auth.service.UserService;
 import com.sashplatonov.habbit.runner.auth.dto.TokenResponse;
 import com.sashplatonov.habbit.runner.model.RefreshTokenEntity;
 import com.sashplatonov.habbit.runner.model.UserEntity;
@@ -86,4 +90,3 @@ public class AuthCollaborators {
     return new TokenResponse(access, refresh, accessTtlSeconds, "Bearer");
   }
 }
-

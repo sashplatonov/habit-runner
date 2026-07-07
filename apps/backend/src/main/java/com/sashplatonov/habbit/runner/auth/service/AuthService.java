@@ -1,5 +1,12 @@
-package com.sashplatonov.habbit.runner.auth;
+package com.sashplatonov.habbit.runner.auth.service;
 
+import com.sashplatonov.habbit.runner.auth.access.OAuthStateAccess;
+import com.sashplatonov.habbit.runner.auth.access.UserAccess;
+import com.sashplatonov.habbit.runner.auth.config.AuthConfig;
+import com.sashplatonov.habbit.runner.auth.security.CurrentUser;
+import com.sashplatonov.habbit.runner.auth.support.AuthCollaborators;
+import com.sashplatonov.habbit.runner.auth.support.OAuthCallbackSession;
+import com.sashplatonov.habbit.runner.auth.support.AuthSupport;
 import com.sashplatonov.habbit.runner.auth.dto.TokenResponse;
 import com.sashplatonov.habbit.runner.model.OAuthStateEntity;
 import com.sashplatonov.habbit.runner.model.UserEntity;

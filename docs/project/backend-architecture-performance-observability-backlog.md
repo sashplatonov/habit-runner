@@ -89,7 +89,7 @@
 - Новые зависимости между пакетами идут сверху вниз, без циклических ссылок.
 - Shared HTTP-контур физически отделён от feature-пакетов, а базовые audit-типы вынесены из `model/` в `infrastructure/persistence/`.
 
-### [ ] P1-3. Декомпозировать перегруженный `auth` модуль
+### [x] P1-3. Декомпозировать перегруженный `auth` модуль
 
 Пути:
 
@@ -113,15 +113,18 @@
 - OAuth, refresh-token lifecycle, user lookup и preferences живут в отдельных смысловых зонах.
 - В одном классе не смешаны HTTP orchestration, persistence access и outbound HTTP.
 - Названия пакетов и файлов отражают ответственность без чтения тела метода.
+- `auth` физически разрезан на `access`, `client`, `config`, `resource`, `security`, `service` и `support`, а поддерживающие тесты смотрят на новые пакеты.
 
 ## 2. Оптимизация скорости и RAM
 
-### [ ] P1-4. Убрать дублирование defaulting и version/timestamp логики из hot path сервисов
+### [x] P1-4. Убрать дублирование defaulting и version/timestamp логики из hot path сервисов
 
 Пути:
 
-- `apps/backend/src/main/java/com/sashplatonov/habbit/runner/habit/HabitServiceImpl.java`
-- `apps/backend/src/main/java/com/sashplatonov/habbit/runner/checkin/CheckinServiceImpl.java`
+- `apps/backend/src/main/java/com/sashplatonov/habbit/runner/habit/service/HabitServiceImpl.java`
+- `apps/backend/src/main/java/com/sashplatonov/habbit/runner/checkin/service/CheckinServiceImpl.java`
+- `apps/backend/src/main/java/com/sashplatonov/habbit/runner/habit/support/HabitMutationSupport.java`
+- `apps/backend/src/main/java/com/sashplatonov/habbit/runner/checkin/support/CheckinMutationSupport.java`
 - `apps/backend/src/main/java/com/sashplatonov/habbit/runner/model/HabitEntity.java`
 - `apps/backend/src/main/java/com/sashplatonov/habbit/runner/model/CheckinEntity.java`
 
@@ -136,6 +139,7 @@
 - В `HabitServiceImpl` и `CheckinServiceImpl` уменьшается объём условной логики, не относящейся к orchestration.
 - Правила defaults и version increment описаны один раз на feature.
 - После рефакторинга нет дублирующихся блоков с одинаковыми полями и значениями по умолчанию.
+- Во время рефакторинга тесты не проверяются, только основной compile/packaging gate.
 
 ### [ ] P1-5. Перевести list/sync hot path на bounded чтение и более узкие выборки
 

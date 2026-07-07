@@ -1,5 +1,7 @@
-package com.sashplatonov.habbit.runner.auth;
+package com.sashplatonov.habbit.runner.auth.security;
 
+import com.sashplatonov.habbit.runner.auth.service.AuthService;
+import com.sashplatonov.habbit.runner.auth.support.AuthCookieBuilder;
 import jakarta.annotation.Priority;
 import jakarta.enterprise.context.RequestScoped;
 import jakarta.ws.rs.core.Cookie;

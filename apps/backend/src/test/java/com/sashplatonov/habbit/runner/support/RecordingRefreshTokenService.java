@@ -1,7 +1,7 @@
 package com.sashplatonov.habbit.runner.support;
 
 import com.sashplatonov.habbit.runner.model.RefreshTokenEntity;
-import com.sashplatonov.habbit.runner.auth.RefreshTokenService;
+import com.sashplatonov.habbit.runner.auth.service.RefreshTokenService;
 
 public class RecordingRefreshTokenService extends RefreshTokenService {
   private RefreshTokenEntity requireActiveResult;

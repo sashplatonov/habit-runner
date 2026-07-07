@@ -1,8 +1,8 @@
-package com.sashplatonov.habbit.runner.auth;
+package com.sashplatonov.habbit.runner.auth.support;
 
 import java.util.Set;
 
-final class ThemeCatalog {
+public final class ThemeCatalog {
   private static final String DEFAULT_THEME = "cloud";
   private static final Set<String> THEME_IDS = Set.of(
       "midnight",
@@ -20,7 +20,7 @@ final class ThemeCatalog {
   private ThemeCatalog() {
   }
 
-  static String normalize(String value) {
+  public static String normalize(String value) {
     return value != null && THEME_IDS.contains(value) ? value : DEFAULT_THEME;
   }
 }

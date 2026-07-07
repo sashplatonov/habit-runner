@@ -1,4 +1,4 @@
-package com.sashplatonov.habbit.runner.auth;
+package com.sashplatonov.habbit.runner.auth.security;
 
 import jakarta.ws.rs.NameBinding;
 

@@ -1,4 +1,4 @@
-package com.sashplatonov.habbit.runner.auth;
+package com.sashplatonov.habbit.runner.auth.service;
 
 import com.sashplatonov.habbit.runner.model.UserEntity;
 import com.sashplatonov.habbit.runner.repository.UserRepository;

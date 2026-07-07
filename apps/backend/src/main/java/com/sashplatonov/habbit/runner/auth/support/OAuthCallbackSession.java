@@ -1,4 +1,4 @@
-package com.sashplatonov.habbit.runner.auth;
+package com.sashplatonov.habbit.runner.auth.support;
 
 import com.sashplatonov.habbit.runner.auth.dto.TokenResponse;
 

@@ -1,7 +1,7 @@
 package com.sashplatonov.habbit.runner.support;
 
-import com.sashplatonov.habbit.runner.auth.CurrentUser;
-import com.sashplatonov.habbit.runner.auth.JwtUtil;
+import com.sashplatonov.habbit.runner.auth.security.CurrentUser;
+import com.sashplatonov.habbit.runner.auth.security.JwtUtil;
 
 public class RecordingJwtUtil extends JwtUtil {
   public String verifiedToken;
