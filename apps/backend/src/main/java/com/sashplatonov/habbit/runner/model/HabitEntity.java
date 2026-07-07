@@ -22,7 +22,8 @@ import java.util.List;
 @Table(
     name = "habits",
     indexes = {
-      @Index(name = "habits_user_updated_cursor_idx", columnList = "userId,updatedAt,id")
+      @Index(name = "habits_user_updated_cursor_idx", columnList = "userId,updatedAt,id"),
+      @Index(name = "habits_user_sort_cursor_idx", columnList = "userId,sortOrder,createdAt,id")
     }
 )
 @Getter

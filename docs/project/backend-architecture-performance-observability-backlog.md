@@ -189,13 +189,14 @@
 
 ## 3. Оптимизация работы с БД
 
-### [ ] P1-7. Пересмотреть индексы под реальные query patterns backend
+### [x] P1-7. Пересмотреть индексы под реальные query patterns backend
 
 Пути:
 
 - `apps/backend/src/main/resources/db/migration/V2__add_sync_cursor_indexes.sql`
 - `apps/backend/src/main/resources/db/migration/V3__add_entity_audit_timestamps.sql`
 - `apps/backend/src/main/resources/db/migration/V5__normalize_habit_schedule_storage.sql`
+- `apps/backend/src/main/resources/db/migration/V8__add_list_and_lookup_indexes.sql`
 - `apps/backend/src/main/java/com/sashplatonov/habbit/runner/repository/HabitRepository.java`
 - `apps/backend/src/main/java/com/sashplatonov/habbit/runner/repository/CheckinRepository.java`
 - `apps/backend/src/main/java/com/sashplatonov/habbit/runner/repository/PushSubscriptionRepository.java`
@@ -211,6 +212,7 @@
 - Для каждого нового индекса есть конкретный repository/query consumer.
 - `EXPLAIN ANALYZE` показывает использование индекса на hot query, а не sequential scan без причины.
 - Нет индексов “на всякий случай”, которые не соответствуют реальным запросам.
+- Во время рефакторинга тесты не проверяются, только основной compile/validate gate.
 
 ### [ ] P1-8. Упростить repository contracts и убрать лишние round-trip операции
 

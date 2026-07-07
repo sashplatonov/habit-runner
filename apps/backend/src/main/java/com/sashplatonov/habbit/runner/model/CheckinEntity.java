@@ -15,7 +15,9 @@ import java.time.LocalDate;
 @Table(
     name = "checkins",
     indexes = {
-        @Index(name = "checkins_user_updated_cursor_idx", columnList = "userId,updatedAt,id")
+        @Index(name = "checkins_user_updated_cursor_idx", columnList = "userId,updatedAt,id"),
+        @Index(name = "checkins_user_date_cursor_idx", columnList = "userId,date,id"),
+        @Index(name = "checkins_habit_user_date_idx", columnList = "habitId,userId,date")
     },
     uniqueConstraints = {
         @UniqueConstraint(name = "habit_date_unique", columnNames = {"habitId", "date"})
