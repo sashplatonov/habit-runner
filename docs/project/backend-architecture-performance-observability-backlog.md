@@ -59,18 +59,22 @@
 - Новый package map можно объяснить без обращения к скрытым знаниям о проекте.
 - Файлы `auth`, `habit`, `checkin` и `notification` разнесены по подпапкам по смыслу: `resource`, `service`, `client`, `security`, `config`, `support`, `access`.
 
-### [ ] P0-2. Выделить shared infrastructure отдельно от domain-кода
+### [x] P0-2. Выделить shared infrastructure отдельно от domain-кода
 
 Пути:
 
-- `apps/backend/src/main/java/com/sashplatonov/habbit/runner/api/RequestTraceFilter.java`
-- `apps/backend/src/main/java/com/sashplatonov/habbit/runner/api/GlobalExceptionMapper.java`
-- `apps/backend/src/main/java/com/sashplatonov/habbit/runner/api/ConstraintViolationExceptionMapper.java`
-- `apps/backend/src/main/java/com/sashplatonov/habbit/runner/api/SecurityHeadersFilter.java`
-- `apps/backend/src/main/java/com/sashplatonov/habbit/runner/auth/AuthGuardFilter.java`
-- `apps/backend/src/main/java/com/sashplatonov/habbit/runner/auth/CsrfGuardFilter.java`
-- `apps/backend/src/main/java/com/sashplatonov/habbit/runner/model/AuditedEntityBase.java`
-- `apps/backend/src/main/java/com/sashplatonov/habbit/runner/model/UuidAuditedEntityBase.java`
+- `apps/backend/src/main/java/com/sashplatonov/habbit/runner/infrastructure/http/RequestTraceFilter.java`
+- `apps/backend/src/main/java/com/sashplatonov/habbit/runner/infrastructure/http/GlobalExceptionMapper.java`
+- `apps/backend/src/main/java/com/sashplatonov/habbit/runner/infrastructure/http/ConstraintViolationExceptionMapper.java`
+- `apps/backend/src/main/java/com/sashplatonov/habbit/runner/infrastructure/http/SecurityHeadersFilter.java`
+- `apps/backend/src/main/java/com/sashplatonov/habbit/runner/infrastructure/http/ResponseHeaders.java`
+- `apps/backend/src/main/java/com/sashplatonov/habbit/runner/infrastructure/http/ErrorResponse.java`
+- `apps/backend/src/main/java/com/sashplatonov/habbit/runner/infrastructure/http/OperationResult.java`
+- `apps/backend/src/main/java/com/sashplatonov/habbit/runner/infrastructure/http/OperationSuccess.java`
+- `apps/backend/src/main/java/com/sashplatonov/habbit/runner/infrastructure/http/OperationFailure.java`
+- `apps/backend/src/main/java/com/sashplatonov/habbit/runner/infrastructure/http/UnknownStatus.java`
+- `apps/backend/src/main/java/com/sashplatonov/habbit/runner/infrastructure/persistence/AuditedEntityBase.java`
+- `apps/backend/src/main/java/com/sashplatonov/habbit/runner/infrastructure/persistence/UuidAuditedEntityBase.java`
 
 Архитектурное решение:
 
@@ -83,6 +87,7 @@
 - Shared package содержит только повторно используемые инфраструктурные элементы.
 - Feature-пакеты больше не зависят от “свалки” общих классов.
 - Новые зависимости между пакетами идут сверху вниз, без циклических ссылок.
+- Shared HTTP-контур физически отделён от feature-пакетов, а базовые audit-типы вынесены из `model/` в `infrastructure/persistence/`.
 
 ### [ ] P1-3. Декомпозировать перегруженный `auth` модуль
 
