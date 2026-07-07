@@ -403,7 +403,7 @@
 - По дашборду можно увидеть объём CRUD, auth-поток, деградацию OAuth и работу push subscription.
 - `docs/monitoring/newrelic.md` содержит список реально экспортируемых метрик, а не только общие обещания.
 
-### [ ] P2-15. Добавить dashboard-ready latency/error SLO view для backend use cases
+### [x] P2-15. Добавить dashboard-ready latency/error SLO view для backend use cases
 
 Пути:
 
@@ -417,13 +417,14 @@
 
 - Отдельно измерять latency и error rate для внутренних use cases, а не надеяться только на HTTP-level telemetry.
 - Для долгих операций использовать `Timer` с единым неймингом и понятными boundaries dashboard.
-- Задокументировать NRQL-запросы или dashboard-блоки для top operations backend.
+- Задокументировать dashboard-ready блоки для latency, error rate и traffic по ключевым backend use cases.
 
 Критерии проверки:
 
 - Есть понятный способ сравнить success/error rate и latency по ключевым use case.
 - Dashboard можно собрать без ручного расследования имён и тегов.
 - Метрики use case уровня не дублируют бесполезно стандартные HTTP/JVM графики.
+- `docs/monitoring/newrelic.md` содержит готовый SLO view для backend use cases.
 
 ## Рекомендуемый порядок исполнения
 

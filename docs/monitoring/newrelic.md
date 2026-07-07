@@ -6,6 +6,7 @@
 
 - [🎯 Scope](#scope)
 - [✅ Backend contract](#backend-contract)
+- [📊 Dashboard-ready SLO view](#dashboard-ready-slo-view)
 - [🔐 Required environment variables](#required-environment-variables)
 - [🚀 Runtime modes](#runtime-modes)
 - [🧪 Validate](#validate)
@@ -77,6 +78,52 @@ Stable tags:
 - `provider`
 
 Dashboard queries should avoid raw `userId`, email, endpoint, or any other high-cardinality identifier.
+
+[↑ Back to top](#top)
+
+## 📊 Dashboard-ready SLO view <a name="dashboard-ready-slo-view"></a>
+
+Use the following panels as the backend SLO entrypoint in New Relic:
+
+### Latency
+
+- `habittracker.mutations.request.roundtrip` for write-path latency across habit and checkin use cases
+- `habittracker.oauth.google.exchange.latency` for the external OAuth boundary
+
+Suggested breakdowns:
+
+- `metricName`
+- `operation`
+- `provider`
+- `deployment.environment`
+
+### Error rate
+
+- `habittracker.auth.login.failure`
+- `habittracker.oauth.google.failure`
+- HTTP 4xx/5xx telemetry for habit and checkin request paths when a dedicated failure counter is not emitted
+
+Suggested breakdowns:
+
+- `operation`
+- `provider`
+- `deployment.environment`
+
+### Traffic
+
+- `habittracker.habit.created`
+- `habittracker.habit.updated`
+- `habittracker.habit.deleted`
+- `habittracker.checkin.upserted`
+- `habittracker.checkin.deleted`
+- `habittracker.auth.login.success`
+- `habittracker.auth.refresh.success`
+- `habittracker.push.subscription.created`
+- `habittracker.push.subscription.deleted`
+
+Panel rule:
+
+- keep the view faceted by the stable tags only and exclude raw identifiers from any dashboard query
 
 [↑ Back to top](#top)
 
