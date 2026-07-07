@@ -28,9 +28,8 @@ public class ObservabilityConfig {
     private final String environment;
 
     // ── Example business metrics ────────────────────────────────────────────
-    // Inject these via constructor into service classes that need them, just
-    // like SyncMetricsCollector does.  They are registered once here so the
-    // common tag set is applied consistently.
+    // Inject these via constructor into service classes that need them.
+    // They are registered once here so the common tag set is applied consistently.
     private final Counter habitCreatedCounter;
     private final Counter habitDeletedCounter;
     private final Timer habitSyncRoundtripTimer;
@@ -56,17 +55,17 @@ public class ObservabilityConfig {
         );
 
         this.habitCreatedCounter = Counter.builder("habittracker.habits.created")
-                .description("Habits created (upserted) via sync push")
+                .description("Habits created via the REST API")
                 .tags(commonTags)
                 .register(registry);
 
         this.habitDeletedCounter = Counter.builder("habittracker.habits.deleted")
-                .description("Habits tombstoned via sync push")
+                .description("Habits deleted via the REST API")
                 .tags(commonTags)
                 .register(registry);
 
-        this.habitSyncRoundtripTimer = Timer.builder("habittracker.sync.roundtrip")
-                .description("Wall-clock duration of a full client sync cycle (push + pull)")
+        this.habitSyncRoundtripTimer = Timer.builder("habittracker.habits.request.roundtrip")
+                .description("Wall-clock duration of a full client habit mutation request")
                 .tags(commonTags)
                 .publishPercentileHistogram()
                 .register(registry);
@@ -97,7 +96,7 @@ public class ObservabilityConfig {
     }
 
     /**
-     * Start a sync roundtrip sample.  Pass the returned {@link Timer.Sample}
+     * Start a habit request roundtrip sample. Pass the returned {@link Timer.Sample}
      * to {@link #stopSyncRoundtrip(Timer.Sample)} after the cycle completes.
      */
     public Timer.Sample startSyncRoundtrip() {

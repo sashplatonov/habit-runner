@@ -1,6 +1,6 @@
-import type { HabitColor, HabitFrequency, HabitSchedule } from '@habbit-runner/shared';
+import type { HabitColor, HabitFrequency, HabitSchedule, HabitType } from '@habbit-runner/shared';
 
-export type { HabitColor, HabitFrequency, HabitSchedule } from '@habbit-runner/shared';
+export type { HabitColor, HabitFrequency, HabitSchedule, HabitType } from '@habbit-runner/shared';
 
 export interface Habit {
   id: string;
@@ -21,7 +21,7 @@ export interface Habit {
   version?: number;
   archived: boolean;
   sortOrder: number;
-  type: 'positive' | 'negative';
+  type: HabitType;
   reminderTime?: string;
   reminderEnabled?: boolean;
 }

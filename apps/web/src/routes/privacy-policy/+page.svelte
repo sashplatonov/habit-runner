@@ -43,21 +43,21 @@
         <h2 class="text-lg font-semibold text-slate-900">2. Data We Collect</h2>
         <h3 class="mt-3 text-base font-semibold text-slate-800">2.1 Local Storage (IndexedDB)</h3>
         <p class="mt-2 text-slate-600">
-          Habbit Runner stores habit data, check-in history, settings, and sync state locally on
-          your device using IndexedDB. This data never leaves your device unless you sign in and
-          enable sync.
+          Habbit Runner stores habit data, check-in history, and settings locally on your device
+          using IndexedDB. This local cache keeps the application responsive and available without
+          reloading every screen from the network.
         </p>
         <h3 class="mt-3 text-base font-semibold text-slate-800">2.2 Google OAuth</h3>
         <p class="mt-2 text-slate-600">
           When you sign in with Google, we receive your Google Account ID, email address, and
-          display name. We use this to identify your account for sync purposes. We do not access
+          display name. We use this to identify your account for authenticated API access. We do not access
           your Google Drive, Gmail, contacts, or any other Google service data.
         </p>
-        <h3 class="mt-3 text-base font-semibold text-slate-800">2.3 Sync Data</h3>
+        <h3 class="mt-3 text-base font-semibold text-slate-800">2.3 Account Data</h3>
         <p class="mt-2 text-slate-600">
-          When sync is enabled, your habit records (name, frequency, targets, completion history)
-          are transmitted to and stored on our servers over HTTPS using JWT authentication. No
-          financial information is collected or stored.
+          When you sign in, your habit records and check-in history are transmitted to and stored
+          on our servers over HTTPS using JWT authentication so they can be loaded on your signed-in
+          devices. No financial information is collected or stored.
         </p>
         <h3 class="mt-3 text-base font-semibold text-slate-800">2.4 Push Notifications</h3>
         <p class="mt-2 text-slate-600">

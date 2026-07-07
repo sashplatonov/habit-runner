@@ -58,6 +58,7 @@ docs/
 | [setup/getting-started.md](./setup/getting-started.md) | Local frontend/backend startup, env requirements, Docker profile usage |
 | [architecture/overview.md](./architecture/overview.md) | Current app topology, key modules, API surface |
 | [architecture/offline-sync-plan.md](./architecture/offline-sync-plan.md) | Offline sync model, outbox flow, conflict notes |
+| [architecture/habit-mutation-api.md](./architecture/habit-mutation-api.md) | Habit create/update/status/delete contracts and frontend reconciliation |
 | [setup/web-push-setup.md](./setup/web-push-setup.md) | VAPID setup, notification verification |
 | [operations/reliability-rollout.md](./operations/reliability-rollout.md) | Health checks, rollout checklist, rollback notes |
 | [operations/github-automation.md](./operations/github-automation.md) | Renovate state and manual security scan guidance |

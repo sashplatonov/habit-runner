@@ -24,7 +24,7 @@
     description: PUBLIC_FEATURES_SEO.description,
     featureList: [
       'Offline-first habit tracking with IndexedDB storage',
-      'Background sync with conflict resolution',
+      'Direct habit and check-in saves over a secure REST API',
       'Streak tracking: current streak and longest streak',
       'Push notifications for habit reminders',
       'Google OAuth sign-in',
@@ -92,16 +92,16 @@
 
       <!-- Background Sync -->
       <section class="rounded-[1.75rem] border border-slate-200/80 bg-white/92 p-6 shadow-[0_18px_50px_rgba(15,23,42,0.08)]">
-        <h2 class="text-xl font-semibold text-slate-900">Background Sync</h2>
+        <h2 class="text-xl font-semibold text-slate-900">Secure Account Sync</h2>
         <p class="mt-3 text-sm text-slate-600">
-          Changes made offline are queued in an outbox and synced automatically when you reconnect.
-          The sync engine uses a pull-push-pull cycle with last-write-wins conflict resolution based
-          on timestamps.
+          When you sign in, habit and check-in changes are saved directly through the backend REST
+          API and then refreshed across your devices. Local IndexedDB storage keeps the interface
+          fast while the server stays the canonical source for signed-in sessions.
         </p>
         <ul class="mt-4 space-y-2 text-sm text-slate-600">
-          <li class="flex gap-2"><span class="mt-0.5 text-emerald-600">✓</span> Automatic sync on reconnect</li>
-          <li class="flex gap-2"><span class="mt-0.5 text-emerald-600">✓</span> Conflict resolution with exponential backoff retry</li>
-          <li class="flex gap-2"><span class="mt-0.5 text-emerald-600">✓</span> Sync status visible in dashboard</li>
+          <li class="flex gap-2"><span class="mt-0.5 text-emerald-600">✓</span> Direct saves to secure backend endpoints</li>
+          <li class="flex gap-2"><span class="mt-0.5 text-emerald-600">✓</span> Fast local cache backed by IndexedDB</li>
+          <li class="flex gap-2"><span class="mt-0.5 text-emerald-600">✓</span> Pull-to-refresh to reload the latest server state</li>
         </ul>
       </section>
 

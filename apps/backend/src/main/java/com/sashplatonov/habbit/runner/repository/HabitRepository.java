@@ -10,9 +10,16 @@ import java.util.List;
 
 @ApplicationScoped
 public class HabitRepository implements PanacheRepositoryBase<HabitEntity, String> {
+  public List<HabitEntity> findAllByUserId(String userId) {
+    return find("userId = ?1 ORDER BY sortOrder ASC, createdAt ASC, id ASC", userId).list();
+  }
 
   public HabitEntity findHabitById(String habitId) {
     return findById(habitId);
+  }
+
+  public HabitEntity findByIdAndUserId(String habitId, String userId) {
+    return find("id = ?1 and userId = ?2", habitId, userId).firstResult();
   }
 
   public List<HabitEntity> findPageForUser(String userId, Instant updatedAt, String cursorId, int pageSize) {

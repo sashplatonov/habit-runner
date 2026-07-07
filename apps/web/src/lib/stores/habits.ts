@@ -3,14 +3,11 @@ import { nowSyncISO } from '@habbit-runner/shared';
 import type { Habit, HabitStats } from '@/types/habit';
 import {
   db,
+  domainToHabitEntity,
   habitEntityToDomain,
   persistHabitInDb,
   removeHabitFromDb,
-  addTombstone,
-  upsertCheckinInDb,
   deleteCheckinInDb,
-  createOutboxEntry,
-  enqueueOutboxEntry,
   getCheckinByNaturalKey,
   getCurrentUserId,
   setCurrentUserId,
@@ -22,12 +19,24 @@ import {
   getHabitStats as getHabitStatsImpl,
   getTodayCompletionRate as getTodayCompletionRateImpl
 } from '$lib/stores/habits.metrics';
-import { syncEntriesWithFallback } from '$lib/sync/writeThrough';
-import { scheduleSyncCycle } from '$lib/sync/syncEngine';
+import {
+  fetchHabits,
+  createHabit as createHabitApi,
+  deleteHabit as deleteHabitApi,
+  updateHabit as updateHabitApi,
+  updateHabitStatus as updateHabitStatusApi
+} from '$lib/api/habits';
+import {
+  deleteCheckin as deleteCheckinApi,
+  fetchCheckins,
+  upsertCheckin as upsertCheckinApi
+} from '$lib/api/checkins';
 import { createHabitId } from '$lib/core/habit-id';
 import { formatDate } from '$lib/habits/habitStats';
 import { completionKeyToCalendarDate } from '$lib/completionKey';
 import { dexieLiveQuery } from '$lib/stores/dexieLiveQuery';
+import type { HabitResponseDto } from '@/types/habit-api';
+import type { CheckinResponseDto } from '@/types/checkin-api';
 
 type ToggleCompletionResult = { habitId: string; date: string; count: number };
 type AdvanceCompletionResult = ToggleCompletionResult & { previousCount: number; target: number };
@@ -35,6 +44,7 @@ export type HabitUpsertInput = Omit<Habit, 'id' | 'completions' | 'createdAt'> &
 
 export interface HabitsStore extends Readable<HabitsSnapshot> {
   setUserId: (userId: string) => void;
+  refresh: () => Promise<void>;
   toggleCompletion: (habitId: string, date?: string) => Promise<ToggleCompletionResult>;
   setCompletionCount: (habitId: string, date: string, count: number) => Promise<ToggleCompletionResult>;
   incrementCompletionCount: (habitId: string, date: string) => Promise<AdvanceCompletionResult>;
@@ -54,6 +64,72 @@ const normalizeFreezeDayKey = completionKeyToCalendarDate;
 
 function getCompletionMutationKey(habitId: string, userId: string): string {
   return `${userId}:${habitId}`;
+}
+
+function mapHabitResponseToDomain(response: HabitResponseDto, existing?: Habit): Habit {
+  return {
+    id: response.id,
+    name: response.name,
+    description: response.description ?? '',
+    color: response.color,
+    icon: response.icon,
+    tags: response.tags ?? [],
+    frequency: response.frequency,
+    customDays: response.customDays,
+    schedule: response.schedule ?? undefined,
+    targetStreak: response.targetStreak,
+    dailyTarget: response.dailyTarget,
+    completions: existing?.completions ?? {},
+    freezeDays: response.freezeDays ?? [],
+    createdAt: response.createdAt,
+    updatedAt: response.updatedAt,
+    version: response.version,
+    archived: response.archived,
+    sortOrder: response.sortOrder,
+    type: response.type,
+    reminderTime: response.reminderTime ?? undefined,
+    reminderEnabled: response.reminderEnabled
+  };
+}
+
+function mapCheckinResponseToEntity(response: CheckinResponseDto, userId: string): CheckinEntity {
+  return {
+    id: response.id,
+    userId,
+    habitId: response.habitId,
+    date: response.date,
+    done: response.done,
+    count: response.count,
+    updatedAt: response.updatedAt,
+    version: response.version
+  };
+}
+
+async function replaceCurrentUserState(
+  userId: string,
+  habitResponses: HabitResponseDto[],
+  checkinResponses: CheckinResponseDto[]
+): Promise<void> {
+  await db.transaction('rw', db.habits, db.checkins, async () => {
+    await db.habits.where({ userId }).delete();
+    await db.checkins.where({ userId }).delete();
+    const habits = habitResponses.map((response) => domainToHabitEntity(mapHabitResponseToDomain(response)));
+    const checkins = checkinResponses.map((response) => mapCheckinResponseToEntity(response, userId));
+    if (habits.length > 0) {
+      await db.habits.bulkPut(habits);
+    }
+    if (checkins.length > 0) {
+      await db.checkins.bulkPut(checkins);
+    }
+  });
+}
+
+async function refreshCurrentUserState(userId: string): Promise<void> {
+  const [habitResponses, checkinResponses] = await Promise.all([
+    fetchHabits(),
+    fetchCheckins()
+  ]);
+  await replaceCurrentUserState(userId, habitResponses, checkinResponses);
 }
 
 export async function runSerializedCompletionMutation<T>(
@@ -108,91 +184,17 @@ async function applyCompletionCountChange(
   count: number
 ): Promise<ToggleCompletionResult> {
   const normalizedCount = Math.max(0, Math.trunc(count));
-  let timestamp = nowSyncISO();
-  let nextVersion = 1;
-  let deletedEntity: CheckinEntity | undefined;
-
-  await db.transaction('rw', db.checkins, db.habits, db.outbox, async () => {
-    if (normalizedCount > 0) {
-      timestamp = await upsertCheckinInDb(habitId, date, true, normalizedCount);
-    } else {
-      deletedEntity = await deleteCheckinInDb(habitId, date);
-    }
-
-    const entity = await db.habits.get(habitId);
-    nextVersion = entity ? (entity.version ?? 0) + 1 : 1;
-    if (entity) {
-      const updatedHabit: Habit = {
-        ...habitEntityToDomain(entity),
-        updatedAt: timestamp,
-        version: nextVersion
-      };
-      await persistHabitInDb(updatedHabit);
-    }
-
-    const payload = normalizedCount === 0
-      ? { habitId, date, updatedAt: timestamp, id: deletedEntity?.id }
-      : { habitId, date, done: true, count: normalizedCount, updatedAt: timestamp, version: nextVersion };
-    const entry = createOutboxEntry('checkin', normalizedCount === 0 ? 'delete' : 'upsert', payload);
-    await enqueueOutboxEntry(entry);
-  });
-
-  scheduleSyncCycle();
-  return { habitId, date, count: normalizedCount };
-}
-
-async function persistHabitWithSyncFallback(habit: Habit, action: 'upsert' | 'delete') {
-  if (action === 'delete') {
-    await removeHabitFromDb(habit.id);
+  if (normalizedCount > 0) {
+    const response = await upsertCheckinApi(habitId, date, {
+      done: true,
+      count: normalizedCount
+    });
+    await db.checkins.put(mapCheckinResponseToEntity(response, getCurrentUserId()));
   } else {
-    await persistHabitInDb(habit);
+    await deleteCheckinApi(habitId, date);
+    await deleteCheckinInDb(habitId, date);
   }
-
-  const entry = createOutboxEntry('habit', action, habit as unknown as Record<string, unknown>);
-  // Sync failure is non-fatal: data is already persisted in IndexedDB above.
-  // The background sync engine will pick it up on the next cycle.
-  try {
-    await syncEntriesWithFallback([entry]);
-  } catch {
-    // ignore
-  }
-}
-
-async function updateHabitAfterCheckinChange(habitId: string, timestamp: string) {
-  const entity = await db.habits.get(habitId);
-  if (entity) {
-    const updatedHabit: Habit = {
-      ...habitEntityToDomain(entity),
-      updatedAt: timestamp,
-      version: (entity.version ?? 0) + 1
-    };
-    await persistHabitInDb(updatedHabit);
-  }
-
-  return entity;
-}
-
-function buildToggleCompletionPayload(params: {
-  habitId: string;
-  date: string;
-  nextCount: number;
-  timestamp: string;
-  version?: number;
-  deletedEntityId?: string;
-}) {
-  const { habitId, date, nextCount, timestamp, version, deletedEntityId } = params;
-  if (nextCount === 0) {
-    return { habitId, date, updatedAt: timestamp, id: deletedEntityId };
-  }
-
-  return {
-    habitId,
-    date,
-    done: true,
-    count: nextCount,
-    updatedAt: timestamp,
-    version: version ?? 1
-  };
+  return { habitId, date, count: normalizedCount };
 }
 
 async function toggleCompletionImpl(
@@ -206,28 +208,7 @@ async function toggleCompletionImpl(
     ? Math.max(1, Math.trunc(existingCheckin.count ?? 1))
     : 0;
   const nextCount = currentCount > 0 ? 0 : 1;
-
-  let timestamp = nowSyncISO();
-  let deletedEntity;
-  if (nextCount > 0) {
-    timestamp = await upsertCheckinInDb(habitId, key, true, nextCount);
-  } else {
-    deletedEntity = await deleteCheckinInDb(habitId, key);
-  }
-
-  const entity = await updateHabitAfterCheckinChange(habitId, timestamp);
-  const payload = buildToggleCompletionPayload({
-    habitId,
-    date: key,
-    nextCount,
-    timestamp,
-    version: entity?.version,
-    deletedEntityId: deletedEntity?.id
-  });
-  const entry = createOutboxEntry('checkin', nextCount === 0 ? 'delete' : 'upsert', payload);
-  await syncEntriesWithFallback([entry]);
-
-  return { habitId, date: key, count: nextCount };
+  return await applyCompletionCountChange(habitId, key, nextCount);
 }
 
 async function addHabitImpl(data: HabitUpsertInput) {
@@ -247,7 +228,26 @@ async function addHabitImpl(data: HabitUpsertInput) {
     archived: safeData.archived ?? false,
     freezeDays: safeData.freezeDays ?? []
   };
-  await persistHabitWithSyncFallback(newHabit, 'upsert');
+  const response = await createHabitApi({
+    id: newHabit.id,
+    name: newHabit.name,
+    description: newHabit.description,
+    color: newHabit.color,
+    icon: newHabit.icon,
+    frequency: newHabit.frequency,
+    customDays: newHabit.customDays,
+    schedule: newHabit.schedule,
+    targetStreak: newHabit.targetStreak,
+    dailyTarget: newHabit.dailyTarget,
+    tags: newHabit.tags,
+    archived: newHabit.archived,
+    sortOrder: newHabit.sortOrder,
+    reminderTime: newHabit.reminderTime ?? null,
+    reminderEnabled: newHabit.reminderEnabled,
+    type: newHabit.type,
+    freezeDays: newHabit.freezeDays
+  });
+  await persistHabitInDb(mapHabitResponseToDomain(response, newHabit));
   return newHabit.id;
 }
 
@@ -265,7 +265,28 @@ async function updateHabitImpl(id: string, data: Partial<Habit>) {
     updatedAt: nowSyncISO(),
     version: (entity.version ?? 0) + 1
   };
-  await persistHabitWithSyncFallback(updatedHabit, 'upsert');
+  const changedKeys = Object.keys(safeData).filter((key) => safeData[key as keyof Habit] !== undefined);
+  const response = changedKeys.length === 1 && changedKeys[0] === 'archived'
+    ? await updateHabitStatusApi(id, { archived: Boolean(safeData.archived) })
+    : await updateHabitApi(id, {
+        name: safeData.name,
+        description: safeData.description,
+        color: safeData.color,
+        icon: safeData.icon,
+        frequency: safeData.frequency,
+        customDays: safeData.customDays,
+        schedule: safeData.schedule,
+        targetStreak: safeData.targetStreak,
+        dailyTarget: safeData.dailyTarget,
+        tags: safeData.tags,
+        archived: safeData.archived,
+        sortOrder: safeData.sortOrder,
+        reminderTime: safeData.reminderTime ?? undefined,
+        reminderEnabled: safeData.reminderEnabled,
+        type: safeData.type,
+        freezeDays: safeData.freezeDays
+      });
+  await persistHabitInDb(mapHabitResponseToDomain(response, updatedHabit));
 }
 
 async function toggleFreezeDayImpl(id: string, date: string): Promise<boolean | undefined> {
@@ -290,7 +311,10 @@ async function toggleFreezeDayImpl(id: string, date: string): Promise<boolean | 
     updatedAt: nowSyncISO(),
     version: (entity.version ?? 0) + 1
   };
-  await persistHabitWithSyncFallback(updatedHabit, 'upsert');
+  const response = await updateHabitApi(id, {
+    freezeDays: updatedHabit.freezeDays
+  });
+  await persistHabitInDb(mapHabitResponseToDomain(response, updatedHabit));
   return willBeFrozen;
 }
 
@@ -301,32 +325,41 @@ async function deleteHabitImpl(id: string, allHabits: Habit[]) {
     return backup;
   }
 
-  const version = entity.version ?? 1;
-  await addTombstone('habit', id, version);
+  await deleteHabitApi(id);
   await removeHabitFromDb(id);
-  const entry = createOutboxEntry('habit', 'delete', { id, version });
-  await syncEntriesWithFallback([entry]);
   return backup;
 }
 
 async function restoreHabitImpl(habit: Habit) {
-  await persistHabitInDb(habit);
-  await db.tombstones.where({ entity: 'habit', entityId: habit.id }).delete();
-  const entries = [createOutboxEntry('habit', 'upsert', habit as unknown as Record<string, unknown>)];
+  const response = await createHabitApi({
+    id: habit.id,
+    name: habit.name,
+    description: habit.description,
+    color: habit.color,
+    icon: habit.icon,
+    frequency: habit.frequency,
+    customDays: habit.customDays,
+    schedule: habit.schedule,
+    targetStreak: habit.targetStreak,
+    dailyTarget: habit.dailyTarget,
+    tags: habit.tags,
+    archived: habit.archived,
+    sortOrder: habit.sortOrder,
+    reminderTime: habit.reminderTime ?? null,
+    reminderEnabled: habit.reminderEnabled ?? true,
+    type: habit.type,
+    freezeDays: habit.freezeDays
+  });
+  await persistHabitInDb(mapHabitResponseToDomain(response, habit));
   const completionEntries = (Object.entries(habit.completions) as Array<[string, number]>)
     .filter(([, count]) => count > 0);
   for (const [date, count] of completionEntries) {
-    const timestamp = await upsertCheckinInDb(habit.id, date, true, count);
-    entries.push(createOutboxEntry('checkin', 'upsert', {
-      habitId: habit.id,
-      date,
+    const checkin = await upsertCheckinApi(habit.id, date, {
       done: true,
-      count,
-      updatedAt: timestamp,
-      version: habit.version
-    }));
+      count
+    });
+    await db.checkins.put(mapCheckinResponseToEntity(checkin, getCurrentUserId()));
   }
-  await syncEntriesWithFallback(entries);
 }
 
 async function setCompletionCountImpl(
@@ -416,6 +449,10 @@ export function createHabitsStore(initialUserId = getCurrentUserId()): HabitsSto
       currentUserId = userId;
       setCurrentUserId(userId);
       attachQueries();
+      void refreshCurrentUserState(userId);
+    },
+    refresh() {
+      return refreshCurrentUserState(currentUserId);
     },
     toggleCompletion(habitId: string, date?: string) {
       return toggleCompletionImpl(habitId, date, currentUserId);

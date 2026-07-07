@@ -44,7 +44,7 @@ export const PUBLIC_LANDING_SEO = {
     {
       question: 'Does Habbit Runner work without an internet connection?',
       answer:
-        'Yes. Habbit Runner stores all data locally using IndexedDB. You can track habits, log completions, and review stats offline. Changes sync automatically when you reconnect.'
+        'Yes. Habbit Runner caches habit data locally with IndexedDB so you can still open the app and review your progress when connectivity is unstable.'
     },
     {
       question: 'Is my habit data private?',
@@ -64,7 +64,7 @@ export const PUBLIC_LANDING_SEO = {
     {
       question: 'How does background sync work?',
       answer:
-        'Habbit Runner uses a pull-push-pull sync cycle. When you come back online, it pulls server changes, pushes local changes, then pulls again to resolve conflicts automatically.'
+        'Signed-in sessions save habit and check-in changes directly through the REST API, and pull-to-refresh reloads the latest server state into the local cache.'
     }
   ] satisfies FaqItem[]
 };

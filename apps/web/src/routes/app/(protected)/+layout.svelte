@@ -16,7 +16,6 @@
   import AppLayout from '$lib/components/AppLayout.svelte';
   import PullToRefresh from '$lib/components/PullToRefresh.svelte';
   import { habitsStore } from '$lib/stores/habits';
-  import { syncEngineStore } from '$lib/stores/syncEngine';
   import { themeStore } from '$lib/stores/theme';
 
   type Props = {
@@ -28,6 +27,7 @@
 
   let { data, children }: Props = $props();
   let sessionClearInFlight = false;
+  let isRefreshing = $state(false);
 
   afterNavigate(() => {
     if (browser) {
@@ -41,11 +41,19 @@
     }
 
     sessionClearInFlight = true;
-    syncEngineStore.setEnabled(false);
     setCurrentUserId(null);
     clearCurrentUserTimeZone();
     await themeStore.setAuthenticated(false);
     await goto(resolve<'/'>('/', {}), { replaceState: true });
+  }
+
+  async function refreshHabits() {
+    isRefreshing = true;
+    try {
+      await habitsStore.refresh();
+    } finally {
+      isRefreshing = false;
+    }
   }
 
   async function logout() {
@@ -62,8 +70,8 @@
     sessionClearInFlight = false;
     setCurrentUserId(data.authSession.userId);
     habitsStore.setUserId(data.authSession.userId);
+    void refreshHabits();
     void themeStore.setAuthenticated(true);
-    syncEngineStore.setEnabled(true);
 
     const onSessionCleared = () => {
       void handleSessionCleared();
@@ -81,15 +89,14 @@
 
     return () => {
       window.removeEventListener(AUTH_SESSION_CLEARED_EVENT, onSessionCleared);
-      syncEngineStore.stop();
     };
   });
 </script>
 
 <PullToRefresh
   enabled={true}
-  isRefreshing={$syncEngineStore.status === 'syncing' && $syncEngineStore.isActive}
-  onRefresh={() => syncEngineStore.syncNow()}
+  isRefreshing={isRefreshing}
+  onRefresh={refreshHabits}
 >
   <AppLayout
     theme={$themeStore.theme}

@@ -63,8 +63,8 @@
           <div class="rounded-[1.5rem] border border-slate-200/80 bg-white/92 p-5 shadow-[0_14px_38px_rgba(15,23,42,0.06)]">
             <p class="text-sm font-semibold text-slate-900">Offline-First Architecture</p>
             <p class="mt-2 text-xs text-slate-600">
-              All data lives in IndexedDB (via Dexie) on your device. The app works fully offline
-              and syncs changes when you reconnect.
+              Habits and check-ins are cached locally in IndexedDB (via Dexie) so the interface
+              stays fast and responsive during daily use.
             </p>
           </div>
           <div class="rounded-[1.5rem] border border-slate-200/80 bg-white/92 p-5 shadow-[0_14px_38px_rgba(15,23,42,0.06)]">
@@ -75,10 +75,10 @@
             </p>
           </div>
           <div class="rounded-[1.5rem] border border-slate-200/80 bg-white/92 p-5 shadow-[0_14px_38px_rgba(15,23,42,0.06)]">
-            <p class="text-sm font-semibold text-slate-900">Secure Sync</p>
+            <p class="text-sm font-semibold text-slate-900">Secure REST Backend</p>
             <p class="mt-2 text-xs text-slate-600">
-              Pull-push-pull sync cycle with conflict resolution based on timestamps. JWT tokens
-              over HTTPS.
+              Signed-in sessions use JWT-protected HTTPS requests to save and load habits and
+              check-ins directly from the backend API.
             </p>
           </div>
           <div class="rounded-[1.5rem] border border-slate-200/80 bg-white/92 p-5 shadow-[0_14px_38px_rgba(15,23,42,0.06)]">

@@ -11,6 +11,9 @@ import java.util.List;
 
 @ApplicationScoped
 public class CheckinRepository implements PanacheRepositoryBase<CheckinEntity, String> {
+  public List<CheckinEntity> findAllByUserId(String userId) {
+    return find("userId = ?1 ORDER BY date ASC, id ASC", userId).list();
+  }
 
   public CheckinEntity findByHabitDateAndUserId(String habitId, LocalDate date, String userId) {
     return find("habitId = ?1 and date = ?2 and userId = ?3", habitId, date, userId).firstResult();

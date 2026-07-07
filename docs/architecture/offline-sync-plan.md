@@ -1,5 +1,7 @@
 # Offline Sync
 
+Status: legacy. New habit writes should target the concrete `POST /habits`, `PUT /habits/{id}`, `PATCH /habits/{id}/status`, and `DELETE /habits/{id}` endpoints; this document remains as the description of the old sync model during migration.
+
 <a name="top"></a>
 
 Detailed notes on the outbox pattern and conflict handling.
