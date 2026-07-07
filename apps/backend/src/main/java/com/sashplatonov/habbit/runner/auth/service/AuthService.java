@@ -9,6 +9,7 @@ import com.sashplatonov.habbit.runner.auth.support.OAuthCallbackSession;
 import com.sashplatonov.habbit.runner.auth.support.AuthSupport;
 import com.sashplatonov.habbit.runner.auth.dto.TokenResponse;
 import com.sashplatonov.habbit.runner.infrastructure.http.TraceContextSupport;
+import com.sashplatonov.habbit.runner.metrics.instrumentation.ServiceMetricsInstrumentation;
 import com.sashplatonov.habbit.runner.model.OAuthStateEntity;
 import com.sashplatonov.habbit.runner.model.UserEntity;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -28,13 +29,14 @@ public class AuthService {
   protected final AuthCollaborators collaborators;
   protected final UserAccess userAccess;
   protected final OAuthStateAccess oauthStateAccess;
+  protected final ServiceMetricsInstrumentation serviceMetricsInstrumentation;
 
   AuthService() {
-    this(null, null, null, null);
+    this(null, null, null, null, null);
   }
 
   protected AuthService(AuthConfig authConfig, AuthCollaborators collaborators) {
-    this(authConfig, collaborators, null, null);
+    this(authConfig, collaborators, null, null, null);
   }
 
   @Inject
@@ -42,12 +44,14 @@ public class AuthService {
       AuthConfig authConfig,
       AuthCollaborators collaborators,
       UserAccess userAccess,
-      OAuthStateAccess oauthStateAccess
+      OAuthStateAccess oauthStateAccess,
+      ServiceMetricsInstrumentation serviceMetricsInstrumentation
   ) {
     this.authConfig = authConfig;
     this.collaborators = collaborators;
     this.userAccess = userAccess;
     this.oauthStateAccess = oauthStateAccess;
+    this.serviceMetricsInstrumentation = serviceMetricsInstrumentation;
   }
 
   @Transactional
@@ -55,10 +59,16 @@ public class AuthService {
     var user = userAccess().findByEmail(email);
     if (user == null) {
       log.warn("Login rejected: authMethod=email, traceId={}, reason=unknown-user", TraceContextSupport.traceIdOrUnknown());
+      if (serviceMetricsInstrumentation != null) {
+        serviceMetricsInstrumentation.recordAuthLoginFailureEmail();
+      }
       throw new NotAuthorizedException("Unknown user");
     }
     var session = issueTokenPair(user);
     log.info("Login succeeded: userId={}, authMethod=email, traceId={}", user.getId(), TraceContextSupport.traceIdOrUnknown());
+    if (serviceMetricsInstrumentation != null) {
+      serviceMetricsInstrumentation.recordAuthLoginSuccessEmail();
+    }
     return session;
   }
 
@@ -72,6 +82,9 @@ public class AuthService {
         record.userId,
         TraceContextSupport.traceIdOrUnknown()
     );
+    if (serviceMetricsInstrumentation != null) {
+      serviceMetricsInstrumentation.recordAuthRefreshSuccess();
+    }
     return new TokenResponse(accessToken, record.token, authConfig.accessTokenTtlSeconds(), "Bearer");
   }
 
@@ -123,6 +136,9 @@ public class AuthService {
         user.getId(),
         TraceContextSupport.traceIdOrUnknown()
     );
+    if (serviceMetricsInstrumentation != null) {
+      serviceMetricsInstrumentation.recordAuthLoginSuccessGoogle();
+    }
     return new OAuthCallbackSession(collaborators.buildCallbackRedirect(stateEntity.returnTo), session);
   }
 

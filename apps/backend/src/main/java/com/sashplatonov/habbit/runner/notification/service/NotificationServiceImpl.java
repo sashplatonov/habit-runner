@@ -7,8 +7,10 @@ import com.sashplatonov.habbit.runner.notification.dto.PushSubscriptionRequest;
 import com.sashplatonov.habbit.runner.notification.dto.SubscriptionStatusResponse;
 import com.sashplatonov.habbit.runner.notification.dto.VapidPublicKeyResponse;
 import com.sashplatonov.habbit.runner.infrastructure.http.TraceContextSupport;
+import com.sashplatonov.habbit.runner.metrics.instrumentation.ServiceMetricsInstrumentation;
 import com.sashplatonov.habbit.runner.repository.PushSubscriptionRepository;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
 
 @ApplicationScoped
@@ -20,13 +22,24 @@ public class NotificationServiceImpl implements NotificationService {
 
   private final NotificationConfig notificationConfig;
   private final PushSubscriptionRepository pushSubscriptionRepository;
+  private final ServiceMetricsInstrumentation serviceMetricsInstrumentation;
 
   public NotificationServiceImpl(
       NotificationConfig notificationConfig,
       PushSubscriptionRepository pushSubscriptionRepository
   ) {
+    this(notificationConfig, pushSubscriptionRepository, null);
+  }
+
+  @Inject
+  public NotificationServiceImpl(
+      NotificationConfig notificationConfig,
+      PushSubscriptionRepository pushSubscriptionRepository,
+      ServiceMetricsInstrumentation serviceMetricsInstrumentation
+  ) {
     this.notificationConfig = notificationConfig;
     this.pushSubscriptionRepository = pushSubscriptionRepository;
+    this.serviceMetricsInstrumentation = serviceMetricsInstrumentation;
   }
 
   @Override
@@ -74,6 +87,9 @@ public class NotificationServiceImpl implements NotificationService {
       entity.p256dh = request.keys().p256dh();
       entity.auth = request.keys().auth();
       pushSubscriptionRepository.save(entity);
+      if (serviceMetricsInstrumentation != null) {
+        serviceMetricsInstrumentation.recordPushSubscriptionCreated();
+      }
       log.debug(
           "event=push_subscription_saved userId={} traceId={} endpoint={} created=true",
           userId,
@@ -121,6 +137,9 @@ public class NotificationServiceImpl implements NotificationService {
           request.endpoint()
       );
       return OperationResult.success(null);
+    }
+    if (serviceMetricsInstrumentation != null) {
+      serviceMetricsInstrumentation.recordPushSubscriptionDeleted();
     }
     log.debug(
         "event=push_subscription_removed userId={} traceId={} endpoint={} removed=true",

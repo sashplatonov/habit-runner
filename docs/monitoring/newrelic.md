@@ -52,6 +52,32 @@ New Relic dashboards should be built from:
 - log search by `traceId`, `service.name`, and `deployment.environment`
 - custom business metrics from `apps/backend/src/main/java/com/sashplatonov/habbit/runner/metrics/instrumentation/ServiceMetricsInstrumentation.java` are exported through the New Relic Micrometer registry
 
+### Business KPI set
+
+Use these metric names for dashboard aggregation:
+
+- `habittracker.habit.created`
+- `habittracker.habit.updated`
+- `habittracker.habit.deleted`
+- `habittracker.checkin.upserted`
+- `habittracker.checkin.deleted`
+- `habittracker.auth.login.success`
+- `habittracker.auth.login.failure`
+- `habittracker.auth.refresh.success`
+- `habittracker.oauth.google.exchange.latency`
+- `habittracker.oauth.google.failure`
+- `habittracker.push.subscription.created`
+- `habittracker.push.subscription.deleted`
+
+Stable tags:
+
+- `deployment.environment`
+- `operation`
+- `outcome`
+- `provider`
+
+Dashboard queries should avoid raw `userId`, email, endpoint, or any other high-cardinality identifier.
+
 [↑ Back to top](#top)
 
 ## 🔐 Required environment variables <a name="required-environment-variables"></a>
@@ -115,7 +141,7 @@ Checks:
 - backend entity appears in New Relic APM
 - browser entity appears in New Relic Browser after opening the web app
 - logs contain `traceId`, `service.name`, and `deployment.environment`
-- custom thread metrics appear in New Relic `Metric` data after a few scrape intervals
+- custom business KPI metrics appear in New Relic `Metric` data after a few scrape intervals
 - the backend health endpoints still respond from the compose stack
 
 [↑ Back to top](#top)

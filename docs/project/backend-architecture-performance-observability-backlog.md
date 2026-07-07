@@ -360,16 +360,16 @@
 - Для каждой метрики есть владелец, смысл и место использования.
 - Набор метрик можно расширять без копирования meter registration по проекту.
 
-### [ ] P1-14. Добавить минимальный набор backend KPI для New Relic dashboard
+### [x] P1-14. Добавить минимальный набор backend KPI для New Relic dashboard
 
 Пути:
 
 - `apps/backend/src/main/java/com/sashplatonov/habbit/runner/metrics/instrumentation/ServiceMetricsInstrumentation.java`
-- `apps/backend/src/main/java/com/sashplatonov/habbit/runner/habit/HabitServiceImpl.java`
-- `apps/backend/src/main/java/com/sashplatonov/habbit/runner/checkin/CheckinServiceImpl.java`
-- `apps/backend/src/main/java/com/sashplatonov/habbit/runner/auth/AuthService.java`
-- `apps/backend/src/main/java/com/sashplatonov/habbit/runner/auth/GoogleOAuthClient.java`
-- `apps/backend/src/main/java/com/sashplatonov/habbit/runner/notification/NotificationServiceImpl.java`
+- `apps/backend/src/main/java/com/sashplatonov/habbit/runner/habit/service/HabitServiceImpl.java`
+- `apps/backend/src/main/java/com/sashplatonov/habbit/runner/checkin/service/CheckinServiceImpl.java`
+- `apps/backend/src/main/java/com/sashplatonov/habbit/runner/auth/service/AuthService.java`
+- `apps/backend/src/main/java/com/sashplatonov/habbit/runner/auth/client/GoogleOAuthClient.java`
+- `apps/backend/src/main/java/com/sashplatonov/habbit/runner/notification/service/NotificationServiceImpl.java`
 - `docs/monitoring/newrelic.md`
 
 Архитектурное решение:
@@ -388,6 +388,13 @@
   - `push.subscription.created`
   - `push.subscription.deleted`
 - Теги ограничить стабильными измерениями: `deployment.environment`, `operation`, `outcome`, `provider`.
+
+Критерии проверки:
+
+- В `ServiceMetricsInstrumentation` задокументирован и реализован один согласованный KPI-контракт для New Relic.
+- Сервисные классы записывают KPI через instrumentation слой, а не строят метрики напрямую.
+- `docs/monitoring/newrelic.md` описывает только активный backend контракт и перечисляет KPI без ссылок на Grafana/Prometheus.
+- Метрики не содержат high-cardinality идентификаторов вроде `userId`, email или endpoint.
 - Не добавлять high-cardinality tags вроде raw `userId`, `email`, `endpoint`.
 
 Критерии проверки:

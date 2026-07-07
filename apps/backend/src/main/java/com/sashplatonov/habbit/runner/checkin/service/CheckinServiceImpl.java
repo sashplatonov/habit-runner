@@ -67,6 +67,9 @@ public class CheckinServiceImpl implements CheckinService {
         if (deleted == 0) {
           return notFound("Checkin not found", "CHECKIN_NOT_FOUND");
         }
+        if (serviceMetricsInstrumentation != null) {
+          serviceMetricsInstrumentation.recordCheckinDeleted();
+        }
         return OperationResult.success(null);
       }
 
@@ -85,6 +88,9 @@ public class CheckinServiceImpl implements CheckinService {
         CheckinMutationSupport.touch(checkin);
       }
       HabitMutationSupport.touch(habit);
+      if (serviceMetricsInstrumentation != null) {
+        serviceMetricsInstrumentation.recordCheckinUpserted();
+      }
       return OperationResult.success(checkinMapper.toResponse(checkin));
     });
   }
@@ -106,6 +112,9 @@ public class CheckinServiceImpl implements CheckinService {
         return notFound("Checkin not found", "CHECKIN_NOT_FOUND");
       }
       HabitMutationSupport.touch(habit);
+      if (serviceMetricsInstrumentation != null) {
+        serviceMetricsInstrumentation.recordCheckinDeleted();
+      }
       return OperationResult.success(null);
     });
   }

@@ -2,6 +2,7 @@ package com.sashplatonov.habbit.runner.auth.client;
 
 import com.sashplatonov.habbit.runner.auth.config.AuthConfig;
 import com.sashplatonov.habbit.runner.infrastructure.http.TraceContextSupport;
+import com.sashplatonov.habbit.runner.metrics.instrumentation.ServiceMetricsInstrumentation;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -33,18 +34,44 @@ public class GoogleOAuthClient {
   private final AuthConfig authConfig;
   private final ObjectMapper objectMapper;
   private final HttpClient httpClient;
+  private final ServiceMetricsInstrumentation serviceMetricsInstrumentation;
 
   @Inject
+  public GoogleOAuthClient(
+      AuthConfig authConfig,
+      ObjectMapper objectMapper,
+      ServiceMetricsInstrumentation serviceMetricsInstrumentation
+  ) {
+    this(
+        authConfig,
+        objectMapper,
+        HttpClient.newBuilder()
+            .connectTimeout(REQUEST_TIMEOUT)
+            .build(),
+        serviceMetricsInstrumentation
+    );
+  }
+
   public GoogleOAuthClient(AuthConfig authConfig, ObjectMapper objectMapper) {
     this(authConfig, objectMapper, HttpClient.newBuilder()
         .connectTimeout(REQUEST_TIMEOUT)
-        .build());
+        .build(), null);
   }
 
   GoogleOAuthClient(AuthConfig authConfig, ObjectMapper objectMapper, HttpClient httpClient) {
+    this(authConfig, objectMapper, httpClient, null);
+  }
+
+  GoogleOAuthClient(
+      AuthConfig authConfig,
+      ObjectMapper objectMapper,
+      HttpClient httpClient,
+      ServiceMetricsInstrumentation serviceMetricsInstrumentation
+  ) {
     this.authConfig = authConfig;
     this.objectMapper = objectMapper;
     this.httpClient = httpClient;
+    this.serviceMetricsInstrumentation = serviceMetricsInstrumentation;
   }
 
   public String buildAuthorizationUrl(String state, String callbackUrl) {
@@ -59,12 +86,22 @@ public class GoogleOAuthClient {
   }
 
   public String exchangeCodeForEmail(String code, String callbackUrl) {
+    var sample = serviceMetricsInstrumentation == null ? null : serviceMetricsInstrumentation.startGoogleOAuthExchange();
+    var success = false;
     try {
       var accessToken = exchangeCodeForAccessToken(code, callbackUrl);
-      return fetchEmail(accessToken);
+      var email = fetchEmail(accessToken);
+      success = true;
+      return email;
     } catch (NotAuthorizedException | BadRequestException exception) {
+      if (serviceMetricsInstrumentation != null) {
+        serviceMetricsInstrumentation.recordOAuthGoogleFailure();
+      }
       throw exception;
     } catch (IOException exception) {
+      if (serviceMetricsInstrumentation != null) {
+        serviceMetricsInstrumentation.recordOAuthGoogleFailure();
+      }
       log.error(
           "Google OAuth exchange failed: provider=google, traceId={}, stage=network-io, error={}",
           TraceContextSupport.traceIdOrUnknown(),
@@ -73,6 +110,9 @@ public class GoogleOAuthClient {
       );
       throw new NotAuthorizedException("OAuth exchange error: " + exception.getMessage(), exception);
     } catch (InterruptedException exception) {
+      if (serviceMetricsInstrumentation != null) {
+        serviceMetricsInstrumentation.recordOAuthGoogleFailure();
+      }
       Thread.currentThread().interrupt();
       log.error(
           "Google OAuth exchange failed: provider=google, traceId={}, stage=interrupted, error={}",
@@ -81,6 +121,10 @@ public class GoogleOAuthClient {
           exception
       );
       throw new NotAuthorizedException("OAuth exchange interrupted", exception);
+    } finally {
+      if (sample != null) {
+        serviceMetricsInstrumentation.stopGoogleOAuthExchange(sample, success);
+      }
     }
   }
 
