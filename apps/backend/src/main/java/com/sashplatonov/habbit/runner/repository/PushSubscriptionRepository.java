@@ -21,4 +21,9 @@ public class PushSubscriptionRepository implements PanacheRepositoryBase<PushSub
   public long deleteByEndpoint(String endpoint) {
     return delete("endpoint", endpoint);
   }
+
+  @Transactional
+  public long deleteByEndpointAndUserId(String endpoint, String userId) {
+    return delete("endpoint = ?1 and userId = ?2", endpoint, userId);
+  }
 }

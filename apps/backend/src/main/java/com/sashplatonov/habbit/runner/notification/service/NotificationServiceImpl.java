@@ -78,21 +78,27 @@ public class NotificationServiceImpl implements NotificationService {
 
   @Override
   public OperationResult<Void> unsubscribe(String userId, PushSubscriptionEndpointRequest request) {
-    var existing = pushSubscriptionRepository.findByEndpoint(request.endpoint());
-    if (existing != null && !userId.equals(existing.userId)) {
-      log.warn("event=push_subscription_unsubscribe_rejected userId={} reason=endpoint_owned_by_another_user", userId);
-      return OperationResult.failure(
-          new com.sashplatonov.habbit.runner.api.ErrorResponse(
-              FORBIDDEN_TYPE,
-              "Forbidden",
-              jakarta.ws.rs.core.Response.Status.FORBIDDEN.getStatusCode(),
-              "Subscription endpoint belongs to another user",
-              "SUBSCRIPTION_ENDPOINT_FORBIDDEN"
-          )
-      );
+    var deleted = pushSubscriptionRepository.deleteByEndpointAndUserId(request.endpoint(), userId);
+    if (deleted == 0) {
+      var existing = pushSubscriptionRepository.findByEndpoint(request.endpoint());
+      if (existing != null && !userId.equals(existing.userId)) {
+        log.warn("event=push_subscription_unsubscribe_rejected userId={} reason=endpoint_owned_by_another_user", userId);
+        return OperationResult.failure(
+            new com.sashplatonov.habbit.runner.api.ErrorResponse(
+                FORBIDDEN_TYPE,
+                "Forbidden",
+                jakarta.ws.rs.core.Response.Status.FORBIDDEN.getStatusCode(),
+                "Subscription endpoint belongs to another user",
+                "SUBSCRIPTION_ENDPOINT_FORBIDDEN"
+            )
+        );
+      }
     }
-    pushSubscriptionRepository.deleteByEndpoint(request.endpoint());
-    log.debug("event=push_subscription_removed userId={} endpoint={}", userId, request.endpoint());
+    if (deleted == 0) {
+      log.debug("event=push_subscription_removed userId={} endpoint={} removed=false", userId, request.endpoint());
+      return OperationResult.success(null);
+    }
+    log.debug("event=push_subscription_removed userId={} endpoint={} removed=true", userId, request.endpoint());
     return OperationResult.success(null);
   }
 }

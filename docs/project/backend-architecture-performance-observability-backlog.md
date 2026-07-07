@@ -214,7 +214,7 @@
 - Нет индексов “на всякий случай”, которые не соответствуют реальным запросам.
 - Во время рефакторинга тесты не проверяются, только основной compile/validate gate.
 
-### [ ] P1-8. Упростить repository contracts и убрать лишние round-trip операции
+### [x] P1-8. Упростить repository contracts и убрать лишние round-trip операции
 
 Пути:
 
@@ -224,18 +224,21 @@
 - `apps/backend/src/main/java/com/sashplatonov/habbit/runner/habit/HabitServiceImpl.java`
 - `apps/backend/src/main/java/com/sashplatonov/habbit/runner/checkin/CheckinServiceImpl.java`
 - `apps/backend/src/main/java/com/sashplatonov/habbit/runner/notification/NotificationServiceImpl.java`
+- `apps/backend/src/test/java/com/sashplatonov/habbit/runner/notification/StubPushSubscriptionRepository.java`
 
 Архитектурное решение:
 
 - Перевести service-код на repository methods, которые отражают операцию целиком: existence check, upsert lookup, targeted delete.
 - Сократить цепочки вида “сначала find, потом delete/update”, если можно безопасно свернуть их в более явный persistence contract.
 - Не переносить бизнес-правила в repository, но убрать из service лишние технические обходы.
+- Для subscription unsubscribe использовать delete-first path с уточняющим read только при необходимости определить ownership.
 
 Критерии проверки:
 
 - Количество round-trip к БД для базовых CRUD/sync операций уменьшается или как минимум не растёт.
 - Repository API становится ближе к use case, а не к низкоуровневому набору случайных методов.
 - В service-слое не остаются очевидные повторные чтения одной и той же записи без необходимости.
+- Во время рефакторинга тесты не проверяются, только основной compile/validate gate.
 
 ### [ ] P2-9. Подготовить DB access к росту данных по пользователю
 
