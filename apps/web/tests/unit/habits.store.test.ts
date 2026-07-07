@@ -2,6 +2,36 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import type { HabitEntity } from '$lib/storage/db';
 
 type SubscribeCb = (value: HabitEntity[]) => void;
+type HabitApiResponse = {
+  id: string;
+  name: string;
+  description?: string | null;
+  color: string;
+  icon: string;
+  frequency: string;
+  customDays: string[];
+  schedule?: unknown;
+  targetStreak: number;
+  dailyTarget: number;
+  tags: string[];
+  freezeDays: string[];
+  createdAt: string;
+  updatedAt: string;
+  version: number;
+  archived: boolean;
+  sortOrder: number;
+  type: string;
+  reminderEnabled: boolean;
+  reminderTime?: string | null;
+};
+
+const { mockUpdateHabit, mockUpdateHabitStatus, mockUpsertCheckin, mockDeleteCheckin, mockCheckinsPut } = vi.hoisted(() => ({
+  mockUpdateHabit: vi.fn(),
+  mockUpdateHabitStatus: vi.fn(),
+  mockUpsertCheckin: vi.fn(),
+  mockDeleteCheckin: vi.fn(),
+  mockCheckinsPut: vi.fn()
+}));
 
 // Stub dexieLiveQuery to avoid touching IndexedDB during tests
 vi.mock('$lib/stores/dexieLiveQuery', () => ({
@@ -58,7 +88,7 @@ vi.mock('$lib/storage/db', () => {
   return {
     db: {
       habits: { get: mockGet },
-      checkins: {},
+      checkins: { put: mockCheckinsPut },
       outbox: {},
       transaction: mockTransaction
     },
@@ -85,6 +115,18 @@ vi.mock('$lib/storage/db', () => {
   };
 });
 
+vi.mock('$lib/api/habits', () => ({
+  updateHabit: mockUpdateHabit,
+  updateHabitStatus: mockUpdateHabitStatus
+}));
+
+vi.mock('$lib/api/checkins', () => ({
+  upsertCheckin: mockUpsertCheckin,
+  deleteCheckin: mockDeleteCheckin,
+  fetchCheckins: vi.fn(async () => []),
+  fetchHabits: vi.fn(async () => [])
+}));
+
 vi.mock('$lib/sync/writeThrough', () => ({
   syncEntriesWithFallback: vi.fn()
 }));
@@ -108,6 +150,8 @@ describe('habits store - updateHabit', () => {
   beforeEach(() => {
     dbModuleWithMocks.__mocks.mockGet.mockReset();
     dbModuleWithMocks.__mocks.mockPersist.mockReset();
+    mockUpdateHabit.mockReset();
+    mockUpdateHabitStatus.mockReset();
   });
 
   it('persists updated habit to DB', async () => {
@@ -132,7 +176,31 @@ describe('habits store - updateHabit', () => {
       type: 'positive'
     };
 
+    const apiResponse: HabitApiResponse = {
+      id: 'habit-1',
+      name: 'New name',
+      description: 'old desc',
+      color: 'blue',
+      icon: '⚡',
+      frequency: 'daily',
+      customDays: [],
+      schedule: undefined,
+      targetStreak: 10,
+      dailyTarget: 2,
+      tags: [],
+      freezeDays: [],
+      createdAt: '2020-01-01T00:00:00Z',
+      updatedAt: '2020-01-02T00:00:00Z',
+      version: 2,
+      archived: false,
+      sortOrder: 1,
+      type: 'positive',
+      reminderEnabled: true,
+      reminderTime: null
+    };
+
     dbModuleWithMocks.__mocks.mockGet.mockResolvedValue(entity);
+    mockUpdateHabit.mockResolvedValue(apiResponse);
 
     const store = createHabitsStore('test-user');
     await store.updateHabit('habit-1', { name: 'New name', dailyTarget: 2 });
@@ -161,6 +229,8 @@ describe('habits store - incrementCompletionCount', () => {
     dbModuleWithMocks.__mocks.mockDeleteCheckinInDb.mockReset();
     dbModuleWithMocks.__mocks.mockEnqueueOutboxEntry.mockReset();
     dbModuleWithMocks.__mocks.mockTransaction.mockReset();
+    mockUpsertCheckin.mockReset();
+    mockDeleteCheckin.mockReset();
     checkinState.clear();
 
     dbModuleWithMocks.__mocks.mockGet.mockResolvedValue({
@@ -192,6 +262,19 @@ describe('habits store - incrementCompletionCount', () => {
       checkinState.set(key(habitId, date), { done, count });
       return '2026-03-12T10:00:00.000Z';
     });
+    mockUpsertCheckin.mockImplementation(async (habitId: string, date: string, requestBody: { done: boolean; count: number }) => {
+      checkinState.set(key(habitId, date), { done: requestBody.done, count: requestBody.count });
+      return {
+        id: `checkin-${habitId}-${date}`,
+        habitId,
+        date,
+        done: requestBody.done,
+        count: requestBody.count,
+        updatedAt: '2026-03-12T10:00:00.000Z',
+        version: 1
+      };
+    });
+    mockDeleteCheckin.mockResolvedValue(undefined);
   });
 
   it('increments from the persisted DB count on every click', async () => {
@@ -201,19 +284,18 @@ describe('habits store - incrementCompletionCount', () => {
     await store.incrementCompletionCount('habit-1', date);
     await store.incrementCompletionCount('habit-1', date);
 
-    expect(dbModuleWithMocks.__mocks.mockUpsertCheckinInDb).toHaveBeenNthCalledWith(
+    expect(mockUpsertCheckin).toHaveBeenNthCalledWith(
       1,
       'habit-1',
       date,
-      true,
-      1
+      { done: true, count: 1 }
     );
-    expect(dbModuleWithMocks.__mocks.mockUpsertCheckinInDb).toHaveBeenNthCalledWith(
+    expect(mockUpsertCheckin).toHaveBeenNthCalledWith(
       2,
       'habit-1',
       date,
-      true,
-      2
+      { done: true, count: 2 }
     );
+    expect(mockCheckinsPut).toHaveBeenCalledTimes(2);
   });
 });

@@ -1,5 +1,6 @@
 package com.sashplatonov.habbit.runner.api;
 
+import com.sashplatonov.habbit.runner.support.TestHelpers;
 import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.Validation;
 import jakarta.ws.rs.BadRequestException;
@@ -14,7 +15,6 @@ import org.junit.jupiter.api.Test;
 import org.slf4j.MDC;
 
 import java.lang.reflect.Proxy;
-import com.sashplatonov.habbit.runner.support.TestHelpers;
 import java.net.URI;
 import java.util.Map;
 
@@ -42,19 +42,6 @@ class ApiSupportTest {
   void shouldBuildNoContentResponseWhenRequested() {
     var response = ApiResponses.noContent();
     assertEquals(204, TestHelpers.statusOf(response));
-  }
-
-  @Test
-  void shouldBuildNoStoreResponseWithCacheHeadersWhenRequested() {
-    var response = ApiResponses.noStore("payload", "trace-1", 42);
-    assertEquals(200, TestHelpers.statusOf(response));
-    assertEquals("payload", TestHelpers.entityOf(response));
-    assertEquals("trace-1", response.getHeaderString("x-trace-id"));
-    assertEquals("42", response.getHeaderString("x-sync-duration-ms"));
-    assertEquals("app;dur=42", response.getHeaderString("Server-Timing"));
-    assertEquals("no-store, no-cache, must-revalidate, proxy-revalidate", response.getHeaderString(HttpHeaders.CACHE_CONTROL));
-    assertEquals("no-cache", response.getHeaderString("Pragma"));
-    assertEquals("0", response.getHeaderString("Expires"));
   }
 
   @Test

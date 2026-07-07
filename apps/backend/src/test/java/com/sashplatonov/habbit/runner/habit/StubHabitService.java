@@ -6,6 +6,8 @@ import com.sashplatonov.habbit.runner.habit.dto.HabitResponseDto;
 import com.sashplatonov.habbit.runner.habit.dto.HabitStatusUpdateRequestDto;
 import com.sashplatonov.habbit.runner.habit.dto.HabitUpdateRequestDto;
 
+import java.util.List;
+
 final class StubHabitService implements HabitService {
   private String lastUserId;
   private String lastHabitId;
@@ -14,6 +16,7 @@ final class StubHabitService implements HabitService {
   private HabitStatusUpdateRequestDto lastStatusRequest;
   private OperationResult<HabitResponseDto> response;
   private OperationResult<Void> deleteResponse;
+  private List<HabitResponseDto> listResponse = List.of();
 
   public void setResponse(OperationResult<HabitResponseDto> response) {
     this.response = response;
@@ -41,6 +44,16 @@ final class StubHabitService implements HabitService {
 
   public HabitStatusUpdateRequestDto getLastStatusRequest() {
     return lastStatusRequest;
+  }
+
+  @Override
+  public List<HabitResponseDto> findAll(String userId) {
+    lastUserId = userId;
+    return listResponse;
+  }
+
+  public void setListResponse(List<HabitResponseDto> listResponse) {
+    this.listResponse = listResponse;
   }
 
   @Override

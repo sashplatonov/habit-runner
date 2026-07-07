@@ -38,8 +38,6 @@ public abstract class AuthenticatedApiTestSupport {
       entityManager.createNativeQuery("TRUNCATE TABLE habits").executeUpdate();
       entityManager.createNativeQuery("TRUNCATE TABLE refresh_tokens").executeUpdate();
       entityManager.createNativeQuery("TRUNCATE TABLE users").executeUpdate();
-      entityManager.createNativeQuery("TRUNCATE TABLE tombstones").executeUpdate();
-      entityManager.createNativeQuery("TRUNCATE TABLE sync_op_logs").executeUpdate();
       entityManager.createNativeQuery("SET REFERENTIAL_INTEGRITY TRUE").executeUpdate();
       return null;
     });

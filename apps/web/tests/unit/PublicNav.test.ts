@@ -3,7 +3,9 @@ import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import PublicNav from '$lib/components/PublicNav.svelte';
 
-const startOAuthLogin = vi.fn();
+const { startOAuthLogin } = vi.hoisted(() => ({
+  startOAuthLogin: vi.fn()
+}));
 
 vi.mock('$lib/auth/oauth', () => ({
   startOAuthLogin

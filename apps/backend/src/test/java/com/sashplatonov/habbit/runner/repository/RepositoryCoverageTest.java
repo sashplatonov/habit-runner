@@ -8,7 +8,6 @@ import com.sashplatonov.habbit.runner.model.HabitType;
 import com.sashplatonov.habbit.runner.model.OAuthStateEntity;
 import com.sashplatonov.habbit.runner.model.PushSubscriptionEntity;
 import com.sashplatonov.habbit.runner.model.RefreshTokenEntity;
-import com.sashplatonov.habbit.runner.model.TombstoneEntity;
 import com.sashplatonov.habbit.runner.model.UserEntity;
 import com.sashplatonov.habbit.runner.support.AuthenticatedApiTestSupport;
 import io.quarkus.test.junit.QuarkusTest;
@@ -44,9 +43,6 @@ class RepositoryCoverageTest extends AuthenticatedApiTestSupport {
 
   @Inject
   CheckinRepository checkinRepository;
-
-  @Inject
-  TombstoneRepository tombstoneRepository;
 
   @Test
   void shouldCoverUserAndAuthRepositories() throws Exception {
@@ -95,8 +91,6 @@ class RepositoryCoverageTest extends AuthenticatedApiTestSupport {
     var userId = UUID.randomUUID().toString();
     var firstUpdatedAt = Instant.parse("2026-04-10T10:00:00Z");
     var secondUpdatedAt = Instant.parse("2026-04-10T10:05:00Z");
-    var firstDeletedAt = Instant.parse("2026-04-10T10:10:00Z");
-    var secondDeletedAt = Instant.parse("2026-04-10T10:15:00Z");
 
     inTransaction(() -> {
       var firstHabit = new HabitEntity();
@@ -164,25 +158,6 @@ class RepositoryCoverageTest extends AuthenticatedApiTestSupport {
       assertEquals(1, checkinRepository.findPageForUser(userId, firstUpdatedAt, firstCheckin.getId(), 10).size());
       assertEquals(1L, checkinRepository.deleteByHabitIdUserIdAndDate(firstHabit.getId(), userId, LocalDate.of(2026, 4, 10)));
       assertEquals(1L, checkinRepository.deleteByHabitIdAndUserId(firstHabit.id, userId));
-
-      var firstTombstone = new TombstoneEntity();
-      firstTombstone.setUserId(userId);
-      firstTombstone.setEntity("habit");
-      firstTombstone.setEntityId(firstHabit.getId());
-      firstTombstone.setVersion(1);
-      firstTombstone.setDeletedAt(firstDeletedAt);
-      tombstoneRepository.save(firstTombstone);
-
-      var secondTombstone = new TombstoneEntity();
-      secondTombstone.setUserId(userId);
-      secondTombstone.setEntity("checkin");
-      secondTombstone.setEntityId(secondHabit.getId());
-      secondTombstone.setVersion(2);
-      secondTombstone.setDeletedAt(secondDeletedAt);
-      tombstoneRepository.save(secondTombstone);
-
-      assertEquals(2, tombstoneRepository.findPageForUser(userId, null, null, 10).size());
-      assertEquals(1, tombstoneRepository.findPageForUser(userId, firstDeletedAt, firstTombstone.getId(), 10).size());
       assertEquals(1L, habitRepository.deleteByIdAndUserId(secondHabit.getId(), userId));
     });
   }
