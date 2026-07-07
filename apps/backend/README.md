@@ -121,6 +121,18 @@ Optional feature variables:
 
 ---
 
+## 🩺 Health contract <a name="health-contract"></a>
+
+The backend exposes standard Quarkus health endpoints under `/q/health`.
+
+- Readiness includes lightweight config checks for auth and push notifications.
+- Database connectivity is left to Quarkus/Agroal health and is not duplicated here.
+- The health checks are config-only and do not perform network calls or heavy queries.
+
+[↑ Back to top](#top)
+
+---
+
 ## 🗄️ DB access contract <a name="db-access-contract"></a>
 
 Repository access is intentionally bounded:

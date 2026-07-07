@@ -264,7 +264,7 @@
 
 ## 4. Улучшение observability
 
-### [ ] P1-10. Ввести полноценный пакет health/readiness вместо пустого каркаса
+### [x] P1-10. Ввести полноценный пакет health/readiness вместо пустого каркаса
 
 Пути:
 
@@ -272,18 +272,21 @@
 - `apps/backend/src/main/java/com/sashplatonov/habbit/runner/auth/AuthConfig.java`
 - `apps/backend/src/main/java/com/sashplatonov/habbit/runner/notification/NotificationConfig.java`
 - `apps/backend/src/main/resources/application.properties`
+- `apps/backend/README.md`
 
 Архитектурное решение:
 
 - Пакет `health` должен либо содержать реальные lightweight readiness checks, либо быть убран до момента внедрения.
 - Не дублировать database connectivity, так как её уже покрывает Quarkus/Agroal health.
 - Добавить проверки только для критичных runtime prerequisites: например, корректность обязательной auth-конфигурации и readiness push-конфигурации там, где это реально влияет на доступность API.
+- Реальные checks находятся в `apps/backend/src/main/java/com/sashplatonov/habbit/runner/health/` и проверяют только config prerequisites.
 
 Критерии проверки:
 
 - Пустой пакет `health` либо заполнен рабочими checks, либо исключён из структуры.
 - Каждый custom health check быстрый, без тяжёлых запросов и побочных эффектов.
 - `/q/health/ready` отражает реальные зависимости backend, а не декоративные статусы.
+- Во время рефакторинга тесты не проверяются, только основной compile/validate gate.
 
 ### [ ] P1-11. Довести trace/log correlation до полного request и outbound flow
 
