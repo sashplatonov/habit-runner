@@ -10,8 +10,12 @@ import java.util.List;
 
 @ApplicationScoped
 public class HabitRepository implements PanacheRepositoryBase<HabitEntity, String> {
-  public List<HabitEntity> findAllByUserId(String userId) {
-    return find("userId = ?1 ORDER BY sortOrder ASC, createdAt ASC, id ASC", userId).list();
+  public static final int DEFAULT_LIST_LIMIT = 200;
+
+  public List<HabitEntity> findListForUser(String userId, int limit) {
+    return find("userId = ?1 ORDER BY sortOrder ASC, createdAt ASC, id ASC", userId)
+        .page(0, limit)
+        .list();
   }
 
   public HabitEntity findHabitById(String habitId) {
@@ -22,7 +26,7 @@ public class HabitRepository implements PanacheRepositoryBase<HabitEntity, Strin
     return find("id = ?1 and userId = ?2", habitId, userId).firstResult();
   }
 
-  public List<HabitEntity> findPageForUser(String userId, Instant updatedAt, String cursorId, int pageSize) {
+  public List<HabitEntity> findSyncPageForUser(String userId, Instant updatedAt, String cursorId, int pageSize) {
     if (updatedAt == null || cursorId == null) {
       return find("userId = ?1 ORDER BY updatedAt ASC, id ASC", userId)
           .page(0, pageSize)
@@ -34,6 +38,14 @@ public class HabitRepository implements PanacheRepositoryBase<HabitEntity, Strin
         updatedAt,
         cursorId
     ).page(0, pageSize).list();
+  }
+
+  public List<HabitEntity> findAllByUserId(String userId) {
+    return findListForUser(userId, DEFAULT_LIST_LIMIT);
+  }
+
+  public List<HabitEntity> findPageForUser(String userId, Instant updatedAt, String cursorId, int pageSize) {
+    return findSyncPageForUser(userId, updatedAt, cursorId, pageSize);
   }
 
   @Transactional

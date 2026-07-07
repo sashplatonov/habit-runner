@@ -49,7 +49,7 @@ public class HabitResource {
   }
 
   @GET
-  @Operation(summary = "List habits", description = "Returns all habits for the authenticated user.")
+  @Operation(summary = "List habits", description = "Returns up to the default page of habits for the authenticated user.")
   @APIResponses({
       @APIResponse(responseCode = "200", description = "Habits loaded",
           content = @Content(schema = @Schema(implementation = HabitResponseDto.class))),

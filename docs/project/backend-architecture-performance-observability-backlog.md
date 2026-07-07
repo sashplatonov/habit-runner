@@ -141,7 +141,7 @@
 - После рефакторинга нет дублирующихся блоков с одинаковыми полями и значениями по умолчанию.
 - Во время рефакторинга тесты не проверяются, только основной compile/packaging gate.
 
-### [ ] P1-5. Перевести list/sync hot path на bounded чтение и более узкие выборки
+### [x] P1-5. Перевести list/sync hot path на bounded чтение и более узкие выборки
 
 Пути:
 
@@ -149,18 +149,21 @@
 - `apps/backend/src/main/java/com/sashplatonov/habbit/runner/repository/CheckinRepository.java`
 - `apps/backend/src/main/java/com/sashplatonov/habbit/runner/habit/HabitServiceImpl.java`
 - `apps/backend/src/main/java/com/sashplatonov/habbit/runner/checkin/CheckinServiceImpl.java`
+- `apps/backend/src/main/java/com/sashplatonov/habbit/runner/habit/resource/HabitResource.java`
+- `apps/backend/src/main/java/com/sashplatonov/habbit/runner/checkin/resource/CheckinResource.java`
 
 Архитектурное решение:
 
-- Для списочных и sync-сценариев опираться на cursor/pagination методы как на основной контракт, а не держать параллельно unbounded `findAll...`.
-- Там, где для ответа не нужен полный entity graph, перейти на более узкие запросы или projection-style чтение.
-- Запретить загрузку полного пользовательского набора привычек/чекинов без лимита.
+- Для списочных сценариев использовать bounded page-size контракт как основной путь, а sync сценарии оставить на явном cursor/pagination API.
+- Убрать unbounded `findAll...` как рабочий hot path и оставить его только как bounded-обёртку для совместимости.
+- Зафиксировать лимит списка на уровне репозитория, чтобы поведение было очевидно без чтения сервиса.
 
 Критерии проверки:
 
 - В коде нет пользовательских чтений без лимита для потенциально растущих коллекций.
 - Репозитории явно различают list API, sync API и точечные lookup-операции.
-- Для каждого hot query можно указать его лимит, порядок сортировки и курсор.
+- Для list API и sync API можно назвать лимит, порядок сортировки и курсор.
+- Во время рефакторинга тесты не проверяются, только основной compile/validate gate.
 
 ### [ ] P2-6. Снизить лишние аллокации и лог-шум в request path
 

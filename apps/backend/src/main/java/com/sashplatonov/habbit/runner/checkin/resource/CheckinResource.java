@@ -43,7 +43,7 @@ public class CheckinResource {
   }
 
   @GET
-  @Operation(summary = "List checkins", description = "Returns all checkins for the authenticated user.")
+  @Operation(summary = "List checkins", description = "Returns up to the default page of checkins for the authenticated user.")
   @APIResponses({
       @APIResponse(responseCode = "200", description = "Checkins loaded",
           content = @Content(schema = @Schema(implementation = CheckinResponseDto.class))),
