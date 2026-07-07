@@ -1,12 +1,12 @@
 import { reportWebVital } from '@/lib/observability/webVitals';
-import { trackWebVital } from '$lib/observability/faro';
+import { logBrowser } from '$lib/observability/newrelic';
 import type { Metric } from 'web-vitals';
 
-vi.mock('$lib/observability/faro', () => ({
-  trackWebVital: vi.fn(),
+vi.mock('$lib/observability/newrelic', () => ({
+  logBrowser: vi.fn(),
 }));
 
-const mockedTrackWebVital = vi.mocked(trackWebVital);
+const mockedLogBrowser = vi.mocked(logBrowser);
 
 const metric: Metric = {
   name: 'LCP',
@@ -31,7 +31,7 @@ beforeEach(() => {
 test('reports vitals through observability helper without using sendBeacon', () => {
   reportWebVital(metric, '/blog/example-post', false);
 
-  expect(mockedTrackWebVital).toHaveBeenCalledWith({
+  expect(mockedLogBrowser).toHaveBeenCalledWith('info', 'web_vital', 'Web vital LCP', {
     name: 'LCP',
     value: 1234,
     rating: 'good',
@@ -46,7 +46,7 @@ test('skips production reporting in dev mode', () => {
 
   reportWebVital(metric, '/blog/example-post', true);
 
-  expect(mockedTrackWebVital).not.toHaveBeenCalled();
+  expect(mockedLogBrowser).not.toHaveBeenCalled();
   expect(globalThis.navigator.sendBeacon).not.toHaveBeenCalled();
   expect(debugSpy).toHaveBeenCalledWith('[web-vitals]', 'LCP', 1234, 'good');
 

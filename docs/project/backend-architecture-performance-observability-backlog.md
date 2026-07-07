@@ -13,7 +13,7 @@
 Текущее состояние backend:
 
 - feature-пакеты (`auth`, `habit`, `checkin`, `notification`) смешаны с общими `model` и `repository`;
-- `apps/backend/src/main/resources/application.properties` уже включает JSON-логи, management interface и Micrometer Prometheus binder;
+- `apps/backend/src/main/resources/application.properties` уже включает JSON-логи, health checks и New Relic metric export;
 - `apps/backend/src/main/java/com/sashplatonov/habbit/runner/metrics/ObservabilityConfig.java` регистрирует несколько бизнес-метрик, но метрики не оформлены как полноценный service-level контракт;
 - каталоги `apps/backend/src/main/java/com/sashplatonov/habbit/runner/config`, `health`, `mutation` сейчас не оформлены как полноценные модули и требуют либо наполнения, либо явного упрощения структуры.
 
@@ -315,24 +315,24 @@
 - Тест `GoogleOAuthClientTest` проверяет, что traceId уходит в outbound HTTP headers.
 - Во время рефакторинга тесты не проверяются, только основной compile/validate gate.
 
-### [ ] P2-12. Свести observability-документацию к одному актуальному backend contract
+### [x] P2-12. Свести observability-документацию к одному актуальному backend contract
 
 Пути:
 
 - `docs/monitoring/newrelic.md`
-- `docs/monitoring/grafana-cloud.md`
 - `apps/backend/README.md`
 - `docs/README.md`
+- `README.md`
 
 Архитектурное решение:
 
-- Описать New Relic как primary path, а Prometheus/Grafana как optional legacy path без конфликтующих инструкций.
-- Вынести в документацию точный список backend метрик, health endpoints, trace/log fields и режимов включения.
-- Убрать размытые формулировки, где непонятно, какой путь observability считается основным.
+- Описать New Relic как единственный backend observability path.
+- Вынести в документацию точный список backend health endpoints, trace/log fields, metrics export and runtime modes.
+- Убрать любые формулировки, которые намекают на Prometheus/Grafana как на поддерживаемый путь.
 
 Критерии проверки:
 
-- По документации видно один основной backend observability path.
+- По документации видно один backend observability path.
 - Все упомянутые env vars и endpoints совпадают с текущим runtime contract.
 - Документация позволяет повторить включение observability без чтения исходников.
 

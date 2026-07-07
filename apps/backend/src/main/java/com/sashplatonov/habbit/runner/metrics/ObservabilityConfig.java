@@ -16,8 +16,7 @@ import java.util.List;
  * example business-level counters / timers for injection throughout the app.
  *
  * <p>Resource tags (service.name, service.version, deployment.environment) are
- * also declared in {@code quarkus.micrometer.export.otlp.resource-attributes}
- * so they appear on every exported metric without needing to tag call-sites.
+ * attached here so every exported metric carries the same service identity.
  */
 @ApplicationScoped
 public class ObservabilityConfig {
@@ -73,16 +72,12 @@ public class ObservabilityConfig {
 
     /**
      * Startup hook kept for future use (e.g. registering gauges for live objects).
-     * Common resource labels (service.name, service.version, deployment.environment)
-     * are provided externally via Alloy scrape relabelling, so we no longer call
-     * {@code registry.config().commonTags()} here.  Applying common tags after the
-     * JVM auto-instrumentation meters have already been registered causes Micrometer
-     * to throw "Meters that share a name must share tag keys" errors because the
-     * auto-registered meters have no tags while newly created meters would carry the
-     * common tags â€" violating Micrometer's same-name invariant.
+     * We avoid mutating global common tags after Micrometer meters are already
+     * registered because that can break tag-key compatibility across meters with
+     * the same name.
      */
     void onStart(@Observes StartupEvent ev) {
-        // intentionally empty – see Javadoc above
+        // intentionally empty
     }
 
     // ── Public helpers used by service / resource beans ─────────────────────

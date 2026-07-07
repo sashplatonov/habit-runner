@@ -113,9 +113,7 @@ Optional feature variables:
 - `VAPID_PUBLIC_KEY`
 - `VAPID_PRIVATE_KEY`
 - `VAPID_SUBJECT`
-- New Relic runtime toggles live in the root `.env.example`; keep `NEW_RELIC_AGENT_ENABLED=false` locally and enable forwarding only after the log-volume review.
-- For the legacy metrics path, run the Alloy sidecar from `docker-compose.yml`
-  and keep remote-write credentials in environment variables (do NOT bake secrets into images).
+- Observability defaults, required env vars, and the backend contract are documented in [docs/monitoring/newrelic.md](../../docs/monitoring/newrelic.md).
 
 [↑ Back to top](#top)
 
@@ -158,8 +156,6 @@ Adjust these values only after observing real concurrency and connection wait be
 ## 🌐 Key endpoints <a name="key-endpoints"></a>
 
 - `GET /q/health`
-- `GET /q/metrics`
-- `GET /metrics`
 - `GET /auth/google/start`
 - `GET /auth/google/callback`
 - `POST /auth/refresh`

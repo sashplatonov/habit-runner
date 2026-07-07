@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
-  <!-- Console logging only. For shipping logs to Grafana Cloud Loki, run
-       Grafana Agent or Promtail on the host and forward container stdout.
-  -->
+  <!-- Console logging only. New Relic consumes stdout logs from the container. -->
 
   <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
     <encoder>

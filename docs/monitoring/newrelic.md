@@ -1,75 +1,102 @@
-# New Relic Monitoring
+# Backend Observability Contract (New Relic)
 
 <a name="top"></a>
 
-## Table of Contents
+## 📋 Table of Contents
 
 - [🎯 Scope](#scope)
-- [🔐 Required Environment Variables](#required-environment-variables)
-- [🚀 Runtime Modes](#runtime-modes)
+- [✅ Backend contract](#backend-contract)
+- [🔐 Required environment variables](#required-environment-variables)
+- [🚀 Runtime modes](#runtime-modes)
 - [🧪 Validate](#validate)
 
-This repo uses New Relic as the default backend observability path:
+New Relic is the primary backend observability path for this repository.
 
-- Java agent inside `apps/backend`
-- Browser agent inside `apps/web`
-- JSON ECS logs on stdout
-- browser logs and JS errors sent from the SvelteKit client when browser config is present
-- log forwarding stays disabled until the log volume review is done
-- Grafana Alloy remains optional legacy tooling for the old metrics path only
+- Backend APM, JVM telemetry, and logs-in-context go through the Java agent in `apps/backend`
+- JSON ECS logs stay on stdout and carry `trace_id`, `span_id`, `service.name`, and `deployment.environment`
+- Request correlation uses `x-trace-id` inbound and propagates to outbound HTTP calls
+- Browser observability is optional and only enabled when the frontend build-time New Relic browser config is present
+- The backend does not expose a Grafana/Prometheus path anymore
 
 [↑ Back to top](#top)
 
 ## 🎯 Scope <a name="scope"></a>
 
-- Backend APM, JVM telemetry, and logs-in-context for `habittracker-api`
-- Browser page views, JS errors, and client-side logs for the web app
-- no second default log pipeline
-- legacy Alloy/Mimir assets are optional and should not be enabled in parallel with the New Relic default path
+- Backend health, metrics, logs, and trace correlation for `habittracker-api`
+- Runtime knobs that affect backend visibility in New Relic
+- Only the active New Relic contract is documented here
 
 [↑ Back to top](#top)
 
-## 🔐 Required Environment Variables <a name="required-environment-variables"></a>
+## ✅ Backend contract <a name="backend-contract"></a>
 
-Runtime:
+The backend observability contract is intentionally small and explicit:
+
+- health endpoints:
+  - `/q/health`
+  - `/q/health/ready`
+- request correlation:
+  - inbound header: `x-trace-id`
+  - MDC key: `traceId`
+  - JSON log fields: `trace_id`, `span_id`
+- log metadata:
+  - `service.name=habittracker-api`
+  - `deployment.environment=${DEPLOYMENT_ENV}`
+- outbound correlation:
+  - OAuth and other slow-path HTTP calls reuse the active `traceId` when present
+
+New Relic dashboards should be built from:
+
+- APM service/entity health
+- JVM and HTTP telemetry
+- log search by `traceId`, `service.name`, and `deployment.environment`
+- custom business metrics from `apps/backend/src/main/java/com/sashplatonov/habbit/runner/metrics/ObservabilityConfig.java` are exported through the New Relic Micrometer registry
+
+[↑ Back to top](#top)
+
+## 🔐 Required environment variables <a name="required-environment-variables"></a>
+
+Backend runtime:
 
 - `NEW_RELIC_LICENSE_KEY`
 - `NEW_RELIC_APP_NAME=habittracker-api`
 - `NEW_RELIC_AGENT_ENABLED=false`
-- `DEPLOYMENT_ENV=development`
 - `NEW_RELIC_APPLICATION_LOGGING_FORWARDING_ENABLED=false`
 - `NEW_RELIC_APPLICATION_LOGGING_FORWARDING_MAX_SAMPLES_STORED=10000`
 - `NEW_RELIC_APPLICATION_LOGGING_LOCAL_DECORATING_ENABLED=false`
+- `APP_VERSION`
+- `SERVICE_VERSION`
+- `DEPLOYMENT_ENV`
+
+Frontend browser observability:
+
 - `VITE_NEW_RELIC_BROWSER_ENABLED=false`
-- `VITE_NEW_RELIC_BROWSER_INFO=` copied from the Browser app `NREUM.info` snippet
-- `VITE_NEW_RELIC_BROWSER_INIT=` copied from the Browser app `NREUM.init` snippet
-- `VITE_NEW_RELIC_BROWSER_LOADER_CONFIG=` copied from the Browser app `NREUM.loader_config` snippet
+- `VITE_NEW_RELIC_BROWSER_INFO`
+- `VITE_NEW_RELIC_BROWSER_INIT`
+- `VITE_NEW_RELIC_BROWSER_LOADER_CONFIG`
 
 Notes:
 
 - keep the license key out of git
 - browser config is build-time data for the frontend image, so populate it before `apps/web` is built
-- keep forwarding off until the log volume review says the stack is safe for the free plan
+- keep forwarding off until the log-volume review says the stack is safe for the chosen plan
 - keep local decorating off when forwarding is on
-- Quarkus does not expose the servlet-container JMX pool set that powers the built-in APM `Threads` tab, so the image now ships a custom JMX extension under `/opt/newrelic/extensions`.
-- Query custom JVM/thread metrics in New Relic from the `Metric` event with names like `JMX/Runtime/Threads/ThreadCount`.
-- Browser logs arrive in the New Relic `Logs` UI and can be filtered by browser app name plus the custom `event` attribute.
 
 [↑ Back to top](#top)
 
-## 🚀 Runtime Modes <a name="runtime-modes"></a>
+## 🚀 Runtime modes <a name="runtime-modes"></a>
 
 1. `NEW_RELIC_AGENT_ENABLED=false`
-   - default local mode
-   - no agent attachment
+   - local default
+   - backend runs without agent attachment
 2. `NEW_RELIC_AGENT_ENABLED=true` with forwarding off
-   - first rollout mode
-   - APM and JVM telemetry only
-3. frontend browser config present with `VITE_NEW_RELIC_BROWSER_ENABLED=true`
-   - Browser page views, JS errors, and client logs enabled
-   - configure from the Browser app copy/paste snippet before building the web image
+   - APM, JVM telemetry, and logs-in-context only
+   - safe first rollout mode
+3. browser config present with `VITE_NEW_RELIC_BROWSER_ENABLED=true`
+   - browser page views, JS errors, and client logs are enabled
+   - configure from the Browser app snippet before building the web image
 4. `NEW_RELIC_AGENT_ENABLED=true` with forwarding on
-   - only after log volume review
+   - only after log-volume review
    - keep `debug,trace` denied
    - keep the sample cap explicit
 
@@ -87,9 +114,8 @@ Checks:
 
 - backend entity appears in New Relic APM
 - browser entity appears in New Relic Browser after opening the web app
-- frontend logs appear in New Relic `Logs`
+- logs contain `traceId`, `service.name`, and `deployment.environment`
 - custom thread metrics appear in New Relic `Metric` data after a few scrape intervals
-- logs include the application name and deployment environment
-- Alloy documentation remains clearly marked as optional/legacy
+- the backend health endpoints still respond from the compose stack
 
 [↑ Back to top](#top)

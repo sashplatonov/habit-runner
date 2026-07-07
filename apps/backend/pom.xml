@@ -81,15 +81,15 @@
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-smallrye-health</artifactId>
         </dependency>
-        <!-- Core Micrometer instrumentation: JVM, HTTP, and custom meters -->
+        <!-- Core Micrometer instrumentation for JVM, HTTP, and custom meters -->
         <dependency>
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-micrometer</artifactId>
         </dependency>
-        <!-- Exposes /q/metrics in Prometheus text format so Grafana Agent can scrape it -->
         <dependency>
-            <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-micrometer-registry-prometheus</artifactId>
+            <groupId>io.quarkiverse.micrometer.registry</groupId>
+            <artifactId>quarkus-micrometer-registry-newrelic-telemetry</artifactId>
+            <version>3.5.0</version>
         </dependency>
         <dependency>
             <groupId>io.quarkus</groupId>
@@ -161,7 +161,6 @@
             <version>${mockito.version}</version>
             <scope>test</scope>
         </dependency>
-        <!-- Structured JSON output to stdout; New Relic reads the container logs when log forwarding is enabled -->
     </dependencies>
 
     <build>

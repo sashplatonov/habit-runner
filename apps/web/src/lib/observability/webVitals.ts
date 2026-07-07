@@ -1,5 +1,5 @@
 import type { Metric } from 'web-vitals';
-import { trackWebVital } from '$lib/observability/faro';
+import { logBrowser } from '$lib/observability/newrelic';
 
 export function reportWebVital(metric: Metric, pathname: string, isDev = import.meta.env.DEV): void {
   if (isDev) {
@@ -8,7 +8,7 @@ export function reportWebVital(metric: Metric, pathname: string, isDev = import.
     return;
   }
 
-  trackWebVital({
+  logBrowser('info', 'web_vital', `Web vital ${metric.name}`, {
     name: metric.name,
     value: metric.value,
     rating: metric.rating,

@@ -19,8 +19,6 @@ Current runtime endpoints:
 | Endpoint | Purpose |
 |---|---|
 | `/q/health` | Quarkus health |
-| `/q/metrics` | Prometheus/Micrometer export |
-| `/metrics` | Lightweight JSON app metrics |
 
 Docker Compose health checks currently monitor:
 
@@ -33,7 +31,8 @@ Docker Compose health checks currently monitor:
 Important current behavior:
 - `db` is behind the `db` profile;
 - `api` does not publish a host port in the default stack;
-- external browser traffic reaches the API through the `web` proxy at `/api`.
+- external browser traffic reaches the API through the `web` proxy at `/api`;
+- backend observability details live in [docs/monitoring/newrelic.md](../monitoring/newrelic.md).
 
 [↑ Back to top](#top)
 

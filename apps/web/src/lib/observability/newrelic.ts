@@ -105,7 +105,7 @@ export async function initNewRelicBrowser(): Promise<void> {
   initialized = true;
   setBrowserPageViewName(window.location.pathname);
 
-  const deploymentEnv = (import.meta.env.VITE_FARO_ENVIRONMENT as string | undefined) ?? import.meta.env.MODE;
+  const deploymentEnv = (import.meta.env.VITE_NEW_RELIC_BROWSER_ENVIRONMENT as string | undefined) ?? import.meta.env.MODE;
   if (deploymentEnv) {
     getNewRelicApi()?.setCustomAttribute?.('deployment.environment', deploymentEnv, true);
   }

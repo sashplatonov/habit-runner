@@ -1,4 +1,3 @@
-import { initFaro } from '$lib/observability/faro';
 import { installGlobalClientLogging, logClientError } from '$lib/logging/clientLogger';
 import { initNewRelicBrowser, noticeBrowserError } from '$lib/observability/newrelic';
 import { reportWebVital } from '$lib/observability/webVitals';
@@ -43,7 +42,6 @@ export async function init(): Promise<void> {
   initialized = true;
   await initNewRelicBrowser();
   installGlobalClientLogging();
-  await initFaro();
   void registerServiceWorker();
 
   // Report Core Web Vitals without blocking main thread

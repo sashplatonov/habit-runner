@@ -172,7 +172,7 @@ cd apps/backend
 - Web Push setup: [docs/setup/web-push-setup.md](./docs/setup/web-push-setup.md)
 - Reliability and rollout: [docs/operations/reliability-rollout.md](./docs/operations/reliability-rollout.md)
 - GitHub automation: [docs/operations/github-automation.md](./docs/operations/github-automation.md)
-- Monitoring: [docs/monitoring/newrelic.md](./docs/monitoring/newrelic.md) for the default path and [docs/monitoring/grafana-cloud.md](./docs/monitoring/grafana-cloud.md) for the legacy Alloy path
+- Monitoring: [docs/monitoring/newrelic.md](./docs/monitoring/newrelic.md) for the default backend observability contract
 - Project health: [docs/project/health.md](./docs/project/health.md)
 
 [↑ Back to top](#top)

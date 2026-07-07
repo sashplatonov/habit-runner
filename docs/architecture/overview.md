@@ -27,9 +27,8 @@ Backend API in apps/backend
 ├── /auth           login, refresh, Google OAuth, preferences
 ├── /sync           pull and push for habits/checkins/tombstones
 ├── /notifications  VAPID key, subscribe, unsubscribe
-├── /metrics        lightweight JSON metrics
 ├── /q/health       Quarkus health endpoint
-└── /q/metrics      Prometheus metrics
+└── New Relic       APM, logs-in-context, browser telemetry
 │
 PostgreSQL
 └── Flyway-managed schema selected by DB_SCHEMA
@@ -90,7 +89,7 @@ Important paths:
 | `apps/backend/src/main/java/com/habittracker/auth` | Login, refresh, Google OAuth, preferences, JWT guard |
 | `apps/backend/src/main/java/com/habittracker/sync` | Pull/push resources, DTOs, server-side sync logic |
 | `apps/backend/src/main/java/com/habittracker/notification` | VAPID public key and push subscription endpoints |
-| `apps/backend/src/main/java/com/habittracker/metrics` | Lightweight `/metrics` JSON payload |
+| `apps/backend/src/main/java/com/sashplatonov/habbit/runner/metrics` | Business metrics exported through New Relic Micrometer registry |
 | `apps/backend/src/main/java/com/habittracker/model` | Panache entities |
 | `apps/backend/src/main/resources/application.properties` | Quarkus, datasource, CORS, Flyway, auth config |
 | `apps/backend/src/main/resources/db/migration` | Flyway migrations |
