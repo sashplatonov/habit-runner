@@ -69,10 +69,10 @@ public class NotificationServiceImpl implements NotificationService {
       entity.p256dh = request.keys().p256dh();
       entity.auth = request.keys().auth();
       pushSubscriptionRepository.save(entity);
-      log.info("event=push_subscription_saved userId={} endpoint={} created=true", userId, request.endpoint());
+      log.debug("event=push_subscription_saved userId={} endpoint={} created=true", userId, request.endpoint());
       return OperationResult.success(new SubscriptionStatusResponse(true));
     }
-    log.info("event=push_subscription_saved userId={} endpoint={} created=false", userId, request.endpoint());
+    log.debug("event=push_subscription_saved userId={} endpoint={} created=false", userId, request.endpoint());
     return OperationResult.success(new SubscriptionStatusResponse(true));
   }
 
@@ -92,7 +92,7 @@ public class NotificationServiceImpl implements NotificationService {
       );
     }
     pushSubscriptionRepository.deleteByEndpoint(request.endpoint());
-    log.info("event=push_subscription_removed userId={} endpoint={}", userId, request.endpoint());
+    log.debug("event=push_subscription_removed userId={} endpoint={}", userId, request.endpoint());
     return OperationResult.success(null);
   }
 }

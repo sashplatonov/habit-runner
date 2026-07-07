@@ -43,7 +43,7 @@ public class HabitServiceImpl implements HabitService {
   @Override
   @Transactional
   public OperationResult<HabitResponseDto> create(String userId, HabitCreateRequestDto request) {
-    log.info("Creating habit userId={} habitId={}", userId, request.id());
+    log.debug("Creating habit userId={} habitId={}", userId, request.id());
     var existing = habitRepository.findHabitById(request.id());
     if (existing != null && !userId.equals(existing.getUserId())) {
       return OperationResult.failure(new ErrorResponse(
@@ -70,7 +70,7 @@ public class HabitServiceImpl implements HabitService {
   @Override
   @Transactional
   public OperationResult<HabitResponseDto> update(String userId, String habitId, HabitUpdateRequestDto request) {
-    log.info("Updating habit userId={} habitId={}", userId, habitId);
+    log.debug("Updating habit userId={} habitId={}", userId, habitId);
     var habit = habitRepository.findByIdAndUserId(habitId, userId);
     if (habit == null) {
       return notFound();
@@ -89,7 +89,7 @@ public class HabitServiceImpl implements HabitService {
       String habitId,
       HabitStatusUpdateRequestDto request
   ) {
-    log.info("Updating habit status userId={} habitId={} archived={}", userId, habitId, request.archived());
+    log.debug("Updating habit status userId={} habitId={} archived={}", userId, habitId, request.archived());
     var habit = habitRepository.findByIdAndUserId(habitId, userId);
     if (habit == null) {
       return notFound();
@@ -103,7 +103,7 @@ public class HabitServiceImpl implements HabitService {
   @Override
   @Transactional
   public OperationResult<Void> delete(String userId, String habitId) {
-    log.info("Deleting habit userId={} habitId={}", userId, habitId);
+    log.debug("Deleting habit userId={} habitId={}", userId, habitId);
     checkinRepository.deleteByHabitIdAndUserId(habitId, userId);
     var deleted = habitRepository.deleteByIdAndUserId(habitId, userId);
     if (deleted == 0) {

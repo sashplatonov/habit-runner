@@ -11,14 +11,12 @@ import com.sashplatonov.habbit.runner.repository.CheckinRepository;
 import com.sashplatonov.habbit.runner.repository.HabitRepository;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.transaction.Transactional;
-import lombok.extern.slf4j.Slf4j;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
 import java.util.List;
 
 @ApplicationScoped
-@Slf4j
 public class CheckinServiceImpl implements CheckinService {
   private final CheckinRepository checkinRepository;
   private final HabitRepository habitRepository;

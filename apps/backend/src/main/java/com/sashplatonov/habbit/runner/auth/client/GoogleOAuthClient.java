@@ -23,8 +23,11 @@ public class GoogleOAuthClient {
   private static final String AUTHORIZATION_URL = "https://accounts.google.com/o/oauth2/v2/auth";
   private static final String TOKEN_URL = "https://oauth2.googleapis.com/token";
   private static final String USER_INFO_URL = "https://www.googleapis.com/oauth2/v3/userinfo";
+  private static final String OAUTH_SCOPE = "openid email profile";
+  private static final String FORM_CONTENT_TYPE = "application/x-www-form-urlencoded";
   private static final Duration REQUEST_TIMEOUT = Duration.ofSeconds(10);
   private static final long SLOW_OAUTH_CALL_THRESHOLD_MS = 1_500L;
+  private static final HttpResponse.BodyHandler<String> STRING_BODY_HANDLER = HttpResponse.BodyHandlers.ofString();
 
   private final AuthConfig authConfig;
   private final ObjectMapper objectMapper;
@@ -44,12 +47,12 @@ public class GoogleOAuthClient {
   }
 
   public String buildAuthorizationUrl(String state, String callbackUrl) {
-    ensureConfigured();
+    var clientId = requiredClientId();
     return AUTHORIZATION_URL
-        + "?client_id=" + urlEncode(requiredClientId())
+        + "?client_id=" + urlEncode(clientId)
         + "&redirect_uri=" + urlEncode(callbackUrl)
         + "&response_type=code"
-        + "&scope=" + urlEncode("openid email profile")
+        + "&scope=" + urlEncode(OAUTH_SCOPE)
         + "&state=" + urlEncode(state)
         + "&access_type=offline&prompt=select_account";
   }
@@ -78,21 +81,23 @@ public class GoogleOAuthClient {
   }
 
   private String exchangeCodeForAccessToken(String code, String callbackUrl) throws IOException, InterruptedException {
+    var clientId = requiredClientId();
+    var clientSecret = requiredClientSecret();
     var body = "code=" + urlEncode(code)
-        + "&client_id=" + urlEncode(requiredClientId())
-        + "&client_secret=" + urlEncode(requiredClientSecret())
+        + "&client_id=" + urlEncode(clientId)
+        + "&client_secret=" + urlEncode(clientSecret)
         + "&redirect_uri=" + urlEncode(callbackUrl)
         + "&grant_type=authorization_code";
 
     var request = HttpRequest.newBuilder()
         .uri(URI.create(TOKEN_URL))
-        .header("Content-Type", "application/x-www-form-urlencoded")
+        .header("Content-Type", FORM_CONTENT_TYPE)
         .POST(HttpRequest.BodyPublishers.ofString(body))
         .timeout(REQUEST_TIMEOUT)
         .build();
 
     var startedAt = System.nanoTime();
-    var response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+    var response = httpClient.send(request, STRING_BODY_HANDLER);
     var elapsedMs = elapsedMs(startedAt);
     if (response.statusCode() != 200) {
       log.warn(
@@ -122,7 +127,7 @@ public class GoogleOAuthClient {
         .build();
 
     var startedAt = System.nanoTime();
-    var response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+    var response = httpClient.send(request, STRING_BODY_HANDLER);
     var elapsedMs = elapsedMs(startedAt);
     if (response.statusCode() != 200) {
       log.warn(
