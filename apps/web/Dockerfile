@@ -1,12 +1,13 @@
+# syntax=docker/dockerfile:1.7
 FROM node:22-alpine AS build
 WORKDIR /app
 
-# copy package files for workspace install
-COPY package*.json ./
+# Copy dependency manifests first so npm install stays cached across source changes.
+COPY package.json package-lock.json ./
 COPY packages/shared/package.json ./packages/shared/
 COPY tsconfig.base.json ./
 
-RUN npm install --ignore-scripts --no-audit --no-fund --legacy-peer-deps --package-lock=false
+RUN --mount=type=cache,target=/root/.npm npm ci --ignore-scripts --no-audit --no-fund --legacy-peer-deps
 
 # copy shared, build it
 COPY packages/shared/ ./packages/shared/

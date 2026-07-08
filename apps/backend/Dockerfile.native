@@ -1,6 +1,9 @@
+# syntax=docker/dockerfile:1.7
 ARG MANDREL_BUILDER_IMAGE=quay.io/quarkus/ubi9-quarkus-mandrel-builder-image:jdk-25
 FROM ${MANDREL_BUILDER_IMAGE} AS build
 WORKDIR /workspace
+
+ENV MAVEN_OPTS="-XX:MaxRAMPercentage=70 -XX:ActiveProcessorCount=1"
 
 # Copy only the parts needed for a reproducible build (context: apps/backend)
 COPY .mvn/ .mvn/
@@ -9,11 +12,14 @@ COPY pom.xml ./pom.xml
 COPY checkstyle ./checkstyle
 COPY pmd ./pmd
 COPY spotbugs ./spotbugs
+
+RUN --mount=type=cache,target=/root/.m2 sh ./mvnw -B -T1 -Dmaven.test.skip=true dependency:go-offline
+
 COPY src ./src
 # Build native image. The default MANDREL_BUILDER_IMAGE targets JDK 25 and
 # includes Mandrel's native-image toolchain; if you need a different image,
 # override `MANDREL_BUILDER_IMAGE` via build-arg.
-RUN sh ./mvnw -Dnative package
+RUN --mount=type=cache,target=/root/.m2 sh ./mvnw -B -T1 -Dnative -Dtest.jvm.argline.extra="-XX:ActiveProcessorCount=1 -XX:MaxRAMPercentage=70" package
 
 FROM quay.io/quarkus/quarkus-micro-image:2.0
 WORKDIR /work/

@@ -18,15 +18,7 @@ RUN --mount=type=cache,target=/root/.m2 ./mvnw -B -T1 -Dmaven.test.skip=true dep
 # Copy application sources after dependency warmup to avoid invalidating the cache on every change.
 COPY src src
 
-RUN --mount=type=cache,target=/root/.m2 ./mvnw -B -T1 -Djacoco.skip=true -Dtest.jvm.argline.extra="-XX:ActiveProcessorCount=2 -XX:MaxRAMPercentage=70" package
-
-# Normalize produced jar to a known location. Prefer the Quarkus run jar if present.
-RUN set -eux; \
-		if [ -f target/quarkus-app/quarkus-run.jar ]; then \
-			cp target/quarkus-app/quarkus-run.jar application.jar; \
-		else \
-			JAR=$(ls target/*.jar | grep -v "original" | head -n1) && cp "$JAR" application.jar; \
-		fi
+RUN --mount=type=cache,target=/root/.m2 ./mvnw -B -T1 -Djacoco.skip=true -Dtest.jvm.argline.extra="-XX:ActiveProcessorCount=1 -XX:MaxRAMPercentage=70" package
 
 FROM docker.io/library/eclipse-temurin:25-jre AS runtime
 WORKDIR /work
