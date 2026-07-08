@@ -18,4 +18,4 @@ sed \
   -e "s|@@API_PORT@@|${API_PORT}|g" \
   -e "s|@@CORS_ALLOW_ORIGIN@@|${CORS_ALLOW_ORIGIN}|g" \
   /etc/nginx/conf.d/default.conf.template > /etc/nginx/conf.d/default.conf
-exec nginx -g 'daemon off; pid /tmp/nginx.pid;'
+exec nginx -c /etc/nginx/nginx.conf -g 'daemon off;'
