@@ -52,7 +52,7 @@ jobs:
 
       - name: Cache Trivy DB
         continue-on-error: true
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ${{ runner.temp }}/.trivy-cache
           key: trivy-db
@@ -67,24 +67,6 @@ jobs:
           severity: HIGH,CRITICAL
           skip-dirs: target
           cache-dir: ${{ runner.temp }}/.trivy-cache
-
-  security-frontend:
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v5
-
-      - name: Run frontend security scan
-        uses: aquasecurity/trivy-action@v0.36.0
-        with:
-          scan-type: fs
-          scan-ref: apps/web
-          scanners: vuln,secret,misconfig
-          ignore-unfixed: true
-          exit-code: '1'
-          severity: HIGH,CRITICAL
-          skip-dirs: node_modules,dist,.svelte-kit,coverage,.vite
 
   verify-frontend:
     runs-on: ubuntu-latest
@@ -109,3 +91,21 @@ jobs:
 
       - name: Verify frontend
         run: npm run check:web
+
+  security-frontend:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Run frontend security scan
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          scan-type: fs
+          scan-ref: apps/web
+          scanners: vuln,secret,misconfig
+          ignore-unfixed: true
+          exit-code: '1'
+          severity: HIGH,CRITICAL
+          skip-dirs: node_modules,dist,.svelte-kit,coverage,.vite
