@@ -14,33 +14,11 @@ import org.mapstruct.NullValuePropertyMappingStrategy;
 
 @Mapper(componentModel = MappingConstants.ComponentModel.CDI)
 public interface HabitMapper {
-  @Mapping(target = "id", ignore = true)
-  @Mapping(target = "userId", ignore = true)
-  @Mapping(target = "scheduleType", source = "schedule.type")
-  @Mapping(target = "scheduleWeekdays", source = "schedule.weekdays")
-  @Mapping(target = "scheduleTimesPerWeek", source = "schedule.timesPerWeek")
-  @Mapping(target = "scheduleTimesPerMonth", source = "schedule.timesPerMonth")
-  @Mapping(target = "scheduleWeeksOfMonth", source = "schedule.weeksOfMonth")
-  @Mapping(target = "createdAt", ignore = true)
-  @Mapping(target = "updatedAt", ignore = true)
-  @Mapping(target = "version", ignore = true)
-  @Mapping(target = "updatedAtExplicitlySet", ignore = true)
-  @Mapping(target = "lastReminderSentAt", ignore = true)
+  @HabitEntityMappings
   void applyCreate(HabitCreateRequestDto request, @MappingTarget HabitEntity entity);
 
   @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
-  @Mapping(target = "id", ignore = true)
-  @Mapping(target = "userId", ignore = true)
-  @Mapping(target = "scheduleType", source = "schedule.type")
-  @Mapping(target = "scheduleWeekdays", source = "schedule.weekdays")
-  @Mapping(target = "scheduleTimesPerWeek", source = "schedule.timesPerWeek")
-  @Mapping(target = "scheduleTimesPerMonth", source = "schedule.timesPerMonth")
-  @Mapping(target = "scheduleWeeksOfMonth", source = "schedule.weeksOfMonth")
-  @Mapping(target = "createdAt", ignore = true)
-  @Mapping(target = "updatedAt", ignore = true)
-  @Mapping(target = "version", ignore = true)
-  @Mapping(target = "updatedAtExplicitlySet", ignore = true)
-  @Mapping(target = "lastReminderSentAt", ignore = true)
+  @HabitEntityMappings
   void applyUpdate(HabitUpdateRequestDto request, @MappingTarget HabitEntity entity);
 
   @Mapping(target = "schedule", expression = "java(toSchedule(entity))")

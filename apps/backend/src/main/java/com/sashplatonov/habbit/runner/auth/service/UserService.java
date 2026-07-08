@@ -31,10 +31,24 @@ public class UserService {
     return createdUser;
   }
 
+  public UserEntity findUserByEmail(String email) {
+    return findByEmail(email);
+  }
+
+  public UserEntity findRequiredUserById(String userId) {
+    return findRequiredById(userId);
+  }
+
   protected UserEntity findByEmail(String email) {
     return userRepository == null
         ? UserEntity.<UserEntity>find("email", email).firstResult()
         : userRepository.findByEmail(email);
+  }
+
+  protected UserEntity findRequiredById(String userId) {
+    return userRepository == null
+        ? UserEntity.findById(userId)
+        : userRepository.findRequiredById(userId);
   }
 
   protected UserEntity createUser(String email) {

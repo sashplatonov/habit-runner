@@ -94,17 +94,17 @@ class RepositoryCoverageTest extends AuthenticatedApiTestSupport {
 
     inTransaction(() -> {
       var firstHabit = new HabitEntity();
-      firstHabit.id = UUID.randomUUID().toString();
-      firstHabit.userId = userId;
-      firstHabit.name = "Morning Run";
+      firstHabit.setId(UUID.randomUUID().toString());
+      firstHabit.setUserId(userId);
+      firstHabit.setName("Morning Run");
       firstHabit.setFrequency(HabitFrequency.DAILY);
       firstHabit.setColor(HabitColor.BLUE);
-      firstHabit.icon = "run";
-      firstHabit.dailyTarget = 1;
-      firstHabit.targetStreak = 0;
-      firstHabit.archived = false;
+      firstHabit.setIcon("run");
+      firstHabit.setDailyTarget(1);
+      firstHabit.setTargetStreak(0);
+      firstHabit.setArchived(false);
       firstHabit.setType(HabitType.POSITIVE);
-      firstHabit.version = 1;
+      firstHabit.setVersion(1);
       firstHabit.setSortOrder(BigInteger.ZERO);
       firstHabit.setCreatedAt(firstUpdatedAt);
       firstHabit.setUpdatedAt(firstUpdatedAt);
@@ -157,7 +157,7 @@ class RepositoryCoverageTest extends AuthenticatedApiTestSupport {
       assertEquals(2, checkinRepository.findPageForUser(userId, null, null, 10).size());
       assertEquals(1, checkinRepository.findPageForUser(userId, firstUpdatedAt, firstCheckin.getId(), 10).size());
       assertEquals(1L, checkinRepository.deleteByHabitIdUserIdAndDate(firstHabit.getId(), userId, LocalDate.of(2026, 4, 10)));
-      assertEquals(1L, checkinRepository.deleteByHabitIdAndUserId(firstHabit.id, userId));
+      assertEquals(1L, checkinRepository.deleteByHabitIdAndUserId(firstHabit.getId(), userId));
       assertEquals(1L, habitRepository.deleteByIdAndUserId(secondHabit.getId(), userId));
     });
   }

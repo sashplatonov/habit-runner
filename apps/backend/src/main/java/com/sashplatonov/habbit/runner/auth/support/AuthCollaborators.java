@@ -43,7 +43,7 @@ public class AuthCollaborators {
   public UserService getUserService() {
     return userService;
   }
-  
+
   public RefreshTokenEntity requireActiveRefreshToken(String token) {
     return refreshTokenService.requireActive(token);
   }
@@ -74,6 +74,14 @@ public class AuthCollaborators {
 
   public String exchangeCodeForEmail(String code) {
     return oauthSupport.exchangeCodeForEmail(code);
+  }
+
+  public UserEntity findUserByEmail(String email) {
+    return userService.findUserByEmail(email);
+  }
+
+  public UserEntity findRequiredUserById(String userId) {
+    return userService.findRequiredUserById(userId);
   }
 
   public UserEntity findOrCreateUser(String email) {

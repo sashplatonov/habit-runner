@@ -1,8 +1,8 @@
 package com.sashplatonov.habbit.runner.habit;
 
 import com.sashplatonov.habbit.runner.api.ErrorResponse;
+import com.sashplatonov.habbit.runner.api.AuthenticatedResourceSupport;
 import com.sashplatonov.habbit.runner.api.OperationFailure;
-import com.sashplatonov.habbit.runner.api.OperationResult;
 import com.sashplatonov.habbit.runner.api.OperationSuccess;
 import com.sashplatonov.habbit.runner.auth.security.CurrentUserContext;
 import com.sashplatonov.habbit.runner.auth.security.RequireAuth;
@@ -39,13 +39,12 @@ import java.util.List;
 @RequireAuth
 @Tag(name = "Habits")
 @Slf4j
-public class HabitResource {
+public class HabitResource extends AuthenticatedResourceSupport {
   private final HabitService habitService;
-  private final CurrentUserContext currentUserContext;
 
   public HabitResource(HabitService habitService, CurrentUserContext currentUserContext) {
+    super(currentUserContext);
     this.habitService = habitService;
-    this.currentUserContext = currentUserContext;
   }
 
   @GET
@@ -57,8 +56,7 @@ public class HabitResource {
           content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
   })
   public List<HabitResponseDto> findAll() {
-    var userId = currentUserContext.requireUser().id();
-    return habitService.findAll(userId);
+    return habitService.findAll(currentUserId());
   }
 
   @POST
@@ -74,44 +72,27 @@ public class HabitResource {
           content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
   })
   public Response create(@Valid @NotNull HabitCreateRequestDto body) {
-    var userId = currentUserContext.requireUser().id();
-    return toResponse(habitService.create(userId, body), Response.Status.CREATED);
+    return toResponse(habitService.create(currentUserId(), body), Response.Status.CREATED);
   }
 
   @PUT
   @Path("/{habitId}")
   @Operation(summary = "Update habit", description = "Updates a habit with a concrete domain-specific request DTO.")
-  @APIResponses({
-      @APIResponse(responseCode = "200", description = "Habit updated",
-          content = @Content(schema = @Schema(implementation = HabitResponseDto.class))),
-      @APIResponse(responseCode = "400", description = "Validation failed",
-          content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
-      @APIResponse(responseCode = "403", description = "Authentication required",
-          content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
-      @APIResponse(responseCode = "404", description = "Habit not found",
-          content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
-  })
+  @APIResponse(responseCode = "200", description = "Habit updated",
+      content = @Content(schema = @Schema(implementation = HabitResponseDto.class)))
+  @HabitMutationErrorResponses
   public Response update(@PathParam("habitId") String habitId, @Valid @NotNull HabitUpdateRequestDto body) {
-    var userId = currentUserContext.requireUser().id();
-    return toResponse(habitService.update(userId, habitId, body), Response.Status.OK);
+    return toResponse(habitService.update(currentUserId(), habitId, body), Response.Status.OK);
   }
 
   @PATCH
   @Path("/{habitId}/status")
   @Operation(summary = "Update habit status", description = "Toggles the habit archive status using a dedicated request DTO.")
-  @APIResponses({
-      @APIResponse(responseCode = "200", description = "Habit status updated",
-          content = @Content(schema = @Schema(implementation = HabitResponseDto.class))),
-      @APIResponse(responseCode = "400", description = "Validation failed",
-          content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
-      @APIResponse(responseCode = "403", description = "Authentication required",
-          content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
-      @APIResponse(responseCode = "404", description = "Habit not found",
-          content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
-  })
+  @APIResponse(responseCode = "200", description = "Habit status updated",
+      content = @Content(schema = @Schema(implementation = HabitResponseDto.class)))
+  @HabitMutationErrorResponses
   public Response updateStatus(@PathParam("habitId") String habitId, @Valid @NotNull HabitStatusUpdateRequestDto body) {
-    var userId = currentUserContext.requireUser().id();
-    return toResponse(habitService.updateStatus(userId, habitId, body), Response.Status.OK);
+    return toResponse(habitService.updateStatus(currentUserId(), habitId, body), Response.Status.OK);
   }
 
   @DELETE
@@ -125,21 +106,11 @@ public class HabitResource {
           content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
   })
   public Response delete(@PathParam("habitId") String habitId) {
-    var userId = currentUserContext.requireUser().id();
-    var result = habitService.delete(userId, habitId);
+    var result = habitService.delete(currentUserId(), habitId);
     if (result instanceof OperationSuccess<Void>) {
       return Response.noContent().build();
     }
     var failure = (OperationFailure<Void>) result;
     return Response.status(failure.toErrorResponse().status()).entity(failure.toErrorResponse()).build();
-  }
-
-  private <T> Response toResponse(OperationResult<T> result, Response.Status status) {
-    if (result instanceof OperationSuccess<T> success) {
-      return Response.status(status).entity(success.value()).build();
-    }
-    var failure = (OperationFailure<T>) result;
-    var error = failure.toErrorResponse();
-    return Response.status(error.status()).entity(error).build();
   }
 }

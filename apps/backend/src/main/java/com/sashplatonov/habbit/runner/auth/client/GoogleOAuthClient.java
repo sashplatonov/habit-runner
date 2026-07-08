@@ -2,6 +2,7 @@ package com.sashplatonov.habbit.runner.auth.client;
 
 import com.sashplatonov.habbit.runner.auth.config.AuthConfig;
 import com.sashplatonov.habbit.runner.infrastructure.http.TraceContextSupport;
+import com.sashplatonov.habbit.runner.metrics.instrumentation.ServiceMetric;
 import com.sashplatonov.habbit.runner.metrics.instrumentation.ServiceMetricsInstrumentation;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -18,6 +19,7 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
+import io.micrometer.core.instrument.Timer;
 
 @ApplicationScoped
 @Slf4j
@@ -86,45 +88,21 @@ public class GoogleOAuthClient {
   }
 
   public String exchangeCodeForEmail(String code, String callbackUrl) {
-    var sample = serviceMetricsInstrumentation == null ? null : serviceMetricsInstrumentation.startGoogleOAuthExchange();
+    var sample = startGoogleOAuthExchange();
     var success = false;
     try {
       var accessToken = exchangeCodeForAccessToken(code, callbackUrl);
       var email = fetchEmail(accessToken);
       success = true;
       return email;
-    } catch (NotAuthorizedException | BadRequestException exception) {
-      if (serviceMetricsInstrumentation != null) {
-        serviceMetricsInstrumentation.recordOAuthGoogleFailure();
-      }
-      throw exception;
     } catch (IOException exception) {
-      if (serviceMetricsInstrumentation != null) {
-        serviceMetricsInstrumentation.recordOAuthGoogleFailure();
-      }
-      log.error(
-          "Google OAuth exchange failed: provider=google, traceId={}, stage=network-io, error={}",
-          TraceContextSupport.traceIdOrUnknown(),
-          exception.getMessage(),
-          exception
-      );
-      throw new NotAuthorizedException("OAuth exchange error: " + exception.getMessage(), exception);
+      recordOAuthFailure();
+      throw logAndWrapIOException(exception);
     } catch (InterruptedException exception) {
-      if (serviceMetricsInstrumentation != null) {
-        serviceMetricsInstrumentation.recordOAuthGoogleFailure();
-      }
-      Thread.currentThread().interrupt();
-      log.error(
-          "Google OAuth exchange failed: provider=google, traceId={}, stage=interrupted, error={}",
-          TraceContextSupport.traceIdOrUnknown(),
-          exception.getMessage(),
-          exception
-      );
-      throw new NotAuthorizedException("OAuth exchange interrupted", exception);
+      recordOAuthFailure();
+      throw logAndWrapInterrupted(exception);
     } finally {
-      if (sample != null) {
-        serviceMetricsInstrumentation.stopGoogleOAuthExchange(sample, success);
-      }
+      finishGoogleOAuthExchange(sample, success);
     }
   }
 
@@ -242,6 +220,43 @@ public class GoogleOAuthClient {
           elapsedMs,
           SLOW_OAUTH_CALL_THRESHOLD_MS
       );
+    }
+  }
+
+  private Timer.Sample startGoogleOAuthExchange() {
+    return serviceMetricsInstrumentation == null ? null : serviceMetricsInstrumentation.startGoogleOAuthExchange();
+  }
+
+  private void finishGoogleOAuthExchange(Timer.Sample sample, boolean success) {
+    if (sample != null) {
+      serviceMetricsInstrumentation.stopGoogleOAuthExchange(sample, success);
+    }
+  }
+
+  private RuntimeException logAndWrapIOException(IOException exception) {
+    log.error(
+        "Google OAuth exchange failed: provider=google, traceId={}, stage=network-io, error={}",
+        TraceContextSupport.traceIdOrUnknown(),
+        exception.getMessage(),
+        exception
+    );
+    return new NotAuthorizedException("OAuth exchange error: " + exception.getMessage(), exception);
+  }
+
+  private RuntimeException logAndWrapInterrupted(InterruptedException exception) {
+    Thread.currentThread().interrupt();
+    log.error(
+        "Google OAuth exchange failed: provider=google, traceId={}, stage=interrupted, error={}",
+        TraceContextSupport.traceIdOrUnknown(),
+        exception.getMessage(),
+        exception
+    );
+    return new NotAuthorizedException("OAuth exchange interrupted", exception);
+  }
+
+  private void recordOAuthFailure() {
+    if (serviceMetricsInstrumentation != null) {
+      serviceMetricsInstrumentation.record(ServiceMetric.OAUTH_GOOGLE_FAILURE);
     }
   }
 

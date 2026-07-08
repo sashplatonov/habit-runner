@@ -1,7 +1,6 @@
 package com.sashplatonov.habbit.runner.auth.service;
 
 import com.sashplatonov.habbit.runner.auth.access.OAuthStateAccess;
-import com.sashplatonov.habbit.runner.auth.access.UserAccess;
 import com.sashplatonov.habbit.runner.auth.config.AuthConfig;
 import com.sashplatonov.habbit.runner.auth.security.CurrentUser;
 import com.sashplatonov.habbit.runner.auth.support.AuthCollaborators;
@@ -9,6 +8,7 @@ import com.sashplatonov.habbit.runner.auth.support.OAuthCallbackSession;
 import com.sashplatonov.habbit.runner.auth.support.AuthSupport;
 import com.sashplatonov.habbit.runner.auth.dto.TokenResponse;
 import com.sashplatonov.habbit.runner.infrastructure.http.TraceContextSupport;
+import com.sashplatonov.habbit.runner.metrics.instrumentation.ServiceMetric;
 import com.sashplatonov.habbit.runner.metrics.instrumentation.ServiceMetricsInstrumentation;
 import com.sashplatonov.habbit.runner.model.OAuthStateEntity;
 import com.sashplatonov.habbit.runner.model.UserEntity;
@@ -27,47 +27,44 @@ public class AuthService {
 
   protected final AuthConfig authConfig;
   protected final AuthCollaborators collaborators;
-  protected final UserAccess userAccess;
   protected final OAuthStateAccess oauthStateAccess;
   protected final ServiceMetricsInstrumentation serviceMetricsInstrumentation;
 
   AuthService() {
-    this(null, null, null, null, null);
+    this(null, null, null, null);
   }
 
   protected AuthService(AuthConfig authConfig, AuthCollaborators collaborators) {
-    this(authConfig, collaborators, null, null, null);
+    this(authConfig, collaborators, null, null);
   }
 
   @Inject
   public AuthService(
       AuthConfig authConfig,
       AuthCollaborators collaborators,
-      UserAccess userAccess,
       OAuthStateAccess oauthStateAccess,
       ServiceMetricsInstrumentation serviceMetricsInstrumentation
   ) {
     this.authConfig = authConfig;
     this.collaborators = collaborators;
-    this.userAccess = userAccess;
     this.oauthStateAccess = oauthStateAccess;
     this.serviceMetricsInstrumentation = serviceMetricsInstrumentation;
   }
 
   @Transactional
   public TokenResponse login(String email) {
-    var user = userAccess().findByEmail(email);
+    var user = findUserByEmail(email);
     if (user == null) {
       log.warn("Login rejected: authMethod=email, traceId={}, reason=unknown-user", TraceContextSupport.traceIdOrUnknown());
       if (serviceMetricsInstrumentation != null) {
-        serviceMetricsInstrumentation.recordAuthLoginFailureEmail();
+        serviceMetricsInstrumentation.record(ServiceMetric.AUTH_LOGIN_FAILURE_EMAIL);
       }
       throw new NotAuthorizedException("Unknown user");
     }
     var session = issueTokenPair(user);
     log.info("Login succeeded: userId={}, authMethod=email, traceId={}", user.getId(), TraceContextSupport.traceIdOrUnknown());
     if (serviceMetricsInstrumentation != null) {
-      serviceMetricsInstrumentation.recordAuthLoginSuccessEmail();
+      serviceMetricsInstrumentation.record(ServiceMetric.AUTH_LOGIN_SUCCESS_EMAIL);
     }
     return session;
   }
@@ -83,7 +80,7 @@ public class AuthService {
         TraceContextSupport.traceIdOrUnknown()
     );
     if (serviceMetricsInstrumentation != null) {
-      serviceMetricsInstrumentation.recordAuthRefreshSuccess();
+      serviceMetricsInstrumentation.record(ServiceMetric.AUTH_REFRESH_SUCCESS);
     }
     return new TokenResponse(accessToken, record.token, authConfig.accessTokenTtlSeconds(), "Bearer");
   }
@@ -137,7 +134,7 @@ public class AuthService {
         TraceContextSupport.traceIdOrUnknown()
     );
     if (serviceMetricsInstrumentation != null) {
-      serviceMetricsInstrumentation.recordAuthLoginSuccessGoogle();
+      serviceMetricsInstrumentation.record(ServiceMetric.AUTH_LOGIN_SUCCESS_GOOGLE);
     }
     return new OAuthCallbackSession(collaborators.buildCallbackRedirect(stateEntity.returnTo), session);
   }
@@ -167,7 +164,7 @@ public class AuthService {
   }
 
   protected UserEntity requireUserById(String userId) {
-    var user = userAccess().findRequiredById(userId);
+    var user = findRequiredUserById(userId);
     if (user == null) {
       log.warn(
           "Refresh token rejected: userId={}, traceId={}, reason=user-not-found",
@@ -179,8 +176,12 @@ public class AuthService {
     return user;
   }
 
-  protected UserAccess userAccess() {
-    return userAccess;
+  protected UserEntity findUserByEmail(String email) {
+    return collaborators.findUserByEmail(email);
+  }
+
+  protected UserEntity findRequiredUserById(String userId) {
+    return collaborators.findRequiredUserById(userId);
   }
 
   protected OAuthStateAccess oauthStateAccess() {

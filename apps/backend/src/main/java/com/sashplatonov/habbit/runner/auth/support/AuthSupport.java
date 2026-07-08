@@ -6,14 +6,14 @@ import java.security.SecureRandom;
 import java.util.HexFormat;
 
 public final class AuthSupport {
+  private static final ThreadLocal<SecureRandom> SECURE_RANDOM = ThreadLocal.withInitial(SecureRandom::new);
+
   private AuthSupport() {
   }
 
   public static String randomToken(int bytes) {
-    // Create SecureRandom on each call to avoid storing in GraalVM image heap
-    var random = new SecureRandom();
     var bytesArray = new byte[bytes];
-    random.nextBytes(bytesArray);
+    SECURE_RANDOM.get().nextBytes(bytesArray);
     return HexFormat.of().formatHex(bytesArray);
   }
 

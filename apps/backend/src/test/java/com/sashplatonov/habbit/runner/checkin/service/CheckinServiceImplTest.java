@@ -1,14 +1,13 @@
 package com.sashplatonov.habbit.runner.checkin.service;
 
 import com.sashplatonov.habbit.runner.api.OperationFailure;
-import com.sashplatonov.habbit.runner.api.OperationResult;
 import com.sashplatonov.habbit.runner.api.OperationSuccess;
 import com.sashplatonov.habbit.runner.checkin.CheckinMapper;
 import com.sashplatonov.habbit.runner.checkin.CheckinServiceImpl;
 import com.sashplatonov.habbit.runner.checkin.dto.CheckinResponseDto;
 import com.sashplatonov.habbit.runner.checkin.dto.CheckinUpsertRequestDto;
+import com.sashplatonov.habbit.runner.checkin.support.CheckinMutationCoordinator;
 import com.sashplatonov.habbit.runner.habit.dto.HabitResponseDto;
-import com.sashplatonov.habbit.runner.metrics.instrumentation.ServiceMetricsInstrumentation;
 import com.sashplatonov.habbit.runner.model.CheckinEntity;
 import com.sashplatonov.habbit.runner.model.HabitColor;
 import com.sashplatonov.habbit.runner.model.HabitEntity;
@@ -24,7 +23,6 @@ import java.math.BigInteger;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
-import java.util.function.Supplier;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
@@ -38,13 +36,11 @@ class CheckinServiceImplTest {
   private final CheckinRepository checkinRepository = mock(CheckinRepository.class);
   private final HabitRepository habitRepository = mock(HabitRepository.class);
   private final CheckinMapper checkinMapper = mock(CheckinMapper.class);
-  private final ServiceMetricsInstrumentation metrics = mock(ServiceMetricsInstrumentation.class);
-  private final CheckinServiceImpl service = new CheckinServiceImpl(checkinRepository, habitRepository, checkinMapper, metrics);
+  private final CheckinMutationCoordinator coordinator = new CheckinMutationCoordinator();
+  private final CheckinServiceImpl service = new CheckinServiceImpl(checkinRepository, habitRepository, checkinMapper, coordinator);
 
   @BeforeEach
   void setUp() {
-    when(metrics.measureMutation(ArgumentMatchers.<Supplier<OperationResult<?>> >any()))
-        .thenAnswer(invocation -> invocation.<Supplier<OperationResult<?>>>getArgument(0).get());
     doAnswer(invocation -> response("checkin-1")).when(checkinMapper).toResponse(ArgumentMatchers.any());
   }
 
@@ -154,17 +150,17 @@ class CheckinServiceImplTest {
     var entity = new HabitEntity();
     entity.setId("habit-1");
     entity.setUserId("user-1");
-    entity.name = "Read";
-    entity.color = HabitColor.BLUE;
-    entity.icon = "book";
-    entity.frequency = HabitFrequency.DAILY;
-    entity.targetStreak = 1;
-    entity.dailyTarget = 1;
-    entity.tags = List.of();
-    entity.createdAt = Instant.parse("2026-04-10T10:00:00Z");
-    entity.updatedAt = Instant.parse("2026-04-10T10:00:00Z");
-    entity.sortOrder = BigInteger.ONE;
-    entity.type = HabitType.POSITIVE;
+    entity.setName("Read");
+    entity.setColor(HabitColor.BLUE);
+    entity.setIcon("book");
+    entity.setFrequency(HabitFrequency.DAILY);
+    entity.setTargetStreak(1);
+    entity.setDailyTarget(1);
+    entity.setTags(List.of());
+    entity.setCreatedAt(Instant.parse("2026-04-10T10:00:00Z"));
+    entity.setUpdatedAt(Instant.parse("2026-04-10T10:00:00Z"));
+    entity.setSortOrder(BigInteger.ONE);
+    entity.setType(HabitType.POSITIVE);
     return entity;
   }
 

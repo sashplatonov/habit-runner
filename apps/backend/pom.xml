@@ -285,6 +285,9 @@
                     <printFailingErrors>true</printFailingErrors>
                     <linkXRef>false</linkXRef>
                     <includeTests>false</includeTests>
+                    <excludeRoots>
+                        <excludeRoot>${project.build.directory}/generated-sources</excludeRoot>
+                    </excludeRoots>
                     <rulesets>
                         <ruleset>pmd/ruleset.xml</ruleset>
                     </rulesets>

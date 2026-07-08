@@ -29,7 +29,21 @@ public enum WeekOfMonthValue {
     if (rawValue instanceof Number number) {
       return fromNumber(number.intValue());
     }
-    var normalized = rawValue.toString().trim().toLowerCase();
+    return fromText(rawValue.toString());
+  }
+
+  private static WeekOfMonthValue fromNumber(int value) {
+    return switch (value) {
+      case 1 -> FIRST;
+      case 2 -> SECOND;
+      case 3 -> THIRD;
+      case 4 -> FOURTH;
+      default -> null;
+    };
+  }
+
+  private static WeekOfMonthValue fromText(String rawValue) {
+    var normalized = rawValue.trim().toLowerCase();
     if (normalized.isEmpty()) {
       return null;
     }
@@ -39,16 +53,6 @@ public enum WeekOfMonthValue {
       case "3" -> THIRD;
       case "4" -> FOURTH;
       case "last" -> LAST;
-      default -> null;
-    };
-  }
-
-  private static WeekOfMonthValue fromNumber(int value) {
-    return switch (value) {
-      case 1 -> FIRST;
-      case 2 -> SECOND;
-      case 3 -> THIRD;
-      case 4 -> FOURTH;
       default -> null;
     };
   }

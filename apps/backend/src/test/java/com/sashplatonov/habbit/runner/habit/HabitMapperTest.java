@@ -62,7 +62,7 @@ class HabitMapperTest {
     entity.setVersion(1);
     entity.setSortOrder(BigInteger.valueOf(11));
 
-    assertEquals("Read", entity.name);
+    assertEquals("Read", entity.getName());
     assertEquals(HabitScheduleType.WEEKLY_DAYS, entity.getScheduleType());
     assertEquals(List.of(1, 3, 5), entity.getScheduleWeekdays());
     assertEquals(3, entity.getScheduleTimesPerWeek());
@@ -98,7 +98,7 @@ class HabitMapperTest {
 
     habitMapper.applyCreate(request, entity);
 
-    assertEquals("Walk", entity.name);
+    assertEquals("Walk", entity.getName());
     assertNull(entity.getScheduleType());
     assertNull(entity.getScheduleWeekdays());
     assertNull(entity.getScheduleWeeksOfMonth());
@@ -157,25 +157,25 @@ class HabitMapperTest {
 
     habitMapper.applyUpdate(request, entity);
 
-    assertEquals("Read more", entity.name);
-    assertEquals("Updated reading plan", entity.description);
-    assertEquals(HabitColor.GREEN, entity.color);
-    assertEquals("book-open", entity.icon);
-    assertEquals(HabitFrequency.WEEKDAYS, entity.frequency);
+    assertEquals("Read more", entity.getName());
+    assertEquals("Updated reading plan", entity.getDescription());
+    assertEquals(HabitColor.GREEN, entity.getColor());
+    assertEquals("book-open", entity.getIcon());
+    assertEquals(HabitFrequency.WEEKDAYS, entity.getFrequency());
     assertEquals(List.of(2, 4), entity.getCustomDays());
     assertEquals(HabitScheduleType.WEEKLY_DAYS, entity.getScheduleType());
     assertEquals(List.of(1, 3, 5), entity.getScheduleWeekdays());
     assertEquals(3, entity.getScheduleTimesPerWeek());
     assertEquals(12, entity.getScheduleTimesPerMonth());
     assertEquals(List.of(WeekOfMonthValue.FIRST, WeekOfMonthValue.THIRD), entity.getScheduleWeeksOfMonth());
-    assertEquals(9, entity.targetStreak);
-    assertEquals(4, entity.dailyTarget);
+    assertEquals(9, entity.getTargetStreak());
+    assertEquals(4, entity.getDailyTarget());
     assertEquals(List.of("focus", "health"), entity.getTags());
-    assertEquals(true, entity.archived);
+    assertEquals(true, entity.isArchived());
     assertEquals(BigInteger.valueOf(21), entity.getSortOrder());
-    assertEquals("08:15", entity.reminderTime);
-    assertEquals(false, entity.reminderEnabled);
-    assertEquals(HabitType.NEGATIVE, entity.type);
+    assertEquals("08:15", entity.getReminderTime());
+    assertEquals(false, entity.isReminderEnabled());
+    assertEquals(HabitType.NEGATIVE, entity.getType());
     assertEquals(List.of("2026-04-11"), entity.getFreezeDays());
   }
 
@@ -184,20 +184,20 @@ class HabitMapperTest {
     var entity = new HabitEntity();
     entity.setId("habit-1");
     entity.setUserId("user-1");
-    entity.name = "Read";
-    entity.description = "Daily reading";
-    entity.color = HabitColor.BLUE;
-    entity.icon = "book";
-    entity.frequency = HabitFrequency.DAILY;
-    entity.targetStreak = 7;
-    entity.dailyTarget = 2;
-    entity.tags = List.of("focus");
-    entity.archived = false;
-    entity.sortOrder = BigInteger.valueOf(11);
-    entity.reminderTime = "07:30";
-    entity.reminderEnabled = true;
-    entity.type = HabitType.POSITIVE;
-    entity.freezeDays = List.of("2026-04-10");
+    entity.setName("Read");
+    entity.setDescription("Daily reading");
+    entity.setColor(HabitColor.BLUE);
+    entity.setIcon("book");
+    entity.setFrequency(HabitFrequency.DAILY);
+    entity.setTargetStreak(7);
+    entity.setDailyTarget(2);
+    entity.setTags(List.of("focus"));
+    entity.setArchived(false);
+    entity.setSortOrder(BigInteger.valueOf(11));
+    entity.setReminderTime("07:30");
+    entity.setReminderEnabled(true);
+    entity.setType(HabitType.POSITIVE);
+    entity.setFreezeDays(List.of("2026-04-10"));
     entity.setScheduleType(HabitScheduleType.DAILY);
     entity.setScheduleWeekdays(List.of());
 
@@ -208,10 +208,10 @@ class HabitMapperTest {
 
     habitMapper.applyUpdate(request, entity);
 
-    assertEquals("Read more", entity.name);
-    assertEquals("Daily reading", entity.description);
-    assertEquals(HabitColor.BLUE, entity.color);
-    assertEquals(true, entity.archived);
+    assertEquals("Read more", entity.getName());
+    assertEquals("Daily reading", entity.getDescription());
+    assertEquals(HabitColor.BLUE, entity.getColor());
+    assertEquals(true, entity.isArchived());
     assertNull(habitMapper.toResponse(new HabitEntity()).schedule());
   }
 }

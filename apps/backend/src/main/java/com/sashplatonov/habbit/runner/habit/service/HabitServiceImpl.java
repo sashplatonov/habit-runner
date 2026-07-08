@@ -8,6 +8,7 @@ import com.sashplatonov.habbit.runner.habit.dto.HabitStatusUpdateRequestDto;
 import com.sashplatonov.habbit.runner.habit.dto.HabitUpdateRequestDto;
 import com.sashplatonov.habbit.runner.model.HabitEntity;
 import com.sashplatonov.habbit.runner.habit.support.HabitMutationSupport;
+import com.sashplatonov.habbit.runner.metrics.instrumentation.ServiceMetric;
 import com.sashplatonov.habbit.runner.metrics.instrumentation.ServiceMetricsInstrumentation;
 import com.sashplatonov.habbit.runner.repository.CheckinRepository;
 import com.sashplatonov.habbit.runner.repository.HabitRepository;
@@ -68,7 +69,7 @@ public class HabitServiceImpl implements HabitService {
       HabitMutationSupport.touch(habit);
       if (existing == null) {
         habitRepository.save(habit);
-        serviceMetricsInstrumentation.recordHabitCreated();
+        serviceMetricsInstrumentation.record(ServiceMetric.HABIT_CREATED);
       }
       return OperationResult.success(habitMapper.toResponse(habit));
     });
@@ -88,7 +89,7 @@ public class HabitServiceImpl implements HabitService {
       HabitMutationSupport.normalize(habit);
       HabitMutationSupport.touch(habit);
       if (serviceMetricsInstrumentation != null) {
-        serviceMetricsInstrumentation.recordHabitUpdated();
+        serviceMetricsInstrumentation.record(ServiceMetric.HABIT_UPDATED);
       }
       return OperationResult.success(habitMapper.toResponse(habit));
     });
@@ -131,7 +132,7 @@ public class HabitServiceImpl implements HabitService {
         ));
       }
       if (serviceMetricsInstrumentation != null) {
-        serviceMetricsInstrumentation.recordHabitDeleted();
+        serviceMetricsInstrumentation.record(ServiceMetric.HABIT_DELETED);
       }
       return OperationResult.success(null);
     });

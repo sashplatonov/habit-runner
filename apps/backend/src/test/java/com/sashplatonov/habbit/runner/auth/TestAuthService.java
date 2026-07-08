@@ -1,7 +1,6 @@
 package com.sashplatonov.habbit.runner.auth;
 
 import com.sashplatonov.habbit.runner.auth.access.OAuthStateAccess;
-import com.sashplatonov.habbit.runner.auth.access.UserAccess;
 import com.sashplatonov.habbit.runner.auth.client.GoogleOAuthClient;
 import com.sashplatonov.habbit.runner.auth.config.AuthConfig;
 import com.sashplatonov.habbit.runner.auth.resource.AuthResource;
@@ -16,7 +15,6 @@ import com.sashplatonov.habbit.runner.auth.security.RequireAuth;
 import com.sashplatonov.habbit.runner.auth.service.AuthService;
 import com.sashplatonov.habbit.runner.auth.service.PreferencesService;
 import com.sashplatonov.habbit.runner.auth.service.RefreshTokenService;
-import com.sashplatonov.habbit.runner.auth.service.UserService;
 import com.sashplatonov.habbit.runner.auth.support.AuthCollaborators;
 import com.sashplatonov.habbit.runner.auth.support.AuthCookieBuilder;
 import com.sashplatonov.habbit.runner.auth.support.AuthSupport;
@@ -67,18 +65,13 @@ final class TestAuthService extends AuthService {
   }
 
   @Override
-  protected UserAccess userAccess() {
-    return new UserAccess() {
-      @Override
-      public UserEntity findByEmail(String email) {
-        return userByEmail;
-      }
+  protected UserEntity findUserByEmail(String email) {
+    return userByEmail;
+  }
 
-      @Override
-      public UserEntity findRequiredById(String userId) {
-        return userById;
-      }
-    };
+  @Override
+  protected UserEntity findRequiredUserById(String userId) {
+    return userById;
   }
 
   @Override

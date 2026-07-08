@@ -7,6 +7,7 @@ import com.sashplatonov.habbit.runner.notification.dto.PushSubscriptionRequest;
 import com.sashplatonov.habbit.runner.notification.dto.SubscriptionStatusResponse;
 import com.sashplatonov.habbit.runner.notification.dto.VapidPublicKeyResponse;
 import com.sashplatonov.habbit.runner.infrastructure.http.TraceContextSupport;
+import com.sashplatonov.habbit.runner.metrics.instrumentation.ServiceMetric;
 import com.sashplatonov.habbit.runner.metrics.instrumentation.ServiceMetricsInstrumentation;
 import com.sashplatonov.habbit.runner.repository.PushSubscriptionRepository;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -88,7 +89,7 @@ public class NotificationServiceImpl implements NotificationService {
       entity.auth = request.keys().auth();
       pushSubscriptionRepository.save(entity);
       if (serviceMetricsInstrumentation != null) {
-        serviceMetricsInstrumentation.recordPushSubscriptionCreated();
+        serviceMetricsInstrumentation.record(ServiceMetric.PUSH_SUBSCRIPTION_CREATED);
       }
       log.debug(
           "event=push_subscription_saved userId={} traceId={} endpoint={} created=true",
@@ -139,7 +140,7 @@ public class NotificationServiceImpl implements NotificationService {
       return OperationResult.success(null);
     }
     if (serviceMetricsInstrumentation != null) {
-      serviceMetricsInstrumentation.recordPushSubscriptionDeleted();
+      serviceMetricsInstrumentation.record(ServiceMetric.PUSH_SUBSCRIPTION_DELETED);
     }
     log.debug(
         "event=push_subscription_removed userId={} traceId={} endpoint={} removed=true",

@@ -1,8 +1,8 @@
 package com.sashplatonov.habbit.runner.checkin;
 
 import com.sashplatonov.habbit.runner.api.ErrorResponse;
+import com.sashplatonov.habbit.runner.api.AuthenticatedResourceSupport;
 import com.sashplatonov.habbit.runner.api.OperationFailure;
-import com.sashplatonov.habbit.runner.api.OperationResult;
 import com.sashplatonov.habbit.runner.api.OperationSuccess;
 import com.sashplatonov.habbit.runner.auth.security.CurrentUserContext;
 import com.sashplatonov.habbit.runner.auth.security.RequireAuth;
@@ -33,13 +33,12 @@ import java.util.List;
 @Consumes(MediaType.APPLICATION_JSON)
 @RequireAuth
 @Tag(name = "Checkins")
-public class CheckinResource {
+public class CheckinResource extends AuthenticatedResourceSupport {
   private final CheckinService checkinService;
-  private final CurrentUserContext currentUserContext;
 
   public CheckinResource(CheckinService checkinService, CurrentUserContext currentUserContext) {
+    super(currentUserContext);
     this.checkinService = checkinService;
-    this.currentUserContext = currentUserContext;
   }
 
   @GET
@@ -51,8 +50,7 @@ public class CheckinResource {
           content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
   })
   public List<CheckinResponseDto> findAll() {
-    var userId = currentUserContext.requireUser().id();
-    return checkinService.findAll(userId);
+    return checkinService.findAll(currentUserId());
   }
 
   @PUT
@@ -71,8 +69,7 @@ public class CheckinResource {
       @PathParam("date") String date,
       @Valid @NotNull CheckinUpsertRequestDto body
   ) {
-    var userId = currentUserContext.requireUser().id();
-    return toResponse(checkinService.upsert(userId, habitId, date, body), Response.Status.OK);
+    return toResponse(checkinService.upsert(currentUserId(), habitId, date, body), Response.Status.OK);
   }
 
   @DELETE
@@ -86,21 +83,11 @@ public class CheckinResource {
           content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
   })
   public Response delete(@PathParam("habitId") String habitId, @PathParam("date") String date) {
-    var userId = currentUserContext.requireUser().id();
-    var result = checkinService.delete(userId, habitId, date);
+    var result = checkinService.delete(currentUserId(), habitId, date);
     if (result instanceof OperationSuccess<Void>) {
       return Response.noContent().build();
     }
     var failure = (OperationFailure<Void>) result;
     return Response.status(failure.toErrorResponse().status()).entity(failure.toErrorResponse()).build();
-  }
-
-  private <T> Response toResponse(OperationResult<T> result, Response.Status status) {
-    if (result instanceof OperationSuccess<T> success) {
-      return Response.status(status).entity(success.value()).build();
-    }
-    var failure = (OperationFailure<T>) result;
-    var error = failure.toErrorResponse();
-    return Response.status(error.status()).entity(error).build();
   }
 }

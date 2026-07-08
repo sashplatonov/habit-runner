@@ -16,27 +16,21 @@ public final class HabitMutationSupport {
   }
 
   public static void normalize(HabitEntity habit) {
-    if (habit.getColor() == null) {
-      habit.setColor(HabitColor.BLUE);
-    }
-    if (habit.getIcon() == null) {
-      habit.setIcon(DEFAULT_ICON);
-    }
-    if (habit.getFrequency() == null) {
-      habit.setFrequency(HabitFrequency.DAILY);
-    }
-    if (habit.getTargetStreak() < 1) {
-      habit.setTargetStreak(1);
-    }
-    if (habit.getDailyTarget() < 1) {
-      habit.setDailyTarget(1);
-    }
-    if (habit.getSortOrder() == null) {
-      habit.setSortOrder(BigInteger.ZERO);
-    }
-    if (habit.getType() == null) {
-      habit.setType(HabitType.POSITIVE);
-    }
+    applyScalarDefaults(habit);
+    applyCollectionDefaults(habit);
+    applyVersionDefault(habit);
+  }
+
+  private static void applyScalarDefaults(HabitEntity habit) {
+    applyColorDefault(habit);
+    applyIconDefault(habit);
+    applyFrequencyDefault(habit);
+    applyTargetDefaults(habit);
+    applySortOrderDefault(habit);
+    applyTypeDefault(habit);
+  }
+
+  private static void applyCollectionDefaults(HabitEntity habit) {
     if (habit.getCustomDays() == null) {
       habit.setCustomDays(List.of());
     }
@@ -46,6 +40,9 @@ public final class HabitMutationSupport {
     if (habit.getFreezeDays() == null) {
       habit.setFreezeDays(List.of());
     }
+  }
+
+  private static void applyVersionDefault(HabitEntity habit) {
     if (habit.getVersion() < 1) {
       habit.setVersion(1);
     }
@@ -54,5 +51,44 @@ public final class HabitMutationSupport {
   public static void touch(HabitEntity habit) {
     habit.setUpdatedAt(Instant.now());
     habit.setVersion(Math.max(1, habit.getVersion()) + 1);
+  }
+
+  private static void applyColorDefault(HabitEntity habit) {
+    if (habit.getColor() == null) {
+      habit.setColor(HabitColor.BLUE);
+    }
+  }
+
+  private static void applyIconDefault(HabitEntity habit) {
+    if (habit.getIcon() == null) {
+      habit.setIcon(DEFAULT_ICON);
+    }
+  }
+
+  private static void applyFrequencyDefault(HabitEntity habit) {
+    if (habit.getFrequency() == null) {
+      habit.setFrequency(HabitFrequency.DAILY);
+    }
+  }
+
+  private static void applyTargetDefaults(HabitEntity habit) {
+    if (habit.getTargetStreak() < 1) {
+      habit.setTargetStreak(1);
+    }
+    if (habit.getDailyTarget() < 1) {
+      habit.setDailyTarget(1);
+    }
+  }
+
+  private static void applySortOrderDefault(HabitEntity habit) {
+    if (habit.getSortOrder() == null) {
+      habit.setSortOrder(BigInteger.ZERO);
+    }
+  }
+
+  private static void applyTypeDefault(HabitEntity habit) {
+    if (habit.getType() == null) {
+      habit.setType(HabitType.POSITIVE);
+    }
   }
 }
