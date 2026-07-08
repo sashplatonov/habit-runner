@@ -53,7 +53,7 @@ class RepositoryCoverageTest extends AuthenticatedApiTestSupport {
 
     inTransaction(() -> {
       var user = new UserEntity();
-      user.email = email;
+      user.setEmail(email);
       userRepository.save(user);
 
       var state = new OAuthStateEntity();
@@ -63,21 +63,21 @@ class RepositoryCoverageTest extends AuthenticatedApiTestSupport {
       oAuthStateRepository.save(state);
 
       var refresh = new RefreshTokenEntity();
-      refresh.token = refreshToken;
-      refresh.userId = user.id;
-      refresh.revoked = false;
+      refresh.setToken(refreshToken);
+      refresh.setUserId(user.getId());
+      refresh.setRevoked(false);
       refresh.setExpiry(Instant.now().plusSeconds(600));
       refreshTokenRepository.save(refresh);
 
       var subscription = new PushSubscriptionEntity();
-      subscription.userId = user.id;
-      subscription.endpoint = endpoint;
-      subscription.p256dh = "p256dh";
-      subscription.auth = "auth";
+      subscription.setUserId(user.getId());
+      subscription.setEndpoint(endpoint);
+      subscription.setP256dh("p256dh");
+      subscription.setAuth("auth");
       pushSubscriptionRepository.save(subscription);
 
       assertNotNull(userRepository.findByEmail(email));
-      assertNotNull(userRepository.findRequiredById(user.id));
+      assertNotNull(userRepository.findRequiredById(user.getId()));
       assertNotNull(oAuthStateRepository.findById(stateId));
       assertNotNull(refreshTokenRepository.findByToken(refreshToken));
       assertNotNull(pushSubscriptionRepository.findByEndpoint(endpoint));

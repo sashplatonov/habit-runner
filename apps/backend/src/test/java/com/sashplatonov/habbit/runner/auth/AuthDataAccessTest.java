@@ -64,7 +64,7 @@ class AuthDataAccessTest extends AuthenticatedApiTestSupport {
     var user = createAuthenticatedUser("mint");
     inTransaction(() -> {
       var entity = UserEntity.<UserEntity>findById(user.id());
-      entity.timezone = "Europe/Berlin";
+      entity.setTimezone("Europe/Berlin");
     });
 
     var response = new PreferencesService().getUserPreferences(user.id());
@@ -83,7 +83,7 @@ class AuthDataAccessTest extends AuthenticatedApiTestSupport {
 
     assertEquals("sakura", response.theme());
     assertEquals("America/New_York", response.timezone());
-    assertEquals("sakura", UserEntity.<UserEntity>findById(user.id()).theme);
+    assertEquals("sakura", UserEntity.<UserEntity>findById(user.id()).getTheme());
   }
 
   @Test
@@ -91,7 +91,7 @@ class AuthDataAccessTest extends AuthenticatedApiTestSupport {
     var user = createAuthenticatedUser("cloud");
     inTransaction(() -> {
       var entity = UserEntity.<UserEntity>findById(user.id());
-      entity.timezone = "Europe/Paris";
+      entity.setTimezone("Europe/Paris");
     });
 
     var response = inTransaction(() -> new PreferencesService().updateUserPreferences(
@@ -101,7 +101,7 @@ class AuthDataAccessTest extends AuthenticatedApiTestSupport {
 
     assertEquals("cloud", response.theme());
     assertNull(response.timezone());
-    assertNull(UserEntity.<UserEntity>findById(user.id()).timezone);
+    assertNull(UserEntity.<UserEntity>findById(user.id()).getTimezone());
   }
 
   @Test
@@ -122,8 +122,8 @@ class AuthDataAccessTest extends AuthenticatedApiTestSupport {
     var email = UUID.randomUUID() + "@example.test";
     var user = inTransaction(() -> new UserService().findOrCreateUser(email));
 
-    assertEquals(email, user.email);
-    assertEquals("cloud", user.theme);
+    assertEquals(email, user.getEmail());
+    assertEquals("cloud", user.getTheme());
   }
 
   @Test
@@ -131,8 +131,8 @@ class AuthDataAccessTest extends AuthenticatedApiTestSupport {
     var email = UUID.randomUUID() + "@example.test";
     var existing = inTransaction(() -> {
       var entity = new UserEntity();
-      entity.email = email;
-      entity.theme = "cloud";
+      entity.setEmail(email);
+      entity.setTheme("cloud");
       entity.markCreatedAt(Instant.now());
       entity.persist();
       return entity;

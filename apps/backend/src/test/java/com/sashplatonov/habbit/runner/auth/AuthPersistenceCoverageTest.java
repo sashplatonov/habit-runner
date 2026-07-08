@@ -79,7 +79,7 @@ class AuthPersistenceCoverageTest extends AuthenticatedApiTestSupport {
     });
 
     var token = "refresh-" + UUID.randomUUID();
-    var createdToken = inTransaction(() -> refreshTokenService.create(token, user.id, 30));
+    var createdToken = inTransaction(() -> refreshTokenService.create(token, user.getId(), 30));
     var active = inTransaction(() -> refreshTokenService.requireActive(token));
     inTransaction(() -> refreshTokenService.revoke(token));
     RefreshTokenEntity stored = inTransaction(() -> {
@@ -129,15 +129,15 @@ class AuthPersistenceCoverageTest extends AuthenticatedApiTestSupport {
       entity.setEmail(UUID.randomUUID() + "@example.test");
       entity.setTheme("cloud");
       entity.persist();
-      return entity.id;
+      return entity.getId();
     });
     var token = "refresh-" + UUID.randomUUID();
 
     inTransaction(() -> {
       var entity = new RefreshTokenEntity();
-      entity.token = token;
-      entity.userId = userId;
-      entity.revoked = false;
+      entity.setToken(token);
+      entity.setUserId(userId);
+      entity.setRevoked(false);
       entity.setCreatedAt(initialCreatedAt);
       entity.setUpdatedAt(initialUpdatedAt);
       entity.setExpiry(Instant.parse("2026-05-09T08:00:00Z"));
@@ -150,28 +150,28 @@ class AuthPersistenceCoverageTest extends AuthenticatedApiTestSupport {
 
     assertEquals(initialCreatedAt, stored.createdAtValue());
     assertTrue(stored.updatedAtValue().isAfter(initialUpdatedAt));
-    assertTrue(stored.revoked);
+    assertTrue(stored.isRevoked());
   }
 
   @Test
   void shouldReadAndUpdatePreferencesThroughRealPersistenceService() throws Exception {
     var user = inTransaction(() -> {
       var entity = new UserEntity();
-      entity.email = UUID.randomUUID() + "@example.test";
-      entity.theme = "unsupported-theme";
-      entity.timezone = "Europe/Berlin";
+      entity.setEmail(UUID.randomUUID() + "@example.test");
+      entity.setTheme("unsupported-theme");
+      entity.setTimezone("Europe/Berlin");
       entity.markCreatedAt(Instant.now());
       entity.persist();
       return entity;
     });
 
-    var current = inTransaction(() -> preferencesService.getUserPreferences(user.id));
+    var current = inTransaction(() -> preferencesService.getUserPreferences(user.getId()));
     var updated = inTransaction(() -> preferencesService.updateUserPreferences(
-        user.id,
+        user.getId(),
         new UpdatePreferencesRequest("matrix", " ")
     ));
     var unchangedTimezone = inTransaction(() -> preferencesService.updateUserPreferences(
-        user.id,
+        user.getId(),
         new UpdatePreferencesRequest("matrix", null)
     ));
 

@@ -15,12 +15,12 @@ import java.util.UUID;
 public abstract class UuidAuditedEntityBase extends AuditedEntityBase {
   @Id
   @Column(nullable = false)
-  public String id;
+  private String id;
 
   @PrePersist
   void prePersistUuidId() {
-    if (!hasText(id)) {
-      id = UUID.randomUUID().toString();
+    if (!hasText(getId())) {
+      setId(UUID.randomUUID().toString());
     }
   }
 

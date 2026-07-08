@@ -72,17 +72,17 @@ public class AuthService {
   @Transactional
   public TokenResponse refreshToken(String token) {
     var record = collaborators.requireActiveRefreshToken(token);
-    var user = requireUserById(record.userId);
-    var accessToken = collaborators.createAccessToken(user.getId(), user.email, authConfig.accessTokenTtlSeconds());
+    var user = requireUserById(record.getUserId());
+    var accessToken = collaborators.createAccessToken(user.getId(), user.getEmail(), authConfig.accessTokenTtlSeconds());
     log.info(
         "Access token refreshed: userId={}, authMethod=refresh-token, traceId={}",
-        record.userId,
+        record.getUserId(),
         TraceContextSupport.traceIdOrUnknown()
     );
     if (serviceMetricsInstrumentation != null) {
       serviceMetricsInstrumentation.record(ServiceMetric.AUTH_REFRESH_SUCCESS);
     }
-    return new TokenResponse(accessToken, record.token, authConfig.accessTokenTtlSeconds(), "Bearer");
+    return new TokenResponse(accessToken, record.getToken(), authConfig.accessTokenTtlSeconds(), "Bearer");
   }
 
   @Transactional
@@ -144,7 +144,7 @@ public class AuthService {
   }
 
   private TokenResponse issueTokenPair(UserEntity user) {
-    var accessToken = collaborators.createAccessToken(user.getId(), user.email, authConfig.accessTokenTtlSeconds());
+    var accessToken = collaborators.createAccessToken(user.getId(), user.getEmail(), authConfig.accessTokenTtlSeconds());
     var refreshToken = collaborators.createRefreshToken(
         AuthSupport.randomToken(32),
         user.getId(),

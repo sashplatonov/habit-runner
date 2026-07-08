@@ -53,9 +53,9 @@ class AuthRefreshTest extends AuthenticatedApiTestSupport {
 
   private String insertRefreshToken(boolean revoked, Instant expiresAt) throws Exception {
     var rt = new RefreshTokenEntity();
-    rt.userId = userId;
-    rt.token = UUID.randomUUID().toString();
-    rt.revoked = revoked;
+    rt.setUserId(userId);
+    rt.setToken(UUID.randomUUID().toString());
+    rt.setRevoked(revoked);
     rt.setExpiry(expiresAt);
     inTransaction(() -> {
       rt.persist();

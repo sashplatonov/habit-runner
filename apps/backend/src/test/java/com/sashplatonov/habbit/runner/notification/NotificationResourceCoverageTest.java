@@ -89,8 +89,8 @@ VAPID_PUBLIC_KEY=
 
     var stored = PushSubscriptionEntity.<PushSubscriptionEntity>find("endpoint", endpoint).firstResult();
     assertEquals(1L, PushSubscriptionEntity.count("endpoint", endpoint));
-    assertEquals("first", stored.p256dh);
-    assertEquals("first", stored.auth);
+    assertEquals("first", stored.getP256dh());
+    assertEquals("first", stored.getAuth());
   }
 
   @Test

@@ -14,16 +14,16 @@ import java.time.Instant;
 @Setter
 public class RefreshTokenEntity extends UuidAuditedEntityBase {
   @Column(nullable = false, unique = true)
-  public String token;
+  private String token;
 
   @Column(name = "userId", nullable = false)
-  public String userId;
+  private String userId;
 
   @Column(nullable = false)
-  public boolean revoked;
+  private boolean revoked;
 
   @Column(name = "expiresAt", nullable = false)
-  public Instant expiresAt;
+  private Instant expiresAt;
 
   public String getToken() {
     return token;
@@ -58,18 +58,18 @@ public class RefreshTokenEntity extends UuidAuditedEntityBase {
   }
 
   public boolean isActiveAt(Instant instant) {
-    return !revoked && !expiresAt.isBefore(instant);
+    return !isRevoked() && !getExpiresAt().isBefore(instant);
   }
 
   public void revoke() {
-    revoked = true;
+    setRevoked(true);
   }
 
   public void setExpiry(Instant instant) {
-    expiresAt = instant;
+    setExpiresAt(instant);
   }
 
   public String tokenValue() {
-    return token;
+    return getToken();
   }
 }

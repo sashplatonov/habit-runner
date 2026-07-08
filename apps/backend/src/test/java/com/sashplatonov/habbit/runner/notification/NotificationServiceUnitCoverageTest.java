@@ -54,8 +54,8 @@ class NotificationServiceUnitCoverageTest {
     assertEquals(new SubscriptionStatusResponse(true), assertInstanceOf(SubscriptionStatusResponse.class, alreadyOwned.value()));
 
     var foreign = new PushSubscriptionEntity();
-    foreign.userId = "other-user";
-    foreign.endpoint = request.endpoint();
+    foreign.setUserId("other-user");
+    foreign.setEndpoint(request.endpoint());
     repository.setExisting(foreign);
     var subscribeConflict = assertInstanceOf(OperationFailure.class, service.subscribe("user-1", request));
     var subscribeErr = subscribeConflict.toErrorResponse();

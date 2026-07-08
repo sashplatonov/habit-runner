@@ -19,13 +19,13 @@ import java.time.Instant;
 @Setter
 public abstract class AuditedEntityBase extends PanacheEntityBase {
   @Column(name = "createdAt", nullable = false, updatable = false)
-  public Instant createdAt;
+  private Instant createdAt;
 
   @Column(name = "updatedAt", nullable = false)
-  public Instant updatedAt;
+  private Instant updatedAt;
 
   @Transient
-  public boolean updatedAtExplicitlySet;
+  private boolean updatedAtExplicitlySet;
 
   // Methods for test compatibility
   public Instant createdAtValue() {

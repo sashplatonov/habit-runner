@@ -29,7 +29,7 @@ public final class StubPushSubscriptionRepository extends PushSubscriptionReposi
   @Override
   public long deleteByEndpointAndUserId(String endpoint, String userId) {
     deletedEndpoint = endpoint;
-    if (existing != null && userId.equals(existing.userId) && endpoint.equals(existing.endpoint)) {
+    if (existing != null && userId.equals(existing.getUserId()) && endpoint.equals(existing.getEndpoint())) {
       existing = null;
       return 1L;
     }
@@ -49,11 +49,11 @@ public final class StubPushSubscriptionRepository extends PushSubscriptionReposi
   }
 
   public String getSavedUserId() {
-    return savedEntity == null ? null : savedEntity.userId;
+    return savedEntity == null ? null : savedEntity.getUserId();
   }
 
   public String getSavedEndpoint() {
-    return savedEntity == null ? null : savedEntity.endpoint;
+    return savedEntity == null ? null : savedEntity.getEndpoint();
   }
 
   public void promoteSavedToExisting() {

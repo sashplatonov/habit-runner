@@ -26,22 +26,22 @@ import java.time.LocalDate;
 @Data
 public class CheckinEntity extends UuidAuditedEntityBase {
   @Column(name = "habitId", nullable = false)
-  public String habitId;
+  private String habitId;
 
   @Column(name = "userId", nullable = false)
-  public String userId;
+  private String userId;
 
   @Column(nullable = false)
-  public LocalDate date;
+  private LocalDate date;
 
   @Column(nullable = false)
-  public boolean done;
+  private boolean done;
 
   @Column(nullable = false)
-  public int count;
+  private int count;
 
   @Column(nullable = false)
-  public int version;
+  private int version;
 
   @PrePersist
   void prePersist() {

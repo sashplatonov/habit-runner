@@ -15,18 +15,18 @@ import java.time.Instant;
 @Setter
 public class UserEntity extends UuidAuditedEntityBase {
   @Column(nullable = false, unique = true)
-  public String email;
+  private String email;
 
   @Column(nullable = false)
-  public String theme;
+  private String theme;
 
   @Column
-  public String timezone;
+  private String timezone;
 
   @PrePersist
   void prePersist() {
-    if (theme == null || theme.isBlank()) {
-      theme = "cloud";
+    if (getTheme() == null || getTheme().isBlank()) {
+      setTheme("cloud");
     }
   }
 

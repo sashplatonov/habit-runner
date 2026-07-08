@@ -53,7 +53,7 @@ public class UserService {
 
   protected UserEntity createUser(String email) {
     var user = new UserEntity();
-    user.email = email;
+    user.setEmail(email);
     if (userRepository != null) {
       userRepository.save(user);
     } else {

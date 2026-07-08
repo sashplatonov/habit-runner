@@ -135,6 +135,6 @@ class AuthThemeResourceTest extends AuthenticatedApiTestSupport {
   private void assertStoredTheme(String expectedTheme) {
     var user = UserEntity.<UserEntity>findById(userId);
     assertNotNull(user);
-    assertEquals(expectedTheme, user.theme);
+    assertEquals(expectedTheme, user.getTheme());
   }
 }

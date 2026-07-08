@@ -45,7 +45,7 @@ class AuthModelEntityTest {
     user.markCreatedAt(createdAt);
     runPrePersist(user);
 
-    user.theme = "matrix";
+    user.setTheme("matrix");
     user.preUpdateAudit();
 
     var updatedAt = user.updatedAtValue();
@@ -72,7 +72,7 @@ class AuthModelEntityTest {
   @Test
   void shouldRevokeRefreshTokenAndExposeTokenValueWhenRequested() {
     var token = new RefreshTokenEntity();
-    token.token = "refresh-token";
+    token.setToken("refresh-token");
     token.setExpiry(Instant.now().minusSeconds(60));
 
     token.revoke();
@@ -104,9 +104,9 @@ class AuthModelEntityTest {
 
     assertFalse(state.isExpiredAt(Instant.parse("2026-04-09T11:59:59Z")));
     assertTrue(state.isExpiredAt(Instant.parse("2026-04-09T12:00:01Z")));
-    assertNotNull(state.createdAt);
-    assertNotNull(state.updatedAt);
-    assertEquals(state.createdAt, state.updatedAt);
+    assertNotNull(state.getCreatedAt());
+    assertNotNull(state.getUpdatedAt());
+    assertEquals(state.getCreatedAt(), state.getUpdatedAt());
   }
 
   private void runPrePersist(UserEntity entity) {

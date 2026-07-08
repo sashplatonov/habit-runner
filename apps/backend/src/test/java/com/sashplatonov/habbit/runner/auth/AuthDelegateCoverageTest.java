@@ -91,8 +91,8 @@ class AuthDelegateCoverageTest {
         new RecordingUserService()
     );
     var user = new UserEntity();
-    user.id = "user-1";
-    user.email = "user@example.test";
+    user.setId("user-1");
+    user.setEmail("user@example.test");
 
     var tokenResponse = collaborators.issueTokenPair(user, 7200, 45);
 

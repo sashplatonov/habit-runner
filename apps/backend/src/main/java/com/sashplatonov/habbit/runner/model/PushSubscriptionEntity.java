@@ -12,16 +12,16 @@ import lombok.Setter;
 @Setter
 public class PushSubscriptionEntity extends UuidAuditedEntityBase {
   @Column(name = "userId", nullable = false)
-  public String userId;
+  private String userId;
 
   @Column(nullable = false, unique = true)
-  public String endpoint;
+  private String endpoint;
 
   @Column(nullable = false)
-  public String p256dh;
+  private String p256dh;
 
   @Column(nullable = false)
-  public String auth;
+  private String auth;
 
   public String getUserId() {
     return userId;

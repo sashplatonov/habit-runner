@@ -36,15 +36,15 @@ public class RefreshTokenService {
     var record = findByToken(token);
     if (record != null) {
       record.revoke();
-      log.info("event=auth_token_revoked, userId={}", record.userId);
+      log.info("event=auth_token_revoked, userId={}", record.getUserId());
     }
   }
 
   public String create(String token, String userId, int refreshTokenDays) {
     var refresh = newRefreshToken();
-    refresh.token = token;
-    refresh.userId = userId;
-    refresh.revoked = false;
+    refresh.setToken(token);
+    refresh.setUserId(userId);
+    refresh.setRevoked(false);
     refresh.setExpiry(now().plusSeconds((long) refreshTokenDays * 24 * 60 * 60));
     persistRefreshToken(refresh);
     return token;

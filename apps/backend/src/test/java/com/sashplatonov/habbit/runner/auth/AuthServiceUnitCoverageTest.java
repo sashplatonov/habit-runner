@@ -51,7 +51,7 @@ class AuthServiceUnitCoverageTest {
     var user = user("user-1", "user@example.test");
     service.setUserByEmail(user);
 
-    var tokenResponse = service.login(user.email);
+    var tokenResponse = service.login(user.getEmail());
 
     assertEquals("access::user-1::user@example.test::3600", tokenResponse.accessToken());
     assertEquals("refresh::user-1::30", tokenResponse.refreshToken());
@@ -70,8 +70,8 @@ class AuthServiceUnitCoverageTest {
     var collaborators = new StubCollaborators();
     var service = new TestAuthService(collaborators);
     var refreshRecord = new RefreshTokenEntity();
-    refreshRecord.token = "refresh-token";
-    refreshRecord.userId = "user-1";
+    refreshRecord.setToken("refresh-token");
+    refreshRecord.setUserId("user-1");
     collaborators.setActiveRefreshToken(refreshRecord);
     service.setUserById(user("user-1", "user@example.test"));
 
@@ -86,8 +86,8 @@ class AuthServiceUnitCoverageTest {
     var collaborators = new StubCollaborators();
     var service = new TestAuthService(collaborators);
     var refreshRecord = new RefreshTokenEntity();
-    refreshRecord.token = "refresh-token";
-    refreshRecord.userId = "missing-user";
+    refreshRecord.setToken("refresh-token");
+    refreshRecord.setUserId("missing-user");
     collaborators.setActiveRefreshToken(refreshRecord);
 
     assertThrows(NotAuthorizedException.class, () -> service.refreshToken("refresh-token"));
@@ -189,9 +189,9 @@ class AuthServiceUnitCoverageTest {
     var service = new TestRefreshTokenService();
     service.setCurrentTime(Instant.parse("2026-04-10T14:00:00Z"));
     var active = new RefreshTokenEntity();
-    active.token = "refresh-token";
-    active.userId = "user-1";
-    active.revoked = false;
+    active.setToken("refresh-token");
+    active.setUserId("user-1");
+    active.setRevoked(false);
     active.setExpiry(Instant.parse("2026-04-10T14:05:00Z"));
     service.setRecordByToken(active);
 
@@ -200,11 +200,11 @@ class AuthServiceUnitCoverageTest {
     var created = service.create("new-refresh", "user-1", 30);
 
     assertEquals(active, required);
-    assertTrue(active.revoked);
+    assertTrue(active.isRevoked());
     assertEquals("new-refresh", created);
     assertNotNull(service.getPersistedRecord());
-    assertEquals("user-1", service.getPersistedRecord().userId);
-    assertEquals(Instant.parse("2026-05-10T14:00:00Z"), service.getPersistedRecord().expiresAt);
+    assertEquals("user-1", service.getPersistedRecord().getUserId());
+    assertEquals(Instant.parse("2026-05-10T14:00:00Z"), service.getPersistedRecord().getExpiresAt());
   }
 
   @Test
@@ -215,9 +215,9 @@ class AuthServiceUnitCoverageTest {
     assertThrows(NotAuthorizedException.class, () -> service.requireActive("missing"));
 
     var expired = new RefreshTokenEntity();
-    expired.token = "expired-token";
-    expired.userId = "user-1";
-    expired.revoked = false;
+    expired.setToken("expired-token");
+    expired.setUserId("user-1");
+    expired.setRevoked(false);
     expired.setExpiry(Instant.parse("2026-04-10T13:59:59Z"));
     service.setRecordByToken(expired);
 
@@ -237,8 +237,8 @@ class AuthServiceUnitCoverageTest {
   void shouldReadAndUpdatePreferencesThroughOverriddenLookup() {
     var service = new TestPreferencesService();
     var user = user("user-1", "user@example.test");
-    user.theme = "unsupported-theme";
-    user.timezone = "Europe/Berlin";
+    user.setTheme("unsupported-theme");
+    user.setTimezone("Europe/Berlin");
     service.setUserById(user);
 
     var current = service.getUserPreferences("user-1");
@@ -248,15 +248,15 @@ class AuthServiceUnitCoverageTest {
     assertEquals("Europe/Berlin", current.timezone());
     assertEquals("sakura", updated.theme());
     assertNull(updated.timezone());
-    assertNull(user.timezone);
+    assertNull(user.getTimezone());
   }
 
   @Test
   void shouldKeepExistingTimezoneWhenPreferencesUpdateDoesNotProvideTimezone() {
     var service = new TestPreferencesService();
     var user = user("user-1", "user@example.test");
-    user.theme = "cloud";
-    user.timezone = "Europe/Paris";
+    user.setTheme("cloud");
+    user.setTimezone("Europe/Paris");
     service.setUserById(user);
 
     var updated = service.updateUserPreferences("user-1", new UpdatePreferencesRequest("matrix", null));
@@ -291,15 +291,15 @@ class AuthServiceUnitCoverageTest {
     var created = creatingService.findOrCreateUser("new@example.test");
 
     assertNotNull(created);
-    assertEquals("new@example.test", created.email);
+    assertEquals("new@example.test", created.getEmail());
     assertTrue(creatingService.isCreateInvoked());
   }
 
   static UserEntity user(String id, String email) {
     var user = new UserEntity();
-    user.id = id;
-    user.email = email;
-    user.theme = "cloud";
+    user.setId(id);
+    user.setEmail(email);
+    user.setTheme("cloud");
     return user;
   }
 }

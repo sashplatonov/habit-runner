@@ -65,7 +65,7 @@ public class NotificationServiceImpl implements NotificationService {
   @Override
   public OperationResult<SubscriptionStatusResponse> subscribe(String userId, PushSubscriptionRequest request) {
     var existing = pushSubscriptionRepository.findByEndpoint(request.endpoint());
-    if (existing != null && !userId.equals(existing.userId)) {
+    if (existing != null && !userId.equals(existing.getUserId())) {
       log.warn(
           "event=push_subscription_rejected userId={} traceId={} reason=endpoint_owned_by_another_user",
           userId,
@@ -83,10 +83,10 @@ public class NotificationServiceImpl implements NotificationService {
     }
     if (existing == null) {
       var entity = new PushSubscriptionEntity();
-      entity.userId = userId;
-      entity.endpoint = request.endpoint();
-      entity.p256dh = request.keys().p256dh();
-      entity.auth = request.keys().auth();
+      entity.setUserId(userId);
+      entity.setEndpoint(request.endpoint());
+      entity.setP256dh(request.keys().p256dh());
+      entity.setAuth(request.keys().auth());
       pushSubscriptionRepository.save(entity);
       if (serviceMetricsInstrumentation != null) {
         serviceMetricsInstrumentation.record(ServiceMetric.PUSH_SUBSCRIPTION_CREATED);
@@ -113,7 +113,7 @@ public class NotificationServiceImpl implements NotificationService {
     var deleted = pushSubscriptionRepository.deleteByEndpointAndUserId(request.endpoint(), userId);
     if (deleted == 0) {
       var existing = pushSubscriptionRepository.findByEndpoint(request.endpoint());
-      if (existing != null && !userId.equals(existing.userId)) {
+      if (existing != null && !userId.equals(existing.getUserId())) {
         log.warn(
             "event=push_subscription_unsubscribe_rejected userId={} traceId={} reason=endpoint_owned_by_another_user",
             userId,

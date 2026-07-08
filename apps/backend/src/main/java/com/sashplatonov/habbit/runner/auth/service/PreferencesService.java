@@ -33,7 +33,7 @@ public class PreferencesService {
     if (user == null) {
       throw new NotAuthorizedException("User no longer exists");
     }
-    return new UserPreferencesResponse(ThemeCatalog.normalize(user.theme), user.timezone);
+    return new UserPreferencesResponse(ThemeCatalog.normalize(user.getTheme()), user.getTimezone());
   }
 
   @Transactional
@@ -42,20 +42,20 @@ public class PreferencesService {
     if (user == null) {
       throw new NotAuthorizedException("User no longer exists");
     }
-    var previousTheme = ThemeCatalog.normalize(user.theme);
-    var previousTimezone = user.timezone;
+    var previousTheme = ThemeCatalog.normalize(user.getTheme());
+    var previousTimezone = user.getTimezone();
 
-      user.theme = ThemeCatalog.normalize(request.theme());
+    user.setTheme(ThemeCatalog.normalize(request.theme()));
     if (request.timezone() != null) {
-      user.timezone = request.timezone().isBlank() ? null : request.timezone();
+      user.setTimezone(request.timezone().isBlank() ? null : request.timezone());
     }
     log.info(
         "User preferences updated: userId={}, themeChanged={}, timezoneChanged={}",
         user.getId(),
-        !Objects.equals(previousTheme, user.theme),
-        !Objects.equals(previousTimezone, user.timezone)
+        !Objects.equals(previousTheme, user.getTheme()),
+        !Objects.equals(previousTimezone, user.getTimezone())
     );
-    return new UserPreferencesResponse(user.theme, user.timezone);
+    return new UserPreferencesResponse(user.getTheme(), user.getTimezone());
   }
 
   protected UserEntity findUserById(String userId) {
