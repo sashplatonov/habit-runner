@@ -6,6 +6,9 @@ on:
     branches:
       - main
 
+permissions:
+  contents: read
+
 jobs:
   verify-backend:
     runs-on: ubuntu-latest
@@ -39,6 +42,42 @@ jobs:
             apps/backend/target/spotbugs.xml
             apps/backend/target/spotbugsXml.xml
           if-no-files-found: ignore
+
+  security-backend:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run backend security scan
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          scan-type: fs
+          scan-ref: apps/backend
+          scanners: vuln,secret,misconfig
+          ignore-unfixed: true
+          exit-code: '1'
+          severity: HIGH,CRITICAL
+          skip-dirs: target
+
+  security-frontend:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run frontend security scan
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          scan-type: fs
+          scan-ref: apps/web
+          scanners: vuln,secret,misconfig
+          ignore-unfixed: true
+          exit-code: '1'
+          severity: HIGH,CRITICAL
+          skip-dirs: node_modules,dist,.svelte-kit,coverage,.vite
 
   verify-frontend:
     runs-on: ubuntu-latest

@@ -14,8 +14,9 @@
 
 The current checkout includes:
 - `.github/renovate.json`
+- `.github/workflows/quality.yml` with backend verify, frontend verify, and Trivy security scans
 
-The current checkout does not include committed GitHub Actions workflows for Trivy or other CI automation, so treat those flows as manual or planned work rather than active guarantees.
+The current checkout now treats Trivy as an active CI gate rather than a manual-only check.
 
 [↑ Back to top](#top)
 
@@ -50,7 +51,7 @@ Review expectation:
 
 ## 🛡️ Security scanning <a name="security-scanning"></a>
 
-There is no committed Trivy workflow in this repository right now.
+Trivy now runs in GitHub Actions for both application trees.
 
 Manual examples:
 
@@ -60,7 +61,11 @@ trivy image habbit-runner-web:latest
 trivy image habbit-runner-api:latest
 ```
 
-If you add automated scanning later, update this doc together with:
+The workflow scans:
+- `apps/web` for frontend code, lockfiles, and Dockerfile misconfigurations;
+- `apps/backend` for backend code, Maven metadata, and Dockerfile misconfigurations.
+
+If you extend the automated scanning later, update this doc together with:
 - workflow files in `.github/workflows`;
 - rollout or remediation instructions;
 - any required secrets or SARIF upload steps.
