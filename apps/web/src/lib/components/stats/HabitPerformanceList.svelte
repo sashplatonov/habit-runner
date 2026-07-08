@@ -61,7 +61,7 @@
           <button
             type="button"
             class="flex min-w-0 flex-1 items-center gap-3 text-left"
-            onclick={() => void goto(resolve('/app/(protected)/habit/[id]', { id: entry.habit.id }))}
+            onclick={() => void goto(resolve<'/app/(protected)/habit/[id]'>('/app/(protected)/habit/[id]', { id: entry.habit.id }))}
           >
             <span class="w-4 shrink-0 text-[10px] font-mono text-muted">{i + 1}</span>
             <span class="text-base">{entry.habit.icon}</span>

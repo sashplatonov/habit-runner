@@ -3,7 +3,7 @@
   import { formatHabitLabel } from '$lib/habits/formatHabitLabel';
   import type { Habit } from '@/types/habit';
   import { HABIT_COLOR_THEMES } from '$lib/theme/habit-colors';
-  import type { PeriodOption } from '$lib/stats/statsPage';
+  import type { HabitPeriodDataRow, PeriodOption } from '$lib/stats/statsPage';
   import {
     buildQuarterTickMeta,
     formatQuarterWeekLabel,
@@ -11,7 +11,7 @@
   } from '$lib/stats/statsCharts';
 
   type Props = {
-    habitPeriodData: Array<Record<string, string | number>>;
+    habitPeriodData: HabitPeriodDataRow[];
     filteredHabits: Habit[];
     hiddenHabits: string[];
     toggleHabitVisibility: (name: string) => void;

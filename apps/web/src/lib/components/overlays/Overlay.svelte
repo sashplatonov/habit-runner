@@ -1,12 +1,13 @@
 <script lang="ts">
   import { portal } from '$lib/actions/portal';
+  import type { Snippet } from 'svelte';
   import { openOverlay, closeActiveOverlay } from './overlayManager';
 
   type Props = {
     open: boolean;
     triggerEl?: HTMLElement | null;
     onClose: () => void;
-    children: () => any;
+    children: Snippet;
     role?: string;
     ariaLabel?: string;
     ariaModal?: boolean;

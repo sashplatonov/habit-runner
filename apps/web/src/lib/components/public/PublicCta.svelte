@@ -1,9 +1,11 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
+  import { resolve } from '$app/paths';
+  import type { RouteIdWithSearchOrHash } from '$app/types';
   import type { Snippet } from 'svelte';
 
   type Props = {
-    href?: string;
+    href?: RouteIdWithSearchOrHash;
     onclick?: () => void;
     variant?: 'primary' | 'secondary' | 'ghost';
     size?: 'sm' | 'md' | 'lg';
@@ -15,7 +17,7 @@
 
   function handleClick() {
     if (href) {
-      void goto(href);
+      void goto(resolve(href, {}));
     } else if (onclick) {
       onclick();
     }

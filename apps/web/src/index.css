@@ -1,6 +1,23 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+
+@theme {
+  --font-sans: 'Sora', sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+  --color-bg-primary: var(--bg-primary);
+  --color-bg-secondary: var(--bg-secondary);
+  --color-bg-card: var(--bg-card);
+  --color-border: var(--border);
+  --color-border-hover: var(--border-hover);
+  --color-foreground: var(--text-primary);
+  --color-muted: var(--text-muted);
+  --color-accent: var(--accent);
+  --color-accent-secondary: var(--accent-secondary);
+  --shadow-glow-blue: 0 0 20px rgba(0, 212, 255, 0.3);
+  --shadow-glow-green: 0 0 20px rgba(0, 255, 136, 0.3);
+  --shadow-glow-blue-sm: 0 0 10px rgba(0, 212, 255, 0.25);
+  --shadow-glow-green-sm: 0 0 10px rgba(0, 255, 136, 0.25);
+  --animate-pulse-slow: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
 
 /* Global focus-visible contract */
 *:focus-visible {

@@ -15,7 +15,7 @@ This hub tracks the current repository shape and links to the operator and engin
 
 ## 🎯 Project snapshot <a name="project-snapshot"></a>
 
-- Frontend: `apps/web` with React 19, Vite, PWA support, Dexie-based offline storage, and Vitest tests.
+- Frontend: `apps/web` with Svelte 5, SvelteKit 2, Vite, PWA support, Dexie-based offline storage, and Vitest tests.
 - Shared web DTOs: `apps/web/packages/shared`.
 - Backend: `apps/backend` with Quarkus, Panache, Flyway, PostgreSQL, Google OAuth, sync, notifications, and metrics endpoints.
 - Deployment baseline: root `docker-compose.yml` plus optional `docker-compose.local.yml`.

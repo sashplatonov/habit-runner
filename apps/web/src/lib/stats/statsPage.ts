@@ -20,6 +20,10 @@ export type DailyDataPoint = {
   rate: number;
 };
 
+export type HabitPeriodDataRow = {
+  period: string;
+} & Record<string, string | number>;
+
 export type WeekdayStats = {
   bestWeekday: string;
   worstWeekday: string;
@@ -251,9 +255,9 @@ export function generateDailyCompletionData(
   });
 }
 
-export function generateHabitPeriodData(habits: Habit[], segments: PeriodSegment[]) {
+export function generateHabitPeriodData(habits: Habit[], segments: PeriodSegment[]): HabitPeriodDataRow[] {
   return segments.map((segment) => {
-    const entry: Record<string, string | number> = { period: segment.label };
+    const entry: HabitPeriodDataRow = { period: segment.label };
     const spanDays = Math.max(1, differenceInDays(segment.end, segment.start));
 
     habits.forEach((habit) => {

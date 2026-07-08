@@ -11,17 +11,20 @@
 
   const { habits }: Props = $props();
 
-  const allStats = $derived(
-    habits.map((habit) => ({ habit, stats: habitsStore.getHabitStats(habit.id) }))
-  );
+  const allStats = $derived.by(() => habits.map((habit) => ({ habit, stats: habitsStore.getHabitStats(habit.id) })));
 
   const avgRate = $derived.by(() => {
-    if (allStats.length === 0) return 0;
-    return Math.round(allStats.reduce((s, e) => s + e.stats.completionRate, 0) / allStats.length);
+    if (allStats.length === 0) {
+      return 0;
+    }
+
+    return Math.round(allStats.reduce((sum, entry) => sum + entry.stats.completionRate, 0) / allStats.length);
   });
-  const bestStreak = $derived(allStats.length > 0 ? Math.max(...allStats.map((e) => e.stats.longestStreak)) : 0);
-  const totalCompletions = $derived(allStats.reduce((s, e) => s + e.stats.completedDays, 0));
-  const currentStreaks = $derived(allStats.filter((e) => e.stats.currentStreak > 0).length);
+  const bestStreak = $derived.by(() => (
+    allStats.length > 0 ? Math.max(...allStats.map((entry) => entry.stats.longestStreak)) : 0
+  ));
+  const totalCompletions = $derived.by(() => allStats.reduce((sum, entry) => sum + entry.stats.completedDays, 0));
+  const currentStreaks = $derived.by(() => allStats.filter((entry) => entry.stats.currentStreak > 0).length);
 </script>
 
 <div class="space-y-2">

@@ -2,6 +2,7 @@ import path from 'node:path';
 import { mkdir } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { defineConfig, type Plugin, type ResolvedConfig } from 'vite';
+import tailwindcss from '@tailwindcss/vite';
 import { sveltekit } from '@sveltejs/kit/vite';
 import { SvelteKitPWA } from '@vite-pwa/sveltekit';
 import { resolveApiProxyTarget } from './src/lib/api/devProxy';
@@ -49,7 +50,7 @@ function prepareInjectManifestServiceWorker(rootDir: string): Plugin {
   };
 }
 
-// https://vitejs.dev/config/
+// https://vite.dev/config/
 export default defineConfig({
   define: {
     __BUILD_TIME__: JSON.stringify(new Date().toISOString()),
@@ -96,6 +97,7 @@ export default defineConfig({
     }
   },
   plugins: [
+    tailwindcss(),
     sveltekit(),
     prepareInjectManifestServiceWorker(dirname),
     ...(process.env.SKIP_PWA === '1' ? [] : [

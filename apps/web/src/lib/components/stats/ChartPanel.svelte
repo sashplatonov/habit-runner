@@ -3,12 +3,12 @@
   import StatsTrendChart from '$lib/components/StatsTrendChart.svelte';
   import ChartGuideTooltip from '$lib/components/ChartGuideTooltip.svelte';
   import type { Habit } from '@/types/habit';
-  import type { PeriodOption, WeekdayStats } from '$lib/stats/statsPage';
+  import type { HabitPeriodDataRow, PeriodOption, WeekdayStats } from '$lib/stats/statsPage';
 
   type Props = {
     avgRate: number;
     dailyData: Array<{ day: string; axisLabel: string; completed: number; total: number; rate: number }>;
-    habitPeriodData: Array<Record<string, string | number>>;
+    habitPeriodData: HabitPeriodDataRow[];
     filteredHabits: Habit[];
     hiddenHabits: string[];
     toggleHabitVisibility: (name: string) => void;

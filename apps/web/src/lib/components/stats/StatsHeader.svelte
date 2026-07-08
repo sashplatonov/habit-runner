@@ -15,7 +15,7 @@
   const { habits, period, onPeriodChange, periodOptions, periodDisplayNames }: Props = $props();
 
   const habitCount = $derived(habits.length);
-  const activeCount = $derived(habits.filter(h => !h.archived).length);
+  const activeCount = $derived.by(() => habits.filter((habit) => !habit.archived).length);
   
   function getPeriodButtonClass(periodId: string) {
     const isActive = period === periodId;
@@ -51,7 +51,7 @@
     {/each}
     <button
       type="button"
-      onclick={() => void goto(resolve('/app/(protected)/habit/new', {}))}
+      onclick={() => void goto(resolve<'/app/(protected)/habit/new'>('/app/(protected)/habit/new', {}))}
       class="flex h-7 w-7 items-center justify-center rounded-lg border border-border text-muted transition-colors hover:border-accent/50 hover:text-accent"
       aria-label="Add new habit"
     >

@@ -1,8 +1,10 @@
 <script lang="ts">
+  import type { ComponentType } from 'svelte';
+
   type Props = {
     title: string;
     description?: string;
-    icon?: any; // optional icon component
+    icon?: ComponentType;
     class?: string;
   };
 

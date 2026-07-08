@@ -15,7 +15,7 @@
 
 ## ✅ Prerequisites <a name="prerequisites"></a>
 
-- Node.js 22+
+- Node.js 22.12+
 - npm 10+
 - Java 25
 - Docker + Docker Compose
@@ -24,6 +24,7 @@
 Important repo note:
 
 - there is no root `package.json`, so npm commands run from `apps/web`;
+- `apps/web/package.json` declares the frontend Node runtime contract, and GitHub Actions verifies it with Node 22.12.0;
 - backend configuration comes from shell environment or Docker Compose, not from an auto-loaded `apps/backend/.env`.
 
 [↑ Back to top](#top)
@@ -36,8 +37,12 @@ Install dependencies and start Vite:
 
 ```bash
 cd apps/web
+npm -v
+node -v
 npm install
 ```
+
+Use Node.js 22.12.0 or newer before running the frontend commands above. That matches the current Docker build image and the Vite 8 baseline this repository is moving toward.
 
 Create `apps/web/.env.local` when you want explicit local overrides:
 

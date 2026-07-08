@@ -7,7 +7,7 @@ on:
       - main
 
 jobs:
-  verify:
+  verify-backend:
     runs-on: ubuntu-latest
 
     defaults:
@@ -39,3 +39,27 @@ jobs:
             apps/backend/target/spotbugs.xml
             apps/backend/target/spotbugsXml.xml
           if-no-files-found: ignore
+
+  verify-frontend:
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: apps/web
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.12.0'
+          cache: npm
+          cache-dependency-path: apps/web/package-lock.json
+
+      - name: Install web dependencies
+        run: npm ci
+
+      - name: Verify frontend
+        run: npm run check:web

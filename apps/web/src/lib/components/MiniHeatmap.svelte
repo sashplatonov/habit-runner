@@ -21,7 +21,7 @@
     return Array.from({ length: 30 }, (_, index) => addDaysToCalendarDate(todayKey, -(29 - index)));
   });
   const startDay = $derived(days[0] ? calendarDateToDate(days[0]).getDay() : 0);
-  const emptyCells = $derived(Array.from({ length: startDay }));
+  const emptyCells = $derived(Array.from({ length: startDay }, (_, index) => index));
   const palette = $derived(HABIT_COLOR_THEMES[color]);
 
   // Debugging aid: log incoming completions and computed days on mount.
@@ -30,7 +30,7 @@
     try {
       console.log('[MiniHeatmap] Completions:', completions);
       console.log('[MiniHeatmap] Computed days:', days);
-    } catch (e) {
+    } catch {
       // Silently ignore mount log errors
     }
     /* eslint-enable no-console */
@@ -38,7 +38,7 @@
 </script>
 
 <div class="grid grid-flow-col grid-rows-7 gap-[2px]">
-  {#each emptyCells as _, index (`empty-${index}`)}
+  {#each emptyCells as index (`empty-${index}`)}
     <div class="h-[4px] w-[4px] rounded-[1px] bg-transparent"></div>
   {/each}
 

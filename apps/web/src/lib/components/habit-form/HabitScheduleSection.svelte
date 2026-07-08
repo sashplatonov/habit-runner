@@ -339,17 +339,17 @@
         class="slider-input relative z-10 w-full cursor-pointer appearance-none bg-transparent"
       />
       <div class="mt-2 flex justify-between px-0.5">
-        {#each Array(DAILY_TARGET_MAX - DAILY_TARGET_MIN + 1) as _, i (DAILY_TARGET_MIN + i)}
+        {#each Array.from({ length: DAILY_TARGET_MAX - DAILY_TARGET_MIN + 1 }, (_, index) => DAILY_TARGET_MIN + index) as tick, tickIndex (`${tick}-${tickIndex}`)}
           <div class="relative flex flex-col items-center">
             <div
               class="mb-0.5 h-1 w-1 rounded-full transition-all duration-300"
-              style="background: {dailyTarget >= DAILY_TARGET_MIN + i ? selectedColor.hex : 'var(--border)'}; box-shadow: {dailyTarget >= DAILY_TARGET_MIN + i ? '0 0 4px ' + selectedColor.hex + '80' : 'none'};"
+              style="background: {dailyTarget >= tick ? selectedColor.hex : 'var(--border)'}; box-shadow: {dailyTarget >= tick ? '0 0 4px ' + selectedColor.hex + '80' : 'none'};"
             ></div>
             <span
               class="text-[8px] font-mono transition-all duration-300"
-              style="color: {dailyTarget === DAILY_TARGET_MIN + i ? selectedColor.hex : 'var(--text-muted)'}; font-weight: {dailyTarget === DAILY_TARGET_MIN + i ? 'bold' : 'normal'}; transform: {dailyTarget === DAILY_TARGET_MIN + i ? 'scale(1.2)' : 'scale(1)'};"
+              style="color: {dailyTarget === tick ? selectedColor.hex : 'var(--text-muted)'}; font-weight: {dailyTarget === tick ? 'bold' : 'normal'}; transform: {dailyTarget === tick ? 'scale(1.2)' : 'scale(1)'};"
             >
-              {DAILY_TARGET_MIN + i}
+              {tick}
             </span>
           </div>
         {/each}
