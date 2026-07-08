@@ -1,7 +1,6 @@
 <script lang="ts">
   import { Plus, X } from 'lucide-svelte';
   import { SUGGESTED_TAGS } from '$lib/habits/constants';
-  import type { FormValues } from '../HabitForm.svelte';
 
   let {
     tags = $bindable<string[]>([]),
@@ -28,14 +27,6 @@
     tags = tags.filter((item) => item !== tag);
   }
 
-  function normalizeTags(rawTagInput: string, currentTags: string[]): string[] {
-    const sanitized = rawTagInput.toLowerCase().replace(/[^a-z0-9]/g, '');
-    if (!sanitized || currentTags.includes(sanitized) || currentTags.length >= 5) {
-      return currentTags;
-    }
-
-    return [...currentTags, sanitized];
-  }
 </script>
 
 <div class="rounded-[1.75rem] border border-border bg-bg-card/92 p-5 shadow-[0_20px_54px_rgba(15,23,42,0.08)]">

@@ -1,4 +1,4 @@
-import type { HabitColor, HabitFrequency } from '@/types/habit';
+import type { HabitColor, HabitFrequency, HabitSchedule } from '@/types/habit';
 
 export const COLORS: {
   value: HabitColor;
@@ -25,7 +25,7 @@ export const FREQUENCIES: {
 ];
 
 export const SCHEDULE_TYPE_OPTIONS: {
-  value: string;
+  value: HabitSchedule['type'];
   label: string;
   desc: string;
 }[] = [

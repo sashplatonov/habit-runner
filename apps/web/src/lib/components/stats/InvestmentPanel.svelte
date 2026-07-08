@@ -9,9 +9,6 @@
   };
 
   const { weekdayStats }: Props = $props();
-
-  const investmentColor = $derived(getInvestmentColor(weekdayStats.investmentPercent));
-  const investmentMessage = $derived(getInvestmentMessage(weekdayStats.investmentPercent, weekdayStats.worstWeekday));
 </script>
 
 <div class="rounded-[1.5rem] border border-border bg-bg-card/92 p-5 shadow-[0_18px_50px_rgba(15,23,42,0.08)] space-y-4">
@@ -45,5 +42,7 @@
     <div class="h-full bg-accent transition-all duration-1000" style:width={`${weekdayStats.investmentPercent}%`} style:box-shadow="0 0 10px var(--glow)"></div>
   </div>
 
-  <p class="text-[10px] font-mono text-center" style:color={investmentColor}>{investmentMessage}</p>
+  <p class="text-[10px] font-mono text-center" style:color={getInvestmentColor(weekdayStats.investmentPercent)}>
+    {getInvestmentMessage(weekdayStats.investmentPercent, weekdayStats.worstWeekday)}
+  </p>
 </div>

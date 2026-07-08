@@ -1,8 +1,6 @@
 <script lang="ts">
-  import type { Habit, HabitUpsertInput } from '@habbit-runner/shared';
-  import { ArrowLeft, Plus, X } from 'lucide-svelte';
+  import type { Habit } from '@/types/habit';
   import { COLORS, ICONS } from '$lib/habits/constants';
-  import type { FormValues } from '../HabitForm.svelte';
 
   let {
     name = $bindable(''),
@@ -10,8 +8,7 @@
     color = $bindable<Habit['color']>('blue'),
     icon = $bindable('⚡'),
     errors = {},
-    selectedColor = COLORS[0],
-    mode = 'create'
+    selectedColor = COLORS[0]
   }: {
     name: string;
     description: string;
@@ -19,7 +16,6 @@
     icon: string;
     errors: Record<string, string>;
     selectedColor: (typeof COLORS)[number];
-    mode: 'create' | 'edit';
   } = $props();
 
   function handleCustomIconInput(event: Event) {

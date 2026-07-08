@@ -7,7 +7,6 @@
   import { calculateScheduledStreak, calculateScheduledCompletionRate } from '$lib/habits/schedule';
   import { getScheduleStatusForDate, isMandatoryToday } from '$lib/habits/schedule';
   import { formatAppDate } from '$lib/i18n';
-  import { buildCelebrationParticles, getCelebrationLabel } from '$lib/habits/completionCelebration';
   import CompletionRing from '$lib/components/CompletionRing.svelte';
   import MiniHeatmap from '$lib/components/MiniHeatmap.svelte';
   import DescriptionTooltip from '$lib/components/DescriptionTooltip.svelte';
@@ -22,6 +21,7 @@
     dragover: DragEvent;
     dragleave: DragEvent;
     drop: DragEvent;
+    dragend: DragEvent;
     touchstart: TouchEvent;
     touchmove: TouchEvent;
     touchend: TouchEvent;
@@ -55,7 +55,10 @@
   $: streak = calculateScheduledStreak(habit, habit.completions).current;
   $: completionRate = calculateScheduledCompletionRate(habit, habit.completions);
   $: last7 = Array.from({ length: 7 }, (_, i) => {
-    const key = formatAppDate(new Date(todayDate.getTime() + (i - 6) * 86_400_000));
+    const key = formatAppDate(new Date(todayDate.getTime() + (i - 6) * 86_400_000), {
+      month: 'short',
+      day: 'numeric'
+    });
     return (habit.completions[key] ?? 0) >= tgt;
   });
   $: hint = computeTileHint(habit, completionRate, streak);
@@ -106,8 +109,8 @@
     dispatch('drop', e);
   }
 
-  function handleDragEnd() {
-    dispatch('dragend');
+  function handleDragEnd(e: DragEvent) {
+    dispatch('dragend', e);
   }
 
   function handleTouchStart(e: TouchEvent) {
@@ -118,12 +121,12 @@
     dispatch('touchmove', e);
   }
 
-  function handleTouchEnd() {
-    dispatch('touchend');
+  function handleTouchEnd(e: TouchEvent) {
+    dispatch('touchend', e);
   }
 
-  function handleTouchCancel() {
-    dispatch('touchcancel');
+  function handleTouchCancel(e: TouchEvent) {
+    dispatch('touchcancel', e);
   }
 
   function handleGripTouchStart(e: TouchEvent) {

@@ -1,6 +1,5 @@
 <script lang="ts">
   import { resolve } from '$app/paths';
-  import { goto } from '$app/navigation';
   import { ArrowRight, CheckCircle2, Sparkles } from 'lucide-svelte';
   import { startOAuthLogin } from '$lib/auth/oauth';
   import PublicNav from '$lib/components/PublicNav.svelte';
@@ -31,17 +30,6 @@
       behavior: 'smooth',
       block: 'start'
     });
-  }
-
-  function handleCtaClick() {
-    goto(resolve('/', {}));
-  }
-
-  function showAuthHelp() {
-    noticeMessage = 'OAuth is not configured. Export backend Google OAuth env vars (or set them in root .env for Docker) and restart the API.';
-    window.setTimeout(() => {
-      noticeMessage = null;
-    }, 6000);
   }
 </script>
 

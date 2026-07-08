@@ -1,8 +1,13 @@
 <script lang="ts">
   import ChartGuideTooltip from '$lib/components/ChartGuideTooltip.svelte';
   import { INSIGHTS_TOOLTIP } from '$lib/habits/blockGuideTooltips';
-  import type { Insight } from '$lib/stats/statsPage';
   import { Lightbulb, Flame, AlertTriangle, Zap } from 'lucide-svelte';
+
+  type Insight = {
+    id: string;
+    title: string;
+    body: string;
+  };
 
   const ICON_MAP: Record<string, typeof Lightbulb> = {
     streak: Flame,

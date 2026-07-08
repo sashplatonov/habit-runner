@@ -1,6 +1,5 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
-  import { resolve } from '$app/paths';
   import type { Snippet } from 'svelte';
 
   type Props = {
@@ -13,11 +12,10 @@
   };
 
   const { href, onclick, variant = 'primary', size = 'md', class: className = '', children }: Props = $props();
-  const resolvedHref = $derived(href ? resolve(href, {}) : undefined);
-  
+
   function handleClick() {
     if (href) {
-      goto(resolve(href, {}));
+      void goto(href);
     } else if (onclick) {
       onclick();
     }

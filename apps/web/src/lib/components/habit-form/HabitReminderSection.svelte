@@ -1,6 +1,4 @@
 <script lang="ts">
-  import type { FormValues } from '../HabitForm.svelte';
-
   let {
     reminderTime = $bindable(''),
     reminderEnabled = $bindable(true)

@@ -1,7 +1,7 @@
 <script lang="ts">
   type Props = {
     title: string;
-    description: string;
+    description?: string;
     icon?: any; // optional icon component
     class?: string;
   };
@@ -16,5 +16,7 @@
     </div>
   {/if}
   <h3 class="text-2xl font-semibold tracking-tight text-slate-950">{title}</h3>
-  <p class="mt-2 text-sm text-slate-600">{description}</p>
+  {#if description}
+    <p class="mt-2 text-sm text-slate-600">{description}</p>
+  {/if}
 </div>

@@ -25,7 +25,6 @@
     onToggleFilters,
   }: Props = $props();
 
-  let searchInput = $state<HTMLInputElement | null>(null);
   const hasTags = $derived(allTags.length > 0);
 
   function clearAll() {
@@ -77,7 +76,6 @@
   <div class="relative flex-1">
     <Search size={14} class="absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
     <input
-      bind:this={searchInput}
       type="text"
       value={searchQuery}
       oninput={(e) => onSearchChange((e.target as HTMLInputElement).value)}

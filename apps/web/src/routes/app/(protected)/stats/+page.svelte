@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { goto } from '$app/navigation';
   import { resolve } from '$app/paths';
   import {
     AlertTriangle,
@@ -23,8 +22,6 @@
     STREAK_THRESHOLDS,
     WEEKDAY_NA
   } from '$lib/constants/stats';
-  import { getInvestmentColor, getInvestmentMessage } from '$lib/stats/StatsView.helpers';
-  import { habitStatusLabel } from '$lib/stats/statsCharts';
   import {
     buildDayDetails,
     buildMergedCompletions,
@@ -102,9 +99,6 @@
     if (allStats.length === 0) return 0;
     return Math.round(allStats.reduce((s, e) => s + e.stats.completionRate, 0) / allStats.length);
   });
-  const bestStreak = $derived(allStats.length > 0 ? Math.max(...allStats.map((e) => e.stats.longestStreak)) : 0);
-  const totalCompletions = $derived(allStats.reduce((s, e) => s + e.stats.completedDays, 0));
-  const currentStreaks = $derived(allStats.filter((e) => e.stats.currentStreak > 0).length);
 
   // Sorted habits for Habits tab
   const sortedStats = $derived.by(() => {
@@ -210,9 +204,6 @@
   const aggregateTarget = $derived(
     Math.max(1, filteredHabits.reduce((s, h) => s + Math.max(1, h.dailyTarget ?? 1), 0))
   );
-  const investmentColor = $derived(getInvestmentColor(weekdayStats.investmentPercent));
-  const investmentMessage = $derived(getInvestmentMessage(weekdayStats.investmentPercent, weekdayStats.worstWeekday));
-
   function handleSortChange(key: HabitSort) {
     if (habitSort === key) {
       habitSortDir = habitSortDir === 'desc' ? 'asc' : 'desc';
@@ -271,7 +262,7 @@
         <div class="flex flex-wrap items-center gap-2 overflow-hidden py-1 sm:flex-nowrap">
           <!-- Tabs -->
           <div class="flex min-w-0 flex-1 items-center overflow-x-auto whitespace-nowrap [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-            <StatsTabs tabs={TABS} activeTab={activeTab} onTabChange={(tab) => activeTab = tab} />
+            <StatsTabs tabs={TABS} activeTab={activeTab} onTabChange={(tab) => activeTab = tab as TabId} />
           </div>
           <!-- Filters toggle -->
           <div class="flex shrink-0 items-center justify-end py-2 pl-1">

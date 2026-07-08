@@ -86,7 +86,7 @@ export function updateDashboardURL(state: Partial<DashboardUrlState>) {
   // Update URL without full reload
   const newUrl = url.pathname + (params.toString() ? '?' + params.toString() : '') + url.hash;
   if (newUrl !== window.location.pathname + window.location.search + window.location.hash) {
-    void goto(resolve(newUrl), { replaceState: true, keepFocus: true, noScroll: true });
+    void goto(resolve(newUrl, {}), { replaceState: true, keepFocus: true, noScroll: true });
   }
 }
 

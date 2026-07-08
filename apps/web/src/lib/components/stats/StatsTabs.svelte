@@ -2,7 +2,7 @@
   type Tab = { id: string; label: string };
 
   type Props = {
-    tabs: Tab[];
+    tabs: readonly Tab[];
     activeTab: string;
     onTabChange: (tabId: string) => void;
   };

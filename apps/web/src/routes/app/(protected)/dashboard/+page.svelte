@@ -24,7 +24,6 @@
   import CompletionRing from '$lib/components/CompletionRing.svelte';
   import MiniHeatmap from '$lib/components/MiniHeatmap.svelte';
   import HabitTile from '$lib/components/HabitTile.svelte';
-  import HabitCompactRow from '$lib/components/dashboard/HabitCompactRow.svelte';
   import Onboarding from '$lib/components/Onboarding.svelte';
   import RemindersPanel from '$lib/components/RemindersPanel.svelte';
   import ChartGuideTooltip from '$lib/components/ChartGuideTooltip.svelte';

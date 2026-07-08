@@ -1,6 +1,5 @@
 <script lang="ts">
   import { portal } from '$lib/actions/portal';
-  import { onMount } from 'svelte';
   import { openOverlay, closeActiveOverlay } from './overlayManager';
 
   type Props = {

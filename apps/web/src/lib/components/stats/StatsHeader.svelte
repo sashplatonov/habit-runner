@@ -2,7 +2,6 @@
   import { goto } from '$app/navigation';
   import { resolve } from '$app/paths';
   import { Plus } from 'lucide-svelte';
-  import { formatHabitLabel } from '$lib/habits/formatHabitLabel';
   import type { Habit } from '@/types/habit';
 
   type Props = {
@@ -52,7 +51,7 @@
     {/each}
     <button
       type="button"
-      onclick={() => goto(resolve('app/(protected)/habit/new'))}
+      onclick={() => void goto(resolve('/app/(protected)/habit/new', {}))}
       class="flex h-7 w-7 items-center justify-center rounded-lg border border-border text-muted transition-colors hover:border-accent/50 hover:text-accent"
       aria-label="Add new habit"
     >

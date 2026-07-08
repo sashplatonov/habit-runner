@@ -2,7 +2,6 @@
   "extends": "./.svelte-kit/tsconfig.json",
   "compilerOptions": {
     "strict": true,
-    "ignoreDeprecations": "6.0",
     "allowJs": true,
     "checkJs": false,
     "moduleResolution": "bundler",

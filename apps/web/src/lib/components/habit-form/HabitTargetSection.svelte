@@ -1,6 +1,5 @@
 <script lang="ts">
   import { DAILY_TARGET_MIN, DAILY_TARGET_MAX } from '$lib/habits/constants';
-  import type { FormValues } from '../HabitForm.svelte';
 
   let {
     targetStreak = $bindable(21),

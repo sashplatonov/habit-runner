@@ -1,11 +1,11 @@
 <script lang="ts">
-  import { describeSchedule, normalizeSchedule, scheduleFromLegacy } from '@habbit-runner/shared';
-  import type { HabitFrequency, HabitSchedule, WeekOfMonth } from '@habbit-runner/shared';
+  import { normalizeSchedule, scheduleFromLegacy } from '@habbit-runner/shared';
+  import type { HabitFrequency, HabitSchedule } from '@habbit-runner/shared';
   import { ArrowLeft, Plus } from 'lucide-svelte';
   import { calculateScheduledStreak } from '$lib/habits/schedule';
   import type { Habit } from '@/types/habit';
   import type { HabitUpsertInput } from '$lib/stores/habits';
-  import { COLORS, DAILY_TARGET_MIN, DAILY_TARGET_MAX, DAY_LABELS, ICONS, SUGGESTED_TAGS } from '$lib/habits/constants';
+  import { COLORS } from '$lib/habits/constants';
   import HabitIdentitySection from './habit-form/HabitIdentitySection.svelte';
   import HabitScheduleSection from './habit-form/HabitScheduleSection.svelte';
   import HabitTargetSection from './habit-form/HabitTargetSection.svelte';
@@ -43,15 +43,7 @@
   const DEFAULT_WEEKDAYS = [1, 2, 3, 4, 5];
   const WEEKEND_DAYS = [0, 6];
   const WEEKDAY_ORDER = [1, 2, 3, 4, 5, 6, 0];
-  const WEEK_OF_MONTH_OPTIONS: WeekOfMonth[] = [1, 2, 3, 4, 'last'];
   const DEFAULT_TARGET_STREAK = 21;
-  const SCHEDULE_TYPE_OPTIONS: { value: HabitSchedule['type']; label: string; desc: string }[] = [
-    { value: 'daily', label: 'Daily', desc: 'Every day' },
-    { value: 'weekly_days', label: 'Days of week', desc: 'Pick weekdays' },
-    { value: 'weekly_quota', label: 'Times per week', desc: 'Hit a weekly quota' },
-    { value: 'monthly_weeks', label: 'Monthly weeks', desc: 'Weeks + weekdays' },
-    { value: 'monthly_quota', label: 'Times per month', desc: 'Monthly quota' }
-  ];
 
   let { mode, habit = null, allHabits = [], onBack, onSubmit }: Props = $props();
 
@@ -110,18 +102,6 @@
     return left.every((value, index) => value === right[index]);
   }
 
-  function toggleArray<T>(items: T[], value: T): T[] {
-    if (items.includes(value)) {
-      return items.filter((item) => item !== value);
-    }
-
-    return [...items, value];
-  }
-
-  function clamp(value: number, min: number, max: number): number {
-    return Math.max(min, Math.min(max, Math.trunc(value)));
-  }
-
   function getWeekdaysFromSchedule(current: HabitSchedule): number[] | undefined {
     if (current.type === 'weekly_days' || current.type === 'monthly_weeks') {
       return current.weekdays;
@@ -132,42 +112,6 @@
     }
 
     return undefined;
-  }
-
-  function createScheduleForType(nextType: HabitSchedule['type'], current: HabitSchedule): HabitSchedule {
-    switch (nextType) {
-      case 'daily':
-        return { type: 'daily' };
-      case 'weekly_days':
-        return {
-          type: 'weekly_days',
-          weekdays: current.type === 'weekly_days' ? current.weekdays : DEFAULT_WEEKDAYS
-        };
-      case 'weekly_quota': {
-        const weekdays = getWeekdaysFromSchedule(current);
-        return {
-          type: 'weekly_quota',
-          timesPerWeek: current.type === 'weekly_quota' ? current.timesPerWeek : 2,
-          ...(weekdays && weekdays.length > 0 ? { weekdays } : {})
-        };
-      }
-      case 'monthly_weeks':
-        return {
-          type: 'monthly_weeks',
-          weeksOfMonth: current.type === 'monthly_weeks' ? current.weeksOfMonth : [1],
-          weekdays: current.type === 'monthly_weeks'
-            ? current.weekdays
-            : getWeekdaysFromSchedule(current) ?? DEFAULT_WEEKDAYS
-        };
-      case 'monthly_quota': {
-        const weekdays = getWeekdaysFromSchedule(current);
-        return {
-          type: 'monthly_quota',
-          timesPerMonth: current.type === 'monthly_quota' ? current.timesPerMonth : 3,
-          ...(weekdays && weekdays.length > 0 ? { weekdays } : {})
-        };
-      }
-    }
   }
 
   function buildInitialValues(source: Habit | null): FormValues {
@@ -427,7 +371,6 @@
       bind:icon
       {errors}
       {selectedColor}
-      {mode}
     />
 
     <HabitScheduleSection

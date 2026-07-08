@@ -1,7 +1,6 @@
 <script lang="ts">
   import type { HabitSchedule, WeekOfMonth } from '@habbit-runner/shared';
   import { DAY_LABELS, SCHEDULE_TYPE_OPTIONS, DAILY_TARGET_MIN, DAILY_TARGET_MAX } from '$lib/habits/constants';
-  import type { FormValues } from '../HabitForm.svelte';
 
   const WEEKDAY_ORDER = [1, 2, 3, 4, 5, 6, 0];
   const WEEK_OF_MONTH_OPTIONS: WeekOfMonth[] = [1, 2, 3, 4, 'last'];
@@ -104,20 +103,18 @@
     return [...items, value];
   }
 
-  function describeSchedule(schedule: HabitSchedule): string {
-    switch (schedule.type) {
+  function describeSchedule(current: HabitSchedule): string {
+    switch (current.type) {
       case 'daily':
         return 'Every day';
       case 'weekly_days':
-        return `On ${schedule.weekdays.map(d => DAY_LABELS[d]).join(', ')}`;
+        return `On ${current.weekdays.map((day) => DAY_LABELS[day]).join(', ')}`;
       case 'weekly_quota':
-        return `${schedule.timesPerWeek} times per week${schedule.weekdays?.length ? ' on ' + schedule.weekdays.map(d => DAY_LABELS[d]).join(', ') : ''}`;
+        return `${current.timesPerWeek} times per week${current.weekdays?.length ? ' on ' + current.weekdays.map((day) => DAY_LABELS[day]).join(', ') : ''}`;
       case 'monthly_weeks':
-        return `Weeks ${schedule.weeksOfMonth.join(', ')} on ${schedule.weekdays.map(d => DAY_LABELS[d]).join(', ')}`;
+        return `Weeks ${current.weeksOfMonth.join(', ')} on ${current.weekdays.map((day) => DAY_LABELS[day]).join(', ')}`;
       case 'monthly_quota':
-        return `${schedule.timesPerMonth} times per month${schedule.weekdays?.length ? ' on ' + schedule.weekdays.map(d => DAY_LABELS[d]).join(', ') : ''}`;
-      default:
-        return '';
+        return `${current.timesPerMonth} times per month${current.weekdays?.length ? ' on ' + current.weekdays.map((day) => DAY_LABELS[day]).join(', ') : ''}`;
     }
   }
 

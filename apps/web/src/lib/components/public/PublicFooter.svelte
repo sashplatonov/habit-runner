@@ -1,6 +1,5 @@
 <script lang="ts">
   import { resolve } from '$app/paths';
-  import PublicCta from '$lib/components/public/PublicCta.svelte';
   import type { Snippet } from 'svelte';
 
   type Props = {
