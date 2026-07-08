@@ -63,7 +63,7 @@ trivy image habbit-runner-api:latest
 
 The workflow scans:
 - `apps/web` for frontend code, lockfiles, and Dockerfile misconfigurations;
-- `apps/backend` for backend code, Maven metadata, and Dockerfile misconfigurations.
+- `apps/backend` for backend code, secrets, and Dockerfile misconfigurations while skipping `pom.xml` to avoid network-dependent Maven resolution.
 
 If you extend the automated scanning later, update this doc together with:
 - workflow files in `.github/workflows`;

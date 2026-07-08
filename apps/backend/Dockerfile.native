@@ -26,4 +26,5 @@ WORKDIR /work/
 COPY --from=build /workspace/target/*-runner /work/application
 
 EXPOSE 8080
+USER 65534:65534
 CMD ["/work/application", "-Dquarkus.http.host=0.0.0.0"]

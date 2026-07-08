@@ -34,7 +34,7 @@ jobs:
 
       - name: Upload SpotBugs reports
         if: always()
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: spotbugs-reports
           path: |
@@ -50,16 +50,22 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v5
 
+      - name: Cache Trivy DB
+        uses: actions/cache@v4
+        with:
+          path: ${{ runner.temp }}/.trivy-cache
+          key: trivy-db
+
       - name: Run backend security scan
         uses: aquasecurity/trivy-action@v0.36.0
         with:
           scan-type: fs
           scan-ref: apps/backend
           scanners: vuln,secret,misconfig
-          ignore-unfixed: true
           exit-code: '1'
           severity: HIGH,CRITICAL
           skip-dirs: target
+          cache-dir: ${{ runner.temp }}/.trivy-cache
 
   security-frontend:
     runs-on: ubuntu-latest
