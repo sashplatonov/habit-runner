@@ -12,6 +12,8 @@ import org.mapstruct.MappingConstants;
 import org.mapstruct.MappingTarget;
 import org.mapstruct.NullValuePropertyMappingStrategy;
 
+import java.util.List;
+
 @Mapper(componentModel = MappingConstants.ComponentModel.CDI)
 public interface HabitMapper {
   @HabitEntityMappings
@@ -21,7 +23,10 @@ public interface HabitMapper {
   @HabitEntityMappings
   void applyUpdate(HabitUpdateRequestDto request, @MappingTarget HabitEntity entity);
 
+  @Mapping(target = "customDays", expression = "java(copyList(entity.getCustomDays()))")
   @Mapping(target = "schedule", expression = "java(toSchedule(entity))")
+  @Mapping(target = "tags", expression = "java(copyList(entity.getTags()))")
+  @Mapping(target = "freezeDays", expression = "java(copyList(entity.getFreezeDays()))")
   HabitResponseDto toResponse(HabitEntity entity);
 
   default HabitScheduleDto toSchedule(HabitEntity entity) {
@@ -30,10 +35,14 @@ public interface HabitMapper {
     }
     return HabitScheduleDto.builder()
         .type(entity.getScheduleType())
-        .weekdays(entity.getScheduleWeekdays())
+        .weekdays(copyList(entity.getScheduleWeekdays()))
         .timesPerWeek(entity.getScheduleTimesPerWeek())
         .timesPerMonth(entity.getScheduleTimesPerMonth())
-        .weeksOfMonth(entity.getScheduleWeeksOfMonth())
+        .weeksOfMonth(copyList(entity.getScheduleWeeksOfMonth()))
         .build();
+  }
+
+  default <T> List<T> copyList(List<T> source) {
+    return source == null ? null : List.copyOf(source);
   }
 }

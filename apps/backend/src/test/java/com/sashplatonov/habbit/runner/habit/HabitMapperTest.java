@@ -27,12 +27,17 @@ class HabitMapperTest {
   @Test
   void shouldApplyCreateAndMapResponseWithSchedule() {
     var entity = new HabitEntity();
+    var customDays = new ArrayList<>(List.of(1, 3, 5));
+    var tags = new ArrayList<>(List.of("focus"));
+    var freezeDays = new ArrayList<>(List.of("2026-04-10"));
+    var scheduleWeekdays = new ArrayList<>(List.of(1, 3, 5));
+    var scheduleWeeksOfMonth = new ArrayList<>(List.of(WeekOfMonthValue.FIRST));
     var schedule = HabitScheduleDto.builder()
         .type(HabitScheduleType.WEEKLY_DAYS)
-        .weekdays(List.of(1, 3, 5))
+        .weekdays(scheduleWeekdays)
         .timesPerWeek(3)
         .timesPerMonth(12)
-        .weeksOfMonth(List.of(WeekOfMonthValue.FIRST))
+        .weeksOfMonth(scheduleWeeksOfMonth)
         .build();
     var request = HabitCreateRequestDto.builder()
         .id("habit-1")
@@ -41,17 +46,17 @@ class HabitMapperTest {
         .color(HabitColor.BLUE)
         .icon("book")
         .frequency(HabitFrequency.WEEKDAYS)
-        .customDays(List.of(1, 3, 5))
+        .customDays(customDays)
         .schedule(schedule)
         .targetStreak(7)
         .dailyTarget(2)
-        .tags(List.of("focus"))
+        .tags(tags)
         .archived(true)
         .sortOrder(11L)
         .reminderTime("07:30")
         .reminderEnabled(true)
         .type(HabitType.POSITIVE)
-        .freezeDays(List.of("2026-04-10"))
+        .freezeDays(freezeDays)
         .build();
 
     habitMapper.applyCreate(request, entity);
@@ -61,6 +66,11 @@ class HabitMapperTest {
     entity.setUpdatedAt(Instant.parse("2026-04-10T10:05:00Z"));
     entity.setVersion(1);
     entity.setSortOrder(BigInteger.valueOf(11));
+    entity.setCustomDays(new ArrayList<>(entity.getCustomDays()));
+    entity.setTags(new ArrayList<>(entity.getTags()));
+    entity.setFreezeDays(new ArrayList<>(entity.getFreezeDays()));
+    entity.setScheduleWeekdays(new ArrayList<>(entity.getScheduleWeekdays()));
+    entity.setScheduleWeeksOfMonth(new ArrayList<>(entity.getScheduleWeeksOfMonth()));
 
     assertEquals("Read", entity.getName());
     assertEquals(HabitScheduleType.WEEKLY_DAYS, entity.getScheduleType());
@@ -74,6 +84,18 @@ class HabitMapperTest {
     assertEquals(HabitScheduleType.WEEKLY_DAYS, response.schedule().type());
     assertEquals(List.of(1, 3, 5), response.schedule().weekdays());
     assertEquals(List.of("2026-04-10"), response.freezeDays());
+
+    entity.getCustomDays().add(7);
+    entity.getTags().add("health");
+    entity.getFreezeDays().add("2026-04-11");
+    entity.getScheduleWeekdays().add(6);
+    entity.getScheduleWeeksOfMonth().add(WeekOfMonthValue.LAST);
+
+    assertEquals(List.of(1, 3, 5), response.customDays());
+    assertEquals(List.of("focus"), response.tags());
+    assertEquals(List.of("2026-04-10"), response.freezeDays());
+    assertEquals(List.of(1, 3, 5), response.schedule().weekdays());
+    assertEquals(List.of(WeekOfMonthValue.FIRST), response.schedule().weeksOfMonth());
   }
 
   @Test
