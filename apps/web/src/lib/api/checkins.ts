@@ -1,4 +1,5 @@
 import type { CheckinResponseDto, CheckinUpsertRequestDto } from '@/types/checkin-api';
+import { completionKeyToCalendarDate } from '@/lib/completionKey';
 import { buildApiUrl } from '@/lib/api/url';
 import { authenticatedFetch } from '@/lib/auth/session';
 
@@ -23,6 +24,10 @@ async function request<T>(path: string, init: RequestInit): Promise<T> {
   return await parseResponse<T>(response);
 }
 
+function toCheckinPathDate(date: string): string {
+  return completionKeyToCalendarDate(date);
+}
+
 export async function fetchCheckins(): Promise<CheckinResponseDto[]> {
   return await request<CheckinResponseDto[]>('/checkins', { method: 'GET' });
 }
@@ -33,7 +38,7 @@ export async function upsertCheckin(
   requestBody: CheckinUpsertRequestDto
 ): Promise<CheckinResponseDto> {
   return await request<CheckinResponseDto>(
-      `/checkins/habits/${encodeURIComponent(habitId)}/dates/${encodeURIComponent(date)}`,
+      `/checkins/habits/${encodeURIComponent(habitId)}/dates/${encodeURIComponent(toCheckinPathDate(date))}`,
       {
         method: 'PUT',
         body: JSON.stringify(requestBody)
@@ -42,7 +47,7 @@ export async function upsertCheckin(
 }
 
 export async function deleteCheckin(habitId: string, date: string): Promise<void> {
-  await request<void>(`/checkins/habits/${encodeURIComponent(habitId)}/dates/${encodeURIComponent(date)}`, {
+  await request<void>(`/checkins/habits/${encodeURIComponent(habitId)}/dates/${encodeURIComponent(toCheckinPathDate(date))}`, {
     method: 'DELETE'
   });
 }
