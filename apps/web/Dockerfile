@@ -38,6 +38,10 @@ RUN mkdir -p .svelte-kit/output/client && npx esbuild src/service-worker.ts --bu
 RUN npx vite build
 
 FROM nginx:1.31.2 AS runtime
+RUN set -eux; \
+    apt-get update; \
+    apt-get install -y --no-install-recommends wget; \
+    rm -rf /var/lib/apt/lists/*
 COPY --from=build /app/build /usr/share/nginx/html
 COPY nginx-main.conf /etc/nginx/nginx.conf
 COPY nginx.conf /etc/nginx/conf.d/default.conf.template
