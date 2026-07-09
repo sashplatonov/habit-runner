@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1.7
 # JVM build for local development
-FROM docker.io/library/eclipse-temurin:25.0.3_9-jdk-alpine-3.23 AS build
+FROM docker.io/library/eclipse-temurin:25-jdk AS build
 WORKDIR /workspace
 
 ENV MAVEN_OPTS="-XX:MaxRAMPercentage=70 -XX:ActiveProcessorCount=1"
@@ -20,7 +20,7 @@ COPY src src
 
 RUN --mount=type=cache,target=/root/.m2 ./mvnw -B -T1 -Djacoco.skip=true -Dmaven.test.skip=true -Dtest.jvm.argline.extra="-XX:ActiveProcessorCount=1 -XX:MaxRAMPercentage=70" package
 
-FROM docker.io/library/eclipse-temurin:25.0.3_9-jre-alpine-3.23 AS runtime
+FROM docker.io/library/eclipse-temurin:25-jre AS runtime
 WORKDIR /work
 # Ensure wget is available for the healthcheck
 RUN set -eux; \
