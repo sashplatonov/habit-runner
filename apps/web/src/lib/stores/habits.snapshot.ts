@@ -9,6 +9,8 @@ export interface HabitsSnapshot {
   formatDate: typeof formatDate;
 }
 
+type CheckinSnapshotItem = Pick<CheckinEntity, 'habitId' | 'date' | 'done' | 'count'>;
+
 function applyFreezeDays(
   baseCompletions: Record<string, number>,
   freezeDays: string[] | undefined,
@@ -19,21 +21,6 @@ function applyFreezeDays(
     const existing = baseCompletions[completionKey] ?? 0;
     baseCompletions[completionKey] = Math.max(dailyTarget, existing);
   });
-}
-
-function buildHabitFromEntity(
-  entity: HabitEntity,
-  completionsByHabitId: Record<string, Record<string, number>>
-): Habit {
-  const domain = habitEntityToDomain(entity);
-  const dailyTarget = Math.max(1, domain.dailyTarget ?? 1);
-  const completions = { ...(completionsByHabitId[domain.id] ?? {}) };
-  applyFreezeDays(completions, domain.freezeDays, dailyTarget);
-
-  return {
-    ...domain,
-    completions
-  };
 }
 
 function sortHabitsByOrder(habits: Habit[]) {
@@ -53,8 +40,27 @@ export function createHabitsSnapshot(
   habitEntities: HabitEntity[],
   checkinEntities: CheckinEntity[]
 ): HabitsSnapshot {
+  return createHabitsSnapshotFromDomain(
+    habitEntities.map((entity) => habitEntityToDomain(entity)),
+    checkinEntities
+  );
+}
+
+export function createHabitsSnapshotFromDomain(
+  habits: Habit[],
+  checkinEntities: CheckinSnapshotItem[]
+): HabitsSnapshot {
   const completionsByHabitId = buildCompletionsByHabitId(checkinEntities);
-  const allHabits = habitEntities.map((entity) => buildHabitFromEntity(entity, completionsByHabitId));
+  const allHabits = habits.map((habit) => {
+    const dailyTarget = Math.max(1, habit.dailyTarget ?? 1);
+    const completions = { ...(completionsByHabitId[habit.id] ?? {}) };
+    applyFreezeDays(completions, habit.freezeDays, dailyTarget);
+
+    return {
+      ...habit,
+      completions
+    };
+  });
   const orderedHabits = sortHabitsByOrder(allHabits);
 
   return {

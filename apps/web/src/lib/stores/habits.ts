@@ -2,19 +2,10 @@ import { get, writable, type Readable } from 'svelte/store';
 import { nowSyncISO } from '@habbit-runner/shared';
 import type { Habit, HabitStats } from '@/types/habit';
 import {
-  db,
-  domainToHabitEntity,
-  habitEntityToDomain,
-  persistHabitInDb,
-  removeHabitFromDb,
-  deleteCheckinInDb,
-  getCheckinByNaturalKey,
   getCurrentUserId,
-  setCurrentUserId,
-  type CheckinEntity,
-  type HabitEntity
+  setCurrentUserId
 } from '$lib/storage/db';
-import { createHabitsSnapshot, type HabitsSnapshot } from '$lib/stores/habits.snapshot';
+import { createHabitsSnapshotFromDomain, type HabitsSnapshot } from '$lib/stores/habits.snapshot';
 import {
   getHabitStats as getHabitStatsImpl,
   getTodayCompletionRate as getTodayCompletionRateImpl
@@ -34,12 +25,20 @@ import {
 import { createHabitId } from '$lib/core/habit-id';
 import { formatDate } from '$lib/habits/habitStats';
 import { completionKeyToCalendarDate } from '$lib/completionKey';
-import { dexieLiveQuery } from '$lib/stores/dexieLiveQuery';
 import type { HabitResponseDto } from '@/types/habit-api';
 import type { CheckinResponseDto } from '@/types/checkin-api';
-
-type ToggleCompletionResult = { habitId: string; date: string; count: number };
-type AdvanceCompletionResult = ToggleCompletionResult & { previousCount: number; target: number };
+import {
+  createCheckinEntity,
+  findCheckin,
+  mapHabitResponseToDomain,
+  removeCheckinFromCollection,
+  removeHabitFromCollection,
+  replaceCheckinInCollection,
+  replaceHabitInCollection,
+  type AdvanceCompletionResult,
+  type CheckinState,
+  type ToggleCompletionResult
+} from '$lib/stores/habits.storeHelpers';
 export type HabitUpsertInput = Omit<Habit, 'id' | 'completions' | 'createdAt'> & { sortOrder?: number; reminderTime?: string | null };
 
 export interface HabitsStore extends Readable<HabitsSnapshot> {
@@ -66,72 +65,6 @@ function getCompletionMutationKey(habitId: string, userId: string): string {
   return `${userId}:${habitId}`;
 }
 
-function mapHabitResponseToDomain(response: HabitResponseDto, existing?: Habit): Habit {
-  return {
-    id: response.id,
-    name: response.name,
-    description: response.description ?? '',
-    color: response.color,
-    icon: response.icon,
-    tags: response.tags ?? [],
-    frequency: response.frequency,
-    customDays: response.customDays,
-    schedule: response.schedule ?? undefined,
-    targetStreak: response.targetStreak,
-    dailyTarget: response.dailyTarget,
-    completions: existing?.completions ?? {},
-    freezeDays: response.freezeDays ?? [],
-    createdAt: response.createdAt,
-    updatedAt: response.updatedAt,
-    version: response.version,
-    archived: response.archived,
-    sortOrder: response.sortOrder,
-    type: response.type,
-    reminderTime: response.reminderTime ?? undefined,
-    reminderEnabled: response.reminderEnabled
-  };
-}
-
-function mapCheckinResponseToEntity(response: CheckinResponseDto, userId: string): CheckinEntity {
-  return {
-    id: response.id,
-    userId,
-    habitId: response.habitId,
-    date: response.date,
-    done: response.done,
-    count: response.count,
-    updatedAt: response.updatedAt,
-    version: response.version
-  };
-}
-
-async function replaceCurrentUserState(
-  userId: string,
-  habitResponses: HabitResponseDto[],
-  checkinResponses: CheckinResponseDto[]
-): Promise<void> {
-  await db.transaction('rw', db.habits, db.checkins, async () => {
-    await db.habits.where({ userId }).delete();
-    await db.checkins.where({ userId }).delete();
-    const habits = habitResponses.map((response) => domainToHabitEntity(mapHabitResponseToDomain(response)));
-    const checkins = checkinResponses.map((response) => mapCheckinResponseToEntity(response, userId));
-    if (habits.length > 0) {
-      await db.habits.bulkPut(habits);
-    }
-    if (checkins.length > 0) {
-      await db.checkins.bulkPut(checkins);
-    }
-  });
-}
-
-async function refreshCurrentUserState(userId: string): Promise<void> {
-  const [habitResponses, checkinResponses] = await Promise.all([
-    fetchHabits(),
-    fetchCheckins()
-  ]);
-  await replaceCurrentUserState(userId, habitResponses, checkinResponses);
-}
-
 export async function runSerializedCompletionMutation<T>(
   habitId: string,
   userId: string,
@@ -152,12 +85,17 @@ export async function runSerializedCompletionMutation<T>(
   }
 }
 
+function createEmptySnapshot(): HabitsSnapshot {
+  return createHabitsSnapshotFromDomain([], []);
+}
+
 async function getPersistedCompletionCount(
   habitId: string,
   date: string,
-  userId: string
+  userId: string,
+  checkins: CheckinState[]
 ): Promise<number> {
-  const existingCheckin = await getCheckinByNaturalKey(habitId, date, userId);
+  const existingCheckin = findCheckin(checkins, habitId, date, userId);
   if (!existingCheckin?.done) {
     return 0;
   }
@@ -169,41 +107,19 @@ async function resolveHabitDailyTarget(
   habitId: string,
   allHabits: Habit[]
 ): Promise<number> {
-  const entity = await db.habits.get(habitId);
-  if (entity) {
-    return Math.max(1, Math.trunc(entity.dailyTarget ?? 1));
-  }
-
   const habit = allHabits.find((item) => item.id === habitId);
   return Math.max(1, Math.trunc(habit?.dailyTarget ?? 1));
-}
-
-async function applyCompletionCountChange(
-  habitId: string,
-  date: string,
-  count: number
-): Promise<ToggleCompletionResult> {
-  const normalizedCount = Math.max(0, Math.trunc(count));
-  if (normalizedCount > 0) {
-    const response = await upsertCheckinApi(habitId, date, {
-      done: true,
-      count: normalizedCount
-    });
-    await db.checkins.put(mapCheckinResponseToEntity(response, getCurrentUserId()));
-  } else {
-    await deleteCheckinApi(habitId, date);
-    await deleteCheckinInDb(habitId, date);
-  }
-  return { habitId, date, count: normalizedCount };
 }
 
 async function toggleCompletionImpl(
   habitId: string,
   date: string | undefined,
-  userId: string
+  userId: string,
+  checkins: CheckinState[],
+  applyCompletionCountChange: (habitId: string, date: string, count: number) => Promise<ToggleCompletionResult>
 ): Promise<ToggleCompletionResult> {
   const key = date || formatDate(new Date());
-  const existingCheckin = await getCheckinByNaturalKey(habitId, key, userId);
+  const existingCheckin = findCheckin(checkins, habitId, key, userId);
   const currentCount = existingCheckin && existingCheckin.done
     ? Math.max(1, Math.trunc(existingCheckin.count ?? 1))
     : 0;
@@ -247,55 +163,25 @@ async function addHabitImpl(data: HabitUpsertInput) {
     type: newHabit.type,
     freezeDays: newHabit.freezeDays
   });
-  await persistHabitInDb(mapHabitResponseToDomain(response, newHabit));
-  return newHabit.id;
+  return mapHabitResponseToDomain(response, newHabit);
 }
 
-async function updateHabitImpl(id: string, data: Partial<Habit>) {
-  const entity = await db.habits.get(id);
-  if (!entity) {
-    return;
-  }
-
-  const existing = habitEntityToDomain(entity);
+function updateHabitImpl(data: Partial<Habit>) {
   const safeData = structuredClone(data) as Partial<Habit>;
-  const updatedHabit: Habit = {
+  const changedKeys = Object.keys(safeData).filter((key) => safeData[key as keyof Habit] !== undefined);
+  return { safeData, changedKeys };
+}
+
+function buildUpdatedHabit(existing: Habit, safeData: Partial<Habit>): Habit {
+  return {
     ...existing,
     ...safeData,
     updatedAt: nowSyncISO(),
-    version: (entity.version ?? 0) + 1
+    version: (existing.version ?? 0) + 1
   };
-  const changedKeys = Object.keys(safeData).filter((key) => safeData[key as keyof Habit] !== undefined);
-  const response = changedKeys.length === 1 && changedKeys[0] === 'archived'
-    ? await updateHabitStatusApi(id, { archived: Boolean(safeData.archived) })
-    : await updateHabitApi(id, {
-        name: safeData.name,
-        description: safeData.description,
-        color: safeData.color,
-        icon: safeData.icon,
-        frequency: safeData.frequency,
-        customDays: safeData.customDays,
-        schedule: safeData.schedule,
-        targetStreak: safeData.targetStreak,
-        dailyTarget: safeData.dailyTarget,
-        tags: safeData.tags,
-        archived: safeData.archived,
-        sortOrder: safeData.sortOrder,
-        reminderTime: safeData.reminderTime ?? undefined,
-        reminderEnabled: safeData.reminderEnabled,
-        type: safeData.type,
-        freezeDays: safeData.freezeDays
-      });
-  await persistHabitInDb(mapHabitResponseToDomain(response, updatedHabit));
 }
 
-async function toggleFreezeDayImpl(id: string, date: string): Promise<boolean | undefined> {
-  const entity = await db.habits.get(id);
-  if (!entity) {
-    return undefined;
-  }
-
-  const existing = habitEntityToDomain(entity);
+function toggleFreezeDayImpl(existing: Habit, date: string): { willBeFrozen: boolean; updatedHabit: Habit } {
   const freezeKey = normalizeFreezeDayKey(date);
   const nextFreezeDays = new Set(existing.freezeDays ?? []);
   const willBeFrozen = !nextFreezeDays.has(freezeKey);
@@ -305,189 +191,266 @@ async function toggleFreezeDayImpl(id: string, date: string): Promise<boolean | 
     nextFreezeDays.delete(freezeKey);
   }
 
-  const updatedHabit: Habit = {
-    ...existing,
-    freezeDays: Array.from(nextFreezeDays).sort(),
-    updatedAt: nowSyncISO(),
-    version: (entity.version ?? 0) + 1
+  return {
+    willBeFrozen,
+    updatedHabit: {
+      ...existing,
+      freezeDays: Array.from(nextFreezeDays).sort(),
+      updatedAt: nowSyncISO(),
+      version: (existing.version ?? 0) + 1
+    }
   };
-  const response = await updateHabitApi(id, {
-    freezeDays: updatedHabit.freezeDays
-  });
-  await persistHabitInDb(mapHabitResponseToDomain(response, updatedHabit));
-  return willBeFrozen;
 }
 
 async function deleteHabitImpl(id: string, allHabits: Habit[]) {
-  const entity = await db.habits.get(id);
-  const backup = allHabits.find((habit) => habit.id === id);
-  if (!entity) {
-    return backup;
-  }
-
-  await deleteHabitApi(id);
-  await removeHabitFromDb(id);
-  return backup;
+  return allHabits.find((habit) => habit.id === id);
 }
 
-async function restoreHabitImpl(habit: Habit) {
-  const response = await createHabitApi({
-    id: habit.id,
-    name: habit.name,
-    description: habit.description,
-    color: habit.color,
-    icon: habit.icon,
-    frequency: habit.frequency,
-    customDays: habit.customDays,
-    schedule: habit.schedule,
-    targetStreak: habit.targetStreak,
-    dailyTarget: habit.dailyTarget,
-    tags: habit.tags,
-    archived: habit.archived,
-    sortOrder: habit.sortOrder,
-    reminderTime: habit.reminderTime ?? null,
-    reminderEnabled: habit.reminderEnabled ?? true,
-    type: habit.type,
-    freezeDays: habit.freezeDays
-  });
-  await persistHabitInDb(mapHabitResponseToDomain(response, habit));
-  const completionEntries = (Object.entries(habit.completions) as Array<[string, number]>)
-    .filter(([, count]) => count > 0);
-  for (const [date, count] of completionEntries) {
-    const checkin = await upsertCheckinApi(habit.id, date, {
-      done: true,
-      count
-    });
-    await db.checkins.put(mapCheckinResponseToEntity(checkin, getCurrentUserId()));
-  }
+type HabitsStoreRuntime = {
+  store: ReturnType<typeof writable<HabitsSnapshot>>;
+  currentUserId: string;
+  currentHabits: Habit[];
+  currentCheckins: CheckinState[];
+};
+
+function refreshRuntimeSnapshot(runtime: HabitsStoreRuntime): void {
+  runtime.store.set(createHabitsSnapshotFromDomain(runtime.currentHabits, runtime.currentCheckins));
 }
 
-async function setCompletionCountImpl(
+function replaceRuntimeUserState(
+  runtime: HabitsStoreRuntime,
+  habitResponses: HabitResponseDto[],
+  checkinResponses: CheckinResponseDto[]
+): void {
+  runtime.currentHabits = habitResponses.map((response) => mapHabitResponseToDomain(response));
+  runtime.currentCheckins = checkinResponses.map((response) => createCheckinEntity(response, runtime.currentUserId));
+  refreshRuntimeSnapshot(runtime);
+}
+
+async function refreshRuntimeFromBackend(runtime: HabitsStoreRuntime): Promise<void> {
+  const [habitResponses, checkinResponses] = await Promise.all([
+    fetchHabits(),
+    fetchCheckins()
+  ]);
+  replaceRuntimeUserState(runtime, habitResponses, checkinResponses);
+}
+
+async function applyRuntimeCompletionCountChange(
+  runtime: HabitsStoreRuntime,
   habitId: string,
   date: string,
-  count: number,
-  allHabits: Habit[]
+  count: number
 ): Promise<ToggleCompletionResult> {
-  const userId = getCurrentUserId();
-  return runSerializedCompletionMutation(habitId, userId, async () => {
-    const normalizedCount = Math.max(0, Math.trunc(count));
-    const maxCount = await resolveHabitDailyTarget(habitId, allHabits);
-    const clampedCount = Math.min(normalizedCount, maxCount);
-    return applyCompletionCountChange(habitId, date, clampedCount);
-  });
+  const normalizedCount = Math.max(0, Math.trunc(count));
+  if (normalizedCount > 0) {
+    const response = await upsertCheckinApi(habitId, date, {
+      done: true,
+      count: normalizedCount
+    });
+    runtime.currentCheckins = replaceCheckinInCollection(
+      runtime.currentCheckins,
+      createCheckinEntity(response, runtime.currentUserId)
+    );
+  } else {
+    await deleteCheckinApi(habitId, date);
+    runtime.currentCheckins = removeCheckinFromCollection(
+      runtime.currentCheckins,
+      habitId,
+      date,
+      runtime.currentUserId
+    );
+  }
+  refreshRuntimeSnapshot(runtime);
+  return { habitId, date, count: normalizedCount };
 }
 
-async function advanceCompletionCountImpl(
-  habitId: string,
-  date: string,
-  allHabits: Habit[]
-): Promise<AdvanceCompletionResult> {
-  return incrementCompletionCountImpl(habitId, date, allHabits);
+function createMutationActions(runtime: HabitsStoreRuntime): Pick<
+  HabitsStore,
+  'setUserId' | 'refresh' | 'toggleCompletion' | 'setCompletionCount' | 'incrementCompletionCount' | 'advanceCompletionCount'
+> {
+  return {
+    setUserId(userId: string) {
+      runtime.currentUserId = userId;
+      setCurrentUserId(userId);
+      runtime.currentHabits = [];
+      runtime.currentCheckins = [];
+      refreshRuntimeSnapshot(runtime);
+      void refreshRuntimeFromBackend(runtime);
+    },
+    refresh() {
+      return refreshRuntimeFromBackend(runtime);
+    },
+    toggleCompletion(habitId: string, date?: string) {
+      return toggleCompletionImpl(
+        habitId,
+        date,
+        runtime.currentUserId,
+        runtime.currentCheckins,
+        (id, key, count) => applyRuntimeCompletionCountChange(runtime, id, key, count)
+      );
+    },
+    setCompletionCount(habitId: string, date: string, count: number) {
+      const allHabits = get(runtime.store).allHabits;
+      return runSerializedCompletionMutation(habitId, runtime.currentUserId, async () => {
+        const normalizedCount = Math.max(0, Math.trunc(count));
+        const maxCount = await resolveHabitDailyTarget(habitId, allHabits);
+        return applyRuntimeCompletionCountChange(runtime, habitId, date, Math.min(normalizedCount, maxCount));
+      });
+    },
+    incrementCompletionCount(habitId: string, date: string) {
+      const allHabits = get(runtime.store).allHabits;
+      return runSerializedCompletionMutation(habitId, runtime.currentUserId, async () => {
+        const target = await resolveHabitDailyTarget(habitId, allHabits);
+        const previousCount = await getPersistedCompletionCount(
+          habitId,
+          date,
+          runtime.currentUserId,
+          runtime.currentCheckins
+        );
+        const result = await applyRuntimeCompletionCountChange(runtime, habitId, date, previousCount + 1);
+        return { ...result, previousCount, target };
+      });
+    },
+    advanceCompletionCount(habitId: string, date: string) {
+      return this.incrementCompletionCount(habitId, date);
+    }
+  };
 }
 
-async function incrementCompletionCountImpl(
-  habitId: string,
-  date: string,
-  allHabits: Habit[]
-): Promise<AdvanceCompletionResult> {
-  const userId = getCurrentUserId();
-  return runSerializedCompletionMutation(habitId, userId, async () => {
-    const target = await resolveHabitDailyTarget(habitId, allHabits);
-    const previousCount = await getPersistedCompletionCount(habitId, date, userId);
-    const nextCount = previousCount + 1;
-    const result = await applyCompletionCountChange(habitId, date, nextCount);
-    return {
-      ...result,
-      previousCount,
-      target
-    };
-  });
+function createHabitCrudActions(runtime: HabitsStoreRuntime): Pick<
+  HabitsStore,
+  'addHabit' | 'updateHabit' | 'toggleFreezeDay' | 'deleteHabit' | 'restoreHabit'
+> {
+  return {
+    async addHabit(data: HabitUpsertInput) {
+      const createdHabit = await addHabitImpl(data);
+      runtime.currentHabits = replaceHabitInCollection(runtime.currentHabits, createdHabit);
+      refreshRuntimeSnapshot(runtime);
+      return createdHabit.id;
+    },
+    async updateHabit(id: string, data: Partial<Habit>) {
+      const existing = runtime.currentHabits.find((habit) => habit.id === id);
+      if (!existing) {
+        return;
+      }
+
+      const { safeData, changedKeys } = updateHabitImpl(data);
+      const updatedHabit = buildUpdatedHabit(existing, safeData);
+      const response = changedKeys.length === 1 && changedKeys[0] === 'archived'
+        ? await updateHabitStatusApi(id, { archived: Boolean(safeData.archived) })
+        : await updateHabitApi(id, {
+            name: safeData.name,
+            description: safeData.description,
+            color: safeData.color,
+            icon: safeData.icon,
+            frequency: safeData.frequency,
+            customDays: safeData.customDays,
+            schedule: safeData.schedule,
+            targetStreak: safeData.targetStreak,
+            dailyTarget: safeData.dailyTarget,
+            tags: safeData.tags,
+            archived: safeData.archived,
+            sortOrder: safeData.sortOrder,
+            reminderTime: safeData.reminderTime ?? undefined,
+            reminderEnabled: safeData.reminderEnabled,
+            type: safeData.type,
+            freezeDays: safeData.freezeDays
+          });
+      runtime.currentHabits = replaceHabitInCollection(
+        runtime.currentHabits,
+        mapHabitResponseToDomain(response, updatedHabit)
+      );
+      refreshRuntimeSnapshot(runtime);
+    },
+    async toggleFreezeDay(id: string, date: string) {
+      const existing = runtime.currentHabits.find((habit) => habit.id === id);
+      if (!existing) {
+        return undefined;
+      }
+
+      const { willBeFrozen, updatedHabit } = toggleFreezeDayImpl(existing, date);
+      const response = await updateHabitApi(id, { freezeDays: updatedHabit.freezeDays });
+      runtime.currentHabits = replaceHabitInCollection(
+        runtime.currentHabits,
+        mapHabitResponseToDomain(response, updatedHabit)
+      );
+      refreshRuntimeSnapshot(runtime);
+      return willBeFrozen;
+    },
+    async deleteHabit(id: string) {
+      const backup = await deleteHabitImpl(id, get(runtime.store).allHabits);
+      if (!backup) {
+        return undefined;
+      }
+
+      await deleteHabitApi(id);
+      runtime.currentHabits = removeHabitFromCollection(runtime.currentHabits, id);
+      runtime.currentCheckins = runtime.currentCheckins.filter((checkin) => checkin.habitId !== id);
+      refreshRuntimeSnapshot(runtime);
+      return backup;
+    },
+    async restoreHabit(habit: Habit) {
+      const response = await createHabitApi({
+        id: habit.id,
+        name: habit.name,
+        description: habit.description,
+        color: habit.color,
+        icon: habit.icon,
+        frequency: habit.frequency,
+        customDays: habit.customDays,
+        schedule: habit.schedule,
+        targetStreak: habit.targetStreak,
+        dailyTarget: habit.dailyTarget,
+        tags: habit.tags,
+        archived: habit.archived,
+        sortOrder: habit.sortOrder,
+        reminderTime: habit.reminderTime ?? null,
+        reminderEnabled: habit.reminderEnabled ?? true,
+        type: habit.type,
+        freezeDays: habit.freezeDays
+      });
+      runtime.currentHabits = replaceHabitInCollection(runtime.currentHabits, mapHabitResponseToDomain(response, habit));
+
+      const completionEntries = (Object.entries(habit.completions) as Array<[string, number]>)
+        .filter(([, count]) => count > 0);
+      for (const [date, count] of completionEntries) {
+        const checkin = await upsertCheckinApi(habit.id, date, { done: true, count });
+        runtime.currentCheckins = replaceCheckinInCollection(
+          runtime.currentCheckins,
+          createCheckinEntity(checkin, runtime.currentUserId)
+        );
+      }
+      refreshRuntimeSnapshot(runtime);
+    }
+  };
+}
+
+function createHabitsStoreInternal(initialUserId = getCurrentUserId()): HabitsStore {
+  const runtime: HabitsStoreRuntime = {
+    store: writable<HabitsSnapshot>(createEmptySnapshot()),
+    currentUserId: initialUserId,
+    currentHabits: [],
+    currentCheckins: []
+  };
+
+  setCurrentUserId(runtime.currentUserId);
+  refreshRuntimeSnapshot(runtime);
+
+  return {
+    subscribe: runtime.store.subscribe,
+    ...createMutationActions(runtime),
+    ...createHabitCrudActions(runtime),
+    getHabitStats(habitId: string) {
+      return getHabitStatsImpl(habitId, get(runtime.store).allHabits);
+    },
+    getTodayCompletionRate() {
+      return getTodayCompletionRateImpl(get(runtime.store).habits);
+    }
+  };
 }
 
 export function createHabitsStore(initialUserId = getCurrentUserId()): HabitsStore {
-  const store = writable<HabitsSnapshot>(createHabitsSnapshot([], []));
-  let currentUserId = initialUserId;
-  let latestHabitEntities: HabitEntity[] = [];
-  let latestCheckinEntities: CheckinEntity[] = [];
-  let stopHabitSubscription: () => void = () => undefined;
-  let stopCheckinSubscription: () => void = () => undefined;
-
-  function refreshSnapshot() {
-    store.set(createHabitsSnapshot(latestHabitEntities, latestCheckinEntities));
-  }
-
-  function attachQueries() {
-    stopHabitSubscription();
-    stopCheckinSubscription();
-    latestHabitEntities = [];
-    latestCheckinEntities = [];
-    refreshSnapshot();
-
-    stopHabitSubscription = dexieLiveQuery(
-      () => db.habits.where({ userId: currentUserId }).toArray(),
-      [] as HabitEntity[]
-    ).subscribe((entities) => {
-      latestHabitEntities = entities ?? [];
-      refreshSnapshot();
-    });
-
-    stopCheckinSubscription = dexieLiveQuery(
-      () => db.checkins.where({ userId: currentUserId }).toArray(),
-      [] as CheckinEntity[]
-    ).subscribe((entities) => {
-      latestCheckinEntities = entities ?? [];
-      refreshSnapshot();
-    });
-  }
-
-  setCurrentUserId(currentUserId);
-  attachQueries();
-
-  return {
-    subscribe: store.subscribe,
-    setUserId(userId: string) {
-      currentUserId = userId;
-      setCurrentUserId(userId);
-      attachQueries();
-      void refreshCurrentUserState(userId);
-    },
-    refresh() {
-      return refreshCurrentUserState(currentUserId);
-    },
-    toggleCompletion(habitId: string, date?: string) {
-      return toggleCompletionImpl(habitId, date, currentUserId);
-    },
-    setCompletionCount(habitId: string, date: string, count: number) {
-      return setCompletionCountImpl(habitId, date, count, get(store).allHabits);
-    },
-    incrementCompletionCount(habitId: string, date: string) {
-      return incrementCompletionCountImpl(habitId, date, get(store).allHabits);
-    },
-    advanceCompletionCount(habitId: string, date: string) {
-      return advanceCompletionCountImpl(habitId, date, get(store).allHabits);
-    },
-    addHabit(data: HabitUpsertInput) {
-      return addHabitImpl(data);
-    },
-    updateHabit(id: string, data: Partial<Habit>) {
-      return updateHabitImpl(id, data);
-    },
-    toggleFreezeDay(id: string, date: string) {
-      return toggleFreezeDayImpl(id, date);
-    },
-    deleteHabit(id: string) {
-      return deleteHabitImpl(id, get(store).allHabits);
-    },
-    restoreHabit(habit: Habit) {
-      return restoreHabitImpl(habit);
-    },
-    getHabitStats(habitId: string) {
-      return getHabitStatsImpl(habitId, get(store).allHabits);
-    },
-    getTodayCompletionRate() {
-      return getTodayCompletionRateImpl(get(store).habits);
-    }
-  };
+  return createHabitsStoreInternal(initialUserId);
 }
 
 export const habitsStore = createHabitsStore();

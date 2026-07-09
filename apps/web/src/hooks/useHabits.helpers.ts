@@ -1,12 +1,17 @@
-import type { CheckinEntity } from '@/lib/storage/db';
+import { normalizeToCompletionKey } from '@/lib/completionKey';
+
+type CheckinLike = {
+  habitId: string;
+  date: string;
+  done: boolean;
+  count?: number;
+};
 
 function normalizeDateKey(date: string): string {
-  // Normalize legacy date-only strings to UTC ISO without milliseconds
-  const iso = new Date(date).toISOString();
-  return iso.replace('.000', '');
+  return normalizeToCompletionKey(date);
 }
 
-export function buildCompletionsByHabitId(checkins: CheckinEntity[]): Record<string, Record<string, number>> {
+export function buildCompletionsByHabitId(checkins: CheckinLike[]): Record<string, Record<string, number>> {
   const map: Record<string, Record<string, number>> = {};
   for (const checkin of checkins ?? []) {
     if (!checkin.done) {continue;}
