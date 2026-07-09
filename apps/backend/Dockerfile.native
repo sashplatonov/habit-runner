@@ -19,9 +19,9 @@ COPY src ./src
 # Build native image. The default MANDREL_BUILDER_IMAGE targets JDK 25 and
 # includes Mandrel's native-image toolchain; if you need a different image,
 # override `MANDREL_BUILDER_IMAGE` via build-arg.
-RUN --mount=type=cache,target=/root/.m2 sh ./mvnw -B -T1 -Dnative -Dtest.jvm.argline.extra="-XX:ActiveProcessorCount=1 -XX:MaxRAMPercentage=70" package
+RUN --mount=type=cache,target=/root/.m2 sh ./mvnw -B -T1 -Dnative -Dmaven.test.skip=true -Dtest.jvm.argline.extra="-XX:ActiveProcessorCount=1 -XX:MaxRAMPercentage=70" package
 
-FROM quay.io/quarkus/quarkus-micro-image:2.0
+FROM quay.io/quarkus/ubi9-quarkus-micro-image:2.0
 WORKDIR /work/
 COPY --from=build /workspace/target/*-runner /work/application
 

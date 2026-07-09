@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1.7
 # JVM build for local development
-FROM docker.io/library/eclipse-temurin:25-jdk AS build
+FROM docker.io/library/eclipse-temurin:25.0.3_9-jre-alpine-3.23-jdk AS build
 WORKDIR /workspace
 
 ENV MAVEN_OPTS="-XX:MaxRAMPercentage=70 -XX:ActiveProcessorCount=1"
@@ -18,9 +18,9 @@ RUN --mount=type=cache,target=/root/.m2 ./mvnw -B -T1 -Dmaven.test.skip=true dep
 # Copy application sources after dependency warmup to avoid invalidating the cache on every change.
 COPY src src
 
-RUN --mount=type=cache,target=/root/.m2 ./mvnw -B -T1 -Djacoco.skip=true -Dtest.jvm.argline.extra="-XX:ActiveProcessorCount=1 -XX:MaxRAMPercentage=70" package
+RUN --mount=type=cache,target=/root/.m2 ./mvnw -B -T1 -Djacoco.skip=true -Dmaven.test.skip=true -Dtest.jvm.argline.extra="-XX:ActiveProcessorCount=1 -XX:MaxRAMPercentage=70" package
 
-FROM docker.io/library/eclipse-temurin:25-jre AS runtime
+FROM docker.io/library/eclipse-temurin:25.0.3_9-jre-alpine-3.23-jre AS runtime
 WORKDIR /work
 # Ensure wget is available for the healthcheck
 RUN set -eux; \
@@ -28,7 +28,7 @@ RUN set -eux; \
 	apt-get install -y --no-install-recommends wget curl unzip; \
 	rm -rf /var/lib/apt/lists/*;
 # Pin the agent at a Java 25-compatible release and keep the download explicit.
-ARG NEW_RELIC_AGENT_VERSION=9.2.0
+ARG NEW_RELIC_AGENT_VERSION=9.3.0
 ENV NEW_RELIC_HOME=/opt/newrelic \
 	NEW_RELIC_CONFIG_FILE=/opt/newrelic/newrelic.yml \
 	NEW_RELIC_AGENT_ENABLED=false

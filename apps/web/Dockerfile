@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1.7
-FROM node:22.12.0-alpine AS build
+FROM node:22.23.1-alpine3.22 AS build
 WORKDIR /app
 
 # Copy dependency manifests first so npm install stays cached across source changes.
@@ -37,7 +37,7 @@ RUN mkdir -p .svelte-kit/output/client && npx esbuild src/service-worker.ts --bu
 # Enable PWA plugin during Docker build so the service worker and manifest are included
 RUN npx vite build
 
-FROM nginx:1.27-alpine AS runtime
+FROM nginx:1.31.2-alpine3.22 AS runtime
 COPY --from=build /app/build /usr/share/nginx/html
 COPY nginx-main.conf /etc/nginx/nginx.conf
 COPY nginx.conf /etc/nginx/conf.d/default.conf.template
