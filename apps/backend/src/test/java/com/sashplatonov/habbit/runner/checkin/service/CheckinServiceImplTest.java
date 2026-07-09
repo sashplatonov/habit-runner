@@ -29,6 +29,7 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -98,8 +99,37 @@ class CheckinServiceImplTest {
     assertInstanceOf(OperationSuccess.class, result);
     verify(checkinRepository, never()).save(ArgumentMatchers.any(CheckinEntity.class));
     assertEquals(true, existing.getDone());
-    assertEquals(1, existing.getCount());
+    assertEquals(3, existing.getCount());
     assertEquals(2, existing.getVersion());
+  }
+
+  @Test
+  void shouldReturnAllCheckinsForUserWithoutDefaultListLimit() {
+    var first = new CheckinEntity();
+    first.setId("checkin-1");
+    first.setHabitId("habit-1");
+    first.setUserId("user-1");
+    first.setDate(LocalDate.of(2026, 4, 10));
+    first.setDone(true);
+    first.setCount(1);
+    first.setVersion(1);
+
+    var second = new CheckinEntity();
+    second.setId("checkin-2");
+    second.setHabitId("habit-1");
+    second.setUserId("user-1");
+    second.setDate(LocalDate.of(2026, 4, 11));
+    second.setDone(true);
+    second.setCount(2);
+    second.setVersion(1);
+
+    when(checkinRepository.findAllByUserId("user-1")).thenReturn(List.of(first, second));
+
+    var result = service.findAll("user-1");
+
+    assertEquals(2, result.size());
+    verify(checkinRepository, times(1)).findAllByUserId("user-1");
+    verify(checkinRepository, never()).findListForUser("user-1");
   }
 
   @Test

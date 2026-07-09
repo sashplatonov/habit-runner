@@ -50,7 +50,7 @@ public class CheckinRepository implements PanacheRepositoryBase<CheckinEntity, S
   }
 
   public List<CheckinEntity> findAllByUserId(String userId) {
-    return findListForUser(userId);
+    return find("userId = ?1 ORDER BY date ASC, id ASC", userId).list();
   }
 
   public List<CheckinEntity> findPageForUser(String userId, Instant updatedAt, String cursorId, int pageSize) {

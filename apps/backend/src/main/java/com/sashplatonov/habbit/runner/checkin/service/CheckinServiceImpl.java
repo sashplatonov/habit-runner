@@ -38,7 +38,7 @@ public class CheckinServiceImpl implements CheckinService {
 
   @Override
   public List<CheckinResponseDto> findAll(String userId) {
-    return checkinRepository.findListForUser(userId).stream()
+    return checkinRepository.findAllByUserId(userId).stream()
         .map(checkinMapper::toResponse)
         .toList();
   }
@@ -80,7 +80,7 @@ public class CheckinServiceImpl implements CheckinService {
       return deleteCheckin(userId, habitId, parsedDate, habit);
     }
 
-    return saveCheckin(userId, habitId, parsedDate, habit);
+    return saveCheckin(userId, habitId, parsedDate, request, habit);
   }
 
   private OperationResult<CheckinResponseDto> deleteCheckin(
@@ -102,6 +102,7 @@ public class CheckinServiceImpl implements CheckinService {
       String userId,
       String habitId,
       java.time.LocalDate parsedDate,
+      CheckinUpsertRequestDto request,
       HabitEntity habit
   ) {
     var existing = checkinRepository.findByHabitDateAndUserId(habitId, parsedDate, userId);
@@ -112,6 +113,7 @@ public class CheckinServiceImpl implements CheckinService {
       checkin.setDate(parsedDate);
     }
     checkin.setDone(true);
+    checkin.setCount(Math.max(1, request.count() != null ? request.count() : 1));
     checkinMutationCoordinator.normalize(checkin);
     if (existing == null) {
       checkinRepository.save(checkin);
