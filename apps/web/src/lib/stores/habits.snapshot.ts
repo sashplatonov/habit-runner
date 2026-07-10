@@ -7,6 +7,8 @@ export interface HabitsSnapshot {
   habits: Habit[];
   allHabits: Habit[];
   formatDate: typeof formatDate;
+  isHydrating: boolean;
+  hasHydrated: boolean;
 }
 
 type CheckinSnapshotItem = Pick<CheckinEntity, 'habitId' | 'date' | 'done' | 'count'>;
@@ -48,7 +50,8 @@ export function createHabitsSnapshot(
 
 export function createHabitsSnapshotFromDomain(
   habits: Habit[],
-  checkinEntities: CheckinSnapshotItem[]
+  checkinEntities: CheckinSnapshotItem[],
+  meta: { isHydrating?: boolean; hasHydrated?: boolean } = {}
 ): HabitsSnapshot {
   const completionsByHabitId = buildCompletionsByHabitId(checkinEntities);
   const allHabits = habits.map((habit) => {
@@ -66,6 +69,8 @@ export function createHabitsSnapshotFromDomain(
   return {
     habits: orderedHabits.filter((habit) => !habit.archived),
     allHabits: orderedHabits,
-    formatDate
+    formatDate,
+    isHydrating: meta.isHydrating ?? false,
+    hasHydrated: meta.hasHydrated ?? true
   };
 }

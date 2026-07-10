@@ -6,10 +6,11 @@ import {
 } from '../../src/lib/dashboard/viewState';
 
 describe('dashboard view state', () => {
-  it('shows onboarding only when there are no habits at all', () => {
-    expect(shouldShowDashboardOnboarding(0)).toBe(true);
-    expect(shouldShowDashboardOnboarding(1)).toBe(false);
-    expect(shouldShowDashboardOnboarding(5)).toBe(false);
+  it('shows onboarding only after the first hydration confirms there are no habits', () => {
+    expect(shouldShowDashboardOnboarding(0, false)).toBe(false);
+    expect(shouldShowDashboardOnboarding(0, true)).toBe(true);
+    expect(shouldShowDashboardOnboarding(1, true)).toBe(false);
+    expect(shouldShowDashboardOnboarding(5, true)).toBe(false);
   });
 
   it('switches to archived filter when only archived habits exist', () => {

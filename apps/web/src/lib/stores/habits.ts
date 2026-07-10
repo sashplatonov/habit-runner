@@ -42,7 +42,7 @@ import {
 export type HabitUpsertInput = Omit<Habit, 'id' | 'completions' | 'createdAt'> & { sortOrder?: number; reminderTime?: string | null };
 
 export interface HabitsStore extends Readable<HabitsSnapshot> {
-  setUserId: (userId: string) => void;
+  setUserId: (userId: string) => Promise<void>;
   refresh: () => Promise<void>;
   toggleCompletion: (habitId: string, date?: string) => Promise<ToggleCompletionResult>;
   setCompletionCount: (habitId: string, date: string, count: number) => Promise<ToggleCompletionResult>;
@@ -86,7 +86,10 @@ export async function runSerializedCompletionMutation<T>(
 }
 
 function createEmptySnapshot(): HabitsSnapshot {
-  return createHabitsSnapshotFromDomain([], []);
+  return createHabitsSnapshotFromDomain([], [], {
+    isHydrating: false,
+    hasHydrated: false
+  });
 }
 
 async function getPersistedCompletionCount(
@@ -211,10 +214,15 @@ type HabitsStoreRuntime = {
   currentUserId: string;
   currentHabits: Habit[];
   currentCheckins: CheckinState[];
+  isHydrating: boolean;
+  hasHydrated: boolean;
 };
 
 function refreshRuntimeSnapshot(runtime: HabitsStoreRuntime): void {
-  runtime.store.set(createHabitsSnapshotFromDomain(runtime.currentHabits, runtime.currentCheckins));
+  runtime.store.set(createHabitsSnapshotFromDomain(runtime.currentHabits, runtime.currentCheckins, {
+    isHydrating: runtime.isHydrating,
+    hasHydrated: runtime.hasHydrated
+  }));
 }
 
 function replaceRuntimeUserState(
@@ -228,11 +236,19 @@ function replaceRuntimeUserState(
 }
 
 async function refreshRuntimeFromBackend(runtime: HabitsStoreRuntime): Promise<void> {
-  const [habitResponses, checkinResponses] = await Promise.all([
-    fetchHabits(),
-    fetchCheckins()
-  ]);
-  replaceRuntimeUserState(runtime, habitResponses, checkinResponses);
+  runtime.isHydrating = true;
+  refreshRuntimeSnapshot(runtime);
+  try {
+    const [habitResponses, checkinResponses] = await Promise.all([
+      fetchHabits(),
+      fetchCheckins()
+    ]);
+    replaceRuntimeUserState(runtime, habitResponses, checkinResponses);
+  } finally {
+    runtime.isHydrating = false;
+    runtime.hasHydrated = true;
+    refreshRuntimeSnapshot(runtime);
+  }
 }
 
 async function applyRuntimeCompletionCountChange(
@@ -269,13 +285,15 @@ function createMutationActions(runtime: HabitsStoreRuntime): Pick<
   'setUserId' | 'refresh' | 'toggleCompletion' | 'setCompletionCount' | 'incrementCompletionCount' | 'advanceCompletionCount'
 > {
   return {
-    setUserId(userId: string) {
+    async setUserId(userId: string) {
       runtime.currentUserId = userId;
       setCurrentUserId(userId);
       runtime.currentHabits = [];
       runtime.currentCheckins = [];
+      runtime.isHydrating = false;
+      runtime.hasHydrated = false;
       refreshRuntimeSnapshot(runtime);
-      void refreshRuntimeFromBackend(runtime);
+      await refreshRuntimeFromBackend(runtime);
     },
     refresh() {
       return refreshRuntimeFromBackend(runtime);
@@ -430,7 +448,9 @@ function createHabitsStoreInternal(initialUserId = getCurrentUserId()): HabitsSt
     store: writable<HabitsSnapshot>(createEmptySnapshot()),
     currentUserId: initialUserId,
     currentHabits: [],
-    currentCheckins: []
+    currentCheckins: [],
+    isHydrating: false,
+    hasHydrated: false
   };
 
   setCurrentUserId(runtime.currentUserId);

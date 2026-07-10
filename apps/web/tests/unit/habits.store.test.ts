@@ -139,8 +139,39 @@ describe('habits store', () => {
     await store.refresh();
 
     const snapshot = get(store);
+    expect(snapshot.hasHydrated).toBe(true);
+    expect(snapshot.isHydrating).toBe(false);
     expect(snapshot.allHabits).toHaveLength(1);
     expect(snapshot.allHabits[0].completions['2026-07-09T00:00:00Z']).toBe(1);
+  });
+
+  it('marks the first backend load as hydrating before habits arrive', async () => {
+    let resolveHabits: ((value: ReturnType<typeof buildHabitResponse>[]) => void) | undefined;
+    let resolveCheckins: ((value: ReturnType<typeof buildCheckinResponse>[]) => void) | undefined;
+
+    mockFetchHabits.mockReturnValue(new Promise((resolve) => {
+      resolveHabits = resolve;
+    }));
+    mockFetchCheckins.mockReturnValue(new Promise((resolve) => {
+      resolveCheckins = resolve;
+    }));
+
+    const store = createHabitsStore('test-user');
+    const refreshPromise = store.refresh();
+
+    const loadingSnapshot = get(store);
+    expect(loadingSnapshot.isHydrating).toBe(true);
+    expect(loadingSnapshot.hasHydrated).toBe(false);
+    expect(loadingSnapshot.allHabits).toHaveLength(0);
+
+    resolveHabits?.([buildHabitResponse()]);
+    resolveCheckins?.([]);
+    await refreshPromise;
+
+    const hydratedSnapshot = get(store);
+    expect(hydratedSnapshot.isHydrating).toBe(false);
+    expect(hydratedSnapshot.hasHydrated).toBe(true);
+    expect(hydratedSnapshot.allHabits).toHaveLength(1);
   });
 
   it('increments from the backend-backed in-memory count on repeated clicks', async () => {

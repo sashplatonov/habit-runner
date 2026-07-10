@@ -1,7 +1,7 @@
 export type DashboardFilter = 'pending' | 'all' | 'done' | 'archived';
 
-export function shouldShowDashboardOnboarding(totalHabitCount: number) {
-  return totalHabitCount === 0;
+export function shouldShowDashboardOnboarding(totalHabitCount: number, hasHydrated: boolean) {
+  return hasHydrated && totalHabitCount === 0;
 }
 
 export function normalizeDashboardFilter(

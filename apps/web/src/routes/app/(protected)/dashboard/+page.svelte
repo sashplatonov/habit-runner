@@ -151,7 +151,8 @@
   const activeHabits = $derived($habitsStore.habits);
   const archivedHabits = $derived($habitsStore.allHabits.filter((habit) => habit.archived));
   const totalHabits = $derived($habitsStore.allHabits.length);
-  const showOnboarding = $derived(shouldShowDashboardOnboarding(totalHabits));
+  const isInitialHydration = $derived($habitsStore.isHydrating && !$habitsStore.hasHydrated);
+  const showOnboarding = $derived(shouldShowDashboardOnboarding(totalHabits, $habitsStore.hasHydrated));
 
   const scheduledToday = $derived(activeHabits.filter((h) => isMandatoryToday(h, todayDate)));
 
@@ -685,7 +686,15 @@
   <title>Dashboard - Habbit Runner</title>
 </svelte:head>
 
-{#if showOnboarding}
+{#if isInitialHydration}
+  <div class="min-h-[60vh] px-4 py-10 sm:px-6">
+    <div class="mx-auto flex max-w-4xl flex-col items-center justify-center rounded-[2rem] border border-border bg-bg-secondary/88 px-6 py-16 text-center shadow-[0_26px_70px_rgba(15,23,42,0.1)] backdrop-blur-xl">
+      <div class="h-10 w-10 animate-spin rounded-full border-2 border-border border-t-accent"></div>
+      <p class="mt-5 text-sm font-semibold text-foreground">Loading your habits...</p>
+      <p class="mt-2 text-xs font-mono uppercase tracking-wider text-muted">Syncing dashboard data from the server</p>
+    </div>
+  </div>
+{:else if showOnboarding}
   <Onboarding onCreateCustom={navigateToNewHabit} onTemplateSelect={handleTemplateSelect} activeTemplate={addingTemplate} />
 {:else}
   <div class="min-h-screen bg-transparent">

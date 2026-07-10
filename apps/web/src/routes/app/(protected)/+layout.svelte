@@ -69,8 +69,10 @@
   onMount(() => {
     sessionClearInFlight = false;
     setCurrentUserId(data.authSession.userId);
-    habitsStore.setUserId(data.authSession.userId);
-    void refreshHabits();
+    isRefreshing = true;
+    void habitsStore.setUserId(data.authSession.userId).finally(() => {
+      isRefreshing = false;
+    });
     void themeStore.setAuthenticated(true);
 
     const onSessionCleared = () => {
