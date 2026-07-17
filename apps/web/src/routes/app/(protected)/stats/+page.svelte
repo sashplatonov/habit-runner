@@ -61,47 +61,47 @@
     <div class="mx-auto flex max-w-7xl flex-col gap-4">
       <Surface
         as="section"
-        padding="lg"
+        padding="sm"
         class="bg-bg-card"
         style="background: linear-gradient(135deg, var(--bg-card), color-mix(in srgb, var(--bg-card) 84%, var(--progress) 16%));"
       >
-        <div class="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
-          <div class="max-w-2xl">
-            <StatusPill tone="progress">
-              <Sparkles size={12} />
-              Progress
-            </StatusPill>
-            <h1 class="mt-4 text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
-              Simple progress that pushes you forward.
-            </h1>
-            <p class="mt-3 max-w-xl text-base leading-7 text-muted">
+        <div class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+          <div class="min-w-0 flex-1">
+            <div class="flex flex-wrap items-center gap-2">
+              <StatusPill tone="progress">
+                <Sparkles size={12} />
+                Progress
+              </StatusPill>
+              <h1 class="text-lg font-semibold tracking-tight text-foreground sm:text-xl">
+                Simple progress that pushes you forward.
+              </h1>
+            </div>
+            <p class="mt-1.5 max-w-3xl text-xs leading-5 text-muted sm:text-sm">
               One screen, one answer: how you are moving now, what changed versus the previous window, and where the next small win sits.
             </p>
           </div>
 
-          <div class="flex flex-col items-start gap-3 lg:items-end">
+          <div class="flex flex-wrap items-center gap-2">
             <SegmentedControl
               options={windowOptions}
               value={windowId}
               ariaLabel="Statistics window"
               onChange={(next) => { windowId = next as StatsWindowId; }}
             />
-            <div class="flex flex-wrap items-center gap-2 text-sm">
-              <a
-                href={resolve('/app/(protected)/habit/new', {})}
-                class="inline-flex items-center gap-2 rounded-full border border-border bg-bg-card px-4 py-2 font-medium text-foreground transition-colors hover:border-accent/40 hover:text-accent"
-              >
-                <Plus size={14} />
-                Add habit
-              </a>
-              <a
-                href={resolve('/app/(protected)/dashboard', {})}
-                class="inline-flex items-center gap-2 rounded-full border border-border bg-bg-secondary px-4 py-2 font-medium text-muted transition-colors hover:text-foreground"
-              >
-                Back to today
-                <ArrowRight size={14} />
-              </a>
-            </div>
+            <a
+              href={resolve('/app/(protected)/habit/new', {})}
+              class="inline-flex min-h-11 items-center gap-2 rounded-full border border-border bg-bg-card px-3 py-2 text-sm font-medium text-foreground transition-colors hover:border-accent/40 hover:text-accent"
+            >
+              <Plus size={14} />
+              Add habit
+            </a>
+            <a
+              href={resolve('/app/(protected)/dashboard', {})}
+              class="inline-flex min-h-11 items-center gap-2 rounded-full border border-border bg-bg-secondary px-3 py-2 text-sm font-medium text-muted transition-colors hover:text-foreground"
+            >
+              Back to today
+              <ArrowRight size={14} />
+            </a>
           </div>
         </div>
       </Surface>

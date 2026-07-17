@@ -14,7 +14,6 @@ function renderToolbar() {
     pendingCount: 2,
     activeTags: [],
     availableTags: ['health'],
-    activeFilterCount: 0,
     onFilterChange: vi.fn(),
     onSearchChange: vi.fn(),
     onClearSearch: vi.fn(),
@@ -28,6 +27,14 @@ function renderToolbar() {
 }
 
 describe('dashboard controls', () => {
+  it('shows tag filters below the search without opening view options', () => {
+    renderToolbar();
+
+    expect(screen.getByRole('button', { name: 'All tags' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: '#health' })).toBeTruthy();
+    expect(screen.queryByRole('region', { name: 'Dashboard view options' })).toBeNull();
+  });
+
   it('opens and closes view options from the same trigger', async () => {
     const user = userEvent.setup();
     renderToolbar();

@@ -3,8 +3,10 @@
   import { marked } from 'marked';
   import DOMPurify from 'dompurify';
   import { openOverlay, closeActiveOverlay } from '$lib/components/overlays/overlayManager';
-
-  type Placement = 'above' | 'below';
+  import {
+    calculateTooltipPosition,
+    type TooltipPlacement
+  } from '$lib/components/overlays/tooltipPosition';
 
   type Props = {
     description: string;
@@ -24,37 +26,49 @@
 
   let show = $state(false);
   let ready = $state(false);
-  let placement = $state<Placement>('above');
-  let anchor = $state({ cx: 0, triggerTop: 0, triggerBottom: 0 });
+  let viewportWidth = $state(typeof window === 'undefined' ? 1024 : window.innerWidth);
+  let viewportHeight = $state(typeof window === 'undefined' ? 768 : window.innerHeight);
+  let panelPosition = $state({
+    left: 12,
+    top: 12,
+    width: 320,
+    maxHeight: 0,
+    placement: 'above' as TooltipPlacement
+  });
   let triggerEl = $state<HTMLButtonElement | null>(null);
   let panelEl = $state<HTMLDivElement | null>(null);
   let closeTimer: ReturnType<typeof setTimeout> | null = null;
   let isHovering = $state(false);
 
   const isMobile = $derived.by(() => {
-    if (typeof window === 'undefined') return false;
-    return window.innerWidth < 640;
+    return viewportWidth < 640;
   });
 
-  const panelWidth = $derived.by(() => {
-    if (typeof window === 'undefined') {
-      return 280;
+  function updateViewport() {
+    viewportWidth = window.innerWidth;
+    viewportHeight = window.innerHeight;
+    if (show && !isMobile) {
+      positionPanel();
     }
-    if (isMobile) {
-      return window.innerWidth - 32; // 16px padding on each side
-    }
-    return Math.min(Math.max(window.innerWidth / 3, 320), 480);
-  });
+  }
 
-  const left = $derived.by(() => {
-    if (typeof window === 'undefined' || isMobile) {
-      return 16; // For mobile, we use inset-x-0 instead
+  function positionPanel() {
+    if (!triggerEl || !panelEl || isMobile) {
+      return;
     }
-    return Math.max(panelWidth / 2 + 12, Math.min(anchor.cx, window.innerWidth - panelWidth / 2 - 12));
-  });
 
-  const top = $derived(isMobile ? undefined : (placement === 'above' ? anchor.triggerTop - 10 : anchor.triggerBottom + 10));
-  const transform = $derived(isMobile ? 'none' : (placement === 'above' ? 'translate(-50%, -100%)' : 'translate(-50%, 0)'));
+    const rect = triggerEl.getBoundingClientRect();
+    panelPosition = calculateTooltipPosition({
+      viewportWidth,
+      viewportHeight,
+      triggerLeft: rect.left,
+      triggerRight: rect.right,
+      triggerTop: rect.top,
+      triggerBottom: rect.bottom,
+      contentHeight: panelEl.scrollHeight
+    });
+    ready = true;
+  }
 
   function clearCloseTimer() {
     if (closeTimer) {
@@ -77,13 +91,6 @@
     if (!el) {
       return;
     }
-    const rect = el.getBoundingClientRect();
-    anchor = {
-      cx: rect.left + rect.width / 2,
-      triggerTop: rect.top,
-      triggerBottom: rect.bottom
-    };
-    placement = 'above';
     ready = false;
     show = true;
     clearCloseTimer();
@@ -115,9 +122,7 @@
     if (!show || !panelEl || isMobile) {
       return;
     }
-    const panelHeight = panelEl.offsetHeight;
-    placement = anchor.triggerTop - panelHeight - 10 < 12 ? 'below' : 'above';
-    ready = true;
+    positionPanel();
   });
 
   // Handle touch events for mobile swipe-down to close
@@ -149,6 +154,8 @@
     };
   });
 </script>
+
+<svelte:window onresize={updateViewport} onscroll={positionPanel} />
 
 <button
   bind:this={triggerEl}
@@ -189,7 +196,7 @@
     <div
       use:portal
       bind:this={panelEl}
-      class="fixed inset-x-0 bottom-0 z-[9999] max-h-[70vh] overflow-y-auto rounded-t-2xl border border-border/60 bg-bg-card shadow-[0_8px_32px_rgba(0,0,0,0.28)] backdrop-blur-sm"
+      class="fixed inset-x-0 bottom-0 z-[9999] max-h-[70dvh] overflow-y-auto overscroll-contain rounded-t-2xl border border-border/60 bg-bg-card shadow-[0_8px_32px_rgba(0,0,0,0.28)] backdrop-blur-sm"
       role="dialog"
       aria-label="Description"
       aria-modal="true"
@@ -205,7 +212,7 @@
       <div class="flex justify-center pb-1 pt-2 cursor-grab active:cursor-grabbing" role="presentation" aria-hidden="true" ontouchstart={handleTouchStart} ontouchend={handleTouchEnd}>
         <div class="h-[2px] w-8 rounded-full bg-foreground opacity-25"></div>
       </div>
-      <div class="markdown-content break-words px-4 pb-6 text-[11px] leading-[1.6] text-foreground">{@html renderedDescription}</div>
+      <div class="markdown-content break-words px-4 pt-1 text-[11px] leading-[1.6] text-foreground" style:padding-bottom="max(1.5rem, env(safe-area-inset-bottom))">{@html renderedDescription}</div>
     </div>
     <!-- Overlay to close on tap outside -->
     <div
@@ -220,12 +227,11 @@
       use:portal
       bind:this={panelEl}
       class="fixed z-[9999]"
-      style:left="{left}px"
-      style:top="{top}px"
-      style:transform={transform}
-      style:width="{panelWidth}px"
+      style:left="{panelPosition.left}px"
+      style:top="{panelPosition.top}px"
+      style:width="{panelPosition.width}px"
       style:visibility={ready ? 'visible' : 'hidden'}
-      style:max-height="60vh"
+      style:max-height="{panelPosition.maxHeight}px"
       style:overflow-y="auto"
       role="tooltip"
       tabindex="-1"
@@ -262,7 +268,7 @@
       </div>
       <div
         class="absolute left-1/2 h-0 w-0 -translate-x-1/2"
-        style={placement === 'above'
+        style={panelPosition.placement === 'above'
           ? 'bottom: 0; transform: translateX(-50%) translateY(100%); border-left: 6px solid transparent; border-right: 6px solid transparent; border-top: 6px solid color-mix(in srgb, var(--border) 60%, transparent);'
           : 'top: 0; transform: translateX(-50%) translateY(-100%); border-left: 6px solid transparent; border-right: 6px solid transparent; border-bottom: 6px solid color-mix(in srgb, var(--border) 60%, transparent);'}
         aria-hidden="true"

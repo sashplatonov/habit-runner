@@ -746,7 +746,6 @@
           {pendingCount}
           activeTags={selectedTags}
           availableTags={allTags}
-          activeFilterCount={selectedTags.length}
           onFilterChange={(nextFilter) => {
             filter = nextFilter;
           }}
@@ -781,7 +780,7 @@
 
       <RemindersPanel />
 
-      <div class={viewDensity === 'comfortable' ? 'max-w-6xl' : 'max-w-5xl'}>
+      <div class="w-full max-w-6xl">
         {#if filteredHabits.length === 0}
           <div class="rounded-[1.75rem] border border-border bg-bg-secondary/88 py-16 text-center text-muted shadow-[0_20px_54px_rgba(15,23,42,0.08)]">
             <p class="text-4xl mb-3">
@@ -849,7 +848,7 @@
             {/if}
           </div>
         {:else}
-          <div class="mx-auto flex w-full max-w-5xl flex-col gap-3" role="list" aria-label="Habit list">
+          <div class="flex w-full flex-col gap-3" role="list" aria-label="Habit list">
             {#if selectedTags.length === 0}
               {#each filteredHabits as habit, idx (habit.id)}
                 <HabitCompactRow

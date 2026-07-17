@@ -15,7 +15,6 @@
     pendingCount: number;
     activeTags: string[];
     availableTags: string[];
-    activeFilterCount: number;
     onFilterChange: (filter: Filter) => void | Promise<void>;
     onSearchChange: (query: string) => void | Promise<void>;
     onClearSearch: () => void | Promise<void>;
@@ -35,7 +34,6 @@
     pendingCount,
     activeTags,
     availableTags,
-    activeFilterCount,
     onFilterChange,
     onSearchChange,
     onClearSearch,
@@ -58,7 +56,7 @@
   ]);
 
   const activeOptionsCount = $derived(
-    activeFilterCount + (filter === 'archived' ? 1 : 0) + (sortMode !== 'custom' ? 1 : 0) + (viewDensity !== 'comfortable' ? 1 : 0)
+    (filter === 'archived' ? 1 : 0) + (sortMode !== 'custom' ? 1 : 0) + (viewDensity !== 'comfortable' ? 1 : 0)
   );
 
   function handleWindowClick(event: MouseEvent) {
@@ -82,7 +80,7 @@
 
 <svelte:window onpointerdown={handleWindowClick} onkeydown={handleWindowKeydown} />
 
-<section class="space-y-4">
+<section class="space-y-3">
   <div class="flex flex-wrap items-center gap-2">
     <DashboardSegmentedControl
       ariaLabel="Dashboard filter"
@@ -182,7 +180,7 @@
         <div class="flex items-center justify-between gap-3">
           <div>
             <p class="text-[10px] font-semibold uppercase tracking-[0.24em] text-muted">View options</p>
-            <p class="mt-1 text-sm text-muted">Sort, density, tags, archive, and export live here.</p>
+            <p class="mt-1 text-sm text-muted">Sort, density, archive, and export live here.</p>
           </div>
           <button
             type="button"
@@ -233,38 +231,6 @@
             />
           </div>
 
-          <div class="space-y-2">
-            <div class="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.22em] text-muted">
-              <TagIcon size={12} />
-              Tags
-              {#if activeTags.length > 0}
-                <span class="rounded-full bg-accent/12 px-2 py-0.5 text-[10px] text-accent">{activeTags.length}</span>
-              {/if}
-            </div>
-            <div class="flex flex-wrap gap-2">
-              {#if activeTags.length > 0}
-                <button
-                  type="button"
-                  class="min-h-11 rounded-full border border-border bg-bg-secondary px-3 py-2 text-xs text-muted transition-colors hover:text-foreground"
-                  onclick={onClearTags}
-                >
-                  Clear tags
-                </button>
-              {/if}
-              {#each availableTags as tag, tagIndex (tag + '-' + tagIndex)}
-                <button
-                  type="button"
-                  class={`min-h-11 rounded-full border px-3 py-2 text-xs transition-colors ${activeTags.includes(tag) ? 'border-accent/30 bg-accent/10 text-accent' : 'border-border bg-bg-secondary text-muted hover:text-foreground'}`}
-                  onclick={() => {
-                    void onToggleTag(tag);
-                  }}
-                >
-                  #{tag}
-                </button>
-              {/each}
-            </div>
-          </div>
-
           <div class="flex flex-wrap items-center gap-2">
             <button
               type="button"
@@ -300,4 +266,34 @@
       {/if}
     </div>
   </div>
+
+  {#if availableTags.length > 0 || activeTags.length > 0}
+    <div class="flex min-w-0 items-center gap-2" aria-label="Filter habits by tag">
+      <TagIcon class="shrink-0 text-muted" size={16} aria-hidden="true" />
+      <div class="flex min-w-0 flex-1 gap-2 overflow-x-auto overscroll-x-contain pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <button
+          type="button"
+          class={`min-h-11 shrink-0 rounded-full border px-3 py-2 text-xs font-medium transition-colors ${activeTags.length === 0 ? 'border-accent/30 bg-accent/10 text-accent' : 'border-border bg-bg-card text-muted hover:text-foreground'}`}
+          aria-pressed={activeTags.length === 0}
+          onclick={() => {
+            void onClearTags();
+          }}
+        >
+          All tags
+        </button>
+        {#each availableTags as tag, tagIndex (tag + '-' + tagIndex)}
+          <button
+            type="button"
+            class={`min-h-11 shrink-0 rounded-full border px-3 py-2 text-xs font-medium transition-colors ${activeTags.includes(tag) ? 'border-accent/30 bg-accent/10 text-accent' : 'border-border bg-bg-card text-muted hover:text-foreground'}`}
+            aria-pressed={activeTags.includes(tag)}
+            onclick={() => {
+              void onToggleTag(tag);
+            }}
+          >
+            #{tag}
+          </button>
+        {/each}
+      </div>
+    </div>
+  {/if}
 </section>
