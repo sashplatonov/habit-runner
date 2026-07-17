@@ -3,11 +3,11 @@ package com.sashplatonov.habbit.runner.checkin.service;
 import com.sashplatonov.habbit.runner.api.OperationFailure;
 import com.sashplatonov.habbit.runner.api.OperationSuccess;
 import com.sashplatonov.habbit.runner.checkin.CheckinMapper;
+import com.sashplatonov.habbit.runner.checkin.CheckinMutationHandler;
+import com.sashplatonov.habbit.runner.checkin.CheckinQueryHandler;
 import com.sashplatonov.habbit.runner.checkin.CheckinServiceImpl;
-import com.sashplatonov.habbit.runner.checkin.dto.CheckinResponseDto;
 import com.sashplatonov.habbit.runner.checkin.dto.CheckinUpsertRequestDto;
 import com.sashplatonov.habbit.runner.checkin.support.CheckinMutationCoordinator;
-import com.sashplatonov.habbit.runner.habit.dto.HabitResponseDto;
 import com.sashplatonov.habbit.runner.model.CheckinEntity;
 import com.sashplatonov.habbit.runner.model.HabitColor;
 import com.sashplatonov.habbit.runner.model.HabitEntity;
@@ -15,8 +15,8 @@ import com.sashplatonov.habbit.runner.model.HabitFrequency;
 import com.sashplatonov.habbit.runner.model.HabitType;
 import com.sashplatonov.habbit.runner.repository.CheckinRepository;
 import com.sashplatonov.habbit.runner.repository.HabitRepository;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mapstruct.factory.Mappers;
 import org.mockito.ArgumentMatchers;
 
 import java.math.BigInteger;
@@ -26,7 +26,6 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
-import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -36,14 +35,16 @@ import static org.mockito.Mockito.when;
 class CheckinServiceImplTest {
   private final CheckinRepository checkinRepository = mock(CheckinRepository.class);
   private final HabitRepository habitRepository = mock(HabitRepository.class);
-  private final CheckinMapper checkinMapper = mock(CheckinMapper.class);
+  private final CheckinMapper checkinMapper = Mappers.getMapper(CheckinMapper.class);
   private final CheckinMutationCoordinator coordinator = new CheckinMutationCoordinator();
-  private final CheckinServiceImpl service = new CheckinServiceImpl(checkinRepository, habitRepository, checkinMapper, coordinator);
-
-  @BeforeEach
-  void setUp() {
-    doAnswer(invocation -> response("checkin-1")).when(checkinMapper).toResponse(ArgumentMatchers.any());
-  }
+  private final CheckinQueryHandler queryHandler = new CheckinQueryHandler(checkinRepository, checkinMapper);
+  private final CheckinMutationHandler mutationHandler = new CheckinMutationHandler(
+      checkinRepository,
+      habitRepository,
+      checkinMapper,
+      coordinator
+  );
+  private final CheckinServiceImpl service = new CheckinServiceImpl(queryHandler, mutationHandler);
 
   @Test
   void shouldUpsertCheckinAndDeleteWhenMarkedFalse() {
@@ -194,16 +195,4 @@ class CheckinServiceImplTest {
     return entity;
   }
 
-  private CheckinResponseDto response(String id) {
-    return CheckinResponseDto.builder()
-        .id(id)
-        .habitId("habit-1")
-        .date("2026-04-10")
-        .done(true)
-        .count(1)
-        .createdAt("2026-04-10T10:00:00Z")
-        .updatedAt("2026-04-10T10:00:00Z")
-        .version(1)
-        .build();
-  }
 }
