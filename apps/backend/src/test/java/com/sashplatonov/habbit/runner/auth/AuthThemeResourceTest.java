@@ -31,6 +31,8 @@ import io.quarkus.test.junit.QuarkusTest;
 import io.restassured.http.ContentType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.equalTo;
@@ -75,6 +77,22 @@ class AuthThemeResourceTest extends AuthenticatedApiTestSupport {
         .body("theme", equalTo("matrix"));
 
     assertStoredTheme("matrix");
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"graphite", "aurora", "dune", "lagoon"})
+  void shouldRoundTripNewThemeIds(String themeId) {
+    given()
+        .header("Authorization", "Bearer " + token)
+        .contentType(ContentType.JSON)
+        .body(new UpdateThemeRequest(themeId))
+        .when()
+        .put("/auth/theme")
+        .then()
+        .statusCode(200)
+        .body("theme", equalTo(themeId));
+
+    assertStoredTheme(themeId);
   }
 
   @Test

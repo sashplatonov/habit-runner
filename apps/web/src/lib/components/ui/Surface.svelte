@@ -4,16 +4,24 @@
     padding?: 'none' | 'sm' | 'md' | 'lg';
     class?: string;
     style?: string;
+    ariaLive?: 'off' | 'polite' | 'assertive';
     children: import('svelte').Snippet;
   };
 
-  let { as = 'div', padding = 'md', class: className = '', style = '', children }: Props = $props();
+  let {
+    as = 'div',
+    padding = 'md',
+    class: className = '',
+    style = '',
+    ariaLive,
+    children
+  }: Props = $props();
 
   const tagClass = $derived(
     `rounded-surface border border-border bg-bg-card shadow-surface ${padding === 'none' ? '' : padding === 'sm' ? 'p-3' : padding === 'lg' ? 'p-6 sm:p-7' : 'p-4 sm:p-5'}`
   );
 </script>
 
-<svelte:element this={as} class={`${tagClass} ${className}`.trim()} {style}>
+<svelte:element this={as} class={`${tagClass} ${className}`.trim()} {style} aria-live={ariaLive}>
   {@render children()}
 </svelte:element>

@@ -8,9 +8,10 @@
 
   type Props = {
     description: string;
+    triggerClassName?: string;
   };
 
-  const { description }: Props = $props();
+  const { description, triggerClassName = 'h-4 w-4' }: Props = $props();
 
   const renderedDescription = $derived.by(() => {
     try {
@@ -152,7 +153,7 @@
 <button
   bind:this={triggerEl}
   type="button"
-  class="inline-flex h-4 w-4 flex-shrink-0 cursor-help items-center justify-center rounded border border-dashed border-muted font-mono text-[9px] text-muted transition-colors hover:border-foreground hover:text-foreground"
+  class={`inline-flex flex-shrink-0 cursor-help items-center justify-center rounded border border-dashed border-muted font-mono text-[9px] text-muted transition-colors hover:border-foreground hover:text-foreground ${triggerClassName}`}
   onmouseenter={() => {
     if (!isMobile && !show) {
       open();

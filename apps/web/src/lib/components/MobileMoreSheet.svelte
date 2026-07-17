@@ -1,7 +1,8 @@
 <script lang="ts">
-  import { MoonIcon, SearchIcon, SunIcon, LogOutIcon, XIcon } from 'lucide-svelte';
+  import { SearchIcon, LogOutIcon, XIcon } from 'lucide-svelte';
   import Overlay from '$lib/components/overlays/Overlay.svelte';
-  import { THEMES, type ThemeId } from '$lib/theme/themes';
+  import type { ThemeId } from '$lib/theme/themes';
+  import ThemePicker from '$lib/components/ThemePicker.svelte';
 
   type Props = {
     open: boolean;
@@ -15,12 +16,6 @@
 
   let { open, triggerEl = null, theme, onThemeChange, onClose, onLogout, onSearch }: Props = $props();
 
-  const darkThemes = $derived(THEMES.filter((candidate) => candidate.group === 'dark'));
-  const lightThemes = $derived(THEMES.filter((candidate) => candidate.group === 'light'));
-  const splitThemes = $derived([
-    { title: 'Dark', icon: MoonIcon, items: darkThemes },
-    { title: 'Light', icon: SunIcon, items: lightThemes }
-  ]);
 </script>
 
 {#if open}
@@ -41,7 +36,7 @@
         </div>
         <button
           type="button"
-          class="flex h-10 w-10 items-center justify-center rounded-full border border-border bg-bg-card text-muted transition-colors hover:text-foreground"
+          class="flex h-11 w-11 items-center justify-center rounded-full border border-border bg-bg-card text-muted transition-colors hover:text-foreground"
           aria-label="Close menu"
           onclick={onClose}
         >
@@ -66,35 +61,12 @@
 
         <div class="rounded-[1.25rem] border border-border bg-bg-card p-3">
           <p class="px-1 text-[10px] font-medium uppercase tracking-[0.24em] text-muted">Theme</p>
-          <div class="mt-3 grid gap-3">
-            {#each splitThemes as section, sectionIndex (section.title + '-' + sectionIndex)}
-              {@const SectionIcon = section.icon}
-              <div>
-                <div class="flex items-center gap-2 px-1 text-[10px] font-medium uppercase tracking-[0.22em] text-muted">
-                  <SectionIcon size={12} />
-                  {section.title}
-                </div>
-                <div class="mt-2 grid grid-cols-2 gap-2">
-                  {#each section.items as candidate (candidate.id)}
-                    <button
-                      type="button"
-                      class={`flex items-center gap-2 rounded-2xl border px-3 py-2 text-left text-xs transition-colors ${theme === candidate.id ? 'border-progress/30 bg-progress/10 text-foreground' : 'border-border bg-bg-secondary text-muted'}`}
-                      onclick={() => {
-                        void onThemeChange(candidate.id);
-                        onClose();
-                      }}
-                    >
-                      <span class="flex gap-0.5">
-                        <span class="h-2 w-2 rounded-full" style:background-color={candidate.accent}></span>
-                        <span class="h-2 w-2 rounded-full" style:background-color={candidate.accentSecondary}></span>
-                      </span>
-                      {candidate.name}
-                    </button>
-                  {/each}
-                </div>
-              </div>
-            {/each}
-          </div>
+          <ThemePicker
+            class="mt-3"
+            {theme}
+            {onThemeChange}
+            onChoose={onClose}
+          />
         </div>
 
         {#if onLogout}

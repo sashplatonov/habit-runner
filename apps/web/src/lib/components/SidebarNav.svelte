@@ -5,12 +5,11 @@
     BarChart2Icon,
     LayoutDashboardIcon,
     LogOutIcon,
-    MoonIcon,
     PaletteIcon,
     PlusIcon,
-    SunIcon
   } from 'lucide-svelte';
-  import { THEMES, type ThemeId } from '$lib/theme/themes';
+  import type { ThemeId } from '$lib/theme/themes';
+  import ThemePicker from '$lib/components/ThemePicker.svelte';
 
   type Props = {
     theme: ThemeId;
@@ -23,8 +22,6 @@
   let isThemeOpen = $state(false);
   let themeElement = $state<HTMLDivElement | null>(null);
 
-  const darkThemes = $derived(THEMES.filter((candidate) => candidate.group === 'dark'));
-  const lightThemes = $derived(THEMES.filter((candidate) => candidate.group === 'light'));
   const dashboardHref = resolve<'/app/(protected)/dashboard'>('/app/(protected)/dashboard', {});
   const statsHref = resolve<'/app/(protected)/stats'>('/app/(protected)/stats', {});
 
@@ -42,9 +39,15 @@
       isThemeOpen = false;
     }
   }
+
+  function handleWindowKeydown(event: KeyboardEvent) {
+    if (event.key === 'Escape') {
+      isThemeOpen = false;
+    }
+  }
 </script>
 
-<svelte:window onmousedown={handleWindowClick} />
+<svelte:window onmousedown={handleWindowClick} onkeydown={handleWindowKeydown} />
 
 <aside
   class="fixed left-0 top-0 z-50 hidden h-screen w-[252px] flex-col border-r border-border bg-bg-secondary/86 px-4 py-4 shadow-[0_24px_64px_rgba(15,23,42,0.08)] backdrop-blur-xl sm:flex"
@@ -94,10 +97,10 @@
     <div class="relative" bind:this={themeElement}>
       <button
         type="button"
-        class={`flex w-full items-center gap-2.5 rounded-[1.25rem] px-3 py-2.5 text-sm font-medium transition-colors ${isThemeOpen ? 'bg-bg-card text-foreground shadow-[0_12px_30px_rgba(15,23,42,0.08)]' : 'text-muted hover:bg-bg-card/80 hover:text-foreground'}`}
+        class={`flex min-h-11 w-full items-center gap-2.5 rounded-[1.25rem] px-3 py-2.5 text-sm font-medium transition-colors ${isThemeOpen ? 'bg-bg-card text-foreground shadow-[0_12px_30px_rgba(15,23,42,0.08)]' : 'text-muted hover:bg-bg-card/80 hover:text-foreground'}`}
         aria-label="Choose color theme"
         aria-expanded={isThemeOpen}
-        aria-haspopup="listbox"
+        aria-controls="sidebar-theme-picker"
         onclick={() => {
           isThemeOpen = !isThemeOpen;
         }}
@@ -108,50 +111,14 @@
       </button>
 
       {#if isThemeOpen}
-        <div class="absolute bottom-full left-0 z-10 mb-2 flex w-full flex-col gap-0.5 rounded-[1.5rem] border border-border bg-bg-card p-2 shadow-[0_22px_60px_rgba(15,23,42,0.14)]">
-          <div class="flex items-center gap-1.5 px-2 py-1">
-            <MoonIcon size={10} class="text-muted" />
-            <span class="text-[9px] font-mono uppercase tracking-wider text-muted">Dark</span>
-          </div>
-          {#each darkThemes as candidate (candidate.id)}
-            <button
-              type="button"
-              class={`flex items-center gap-2 rounded-lg px-2 py-1.5 text-xs font-mono transition-colors ${theme === candidate.id ? 'bg-progress/10 text-progress' : 'text-muted hover:bg-bg-secondary hover:text-foreground'}`}
-              aria-label={`Switch to ${candidate.name} theme`}
-              onclick={() => {
-                void onThemeChange(candidate.id);
-                isThemeOpen = false;
-              }}
-            >
-              <div class="flex gap-0.5">
-                <div class="h-2 w-2 rounded-full" style:background-color={candidate.accent}></div>
-                <div class="h-2 w-2 rounded-full" style:background-color={candidate.accentSecondary}></div>
-              </div>
-              {candidate.name}
-            </button>
-          {/each}
-          <div class="my-1 h-px bg-border"></div>
-          <div class="flex items-center gap-1.5 px-2 py-1">
-            <SunIcon size={10} class="text-muted" />
-            <span class="text-[9px] font-mono uppercase tracking-wider text-muted">Light</span>
-          </div>
-          {#each lightThemes as candidate (candidate.id)}
-            <button
-              type="button"
-              class={`flex items-center gap-2 rounded-lg px-2 py-1.5 text-xs font-mono transition-colors ${theme === candidate.id ? 'bg-progress/10 text-progress' : 'text-muted hover:bg-bg-secondary hover:text-foreground'}`}
-              aria-label={`Switch to ${candidate.name} theme`}
-              onclick={() => {
-                void onThemeChange(candidate.id);
-                isThemeOpen = false;
-              }}
-            >
-              <div class="flex gap-0.5">
-                <div class="h-2 w-2 rounded-full" style:background-color={candidate.accent}></div>
-                <div class="h-2 w-2 rounded-full" style:background-color={candidate.accentSecondary}></div>
-              </div>
-              {candidate.name}
-            </button>
-          {/each}
+        <div id="sidebar-theme-picker" class="absolute bottom-full left-0 z-10 mb-2 max-h-[min(70vh,40rem)] w-[min(22rem,calc(100vw-2rem))] overflow-y-auto overscroll-contain rounded-[1.5rem] border border-border bg-bg-card p-3 shadow-[0_22px_60px_rgba(15,23,42,0.14)]">
+          <ThemePicker
+            {theme}
+            {onThemeChange}
+            onChoose={() => {
+              isThemeOpen = false;
+            }}
+          />
         </div>
       {/if}
     </div>

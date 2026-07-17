@@ -15,6 +15,6 @@ describe('dashboard SSR safety', () => {
     expect(dashboardSource).not.toMatch(/import\s+confetti\s+from\s+['"]canvas-confetti['"]/);
     expect(habitTileSource).not.toMatch(/import\s+confetti\s+from\s+['"]canvas-confetti['"]/);
     expect(dashboardSource).toContain("import('canvas-confetti')");
-    expect(habitTileSource).toContain("import('canvas-confetti')");
+    expect(habitTileSource).not.toContain("import('canvas-confetti')");
   });
 });

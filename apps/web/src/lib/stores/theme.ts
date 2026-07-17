@@ -1,7 +1,13 @@
 import { get, writable, type Readable } from 'svelte/store';
 import { fetchUserPreferences, saveUserPreferences } from '$lib/api/theme';
 import { logClientError } from '$lib/logging/clientLogger';
-import { THEMES, type Theme, type ThemeId } from '$lib/theme/themes';
+import {
+  DEFAULT_THEME_ID,
+  getTheme,
+  THEMES,
+  type Theme,
+  type ThemeId
+} from '$lib/theme/themes';
 import {
   getBrowserTimeZone,
   getCurrentUserTimeZone,
@@ -33,14 +39,25 @@ function resolveStoredTheme(): ThemeId {
   try {
     const storedTheme = window.localStorage.getItem(STORAGE_KEY);
     const matchingTheme = THEMES.find((theme) => theme.id === storedTheme);
-    return matchingTheme?.id ?? 'cloud';
+    return matchingTheme?.id ?? DEFAULT_THEME_ID;
   } catch {
-    return 'cloud';
+    return DEFAULT_THEME_ID;
   }
 }
 
 function resolveCurrentTheme(themeId: ThemeId): Theme {
-  return THEMES.find((theme) => theme.id === themeId) ?? THEMES[0];
+  return getTheme(themeId);
+}
+
+function updateThemeColorMeta(themeColor: string) {
+  if (typeof document === 'undefined') {
+    return;
+  }
+
+  const meta = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]');
+  if (meta) {
+    meta.setAttribute('content', themeColor);
+  }
 }
 
 function applyTheme(themeId: ThemeId) {
@@ -48,7 +65,9 @@ function applyTheme(themeId: ThemeId) {
     return;
   }
 
+  const theme = resolveCurrentTheme(themeId);
   document.documentElement.setAttribute('data-theme', themeId);
+  updateThemeColorMeta(theme.themeColor);
   try {
     window.localStorage.setItem(STORAGE_KEY, themeId);
   } catch {

@@ -10,10 +10,14 @@ public final class ThemeCatalog {
       "violet",
       "matrix",
       "arctic",
+      "graphite",
+      "aurora",
       "sakura",
       "lavender",
       "mint",
       "peach",
+      "dune",
+      "lagoon",
       DEFAULT_THEME
   );
 

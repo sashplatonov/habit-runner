@@ -10,13 +10,14 @@
   --color-border-hover: var(--border-hover);
   --color-foreground: var(--text-primary);
   --color-muted: var(--text-muted);
+  --color-icon-muted: var(--icon-muted);
   --color-accent: var(--accent);
   --color-accent-secondary: var(--accent-secondary);
   --color-progress: var(--progress);
   --color-attention: var(--attention);
   --color-danger: var(--danger);
   --radius-surface: 1.5rem;
-  --shadow-surface: 0 12px 30px rgba(15, 23, 42, 0.08);
+  --shadow-surface: var(--surface-shadow);
   --shadow-glow-blue: 0 0 20px rgba(0, 212, 255, 0.3);
   --shadow-glow-green: 0 0 20px rgba(0, 255, 136, 0.3);
   --shadow-glow-blue-sm: 0 0 10px rgba(0, 212, 255, 0.25);
@@ -26,179 +27,14 @@
 
 /* Global focus-visible contract */
 *:focus-visible {
-  outline: 2px solid var(--accent, #00d4ff);
+  outline: 2px solid var(--focus-ring, var(--accent));
   outline-offset: 2px;
 }
 
-:root, [data-theme="midnight"] {
-  --bg-primary: #0b100d;
-  --bg-secondary: #121a15;
-  --bg-card: #18211b;
-  --border: #2b382f;
-  --border-hover: #3d4d43;
+:root {
   --border-dashed: var(--border);
-  --text-primary: #f3f7f4;
-  --text-muted: #b8c4bc;
-  --accent: #65d6a0;
-  --accent-secondary: #9aa8ff;
-  --progress: #65d6a0;
-  --attention: #f2a36b;
-  --danger: #ff8b85;
-  --glow: rgba(101, 214, 160, 0.24);
-  --glow-secondary: rgba(154, 168, 255, 0.24);
   --safe-area-inset-top: env(safe-area-inset-top, 0px);
   --safe-area-inset-bottom: env(safe-area-inset-bottom, 0px);
-}
-[data-theme="ember"] {
-  --bg-primary: #0d0b09;
-  --bg-secondary: #161210;
-  --bg-card: #1c1714;
-  --border: #302622;
-  --border-hover: #453733;
-  --text-primary: #f7f5f2;
-  --text-muted: #c0b1a5;
-  --accent: #f2a36b;
-  --accent-secondary: #ff8b85;
-  --progress: #f2a36b;
-  --attention: #ef8b5f;
-  --danger: #ff8b85;
-  --glow: rgba(242, 163, 107, 0.24);
-  --glow-secondary: rgba(255, 139, 133, 0.2);
-}
-[data-theme="violet"] {
-  --bg-primary: #0c0b13;
-  --bg-secondary: #141222;
-  --bg-card: #18162a;
-  --border: #2a2740;
-  --border-hover: #3a3654;
-  --text-primary: #f6f5fb;
-  --text-muted: #b8b1d0;
-  --accent: #9aa8ff;
-  --accent-secondary: #c69bff;
-  --progress: #9aa8ff;
-  --attention: #e3ad6d;
-  --danger: #ff8b85;
-  --glow: rgba(154, 168, 255, 0.24);
-  --glow-secondary: rgba(198, 155, 255, 0.2);
-}
-[data-theme="matrix"] {
-  --bg-primary: #08110a;
-  --bg-secondary: #101913;
-  --bg-card: #152119;
-  --border: #243329;
-  --border-hover: #33463a;
-  --text-primary: #f0f7f1;
-  --text-muted: #b2c3b6;
-  --accent: #65d6a0;
-  --accent-secondary: #9be2bb;
-  --progress: #65d6a0;
-  --attention: #e2c46b;
-  --danger: #ff8b85;
-  --glow: rgba(101, 214, 160, 0.22);
-  --glow-secondary: rgba(155, 226, 187, 0.18);
-}
-[data-theme="arctic"] {
-  --bg-primary: #0a1118;
-  --bg-secondary: #111924;
-  --bg-card: #162131;
-  --border: #223044;
-  --border-hover: #31435d;
-  --text-primary: #f3f7fb;
-  --text-muted: #b4c1cf;
-  --accent: #7eb8ff;
-  --accent-secondary: #dce7f7;
-  --progress: #7eb8ff;
-  --attention: #f2b36b;
-  --danger: #ff8b85;
-  --glow: rgba(126, 184, 255, 0.24);
-  --glow-secondary: rgba(220, 231, 247, 0.18);
-}
-/* ── Light / Pastel Themes ── */
-
-[data-theme="sakura"] {
-  --bg-primary: #fff8f8;
-  --bg-secondary: #fff1f1;
-  --bg-card: #ffe7e8;
-  --border: #ebd0d2;
-  --border-hover: #dcb8bc;
-  --border-dashed: rgba(0,0,0,0.14);
-  --text-primary: #43272a;
-  --text-muted: #7a5a61;
-  --accent: #e56e93;
-  --accent-secondary: #c95cb7;
-  --progress: #e56e93;
-  --attention: #db8a5f;
-  --danger: #d94d66;
-  --glow: rgba(229, 110, 147, 0.16);
-  --glow-secondary: rgba(201, 92, 183, 0.14);
-}
-[data-theme="lavender"] {
-  --bg-primary: #f8f7ff;
-  --bg-secondary: #f1edff;
-  --bg-card: #e9e3ff;
-  --border: #d5cfee;
-  --border-hover: #c4b9e1;
-  --border-dashed: rgba(0,0,0,0.14);
-  --text-primary: #2d2743;
-  --text-muted: #5f5679;
-  --accent: #8b7bff;
-  --accent-secondary: #6fb4ff;
-  --progress: #8b7bff;
-  --attention: #d39d61;
-  --danger: #e06d85;
-  --glow: rgba(139, 123, 255, 0.16);
-  --glow-secondary: rgba(111, 180, 255, 0.14);
-}
-[data-theme="mint"] {
-  --bg-primary: #f5fbf8;
-  --bg-secondary: #eaf7f1;
-  --bg-card: #ddf0e5;
-  --border: #c5e0cf;
-  --border-hover: #aad0b8;
-  --border-dashed: rgba(0,0,0,0.14);
-  --text-primary: #17382a;
-  --text-muted: #4a6b58;
-  --accent: #3fc48a;
-  --accent-secondary: #56b8c9;
-  --progress: #3fc48a;
-  --attention: #d69b62;
-  --danger: #dc6e78;
-  --glow: rgba(63, 196, 138, 0.16);
-  --glow-secondary: rgba(86, 184, 201, 0.14);
-}
-[data-theme="peach"] {
-  --bg-primary: #fffaf5;
-  --bg-secondary: #fff1e5;
-  --bg-card: #fde7d4;
-  --border: #f0d4ba;
-  --border-hover: #e0c29f;
-  --border-dashed: rgba(0,0,0,0.14);
-  --text-primary: #3b2812;
-  --text-muted: #71563d;
-  --accent: #f08d52;
-  --accent-secondary: #dd6d86;
-  --progress: #f08d52;
-  --attention: #d46f46;
-  --danger: #db6773;
-  --glow: rgba(240, 141, 82, 0.16);
-  --glow-secondary: rgba(221, 109, 134, 0.14);
-}
-[data-theme="cloud"] {
-  --bg-primary: #f4f6f1;
-  --bg-secondary: rgba(255, 255, 255, 0.88);
-  --bg-card: #ffffff;
-  --border: #d9e0da;
-  --border-hover: #c3cdc5;
-  --border-dashed: rgba(0,0,0,0.14);
-  --text-primary: #172019;
-  --text-muted: #54645b;
-  --accent: #4e63d8;
-  --accent-secondary: #23835d;
-  --progress: #23835d;
-  --attention: #b45f2a;
-  --danger: #b42318;
-  --glow: rgba(78, 99, 216, 0.18);
-  --glow-secondary: rgba(35, 131, 93, 0.16);
 }
 * {
   box-sizing: border-box;
@@ -208,22 +44,6 @@ html {
   -moz-osx-font-smoothing: grayscale;
   /* P2.2: smooth theme transitions */
   transition: background-color 0.25s ease, color 0.15s ease;
-}
-html[data-theme="cloud"],
-html[data-theme="cloud"] body {
-  background:
-    radial-gradient(circle at top left, rgba(78, 99, 216, 0.16), transparent 28%),
-    radial-gradient(circle at 84% 12%, rgba(35, 131, 93, 0.14), transparent 24%),
-    linear-gradient(180deg, #fafbf7 0%, #f4f6f1 48%, #fbfcf9 100%);
-  color-scheme: light;
-}
-html[data-theme="midnight"],
-html[data-theme="midnight"] body {
-  background:
-    radial-gradient(circle at top left, rgba(101, 214, 160, 0.14), transparent 28%),
-    radial-gradient(circle at 82% 12%, rgba(154, 168, 255, 0.13), transparent 24%),
-    linear-gradient(180deg, #0b100d 0%, #0e1511 48%, #0b100d 100%);
-  color-scheme: dark;
 }
 body {
   background-color: var(--bg-primary);
@@ -314,7 +134,7 @@ textarea:focus-visible,
 select:focus-visible,
 a:focus-visible,
 [tabindex]:focus-visible {
-  outline: 2px solid var(--accent);
+  outline: 2px solid var(--focus-ring, var(--accent));
   outline-offset: 2px;
 }
 

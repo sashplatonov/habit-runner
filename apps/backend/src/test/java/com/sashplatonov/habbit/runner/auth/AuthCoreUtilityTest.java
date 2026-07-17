@@ -72,7 +72,8 @@ class AuthCoreUtilityTest {
 
   @Test
   void shouldKeepThemeWhenThemeIsSupported() {
-    assertEquals("mint", ThemeCatalog.normalize("mint"));
+    assertEquals("graphite", ThemeCatalog.normalize("graphite"));
+    assertEquals("lagoon", ThemeCatalog.normalize("lagoon"));
   }
 
   @Test
