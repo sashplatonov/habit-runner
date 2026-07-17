@@ -11,7 +11,7 @@
   const { dailyTarget, todayCompletionCount, accent }: Props = $props();
 </script>
 
-<div class="rounded-2xl border border-border bg-bg-secondary p-4">
+<div class="rounded-surface border border-border bg-bg-card p-4 shadow-surface">
   <div class="mb-2 flex items-center gap-2">
     <div class="text-[11px] font-mono uppercase tracking-[0.5em] text-muted">Today</div>
     <ChartGuideTooltip

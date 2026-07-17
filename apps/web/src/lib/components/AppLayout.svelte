@@ -16,8 +16,9 @@
 
 <div class="relative min-h-screen overflow-x-clip bg-bg-primary text-foreground">
   <div aria-hidden="true" class="pointer-events-none fixed inset-0 -z-10 hidden sm:block">
-    <div class="absolute left-[-9rem] top-[-8rem] h-[24rem] w-[24rem] rounded-full bg-accent/10 blur-3xl"></div>
-    <div class="absolute right-[-7rem] top-[14rem] h-[22rem] w-[22rem] rounded-full bg-accent-secondary/10 blur-3xl"></div>
+    <div class="absolute left-[-8rem] top-[-8rem] h-[24rem] w-[24rem] rounded-full bg-progress/10 blur-3xl"></div>
+    <div class="absolute right-[-6rem] top-[12rem] h-[24rem] w-[24rem] rounded-full bg-accent-secondary/10 blur-3xl"></div>
+    <div class="absolute bottom-[-8rem] left-[18%] h-[18rem] w-[18rem] rounded-full bg-attention/8 blur-3xl"></div>
   </div>
 
   <a
@@ -33,7 +34,7 @@
     {onLogout}
   />
 
-  <div class="sm:ml-[220px]">
+  <div class="sm:ml-[252px]">
     <main
       id="main-content"
       tabindex="-1"
@@ -45,7 +46,7 @@
     </main>
 
     <footer class="px-4 py-5 text-center sm:px-6">
-      <div class="mx-auto inline-flex items-center gap-2 rounded-full border border-border bg-bg-secondary/75 px-4 py-2 shadow-[0_14px_34px_rgba(15,23,42,0.06)] backdrop-blur-sm">
+      <div class="mx-auto inline-flex items-center gap-2 rounded-full border border-border bg-bg-secondary/84 px-4 py-2 shadow-[0_12px_30px_rgba(15,23,42,0.08)] backdrop-blur-sm">
         <span class="select-none text-[11px] font-mono text-muted/70">
         {new Date(__BUILD_TIME__).toLocaleString('en-GB', {
           day: 'numeric',

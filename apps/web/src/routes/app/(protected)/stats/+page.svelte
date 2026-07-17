@@ -1,345 +1,320 @@
 <script lang="ts">
   import { resolve } from '$app/paths';
-  import {
-    AlertTriangle,
-    Calendar,
-    Dumbbell,
-    Flame,
-    Lightbulb,
-    Plus,
-    Sprout,
-    TrendingDown,
-    TrendingUp,
-    Zap
-  } from 'lucide-svelte';
+  import { ArrowRight, CalendarDays, Flame, Plus, RefreshCcw, Sparkles, Target, TrendingDown, TrendingUp } from 'lucide-svelte';
   import EmptyState from '$lib/components/EmptyState.svelte';
-  import HabitHeatmap from '$lib/components/HabitHeatmap.svelte';
+  import MetricTile from '$lib/components/ui/MetricTile.svelte';
+  import ProgressBar from '$lib/components/ui/ProgressBar.svelte';
+  import SegmentedControl from '$lib/components/ui/SegmentedControl.svelte';
+  import StatusPill from '$lib/components/ui/StatusPill.svelte';
+  import Surface from '$lib/components/ui/Surface.svelte';
   import { habitsStore } from '$lib/stores/habits';
   import { formatHabitLabel } from '$lib/habits/formatHabitLabel';
-  import {
-    PERIOD_DISPLAY_NAMES,
-    STREAK_MESSAGES,
-    STREAK_THRESHOLDS,
-    WEEKDAY_NA
-  } from '$lib/constants/stats';
-  import {
-    buildDayDetails,
-    buildMergedCompletions,
-    buildPeriodSegments,
-    buildWeekdayStats,
-    cleanupHiddenHabits,
-    filterStatsHabits,
-    generateDailyCompletionData,
-    generateHabitPeriodData,
-    getWindowRange,
-    type PeriodOption
-  } from '$lib/stats/statsPage';
-  import StatsTabs from '$lib/components/stats/StatsTabs.svelte';
-  import StatsFilters from '$lib/components/stats/StatsFilters.svelte';
-  import OverviewSignals from '$lib/components/stats/OverviewSignals.svelte';
-  import InvestmentPanel from '$lib/components/stats/InvestmentPanel.svelte';
-  import InsightsGrid from '$lib/components/stats/InsightsGrid.svelte';
-  import ChartPanel from '$lib/components/stats/ChartPanel.svelte';
-  import HabitPerformanceList from '$lib/components/stats/HabitPerformanceList.svelte';
+  import { buildModernStatsSnapshot, type StatsWindowId } from '$lib/stats/modernStats';
 
-  type TabId = 'overview' | 'charts' | 'habits' | 'activity';
-  type HabitSort = 'rate' | 'streak' | 'name';
-
-  let activeTab = $state<TabId>('overview');
-  let period = $state<PeriodOption>('month');
-  let filtersOpen = $state(false);
-  let searchQuery = $state('');
-  let statusFilter = $state<'all' | 'active' | 'archived'>('all');
-  let selectedTags = $state<string[]>([]);
-  let habitSort = $state<HabitSort>('rate');
-  let habitSortDir = $state<'asc' | 'desc'>('desc');
-  let hiddenHabits = $state<string[]>([]);
-
-  const TABS = [
-    { id: 'overview' as TabId, label: 'Overview' },
-    { id: 'charts' as TabId, label: 'Charts' },
-    { id: 'habits' as TabId, label: 'Habits' },
-    { id: 'activity' as TabId, label: 'Activity' }
+  const windowOptions = [
+    { id: '4w', label: '4 weeks' },
+    { id: '12w', label: '12 weeks' }
   ] as const;
-  const WEEKDAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'] as const;
 
-  // Window range for the selected period (no Date mutation)
-  const windowRange = $derived.by(() => getWindowRange(period));
-  const periodSegments = $derived.by(() => buildPeriodSegments(period));
+  let windowId = $state<StatsWindowId>('12w');
 
-  // All unique tags from all habits
-  const allTags = $derived.by(() => {
-    const seen: string[] = [];
-    $habitsStore.allHabits.forEach((h) =>
-      (h.tags ?? []).forEach((t) => { if (!seen.includes(t)) seen.push(t); })
-    );
-    return seen.sort();
-  });
-
-  // Filtered habits
-  const filteredHabits = $derived(
-    filterStatsHabits($habitsStore.allHabits, statusFilter, searchQuery, selectedTags)
+  const activeHabits = $derived($habitsStore.allHabits.filter((habit) => !habit.archived));
+  const snapshot = $derived.by(() => buildModernStatsSnapshot(activeHabits, windowId));
+  const emptyState = $derived(activeHabits.length === 0);
+  const patternTone = $derived(snapshot.pattern?.tone ?? 'neutral');
+  const trendTone = $derived(
+    snapshot.trendDelta === null
+      ? 'neutral'
+      : snapshot.trendDelta >= 8
+        ? 'progress'
+        : snapshot.trendDelta <= -8
+          ? 'attention'
+          : 'neutral'
   );
-  const visibleHabits = $derived(filteredHabits.filter((habit) => !hiddenHabits.includes(habit.name)));
-
-  $effect(() => {
-    const next = cleanupHiddenHabits(hiddenHabits, filteredHabits);
-    if (next !== hiddenHabits) {
-      hiddenHabits = next;
-    }
-  });
-
-  // All stats for filtered habits
-  const allStats = $derived(
-    filteredHabits.map((habit) => ({ habit, stats: habitsStore.getHabitStats(habit.id) }))
-  );
-
-  // Summary KPIs
-  const avgRate = $derived.by(() => {
-    if (allStats.length === 0) return 0;
-    return Math.round(allStats.reduce((s, e) => s + e.stats.completionRate, 0) / allStats.length);
-  });
-
-  // Sorted habits for Habits tab
-  const sortedStats = $derived.by(() => {
-    const entries = [...allStats];
-    if (habitSort === 'name') {
-      entries.sort((a, b) =>
-        habitSortDir === 'asc'
-          ? a.habit.name.localeCompare(b.habit.name)
-          : b.habit.name.localeCompare(a.habit.name)
-      );
-    } else {
-      const metric = habitSort === 'rate' ? 'completionRate' : 'longestStreak';
-      entries.sort((a, b) =>
-        habitSortDir === 'asc' ? a.stats[metric] - b.stats[metric] : b.stats[metric] - a.stats[metric]
-      );
-    }
-    return entries;
-  });
-
-  const dailyData = $derived.by(() => (
-    generateDailyCompletionData(visibleHabits, windowRange.start, windowRange.end, period, periodSegments)
-  ));
-  const habitPeriodData = $derived.by(() => generateHabitPeriodData(filteredHabits, periodSegments));
-
-  const weekdayStats = $derived.by(() => buildWeekdayStats(filteredHabits, windowRange.start, windowRange.end));
-
-  // Generated insights (3 cards)
-  const insights = $derived.by(() => {
-    // Streak insight
-    const streakLeader = allStats.length > 0
-      ? allStats.reduce((best, next) => next.stats.longestStreak > best.stats.longestStreak ? next : best, allStats[0])
-      : null;
-    const days = streakLeader?.stats.longestStreak ?? 0;
-    let streakIcon = Lightbulb;
-    let streakBody: string;
-    if (days >= STREAK_THRESHOLDS.AUTOMATISM_MIN) {
-      streakIcon = Flame;
-      streakBody = STREAK_MESSAGES.AUTOMATISM(formatHabitLabel(streakLeader!.habit), days);
-    } else if (days >= STREAK_THRESHOLDS.MOMENTUM_MIN) {
-      streakIcon = Dumbbell;
-      streakBody = STREAK_MESSAGES.MOMENTUM_ENCOURAGEMENT(days, formatHabitLabel(streakLeader!.habit));
-    } else if (days > 0) {
-      streakIcon = Sprout;
-      streakBody = STREAK_MESSAGES.EARLY_STAGE(days);
-    } else {
-      streakBody = STREAK_MESSAGES.NO_STREAK;
-    }
-
-    // Weekday insight
-    const { bestWeekday, worstWeekday, counts } = weekdayStats;
-    const bestIdx = WEEKDAY_NAMES.indexOf(bestWeekday as typeof WEEKDAY_NAMES[number]);
-    const worstIdx = WEEKDAY_NAMES.indexOf(worstWeekday as typeof WEEKDAY_NAMES[number]);
-    const bestCount = bestIdx >= 0 ? (counts[bestIdx] ?? 0) : 0;
-    const worstCount = worstIdx >= 0 ? (counts[worstIdx] ?? 0) : 0;
-    const weekdayDiff = worstCount === 0 ? bestCount * 100 : Math.round(((bestCount - worstCount) / Math.max(1, worstCount)) * 100);
-    const hasWeekdayShift = bestWeekday !== WEEKDAY_NA && worstWeekday !== WEEKDAY_NA;
-    let weekdayBody: string;
-    if (hasWeekdayShift) {
-      weekdayBody = weekdayDiff > 50
-        ? `${worstWeekday} is your weakest day — try a shorter goal or reminder that day.`
-        : `${weekdayDiff}% more completions on ${bestWeekday} vs ${worstWeekday}.`;
-    } else {
-      weekdayBody = 'Check back after a few active days to see your weekday patterns.';
-    }
-
-    // Momentum insight
-    const improvedCount = habitPeriodData.length > 1
-      ? filteredHabits.reduce((sum, habit) => {
-          const lastEntry = habitPeriodData[habitPeriodData.length - 1];
-          const previousEntry = habitPeriodData[habitPeriodData.length - 2];
-          const current = Number(lastEntry?.[habit.name] ?? 0);
-          const previous = Number(previousEntry?.[habit.name] ?? 0);
-          return current > previous ? sum + 1 : sum;
-        }, 0)
-      : 0;
-    const total = filteredHabits.length;
-
-    let momentumBody: string;
-    let momentumIcon = Lightbulb;
-    if (total === 0) {
-      momentumBody = 'No habits to measure yet.';
-    } else if (improvedCount === total) {
-      momentumIcon = Zap;
-      momentumBody = `All ${total} habits improved this ${PERIOD_DISPLAY_NAMES[period]} - excellent momentum!`;
-    } else if (improvedCount === 0) {
-      momentumIcon = TrendingDown;
-      momentumBody = `No habits improved this ${PERIOD_DISPLAY_NAMES[period]}. Focus on one habit to break the trend.`;
-    } else {
-      momentumIcon = TrendingUp;
-      momentumBody = `${improvedCount} of ${total} habits improved. Push the other ${total - improvedCount} forward.`;
-    }
-
-    return [
-      { id: 'streak', title: 'Best streak', body: streakBody, icon: streakIcon },
-      { id: 'weekday', title: 'Weekday shift', body: weekdayBody, icon: weekdayDiff > 50 ? AlertTriangle : Calendar },
-      { id: 'momentum', title: 'Momentum', body: momentumBody, icon: momentumIcon }
-    ];
-  });
-
-  const mergedCompletions = $derived.by(() => buildMergedCompletions(filteredHabits));
-  const dayDetails = $derived.by(() => buildDayDetails(filteredHabits));
-
-  const aggregateTarget = $derived(
-    Math.max(1, filteredHabits.reduce((s, h) => s + Math.max(1, h.dailyTarget ?? 1), 0))
-  );
-  function handleSortChange(key: HabitSort) {
-    if (habitSort === key) {
-      habitSortDir = habitSortDir === 'desc' ? 'asc' : 'desc';
-    } else {
-      habitSort = key;
-      habitSortDir = 'desc';
-    }
-  }
-
-  function toggleTag(tag: string) {
-    selectedTags = selectedTags.includes(tag)
-      ? selectedTags.filter((t) => t !== tag)
-      : [...selectedTags, tag];
-  }
-
-  function toggleHabitVisibility(name: string) {
-    hiddenHabits = hiddenHabits.includes(name)
-      ? hiddenHabits.filter((n) => n !== name)
-      : [...hiddenHabits, name];
-  }
 </script>
 
 <svelte:head>
-  <title>Stats - Habit Runner</title>
+  <title>Progress - Habit Runner</title>
 </svelte:head>
 
-{#if $habitsStore.allHabits.length === 0}
-  <div class="px-4 py-12">
-    <EmptyState title="No stats yet" description="Add a few habits and complete them for a couple of days to unlock the first activity patterns.">
+{#if emptyState}
+  <div class="px-4 py-10 sm:px-6">
+    <EmptyState
+      title="No progress data yet"
+      description="Create a habit and complete a few scheduled days. The new progress screen will then show trends, patterns, and milestones."
+    >
       {#snippet icon()}
-        <Plus size={34} />
+        <Sparkles size={34} />
       {/snippet}
       {#snippet action()}
         <a
-          class="inline-flex items-center justify-center rounded-full border border-border px-4 py-2 text-xs font-semibold uppercase tracking-widest text-accent transition hover:border-accent-secondary/50"
+          class="inline-flex items-center justify-center rounded-full border border-border bg-bg-card px-4 py-2 text-sm font-medium text-foreground transition-colors hover:border-accent/40 hover:text-accent"
           href={resolve('/app/(protected)/habit/new', {})}
         >
-          Create your first habit
+          Add habit
         </a>
       {/snippet}
     </EmptyState>
   </div>
 {:else}
-  <div class="min-h-screen bg-transparent">
-    <!-- Page header -->
-    <div class="px-4 pt-4 sm:px-6">
-      <div class="mx-auto max-w-6xl rounded-[1.75rem] border border-border bg-bg-secondary/88 px-4 py-4 shadow-[0_24px_60px_rgba(15,23,42,0.1)] backdrop-blur-xl">
-        <p class="text-[10px] font-mono uppercase tracking-widest text-muted">Overview</p>
-        <h1 class="mt-1 text-xl font-semibold text-foreground">Statistics</h1>
-      </div>
-    </div>
-
-    <!-- Sticky tab bar -->
-    <div class="sticky top-0 z-30 bg-transparent px-4 pb-3 pt-2 sm:px-6">
-      <div class="mx-auto max-w-6xl rounded-[1.5rem] border border-border bg-bg-secondary/88 px-4 shadow-[0_22px_56px_rgba(15,23,42,0.1)] backdrop-blur-xl">
-        <div class="flex flex-wrap items-center gap-2 overflow-hidden py-1 sm:flex-nowrap">
-          <!-- Tabs -->
-          <div class="flex min-w-0 flex-1 items-center overflow-x-auto whitespace-nowrap [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-            <StatsTabs tabs={TABS} activeTab={activeTab} onTabChange={(tab) => activeTab = tab as TabId} />
+  <div class="px-4 py-5 sm:px-6 lg:px-8">
+    <div class="mx-auto flex max-w-7xl flex-col gap-4">
+      <Surface
+        as="section"
+        padding="lg"
+        class="bg-bg-card"
+        style="background: linear-gradient(135deg, var(--bg-card), color-mix(in srgb, var(--bg-card) 84%, var(--progress) 16%));"
+      >
+        <div class="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+          <div class="max-w-2xl">
+            <StatusPill tone="progress">
+              <Sparkles size={12} />
+              Progress
+            </StatusPill>
+            <h1 class="mt-4 text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
+              Simple progress that pushes you forward.
+            </h1>
+            <p class="mt-3 max-w-xl text-base leading-7 text-muted">
+              One screen, one answer: how you are moving now, what changed versus the previous window, and where the next small win sits.
+            </p>
           </div>
-          <!-- Filters toggle -->
-          <div class="flex shrink-0 items-center justify-end py-2 pl-1">
-            <StatsFilters
-              searchQuery={searchQuery}
-              onSearchChange={(q) => searchQuery = q}
-              statusFilter={statusFilter}
-              onStatusFilterChange={(f) => statusFilter = f}
-              selectedTags={selectedTags}
-              allTags={allTags}
-              onToggleTag={toggleTag}
-              filtersOpen={filtersOpen}
-              onToggleFilters={() => filtersOpen = !filtersOpen}
+
+          <div class="flex flex-col items-start gap-3 lg:items-end">
+            <SegmentedControl
+              options={windowOptions}
+              value={windowId}
+              ariaLabel="Statistics window"
+              onChange={(next) => { windowId = next as StatsWindowId; }}
+            />
+            <div class="flex flex-wrap items-center gap-2 text-sm">
+              <a
+                href={resolve('/app/(protected)/habit/new', {})}
+                class="inline-flex items-center gap-2 rounded-full border border-border bg-bg-card px-4 py-2 font-medium text-foreground transition-colors hover:border-accent/40 hover:text-accent"
+              >
+                <Plus size={14} />
+                Add habit
+              </a>
+              <a
+                href={resolve('/app/(protected)/dashboard', {})}
+                class="inline-flex items-center gap-2 rounded-full border border-border bg-bg-secondary px-4 py-2 font-medium text-muted transition-colors hover:text-foreground"
+              >
+                Back to today
+                <ArrowRight size={14} />
+              </a>
+            </div>
+          </div>
+        </div>
+      </Surface>
+
+      <section class="grid gap-4 xl:grid-cols-[1.45fr_0.95fr]">
+        <Surface as="article" padding="lg" class="min-w-0">
+          <div class="flex items-start justify-between gap-4">
+            <div>
+              <p class="text-[10px] font-medium uppercase tracking-[0.28em] text-muted">Momentum</p>
+              <h2 class="mt-2 text-xl font-semibold tracking-tight text-foreground">Your current pace</h2>
+            </div>
+            <StatusPill tone={trendTone}>
+              {#if snapshot.trendDelta === null}
+                <RefreshCcw size={12} />
+                Low data
+              {:else if snapshot.trendDelta >= 8}
+                <TrendingUp size={12} />
+                Rising
+              {:else if snapshot.trendDelta <= -8}
+                <TrendingDown size={12} />
+                Slipping
+              {:else}
+                <RefreshCcw size={12} />
+                Steady
+              {/if}
+            </StatusPill>
+          </div>
+
+          <div class="mt-6 grid gap-4 md:grid-cols-3">
+            <MetricTile
+              label="Momentum"
+              value={snapshot.momentum === null ? '—' : `${snapshot.momentum}%`}
+              detail={snapshot.momentum === null
+                ? 'Complete five scheduled opportunities to unlock momentum.'
+                : 'Weighted toward the latest 14 scheduled opportunities.'}
+              tone="progress"
+              icon={Flame}
+            />
+            <MetricTile
+              label="Weekly progress"
+              value={snapshot.weeklyProgress === null ? '—' : `${snapshot.weeklyProgress}%`}
+              detail={snapshot.weeklyProgress === null
+                ? 'No scheduled opportunities have occurred this week.'
+                : 'Completed scheduled opportunities since Monday.'}
+              tone="progress"
+              icon={CalendarDays}
+            />
+            <MetricTile
+              label="Trend"
+              value={snapshot.trendDelta === null
+                ? '—'
+                : `${snapshot.trendDelta > 0 ? '+' : ''}${snapshot.trendDelta} pp`}
+              detail={snapshot.trendLabel === 'insufficient-data'
+                ? `Need five opportunities in both windows; currently ${snapshot.trendSample.current} and ${snapshot.trendSample.previous}.`
+                : snapshot.trendLabel === 'rising'
+                ? 'Better than the previous comparable window.'
+                : snapshot.trendLabel === 'slipping'
+                  ? 'Needs one simpler next action.'
+                  : 'Close to the previous window.'}
+              tone={trendTone}
+              icon={TrendingUp}
             />
           </div>
-        </div>
-      </div>
-    </div>
 
-    <!-- Tab content -->
-    <div class="mx-auto max-w-6xl px-4 py-4 sm:px-6">
+          <div class="mt-5 grid gap-4 md:grid-cols-2">
+            <Surface as="div" padding="md" class="bg-bg-secondary">
+              <div class="flex items-start justify-between gap-3">
+                <div>
+                  <p class="text-[10px] font-medium uppercase tracking-[0.24em] text-muted">Weekly quest</p>
+                  <h3 class="mt-2 text-lg font-semibold text-foreground">Fill the scheduled opportunities</h3>
+                </div>
+                <StatusPill tone="progress">
+                  <Target size={12} />
+                  Quest
+                </StatusPill>
+              </div>
+              <div class="mt-4">
+                <ProgressBar value={snapshot.weeklyProgress ?? 0} label="Current week completion" />
+              </div>
+              <p class="mt-3 text-sm leading-6 text-muted">
+                {snapshot.comebackLabel}. The screen only counts scheduled chances, so gaps stay honest.
+              </p>
+            </Surface>
 
-      <!-- TAB: OVERVIEW -->
-      {#if activeTab === 'overview'}
-        <div class="space-y-4">
-          <div class="grid gap-4 md:grid-cols-[2fr,1fr]">
-            <OverviewSignals habits={filteredHabits} />
-            <InvestmentPanel weekdayStats={weekdayStats} />
+            <Surface as="div" padding="md" class="bg-bg-secondary">
+              <div class="flex items-start justify-between gap-3">
+                <div>
+                  <p class="text-[10px] font-medium uppercase tracking-[0.24em] text-muted">Next milestone</p>
+                  <h3 class="mt-2 text-lg font-semibold text-foreground">The next checkpoint</h3>
+                </div>
+                <StatusPill tone="neutral">
+                  <Sparkles size={12} />
+                  Unlock
+                </StatusPill>
+              </div>
+              <div class="mt-4 rounded-[1.25rem] border border-border bg-bg-card p-4">
+                <p class="text-3xl font-semibold tracking-tight text-foreground">
+                  {snapshot.nextMilestone ?? '—'}
+                </p>
+                <p class="mt-2 text-sm leading-6 text-muted">
+                  {snapshot.nextMilestone
+                    ? `Reach ${snapshot.nextMilestone} consecutive scheduled completions to unlock the next milestone.`
+                    : 'No active streak yet, so the next milestone will appear after the first reliable run.'}
+                </p>
+              </div>
+            </Surface>
           </div>
-          <InsightsGrid insights={insights} />
-        </div>
+        </Surface>
 
-      <!-- TAB: CHARTS -->
-      {:else if activeTab === 'charts'}
-        <div class="space-y-4">
-          <ChartPanel
-            avgRate={avgRate}
-            filteredHabits={filteredHabits}
-            hiddenHabits={hiddenHabits}
-            toggleHabitVisibility={toggleHabitVisibility}
-            period={period}
-            dailyData={dailyData}
-            habitPeriodData={habitPeriodData}
-            weekdayStats={weekdayStats}
-            onPeriodChange={(p) => period = p}
-          />
-        </div>
-
-      <!-- TAB: HABITS -->
-      {:else if activeTab === 'habits'}
-        <div class="space-y-4">
-          <HabitPerformanceList
-            entries={sortedStats}
-            allStats={allStats}
-            sortDir={habitSortDir}
-            onSortChange={handleSortChange}
-            hiddenHabits={hiddenHabits}
-            onToggleVisibility={toggleHabitVisibility}
-          />
-        </div>
-
-      <!-- TAB: ACTIVITY -->
-      {:else if activeTab === 'activity'}
-        <div class="rounded-[1.5rem] border border-border bg-bg-card/92 p-4 shadow-[0_18px_50px_rgba(15,23,42,0.08)] space-y-3">
-          <div class="flex flex-wrap items-center justify-between gap-2">
-            <div class="flex items-center gap-2">
-              <h2 class="min-w-0 text-xs font-mono uppercase tracking-widest text-muted">Activity — 90 days</h2>
+        <div class="flex min-w-0 flex-col gap-4">
+          <Surface as="article" padding="md">
+            <div class="flex items-start justify-between gap-3">
+              <div>
+                <p class="text-[10px] font-medium uppercase tracking-[0.24em] text-muted">Pattern</p>
+                <h2 class="mt-2 text-lg font-semibold text-foreground">When the habit slips</h2>
+              </div>
+              <StatusPill tone={patternTone}>
+                <CalendarDays size={12} />
+                {snapshot.pattern?.title ?? 'Low data'}
+              </StatusPill>
             </div>
-            <span class="text-[10px] font-mono text-muted">{filteredHabits.length} habits</span>
-          </div>
-          <HabitHeatmap
-            completions={mergedCompletions}
-            dailyTarget={aggregateTarget}
-            dayDetails={dayDetails}
-          />
+
+            {#if snapshot.pattern}
+              <div class="mt-4 rounded-[1.25rem] border border-border bg-bg-secondary p-4">
+                <p class="text-sm font-medium text-foreground">{snapshot.pattern.label}</p>
+                <p class="mt-2 text-sm leading-6 text-muted">{snapshot.pattern.detail}</p>
+                <p class="mt-3 text-[11px] font-medium uppercase tracking-[0.22em] text-muted">{snapshot.pattern.sample}</p>
+              </div>
+            {:else}
+              <p class="mt-4 text-sm leading-6 text-muted">
+                Not enough scheduled data yet. This block only appears when the pattern is stable enough to trust.
+              </p>
+            {/if}
+          </Surface>
+
+          <Surface as="article" padding="md">
+            <div class="flex items-start justify-between gap-3">
+              <div>
+                <p class="text-[10px] font-medium uppercase tracking-[0.24em] text-muted">Recovery</p>
+                <h2 class="mt-2 text-lg font-semibold text-foreground">Habits worth your attention</h2>
+              </div>
+              <StatusPill tone="attention">
+                <RefreshCcw size={12} />
+                Rebound
+              </StatusPill>
+            </div>
+            <p class="mt-4 text-sm leading-6 text-muted">
+              {snapshot.focusHabits.length > 0
+                ? `A balanced view of what is strong, improving, and ready for a smaller next step.`
+                : 'No active habits are available for focus.'}
+            </p>
+            <div class="mt-4 space-y-3">
+              {#each snapshot.focusHabits as habit (habit.id)}
+                <a
+                  href={resolve('/app/(protected)/habit/[id]', { id: habit.habit.id })}
+                  class="block rounded-[1.25rem] border border-border bg-bg-card p-4 transition-colors hover:border-accent/35 hover:bg-bg-secondary"
+                >
+                  <div class="flex items-start justify-between gap-3">
+                    <div class="min-w-0">
+                      <p class="truncate text-sm font-medium text-foreground">{formatHabitLabel(habit.habit)}</p>
+                      <p class="mt-1 text-xs text-muted">{habit.label}</p>
+                    </div>
+                    <StatusPill tone={habit.focus === 'support' ? 'attention' : 'progress'}>
+                      {habit.completionRate}%
+                    </StatusPill>
+                  </div>
+                  <div class="mt-3">
+                    <ProgressBar value={habit.completionRate} />
+                  </div>
+                  <div class="mt-3 flex flex-wrap items-center gap-2 text-[11px] text-muted">
+                    <span>{habit.currentStreak}d streak</span>
+                    <span>•</span>
+                    <span>{habit.completionDelta === null
+                      ? 'Not enough prior data'
+                      : `${habit.completionDelta > 0 ? '+' : ''}${habit.completionDelta} pp vs previous window`}</span>
+                    <span>•</span>
+                    <span>Next milestone: {habit.milestone ?? '—'}</span>
+                  </div>
+                </a>
+              {/each}
+            </div>
+          </Surface>
         </div>
-      {/if}
+      </section>
+
+      <Surface as="section" padding="lg">
+        <div class="flex items-start justify-between gap-4">
+          <div>
+            <p class="text-[10px] font-medium uppercase tracking-[0.28em] text-muted">History</p>
+            <h2 class="mt-2 text-xl font-semibold tracking-tight text-foreground">Compact view of the last window</h2>
+          </div>
+          <StatusPill tone="neutral">
+            {snapshot.history.length} weeks
+          </StatusPill>
+        </div>
+
+        <div class="mt-6 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+          {#each snapshot.history as week, weekIndex (week.label + '-' + weekIndex)}
+            <div class="rounded-[1.25rem] border border-border bg-bg-secondary p-4">
+              <div class="flex items-start justify-between gap-3">
+                <div>
+                  <p class="text-sm font-medium text-foreground">{week.label}</p>
+                  <p class="mt-1 text-[11px] uppercase tracking-[0.22em] text-muted">{week.completedDays}/{week.scheduledDays} completed</p>
+                </div>
+                <span class="text-sm font-semibold text-foreground">{week.completionRate}%</span>
+              </div>
+              <div class="mt-3 h-2 overflow-hidden rounded-full bg-border">
+                <div class="h-full rounded-full bg-progress" style:width={`${week.completionRate}%`}></div>
+              </div>
+            </div>
+          {/each}
+        </div>
+      </Surface>
     </div>
   </div>
 {/if}

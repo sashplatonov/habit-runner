@@ -47,20 +47,20 @@
 <svelte:window onmousedown={handleWindowClick} />
 
 <aside
-  class="fixed left-0 top-0 z-50 hidden h-screen w-[220px] flex-col border-r border-border bg-bg-secondary/82 px-3 py-4 shadow-[0_24px_64px_rgba(15,23,42,0.08)] backdrop-blur-xl sm:flex"
+  class="fixed left-0 top-0 z-50 hidden h-screen w-[252px] flex-col border-r border-border bg-bg-secondary/86 px-4 py-4 shadow-[0_24px_64px_rgba(15,23,42,0.08)] backdrop-blur-xl sm:flex"
   style:padding-top="calc(var(--safe-area-inset-top, 0px) + 1rem)"
   aria-label="Sidebar navigation"
 >
-  <a class="mb-5 flex items-center gap-3 rounded-2xl border border-border bg-bg-card/92 px-3 py-3 shadow-[0_18px_48px_rgba(15,23,42,0.08)]" href={dashboardHref}>
-    <img src="/app-icon.svg" alt="Habbit Runner" class="h-9 w-9 flex-shrink-0 rounded-2xl object-contain shadow-[0_10px_24px_rgba(49,105,255,0.16)]" />
+  <a class="mb-5 flex items-center gap-3 rounded-[1.5rem] border border-border bg-bg-card/96 px-3 py-3 shadow-[0_16px_36px_rgba(15,23,42,0.08)]" href={dashboardHref}>
+    <img src="/app-icon.svg" alt="Habbit Runner" class="h-10 w-10 flex-shrink-0 rounded-2xl object-contain" />
     <div>
       <span class="block text-[9px] uppercase tracking-[0.26em] text-muted">Workspace</span>
-      <span class="block text-sm font-bold tracking-tight">Habbit Runner</span>
+      <span class="block text-sm font-semibold tracking-tight">Habbit Runner</span>
     </div>
   </a>
 
   <a
-    class="mb-4 flex items-center gap-2 rounded-2xl border border-accent/25 bg-[linear-gradient(135deg,rgba(49,105,255,0.12),rgba(16,179,154,0.1))] px-3 py-3 text-sm font-semibold text-accent transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_18px_38px_var(--glow)]"
+    class="mb-4 flex items-center gap-2 rounded-[1.25rem] border border-progress/20 bg-progress/10 px-3 py-3 text-sm font-semibold text-progress transition-colors hover:border-progress/30 hover:bg-progress/10"
     href={resolve<'/app/(protected)/habit/new'>('/app/(protected)/habit/new', {})}
   >
     <PlusIcon size={16} />
@@ -70,20 +70,20 @@
   <div class="mb-1 px-2 text-[10px] font-mono uppercase tracking-[0.2em] text-muted">Navigate</div>
   <nav class="flex flex-col gap-1">
     <a
-      class={`flex items-center gap-2.5 rounded-2xl px-3 py-2.5 text-sm font-medium transition-all duration-200 ${isActive(dashboardHref) ? 'border border-accent/20 bg-white text-accent shadow-[0_14px_32px_rgba(49,105,255,0.08)]' : 'text-muted hover:bg-bg-card hover:text-foreground'}`}
+      class={`flex items-center gap-2.5 rounded-[1.25rem] px-3 py-2.5 text-sm font-medium transition-colors ${isActive(dashboardHref) ? 'border border-progress/20 bg-bg-card text-foreground shadow-[0_12px_30px_rgba(15,23,42,0.08)]' : 'text-muted hover:bg-bg-card/80 hover:text-foreground'}`}
       href={dashboardHref}
       aria-current={isActive(dashboardHref) ? 'page' : undefined}
     >
       <LayoutDashboardIcon size={16} />
-      Dashboard
+      Today
     </a>
     <a
-      class={`flex items-center gap-2.5 rounded-2xl px-3 py-2.5 text-sm font-medium transition-all duration-200 ${isActive(statsHref) ? 'border border-accent-secondary/20 bg-white text-accent-secondary shadow-[0_14px_32px_rgba(16,179,154,0.08)]' : 'text-muted hover:bg-bg-card hover:text-foreground'}`}
+      class={`flex items-center gap-2.5 rounded-[1.25rem] px-3 py-2.5 text-sm font-medium transition-colors ${isActive(statsHref) ? 'border border-progress/20 bg-bg-card text-foreground shadow-[0_12px_30px_rgba(15,23,42,0.08)]' : 'text-muted hover:bg-bg-card/80 hover:text-foreground'}`}
       href={statsHref}
       aria-current={isActive(statsHref) ? 'page' : undefined}
     >
       <BarChart2Icon size={16} />
-      Stats
+      Progress
     </a>
   </nav>
 
@@ -94,7 +94,7 @@
     <div class="relative" bind:this={themeElement}>
       <button
         type="button"
-        class={`flex w-full items-center gap-2.5 rounded-2xl px-3 py-2.5 text-sm font-medium transition-all duration-200 ${isThemeOpen ? 'bg-white text-foreground shadow-[0_14px_32px_rgba(15,23,42,0.08)]' : 'text-muted hover:bg-bg-card hover:text-foreground'}`}
+        class={`flex w-full items-center gap-2.5 rounded-[1.25rem] px-3 py-2.5 text-sm font-medium transition-colors ${isThemeOpen ? 'bg-bg-card text-foreground shadow-[0_12px_30px_rgba(15,23,42,0.08)]' : 'text-muted hover:bg-bg-card/80 hover:text-foreground'}`}
         aria-label="Choose color theme"
         aria-expanded={isThemeOpen}
         aria-haspopup="listbox"
@@ -116,7 +116,7 @@
           {#each darkThemes as candidate (candidate.id)}
             <button
               type="button"
-              class={`flex items-center gap-2 rounded-lg px-2 py-1.5 text-xs font-mono transition-colors ${theme === candidate.id ? 'bg-accent/10 text-accent' : 'text-muted hover:bg-bg-secondary hover:text-foreground'}`}
+              class={`flex items-center gap-2 rounded-lg px-2 py-1.5 text-xs font-mono transition-colors ${theme === candidate.id ? 'bg-progress/10 text-progress' : 'text-muted hover:bg-bg-secondary hover:text-foreground'}`}
               aria-label={`Switch to ${candidate.name} theme`}
               onclick={() => {
                 void onThemeChange(candidate.id);
@@ -138,7 +138,7 @@
           {#each lightThemes as candidate (candidate.id)}
             <button
               type="button"
-              class={`flex items-center gap-2 rounded-lg px-2 py-1.5 text-xs font-mono transition-colors ${theme === candidate.id ? 'bg-accent/10 text-accent' : 'text-muted hover:bg-bg-secondary hover:text-foreground'}`}
+              class={`flex items-center gap-2 rounded-lg px-2 py-1.5 text-xs font-mono transition-colors ${theme === candidate.id ? 'bg-progress/10 text-progress' : 'text-muted hover:bg-bg-secondary hover:text-foreground'}`}
               aria-label={`Switch to ${candidate.name} theme`}
               onclick={() => {
                 void onThemeChange(candidate.id);
@@ -159,7 +159,7 @@
     {#if onLogout}
       <button
         type="button"
-        class="mt-1 flex w-full items-center gap-2.5 rounded-2xl px-3 py-2.5 text-sm font-medium text-muted transition-all duration-200 hover:bg-bg-card hover:text-accent-secondary"
+        class="mt-1 flex w-full items-center gap-2.5 rounded-[1.25rem] px-3 py-2.5 text-sm font-medium text-muted transition-colors hover:bg-bg-card/80 hover:text-foreground"
         aria-label="Log out"
         onclick={() => {
           void onLogout();

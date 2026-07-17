@@ -132,7 +132,7 @@
   role="button"
   tabindex="0"
   aria-label="{habit.name}, {completed ? 'completed' : 'not completed'}"
-  class="relative cursor-pointer overflow-hidden rounded-2xl border bg-bg-secondary transition-all duration-200 hover:border-border-hover active:scale-[0.97] animate-fade-slide-up {isFrozen ? 'opacity-75 border-border/50' : 'border-border'}"
+  class="relative cursor-pointer overflow-hidden rounded-[1.5rem] border bg-bg-card transition-all duration-200 hover:border-border-hover active:scale-[0.97] animate-fade-slide-up shadow-[0_12px_28px_rgba(15,23,42,0.06)] {isFrozen ? 'opacity-75 border-border/50' : 'border-border'}"
   style:animation-delay={animDelay}
   onclick={onDetail}
   onkeydown={(e) => {

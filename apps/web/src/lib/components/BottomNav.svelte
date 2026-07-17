@@ -5,14 +5,11 @@
   import {
     BarChart2Icon,
     LayoutDashboardIcon,
-    LogOutIcon,
-    MoonIcon,
-    PaletteIcon,
     PlusIcon,
-    SearchIcon,
-    SunIcon
+    MoreHorizontalIcon
   } from 'lucide-svelte';
-  import { THEMES, type ThemeId } from '$lib/theme/themes';
+  import type { ThemeId } from '$lib/theme/themes';
+  import MobileMoreSheet from '$lib/components/MobileMoreSheet.svelte';
 
   type Props = {
     theme: ThemeId;
@@ -22,26 +19,13 @@
 
   let { theme, onThemeChange, onLogout }: Props = $props();
 
-  let isThemeOpen = $state(false);
-  let themeElement = $state<HTMLDivElement | null>(null);
+  let isMoreOpen = $state(false);
+  let moreButton = $state<HTMLButtonElement | null>(null);
 
-  const darkThemes = $derived(THEMES.filter((candidate) => candidate.group === 'dark'));
-  const lightThemes = $derived(THEMES.filter((candidate) => candidate.group === 'light'));
   const dashboardHref = resolve<'/app/(protected)/dashboard'>('/app/(protected)/dashboard', {});
   const statsHref = resolve<'/app/(protected)/stats'>('/app/(protected)/stats', {});
   const isDashboard = $derived(page.url.pathname === dashboardHref);
   const isStats = $derived(page.url.pathname === statsHref);
-
-  function handleWindowClick(event: MouseEvent) {
-    if (!isThemeOpen) {
-      return;
-    }
-
-    const target = event.target;
-    if (themeElement && target instanceof Node && !themeElement.contains(target)) {
-      isThemeOpen = false;
-    }
-  }
 
   async function focusSearch() {
     if (!isDashboard) {
@@ -54,11 +38,10 @@
   }
 </script>
 
-<svelte:window onmousedown={handleWindowClick} />
-
 <nav
-  class="fixed bottom-0 left-0 right-0 z-40 flex border-t border-border bg-bg-secondary/88 shadow-[0_-18px_40px_rgba(15,23,42,0.12)] backdrop-blur-xl sm:hidden" style="touch-action: manipulation;"
-  style:height="calc(72px + env(safe-area-inset-bottom))"
+  class="fixed bottom-0 left-0 right-0 z-40 flex border-t border-border bg-bg-secondary/92 shadow-[0_-18px_40px_rgba(15,23,42,0.12)] backdrop-blur-xl sm:hidden"
+  style="touch-action: manipulation;"
+  style:height="calc(76px + env(safe-area-inset-bottom))"
   style:padding-bottom="env(safe-area-inset-bottom)"
   aria-label="Mobile navigation"
 >
@@ -71,7 +54,7 @@
     <div class={`flex h-8 w-8 items-center justify-center rounded-[10px] ${isDashboard ? 'bg-accent/10' : ''}`}>
       <LayoutDashboardIcon size={18} />
     </div>
-    <span class="text-[10px] font-medium">Dashboard</span>
+    <span class="text-[10px] font-medium">Today</span>
   </a>
 
   <a
@@ -83,13 +66,12 @@
     <div class={`flex h-8 w-8 items-center justify-center rounded-[10px] ${isStats ? 'bg-accent/10' : ''}`}>
       <BarChart2Icon size={18} />
     </div>
-    <span class="text-[10px] font-medium">Stats</span>
+    <span class="text-[10px] font-medium">Progress</span>
   </a>
 
   <div class="flex flex-[0_0_72px] items-center justify-center">
     <a
-      class="flex h-[54px] w-[54px] items-center justify-center rounded-[1.4rem] bg-accent text-bg-primary"
-      style:box-shadow="0 0 20px var(--glow), 0 18px 32px rgba(15,23,42,0.18)"
+      class="flex h-[54px] w-[54px] items-center justify-center rounded-[1.4rem] bg-progress text-bg-primary shadow-[0_14px_26px_rgba(15,23,42,0.18)]"
       href={resolve<'/app/(protected)/habit/new'>('/app/(protected)/habit/new', {})}
       aria-label="New habit"
     >
@@ -98,98 +80,31 @@
   </div>
 
   <button
+    bind:this={moreButton}
     type="button"
     class="flex flex-1 flex-col items-center justify-center gap-1 text-muted transition-colors hover:text-accent"
-    aria-label="Search habits"
+    aria-label="More actions"
     onclick={() => {
-      void focusSearch();
+      isMoreOpen = true;
     }}
   >
     <div class="flex h-8 w-8 items-center justify-center rounded-[10px]">
-      <SearchIcon size={18} />
+      <MoreHorizontalIcon size={18} />
     </div>
-    <span class="text-[10px] font-medium">Search</span>
+    <span class="text-[10px] font-medium">More</span>
   </button>
 
-  <div class="relative flex flex-1 flex-col items-center justify-center gap-1" bind:this={themeElement}>
-    <button
-      type="button"
-      class={`flex flex-col items-center gap-1 ${isThemeOpen ? 'text-accent' : 'text-muted'}`}
-      aria-label="Choose theme"
-      aria-expanded={isThemeOpen}
-      aria-haspopup="listbox"
-      onclick={() => {
-        isThemeOpen = !isThemeOpen;
-      }}
-    >
-      <div class={`flex h-8 w-8 items-center justify-center rounded-[10px] ${isThemeOpen ? 'bg-accent/10' : ''}`}>
-        <PaletteIcon size={18} />
-      </div>
-      <span class="text-[10px] font-medium">Theme</span>
-    </button>
-
-    {#if isThemeOpen}
-      <div
-        class="absolute right-0 z-10 flex w-44 flex-col gap-0.5 rounded-[1.5rem] border border-border bg-bg-card p-2 shadow-[0_22px_60px_rgba(15,23,42,0.14)]"
-        style:bottom="calc(72px + env(safe-area-inset-bottom))"
-      >
-        <div class="flex items-center gap-1.5 px-2 py-1">
-          <MoonIcon size={10} class="text-muted" />
-          <span class="text-[9px] font-mono uppercase tracking-wider text-muted">Dark</span>
-        </div>
-        {#each darkThemes as candidate (candidate.id)}
-          <button
-            type="button"
-            class={`flex items-center gap-2 rounded-lg px-2 py-1.5 text-xs font-mono transition-colors ${theme === candidate.id ? 'bg-accent/10 text-accent' : 'text-muted hover:bg-bg-secondary hover:text-foreground'}`}
-            onclick={() => {
-              void onThemeChange(candidate.id);
-              isThemeOpen = false;
-            }}
-          >
-            <div class="flex gap-0.5">
-              <div class="h-2 w-2 rounded-full" style:background-color={candidate.accent}></div>
-              <div class="h-2 w-2 rounded-full" style:background-color={candidate.accentSecondary}></div>
-            </div>
-            {candidate.name}
-          </button>
-        {/each}
-        <div class="my-1 h-px bg-border"></div>
-        <div class="flex items-center gap-1.5 px-2 py-1">
-          <SunIcon size={10} class="text-muted" />
-          <span class="text-[9px] font-mono uppercase tracking-wider text-muted">Light</span>
-        </div>
-        {#each lightThemes as candidate (candidate.id)}
-          <button
-            type="button"
-            class={`flex items-center gap-2 rounded-lg px-2 py-1.5 text-xs font-mono transition-colors ${theme === candidate.id ? 'bg-accent/10 text-accent' : 'text-muted hover:bg-bg-secondary hover:text-foreground'}`}
-            onclick={() => {
-              void onThemeChange(candidate.id);
-              isThemeOpen = false;
-            }}
-          >
-            <div class="flex gap-0.5">
-              <div class="h-2 w-2 rounded-full" style:background-color={candidate.accent}></div>
-              <div class="h-2 w-2 rounded-full" style:background-color={candidate.accentSecondary}></div>
-            </div>
-            {candidate.name}
-          </button>
-        {/each}
-
-        {#if onLogout}
-          <div class="my-1 h-px bg-border"></div>
-          <button
-            type="button"
-            class="flex items-center gap-2 rounded-lg px-2 py-1.5 text-xs font-mono text-muted transition-colors hover:bg-bg-secondary hover:text-accent-secondary"
-            onclick={() => {
-              void onLogout();
-              isThemeOpen = false;
-            }}
-          >
-            <LogOutIcon size={12} />
-            Logout
-          </button>
-        {/if}
-      </div>
-    {/if}
-  </div>
+  <MobileMoreSheet
+    open={isMoreOpen}
+    triggerEl={moreButton}
+    {theme}
+    {onThemeChange}
+    onClose={() => {
+      isMoreOpen = false;
+    }}
+    {onLogout}
+    onSearch={() => {
+      void focusSearch();
+    }}
+  />
 </nav>

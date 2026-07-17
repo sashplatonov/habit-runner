@@ -22,71 +22,71 @@ export const THEMES: Theme[] = [
   {
     id: 'midnight',
     name: 'Midnight',
-    accent: '#00d4ff',
-    accentSecondary: '#00ff88',
+    accent: '#65d6a0',
+    accentSecondary: '#9aa8ff',
     group: 'dark'
   },
   {
     id: 'ember',
     name: 'Ember',
-    accent: '#ff8c42',
-    accentSecondary: '#ff4d6a',
+    accent: '#f2a36b',
+    accentSecondary: '#ff8b85',
     group: 'dark'
   },
   {
     id: 'violet',
     name: 'Violet',
-    accent: '#bf6bff',
-    accentSecondary: '#ff6bb5',
+    accent: '#9aa8ff',
+    accentSecondary: '#c69bff',
     group: 'dark'
   },
   {
     id: 'matrix',
     name: 'Matrix',
-    accent: '#33ff33',
-    accentSecondary: '#00cc66',
+    accent: '#65d6a0',
+    accentSecondary: '#9be2bb',
     group: 'dark'
   },
   {
     id: 'arctic',
     name: 'Arctic',
-    accent: '#64b5f6',
-    accentSecondary: '#e0e0e0',
+    accent: '#7eb8ff',
+    accentSecondary: '#dce7f7',
     group: 'dark'
   },
   {
     id: 'sakura',
     name: 'Sakura',
-    accent: '#e8457a',
-    accentSecondary: '#c44dbb',
+    accent: '#e56e93',
+    accentSecondary: '#c95cb7',
     group: 'light'
   },
   {
     id: 'lavender',
     name: 'Lavender',
-    accent: '#7c5cbf',
-    accentSecondary: '#5b8def',
+    accent: '#8b7bff',
+    accentSecondary: '#6fb4ff',
     group: 'light'
   },
   {
     id: 'mint',
     name: 'Mint',
-    accent: '#2eaa6e',
-    accentSecondary: '#1a8fb8',
+    accent: '#3fc48a',
+    accentSecondary: '#56b8c9',
     group: 'light'
   },
   {
     id: 'peach',
     name: 'Peach',
-    accent: '#e07830',
-    accentSecondary: '#d04880',
+    accent: '#f08d52',
+    accentSecondary: '#dd6d86',
     group: 'light'
   },
   {
     id: 'cloud',
     name: 'Cloud',
-    accent: '#4a7aef',
-    accentSecondary: '#3abba0',
+    accent: '#4e63d8',
+    accentSecondary: '#23835d',
     group: 'light'
   }
 ];

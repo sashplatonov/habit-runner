@@ -161,7 +161,7 @@
   {/if}
 
   <div
-    class="habit-card-inner flex items-center rounded-2xl border bg-bg-card px-4 py-3 transition-all duration-150 cursor-pointer overflow-hidden
+    class="habit-card-inner flex items-center rounded-[1.5rem] border bg-bg-card px-4 py-3 transition-all duration-150 cursor-pointer overflow-hidden shadow-[0_10px_24px_rgba(15,23,42,0.06)]
       {isDragOver ? 'border-accent/50' : 'border-border hover:border-border-hover'}
       {isFrozen ? 'opacity-75' : ''}"
     role="button"

@@ -57,7 +57,7 @@
   }
 </script>
 
-<div class="rounded-lg border border-border bg-bg-secondary p-4">
+<div class="rounded-surface border border-border bg-bg-card p-4 shadow-surface">
   <div class="mb-4 flex items-center gap-2">
     <h2 class="text-xs font-mono uppercase tracking-wider text-muted">Monthly completion rate</h2>
     <ChartGuideTooltip
@@ -73,7 +73,7 @@
   </div>
 
   {#if points.length > 0}
-    <div class="rounded-2xl border border-accent/20 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.14),transparent_55%),linear-gradient(180deg,rgba(255,255,255,0.06),rgba(255,255,255,0.01))] p-3">
+    <div class="rounded-2xl border border-border bg-bg-secondary/70 p-3">
       <div class="grid grid-cols-[2rem_minmax(0,1fr)] gap-2">
         <div class="relative h-28">
           {#each yAxisTicks as tick, tickIndex ('tick-label-' + tickIndex)}

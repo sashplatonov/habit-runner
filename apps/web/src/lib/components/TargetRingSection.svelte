@@ -33,7 +33,7 @@
   );
 </script>
 
-<div class="flex items-center gap-4 rounded-lg border border-border bg-bg-secondary p-4">
+<div class="flex items-center gap-4 rounded-surface border border-border bg-bg-card p-4 shadow-surface">
   <CompletionRing percentage={stats.completionRate} size={72} strokeWidth={5} color={habit.color} showText={true} />
 
   <div class="min-w-0 flex-1">

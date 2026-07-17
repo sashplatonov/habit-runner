@@ -44,4 +44,10 @@ describe('PublicNav', () => {
 
     expect(startOAuthLogin).toHaveBeenCalledTimes(1);
   });
+
+  it('keeps the public navigation on its light semantic theme', () => {
+    const { container } = render(PublicNav);
+
+    expect(container.querySelector('header')?.getAttribute('data-theme')).toBe('cloud');
+  });
 });

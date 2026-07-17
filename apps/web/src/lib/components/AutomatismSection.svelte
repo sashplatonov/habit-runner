@@ -19,7 +19,7 @@
   const messageColor = $derived(getAutomatismColor(score));
 </script>
 
-<div class="rounded-xl border border-border bg-bg-secondary p-4">
+<div class="rounded-surface border border-border bg-bg-card p-4 shadow-surface">
   <div class="mb-3 flex items-center justify-between">
     <div class="flex flex-col">
       <div class="flex items-center gap-2">

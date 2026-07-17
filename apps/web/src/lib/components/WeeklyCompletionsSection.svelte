@@ -20,7 +20,7 @@
   const InsightIcon = $derived(insight.icon);
 </script>
 
-<div class="rounded-lg border border-border bg-bg-secondary p-4">
+<div class="rounded-surface border border-border bg-bg-card p-4 shadow-surface">
   <div class="mb-3 flex items-center gap-2">
     <h2 class="text-xs font-mono uppercase tracking-wider text-muted">Weekly completions</h2>
     <ChartGuideTooltip

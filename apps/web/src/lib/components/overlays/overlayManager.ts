@@ -36,14 +36,15 @@ export type OverlayOptions = {
 
 let activeOverlay: OverlayOptions | null = null;
 let previousActiveElement: Element | null = null;
+let previousBodyOverflow: string | null = null;
 
 function getFocusableElements(container: HTMLElement): HTMLElement[] {
   const selector = [
-    'a[href]',
-    'button:not([disabled])',
-    'textarea:not([disabled])',
-    'input:not([disabled])',
-    'select:not([disabled])',
+    'a[href]:not([tabindex="-1"])',
+    'button:not([disabled]):not([tabindex="-1"])',
+    'textarea:not([disabled]):not([tabindex="-1"])',
+    'input:not([disabled]):not([tabindex="-1"])',
+    'select:not([disabled]):not([tabindex="-1"])',
     '[tabindex]:not([tabindex="-1"])',
   ].join(', ');
   return Array.from(container.querySelectorAll<HTMLElement>(selector)).filter(
@@ -94,6 +95,7 @@ function lockBodyScroll() {
   if (typeof document === 'undefined') {
     return;
   }
+  previousBodyOverflow = document.body.style.overflow;
   document.body.style.overflow = 'hidden';
 }
 
@@ -101,7 +103,8 @@ function unlockBodyScroll() {
   if (typeof document === 'undefined') {
     return;
   }
-  document.body.style.overflow = '';
+  document.body.style.overflow = previousBodyOverflow ?? '';
+  previousBodyOverflow = null;
 }
 
 export function openOverlay(opts: OverlayOptions) {

@@ -102,7 +102,7 @@
       {@const CardIcon = card.icon}
       {@const HintIcon = card.hint.icon}
       {@const PhaseIcon = phase.icon}
-      <div class="rounded-lg border border-border bg-bg-secondary p-3">
+      <div class="rounded-[1.25rem] border border-border bg-bg-card p-3 shadow-surface">
         <div class="mb-2 flex items-center gap-1">
           <span style:color={card.key === 'best' ? accent.hex : undefined}>
             <CardIcon
