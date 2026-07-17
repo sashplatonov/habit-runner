@@ -16,8 +16,8 @@ export const HABIT_PHASES: HabitPhase[] = [
     id: 1,
     name: 'Fragile',
     range: '1–21',
-    description: 'Every day is critical',
-    hint: 'Missing = serious setback',
+    description: 'A new routine is taking shape',
+    hint: 'Make the next repetition easy',
     minDays: 1,
     maxDays: 21,
     icon: Shield
@@ -26,8 +26,8 @@ export const HABIT_PHASES: HabitPhase[] = [
     id: 2,
     name: 'Growing',
     range: '22–66',
-    description: 'Momentum is forming',
-    hint: '3 misses in a row = danger',
+    description: 'Repetition is building familiarity',
+    hint: 'Return at the next scheduled opportunity',
     minDays: 22,
     maxDays: 66,
     icon: Zap
@@ -44,10 +44,10 @@ export const HABIT_PHASES: HabitPhase[] = [
   },
   {
     id: 4,
-    name: 'Infallible',
+    name: 'Automatic',
     range: '100+',
-    description: 'Habit is part of your identity',
-    hint: 'Habit runs on autopilot',
+    description: 'The routine feels low-friction',
+    hint: 'Automatic repetition is doing the work',
     minDays: 100,
     maxDays: null,
     icon: Star

@@ -41,6 +41,7 @@ docs/
 │   └── reliability-rollout.md
 ├── project/
 │   ├── health.md
+│   ├── habit-detail-edit-motivation-backlog.md
 │   ├── today-ui-motivation-themes-backlog.md
 │   └── ui-ux-backlog.md
 └── setup/
@@ -66,6 +67,7 @@ docs/
 | [monitoring/newrelic.md](./monitoring/newrelic.md) | Canonical backend observability contract and New Relic rollout guardrails |
 | [project/health.md](./project/health.md) | Quality gates, tests, repo-level verification habits |
 | [project/ui-ux-backlog.md](./project/ui-ux-backlog.md) | UI/UX, maintainability, and UI-code quality backlog tied to current `apps/web` files |
+| [project/habit-detail-edit-motivation-backlog.md](./project/habit-detail-edit-motivation-backlog.md) | Habit detail, create/edit form, shared controls, and description overlay backlog |
 | [project/today-ui-motivation-themes-backlog.md](./project/today-ui-motivation-themes-backlog.md) | Today UI, mobile interaction, motivation, theme architecture, and verification evidence |
 | [features/chart-tooltips.md](./features/chart-tooltips.md) | UX contract for chart guide tooltips |
 

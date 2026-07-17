@@ -1,5 +1,6 @@
 <script lang="ts">
   import { DAILY_TARGET_MIN, DAILY_TARGET_MAX } from '$lib/habits/constants';
+  import FormSection from './FormSection.svelte';
 
   let {
     targetStreak = $bindable(21),
@@ -26,13 +27,16 @@
   }
 </script>
 
-<div class="rounded-[1.75rem] border border-border bg-bg-card/92 p-5 shadow-[0_20px_54px_rgba(15,23,42,0.08)]">
-  <p class="mb-2 block text-[10px] font-mono uppercase tracking-wider text-muted">Daily Target</p>
+<FormSection title="Goal" description="Set the daily target and the streak target." class="space-y-3">
+<div class="space-y-3">
+  <p id="daily-target-label" class="mb-2 block text-[10px] font-mono uppercase tracking-wider text-muted">Daily Target</p>
   <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
     <input
       type="range"
       min={DAILY_TARGET_MIN}
       max={DAILY_TARGET_MAX}
+      name="daily-target-slider"
+      aria-labelledby="daily-target-label"
       bind:value={dailyTarget}
       class="slider-input flex-1"
       style="--accent: {selectedColor.hex};"
@@ -41,19 +45,24 @@
       type="number"
       min={DAILY_TARGET_MIN}
       max={DAILY_TARGET_MAX}
+      name="daily-target"
+      aria-label="Daily target value"
+      inputmode="numeric"
       value={dailyTarget}
       oninput={handleDailyTargetInput}
-      class="w-20 rounded-lg border border-border bg-bg-secondary px-3 py-2 text-center text-sm font-mono tabular-nums text-foreground transition-all focus:border-accent/50"
+      class="w-20 rounded-lg border border-border bg-bg-secondary px-3 py-2 text-center text-sm font-mono tabular-nums text-foreground transition-colors focus:border-accent/50"
     />
     <span class="text-[10px] font-mono text-muted">times/day</span>
   </div>
 
-  <p class="mb-2 mt-4 block text-[10px] font-mono uppercase tracking-wider text-muted">Target Streak</p>
+  <p id="target-streak-label" class="mb-2 mt-4 block text-[10px] font-mono uppercase tracking-wider text-muted">Target Streak</p>
   <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
     <input
       type="range"
       min="1"
       max="365"
+      name="target-streak-slider"
+      aria-labelledby="target-streak-label"
       bind:value={targetStreak}
       class="slider-input flex-1"
       style="--accent: {selectedColor.hex};"
@@ -62,10 +71,14 @@
       type="number"
       min="1"
       max="365"
+      name="target-streak"
+      aria-label="Target streak value"
+      inputmode="numeric"
       value={targetStreak}
       oninput={handleTargetStreakInput}
-      class="w-20 rounded-lg border border-border bg-bg-secondary px-3 py-2 text-center text-sm font-mono tabular-nums text-foreground transition-all focus:border-accent/50"
+      class="w-20 rounded-lg border border-border bg-bg-secondary px-3 py-2 text-center text-sm font-mono tabular-nums text-foreground transition-colors focus:border-accent/50"
     />
     <span class="text-[10px] font-mono text-muted">days</span>
   </div>
-</div>
+  </div>
+</FormSection>

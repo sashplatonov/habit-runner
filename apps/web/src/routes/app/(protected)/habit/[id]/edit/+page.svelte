@@ -2,7 +2,6 @@
   import { goto } from '$app/navigation';
   import { resolve } from '$app/paths';
   import { page } from '$app/state';
-  import { onMount } from 'svelte';
   import EmptyState from '$lib/components/EmptyState.svelte';
   import HabitForm from '$lib/components/HabitForm.svelte';
   import { habitsStore } from '$lib/stores/habits';
@@ -11,18 +10,7 @@
   const allHabits = $derived($habitsStore.allHabits);
   const habit = $derived(allHabits.find((entry) => entry.id === page.params.id) ?? null);
 
-  let isResolvingHabit = $state(true);
-  let saveError = $state<string | null>(null);
-
-  onMount(() => {
-    const timerId = window.setTimeout(() => {
-      isResolvingHabit = false;
-    }, 300);
-
-    return () => {
-      window.clearTimeout(timerId);
-    };
-  });
+  const isResolvingHabit = $derived(!habit && !$habitsStore.hasHydrated);
 
   function handleBack() {
     void goto(resolve('/app/(protected)/habit/[id]', { id: page.params.id }));
@@ -33,15 +21,9 @@
       return;
     }
 
-    saveError = null;
     const habitId = habit.id;
 
-    try {
-      await habitsStore.updateHabit(habitId, payload);
-    } catch (err) {
-      saveError = err instanceof Error ? err.message : 'Failed to save habit';
-      return;
-    }
+    await habitsStore.updateHabit(habitId, payload);
 
     await goto(resolve('/app/(protected)/habit/[id]', { id: habitId }));
   }
@@ -72,12 +54,5 @@
     </EmptyState>
   </div>
 {:else}
-  {#if saveError}
-    <div class="mx-auto max-w-lg px-4 pt-4">
-      <p class="rounded-lg border border-accent-secondary/40 bg-accent-secondary/10 px-3 py-2 text-xs font-mono text-accent-secondary" role="alert">
-        {saveError}
-      </p>
-    </div>
-  {/if}
   <HabitForm mode="edit" habit={habit} allHabits={allHabits} onBack={handleBack} onSubmit={handleSubmit} />
 {/if}

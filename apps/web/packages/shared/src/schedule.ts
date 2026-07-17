@@ -3,6 +3,19 @@ import type { HabitFrequency, HabitSchedule, WeekOfMonth } from './habit.js';
 const WEEKDAY_ORDER = [1, 2, 3, 4, 5, 6, 0];
 const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
+function formatOrdinal(value: number): string {
+  if (value === 1) {
+    return '1st';
+  }
+  if (value === 2) {
+    return '2nd';
+  }
+  if (value === 3) {
+    return '3rd';
+  }
+  return `${value}th`;
+}
+
 type ScheduleCandidate = Partial<HabitSchedule> & Record<string, unknown>;
 
 type ScheduleBuilder = (candidate: ScheduleCandidate) => HabitSchedule | undefined;
@@ -104,7 +117,7 @@ export function describeSchedule(schedule?: HabitSchedule | null): string {
     case 'weekly_quota':
       return `${schedule.timesPerWeek}x a week` + (schedule.weekdays ? ` on ${schedule.weekdays.map((day) => DAY_NAMES[day]).join(', ')}` : '');
     case 'monthly_weeks':
-      return `${schedule.weeksOfMonth.map((week) => week === 'last' ? 'Last' : week + 'th').join(', ')} week${schedule.weekdays.length > 1 ? 's' : ''} on ${schedule.weekdays.map((day) => DAY_NAMES[day]).join(', ')}`;
+      return `${schedule.weeksOfMonth.map((week) => week === 'last' ? 'Last' : formatOrdinal(week)).join(', ')} week${schedule.weeksOfMonth.length > 1 ? 's' : ''} on ${schedule.weekdays.map((day) => DAY_NAMES[day]).join(', ')}`;
     case 'monthly_quota':
       return `${schedule.timesPerMonth}x a month` + (schedule.weekdays ? ` on ${schedule.weekdays.map((day) => DAY_NAMES[day]).join(', ')}` : '');
   }

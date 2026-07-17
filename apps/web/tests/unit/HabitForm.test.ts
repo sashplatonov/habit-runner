@@ -58,7 +58,7 @@ describe('HabitForm', () => {
 
     expect(screen.getByText('Focus is key')).toBeTruthy();
 
-    await user.click(screen.getByRole('button', { name: 'I understand, add anyway' }));
+    await user.click(screen.getByRole('button', { name: 'Add anyway' }));
 
     expect(screen.queryByText('Focus is key')).toBeNull();
   });
@@ -76,7 +76,7 @@ describe('HabitForm', () => {
       }
     });
 
-    const customIconInput = screen.getByPlaceholderText('Own...') as HTMLInputElement;
+    const customIconInput = screen.getByLabelText('Custom habit icon') as HTMLInputElement;
     await user.type(customIconInput, '🛰');
 
     // Check that the input is not empty (emoji handling may normalize)
@@ -107,7 +107,7 @@ describe('HabitForm', () => {
       }
     });
 
-    await user.click(screen.getByRole('button', { name: 'Save' }));
+    await user.click(screen.getAllByRole('button', { name: 'Save habit' })[0]);
 
     await waitFor(() => {
       expect(onSubmit).toHaveBeenCalledTimes(1);
@@ -136,11 +136,11 @@ describe('HabitForm', () => {
         }
       });
 
-      const customIconInput = screen.getByPlaceholderText('Own...') as HTMLInputElement;
+      const customIconInput = screen.getByLabelText('Custom habit icon') as HTMLInputElement;
       await user.type(customIconInput, '🎯');
 
       await user.type(screen.getByLabelText('Name *'), 'Test Habit');
-      await user.click(screen.getByRole('button', { name: 'Create' }));
+      await user.click(screen.getAllByRole('button', { name: 'Create habit' })[0]);
 
       await waitFor(() => {
         expect(onSubmit).toHaveBeenCalledTimes(1);
@@ -165,12 +165,12 @@ describe('HabitForm', () => {
         }
       });
 
-      const customIconInput = screen.getByPlaceholderText('Own...') as HTMLInputElement;
+      const customIconInput = screen.getByLabelText('Custom habit icon') as HTMLInputElement;
       // Use a simple emoji that doesn't have variation selectors
       await user.type(customIconInput, '📝');
 
       await user.type(screen.getByLabelText('Name *'), 'Writing Habit');
-      await user.click(screen.getByRole('button', { name: 'Create' }));
+      await user.click(screen.getAllByRole('button', { name: 'Create habit' })[0]);
 
       await waitFor(() => {
         expect(onSubmit).toHaveBeenCalledTimes(1);
@@ -195,14 +195,14 @@ describe('HabitForm', () => {
         }
       });
 
-      const customIconInput = screen.getByPlaceholderText('Own...') as HTMLInputElement;
+      const customIconInput = screen.getByLabelText('Custom habit icon') as HTMLInputElement;
       // 🇺🇸 is U+1F1FA (regional indicator U) + U+1F1F8 (regional indicator S)
       await user.type(customIconInput, '🇺🇸');
 
       expect(customIconInput.value).toBe('🇺🇸');
 
       await user.type(screen.getByLabelText('Name *'), 'USA Habit');
-      await user.click(screen.getByRole('button', { name: 'Create' }));
+      await user.click(screen.getAllByRole('button', { name: 'Create habit' })[0]);
 
       await waitFor(() => {
         expect(onSubmit).toHaveBeenCalledTimes(1);
@@ -226,7 +226,7 @@ describe('HabitForm', () => {
         }
       });
 
-      const customIconInput = screen.getByPlaceholderText('Own...') as HTMLInputElement;
+      const customIconInput = screen.getByLabelText('Custom habit icon') as HTMLInputElement;
       await user.type(customIconInput, '🎯');
 
       // Click on the first preset icon (⚡)
@@ -235,7 +235,7 @@ describe('HabitForm', () => {
       // After clicking preset, the icon should change (preset icon should be used)
       // We can't easily check the input value, but we can verify the form submits with the preset icon
       await user.type(screen.getByLabelText('Name *'), 'Test Habit');
-      await user.click(screen.getByRole('button', { name: 'Create' }));
+      await user.click(screen.getAllByRole('button', { name: 'Create habit' })[0]);
 
       await waitFor(() => {
         expect(onSubmit).toHaveBeenCalledTimes(1);

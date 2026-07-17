@@ -407,7 +407,7 @@ export function resolveHabitSchedule(habit: Habit): HabitSchedule {
 
 export function getScheduleStatusForDate(
   habit: Habit,
-  date: Date,
+  date: CalendarBoundary,
   timeZone = getCurrentUserTimeZone()
 ): ScheduleDayStatus {
   if (habit.freezeDays?.includes(toCalendarDate(date, timeZone))) {

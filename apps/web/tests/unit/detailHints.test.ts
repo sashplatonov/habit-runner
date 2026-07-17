@@ -82,7 +82,7 @@ describe('detail hints', () => {
     expect(getAutomatismLevel(25, '#00d4ff').label).toBe('Fragile');
     expect(getAutomatismLevel(55, '#00d4ff').label).toBe('Growing');
     expect(getAutomatismLevel(75, '#00d4ff').label).toBe('Established');
-    expect(getAutomatismLevel(90, '#00d4ff').label).toBe('Infallible');
-    expect(getAutomatismMessage(90)).toContain('locked in');
+    expect(getAutomatismLevel(90, '#00d4ff').label).toBe('Automatic');
+    expect(getAutomatismMessage(90)).toContain('context stable');
   });
 });

@@ -216,4 +216,20 @@ describe('habits store', () => {
     expect(snapshot.allHabits[0].dailyTarget).toBe(2);
     expect(mockUpdateHabit).toHaveBeenCalledOnce();
   });
+
+  it('preserves an explicit null when clearing a reminder time', async () => {
+    mockFetchHabits.mockResolvedValue([buildHabitResponse({ reminderTime: '08:00' })]);
+    mockFetchCheckins.mockResolvedValue([]);
+    mockUpdateHabit.mockResolvedValue(buildHabitResponse({ reminderTime: null, version: 2 }));
+
+    const store = createHabitsStore('test-user');
+    await store.refresh();
+    await store.updateHabit('habit-1', { reminderTime: null });
+
+    expect(mockUpdateHabit).toHaveBeenCalledWith(
+      'habit-1',
+      expect.objectContaining({ reminderTime: null })
+    );
+    expect(get(store).allHabits[0].reminderTime).toBeUndefined();
+  });
 });

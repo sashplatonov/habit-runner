@@ -8,7 +8,7 @@
   import { getScheduleStatusForDate, isMandatoryToday } from '$lib/habits/schedule';
   import { formatAppDate } from '$lib/i18n';
   import CompletionRing from '$lib/components/CompletionRing.svelte';
-  import HabitCompletionControl from '$lib/components/dashboard/HabitCompletionControl.svelte';
+  import HabitCompletionControl from '$lib/components/habits/HabitCompletionControl.svelte';
   import MiniHeatmap from '$lib/components/MiniHeatmap.svelte';
   import DescriptionTooltip from '$lib/components/DescriptionTooltip.svelte';
   import type { CelebrationParticle } from '$lib/habits/completionCelebration';

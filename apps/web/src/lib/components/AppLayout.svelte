@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { page } from '$app/state';
   import type { Snippet } from 'svelte';
   import type { ThemeId } from '$lib/theme/themes';
   import SidebarNav from '$lib/components/SidebarNav.svelte';
@@ -12,6 +13,10 @@
   };
 
   let { theme, onThemeChange, onLogout, children }: Props = $props();
+
+  const isHabitFormRoute = $derived(
+    page.url.pathname.endsWith('/habit/new') || /\/habit\/[^/]+\/edit$/.test(page.url.pathname)
+  );
 </script>
 
 <div class="relative min-h-screen overflow-x-clip bg-bg-primary text-foreground">
@@ -40,26 +45,30 @@
       tabindex="-1"
       class="sm:!pb-0"
       style:padding-top="var(--safe-area-inset-top, 0px)"
-      style:padding-bottom="calc(72px + var(--safe-area-inset-bottom, 0px))"
+      style:padding-bottom={isHabitFormRoute ? '0' : 'calc(72px + var(--safe-area-inset-bottom, 0px))'}
     >
       {@render children()}
     </main>
 
-    <footer class="px-4 py-5 text-center sm:px-6">
-      <div class="mx-auto inline-flex items-center gap-2 rounded-full border border-border bg-bg-secondary/84 px-4 py-2 shadow-[0_12px_30px_rgba(15,23,42,0.08)] backdrop-blur-sm">
-        <span class="select-none text-[11px] font-mono text-muted/70">
-        {new Date(__BUILD_TIME__).toLocaleString('en-GB', {
-          day: 'numeric',
-          month: 'short',
-          year: 'numeric',
-          hour: '2-digit',
-          minute: '2-digit',
-          timeZoneName: 'short'
-        })}
-        </span>
-      </div>
-    </footer>
+    {#if !isHabitFormRoute}
+      <footer class="px-4 py-5 text-center sm:px-6">
+        <div class="mx-auto inline-flex items-center gap-2 rounded-full border border-border bg-bg-secondary/84 px-4 py-2 shadow-[0_12px_30px_rgba(15,23,42,0.08)] backdrop-blur-sm">
+          <span class="select-none text-[11px] font-mono text-muted/70">
+          {new Date(__BUILD_TIME__).toLocaleString('en-GB', {
+            day: 'numeric',
+            month: 'short',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+            timeZoneName: 'short'
+          })}
+          </span>
+        </div>
+      </footer>
+    {/if}
   </div>
 
-  <BottomNav {theme} {onThemeChange} {onLogout} />
+  {#if !isHabitFormRoute}
+    <BottomNav {theme} {onThemeChange} {onLogout} />
+  {/if}
 </div>

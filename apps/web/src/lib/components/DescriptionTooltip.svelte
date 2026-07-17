@@ -1,53 +1,53 @@
 <script lang="ts">
-  import { portal } from '$lib/actions/portal';
   import { marked } from 'marked';
   import DOMPurify from 'dompurify';
-  import { openOverlay, closeActiveOverlay } from '$lib/components/overlays/overlayManager';
-  import {
-    calculateTooltipPosition,
-    type TooltipPlacement
-  } from '$lib/components/overlays/tooltipPosition';
+  import { CircleHelp, X } from 'lucide-svelte';
+  import Overlay from '$lib/components/overlays/Overlay.svelte';
+  import { calculateTooltipPosition, type TooltipPlacement } from '$lib/components/overlays/tooltipPosition';
+  import IconButton from '$lib/components/ui/IconButton.svelte';
 
   type Props = {
     description: string;
     triggerClassName?: string;
+    triggerLabel?: string;
   };
 
-  const { description, triggerClassName = 'h-4 w-4' }: Props = $props();
+  const { description, triggerClassName = 'h-11 w-11', triggerLabel = 'Open description' }: Props = $props();
+
+  const componentId = $props.id();
+  const panelId = `habit-description-${componentId}`;
 
   const renderedDescription = $derived.by(() => {
     try {
       const html = marked.parse(description) as string;
       return DOMPurify.sanitize(html);
     } catch {
-      return description;
+      return DOMPurify.sanitize(description);
     }
   });
 
-  let show = $state(false);
-  let ready = $state(false);
+  let open = $state(false);
+  let pinned = $state(false);
   let viewportWidth = $state(typeof window === 'undefined' ? 1024 : window.innerWidth);
   let viewportHeight = $state(typeof window === 'undefined' ? 768 : window.innerHeight);
-  let panelPosition = $state({
-    left: 12,
-    top: 12,
-    width: 320,
-    maxHeight: 0,
-    placement: 'above' as TooltipPlacement
-  });
+  let position = $state({ left: 12, top: 12, width: 320, maxHeight: 0, placement: 'below' as TooltipPlacement });
   let triggerEl = $state<HTMLButtonElement | null>(null);
   let panelEl = $state<HTMLDivElement | null>(null);
   let closeTimer: ReturnType<typeof setTimeout> | null = null;
-  let isHovering = $state(false);
 
-  const isMobile = $derived.by(() => {
-    return viewportWidth < 640;
-  });
+  const isMobile = $derived(viewportWidth < 640);
+
+  function clearCloseTimer() {
+    if (closeTimer) {
+      clearTimeout(closeTimer);
+      closeTimer = null;
+    }
+  }
 
   function updateViewport() {
     viewportWidth = window.innerWidth;
     viewportHeight = window.innerHeight;
-    if (show && !isMobile) {
+    if (open && !isMobile) {
       positionPanel();
     }
   }
@@ -58,7 +58,7 @@
     }
 
     const rect = triggerEl.getBoundingClientRect();
-    panelPosition = calculateTooltipPosition({
+    position = calculateTooltipPosition({
       viewportWidth,
       viewportHeight,
       triggerLeft: rect.left,
@@ -67,213 +67,225 @@
       triggerBottom: rect.bottom,
       contentHeight: panelEl.scrollHeight
     });
-    ready = true;
   }
 
-  function clearCloseTimer() {
-    if (closeTimer) {
-      clearTimeout(closeTimer);
-      closeTimer = null;
+  function openPreview() {
+    clearCloseTimer();
+    if (!open) {
+      open = true;
     }
   }
 
-  function startCloseTimer() {
+  function openPinned() {
     clearCloseTimer();
+    pinned = true;
+    open = true;
+  }
+
+  function closePanel() {
+    clearCloseTimer();
+    pinned = false;
+    open = false;
+  }
+
+  function scheduleClose() {
+    clearCloseTimer();
+    if (pinned) {
+      return;
+    }
     closeTimer = setTimeout(() => {
-      if (!isHovering) {
-        show = false;
+      if (!pinned) {
+        open = false;
       }
-    }, 3000);
+      closeTimer = null;
+    }, 120);
   }
 
-  function open() {
-    const el = triggerEl;
-    if (!el) {
-      return;
-    }
-    ready = false;
-    show = true;
-    clearCloseTimer();
+  function containsFocusTarget(target: EventTarget | null): boolean {
+    return target instanceof Node && Boolean(panelEl?.contains(target));
   }
 
-  function close() {
-    show = false;
-    clearCloseTimer();
-  }
-
-  // Use unified overlay contract for both desktop and mobile
   $effect(() => {
-    if (show && panelEl) {
-      openOverlay({
-        triggerEl,
-        panelEl,
-        open: true,
-        onClose: close,
-        closeOnEscape: true,
-        closeOnOutsideClick: !isMobile, // mobile uses overlay backdrop for close
-        trapFocus: isMobile, // only trap focus for mobile modal
-        restoreFocus: true,
-        lockScroll: isMobile, // lock scroll only for mobile modal
-      });
-    } else if (!show) {
-      closeActiveOverlay();
-    }
-
-    if (!show || !panelEl || isMobile) {
+    if (!open || !panelEl) {
       return;
     }
-    positionPanel();
+
+    const frame = requestAnimationFrame(() => {
+      positionPanel();
+    });
+
+    const onResize = () => positionPanel();
+    const onScroll = () => positionPanel();
+
+    window.addEventListener('resize', onResize);
+    window.addEventListener('scroll', onScroll, true);
+
+    return () => {
+      cancelAnimationFrame(frame);
+      window.removeEventListener('resize', onResize);
+      window.removeEventListener('scroll', onScroll, true);
+    };
   });
 
-  // Handle touch events for mobile swipe-down to close
-  let touchStartY = 0;
-  let touchHandled = false;
-  function handleTouchStart(e: TouchEvent) {
-    // Only handle swipe on the drag handle (top bar), not the whole modal
-    const target = e.target as HTMLElement;
-    if (!target.closest('.cursor-grab')) return;
-    touchStartY = e.touches[0].clientY;
-    touchHandled = true;
-  }
-  function handleTouchEnd(e: TouchEvent) {
-    if (!isMobile || !touchHandled) return;
-    touchHandled = false;
-    const touchEndY = e.changedTouches[0].clientY;
-    const diff = touchEndY - touchStartY;
-    // Swipe down more than 50px to close
-    if (diff > 50) {
-      show = false;
-    }
-  }
-
-  // Cleanup timer and overlay on destroy
   $effect(() => {
     return () => {
       clearCloseTimer();
-      closeActiveOverlay();
     };
   });
 </script>
 
-<svelte:window onresize={updateViewport} onscroll={positionPanel} />
+<svelte:window onresize={updateViewport} />
 
-<button
-  bind:this={triggerEl}
-  type="button"
-  class={`inline-flex flex-shrink-0 cursor-help items-center justify-center rounded border border-dashed border-muted font-mono text-[9px] text-muted transition-colors hover:border-foreground hover:text-foreground ${triggerClassName}`}
-  onmouseenter={() => {
-    if (!isMobile && !show) {
-      open();
-    }
-  }}
-  onmouseleave={() => {
-    // Start close timer when leaving trigger (only on desktop)
-    if (!isMobile && show && !isHovering) {
-      startCloseTimer();
-    }
-  }}
-  onclick={(e) => {
-    e.stopPropagation();
-    if (show) {
-      close();
+<IconButton
+  bind:element={triggerEl}
+  ariaLabel={triggerLabel}
+  title={triggerLabel}
+  active={open}
+  toggle={true}
+  expanded={open}
+  controls={panelId}
+  class={`cursor-help ${triggerClassName}`}
+  onClick={() => {
+    if (open && pinned) {
+      closePanel();
     } else {
-      open();
+      openPinned();
     }
   }}
-  ontouchstart={(e) => {
-    // Prevent mouseenter from firing on touch devices
-    e.stopPropagation();
+  onMouseEnter={() => {
+    if (!isMobile && !open) {
+      openPreview();
+    }
   }}
-  aria-label="Description"
+  onMouseLeave={() => {
+    if (!isMobile) {
+      scheduleClose();
+    }
+  }}
+  onFocus={() => {
+    openPreview();
+  }}
+  onBlur={(event) => {
+    if (!pinned && !containsFocusTarget(event.relatedTarget)) {
+      scheduleClose();
+    }
+  }}
 >
-  ?
-</button>
+  <CircleHelp size={14} stroke-width={2.1} aria-hidden="true" />
+</IconButton>
 
-{#if show}
-  <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
+{#if open}
   {#if isMobile}
-    <!-- Mobile: full-screen modal at bottom with scroll -->
-    <div
-      use:portal
-      bind:this={panelEl}
-      class="fixed inset-x-0 bottom-0 z-[9999] max-h-[70dvh] overflow-y-auto overscroll-contain rounded-t-2xl border border-border/60 bg-bg-card shadow-[0_8px_32px_rgba(0,0,0,0.28)] backdrop-blur-sm"
+    <Overlay
+      open={open}
+      triggerEl={triggerEl}
+      onClose={closePanel}
       role="dialog"
-      aria-label="Description"
-      aria-modal="true"
-      tabindex="-1"
-      onclick={(e) => { e.stopPropagation(); }}
-      onkeydown={(e) => {
-        // Escape is handled by overlayManager, but keep fallback
-        if (e.key === 'Escape') {
-          show = false;
-        }
-      }}
+      ariaLabel={triggerLabel}
+      ariaModal={true}
+      closeOnOutsideClick={true}
+      closeOnEscape={true}
+      trapFocus={true}
+      restoreFocus={true}
+      lockScroll={true}
+      class="inset-x-0 bottom-0 z-[9999] max-h-[72dvh] overflow-hidden rounded-t-[1.75rem] border border-border bg-bg-card shadow-[0_24px_80px_rgba(0,0,0,0.32)]"
     >
-      <div class="flex justify-center pb-1 pt-2 cursor-grab active:cursor-grabbing" role="presentation" aria-hidden="true" ontouchstart={handleTouchStart} ontouchend={handleTouchEnd}>
-        <div class="h-[2px] w-8 rounded-full bg-foreground opacity-25"></div>
-      </div>
-      <div class="markdown-content break-words px-4 pt-1 text-[11px] leading-[1.6] text-foreground" style:padding-bottom="max(1.5rem, env(safe-area-inset-bottom))">{@html renderedDescription}</div>
-    </div>
-    <!-- Overlay to close on tap outside -->
-    <div
-      use:portal
-      class="fixed inset-0 z-[9998] bg-black/20"
-      onclick={() => { show = false; }}
-      aria-hidden="true"
-    ></div>
-  {:else}
-    <!-- Desktop: tooltip with 1/3 width -->
-    <div
-      use:portal
-      bind:this={panelEl}
-      class="fixed z-[9999]"
-      style:left="{panelPosition.left}px"
-      style:top="{panelPosition.top}px"
-      style:width="{panelPosition.width}px"
-      style:visibility={ready ? 'visible' : 'hidden'}
-      style:max-height="{panelPosition.maxHeight}px"
-      style:overflow-y="auto"
-      role="tooltip"
-      tabindex="-1"
-      onmouseenter={() => {
-        isHovering = true;
-        clearCloseTimer();
-      }}
-      onmouseleave={() => {
-        isHovering = false;
-        startCloseTimer();
-      }}
-      onclick={(e) => { e.stopPropagation(); }}
-      onkeydown={(e) => {
-        if (e.key === 'Escape') {
-          close();
-        }
-      }}
-    >
-      <div class="overflow-hidden rounded-2xl border border-border/60 bg-bg-card shadow-[0_8px_32px_rgba(0,0,0,0.28)] backdrop-blur-sm">
-        <div class="flex items-center justify-between px-3 pt-2 pb-1">
-          <div class="flex justify-center flex-1">
-            <div class="h-[2px] w-8 rounded-full bg-foreground opacity-25"></div>
+      <div
+        bind:this={panelEl}
+        id={panelId}
+        class="flex max-h-[72dvh] flex-col"
+        tabindex="-1"
+        role="presentation"
+        onmouseenter={clearCloseTimer}
+        onmouseleave={scheduleClose}
+        onfocusin={clearCloseTimer}
+        onfocusout={(event) => {
+          if (!pinned && !containsFocusTarget(event.relatedTarget)) {
+            scheduleClose();
+          }
+        }}
+      >
+        <div class="flex items-center justify-between gap-3 border-b border-border px-4 py-3">
+          <div class="flex items-center gap-2">
+            <span class="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-border bg-bg-secondary text-accent">
+              <CircleHelp size={16} aria-hidden="true" />
+            </span>
+            <div class="min-w-0">
+              <p class="text-[10px] font-mono uppercase tracking-[0.24em] text-muted">Description</p>
+              <p class="truncate text-sm font-semibold text-foreground">{triggerLabel}</p>
+            </div>
           </div>
           <button
             type="button"
-            class="ml-2 -mr-1 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded hover:bg-foreground/10"
-            onclick={() => { close(); }}
-            aria-label="Close"
+            class="inline-flex h-10 w-10 items-center justify-center rounded-full border border-border text-muted transition hover:border-border-hover hover:text-foreground"
+            aria-label={`Close ${triggerLabel}`}
+            onclick={closePanel}
           >
-            <span class="text-[10px] font-mono leading-none">✕</span>
+            <X size={16} aria-hidden="true" />
           </button>
         </div>
-        <div class="markdown-content break-words px-3 pb-3 text-[11px] leading-[1.6] text-foreground">{@html renderedDescription}</div>
+
+        <div class="markdown-content max-h-[calc(72dvh-4.5rem)] overflow-y-auto px-4 py-4 text-sm leading-6 text-foreground" style:padding-bottom="calc(env(safe-area-inset-bottom, 0px) + 1rem)">
+          {@html renderedDescription}
+        </div>
       </div>
+    </Overlay>
+  {:else}
+    <Overlay
+      open={open}
+      triggerEl={triggerEl}
+      onClose={closePanel}
+      role="dialog"
+      ariaLabel={triggerLabel}
+      ariaModal={false}
+      closeOnOutsideClick={true}
+      closeOnEscape={true}
+      trapFocus={false}
+      restoreFocus={true}
+      lockScroll={false}
+      class="z-[9999] w-[min(24rem,calc(100vw-1.5rem))] max-w-[calc(100vw-1.5rem)]"
+      style={`left: ${position.left}px; top: ${position.top}px; width: ${position.width}px; max-height: ${position.maxHeight}px;`}
+    >
       <div
-        class="absolute left-1/2 h-0 w-0 -translate-x-1/2"
-        style={panelPosition.placement === 'above'
-          ? 'bottom: 0; transform: translateX(-50%) translateY(100%); border-left: 6px solid transparent; border-right: 6px solid transparent; border-top: 6px solid color-mix(in srgb, var(--border) 60%, transparent);'
-          : 'top: 0; transform: translateX(-50%) translateY(-100%); border-left: 6px solid transparent; border-right: 6px solid transparent; border-bottom: 6px solid color-mix(in srgb, var(--border) 60%, transparent);'}
-        aria-hidden="true"
-      ></div>
-    </div>
+        bind:this={panelEl}
+        id={panelId}
+        class="overflow-hidden rounded-[1.5rem] border border-border bg-bg-card shadow-[0_24px_80px_rgba(0,0,0,0.28)]"
+        tabindex="-1"
+        role="presentation"
+        onmouseenter={clearCloseTimer}
+        onmouseleave={scheduleClose}
+        onfocusin={clearCloseTimer}
+        onfocusout={(event) => {
+          if (!pinned && !containsFocusTarget(event.relatedTarget)) {
+            scheduleClose();
+          }
+        }}
+      >
+        <div class="flex items-center justify-between gap-3 border-b border-border px-4 py-3">
+          <div class="flex min-w-0 items-center gap-2">
+            <span class="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-border bg-bg-secondary text-accent">
+              <CircleHelp size={16} aria-hidden="true" />
+            </span>
+            <div class="min-w-0">
+              <p class="text-[10px] font-mono uppercase tracking-[0.24em] text-muted">Description</p>
+              <p class="truncate text-sm font-semibold text-foreground">{triggerLabel}</p>
+            </div>
+          </div>
+          <button
+            type="button"
+            class="inline-flex h-10 w-10 items-center justify-center rounded-full border border-border text-muted transition hover:border-border-hover hover:text-foreground"
+            aria-label={`Close ${triggerLabel}`}
+            onclick={closePanel}
+          >
+            <X size={16} aria-hidden="true" />
+          </button>
+        </div>
+
+        <div class="markdown-content max-h-[min(60vh,32rem)] overflow-y-auto px-4 py-4 text-sm leading-6 text-foreground">
+          {@html renderedDescription}
+        </div>
+      </div>
+    </Overlay>
   {/if}
 {/if}
 
@@ -281,62 +293,62 @@
   :global(.markdown-content) {
     word-break: break-word;
   }
-  :global(.markdown-content p) {
-    margin: 0 0 0.4em;
+
+  :global(.markdown-content h1),
+  :global(.markdown-content h2),
+  :global(.markdown-content h3) {
+    margin: 0 0 0.5rem;
+    line-height: 1.2;
   }
+
+  :global(.markdown-content p) {
+    margin: 0 0 0.75rem;
+  }
+
   :global(.markdown-content p:last-child) {
     margin-bottom: 0;
   }
+
   :global(.markdown-content ul),
   :global(.markdown-content ol) {
-    margin: 0 0 0.4em;
-    padding-left: 1.2em;
+    margin: 0 0 0.75rem;
+    padding-left: 1.25rem;
   }
+
   :global(.markdown-content li) {
-    margin-bottom: 0.2em;
+    margin-bottom: 0.25rem;
   }
+
+  :global(.markdown-content a) {
+    color: var(--accent);
+    text-decoration: underline;
+    text-underline-offset: 0.15em;
+  }
+
   :global(.markdown-content code) {
-    background: color-mix(in srgb, var(--accent) 12%, transparent);
-    padding: 0.1em 0.3em;
-    border-radius: 3px;
+    border-radius: 0.4rem;
+    background: color-mix(in srgb, var(--accent) 10%, transparent);
+    padding: 0.1em 0.35em;
     font-size: 0.95em;
   }
+
   :global(.markdown-content pre) {
-    background: color-mix(in srgb, var(--accent) 8%, transparent);
-    padding: 0.5em 0.7em;
-    border-radius: 6px;
     overflow-x: auto;
-    margin: 0.4em 0;
-    font-size: 0.95em;
+    border-radius: 0.8rem;
+    background: color-mix(in srgb, var(--accent) 8%, transparent);
+    padding: 0.8rem 0.9rem;
+    margin: 0 0 0.75rem;
   }
+
   :global(.markdown-content pre code) {
     background: none;
     padding: 0;
   }
-  :global(.markdown-content strong) {
-    font-weight: 600;
-  }
-  :global(.markdown-content em) {
-    font-style: italic;
-  }
-  :global(.markdown-content a) {
-    color: var(--accent);
-    text-decoration: underline;
-  }
-  :global(.markdown-content h1),
-  :global(.markdown-content h2),
-  :global(.markdown-content h3) {
-    margin: 0.6em 0 0.3em;
-    font-weight: 600;
-    line-height: 1.3;
-  }
-  :global(.markdown-content h1) { font-size: 1.1em; }
-  :global(.markdown-content h2) { font-size: 1.05em; }
-  :global(.markdown-content h3) { font-size: 1em; }
+
   :global(.markdown-content blockquote) {
-    border-left: 3px solid color-mix(in srgb, var(--accent) 40%, transparent);
-    padding-left: 0.6em;
-    margin: 0.4em 0;
-    color: color-mix(in srgb, var(--foreground) 70%, transparent);
+    margin: 0 0 0.75rem;
+    border-left: 2px solid color-mix(in srgb, var(--accent) 50%, transparent);
+    padding-left: 0.75rem;
+    color: var(--text-muted);
   }
 </style>

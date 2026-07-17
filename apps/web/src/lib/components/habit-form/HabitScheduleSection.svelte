@@ -1,19 +1,16 @@
 <script lang="ts">
   import type { HabitSchedule, WeekOfMonth } from '@habbit-runner/shared';
-  import { DAY_LABELS, SCHEDULE_TYPE_OPTIONS, DAILY_TARGET_MIN, DAILY_TARGET_MAX } from '$lib/habits/constants';
+  import { describeSchedule } from '@habbit-runner/shared';
+  import { DAY_LABELS, SCHEDULE_TYPE_OPTIONS } from '$lib/habits/constants';
 
   const WEEKDAY_ORDER = [1, 2, 3, 4, 5, 6, 0];
   const WEEK_OF_MONTH_OPTIONS: WeekOfMonth[] = [1, 2, 3, 4, 'last'];
 
   let {
     schedule = $bindable<HabitSchedule>({ type: 'daily' }),
-    dailyTarget = $bindable(1),
-    selectedColor,
     errors = {}
   }: {
     schedule: HabitSchedule;
-    dailyTarget: number;
-    selectedColor: { hex: string };
     errors: Record<string, string>;
   } = $props();
 
@@ -103,21 +100,6 @@
     return [...items, value];
   }
 
-  function describeSchedule(current: HabitSchedule): string {
-    switch (current.type) {
-      case 'daily':
-        return 'Every day';
-      case 'weekly_days':
-        return `On ${current.weekdays.map((day) => DAY_LABELS[day]).join(', ')}`;
-      case 'weekly_quota':
-        return `${current.timesPerWeek} times per week${current.weekdays?.length ? ' on ' + current.weekdays.map((day) => DAY_LABELS[day]).join(', ') : ''}`;
-      case 'monthly_weeks':
-        return `Weeks ${current.weeksOfMonth.join(', ')} on ${current.weekdays.map((day) => DAY_LABELS[day]).join(', ')}`;
-      case 'monthly_quota':
-        return `${current.timesPerMonth} times per month${current.weekdays?.length ? ' on ' + current.weekdays.map((day) => DAY_LABELS[day]).join(', ') : ''}`;
-    }
-  }
-
   function createScheduleForType(nextType: HabitSchedule['type'], current: HabitSchedule): HabitSchedule {
     switch (nextType) {
       case 'daily':
@@ -162,6 +144,7 @@
       <button
         type="button"
         class={`rounded-lg border px-3 py-3 text-left text-xs font-mono transition ${schedule.type === option.value ? 'border-accent bg-accent/10 text-accent' : 'border-border text-muted hover:border-border-hover'}`}
+        aria-pressed={schedule.type === option.value}
         onclick={() => {
           schedule = createScheduleForType(option.value, schedule);
         }}
@@ -181,6 +164,7 @@
               type="button"
               class={`flex min-h-11 flex-1 items-center justify-center rounded-lg border px-2 py-1 text-xs font-mono transition ${schedule.weekdays.includes(index) ? 'border-accent bg-accent/10 text-accent' : 'border-border text-muted hover:border-border-hover'}`}
               aria-label={`Toggle ${day} for the schedule`}
+              aria-pressed={schedule.weekdays.includes(index)}
               onclick={() => {
                 toggleWeekday(index);
               }}
@@ -202,6 +186,9 @@
             type="number"
             min="1"
             max="7"
+            name="weekly-quota"
+            aria-label="Times per week"
+            inputmode="numeric"
             value={schedule.timesPerWeek}
             class="w-16 rounded-lg border border-border bg-bg-secondary px-3 py-2 text-sm font-mono focus:border-accent/60"
             oninput={(event) => {
@@ -219,6 +206,7 @@
                 type="button"
                 class={`flex min-h-11 flex-1 items-center justify-center rounded-lg border px-2 py-1 text-xs font-mono transition ${(schedule.weekdays ?? []).includes(index) ? 'border-accent bg-accent/10 text-accent' : 'border-border text-muted hover:border-border-hover'}`}
                 aria-label={`Toggle ${day} for the weekly quota schedule`}
+                aria-pressed={(schedule.weekdays ?? []).includes(index)}
                 onclick={() => {
                   toggleWeekday(index);
                 }}
@@ -241,6 +229,7 @@
               <button
                 type="button"
                 class={`rounded-full border px-3 py-2 text-[10px] font-mono transition ${schedule.weeksOfMonth.includes(week) ? 'border-accent bg-accent/10 text-accent' : 'border-border text-muted hover:border-border-hover'}`}
+                aria-pressed={schedule.weeksOfMonth.includes(week)}
                 onclick={() => {
                   toggleWeekOfMonth(week);
                 }}
@@ -262,6 +251,7 @@
                 type="button"
                 class={`flex min-h-11 flex-1 items-center justify-center rounded-lg border px-2 py-1 text-xs font-mono transition ${schedule.weekdays.includes(index) ? 'border-accent bg-accent/10 text-accent' : 'border-border text-muted hover:border-border-hover'}`}
                 aria-label={`Toggle ${day} for the monthly week schedule`}
+                aria-pressed={schedule.weekdays.includes(index)}
                 onclick={() => {
                   toggleWeekday(index);
                 }}
@@ -284,6 +274,9 @@
             type="number"
             min="1"
             max="31"
+            name="monthly-quota"
+            aria-label="Times per month"
+            inputmode="numeric"
             value={schedule.timesPerMonth}
             class="w-20 rounded-lg border border-border bg-bg-secondary px-3 py-2 text-sm font-mono focus:border-accent/60"
             oninput={(event) => {
@@ -301,6 +294,7 @@
                 type="button"
                 class={`flex min-h-11 flex-1 items-center justify-center rounded-lg border px-2 py-1 text-xs font-mono transition ${(schedule.weekdays ?? []).includes(index) ? 'border-accent bg-accent/10 text-accent' : 'border-border text-muted hover:border-border-hover'}`}
                 aria-label={`Toggle ${day} for the monthly quota schedule`}
+                aria-pressed={(schedule.weekdays ?? []).includes(index)}
                 onclick={() => {
                   toggleWeekday(index);
                 }}
@@ -317,113 +311,3 @@
 
   <p class="mt-2 text-[11px] font-mono text-muted">{describeSchedule(schedule)}</p>
 </div>
-
-{#if schedule.type === 'daily'}
-<div class="rounded-[1.75rem] border border-border bg-bg-card/92 p-4 shadow-[0_20px_54px_rgba(15,23,42,0.08)]">
-  <p class="mb-1 block text-[10px] font-mono uppercase tracking-wider text-muted">Daily target</p>
-  <div class="flex items-center gap-3">
-    <div class="relative flex-1 py-1">
-      <div
-        class="slider-track absolute left-0 right-0 top-1/2 h-3 -translate-y-1/2 rounded-full opacity-40 transition-all duration-300"
-        style="background: {selectedColor.hex};"
-      ></div>
-      <div
-        class="slider-progress absolute left-0 top-1/2 h-3 -translate-y-1/2 rounded-full shadow-lg transition-all duration-300"
-        style="background: linear-gradient(90deg, {selectedColor.hex}80, {selectedColor.hex}); width: {((dailyTarget - DAILY_TARGET_MIN) / (DAILY_TARGET_MAX - DAILY_TARGET_MIN)) * 100}%; box-shadow: 0 0 12px {selectedColor.hex}60;"
-      ></div>
-      <input
-        type="range"
-        min={DAILY_TARGET_MIN}
-        max={DAILY_TARGET_MAX}
-        bind:value={dailyTarget}
-        class="slider-input relative z-10 w-full cursor-pointer appearance-none bg-transparent"
-      />
-      <div class="mt-2 flex justify-between px-0.5">
-        {#each Array.from({ length: DAILY_TARGET_MAX - DAILY_TARGET_MIN + 1 }, (_, index) => DAILY_TARGET_MIN + index) as tick, tickIndex (`${tick}-${tickIndex}`)}
-          <div class="relative flex flex-col items-center">
-            <div
-              class="mb-0.5 h-1 w-1 rounded-full transition-all duration-300"
-              style="background: {dailyTarget >= tick ? selectedColor.hex : 'var(--border)'}; box-shadow: {dailyTarget >= tick ? '0 0 4px ' + selectedColor.hex + '80' : 'none'};"
-            ></div>
-            <span
-              class="text-[8px] font-mono transition-all duration-300"
-              style="color: {dailyTarget === tick ? selectedColor.hex : 'var(--text-muted)'}; font-weight: {dailyTarget === tick ? 'bold' : 'normal'}; transform: {dailyTarget === tick ? 'scale(1.2)' : 'scale(1)'};"
-            >
-              {tick}
-            </span>
-          </div>
-        {/each}
-      </div>
-    </div>
-    <div
-      class="flex min-w-[60px] flex-col items-center rounded-lg border-2 px-2 py-1 transition-all duration-300"
-      style="border-color: {selectedColor.hex}80; background: {selectedColor.hex}10;"
-    >
-      <span class="text-[8px] font-mono uppercase tracking-wider" style="color: {selectedColor.hex};">target</span>
-      <span class="text-base font-bold font-mono" style="color: {selectedColor.hex};">{dailyTarget}x</span>
-    </div>
-  </div>
-</div>
-{/if}
-
-<style>
-  .slider-input {
-    -webkit-appearance: none;
-    appearance: none;
-    width: 100%;
-    height: 32px;
-    background: transparent;
-    outline: none;
-    cursor: pointer;
-    margin: 0;
-  }
-
-  .slider-track {
-    pointer-events: none;
-    opacity: 0.4;
-  }
-
-  .slider-progress {
-    pointer-events: none;
-  }
-
-  .slider-input::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    appearance: none;
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    background: var(--bg-card, #0f172a);
-    cursor: pointer;
-    border: 3px solid var(--accent, #00d4ff);
-    box-shadow: 0 0 0 4px rgba(0, 212, 255, 0.3), 0 4px 12px rgba(0, 0, 0, 0.4);
-    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.3s ease;
-    margin-top: -4px;
-  }
-
-  .slider-input::-webkit-slider-thumb:hover {
-    transform: scale(1.25);
-    box-shadow: 0 0 0 6px rgba(0, 212, 255, 0.4), 0 6px 16px rgba(0, 0, 0, 0.5);
-  }
-
-  .slider-input::-moz-range-thumb {
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    background: var(--bg-card, #0f172a);
-    cursor: pointer;
-    border: 3px solid var(--accent, #00d4ff);
-    box-shadow: 0 0 0 4px rgba(0, 212, 255, 0.3), 0 4px 12px rgba(0, 0, 0, 0.4);
-    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.3s ease;
-  }
-
-  .slider-input::-moz-range-thumb:hover {
-    transform: scale(1.25);
-    box-shadow: 0 0 0 6px rgba(0, 212, 255, 0.4), 0 6px 16px rgba(0, 0, 0, 0.5);
-  }
-
-  .slider-input::-moz-range-track {
-    background: transparent;
-    border: none;
-  }
-</style>

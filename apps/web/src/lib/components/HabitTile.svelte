@@ -1,7 +1,7 @@
 <script lang="ts">
   import { Shield, Zap, Activity, Star, Trophy, SnowflakeIcon, Moon } from 'lucide-svelte';
   import CompletionRing from '$lib/components/CompletionRing.svelte';
-  import HabitCompletionControl from '$lib/components/dashboard/HabitCompletionControl.svelte';
+  import HabitCompletionControl from '$lib/components/habits/HabitCompletionControl.svelte';
   import DescriptionTooltip from '$lib/components/DescriptionTooltip.svelte';
   import HabitHeatmap from '$lib/components/HabitHeatmap.svelte';
   import ChartGuideTooltip from '$lib/components/ChartGuideTooltip.svelte';

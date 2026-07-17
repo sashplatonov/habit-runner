@@ -47,7 +47,7 @@ export function getRateWindowLabel(habitAgeDays: number): string {
 
 export function getStreakHint(currentStreak: number, longestStreak: number): CardHint {
   if (currentStreak <= 0) {
-    return { icon: AlertTriangle, text: 'Restart today to rebuild momentum' };
+    return { icon: AlertTriangle, text: 'Continue with today’s scheduled step' };
   }
   if (currentStreak >= longestStreak && currentStreak >= 7) {
     return { icon: TrendingUp, text: 'Personal best pace' };
@@ -90,7 +90,7 @@ export function getRateHint(habitAgeDays: number, completionRate: number): CardH
   if (completionRate >= 40) {
     return { icon: Lightbulb, text: 'Needs more consistency' };
   }
-  return { icon: AlertTriangle, text: 'Fragile rate, simplify the habit' };
+  return { icon: AlertTriangle, text: 'Simplify the next scheduled step' };
 }
 
 export function getRateColor(habitAgeDays: number, completionRate: number): string {
@@ -127,7 +127,7 @@ export function getTotalHint(completedDays: number): CardHint {
 
 export function getAutomatismLevel(score: number, accentHex: string) {
   if (score >= 85) {
-    return { label: 'Infallible', color: accentHex };
+    return { label: 'Automatic', color: accentHex };
   }
   if (score >= 66) {
     return { label: 'Established', color: accentHex };
@@ -140,15 +140,15 @@ export function getAutomatismLevel(score: number, accentHex: string) {
 
 export function getAutomatismMessage(score: number): string {
   if (score >= 85) {
-    return 'This habit runs on autopilot - your routine is locked in.';
+    return 'This habit feels automatic now. Keep the context stable.';
   }
   if (score >= 66) {
-    return 'Habit is established. Keep consistent to push it further.';
+    return 'Habit is established. Keep the context steady to protect it.';
   }
   if (score >= 40) {
-    return `${Math.max(1, 66 - Math.round(score * 0.66))} more active days to reach "automatic" state.`;
+    return `${Math.max(1, 66 - Math.round(score * 0.66))} more active days to reach the automatic range.`;
   }
-  return 'Habit is still fragile. Daily repetition is critical right now.';
+  return 'Habit is still early. Repetition in the same context will help it settle.';
 }
 
 export function getAutomatismColor(score: number): string {

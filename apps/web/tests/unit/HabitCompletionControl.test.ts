@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
-import HabitCompletionControl from '$lib/components/dashboard/HabitCompletionControl.svelte';
+import HabitCompletionControl from '$lib/components/habits/HabitCompletionControl.svelte';
 
 function renderControl(overrides: Record<string, unknown> = {}) {
   const onToggle = vi.fn();

@@ -39,7 +39,11 @@ import {
   type CheckinState,
   type ToggleCompletionResult
 } from '$lib/stores/habits.storeHelpers';
-export type HabitUpsertInput = Omit<Habit, 'id' | 'completions' | 'createdAt'> & { sortOrder?: number; reminderTime?: string | null };
+export type HabitUpsertInput = Omit<Habit, 'id' | 'completions' | 'createdAt' | 'reminderTime'> & {
+  sortOrder?: number;
+  reminderTime?: string | null;
+};
+export type HabitUpdateInput = Partial<Omit<Habit, 'reminderTime'>> & { reminderTime?: string | null };
 
 export interface HabitsStore extends Readable<HabitsSnapshot> {
   setUserId: (userId: string) => Promise<void>;
@@ -49,7 +53,7 @@ export interface HabitsStore extends Readable<HabitsSnapshot> {
   incrementCompletionCount: (habitId: string, date: string) => Promise<AdvanceCompletionResult>;
   advanceCompletionCount: (habitId: string, date: string) => Promise<AdvanceCompletionResult>;
   addHabit: (data: HabitUpsertInput) => Promise<string>;
-  updateHabit: (id: string, data: Partial<Habit>) => Promise<void>;
+  updateHabit: (id: string, data: HabitUpdateInput) => Promise<void>;
   toggleFreezeDay: (id: string, date: string) => Promise<boolean | undefined>;
   deleteHabit: (id: string) => Promise<Habit | undefined>;
   restoreHabit: (habit: Habit) => Promise<void>;
@@ -169,16 +173,18 @@ async function addHabitImpl(data: HabitUpsertInput) {
   return mapHabitResponseToDomain(response, newHabit);
 }
 
-function updateHabitImpl(data: Partial<Habit>) {
-  const safeData = structuredClone(data) as Partial<Habit>;
+function updateHabitImpl(data: HabitUpdateInput) {
+  const safeData = structuredClone(data) as HabitUpdateInput;
   const changedKeys = Object.keys(safeData).filter((key) => safeData[key as keyof Habit] !== undefined);
   return { safeData, changedKeys };
 }
 
-function buildUpdatedHabit(existing: Habit, safeData: Partial<Habit>): Habit {
+function buildUpdatedHabit(existing: Habit, safeData: HabitUpdateInput): Habit {
+  const { reminderTime, ...rest } = safeData;
   return {
     ...existing,
-    ...safeData,
+    ...rest,
+    ...(Object.hasOwn(safeData, 'reminderTime') ? { reminderTime: reminderTime ?? undefined } : {}),
     updatedAt: nowSyncISO(),
     version: (existing.version ?? 0) + 1
   };
@@ -346,7 +352,7 @@ function createHabitCrudActions(runtime: HabitsStoreRuntime): Pick<
       refreshRuntimeSnapshot(runtime);
       return createdHabit.id;
     },
-    async updateHabit(id: string, data: Partial<Habit>) {
+    async updateHabit(id: string, data: HabitUpdateInput) {
       const existing = runtime.currentHabits.find((habit) => habit.id === id);
       if (!existing) {
         return;
@@ -369,7 +375,7 @@ function createHabitCrudActions(runtime: HabitsStoreRuntime): Pick<
             tags: safeData.tags,
             archived: safeData.archived,
             sortOrder: safeData.sortOrder,
-            reminderTime: safeData.reminderTime ?? undefined,
+            reminderTime: safeData.reminderTime,
             reminderEnabled: safeData.reminderEnabled,
             type: safeData.type,
             freezeDays: safeData.freezeDays
