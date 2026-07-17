@@ -65,52 +65,44 @@
     <p class="text-sm font-medium text-muted">{progressLabel} {#if remainingLabel}· {remainingLabel}{/if}</p>
   </div>
 
-  <div class="grid gap-4 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center">
-    <div class="space-y-3">
-      <p class="text-sm leading-6 text-muted">{recoveryCopy}</p>
-      <div class="flex flex-wrap items-center gap-2">
-        <div class="relative">
-          {#if animating}
-            {#each particles as particle (particle.id)}
-              <span
-                class="completion-burst-particle"
-                style="--tx: {particle.tx}px; --ty: {particle.ty}px; --particle-size: {particle.size}px; --particle-rotate: {particle.rotation}deg; --particle-delay: {particle.delay}ms; --particle-duration: {particle.duration}ms; --particle-color: {particle.color}; background: {particle.color}; border-radius: {particle.radius}; left: 50%; top: 50%; margin-left: calc({particle.size}px / -2); margin-top: calc({particle.size}px / -2);"
-              ></span>
-            {/each}
-            <span class="completion-status-pop" style="color: {accent}">{celebrationLabel}</span>
-          {/if}
-          <HabitCompletionControl
-            label={mainLabel}
-            completed={completed}
-            target={target}
-            count={count}
-            accent={accent}
-            scheduled={scheduled}
-            frozen={frozen}
-            pending={pending}
-            error={error}
-            disabled={!scheduled}
-            onToggle={onIncrement}
-          />
-        </div>
-        <IconButton
-          ariaLabel={habit.type === 'negative' ? 'Remove one slip' : 'Remove one completion'}
-          title={habit.type === 'negative' ? 'Remove one slip' : 'Remove one completion'}
-          disabled={!canDecrement || frozen || pending}
-          onClick={onDecrement}
-        >
-          <span class="text-lg leading-none">-</span>
-        </IconButton>
-        <IconButton ariaLabel={frozen ? 'Unfreeze today' : 'Freeze today'} title={frozen ? 'Unfreeze today' : 'Freeze today'} active={frozen} toggle={true} disabled={habit.archived || pending} onClick={onToggleFreeze}>
-          <Snowflake size={16} aria-hidden="true" />
-        </IconButton>
+  <div class="space-y-3">
+    <p class="text-sm leading-6 text-muted">{recoveryCopy}</p>
+    <div class="flex flex-wrap items-center gap-2">
+      <div class="relative">
+        {#if animating}
+          {#each particles as particle (particle.id)}
+            <span
+              class="completion-burst-particle"
+              style="--tx: {particle.tx}px; --ty: {particle.ty}px; --particle-size: {particle.size}px; --particle-rotate: {particle.rotation}deg; --particle-delay: {particle.delay}ms; --particle-duration: {particle.duration}ms; --particle-color: {particle.color}; background: {particle.color}; border-radius: {particle.radius}; left: 50%; top: 50%; margin-left: calc({particle.size}px / -2); margin-top: calc({particle.size}px / -2);"
+            ></span>
+          {/each}
+          <span class="completion-status-pop" style="color: {accent}">{celebrationLabel}</span>
+        {/if}
+        <HabitCompletionControl
+          label={mainLabel}
+          completed={completed}
+          target={target}
+          count={count}
+          accent={accent}
+          scheduled={scheduled}
+          frozen={frozen}
+          pending={pending}
+          error={error}
+          disabled={!scheduled}
+          onToggle={onIncrement}
+        />
       </div>
-    </div>
-
-    <div class="grid min-w-0 gap-2 rounded-[1.25rem] border border-border bg-bg-secondary px-4 py-3 text-sm">
-      <p class="text-[10px] font-mono uppercase tracking-[0.24em] text-muted">Context</p>
-      <p class="text-sm text-foreground">{habit.description ? 'Description is available from the title trigger.' : 'No description set.'}</p>
-      <p class="text-xs text-muted">{scheduled ? 'Scheduled today' : 'Not scheduled today'}</p>
+      <IconButton
+        ariaLabel={habit.type === 'negative' ? 'Remove one slip' : 'Remove one completion'}
+        title={habit.type === 'negative' ? 'Remove one slip' : 'Remove one completion'}
+        disabled={!canDecrement || frozen || pending}
+        onClick={onDecrement}
+      >
+        <span class="text-lg leading-none">-</span>
+      </IconButton>
+      <IconButton ariaLabel={frozen ? 'Unfreeze today' : 'Freeze today'} title={frozen ? 'Unfreeze today' : 'Freeze today'} active={frozen} toggle={true} disabled={habit.archived || pending} onClick={onToggleFreeze}>
+        <Snowflake size={16} aria-hidden="true" />
+      </IconButton>
     </div>
   </div>
 </Surface>
