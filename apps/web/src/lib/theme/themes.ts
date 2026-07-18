@@ -24,6 +24,8 @@ export interface Theme {
   themeColor: string;
 }
 
+export type ThemeUsage = Partial<Record<ThemeId, number>>;
+
 export const DEFAULT_THEME_ID: ThemeId = 'cloud';
 
 export const THEMES: readonly Theme[] = [
@@ -156,6 +158,62 @@ export const THEMES: readonly Theme[] = [
 ];
 
 export const THEME_IDS: ReadonlySet<ThemeId> = new Set(THEMES.map((theme) => theme.id));
+
+const THEME_USAGE_STORAGE_KEY = 'habit-theme-usage';
+
+export function readThemeUsage(): ThemeUsage {
+  if (typeof window === 'undefined') {
+    return {};
+  }
+
+  try {
+    const storedUsage = window.localStorage?.getItem(THEME_USAGE_STORAGE_KEY);
+    const parsedUsage: unknown = storedUsage ? JSON.parse(storedUsage) : {};
+    if (!parsedUsage || typeof parsedUsage !== 'object' || Array.isArray(parsedUsage)) {
+      return {};
+    }
+
+    return Object.fromEntries(
+      [...THEME_IDS]
+        .map((themeId) => [themeId, Reflect.get(parsedUsage, themeId)] as const)
+        .filter((entry): entry is readonly [ThemeId, number] => (
+          Number.isSafeInteger(entry[1]) && entry[1] >= 0
+        ))
+    );
+  } catch {
+    return {};
+  }
+}
+
+export function recordThemeSelection(themeId: ThemeId): ThemeUsage {
+  const usage = readThemeUsage();
+  const nextUsage = {
+    ...usage,
+    [themeId]: (usage[themeId] ?? 0) + 1
+  };
+
+  if (typeof window === 'undefined') {
+    return nextUsage;
+  }
+
+  try {
+    window.localStorage?.setItem(THEME_USAGE_STORAGE_KEY, JSON.stringify(nextUsage));
+  } catch {
+    // Keep the updated ranking in memory when storage is unavailable.
+  }
+
+  return nextUsage;
+}
+
+export function rankThemesByUsage(themes: readonly Theme[], usage: ThemeUsage): Theme[] {
+  return themes
+    .map((theme, catalogIndex) => ({ theme, catalogIndex }))
+    .sort((first, second) => (
+      (usage[second.theme.id] ?? 0) - (usage[first.theme.id] ?? 0)
+      || first.catalogIndex - second.catalogIndex
+    ))
+    .map(({ theme }) => theme);
+}
 
 export function getTheme(themeId: ThemeId): Theme {
   return THEMES.find((theme) => theme.id === themeId)

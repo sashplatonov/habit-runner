@@ -104,6 +104,7 @@ describe('theme contract', () => {
 
     expect(indexCss).not.toMatch(/\[data-theme=/);
     expect(indexCss).not.toMatch(/--bg-primary\s*:/);
-    expect(themeCss).toMatch(/:root,\s*\n\[data-theme='cloud'\]/);
+    expect(themeCss).toMatch(/:root:not\(\[data-theme\]\),\s*\n\[data-theme='cloud'\]/);
+    expect(themeCss).not.toMatch(/(?:^|\n):root,\s*\n\[data-theme='cloud'\]/);
   });
 });

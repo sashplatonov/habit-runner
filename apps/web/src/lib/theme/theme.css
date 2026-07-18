@@ -295,7 +295,7 @@
   color-scheme: light;
 }
 
-:root,
+:root:not([data-theme]),
 [data-theme='cloud'] {
   --bg-primary: #f4f6f1;
   --bg-secondary: rgba(255, 255, 255, 0.88);

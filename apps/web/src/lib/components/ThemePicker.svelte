@@ -1,6 +1,12 @@
 <script lang="ts">
   import { CheckIcon, MoonIcon, SunIcon } from 'lucide-svelte';
-  import { THEMES, type ThemeId } from '$lib/theme/themes';
+  import {
+    rankThemesByUsage,
+    readThemeUsage,
+    recordThemeSelection,
+    THEMES,
+    type ThemeId
+  } from '$lib/theme/themes';
 
   type Props = {
     theme: ThemeId;
@@ -10,16 +16,33 @@
   };
 
   let { theme, onThemeChange, onChoose, class: className = '' }: Props = $props();
+  let themeUsage = $state(readThemeUsage());
 
-  const darkThemes = $derived(THEMES.filter((candidate) => candidate.group === 'dark'));
-  const lightThemes = $derived(THEMES.filter((candidate) => candidate.group === 'light'));
+  const rankedThemes = $derived(rankThemesByUsage(THEMES, themeUsage));
+  const sections = $derived([
+    {
+      id: 'dark',
+      title: 'Dark',
+      icon: MoonIcon,
+      items: rankedThemes.filter((candidate) => candidate.group === 'dark')
+    },
+    {
+      id: 'light',
+      title: 'Light',
+      icon: SunIcon,
+      items: rankedThemes.filter((candidate) => candidate.group === 'light')
+    }
+  ].sort((first, second) => {
+    const mostUsed = (items: typeof rankedThemes) => Math.max(
+      0,
+      ...items.map((candidate) => themeUsage[candidate.id] ?? 0)
+    );
+    return mostUsed(second.items) - mostUsed(first.items);
+  }));
 </script>
 
 <div class={`grid gap-4 ${className}`.trim()}>
-  {#each [
-    { title: 'Dark', icon: MoonIcon, items: darkThemes },
-    { title: 'Light', icon: SunIcon, items: lightThemes }
-  ] as section, sectionIndex (section.title + '-' + sectionIndex)}
+  {#each sections as section, sectionIndex (section.id + '-' + sectionIndex)}
     <section class="space-y-2">
       <div class="flex items-center gap-2 px-1 text-[10px] font-semibold uppercase tracking-[0.22em] text-muted">
         <section.icon size={12} aria-hidden="true" />
@@ -34,6 +57,7 @@
             aria-pressed={theme === candidate.id}
             aria-label={`Switch to ${candidate.name} theme`}
             onclick={() => {
+              themeUsage = recordThemeSelection(candidate.id);
               void onThemeChange(candidate.id);
               void onChoose?.();
             }}
@@ -54,19 +78,20 @@
               </span>
             </span>
 
-            <span class="min-w-0 flex-1">
-              <span class="flex items-center gap-2 text-sm font-medium text-inherit">
+            <span class="min-w-0 flex-1 overflow-hidden">
+              <span class="block truncate text-sm font-medium text-inherit">
                 {candidate.name}
-                {#if theme === candidate.id}
-                  <span class="inline-flex items-center gap-1 rounded-full bg-accent/12 px-1.5 py-0.5 text-[10px] font-semibold text-accent">
-                    <CheckIcon size={10} aria-hidden="true" />
-                    Selected
-                  </span>
-                {/if}
               </span>
-              <span class="mt-0.5 block truncate text-[11px] text-muted">
-                Surface / accent / progress
-              </span>
+              {#if theme === candidate.id}
+                <span class="mt-0.5 inline-flex max-w-full items-center gap-1 rounded-full bg-accent/12 px-1.5 py-0.5 text-[10px] font-semibold text-accent">
+                  <CheckIcon class="shrink-0" size={10} aria-hidden="true" />
+                  <span class="truncate">Selected</span>
+                </span>
+              {:else}
+                <span class="mt-0.5 block truncate text-[11px] text-muted">
+                  Surface / accent / progress
+                </span>
+              {/if}
             </span>
           </button>
         {/each}
