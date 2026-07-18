@@ -625,11 +625,11 @@ Minimum manual gate:
 
 ## 🔍 Implementation review <a name="implementation-review"></a>
 
-Reviewed on `2026-07-17` against the implemented detail, create/edit, shared control, and description-overlay flows.
+Reviewed on `2026-07-18` against the implemented detail, create/edit, shared control, and description-overlay flows.
 
 Automated evidence:
 
-- `cd apps/web && npm run test` — `36` files and `163` tests passed.
+- `cd apps/web && npm run test` — `38` files and `159` tests passed.
 - `cd apps/web && npm run check` — frontend lint, shared-package lint/build, Svelte type checks, production web build, and backend package build passed.
 - Focused regression coverage includes completion control, form model and component behavior, detail view-model timezone behavior, overlay sanitization/IDs, overlay lifecycle, and explicit reminder-time clearing.
 
@@ -644,6 +644,9 @@ Review fixes applied:
 - made rhythm dates timezone-stable, compact on narrow screens, and explicit through non-color state labels;
 - aligned input labels, names, autocomplete behavior, pressed states, decorative-icon semantics, touch targets, semantic attention colors, and transition properties;
 - corrected monthly-week ordinal/plural schedule copy and removed punitive maturity language.
+- removed the duplicate key-metric, automatism, monthly-rate, and weekly-completion detail blocks after a consumer audit; broad trends remain on Progress, while the detail view keeps one current run, one reachable checkpoint, the 28-day rhythm, and retroactive history editing;
+- stopped presenting inferred automaticity as a measured psychological trait and hid best/rate support metrics until the habit has real completion history.
+- redesigned the retro calendar and multi-target history editor around the shared surface, status, focus, semantic-state, and mobile touch-target system while preserving month navigation and retroactive mutations.
 
 Remaining release evidence:
 
@@ -675,6 +678,6 @@ These questions do not block `HABIT-UX-001` through `HABIT-UX-003`. Resolve them
 - Should `Not scheduled today` allow an optional extra completion? Default proposal: preserve current domain behavior and expose an extra action only if the existing store/API already supports it consistently.
 - Should desktop descriptions open on hover at all? Default proposal: hover preview plus click/focus pinning; disable hover behavior for coarse pointers and reduced-motion does not affect open/close semantics.
 - Should mobile create/edit hide BottomNav or place the action bar above it? Default proposal: hide BottomNav consistently on both routes if route-aware layout is already supported cleanly; otherwise reserve its full height.
-- Which existing detail charts remain after the new summary? Default proposal: keep retroactive history editing, delegate broad trend exploration to statistics, and remove a chart only after its decision value and consumers are audited.
+- Resolved on `2026-07-18`: keep retroactive history editing and the 28-day rhythm on detail; delegate broad trend exploration to Progress; remove the duplicated key metrics, inferred automatism, monthly-rate, and weekly-completion blocks after their consumer audit.
 
 [↑ Back to top](#top)

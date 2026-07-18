@@ -27,14 +27,8 @@ export interface Habit {
 }
 
 export interface HabitStats {
-  totalDays: number;
   completedDays: number;
-  currentStreak: number;
   longestStreak: number;
-  completionRate: number;
-  automatismScore: number;
-  weeklyData: { week: string; count: number }[];
-  monthlyData: { month: string; rate: number }[];
 }
 
 export type AppView = 'dashboard' | 'detail' | 'add' | 'edit' | 'stats';

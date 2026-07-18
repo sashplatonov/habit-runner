@@ -1,7 +1,7 @@
 <script lang="ts">
   import { describeSchedule } from '@habbit-runner/shared';
-  import { ChevronLeft, ChevronRight } from 'lucide-svelte';
-  import { SvelteDate, SvelteMap } from 'svelte/reactivity';
+  import { CalendarDays, Check, ChevronLeft, ChevronRight, Snowflake } from 'lucide-svelte';
+  import { SvelteDate } from 'svelte/reactivity';
   import type { Habit } from '@/types/habit';
   import { completionKeyToCalendarDate } from '$lib/completionKey';
   import { formatDate } from '$lib/habits/habitStats';
@@ -9,6 +9,9 @@
   import type { HabitColorTheme } from '$lib/theme/habit-colors';
   import { DAY_HEADERS, POPOVER_HEIGHT, POPOVER_WIDTH } from '$lib/habits/retroCalendar.constants';
   import RetroEditor from '$lib/components/overlays/RetroEditor.svelte';
+  import IconButton from '$lib/components/ui/IconButton.svelte';
+  import StatusPill from '$lib/components/ui/StatusPill.svelte';
+  import Surface from '$lib/components/ui/Surface.svelte';
 
   type Props = {
     habit: Habit;
@@ -24,19 +27,15 @@
     isToday: boolean;
     isFuture: boolean;
     isEmpty: boolean;
-    dayOfWeek: number;
-    isWeekend: boolean;
-    monthIndex?: number;
     isFrozen: boolean;
   };
-
-  type MonthHighlight = 'current' | 'previous' | null;
 
   type RetroCalendarEditor = {
     date: string;
     pendingValue: number;
     anchorX: number;
     anchorY: number;
+    triggerEl: HTMLButtonElement;
   };
 
   const { habit, accent, onUpdate }: Props = $props();
@@ -75,26 +74,15 @@
         isToday: false,
         isFuture: false,
         isEmpty: true,
-        dayOfWeek: date.getDay(),
-        isWeekend: date.getDay() === 0 || date.getDay() === 6,
         isFrozen: false
       });
     }
-
-    const monthIndexMap = new SvelteMap<number, number>();
-    const registerMonthIndex = (month: number) => {
-      if (!monthIndexMap.has(month)) {
-        monthIndexMap.set(month, monthIndexMap.size);
-      }
-      return monthIndexMap.get(month) ?? 0;
-    };
 
     for (let index = 0; index < 30; index += 1) {
       const date = new SvelteDate(startDate.getTime());
       date.setDate(startDate.getDate() + index);
       const dateKey = formatDate(date);
       const freezeKey = completionKeyToCalendarDate(dateKey);
-      const dayOfWeek = date.getDay();
       days.push({
         date: dateKey,
         dayOfMonth: date.getDate(),
@@ -103,9 +91,6 @@
         isToday: dateKey === todayKey,
         isFuture: date > now,
         isEmpty: false,
-        dayOfWeek,
-        isWeekend: dayOfWeek === 0 || dayOfWeek === 6,
-        monthIndex: registerMonthIndex(date.getMonth()),
         isFrozen: (currentHabit.freezeDays ?? []).includes(freezeKey)
       });
     }
@@ -115,111 +100,80 @@
       weeks.push(days.slice(index, index + 7));
     }
 
-    return { weeks, monthCount: monthIndexMap.size };
-  }
-
-  function buildDayBoxShadow(
-    completed: boolean,
-    weekendHighlight: boolean,
-    monthHighlight: MonthHighlight
-  ) {
-    const parts: string[] = [];
-    if (completed) {
-      parts.push(`0 0 10px ${accent.glow}`);
-    }
-    if (weekendHighlight) {
-      parts.push(`0 0 0 1px ${accent.hex}40`);
-    }
-    if (monthHighlight) {
-      parts.push(`0 0 ${monthHighlight === 'current' ? 6 : 4}px ${accent.hex}${monthHighlight === 'current' ? '80' : '50'}`);
-    }
-    return parts.length > 0 ? parts.join(', ') : undefined;
-  }
-
-  function getDayBackground(day: RetroCalendarDay, maxValue: number) {
-    if (day.isEmpty || day.isFuture) {
-      return 'transparent';
-    }
-    if (day.count >= maxValue) {
-      return accent.heatmapLevels[4];
-    }
-    if (day.count > 0) {
-      return accent.heatmapLevels[3];
-    }
-    return 'var(--bg-card)';
+    return { weeks };
   }
 
   function getDayButtonClasses(day: RetroCalendarDay) {
     const classes = [
-      'relative aspect-square w-full overflow-hidden rounded-md border flex flex-col items-center justify-center transition-all duration-150'
+      'group relative flex min-h-11 w-full flex-col items-center justify-center overflow-hidden rounded-[0.9rem] border px-0.5 py-1 text-sm transition-[border-color,background-color,box-shadow,opacity] duration-150 focus-visible:z-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 focus-visible:ring-offset-2 focus-visible:ring-offset-bg-card'
     ];
     if (day.isFuture) {
-      classes.push('cursor-not-allowed opacity-30');
+      classes.push('cursor-not-allowed border-border bg-bg-secondary/40 text-muted opacity-45');
+    } else if (day.isFrozen) {
+      classes.push('border-accent-secondary/35 bg-accent-secondary/10 text-accent-secondary');
+    } else if (!day.scheduled) {
+      classes.push('border-dashed border-border bg-bg-secondary/70 text-muted hover:border-border-hover');
     } else {
-      classes.push('hover:brightness-110');
-    }
-    if (day.isToday) {
-      classes.push('ring-1');
+      classes.push('border-border bg-bg-card text-foreground hover:border-border-hover');
     }
     return classes.join(' ');
   }
 
-  function getMonthMeta(day: RetroCalendarDay, monthCount: number) {
-    const monthSlot = Math.min(Math.max(day.monthIndex ?? 0, 0), Math.max(monthCount - 1, 0));
-    const currentMonthIndex = Math.max(monthCount - 1, 0);
-    const previousMonthIndex = monthCount > 1 ? monthCount - 2 : null;
-    const isCurrentMonth = !day.isFuture && monthSlot === currentMonthIndex;
-    const isPreviousMonth = previousMonthIndex !== null && !day.isFuture && monthSlot === previousMonthIndex;
-    const monthHighlight: MonthHighlight = isCurrentMonth ? 'current' : isPreviousMonth ? 'previous' : null;
-    const monthOpacity = !day.isFuture
-      ? monthHighlight === 'current'
-        ? 1
-        : monthHighlight === 'previous'
-          ? 0.78
-          : Math.max(0.5, 0.9 - monthSlot * 0.15)
-      : undefined;
-    return { monthOpacity, monthHighlight };
-  }
+  function getDayStyle(day: RetroCalendarDay, maxValue: number) {
+    if (day.isEmpty || day.isFuture) {
+      return undefined;
+    }
 
-  function getDayStyle(day: RetroCalendarDay, maxValue: number, monthCount: number) {
-    const background = getDayBackground(day, maxValue);
     const completed = day.count >= maxValue;
-    const { monthOpacity, monthHighlight } = getMonthMeta(day, monthCount);
-    const baseBorderColor = day.scheduled ? accent.hex : 'var(--border-dashed, var(--border))';
-    const borderStyle = day.scheduled ? 'solid' : 'dashed';
-    const weekendHighlight = day.isWeekend && !day.isFuture && !day.isEmpty;
-    const boxShadow = buildDayBoxShadow(completed, weekendHighlight, monthHighlight);
-    const parts = [
-      `background-color: ${background}`,
-      `border-color: ${weekendHighlight || monthHighlight ? accent.hex : baseBorderColor}`,
-      `border-style: ${borderStyle}`
-    ];
-    if (boxShadow) {
-      parts.push(`box-shadow: ${boxShadow}`);
+    const progress = Math.round((Math.min(day.count, maxValue) / maxValue) * 100);
+    const parts: string[] = [];
+
+    if (completed) {
+      parts.push(`background: color-mix(in srgb, var(--bg-card) 55%, ${accent.hex} 45%)`);
+      parts.push(`border-color: ${accent.hex}`);
+      parts.push(`box-shadow: 0 8px 20px ${accent.glow}`);
+    } else if (day.count > 0) {
+      parts.push(`background: linear-gradient(to top, color-mix(in srgb, var(--bg-card) 45%, ${accent.hex} 55%) ${progress}%, var(--bg-card) ${progress}%)`);
+      parts.push(`border-color: ${accent.hex}99`);
     }
-    if (monthOpacity) {
-      parts.push(`opacity: ${monthOpacity}`);
-    }
-    if (weekendHighlight) {
-      parts.push(`background-image: linear-gradient(135deg, ${accent.dim}, transparent)`);
-      parts.push('filter: saturate(1.08)');
-    }
+
     if (day.isToday) {
-      parts.push(`--tw-ring-color: ${accent.hex}`);
+      const existingShadow = completed ? `0 8px 20px ${accent.glow}, ` : '';
+      parts.push(`box-shadow: ${existingShadow}0 0 0 2px var(--bg-card), 0 0 0 4px ${accent.hex}`);
     }
+
     return parts.join('; ');
   }
 
   function getDayLabelClasses(day: RetroCalendarDay, completed: boolean) {
-    const classes = ['text-[9px] font-mono leading-none'];
+    const classes = ['font-mono text-xs font-semibold leading-none tabular-nums'];
     if (completed) {
-      classes.push('font-bold text-foreground');
+      classes.push('text-foreground');
     } else if (day.isToday) {
-      classes.push('font-semibold');
+      classes.push('text-foreground');
     } else {
       classes.push('text-muted');
     }
     return classes.join(' ');
+  }
+
+  function getDayAriaLabel(day: RetroCalendarDay, maxValue: number) {
+    const date = completionKeyToCalendarDate(day.date);
+    const parts = [date, day.isToday ? 'today' : '', day.scheduled ? 'scheduled' : 'rest day'];
+
+    if (day.isFuture) {
+      parts.push('upcoming');
+    } else if (day.isFrozen) {
+      parts.push('frozen');
+    } else if (day.count >= maxValue) {
+      parts.push('completed');
+    } else if (day.count > 0) {
+      parts.push(`${day.count} of ${maxValue} recorded`);
+    } else {
+      parts.push('not completed');
+    }
+
+    return parts.filter(Boolean).join(', ');
   }
 
   function clampPopoverX(anchorX: number) {
@@ -247,8 +201,7 @@
   const grid = $derived(buildRetroGrid(habit, schedule, displayDate));
   const currentDate = $derived(new SvelteDate());
   const weeks = $derived(grid.weeks);
-  const monthCount = $derived(grid.monthCount);
-  const monthYearLabel = $derived(displayDate.toLocaleString('en-US', { month: 'short', year: 'numeric' }));
+  const windowEndLabel = $derived(displayDate.toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }));
   const isCurrentMonth = $derived(
     displayDate.getMonth() === currentDate.getMonth() && displayDate.getFullYear() === currentDate.getFullYear()
   );
@@ -284,7 +237,8 @@
       date: day.date,
       pendingValue: clampValue(day.count, 0, maxValue),
       anchorX: rect.left + rect.width / 2,
-      anchorY: rect.top
+      anchorY: rect.top,
+      triggerEl: event.currentTarget as HTMLButtonElement
     };
   }
 
@@ -331,94 +285,122 @@
   }
 </script>
 
-<div class="space-y-2 rounded-2xl border border-border bg-bg-secondary p-3">
-  <div class="flex items-center justify-between gap-2">
-    <div>
-      <h2 class="text-[11px] font-mono uppercase tracking-[0.5em] text-muted">Retro calendar</h2>
-      <p class="mt-0.5 text-[10px] text-muted">{scheduleLabel}</p>
+<Surface as="section" padding="sm" class="overflow-hidden sm:p-6">
+  <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+    <div class="min-w-0">
+      <p class="text-[10px] font-mono uppercase tracking-[0.24em] text-muted">History editor</p>
+      <h2 class="mt-1 text-xl font-semibold tracking-tight text-foreground">Retro calendar</h2>
+      <p class="mt-2 max-w-xl text-sm leading-6 text-muted">
+        Tap a past day to correct its record. Future days stay locked.
+      </p>
     </div>
-    <span class="text-[11px] font-mono text-muted">30d</span>
+
+    <div class="flex flex-wrap gap-2">
+      <StatusPill tone="neutral">
+        <CalendarDays size={12} aria-hidden="true" />
+        Last 30 days
+      </StatusPill>
+      <StatusPill tone="neutral">{scheduleLabel}</StatusPill>
+    </div>
   </div>
 
-  <div class="flex items-center justify-between gap-2 pt-1">
-    <button
-      type="button"
-      onclick={handlePrevMonth}
-      class="flex h-7 w-7 items-center justify-center rounded border border-border text-muted transition-colors hover:border-border-hover hover:text-foreground"
-      title="Previous month"
-    >
-      <ChevronLeft size={16} />
-    </button>
+  <div class="mt-5 rounded-[1.5rem] border border-border bg-bg-secondary/75 p-2 sm:p-4">
+    <div class="flex items-center justify-between gap-3">
+      <IconButton ariaLabel="Show previous history window" title="Show previous history window" onClick={handlePrevMonth}>
+        <ChevronLeft size={18} aria-hidden="true" />
+      </IconButton>
 
-    <div class="flex-1 text-center">
       <button
         type="button"
         onclick={handleToday}
-        class={`text-xs font-mono uppercase tracking-wider transition-colors ${isCurrentMonth ? 'font-semibold text-foreground' : 'text-muted hover:text-foreground'}`}
-        title="Jump to current month"
+        class={`min-h-11 min-w-0 flex-1 rounded-[1rem] border px-3 py-2 text-center transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 focus-visible:ring-offset-2 focus-visible:ring-offset-bg-card ${isCurrentMonth ? 'border-progress/25 bg-progress/10 text-foreground' : 'border-border bg-bg-card text-muted hover:border-border-hover hover:text-foreground'}`}
+        aria-label={isCurrentMonth ? `${windowEndLabel}, current 30-day window` : `${windowEndLabel}, jump to current 30-day window`}
+        aria-current={isCurrentMonth ? 'date' : undefined}
       >
-        {monthYearLabel}
+        <span class="block text-[9px] font-mono uppercase tracking-[0.2em] text-muted">Window ending</span>
+        <span class="mt-0.5 block truncate text-sm font-semibold">{windowEndLabel}</span>
       </button>
+
+      <IconButton ariaLabel="Show next history window" title="Show next history window" disabled={disableNextMonth} onClick={handleNextMonth}>
+        <ChevronRight size={18} aria-hidden="true" />
+      </IconButton>
     </div>
 
-    <button
-      type="button"
-      onclick={handleNextMonth}
-      disabled={disableNextMonth}
-      class="flex h-7 w-7 items-center justify-center rounded border border-border text-muted transition-colors hover:border-border-hover hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
-      title="Next month"
-    >
-      <ChevronRight size={16} />
-    </button>
-  </div>
+    <ul class="mt-4 flex flex-wrap gap-x-4 gap-y-2 px-1 text-[11px] text-muted" aria-label="Retro calendar legend">
+      <li class="inline-flex items-center gap-1.5">
+        <span class="size-2.5 rounded-full border border-progress/40 bg-progress/30" aria-hidden="true"></span>
+        Completed
+      </li>
+      <li class="inline-flex items-center gap-1.5">
+        <span class="size-2.5 rounded-full border border-border bg-bg-card" aria-hidden="true"></span>
+        Open
+      </li>
+      <li class="inline-flex items-center gap-1.5">
+        <span class="size-2.5 rounded-full border border-dashed border-border bg-bg-secondary" aria-hidden="true"></span>
+        Rest day
+      </li>
+      <li class="inline-flex items-center gap-1.5">
+        <Snowflake size={11} class="text-accent-secondary" aria-hidden="true" />
+        Frozen
+      </li>
+      <li class="inline-flex items-center gap-1.5">
+        <span class="size-2.5 rounded-full border-2 border-foreground/70" aria-hidden="true"></span>
+        Today
+      </li>
+    </ul>
 
-  <div class="mx-auto w-full lg:max-w-[248px]">
-    <div class="mb-1.5 grid grid-cols-7 gap-1.5 sm:gap-2">
-      {#each DAY_HEADERS as header, headerIndex (`${header}-${headerIndex}`)}
-        <div class="py-0.5 text-center text-[9px] font-mono uppercase tracking-wider text-muted">{header}</div>
-      {/each}
-    </div>
+    <div class="mx-auto mt-4 w-full max-w-2xl">
+      <div class="mb-2 grid grid-cols-7 gap-1 sm:gap-2" aria-hidden="true">
+        {#each DAY_HEADERS as header, headerIndex (`${header}-${headerIndex}`)}
+          <div class="py-1 text-center text-[9px] font-mono uppercase tracking-[0.12em] text-muted sm:text-[10px]">{header}</div>
+        {/each}
+      </div>
 
-    <div class="space-y-1.5 sm:space-y-2">
-      {#each weeks as week, weekIndex (`week-${weekIndex}`)}
-        <div class="grid grid-cols-7 gap-1.5 sm:gap-2">
-          {#each week as day, dayIndex (`${day.date}-${dayIndex}`)}
-            {#if day.isEmpty}
-              <div class="aspect-square w-full"></div>
-            {:else}
-              <button
-                type="button"
-                onclick={(event) => { handleDayClick(day, event); }}
-                disabled={day.isFuture}
-                class={getDayButtonClasses(day)}
-                style={getDayStyle(day, maxValue, monthCount)}
-                aria-label={`${day.date} ${day.scheduled ? 'scheduled' : 'manual'} ${day.count}/${maxValue}${day.isFrozen ? ' frozen' : ''}`}
-              >
-                <span
-                  class={getDayLabelClasses(day, day.count >= maxValue)}
-                  style={day.isToday && day.count < maxValue ? `color: ${accent.hex};` : ''}
+      <div class="space-y-1 sm:space-y-2" role="group" aria-label="Editable completion history">
+        {#each weeks as week, weekIndex (`week-${weekIndex}`)}
+          <div class="grid grid-cols-7 gap-1 sm:gap-2">
+            {#each week as day, dayIndex (`${day.date}-${dayIndex}`)}
+              {#if day.isEmpty}
+                <div class="min-h-11 w-full"></div>
+              {:else}
+                <button
+                  type="button"
+                  onclick={(event) => { handleDayClick(day, event); }}
+                  disabled={day.isFuture}
+                  class={getDayButtonClasses(day)}
+                  style={getDayStyle(day, maxValue)}
+                  aria-label={getDayAriaLabel(day, maxValue)}
+                  aria-current={day.isToday ? 'date' : undefined}
                 >
-                  {day.dayOfMonth}
-                </span>
+                  <span
+                    class={getDayLabelClasses(day, day.count >= maxValue)}
+                    style={day.isToday && day.count < maxValue ? `color: ${accent.hex};` : ''}
+                  >
+                    {day.dayOfMonth}
+                  </span>
 
-                {#if day.count > 0 && maxValue > 1}
-                  <span class="text-[7px] leading-none text-foreground/60">{day.count}/{maxValue}</span>
-                {/if}
+                  {#if day.count > 0 && maxValue > 1}
+                    <span class="mt-1 text-[8px] font-semibold leading-none text-foreground/70">{day.count}/{maxValue}</span>
+                  {/if}
 
-                {#if day.isFrozen}
-                  <span class="absolute right-1 top-1 text-[8px] text-accent-secondary" aria-hidden="true">*</span>
-                {/if}
-              </button>
-            {/if}
-          {/each}
-        </div>
-      {/each}
+                  {#if day.isFrozen}
+                    <Snowflake size={10} class="absolute right-1 top-1 text-accent-secondary" aria-hidden="true" />
+                  {:else if day.count >= maxValue}
+                    <Check size={10} class="absolute bottom-1 right-1" style={`color: ${accent.hex}`} aria-hidden="true" />
+                  {/if}
+                </button>
+              {/if}
+            {/each}
+          </div>
+        {/each}
+      </div>
     </div>
   </div>
 
   {#if editor}
     <RetroEditor
       date={editor.date}
+      triggerEl={editor.triggerEl}
       pendingValue={editor.pendingValue}
       maxValue={maxValue}
       accent={accent}
@@ -430,4 +412,4 @@
       onAdjust={(delta) => { adjustEditorValue(delta); }}
     />
   {/if}
-</div>
+</Surface>

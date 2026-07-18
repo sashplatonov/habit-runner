@@ -6,10 +6,6 @@
   import { page } from '$app/state';
   import { onDestroy } from 'svelte';
   import EmptyState from '$lib/components/EmptyState.svelte';
-  import StatCardGrid from '$lib/components/StatCardGrid.svelte';
-  import AutomatismSection from '$lib/components/AutomatismSection.svelte';
-  import MonthlyRateSection from '$lib/components/MonthlyRateSection.svelte';
-  import WeeklyCompletionsSection from '$lib/components/WeeklyCompletionsSection.svelte';
   import HabitRetroCalendar from '$lib/components/HabitRetroCalendar.svelte';
   import HabitDetailHeader from '$lib/components/habits/HabitDetailHeader.svelte';
   import HabitTodayStep from '$lib/components/habits/HabitTodayStep.svelte';
@@ -364,30 +360,20 @@
       />
 
       <HabitMomentum
+        currentStreak={detailModel.currentStreak}
+        hasCompletionHistory={detailModel.hasCompletionHistory}
         streakLabel={detailModel.streakLabel}
         bestLabel={detailModel.bestLabel}
-        phaseLabel={detailModel.phaseLabel}
-        phaseHint={detailModel.phaseHint}
         completionRateLabel={detailModel.completionRateLabel}
         nextMilestoneLabel={detailModel.nextMilestoneLabel}
         nextMilestoneDays={detailModel.nextMilestoneDays}
+        nextMilestoneTarget={detailModel.nextMilestoneTarget}
       />
 
       <HabitRecentRhythm cells={detailModel.rhythmCells} />
       <HabitSettingsSummary scheduleSummary={detailModel.scheduleSummary} reminderSummary={detailModel.reminderSummary} onEditSettings={handleEdit} />
 
-      <div class="grid gap-4 xl:grid-cols-[1.12fr,0.88fr]">
-        <div class="space-y-4">
-          <StatCardGrid stats={stats} {accent} habitCreatedAt={habit.createdAt} />
-          <AutomatismSection score={stats.automatismScore} {accent} />
-          <MonthlyRateSection monthlyData={stats.monthlyData} {accent} habitCreatedAt={habit.createdAt} />
-          <WeeklyCompletionsSection weeklyData={stats.weeklyData} {accent} habitCreatedAt={habit.createdAt} />
-        </div>
-
-        <div class="space-y-4">
-          <HabitRetroCalendar {habit} {accent} onUpdate={handleRetroUpdate} />
-        </div>
-      </div>
+      <HabitRetroCalendar {habit} {accent} onUpdate={handleRetroUpdate} />
 
       <HabitDangerZone
         habitLabel={detailModel.habitLabel}

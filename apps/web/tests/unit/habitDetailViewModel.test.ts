@@ -26,14 +26,8 @@ function makeHabit(overrides: Partial<Habit> = {}): Habit {
 }
 
 const stats: HabitStats = {
-  totalDays: 1,
   completedDays: 1,
-  currentStreak: 1,
-  longestStreak: 3,
-  completionRate: 100,
-  automatismScore: 42,
-  weeklyData: [],
-  monthlyData: []
+  longestStreak: 3
 };
 
 describe('habitDetailViewModel', () => {
@@ -43,7 +37,10 @@ describe('habitDetailViewModel', () => {
     expect(model.loadState).toBe('ready');
     expect(model.operationalState).toBe('complete');
     expect(model.habitLabel).toBe('📚 Read');
-    expect(model.nextMilestoneLabel).toContain('days');
+    expect(model.nextMilestoneLabel).toBe('3-day checkpoint');
+    expect(model.nextMilestoneTarget).toBe(3);
+    expect(model.currentStreak).toBe(1);
+    expect(model.hasCompletionHistory).toBe(true);
     expect(model.rhythmCells).toHaveLength(28);
     expect(model.rhythmCells.some((cell) => cell.state === 'completed')).toBe(true);
     expect(model.rhythmCells.every((cell) => /^\d{1,2}$/.test(cell.shortLabel))).toBe(true);

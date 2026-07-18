@@ -7,7 +7,6 @@ import {
 } from '@habbit-runner/shared';
 import { formatHabitLabel } from '$lib/habits/formatHabitLabel';
 import { calculateScheduledCompletionRate, calculateScheduledStreak, getScheduleStatusForDate, isMandatoryToday, resolveHabitSchedule } from '$lib/habits/schedule';
-import { getHabitPhase, PHASE_MILESTONES } from '$lib/habits/phases';
 import { getCurrentUserTimeZone } from '$lib/time/userTimezone';
 import type { Habit, HabitStats } from '@/types/habit';
 
@@ -36,10 +35,11 @@ export type HabitDetailViewModel = {
   remainingLabel: string;
   scheduleSummary: string;
   reminderSummary: string;
-  phaseLabel: string;
-  phaseHint: string;
   nextMilestoneLabel: string;
   nextMilestoneDays: number | null;
+  nextMilestoneTarget: number | null;
+  currentStreak: number;
+  hasCompletionHistory: boolean;
   streakLabel: string;
   bestLabel: string;
   completionRateLabel: string;
@@ -70,11 +70,17 @@ function describeReminder(habit: Habit): string {
   return habit.reminderTime ? `Daily at ${habit.reminderTime}` : 'No reminder set';
 }
 
-function buildMilestone(currentStreak: number): { label: string; days: number | null } {
-  const next = PHASE_MILESTONES.find((milestone) => milestone > currentStreak) ?? null;
+const MOMENTUM_MILESTONES = [1, 3, 7, 14, 21, 30, 45, 66, 100] as const;
+
+function buildMilestone(currentStreak: number): { label: string; days: number | null; target: number | null } {
+  const next = MOMENTUM_MILESTONES.find((milestone) => milestone > currentStreak) ?? null;
   return next === null
-    ? { label: 'Hold the automatic range', days: null }
-    : { label: `Next milestone: ${next} days`, days: next - currentStreak };
+    ? { label: '100-day rhythm reached', days: null, target: null }
+    : {
+        label: next === 1 ? 'First scheduled completion' : `${next}-day checkpoint`,
+        days: next - currentStreak,
+        target: next
+      };
 }
 
 function buildRhythmCells(habit: Habit, referenceDate: Date, timeZone: string): HabitDetailRhythmCell[] {
@@ -191,10 +197,11 @@ function buildEmptyHabitDetailViewModel(): HabitDetailViewModel {
     remainingLabel: '',
     scheduleSummary: '',
     reminderSummary: '',
-    phaseLabel: '',
-    phaseHint: '',
     nextMilestoneLabel: '',
     nextMilestoneDays: null,
+    nextMilestoneTarget: null,
+    currentStreak: 0,
+    hasCompletionHistory: false,
     streakLabel: '',
     bestLabel: '',
     completionRateLabel: '',
@@ -227,7 +234,6 @@ function buildDetailSnapshot(
   const currentStreak = calculateScheduledStreak(habit, habit.completions, referenceDate, timeZone).current;
   const bestStreak = stats.longestStreak;
   const completionRate = calculateScheduledCompletionRate(habit, habit.completions, referenceDate, timeZone);
-  const phase = getHabitPhase(currentStreak);
   const nextMilestone = buildMilestone(currentStreak);
   const progress = buildProgressLabel(habit, todayCount, target);
   const state = resolveDetailState({
@@ -251,7 +257,6 @@ function buildDetailSnapshot(
     currentStreak,
     bestStreak,
     completionRate,
-    phase,
     nextMilestone,
     todayKey
   };
@@ -292,10 +297,11 @@ export function buildHabitDetailViewModel(
     remainingLabel: buildRemainingLabel(detail.progress),
     scheduleSummary: describeSchedule(resolveHabitSchedule(habit)),
     reminderSummary: describeReminder(habit),
-    phaseLabel: detail.phase.name,
-    phaseHint: detail.phase.hint,
     nextMilestoneLabel: detail.nextMilestone.label,
     nextMilestoneDays: detail.nextMilestone.days,
+    nextMilestoneTarget: detail.nextMilestone.target,
+    currentStreak: detail.currentStreak,
+    hasCompletionHistory: stats.completedDays > 0,
     streakLabel: `${detail.currentStreak} day${detail.currentStreak === 1 ? '' : 's'}`,
     bestLabel: `${detail.bestStreak} day${detail.bestStreak === 1 ? '' : 's'} best`,
     completionRateLabel: `${detail.completionRate}% completion`,

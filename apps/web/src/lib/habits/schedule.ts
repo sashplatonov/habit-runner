@@ -609,23 +609,6 @@ export function calculateScheduledCompletionRate(
   return Math.round((completed / scheduledDays) * 100);
 }
 
-export function calculateAutomatismScore(
-  habit: Habit,
-  completions: Record<string, number>,
-  referenceDate = new Date(),
-  timeZone = getCurrentUserTimeZone()
-): number {
-  const consistency30d = calculateScheduledCompletionRate(habit, completions, referenceDate, timeZone) / 100;
-  const { current: streak } = calculateScheduledStreak(habit, completions, referenceDate, timeZone);
-  const totalCompleted = Object.values(completions).filter(
-    (count) => (count ?? 0) >= Math.max(1, habit.dailyTarget ?? 1)
-  ).length;
-
-  const streakFactor = Math.min(streak / 66, 1);
-  const totalFactor = Math.min(totalCompleted / 100, 1);
-  return Math.min(100, Math.round((consistency30d * 0.5 + streakFactor * 0.3 + totalFactor * 0.2) * 100));
-}
-
 export function getCalendarDayDistance(start: string, end: string): number {
   return diffCalendarDays(start, end);
 }
