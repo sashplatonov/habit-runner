@@ -11,12 +11,12 @@
   import RetroEditor from '$lib/components/overlays/RetroEditor.svelte';
   import IconButton from '$lib/components/ui/IconButton.svelte';
   import StatusPill from '$lib/components/ui/StatusPill.svelte';
-  import Surface from '$lib/components/ui/Surface.svelte';
 
   type Props = {
     habit: Habit;
     accent: HabitColorTheme;
     onUpdate: (dateKey: string, count: number) => Promise<void>;
+    embedded?: boolean;
   };
 
   type RetroCalendarDay = {
@@ -38,7 +38,7 @@
     triggerEl: HTMLButtonElement;
   };
 
-  const { habit, accent, onUpdate }: Props = $props();
+  const { habit, accent, onUpdate, embedded = false }: Props = $props();
 
   let displayDate = new SvelteDate();
   let editor = $state<RetroCalendarEditor | null>(null);
@@ -50,12 +50,13 @@
   function buildRetroGrid(
     currentHabit: Habit,
     schedule: ReturnType<typeof resolveHabitSchedule>,
+    windowDays: number,
     currentDisplayDate: Date = new SvelteDate()
   ) {
     const now = new SvelteDate();
     const todayKey = formatDate(now);
     const startDate = new SvelteDate(currentDisplayDate.getTime());
-    startDate.setDate(startDate.getDate() - 29);
+    startDate.setDate(startDate.getDate() - (windowDays - 1));
 
     const weekStartOffset = (startDate.getDay() + 6) % 7;
     const paddedStart = new SvelteDate(startDate.getTime());
@@ -78,7 +79,7 @@
       });
     }
 
-    for (let index = 0; index < 30; index += 1) {
+    for (let index = 0; index < windowDays; index += 1) {
       const date = new SvelteDate(startDate.getTime());
       date.setDate(startDate.getDate() + index);
       const dateKey = formatDate(date);
@@ -197,8 +198,9 @@
   const schedule = $derived(resolveHabitSchedule(habit));
   const dailyTarget = $derived(Math.max(1, habit.dailyTarget ?? 1));
   const maxValue = $derived(Math.max(1, dailyTarget));
+  const historyWindowDays = $derived(embedded ? 28 : 30);
   const scheduleLabel = $derived(describeSchedule(schedule));
-  const grid = $derived(buildRetroGrid(habit, schedule, displayDate));
+  const grid = $derived(buildRetroGrid(habit, schedule, historyWindowDays, displayDate));
   const currentDate = $derived(new SvelteDate());
   const weeks = $derived(grid.weeks);
   const windowEndLabel = $derived(displayDate.toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }));
@@ -285,26 +287,43 @@
   }
 </script>
 
-<Surface as="section" padding="sm" class="overflow-hidden sm:p-6">
-  <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-    <div class="min-w-0">
-      <p class="text-[10px] font-mono uppercase tracking-[0.24em] text-muted">History editor</p>
-      <h2 class="mt-1 text-xl font-semibold tracking-tight text-foreground">Retro calendar</h2>
-      <p class="mt-2 max-w-xl text-sm leading-6 text-muted">
-        Tap a past day to correct its record. Future days stay locked.
-      </p>
-    </div>
+<svelte:element
+  this={embedded ? 'div' : 'section'}
+  class={embedded ? 'min-w-0' : 'overflow-hidden rounded-surface border border-border bg-bg-card p-3 shadow-surface sm:p-6'}
+>
+  {#if !embedded}
+    <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+      <div class="min-w-0">
+        <p class="text-[10px] font-mono uppercase tracking-[0.24em] text-muted">History editor</p>
+        <h2 class="mt-1 text-xl font-semibold tracking-tight text-foreground">Retro calendar</h2>
+        <p class="mt-2 max-w-xl text-sm leading-6 text-muted">
+          Tap a past day to correct its record. Future days stay locked.
+        </p>
+      </div>
 
-    <div class="flex flex-wrap gap-2">
-      <StatusPill tone="neutral">
-        <CalendarDays size={12} aria-hidden="true" />
-        Last 30 days
-      </StatusPill>
-      <StatusPill tone="neutral">{scheduleLabel}</StatusPill>
+      <div class="flex flex-wrap gap-2">
+        <StatusPill tone="neutral">
+          <CalendarDays size={12} aria-hidden="true" />
+          Last {historyWindowDays} days
+        </StatusPill>
+        <StatusPill tone="neutral">{scheduleLabel}</StatusPill>
+      </div>
     </div>
-  </div>
+  {/if}
 
-  <div class="mt-5 rounded-[1.5rem] border border-border bg-bg-secondary/75 p-2 sm:p-4">
+  <div class={`rounded-[1.5rem] border border-border bg-bg-secondary/75 p-2 sm:p-4 ${embedded ? '' : 'mt-5'}`}>
+    {#if embedded}
+      <div class="mb-4 flex flex-wrap items-center justify-between gap-2 px-1">
+        <p class="text-sm leading-6 text-muted">Tap a past day to correct its record.</p>
+        <div class="flex flex-wrap gap-2">
+          <StatusPill tone="neutral">
+            <CalendarDays size={12} aria-hidden="true" />
+            Last {historyWindowDays} days
+          </StatusPill>
+          <StatusPill tone="neutral">{scheduleLabel}</StatusPill>
+        </div>
+      </div>
+    {/if}
     <div class="flex items-center justify-between gap-3">
       <IconButton ariaLabel="Show previous history window" title="Show previous history window" onClick={handlePrevMonth}>
         <ChevronLeft size={18} aria-hidden="true" />
@@ -314,7 +333,7 @@
         type="button"
         onclick={handleToday}
         class={`min-h-11 min-w-0 flex-1 rounded-[1rem] border px-3 py-2 text-center transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 focus-visible:ring-offset-2 focus-visible:ring-offset-bg-card ${isCurrentMonth ? 'border-progress/25 bg-progress/10 text-foreground' : 'border-border bg-bg-card text-muted hover:border-border-hover hover:text-foreground'}`}
-        aria-label={isCurrentMonth ? `${windowEndLabel}, current 30-day window` : `${windowEndLabel}, jump to current 30-day window`}
+        aria-label={isCurrentMonth ? `${windowEndLabel}, current ${historyWindowDays}-day window` : `${windowEndLabel}, jump to current ${historyWindowDays}-day window`}
         aria-current={isCurrentMonth ? 'date' : undefined}
       >
         <span class="block text-[9px] font-mono uppercase tracking-[0.2em] text-muted">Window ending</span>
@@ -412,4 +431,4 @@
       onAdjust={(delta) => { adjustEditorValue(delta); }}
     />
   {/if}
-</Surface>
+</svelte:element>

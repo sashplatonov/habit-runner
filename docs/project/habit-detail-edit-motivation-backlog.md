@@ -123,7 +123,7 @@ Resulting motivational contract:
 3. **Momentum:** current streak or recent consistency plus one nearest milestone. Historical best is supporting text, not a competing hero card.
 4. **Recent rhythm:** a compact `14` or `28` scheduled-opportunity view with completed, missed, frozen, unscheduled, and future states distinguishable without color alone.
 5. **Insight and settings:** at most one evidence-based observation plus schedule/reminder summary and an `Edit settings` action.
-6. **History and safety:** retroactive history editing remains available below the summary; archive/restore and delete live in a clearly explained danger zone.
+6. **History and safety:** retroactive editing is available as a secondary mode inside the recent-rhythm surface; archive/restore and delete live in a clearly explained danger zone.
 
 ### Create/edit hierarchy
 
@@ -340,9 +340,9 @@ Tasks:
 - Build an identity header with a formatted label, description trigger, status pill, and secondary edit/archive actions; use an overflow menu on narrow screens if needed.
 - Build `HabitTodayStep.svelte` with the shared completion control, schedule/reminder context, semantic progress, pending/error/undo state, and reduced-motion-safe feedback.
 - Build one `HabitMomentum.svelte` section for current progress and nearest milestone; historical best remains supporting copy.
-- Build `HabitRecentRhythm.svelte` using scheduled opportunities and non-color state cues.
+- Build `HabitRecentRhythm.svelte` using scheduled opportunities and non-color state cues, with retroactive editing composed as a secondary mode in the same surface.
 - Build `HabitSettingsSummary.svelte` with readable schedule/reminder text and one `Edit settings` link.
-- Keep retroactive history editing below the motivational summary and ensure it cannot be mistaken for today's primary action.
+- Keep retroactive history editing inside the recent-rhythm surface and ensure it cannot be mistaken for today's primary action.
 - Consolidate archive/restore and delete into an explained danger zone. Deletion confirmation includes the formatted habit label and what happens to history.
 - Remove duplicate hero/stat/chart blocks only after their information is represented in the new hierarchy or intentionally delegated to the statistics page.
 
@@ -629,7 +629,7 @@ Reviewed on `2026-07-18` against the implemented detail, create/edit, shared con
 
 Automated evidence:
 
-- `cd apps/web && npm run test` — `38` files and `159` tests passed.
+- `cd apps/web && npm run test` — `38` files and `160` tests passed.
 - `cd apps/web && npm run check` — frontend lint, shared-package lint/build, Svelte type checks, production web build, and backend package build passed.
 - Focused regression coverage includes completion control, form model and component behavior, detail view-model timezone behavior, overlay sanitization/IDs, overlay lifecycle, and explicit reminder-time clearing.
 
@@ -644,9 +644,9 @@ Review fixes applied:
 - made rhythm dates timezone-stable, compact on narrow screens, and explicit through non-color state labels;
 - aligned input labels, names, autocomplete behavior, pressed states, decorative-icon semantics, touch targets, semantic attention colors, and transition properties;
 - corrected monthly-week ordinal/plural schedule copy and removed punitive maturity language.
-- removed the duplicate key-metric, automatism, monthly-rate, and weekly-completion detail blocks after a consumer audit; broad trends remain on Progress, while the detail view keeps one current run, one reachable checkpoint, the 28-day rhythm, and retroactive history editing;
+- removed the duplicate key-metric, automatism, monthly-rate, and weekly-completion detail blocks after a consumer audit; broad trends remain on Progress, while the detail view keeps one current run, one reachable checkpoint, and one 28-day rhythm with an integrated history-editing mode;
 - stopped presenting inferred automaticity as a measured psychological trait and hid best/rate support metrics until the habit has real completion history.
-- redesigned the retro calendar and multi-target history editor around the shared surface, status, focus, semantic-state, and mobile touch-target system while preserving month navigation and retroactive mutations.
+- consolidated the retro calendar into `Your 28-day rhythm` as an `Edit history` mode, while preserving history-window navigation, multi-target editing, backend mutations, focus behavior, semantic states, and mobile touch targets.
 
 Remaining release evidence:
 
@@ -678,6 +678,6 @@ These questions do not block `HABIT-UX-001` through `HABIT-UX-003`. Resolve them
 - Should `Not scheduled today` allow an optional extra completion? Default proposal: preserve current domain behavior and expose an extra action only if the existing store/API already supports it consistently.
 - Should desktop descriptions open on hover at all? Default proposal: hover preview plus click/focus pinning; disable hover behavior for coarse pointers and reduced-motion does not affect open/close semantics.
 - Should mobile create/edit hide BottomNav or place the action bar above it? Default proposal: hide BottomNav consistently on both routes if route-aware layout is already supported cleanly; otherwise reserve its full height.
-- Resolved on `2026-07-18`: keep retroactive history editing and the 28-day rhythm on detail; delegate broad trend exploration to Progress; remove the duplicated key metrics, inferred automatism, monthly-rate, and weekly-completion blocks after their consumer audit.
+- Resolved on `2026-07-18`: combine retroactive editing with the 28-day rhythm in one detail surface; delegate broad trend exploration to Progress; remove the duplicated key metrics, inferred automatism, monthly-rate, and weekly-completion blocks after their consumer audit.
 
 [↑ Back to top](#top)

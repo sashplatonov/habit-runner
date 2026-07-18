@@ -6,7 +6,6 @@
   import { page } from '$app/state';
   import { onDestroy } from 'svelte';
   import EmptyState from '$lib/components/EmptyState.svelte';
-  import HabitRetroCalendar from '$lib/components/HabitRetroCalendar.svelte';
   import HabitDetailHeader from '$lib/components/habits/HabitDetailHeader.svelte';
   import HabitTodayStep from '$lib/components/habits/HabitTodayStep.svelte';
   import HabitMomentum from '$lib/components/habits/HabitMomentum.svelte';
@@ -370,10 +369,13 @@
         nextMilestoneTarget={detailModel.nextMilestoneTarget}
       />
 
-      <HabitRecentRhythm cells={detailModel.rhythmCells} />
+      <HabitRecentRhythm
+        cells={detailModel.rhythmCells}
+        {habit}
+        {accent}
+        onUpdate={handleRetroUpdate}
+      />
       <HabitSettingsSummary scheduleSummary={detailModel.scheduleSummary} reminderSummary={detailModel.reminderSummary} onEditSettings={handleEdit} />
-
-      <HabitRetroCalendar {habit} {accent} onUpdate={handleRetroUpdate} />
 
       <HabitDangerZone
         habitLabel={detailModel.habitLabel}
