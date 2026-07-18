@@ -12,7 +12,7 @@
     triggerLabel?: string;
   };
 
-  const { description, triggerClassName = 'h-11 w-11', triggerLabel = 'Open description' }: Props = $props();
+  const { description, triggerClassName = 'h-11 w-11', triggerLabel = 'Description' }: Props = $props();
 
   const componentId = $props.id();
   const panelId = `habit-description-${componentId}`;
@@ -210,10 +210,7 @@
             <span class="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-border bg-bg-secondary text-accent">
               <CircleHelp size={16} aria-hidden="true" />
             </span>
-            <div class="min-w-0">
-              <p class="text-[10px] font-mono uppercase tracking-[0.24em] text-muted">Description</p>
-              <p class="truncate text-sm font-semibold text-foreground">{triggerLabel}</p>
-            </div>
+            <p class="text-[10px] font-mono uppercase tracking-[0.24em] text-muted">Description</p>
           </div>
           <button
             type="button"
@@ -266,10 +263,7 @@
             <span class="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-border bg-bg-secondary text-accent">
               <CircleHelp size={16} aria-hidden="true" />
             </span>
-            <div class="min-w-0">
-              <p class="text-[10px] font-mono uppercase tracking-[0.24em] text-muted">Description</p>
-              <p class="truncate text-sm font-semibold text-foreground">{triggerLabel}</p>
-            </div>
+            <p class="text-[10px] font-mono uppercase tracking-[0.24em] text-muted">Description</p>
           </div>
           <button
             type="button"

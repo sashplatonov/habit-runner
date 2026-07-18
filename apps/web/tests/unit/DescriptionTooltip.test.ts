@@ -9,19 +9,20 @@ describe('DescriptionTooltip', () => {
     render(DescriptionTooltip, {
       props: {
         description: '**Bold** <script>alert(1)</script>',
-        triggerLabel: 'Open description for Read'
+        triggerLabel: 'Description for Read'
       }
     });
 
-    const trigger = screen.getByRole('button', { name: 'Open description for Read' });
+    const trigger = screen.getByRole('button', { name: 'Description for Read' });
     expect(trigger.getAttribute('aria-expanded')).toBe('false');
 
     await user.click(trigger);
 
     expect(trigger.getAttribute('aria-expanded')).toBe('true');
-    const dialog = screen.getByRole('dialog', { name: 'Open description for Read' });
+    const dialog = screen.getByRole('dialog', { name: 'Description for Read' });
     expect(dialog.querySelector('strong')).toBeTruthy();
     expect(dialog.querySelector('script')).toBeNull();
+    expect(dialog.textContent).not.toContain('Open description');
   });
 
   it('uses a unique controlled panel id for each tooltip instance', () => {

@@ -230,7 +230,7 @@ export function buildHabitDetailViewModel(
     loadState: 'ready',
     operationalState: detail.state,
     habitLabel: detail.habitLabel,
-    descriptionLabel: habit.description ? `Open description for ${detail.habitLabel}` : '',
+    descriptionLabel: habit.description ? `Description for ${detail.habitLabel}` : '',
     todayLabel: buildTodayLabel(detail.mandatoryToday),
     todaySummary: buildTodaySummary(detail.mandatoryToday, detail.progress, detail.target),
     progressLabel: `${detail.progress.count}/${detail.target}`,
