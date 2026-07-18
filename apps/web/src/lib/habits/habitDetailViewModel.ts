@@ -1,8 +1,5 @@
 import {
-  addDaysToCalendarDate,
-  calendarDateToDate,
   describeSchedule,
-  extractCalendarDate,
   formatCalendarDateInTimeZone
 } from '@habbit-runner/shared';
 import { formatHabitLabel } from '$lib/habits/formatHabitLabel';
@@ -12,17 +9,6 @@ import type { Habit, HabitStats } from '@/types/habit';
 
 export type HabitDetailLoadState = 'loading' | 'not-found' | 'ready';
 export type HabitDetailOperationalState = 'not-scheduled' | 'in-progress' | 'complete' | 'frozen' | 'archived' | 'pending' | 'error';
-
-export type HabitDetailRhythmCellState = 'completed' | 'missed' | 'frozen' | 'not-scheduled' | 'future';
-
-export type HabitDetailRhythmCell = {
-  dateKey: string;
-  label: string;
-  shortLabel: string;
-  state: HabitDetailRhythmCellState;
-  count: number;
-  isToday: boolean;
-};
 
 export type HabitDetailViewModel = {
   loadState: HabitDetailLoadState;
@@ -44,7 +30,6 @@ export type HabitDetailViewModel = {
   bestLabel: string;
   completionRateLabel: string;
   recoveryCopy: string;
-  rhythmCells: HabitDetailRhythmCell[];
   isScheduledToday: boolean;
   isMandatoryToday: boolean;
   isFrozenToday: boolean;
@@ -52,15 +37,6 @@ export type HabitDetailViewModel = {
   isPending: boolean;
   hasError: boolean;
 };
-
-function formatDateLabel(dateKey: string, format: 'long' | 'short'): string {
-  const value = extractCalendarDate(dateKey) ?? dateKey;
-  return new Intl.DateTimeFormat('en-US', {
-    timeZone: 'UTC',
-    ...(format === 'long' ? { month: 'short' as const } : {}),
-    day: 'numeric'
-  }).format(calendarDateToDate(value));
-}
 
 function describeReminder(habit: Habit): string {
   if (!habit.reminderEnabled) {
@@ -81,41 +57,6 @@ function buildMilestone(currentStreak: number): { label: string; days: number | 
         days: next - currentStreak,
         target: next
       };
-}
-
-function buildRhythmCells(habit: Habit, referenceDate: Date, timeZone: string): HabitDetailRhythmCell[] {
-  const today = formatCalendarDateInTimeZone(referenceDate, timeZone);
-  const target = Math.max(1, habit.dailyTarget ?? 1);
-  const cells: HabitDetailRhythmCell[] = [];
-  const start = addDaysToCalendarDate(today, -13);
-
-  for (let offset = 0; offset < 28; offset += 1) {
-    const dateKey = addDaysToCalendarDate(start, offset);
-    const scheduled = getScheduleStatusForDate(habit, dateKey, timeZone);
-    const count = habit.completions[`${dateKey}T00:00:00Z`] ?? 0;
-
-    let state: HabitDetailRhythmCellState = 'missed';
-    if (dateKey > today) {
-      state = 'future';
-    } else if (scheduled === 'frozen') {
-      state = 'frozen';
-    } else if (scheduled === 'unscheduled') {
-      state = 'not-scheduled';
-    } else if ((habit.type === 'negative' && count === 0) || count >= target) {
-      state = 'completed';
-    }
-
-    cells.push({
-      dateKey,
-      label: formatDateLabel(dateKey, 'long'),
-      shortLabel: formatDateLabel(dateKey, 'short'),
-      state,
-      count,
-      isToday: dateKey === today
-    });
-  }
-
-  return cells;
 }
 
 function resolveDetailState(input: {
@@ -206,7 +147,6 @@ function buildEmptyHabitDetailViewModel(): HabitDetailViewModel {
     bestLabel: '',
     completionRateLabel: '',
     recoveryCopy: '',
-    rhythmCells: [],
     isScheduledToday: false,
     isMandatoryToday: false,
     isFrozenToday: false,
@@ -306,7 +246,6 @@ export function buildHabitDetailViewModel(
     bestLabel: `${detail.bestStreak} day${detail.bestStreak === 1 ? '' : 's'} best`,
     completionRateLabel: `${detail.completionRate}% completion`,
     recoveryCopy: buildRecoveryCopy(detail.state),
-    rhythmCells: buildRhythmCells(habit, referenceDate, timeZone),
     isScheduledToday: detail.scheduledToday,
     isMandatoryToday: detail.mandatoryToday,
     isFrozenToday: detail.frozenToday,

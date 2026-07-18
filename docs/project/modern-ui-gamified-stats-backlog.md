@@ -975,7 +975,7 @@ Mobile layout:
 - `apps/web/src/lib/components/AutomatismSection.svelte`
 - `apps/web/src/lib/components/MonthlyRateSection.svelte`
 - `apps/web/src/lib/components/WeeklyCompletionsSection.svelte`
-- `apps/web/src/lib/components/HabitRetroCalendar.svelte`
+- `apps/web/src/lib/components/habits/HabitRhythmCalendar.svelte`
 - новый общий `apps/web/src/lib/components/habits/HabitCompletionControl.svelte`, созданный в `UI-005`
 - detail/form unit tests
 

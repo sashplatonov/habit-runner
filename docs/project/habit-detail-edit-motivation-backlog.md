@@ -355,7 +355,8 @@ Files:
 - `apps/web/src/lib/components/habits/HabitRecentRhythm.svelte` (new)
 - `apps/web/src/lib/components/habits/HabitSettingsSummary.svelte` (new)
 - `apps/web/src/lib/components/habits/HabitDangerZone.svelte` (new)
-- `apps/web/src/lib/components/HabitRetroCalendar.svelte`
+- `apps/web/src/lib/components/habits/HabitRhythmCalendar.svelte` (new)
+- `apps/web/src/lib/components/overlays/DayStatusMenu.svelte` (new)
 - `apps/web/src/lib/habits/completionCelebration.ts`
 - `apps/web/tests/unit/HabitDetailPage.test.ts` (new)
 - focused tests for each new detail component where behavior is non-trivial
@@ -629,7 +630,7 @@ Reviewed on `2026-07-18` against the implemented detail, create/edit, shared con
 
 Automated evidence:
 
-- `cd apps/web && npm run test` — `38` files and `160` tests passed.
+- `cd apps/web && npm run test` — `38` files and `163` tests passed.
 - `cd apps/web && npm run check` — frontend lint, shared-package lint/build, Svelte type checks, production web build, and backend package build passed.
 - Focused regression coverage includes completion control, form model and component behavior, detail view-model timezone behavior, overlay sanitization/IDs, overlay lifecycle, and explicit reminder-time clearing.
 
@@ -646,7 +647,7 @@ Review fixes applied:
 - corrected monthly-week ordinal/plural schedule copy and removed punitive maturity language.
 - removed the duplicate key-metric, automatism, monthly-rate, and weekly-completion detail blocks after a consumer audit; broad trends remain on Progress, while the detail view keeps one current run, one reachable checkpoint, and one 28-day rhythm with an integrated history-editing mode;
 - stopped presenting inferred automaticity as a measured psychological trait and hid best/rate support metrics until the habit has real completion history.
-- consolidated the retro calendar into `Your 28-day rhythm` as an `Edit history` mode, while preserving history-window navigation, multi-target editing, backend mutations, focus behavior, semantic states, and mobile touch targets.
+- consolidated the retro calendar into one interactive `Your 28-day rhythm` calendar; selecting a day now opens one custom status menu, while 28-day navigation, backend mutations, focus behavior, semantic states, and mobile touch targets remain intact.
 
 Remaining release evidence:
 

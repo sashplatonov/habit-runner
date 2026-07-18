@@ -13,6 +13,7 @@
   import HabitSettingsSummary from '$lib/components/habits/HabitSettingsSummary.svelte';
   import HabitDangerZone from '$lib/components/habits/HabitDangerZone.svelte';
   import { buildHabitDetailViewModel } from '$lib/habits/habitDetailViewModel';
+  import { buildDayStatusMutation, type EditableDayStatus } from '$lib/habits/habitRhythmStatus';
   import { buildCelebrationParticles, getCelebrationLabel, type CelebrationParticle } from '$lib/habits/completionCelebration';
   import { completionKeyToCalendarDate } from '$lib/completionKey';
   import { formatHabitLabel } from '$lib/habits/formatHabitLabel';
@@ -266,14 +267,20 @@
     }
   }
 
-  async function handleRetroUpdate(dateKey: string, count: number) {
+  async function handleSetRhythmStatus(dateKey: string, status: EditableDayStatus) {
     if (!habit || mutationPending) return;
     mutationPending = true;
     mutationError = null;
     try {
-      await habitsStore.setCompletionCount(habit.id, dateKey, count);
+      const mutation = buildDayStatusMutation(habit, dateKey, status);
+      if (mutation.toggleFreeze) {
+        await habitsStore.toggleFreezeDay(habit.id, dateKey);
+      }
+      if (mutation.completionCount !== null) {
+        await habitsStore.setCompletionCount(habit.id, dateKey, mutation.completionCount);
+      }
     } catch (err) {
-      mutationError = err instanceof Error ? err.message : 'Failed to update history';
+      mutationError = err instanceof Error ? err.message : 'Failed to update day status';
     } finally {
       mutationPending = false;
     }
@@ -370,10 +377,12 @@
       />
 
       <HabitRecentRhythm
-        cells={detailModel.rhythmCells}
         {habit}
         {accent}
-        onUpdate={handleRetroUpdate}
+        {referenceDate}
+        {timeZone}
+        pending={mutationPending}
+        onSetStatus={handleSetRhythmStatus}
       />
       <HabitSettingsSummary scheduleSummary={detailModel.scheduleSummary} reminderSummary={detailModel.reminderSummary} onEditSettings={handleEdit} />
 

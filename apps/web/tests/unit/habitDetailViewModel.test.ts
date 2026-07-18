@@ -31,7 +31,7 @@ const stats: HabitStats = {
 };
 
 describe('habitDetailViewModel', () => {
-  it('builds a motivating ready state with rhythm cells and milestones', () => {
+  it('builds a motivating ready state with milestones', () => {
     const model = buildHabitDetailViewModel(makeHabit(), stats, new Date('2026-07-17T12:00:00Z'), 'UTC');
 
     expect(model.loadState).toBe('ready');
@@ -41,24 +41,6 @@ describe('habitDetailViewModel', () => {
     expect(model.nextMilestoneTarget).toBe(3);
     expect(model.currentStreak).toBe(1);
     expect(model.hasCompletionHistory).toBe(true);
-    expect(model.rhythmCells).toHaveLength(28);
-    expect(model.rhythmCells.some((cell) => cell.state === 'completed')).toBe(true);
-    expect(model.rhythmCells.every((cell) => /^\d{1,2}$/.test(cell.shortLabel))).toBe(true);
-  });
-
-  it('keeps calendar labels and weekday schedules stable across time zones', () => {
-    const model = buildHabitDetailViewModel(
-      makeHabit({
-        schedule: { type: 'weekly_days', weekdays: [5] }
-      }),
-      stats,
-      new Date('2026-07-17T18:00:00Z'),
-      'America/Los_Angeles'
-    );
-
-    const today = model.rhythmCells.find((cell) => cell.isToday);
-    expect(today?.label).toBe('Jul 17');
-    expect(today?.state).toBe('completed');
   });
 
   it('marks unscheduled habits as not scheduled today', () => {
