@@ -13,6 +13,10 @@ x-service-defaults: &service_defaults
 services:
   db:
     <<: *service_defaults
+    read_only: true
+    tmpfs:
+      - /tmp:mode=1777
+      - /var/run/postgresql
     profiles:
       - db
     image: postgres:18-alpine
@@ -35,6 +39,10 @@ services:
 
   api:
     <<: *service_defaults
+    read_only: true
+    tmpfs:
+      - /tmp:mode=1777
+      - /opt/newrelic/logs:mode=1777
     build:
       context: ./apps/backend
       dockerfile: Dockerfile
@@ -86,6 +94,10 @@ services:
 
   web:
     <<: *service_defaults
+    read_only: true
+    tmpfs:
+      - /tmp:mode=1777
+      - /var/cache/nginx:mode=1777
     build:
       context: ./apps/web
       dockerfile: Dockerfile
