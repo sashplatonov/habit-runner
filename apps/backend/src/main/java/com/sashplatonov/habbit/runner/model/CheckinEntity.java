@@ -7,7 +7,8 @@ import jakarta.persistence.Index;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.time.LocalDate;
 
@@ -23,7 +24,8 @@ import java.time.LocalDate;
         @UniqueConstraint(name = "habit_date_unique", columnNames = {"habitId", "date"})
     }
 )
-@Data
+@Getter
+@Setter
 public class CheckinEntity extends UuidAuditedEntityBase {
   @Column(name = "habitId", nullable = false)
   private String habitId;

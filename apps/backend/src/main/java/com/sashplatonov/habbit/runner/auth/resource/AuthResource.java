@@ -67,7 +67,7 @@ public class AuthResource {
   })
   public Response login(@Valid @NotNull LoginRequest request) {
     var session = authService.login(request.email());
-    return authenticatedSessionResponse(session);
+    return authenticatedSessionResponse(session, null);
   }
 
   @GET
@@ -96,7 +96,7 @@ public class AuthResource {
     var callback = authService.handleOAuthCallbackSession(code, state);
     var responseBuilder = Response.status(Response.Status.FOUND)
         .location(java.net.URI.create(callback.redirectUrl()));
-    return addSessionCookies(responseBuilder, callback.session()).build();
+    return addSessionCookies(responseBuilder, callback.session(), null).build();
   }
 
   @POST
@@ -108,9 +108,12 @@ public class AuthResource {
       @APIResponse(responseCode = "403", description = "Refresh rejected",
           content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
   })
-  public Response refresh(@CookieParam(AuthCookieBuilder.REFRESH_TOKEN_COOKIE) String refreshToken) {
+  public Response refresh(
+      @CookieParam(AuthCookieBuilder.REFRESH_TOKEN_COOKIE) String refreshToken,
+      @CookieParam(AuthCookieBuilder.CSRF_TOKEN_COOKIE) String csrfToken
+  ) {
     var session = authService.refreshToken(refreshToken);
-    return authenticatedSessionResponse(session);
+    return authenticatedSessionResponse(session, csrfToken);
   }
 
   @POST
@@ -176,16 +179,19 @@ public class AuthResource {
     return Response.ok(updated).build();
   }
 
-  private Response authenticatedSessionResponse(TokenResponse session) {
+  private Response authenticatedSessionResponse(TokenResponse session, String csrfToken) {
     var responseBuilder = Response.ok(currentSessionResponse(session));
-    return addSessionCookies(responseBuilder, session).build();
+    return addSessionCookies(responseBuilder, session, csrfToken).build();
   }
 
   private Response.ResponseBuilder addSessionCookies(
       Response.ResponseBuilder responseBuilder,
-      TokenResponse session
+      TokenResponse session,
+      String existingCsrfToken
   ) {
-    var csrfToken = AuthSupport.randomToken(16);
+    var csrfToken = existingCsrfToken == null || existingCsrfToken.isBlank()
+        ? AuthSupport.randomToken(16)
+        : existingCsrfToken;
     return responseBuilder
         .cookie(authCookieBuilder.accessToken(session.accessToken(), session.expiresIn()))
         .cookie(authCookieBuilder.refreshToken(session.refreshToken(), refreshCookieMaxAgeSeconds()))

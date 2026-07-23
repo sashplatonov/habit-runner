@@ -16,6 +16,7 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'jsdom',
+    execArgv: ['--no-experimental-webstorage'],
     include: ['tests/**/*.test.{ts,tsx}'],
     coverage: {
       reporter: ['text', 'lcov'],

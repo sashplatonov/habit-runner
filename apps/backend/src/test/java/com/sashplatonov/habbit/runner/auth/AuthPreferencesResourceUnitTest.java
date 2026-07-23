@@ -4,6 +4,7 @@ import com.sashplatonov.habbit.runner.auth.access.OAuthStateAccess;
 import com.sashplatonov.habbit.runner.auth.access.UserAccess;
 import com.sashplatonov.habbit.runner.auth.client.GoogleOAuthClient;
 import com.sashplatonov.habbit.runner.auth.config.AuthConfig;
+import com.sashplatonov.habbit.runner.auth.dto.UserPreferencesResponse;
 import com.sashplatonov.habbit.runner.auth.resource.AuthResource;
 import com.sashplatonov.habbit.runner.auth.resource.AuthThemeResource;
 import com.sashplatonov.habbit.runner.auth.security.AuthGuardFilter;
@@ -47,8 +48,12 @@ class AuthPreferencesResourceUnitTest {
     var updated = resource.updatePreferences(new UpdatePreferencesRequest("matrix", null));
 
     assertEquals("user-1", preferencesService.getLastUserId());
-    assertEquals(preferencesService.getGetResponse(), TestHelpers.entityOf(current));
-    assertEquals(preferencesService.getUpdateResponse(), TestHelpers.entityOf(updated));
+    assertEquals(
+        preferencesService.getGetResponse(),
+        TestHelpers.entityOf(current, UserPreferencesResponse.class));
+    assertEquals(
+        preferencesService.getUpdateResponse(),
+        TestHelpers.entityOf(updated, UserPreferencesResponse.class));
     assertEquals("matrix", preferencesService.getLastRequestTheme());
   }
 

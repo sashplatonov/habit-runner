@@ -4,6 +4,7 @@ import com.sashplatonov.habbit.runner.support.TestHelpers;
 import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.Validation;
 import jakarta.ws.rs.BadRequestException;
+import jakarta.ws.rs.ForbiddenException;
 import jakarta.ws.rs.NotAuthorizedException;
 import jakarta.ws.rs.NotFoundException;
 import jakarta.ws.rs.WebApplicationException;
@@ -35,7 +36,7 @@ class ApiSupportTest {
     var response = ApiResponses.created("created-payload");
 
     assertEquals(201, TestHelpers.statusOf(response));
-    assertEquals("created-payload", TestHelpers.entityOf(response));
+    assertEquals("created-payload", TestHelpers.entityOf(response, String.class));
   }
 
   @Test
@@ -50,7 +51,7 @@ class ApiSupportTest {
     assertEquals(400, TestHelpers.statusOf(response));
     var mediaType = TestHelpers.mediaTypeOf(response);
     assertEquals("application/json", mediaType.toString());
-    ErrorResponse error = TestHelpers.entityOf(response);
+    var error = TestHelpers.entityOf(response, ErrorResponse.class);
     assertEquals(400, error.status());
 
     assertTrue(error.detail().contains("must not be blank"));
@@ -63,7 +64,7 @@ class ApiSupportTest {
     assertEquals(403, TestHelpers.statusOf(response));
     var mediaType = TestHelpers.mediaTypeOf(response);
     assertEquals("application/json", mediaType.toString());
-    ErrorResponse error = TestHelpers.entityOf(response);
+    var error = TestHelpers.entityOf(response, ErrorResponse.class);
     assertEquals(403, error.status());
 
     assertEquals("Forbidden", error.title());
@@ -77,14 +78,14 @@ class ApiSupportTest {
     assertEquals(404, TestHelpers.statusOf(notFoundResponse));
     var notFoundMedia = TestHelpers.mediaTypeOf(notFoundResponse);
     assertEquals("application/json", notFoundMedia.toString());
-    ErrorResponse notFound = TestHelpers.entityOf(notFoundResponse);
+    var notFound = TestHelpers.entityOf(notFoundResponse, ErrorResponse.class);
     assertEquals(404, notFound.status());
 
     var badRequestResponse = mapper.toResponse(new BadRequestException("Bad input"));
     assertEquals(400, TestHelpers.statusOf(badRequestResponse));
     var badRequestMedia = TestHelpers.mediaTypeOf(badRequestResponse);
     assertEquals("application/json", badRequestMedia.toString());
-    ErrorResponse badRequest = TestHelpers.entityOf(badRequestResponse);
+    var badRequest = TestHelpers.entityOf(badRequestResponse, ErrorResponse.class);
     assertEquals(400, badRequest.status());
 
     assertEquals("Not Found", notFound.title());
@@ -98,10 +99,21 @@ class ApiSupportTest {
     assertEquals(422, TestHelpers.statusOf(response));
     var mediaType422 = TestHelpers.mediaTypeOf(response);
     assertEquals("application/json", mediaType422.toString());
-    ErrorResponse error = TestHelpers.entityOf(response);
+    var error = TestHelpers.entityOf(response, ErrorResponse.class);
     assertEquals(422, error.status());
 
     assertEquals("Request Failed", error.title());
+    assertEquals("REQUEST_REJECTED", error.errorCode());
+  }
+
+  @Test
+  void shouldPreserveForbiddenStatusWhenExceptionHasCustomMessage() {
+    var response = new GlobalExceptionMapper().toResponse(new ForbiddenException("Invalid CSRF token"));
+
+    assertEquals(403, TestHelpers.statusOf(response));
+    var error = TestHelpers.entityOf(response, ErrorResponse.class);
+    assertEquals("Forbidden", error.title());
+    assertEquals("Invalid CSRF token", error.detail());
     assertEquals("REQUEST_REJECTED", error.errorCode());
   }
 
@@ -111,7 +123,7 @@ class ApiSupportTest {
     assertEquals(500, TestHelpers.statusOf(response));
     var mediaType500 = TestHelpers.mediaTypeOf(response);
     assertEquals("application/json", mediaType500.toString());
-    ErrorResponse error = TestHelpers.entityOf(response);
+    var error = TestHelpers.entityOf(response, ErrorResponse.class);
     assertEquals(500, error.status());
 
     assertEquals("Internal Server Error", error.title());
@@ -131,7 +143,7 @@ class ApiSupportTest {
       assertEquals(400, TestHelpers.statusOf(response));
       var media400 = TestHelpers.mediaTypeOf(response);
       assertEquals("application/json", media400.toString());
-      ErrorResponse error = TestHelpers.entityOf(response);
+      var error = TestHelpers.entityOf(response, ErrorResponse.class);
       assertEquals(400, error.status());
 
       assertEquals("Bad input", error.detail());
@@ -148,7 +160,7 @@ class ApiSupportTest {
     }
   }
   private static <T> T proxy(Class<T> type, Map<String, Object> values) {
-    return (T) Proxy.newProxyInstance(
+    return type.cast(Proxy.newProxyInstance(
         type.getClassLoader(),
         new Class<?>[]{type},
         (instance, method, args) -> {
@@ -161,7 +173,7 @@ class ApiSupportTest {
           }
           return null;
         }
-    );
+    ));
   }
 
   // Response helpers moved to TestHelpers

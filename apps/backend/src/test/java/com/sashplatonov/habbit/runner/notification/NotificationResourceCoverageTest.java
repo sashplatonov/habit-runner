@@ -47,7 +47,7 @@ VAPID_PUBLIC_KEY=
     var response = resource.getVapidPublicKey();
 
     assertEquals(200, TestHelpers.statusOf(response));
-    VapidPublicKeyResponse vapid = TestHelpers.entityOf(response);
+    var vapid = TestHelpers.entityOf(response, VapidPublicKeyResponse.class);
     assertEquals(TEST_VAPID_PUBLIC_KEY, vapid.publicKey());
   }
 
@@ -57,7 +57,7 @@ VAPID_PUBLIC_KEY=
     var response = resource.getVapidPublicKey();
 
     assertEquals(503, TestHelpers.statusOf(response));
-    ErrorResponse err = TestHelpers.entityOf(response);
+    var err = TestHelpers.entityOf(response, ErrorResponse.class);
     assertEquals("VAPID_PUBLIC_KEY_MISSING", err.errorCode());
   }
 
@@ -74,7 +74,7 @@ VAPID_PUBLIC_KEY=
     });
 
     assertEquals(201, TestHelpers.statusOf(response));
-    SubscriptionStatusResponse status = TestHelpers.entityOf(response);
+    var status = TestHelpers.entityOf(response, SubscriptionStatusResponse.class);
     assertTrue(status.success());
     assertEquals(1L, PushSubscriptionEntity.count("endpoint", endpoint));
   }

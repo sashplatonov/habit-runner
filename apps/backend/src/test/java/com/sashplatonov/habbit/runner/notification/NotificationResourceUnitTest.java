@@ -17,7 +17,7 @@ class NotificationResourceUnitTest {
     var response = res.getVapidPublicKey();
 
     assertEquals(200, TestHelpers.statusOf(response));
-    VapidPublicKeyResponse vapid = TestHelpers.entityOf(response);
+    var vapid = TestHelpers.entityOf(response, VapidPublicKeyResponse.class);
     assertEquals("unit-public-key", vapid.publicKey());
   }
 
@@ -27,7 +27,7 @@ class NotificationResourceUnitTest {
     var response = res.getVapidPublicKey();
 
     assertEquals(503, TestHelpers.statusOf(response));
-    ErrorResponse err = TestHelpers.entityOf(response);
+    var err = TestHelpers.entityOf(response, ErrorResponse.class);
     assertEquals("VAPID_PUBLIC_KEY_MISSING", err.errorCode());
   }
 

@@ -75,6 +75,7 @@ class AuthRefreshTest extends AuthenticatedApiTestSupport {
         .post("/auth/refresh")
         .then()
         .statusCode(200)
+      .cookie(AuthCookieBuilder.CSRF_TOKEN_COOKIE, CSRF_TOKEN)
       .body("userId", equalTo(userId))
       .body("email", equalTo(email));
   }

@@ -2,6 +2,7 @@ package com.sashplatonov.habbit.runner.api;
 
 import jakarta.validation.ValidationException;
 import jakarta.ws.rs.BadRequestException;
+import jakarta.ws.rs.ForbiddenException;
 import jakarta.ws.rs.NotAuthorizedException;
 import jakarta.ws.rs.NotFoundException;
 import jakarta.ws.rs.WebApplicationException;
@@ -36,34 +37,41 @@ public class GlobalExceptionMapper implements ExceptionMapper<Exception> {
   @Override
   public Response toResponse(Exception exception) {
     return switch (exception) {
-      case ValidationException e -> serverError(new ErrorResponse(
+      case ValidationException e -> clientError(new ErrorResponse(
         ERR_BASE + "validation",
         "Validation Error",
         Response.Status.BAD_REQUEST.getStatusCode(),
         messageOrDefault(e, "Validation failed"),
         "VALIDATION_FAILED"
-      ), false, e);
-      case NotAuthorizedException e -> serverError(new ErrorResponse(
+      ));
+      case NotAuthorizedException e -> clientError(new ErrorResponse(
         ERR_BASE + "forbidden",
         "Forbidden",
         Response.Status.FORBIDDEN.getStatusCode(),
         messageOrDefault(e, "Authentication required"),
         "AUTH_REQUIRED"
-      ), false, e);
-      case NotFoundException e -> serverError(new ErrorResponse(
+      ));
+      case ForbiddenException e -> securityError(new ErrorResponse(
+        ERR_BASE + "forbidden",
+        "Forbidden",
+        Response.Status.FORBIDDEN.getStatusCode(),
+        messageOrDefault(e, "Request forbidden"),
+        "REQUEST_REJECTED"
+      ));
+      case NotFoundException e -> clientError(new ErrorResponse(
         ERR_BASE + "not-found",
         "Not Found",
         Response.Status.NOT_FOUND.getStatusCode(),
         messageOrDefault(e, "Resource not found"),
         "RESOURCE_NOT_FOUND"
-      ), false, e);
-      case BadRequestException e -> serverError(new ErrorResponse(
+      ));
+      case BadRequestException e -> clientError(new ErrorResponse(
         ERR_BASE + "bad-request",
         "Bad Request",
         Response.Status.BAD_REQUEST.getStatusCode(),
         messageOrDefault(e, "Bad request"),
         "BAD_REQUEST"
-      ), false, e);
+      ));
       case WebApplicationException e -> webException(e);
       default -> serverError(new ErrorResponse(
         ERR_BASE + "internal-server-error",
@@ -71,24 +79,21 @@ public class GlobalExceptionMapper implements ExceptionMapper<Exception> {
         Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(),
         "Internal server error",
         "INTERNAL_SERVER_ERROR"
-      ), true, exception);
+      ), exception);
     };
   }
 
   private Response webException(WebApplicationException e) {
     var status = normalizedStatus(e);
     var title = title(status);
-    return serverError(
-        new ErrorResponse(
-            ERR_BASE + "request-failed",
-            title,
-            status.getStatusCode(),
-            messageOrDefault(e, title),
-            status.getStatusCode() >= 500 ? "REQUEST_FAILED" : "REQUEST_REJECTED"
-        ),
-        isServerFailure(status),
-        e
+    var error = new ErrorResponse(
+        ERR_BASE + "request-failed",
+        title,
+        status.getStatusCode(),
+        messageOrDefault(e, title),
+        status.getStatusCode() >= 500 ? "REQUEST_FAILED" : "REQUEST_REJECTED"
     );
+    return isServerFailure(status) ? serverError(error, e) : clientError(error);
   }
 
   private static Response.StatusType normalizedStatus(WebApplicationException exception) {
@@ -102,29 +107,47 @@ public class GlobalExceptionMapper implements ExceptionMapper<Exception> {
     return Response.Status.INTERNAL_SERVER_ERROR;
   }
 
-  private Response serverError(ErrorResponse error, boolean serverFailure, Exception exception) {
-    if (serverFailure) {
-      log.error(
-          "event=request_failed method={} path={} clientIp={} traceId={} status={} detail={}",
-          requestMethod(),
-          requestPath(),
-          clientIp(),
-          traceId(),
-          error.status(),
-          error.detail(),
-          exception
-      );
-    } else {
-      log.warn(
-          "event=request_rejected method={} path={} clientIp={} traceId={} status={} detail={}",
-          requestMethod(),
-          requestPath(),
-          clientIp(),
-          traceId(),
-          error.status(),
-          error.detail()
-      );
-    }
+  private Response serverError(ErrorResponse error, Exception exception) {
+    log.error(
+        "event=request_failed method={} path={} clientIp={} traceId={} status={} detail={}",
+        requestMethod(),
+        requestPath(),
+        clientIp(),
+        traceId(),
+        error.status(),
+        error.detail(),
+        exception
+    );
+    return response(error);
+  }
+
+  private Response securityError(ErrorResponse error) {
+    log.warn(
+        "event=request_rejected method={} path={} clientIp={} traceId={} status={} detail={}",
+        requestMethod(),
+        requestPath(),
+        clientIp(),
+        traceId(),
+        error.status(),
+        error.detail()
+    );
+    return response(error);
+  }
+
+  private Response clientError(ErrorResponse error) {
+    log.debug(
+        "event=request_rejected method={} path={} clientIp={} traceId={} status={} detail={}",
+        requestMethod(),
+        requestPath(),
+        clientIp(),
+        traceId(),
+        error.status(),
+        error.detail()
+    );
+    return response(error);
+  }
+
+  private Response response(ErrorResponse error) {
     return Response.status(error.status())
         .type(MediaType.APPLICATION_JSON)
         .entity(error)

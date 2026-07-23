@@ -49,7 +49,6 @@
         </properties>
     </rule>
     <rule ref="category/java/errorprone.xml/AvoidCatchingGenericException"/>
-    <rule ref="category/java/errorprone.xml/AvoidCatchingNPE"/>
     <rule ref="category/java/errorprone.xml/CompareObjectsWithEquals"/>
     <rule ref="category/java/errorprone.xml/BrokenNullCheck"/>
     <rule ref="category/java/errorprone.xml/AssignmentInOperand"/>

@@ -24,8 +24,8 @@ public final class TestHelpers {
     return response.getMediaType();
   }
 
-  public static <T> T entityOf(Response response) {
-    return (T) response.getEntity();
+  public static <T> T entityOf(Response response, Class<T> entityType) {
+    return entityType.cast(response.getEntity());
   }
 
   public static int statusOf(Response response) {

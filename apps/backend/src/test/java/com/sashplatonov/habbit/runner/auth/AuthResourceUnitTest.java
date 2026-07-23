@@ -53,11 +53,11 @@ class AuthResourceUnitTest {
     var login = resource.login(new LoginRequest("user@example.test"));
     var googleStart = resource.startGoogle("/dashboard");
     var googleCallback = resource.googleCallback("code-123", "state-123");
-    var refresh = resource.refresh("refresh-1");
+    var refresh = resource.refresh("refresh-1", "csrf-1");
     var logout = resource.logout("refresh-1");
 
     assertEquals("user@example.test", authService.getLastLoginEmail());
-    AuthSessionResponse loginSession = TestHelpers.entityOf(login);
+    var loginSession = TestHelpers.entityOf(login, AuthSessionResponse.class);
     assertSession(loginSession, "user-1", "user@example.test");
     assertCookiesPresent(login.getCookies());
     assertEquals("/dashboard", authService.getLastReturnTo());
@@ -66,9 +66,13 @@ class AuthResourceUnitTest {
     assertEquals("state-123", authService.getLastState());
     assertRedirect(googleCallback, "https://app.example.test/callback");
     assertCookiesPresent(googleCallback.getCookies());
-    AuthSessionResponse refreshSession = TestHelpers.entityOf(refresh);
+    var refreshSession = TestHelpers.entityOf(refresh, AuthSessionResponse.class);
     assertSession(refreshSession, "user-1", "user@example.test");
     assertCookiesPresent(refresh.getCookies());
+    assertEquals(
+        "csrf-1",
+        refresh.getCookies().get(AuthCookieBuilder.CSRF_TOKEN_COOKIE).getValue()
+    );
     assertEquals("refresh-1", authService.getLastRefreshToken());
     assertEquals(204, TestHelpers.statusOf(logout));
     assertEquals("refresh-1", authService.getRevokedToken());

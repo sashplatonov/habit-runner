@@ -9,6 +9,9 @@ export interface AuthSession {
   email?: string;
 }
 
+let refreshInFlight: Promise<AuthSession> | null = null;
+let authSessionRevision = 0;
+
 function toSession(payload: {
   userId: string;
   email?: string;
@@ -22,7 +25,9 @@ function toSession(payload: {
 export function readAuthSession(): AuthSession | null {
   try {
     const raw = localStorage.getItem(AUTH_SESSION_KEY);
-    if (!raw) {return null;}
+    if (!raw) {
+      return null;
+    }
     const parsed = JSON.parse(raw) as AuthSession;
     if (!parsed.userId) {
       return null;
@@ -39,12 +44,17 @@ export function saveAuthSession(payload: {
 }): AuthSession {
   const session = toSession(payload);
   localStorage.setItem(AUTH_SESSION_KEY, JSON.stringify(session));
+  authSessionRevision += 1;
   return session;
 }
 
 export function clearAuthSession(): void {
+  const hadSession = localStorage.getItem(AUTH_SESSION_KEY) !== null;
   localStorage.removeItem(AUTH_SESSION_KEY);
-  window.dispatchEvent(new Event(AUTH_SESSION_CLEARED_EVENT));
+  authSessionRevision += 1;
+  if (hadSession) {
+    window.dispatchEvent(new Event(AUTH_SESSION_CLEARED_EVENT));
+  }
 }
 
 function readCookie(name: string): string | null {
@@ -105,6 +115,7 @@ async function loadAuthSessionFromServer(): Promise<AuthSession | null> {
 }
 
 async function refreshSession(): Promise<AuthSession> {
+  const revisionAtStart = authSessionRevision;
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 10_000);
   try {
@@ -122,9 +133,13 @@ async function refreshSession(): Promise<AuthSession> {
       throw new Error('Unable to refresh authentication token');
     }
 
-    return normalizeAuthSession(await response.json());
+    const payload = await response.json();
+    if (revisionAtStart !== authSessionRevision) {
+      throw new Error('Auth refresh was superseded by a newer session change');
+    }
+    return normalizeAuthSession(payload);
   } catch (err: unknown) {
-    if (err instanceof Error && (err as Error).name === 'AbortError') {
+    if (err instanceof Error && err.name === 'AbortError') {
       throw new Error('Auth refresh timed out', { cause: err });
     }
     if (err instanceof Error) {
@@ -136,6 +151,15 @@ async function refreshSession(): Promise<AuthSession> {
   } finally {
     clearTimeout(timeoutId);
   }
+}
+
+function refreshSessionOnce(): Promise<AuthSession> {
+  if (!refreshInFlight) {
+    refreshInFlight = refreshSession().finally(() => {
+      refreshInFlight = null;
+    });
+  }
+  return refreshInFlight;
 }
 
 export async function ensureAuthSession(): Promise<AuthSession | null> {
@@ -156,8 +180,8 @@ export async function authenticatedFetch(input: string, init: RequestInit = {}):
   const headers = new Headers(init.headers);
   addAuthHeaders(headers, method, hasBody);
 
-  const doFetch = async (requestHeaders: Headers): Promise<Response> => {
-    return await fetch(input, {
+  const doFetch = (requestHeaders: Headers): Promise<Response> => {
+    return fetch(input, {
       ...init,
       headers: requestHeaders,
       credentials: 'include',
@@ -174,7 +198,7 @@ export async function authenticatedFetch(input: string, init: RequestInit = {}):
   }
 
   try {
-    await refreshSession();
+    await refreshSessionOnce();
   } catch {
     clearAuthSession();
     return response;
