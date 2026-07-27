@@ -7,6 +7,7 @@ import jakarta.persistence.Index;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -26,6 +27,7 @@ import java.time.LocalDate;
 )
 @Getter
 @Setter
+@EqualsAndHashCode(callSuper = false)
 public class CheckinEntity extends UuidAuditedEntityBase {
   @Column(name = "habitId", nullable = false)
   private String habitId;
