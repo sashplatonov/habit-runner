@@ -1,0 +1,12 @@
+# Dokploy deployment overlay. Apply this file after either the JVM or native
+# Compose file so the API joins the external network used by Dokploy routing.
+
+services:
+  api:
+    networks:
+      - backend
+      - dokploy-ipv6
+
+networks:
+  dokploy-ipv6:
+    external: true

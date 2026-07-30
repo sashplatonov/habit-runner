@@ -81,6 +81,9 @@ Start a local Postgres instance first. The easiest repo-native path is the Compo
 docker compose --profile db up -d db
 ```
 
+If port `5432` is already occupied, keep `DB_PORT=5432` for container-to-container
+traffic and choose a free host port, for example `DB_HOST_PORT=55432`.
+
 For the standard local setup, the backend dev profile now provides matching defaults automatically:
 
 - `DB_HOST=localhost`
@@ -158,7 +161,7 @@ resolve when either required value is blank or missing.
 For the full local stack with the bundled database:
 
 ```bash
-docker compose --profile db up --build
+docker compose -f docker-compose.yml -f docker-compose.local.yml --profile db up --build
 ```
 
 For a stack that targets an already running external database:
@@ -182,6 +185,17 @@ Current Compose behavior:
 - `api` is exposed only to the internal Docker network;
 - browser traffic reaches the backend through the `web` nginx proxy at `/api`;
 - `docker-compose.local.yml` exposes the web app on `http://localhost:5137`.
+- `docker-compose.dokploy.yml` is a deployment-only overlay that attaches the
+  API to the external `dokploy-ipv6` routing network.
+- When `VAPID_PUBLIC_KEY` is empty, `/q/health/ready` stays UP and the
+  notification check reports `status=disabled` instead of blocking startup.
+
+Dokploy deployment:
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.dokploy.yml config --quiet
+docker compose -f docker-compose.yml -f docker-compose.dokploy.yml up -d --build
+```
 
 [↑ Back to top](#top)
 
@@ -222,7 +236,8 @@ Use matching origins:
 | `WEB_PORT` | Yes | Internal web service port mapping in templates |
 | `API_PORT` | Yes | Backend HTTP port inside the container |
 | `DB_HOST` | Yes | Database host for the backend |
-| `DB_PORT` | Yes | Database port |
+| `DB_PORT` | Yes | Database connection port used by the backend |
+| `DB_HOST_PORT` | No | Host port published by the bundled Compose database; defaults to `DB_PORT` for backward compatibility |
 | `DB_NAME` | Yes | Database name |
 | `DB_USER` | Yes | Database user |
 | `DB_PASSWORD` | Yes | Database password |
@@ -235,6 +250,7 @@ Use matching origins:
 | `API_PUBLIC_URL` | Yes | Public backend URL used in OAuth redirects |
 | `OAUTH_DEFAULT_RETURN_TO` | Yes | Frontend URL after auth |
 | `CORS_ORIGINS` | Yes | Allowed frontend origins |
+| `NEW_RELIC_METRICS_ENABLED` | No | Enables New Relic metric export; requires `NEW_RELIC_LICENSE_KEY` when `true` |
 | `GOOGLE_OAUTH_CLIENT_ID` | Optional | Needed for real Google sign-in; required for production startup and readiness |
 | `GOOGLE_OAUTH_CLIENT_SECRET` | Optional | Needed for real Google sign-in; required for production startup and readiness |
 | `VAPID_PUBLIC_KEY` | Optional | Browser push public key |

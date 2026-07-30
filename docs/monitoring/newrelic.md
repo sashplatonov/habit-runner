@@ -129,7 +129,8 @@ Panel rule:
 
 Backend runtime:
 
-- `NEW_RELIC_LICENSE_KEY`
+- `NEW_RELIC_METRICS_ENABLED=false`
+- `NEW_RELIC_LICENSE_KEY` (required when metrics or the Java agent are enabled)
 - `NEW_RELIC_APP_NAME=habittracker-api`
 - `NEW_RELIC_AGENT_ENABLED=false`
 - `NEW_RELIC_APPLICATION_LOGGING_FORWARDING_ENABLED=false`
@@ -160,13 +161,16 @@ Notes:
 1. `NEW_RELIC_AGENT_ENABLED=false`
    - local default
    - backend runs without agent attachment
-2. `NEW_RELIC_AGENT_ENABLED=true` with forwarding off
+2. `NEW_RELIC_METRICS_ENABLED=true` with a license key
+   - Micrometer exports JVM and HTTP metrics
+   - can be enabled independently from the Java agent
+3. `NEW_RELIC_AGENT_ENABLED=true` with forwarding off
    - APM, JVM telemetry, and logs-in-context only
    - safe first rollout mode
-3. browser config present with `VITE_NEW_RELIC_BROWSER_ENABLED=true`
+4. browser config present with `VITE_NEW_RELIC_BROWSER_ENABLED=true`
    - browser page views, JS errors, and client logs are enabled
    - configure from the Browser app snippet before building the web image
-4. `NEW_RELIC_AGENT_ENABLED=true` with forwarding on
+5. `NEW_RELIC_AGENT_ENABLED=true` with forwarding on
    - only after log-volume review
    - keep `debug,trace` denied
    - keep the sample cap explicit

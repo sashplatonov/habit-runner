@@ -28,7 +28,7 @@ services:
     volumes:
       - habbit_runner_pgdata:/var/lib/postgresql
     ports:
-      - "${DB_PORT:-5432}:5432"
+      - "${DB_HOST_PORT:-${DB_PORT:-5432}}:5432"
     healthcheck:
       test: ["CMD-SHELL","pg_isready -U ${DB_USER:-habbit} -d ${DB_NAME:-habbit_runner}"]
       interval: 5s
@@ -71,8 +71,9 @@ services:
       SERVICE_VERSION: ${SERVICE_VERSION:-1.0.0}
       DEPLOYMENT_ENV: ${DEPLOYMENT_ENV:-production}
       ENVIRONMENT: ${ENVIRONMENT:-production}
-      NEW_RELIC_LICENSE_KEY: ${NEW_RELIC_LICENSE_KEY:-}
+      NEW_RELIC_LICENSE_KEY: ${NEW_RELIC_LICENSE_KEY:-disabled}
       NEW_RELIC_METRIC_API_URI: ${NEW_RELIC_METRIC_API_URI:-https://metric-api.newrelic.com/metric/v1}
+      NEW_RELIC_METRICS_ENABLED: ${NEW_RELIC_METRICS_ENABLED:-false}
       NEW_RELIC_APP_NAME: ${NEW_RELIC_APP_NAME:-habittracker-api}
       NEW_RELIC_AGENT_ENABLED: ${NEW_RELIC_AGENT_ENABLED:-false}
       NEW_RELIC_APPLICATION_LOGGING_FORWARDING_ENABLED: ${NEW_RELIC_APPLICATION_LOGGING_FORWARDING_ENABLED:-false}
@@ -90,7 +91,6 @@ services:
       start_period: 15s
     networks:
       - backend
-      - dokploy-ipv6
 
   web:
     <<: *service_defaults
@@ -136,7 +136,3 @@ volumes:
 networks:
   backend:
     driver: bridge
-  # ⚠️ DO NOT REMOVE: dokploy-ipv6 — Dokploy external network for IPv6 routing.
-  # Required for Dokploy reverse-proxy to reach the backend.
-  dokploy-ipv6:
-    external: true

@@ -85,20 +85,39 @@ class HealthReadinessTest {
   }
 
   @Test
-  void shouldReportNotificationConfigUpAndDownStates() {
+  void shouldReportNotificationCapabilityEnabled() {
     var notificationConfig = mock(NotificationConfig.class);
     when(notificationConfig.vapidPublicKey()).thenReturn(Optional.of("public-key"));
 
     var healthCheck = new NotificationReadinessHealthCheck(notificationConfig);
-    var up = healthCheck.call();
+    var response = healthCheck.call();
 
-    assertEquals(HealthCheckResponse.Status.UP, up.getStatus());
+    assertEquals(HealthCheckResponse.Status.UP, response.getStatus());
+    assertEquals("enabled", response.getData().orElseThrow().get("status"));
+  }
 
+  @Test
+  void shouldReportNotificationCapabilityDisabledWhenKeyIsMissing() {
+    var notificationConfig = mock(NotificationConfig.class);
     when(notificationConfig.vapidPublicKey()).thenReturn(Optional.empty());
-    var down = healthCheck.call();
 
-    assertEquals(HealthCheckResponse.Status.DOWN, down.getStatus());
-    assertTrue(down.getData().orElseThrow().containsValue("notification.vapid-public-key is missing"));
+    var response = new NotificationReadinessHealthCheck(notificationConfig).call();
+
+    assertEquals(HealthCheckResponse.Status.UP, response.getStatus());
+    var data = response.getData().orElseThrow();
+    assertEquals("disabled", data.get("status"));
+    assertEquals("notification.vapid-public-key is missing", data.get("reason"));
+  }
+
+  @Test
+  void shouldReportNotificationCapabilityDisabledWhenKeyIsBlank() {
+    var notificationConfig = mock(NotificationConfig.class);
+    when(notificationConfig.vapidPublicKey()).thenReturn(Optional.of(" "));
+
+    var response = new NotificationReadinessHealthCheck(notificationConfig).call();
+
+    assertEquals(HealthCheckResponse.Status.UP, response.getStatus());
+    assertEquals("disabled", response.getData().orElseThrow().get("status"));
   }
 
   private void stubValidAuthConfig(AuthConfig authConfig) {

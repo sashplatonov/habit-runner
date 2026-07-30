@@ -346,18 +346,33 @@ docker run --rm -v "$PWD:/work:ro" -w /work aquasec/trivy:0.72.0 \
 
 <a id="pr-006"></a>
 
-### PR-006 — Make the local Compose stack portable
+### PR-006 — Make local Compose startup reliable
+
+**Status:** completed and verified locally on 2026-07-30 within the approved
+scope. The maintainer subsequently approved the dedicated Dokploy deployment
+overlay.
 
 **Problem and evidence**
 
-- The base Compose file requires the external Dokploy network `dokploy-ipv6`.
+- The base Compose files require the external Dokploy network `dokploy-ipv6`,
+  which prevents a clean local stack from starting before deployment-specific
+  infrastructure exists.
+- `DB_PORT` is used both as the backend connection port and as the bundled
+  database's published host port, so resolving a host-port collision breaks
+  container-to-container database connectivity.
+- Production-profile metric export is always enabled and rejects the intentionally
+  empty local New Relic key before the API can start.
 - Optional VAPID configuration can make backend readiness fail and prevent the web container from starting.
 - A clean developer cannot exercise protected flows without external OAuth configuration.
 
 **Architectural decision**
 
-- The base Compose topology must be portable and contain only local networks.
-- Dokploy-specific networks and routing belong in a deployment overlay.
+- Keep local Compose files self-contained and attach the API to the external
+  `dokploy-ipv6` network through a dedicated deployment overlay.
+- Keep `DB_PORT` as the backend connection port and add `DB_HOST_PORT` for the
+  published database port, with a fallback to `DB_PORT` for existing env files.
+- Make New Relic metric export opt-in through `NEW_RELIC_METRICS_ENABLED`; local
+  startup must not require an observability secret.
 - Missing optional push configuration produces a named degraded/disabled component status but does not make the core API unready.
 - Provide a dev-only identity path from PR-002 or document the exact OAuth setup; never expose the dev identity provider in production.
 
@@ -371,30 +386,36 @@ docker run --rm -v "$PWD:/work:ro" -w /work aquasec/trivy:0.72.0 \
 - `apps/backend/src/test/java/com/sashplatonov/habbit/runner/health/HealthReadinessTest.java`
 - `.env.example`
 - `docs/setup/getting-started.md`
+- `docs/monitoring/newrelic.md`
 
 **Acceptance criteria**
 
-- `docker compose --profile db up --build` does not require a pre-created external network.
+- Local Compose startup does not require a pre-created Dokploy network.
 - Core API readiness is UP without VAPID values, while notification capability is visibly disabled.
-- The Dokploy overlay preserves the existing deployment network contract.
+- The Dokploy overlay preserves the existing external routing contract for JVM
+  and native deployments.
+- A host PostgreSQL port collision can be resolved with `DB_HOST_PORT` without
+  changing the API's internal database port.
+- The API starts without a New Relic key when metric export is disabled.
 - A clean developer can reach a documented usable application state within ten minutes.
 - All environment variables remain documented and backward-compatible.
 
 **Verification**
 
 ```bash
-docker compose --profile db config --quiet
+DB_HOST_PORT=55432 docker compose -f docker-compose.yml -f docker-compose.local.yml --profile db config --quiet
 docker compose -f docker-compose.yml -f docker-compose.dokploy.yml config --quiet
-docker compose --profile db up --build --wait
-curl --fail http://127.0.0.1:8080/q/health/ready
-curl --fail http://127.0.0.1:3000/
-docker compose --profile db down
+docker compose -f docker-compose.native.yml -f docker-compose.dokploy.yml config --quiet
+DB_HOST_PORT=55432 docker compose -f docker-compose.yml -f docker-compose.local.yml --profile db up --build --wait
+curl --fail http://127.0.0.1:5137/api/q/health/ready
+curl --fail http://127.0.0.1:5137/
+DB_HOST_PORT=55432 docker compose -f docker-compose.yml -f docker-compose.local.yml --profile db down
 cd apps/backend && ./mvnw -B -ntp test
 ```
 
 [↑ Back to top](#top)
 
-**AI agent commit command:** `git add docker-compose.yml docker-compose.local.yml docker-compose.native.yml docker-compose.dokploy.yml .env.example apps/backend docs/setup/getting-started.md && git commit -m "fix(docker): make local stack portable"`
+**AI agent commit command:** `git add .env.example docker-compose.yml docker-compose.local.yml docker-compose.native.yml docker-compose.dokploy.yml apps/backend docs/ai-fix-log.md docs/monitoring/newrelic.md docs/portfolio-readiness-backlog.md docs/setup/getting-started.md && git commit -m "refactor(docker): isolate dokploy deployment"`
 
 ---
 

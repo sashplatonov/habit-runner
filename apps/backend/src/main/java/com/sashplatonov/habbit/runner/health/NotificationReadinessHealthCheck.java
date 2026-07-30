@@ -23,11 +23,15 @@ public class NotificationReadinessHealthCheck implements HealthCheck {
     var vapidPublicKey = notificationConfig.vapidPublicKey().orElse(null);
     if (isBlank(vapidPublicKey)) {
       return HealthCheckResponse.named("notification-config")
-          .down()
+          .up()
+          .withData("status", "disabled")
           .withData("reason", "notification.vapid-public-key is missing")
           .build();
     }
-    return HealthCheckResponse.up("notification-config");
+    return HealthCheckResponse.named("notification-config")
+        .up()
+        .withData("status", "enabled")
+        .build();
   }
 
   private boolean isBlank(String value) {
