@@ -5,15 +5,17 @@ import com.sashplatonov.habbit.runner.auth.security.RequireAuth;
 import com.sashplatonov.habbit.runner.auth.service.AuthService;
 import com.sashplatonov.habbit.runner.auth.service.PreferencesService;
 import com.sashplatonov.habbit.runner.auth.support.AuthCookieBuilder;
-import com.sashplatonov.habbit.runner.auth.support.AuthSupport;
+import com.sashplatonov.habbit.runner.auth.support.AuthRateLimitService;
+import com.sashplatonov.habbit.runner.auth.support.AuthResourceSupport;
 import com.sashplatonov.habbit.runner.api.ApiResponses;
+import com.sashplatonov.habbit.runner.api.ClientIpResolver;
 import com.sashplatonov.habbit.runner.api.ErrorResponse;
 import com.sashplatonov.habbit.runner.auth.dto.AuthSessionResponse;
-import com.sashplatonov.habbit.runner.auth.dto.TokenResponse;
 import com.sashplatonov.habbit.runner.auth.dto.UpdatePreferencesRequest;
 import com.sashplatonov.habbit.runner.auth.dto.UserPreferencesResponse;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
+import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.CookieParam;
 import jakarta.ws.rs.GET;
@@ -22,8 +24,10 @@ import jakarta.ws.rs.PUT;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.QueryParam;
+import jakarta.ws.rs.core.HttpHeaders;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import java.util.UUID;
 import org.eclipse.microprofile.openapi.annotations.Operation;
 import org.eclipse.microprofile.openapi.annotations.media.Content;
 import org.eclipse.microprofile.openapi.annotations.media.Schema;
@@ -39,17 +43,21 @@ public class AuthResource {
   final PreferencesService preferencesService;
   final CurrentUserContext currentUserContext;
   final AuthCookieBuilder authCookieBuilder;
+  final AuthRateLimitService authRateLimitService;
+  @Context
+  HttpHeaders headers;
 
   public AuthResource(
       AuthService authService,
       PreferencesService preferencesService,
       CurrentUserContext currentUserContext,
-      AuthCookieBuilder authCookieBuilder
+      AuthResourceSupport authResourceSupport
   ) {
     this.authService = authService;
     this.preferencesService = preferencesService;
     this.currentUserContext = currentUserContext;
-    this.authCookieBuilder = authCookieBuilder;
+    this.authCookieBuilder = authResourceSupport.cookieBuilder();
+    this.authRateLimitService = authResourceSupport.rateLimitService();
   }
 
   @GET
@@ -59,6 +67,7 @@ public class AuthResource {
       @APIResponse(responseCode = "302", description = "OAuth redirect initiated")
   })
   public Response startGoogle(@QueryParam("returnTo") String returnTo) {
+    enforceIpLimit("auth:google:start", 30, 60L);
     var redirect = authService.createOAuthAuthorizationUrl(returnTo);
     return ApiResponses.redirect(redirect);
   }
@@ -75,10 +84,16 @@ public class AuthResource {
           content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
   })
   public Response googleCallback(@QueryParam("code") String code, @QueryParam("state") String state) {
+    enforceIpLimit("auth:google:callback", 20, 60L);
     var callback = authService.handleOAuthCallbackSession(code, state);
     var responseBuilder = Response.status(Response.Status.FOUND)
         .location(java.net.URI.create(callback.redirectUrl()));
-    return addSessionCookies(responseBuilder, callback.session(), null).build();
+    var session = callback.session();
+    return responseBuilder
+        .cookie(authCookieBuilder.accessToken(session.accessToken(), session.expiresIn()))
+        .cookie(authCookieBuilder.refreshToken(session.refreshToken(), refreshCookieMaxAgeSeconds()))
+        .cookie(authCookieBuilder.csrfToken(csrfToken(null), refreshCookieMaxAgeSeconds()))
+        .build();
   }
 
   @POST
@@ -94,8 +109,14 @@ public class AuthResource {
       @CookieParam(AuthCookieBuilder.REFRESH_TOKEN_COOKIE) String refreshToken,
       @CookieParam(AuthCookieBuilder.CSRF_TOKEN_COOKIE) String csrfToken
   ) {
+    enforceIpLimit("auth:refresh", 20, 60L);
     var session = authService.refreshToken(refreshToken);
-    return authenticatedSessionResponse(session, csrfToken);
+    return authenticatedSessionResponse(
+        session.accessToken(),
+        session.refreshToken(),
+        session.expiresIn(),
+        csrfToken
+    );
   }
 
   @POST
@@ -105,6 +126,7 @@ public class AuthResource {
       @APIResponse(responseCode = "204", description = "Session cleared")
   })
   public Response logout(@CookieParam(AuthCookieBuilder.REFRESH_TOKEN_COOKIE) String refreshToken) {
+    enforceIpLimit("auth:logout", 20, 60L);
     authService.revokeToken(refreshToken);
     return Response.noContent()
         .cookie(authCookieBuilder.expiredAccessToken())
@@ -161,31 +183,39 @@ public class AuthResource {
     return Response.ok(updated).build();
   }
 
-  private Response authenticatedSessionResponse(TokenResponse session, String csrfToken) {
-    var responseBuilder = Response.ok(currentSessionResponse(session));
-    return addSessionCookies(responseBuilder, session, csrfToken).build();
-  }
-
-  private Response.ResponseBuilder addSessionCookies(
-      Response.ResponseBuilder responseBuilder,
-      TokenResponse session,
+  private Response authenticatedSessionResponse(
+      String accessToken,
+      String refreshToken,
+      int expiresIn,
       String existingCsrfToken
   ) {
-    var csrfToken = existingCsrfToken == null || existingCsrfToken.isBlank()
-        ? AuthSupport.randomToken(16)
-        : existingCsrfToken;
-    return responseBuilder
-        .cookie(authCookieBuilder.accessToken(session.accessToken(), session.expiresIn()))
-        .cookie(authCookieBuilder.refreshToken(session.refreshToken(), refreshCookieMaxAgeSeconds()))
-        .cookie(authCookieBuilder.csrfToken(csrfToken, refreshCookieMaxAgeSeconds()));
+    return Response.ok(currentSessionResponse(accessToken))
+        .cookie(authCookieBuilder.accessToken(accessToken, expiresIn))
+        .cookie(authCookieBuilder.refreshToken(refreshToken, refreshCookieMaxAgeSeconds()))
+        .cookie(authCookieBuilder.csrfToken(csrfToken(existingCsrfToken), refreshCookieMaxAgeSeconds()))
+        .build();
   }
 
-  private AuthSessionResponse currentSessionResponse(TokenResponse session) {
-    var user = authService.verifyAccessToken(session.accessToken());
+  private AuthSessionResponse currentSessionResponse(String accessToken) {
+    var user = authService.verifyAccessToken(accessToken);
     return new AuthSessionResponse(user.id(), user.email());
   }
 
   private int refreshCookieMaxAgeSeconds() {
     return authService.refreshTokenDays() * 24 * 60 * 60;
+  }
+
+  private String csrfToken(String existingCsrfToken) {
+    return existingCsrfToken == null || existingCsrfToken.isBlank()
+        ? UUID.randomUUID().toString().replace("-", "")
+        : existingCsrfToken;
+  }
+
+  private void enforceIpLimit(String operation, int limit, long windowSeconds) {
+    authRateLimitService.checkIp(operation, clientIp(), limit, windowSeconds);
+  }
+
+  private String clientIp() {
+    return ClientIpResolver.resolve(headers);
   }
 }

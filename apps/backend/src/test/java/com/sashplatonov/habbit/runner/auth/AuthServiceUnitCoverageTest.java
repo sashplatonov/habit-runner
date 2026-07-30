@@ -20,6 +20,7 @@ import com.sashplatonov.habbit.runner.auth.service.UserService;
 import com.sashplatonov.habbit.runner.auth.support.AuthCollaborators;
 import com.sashplatonov.habbit.runner.auth.support.AuthCookieBuilder;
 import com.sashplatonov.habbit.runner.auth.support.AuthSupport;
+import com.sashplatonov.habbit.runner.auth.support.RefreshTokenDigest;
 import com.sashplatonov.habbit.runner.auth.support.OAuthCallbackSession;
 import com.sashplatonov.habbit.runner.auth.support.OAuthHelper;
 import com.sashplatonov.habbit.runner.auth.support.OAuthSupport;
@@ -49,7 +50,8 @@ class AuthServiceUnitCoverageTest {
     var collaborators = new StubCollaborators();
     var service = new TestAuthService(collaborators);
     var refreshRecord = new RefreshTokenEntity();
-    refreshRecord.setToken("refresh-token");
+    refreshRecord.setTokenHash(RefreshTokenDigest.hash("refresh-token"));
+    refreshRecord.setFamilyId("family-1");
     refreshRecord.setUserId("user-1");
     collaborators.setActiveRefreshToken(refreshRecord);
     service.setUserById(user("user-1", "user@example.test"));
@@ -57,7 +59,7 @@ class AuthServiceUnitCoverageTest {
     var tokenResponse = service.refreshToken("refresh-token");
 
     assertEquals("access::user-1::user@example.test::3600", tokenResponse.accessToken());
-    assertEquals("refresh-token", tokenResponse.refreshToken());
+    assertEquals("rotated-refresh", tokenResponse.refreshToken());
   }
 
   @Test
@@ -65,7 +67,8 @@ class AuthServiceUnitCoverageTest {
     var collaborators = new StubCollaborators();
     var service = new TestAuthService(collaborators);
     var refreshRecord = new RefreshTokenEntity();
-    refreshRecord.setToken("refresh-token");
+    refreshRecord.setTokenHash(RefreshTokenDigest.hash("refresh-token"));
+    refreshRecord.setFamilyId("family-1");
     refreshRecord.setUserId("missing-user");
     collaborators.setActiveRefreshToken(refreshRecord);
 
@@ -168,10 +171,10 @@ class AuthServiceUnitCoverageTest {
     var service = new TestRefreshTokenService();
     service.setCurrentTime(Instant.parse("2026-04-10T14:00:00Z"));
     var active = new RefreshTokenEntity();
-    active.setToken("refresh-token");
+    active.setTokenHash(RefreshTokenDigest.hash("refresh-token"));
     active.setUserId("user-1");
     active.setRevoked(false);
-    active.setExpiry(Instant.parse("2026-04-10T14:05:00Z"));
+    active.setExpiresAt(Instant.parse("2026-04-10T14:05:00Z"));
     service.setRecordByToken(active);
 
     var required = service.requireActive("refresh-token");
@@ -194,10 +197,10 @@ class AuthServiceUnitCoverageTest {
     assertThrows(NotAuthorizedException.class, () -> service.requireActive("missing"));
 
     var expired = new RefreshTokenEntity();
-    expired.setToken("expired-token");
+    expired.setTokenHash(RefreshTokenDigest.hash("expired-token"));
     expired.setUserId("user-1");
     expired.setRevoked(false);
-    expired.setExpiry(Instant.parse("2026-04-10T13:59:59Z"));
+    expired.setExpiresAt(Instant.parse("2026-04-10T13:59:59Z"));
     service.setRecordByToken(expired);
 
     assertThrows(NotAuthorizedException.class, () -> service.requireActive("expired-token"));

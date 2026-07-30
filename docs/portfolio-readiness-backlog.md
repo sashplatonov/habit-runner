@@ -245,6 +245,8 @@ cd apps/backend && ./mvnw -B -ntp test
 
 ### PR-004 — Rotate and protect refresh tokens
 
+**Status:** completed and verified locally on 2026-07-30.
+
 **Problem and evidence**
 
 - Refresh tokens are persisted in reusable plaintext form.
@@ -273,6 +275,7 @@ cd apps/backend && ./mvnw -B -ntp test
 - Raw refresh tokens are never stored or logged.
 - Every refresh returns a new token and invalidates the previous token.
 - Concurrent refresh requests have one deterministic winner.
+- The losing request in a concurrent refresh race returns 409, never 500.
 - Reuse of an invalidated token revokes the family and clears auth cookies.
 - Logout revokes the current family.
 - Rate-limited requests return 429 with a stable error code and `Retry-After`.
@@ -294,6 +297,10 @@ cd apps/backend && ./mvnw -B -ntp verify
 <a id="pr-005"></a>
 
 ### PR-005 — Remediate current dependency findings
+
+**Status:** completed and verified locally on 2026-07-30. Remaining full-audit
+findings are upstream-only development chains documented in `docs/ai-fix-log.md`;
+the production graph and High/Critical Trivy gate are clean.
 
 **Problem and evidence**
 

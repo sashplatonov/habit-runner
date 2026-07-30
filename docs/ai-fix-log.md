@@ -1,0 +1,55 @@
+# AI Fix Log
+
+## 2026-07-30 — PR-004 review follow-up
+
+- Added the missing `V9__secure_refresh_token_families.sql` migration and verified
+  both a fresh V1–V9 PostgreSQL migration and conversion of an existing plaintext
+  refresh token to its SHA-256 digest.
+- Bounded the in-memory authentication rate limiter at 10,000 keys, evicted expired
+  buckets, and failed closed through a shared overflow bucket.
+- Preferred the proxy-controlled `X-Real-IP` value and the last forwarded hop so a
+  client-supplied first `X-Forwarded-For` value cannot bypass the limiter behind the
+  bundled nginx proxy.
+- Distinguished a concurrent refresh-rotation conflict from token replay. The web
+  client recovers a session won by another browser context, while expired, revoked,
+  or replayed tokens clear all auth cookies.
+- Decoupled the refresh-rotation conflict from JAX-RS and added a dedicated HTTP
+  mapper. A concurrent refresh loser now returns the intended 409 rather than 500;
+  a two-request race test protects the one-winner contract.
+- Improved the OAuth callback status announcement for assistive technology and made
+  its failed-state link return to the public home page.
+
+Risk: the migration removes the plaintext `token` column after backfilling digests.
+Back up the database before deployment and deploy the migration together with the
+backend code.
+
+Rollback: restore the pre-deployment database backup and deploy the previous backend
+image. A code-only rollback is not compatible after V9 removes the plaintext column.
+
+## 2026-07-30 — PR-005 dependency review
+
+- Updated DOMPurify to 3.4.12 and applied all non-breaking `npm audit fix`
+  updates, including SvelteKit 2.70.2 and fixed transitive releases of `ws`,
+  `form-data`, `fast-uri`, and top-level `brace-expansion`.
+- `npm audit --omit=dev` reports zero vulnerabilities.
+- The remaining full-audit findings are build-time-only upstream chains:
+  `@vite-pwa/sveltekit > vite-plugin-pwa > workbox-build >
+  @trickfilm400/rollup-plugin-off-main-thread > ejs > jake > filelist >
+  minimatch > brace-expansion`, and `@sveltejs/kit > cookie`.
+- Current releases `@vite-pwa/sveltekit@1.1.0` and
+  `@sveltejs/kit@2.70.2` still resolve those chains. The audit-proposed
+  `@sveltejs/kit@0.0.30` is an invalid breaking downgrade, so no override,
+  suppression, or forced downgrade was added.
+- Updated the Quarkus platform from 3.37.1 to the latest 3.37 maintenance
+  release, 3.37.4, so its managed Jackson and Netty dependencies receive the
+  security fixes reported by the current Trivy database.
+- Quarkus 3.37.4 manages fixed Netty 4.1.136.Final but still manages vulnerable
+  `jackson-core` 2.22.0, so `jackson-core` is explicitly managed at the fixed
+  patch release 2.22.1 until the Quarkus BOM catches up.
+
+Risk: the unresolved advisories apply to development/build tooling and do not
+enter the production dependency graph. Recheck them when SvelteKit, Vite PWA,
+or Workbox publishes a fixed dependency graph.
+
+Rollback: restore the previous `apps/web/package.json` and
+`apps/web/package-lock.json`, then run `npm install`.

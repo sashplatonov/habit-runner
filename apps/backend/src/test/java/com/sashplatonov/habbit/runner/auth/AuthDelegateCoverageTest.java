@@ -20,6 +20,7 @@ import com.sashplatonov.habbit.runner.auth.service.UserService;
 import com.sashplatonov.habbit.runner.auth.support.AuthCollaborators;
 import com.sashplatonov.habbit.runner.auth.support.AuthCookieBuilder;
 import com.sashplatonov.habbit.runner.auth.support.AuthSupport;
+import com.sashplatonov.habbit.runner.auth.support.RefreshTokenDigest;
 import com.sashplatonov.habbit.runner.auth.support.OAuthCallbackSession;
 import com.sashplatonov.habbit.runner.auth.support.OAuthHelper;
 import com.sashplatonov.habbit.runner.auth.support.OAuthSupport;
@@ -52,7 +53,8 @@ class AuthDelegateCoverageTest {
     var collaborators = new AuthCollaborators(jwtUtil, refreshTokenService, oauthSupport, userService);
 
     var refreshRecord = new RefreshTokenEntity();
-    refreshRecord.setToken("refresh-token");
+    refreshRecord.setTokenHash(RefreshTokenDigest.hash("refresh-token"));
+    refreshRecord.setFamilyId("family-1");
     refreshTokenService.setRequireActiveResult(refreshRecord);
 
     var existingUser = new UserEntity();

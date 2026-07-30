@@ -25,7 +25,9 @@
           return;
         }
 
-  await goto(resolve<'/app/(protected)/dashboard'>('/app/(protected)/dashboard', {}), { replaceState: true });
+        await goto(resolve<'/app/(protected)/dashboard'>('/app/(protected)/dashboard', {}), {
+          replaceState: true
+        });
       } catch {
         if (cancelled) {
           return;
@@ -49,12 +51,18 @@
 <div class="flex min-h-screen items-center justify-center bg-bg-primary px-4 text-foreground">
   <div class="max-w-md rounded-3xl border border-border bg-bg-card p-6 shadow-glow-blue-sm">
     <p class="text-xs font-mono uppercase tracking-[0.3em] text-muted">OAuth callback</p>
-    <p class="mt-3 text-sm font-mono leading-6 text-muted">{message}</p>
+    <p
+      class="mt-3 text-sm font-mono leading-6 text-muted"
+      role={failed ? 'alert' : 'status'}
+      aria-live="polite"
+    >
+      {message}
+    </p>
 
     {#if failed}
       <a
         class="mt-5 inline-flex items-center rounded-full border border-border px-4 py-2 text-sm text-foreground transition hover:border-accent hover:text-accent"
-        href={resolve<'/app/(protected)/dashboard'>('/app/(protected)/dashboard', {})}
+        href={resolve<'/'>('/', {})}
       >
         Return home
       </a>

@@ -1,6 +1,5 @@
 package com.sashplatonov.habbit.runner.auth;
 
-import com.sashplatonov.habbit.runner.auth.access.OAuthStateAccess;
 import com.sashplatonov.habbit.runner.auth.client.GoogleOAuthClient;
 import com.sashplatonov.habbit.runner.auth.config.AuthConfig;
 import com.sashplatonov.habbit.runner.auth.resource.AuthResource;
@@ -18,6 +17,7 @@ import com.sashplatonov.habbit.runner.auth.service.RefreshTokenService;
 import com.sashplatonov.habbit.runner.auth.support.AuthCollaborators;
 import com.sashplatonov.habbit.runner.auth.support.AuthCookieBuilder;
 import com.sashplatonov.habbit.runner.auth.support.AuthSupport;
+import com.sashplatonov.habbit.runner.auth.support.AuthServiceSupport;
 import com.sashplatonov.habbit.runner.auth.support.OAuthCallbackSession;
 import com.sashplatonov.habbit.runner.auth.support.OAuthHelper;
 import com.sashplatonov.habbit.runner.auth.support.OAuthSupport;
@@ -29,55 +29,41 @@ import com.sashplatonov.habbit.runner.support.TestConfigFactory;
 import java.time.Instant;
 
 final class TestAuthService extends AuthService {
-  private UserEntity userById;
-  private OAuthStateEntity oauthState;
-  private StoredState storedState;
-  private String deletedState;
+  private final TestOAuthStateAccess oauthStateAccess;
   private Instant currentTime = Instant.parse("2026-04-10T13:00:00Z");
 
   TestAuthService(StubCollaborators collaborators) {
-    super(TestConfigFactory.defaultAuthConfig(), collaborators);
+    this(collaborators, new TestOAuthStateAccess());
+  }
+
+  TestAuthService(StubCollaborators collaborators, TestOAuthStateAccess oauthStateAccess) {
+    super(
+        TestConfigFactory.defaultAuthConfig(),
+        collaborators,
+        oauthStateAccess,
+        new AuthServiceSupport(null, null)
+    );
+    this.oauthStateAccess = oauthStateAccess;
   }
 
   void setUserById(UserEntity userById) {
-    this.userById = userById;
+    ((StubCollaborators) collaborators).setUserById(userById);
   }
 
   void setOauthState(OAuthStateEntity oauthState) {
-    this.oauthState = oauthState;
+    oauthStateAccess.setOauthState(oauthState);
   }
 
   StoredState getStoredState() {
-    return storedState;
+    return oauthStateAccess.getStoredState();
   }
 
   String getDeletedState() {
-    return deletedState;
+    return oauthStateAccess.getDeletedState();
   }
 
   void setCurrentTime(Instant currentTime) {
     this.currentTime = currentTime;
-  }
-
-  @Override
-  protected UserEntity findRequiredUserById(String userId) {
-    return userById;
-  }
-
-  @Override
-  protected OAuthStateAccess oauthStateAccess() {
-    return new OAuthStateAccess() {
-      @Override
-      public OAuthStateEntity consume(String state) {
-        deletedState = state;
-        return oauthState;
-      }
-
-      @Override
-      public void save(OAuthStateEntity payload) {
-        storedState = new StoredState(payload.state, payload.returnTo, payload.expiry());
-      }
-    };
   }
 
   @Override

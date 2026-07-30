@@ -9,6 +9,7 @@ import com.sashplatonov.habbit.runner.model.OAuthStateEntity;
 import com.sashplatonov.habbit.runner.model.PushSubscriptionEntity;
 import com.sashplatonov.habbit.runner.model.RefreshTokenEntity;
 import com.sashplatonov.habbit.runner.model.UserEntity;
+import com.sashplatonov.habbit.runner.auth.support.RefreshTokenDigest;
 import com.sashplatonov.habbit.runner.support.AuthenticatedApiTestSupport;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
@@ -63,10 +64,10 @@ class RepositoryCoverageTest extends AuthenticatedApiTestSupport {
       oAuthStateRepository.save(state);
 
       var refresh = new RefreshTokenEntity();
-      refresh.setToken(refreshToken);
+      refresh.setTokenHash(RefreshTokenDigest.hash(refreshToken));
       refresh.setUserId(user.getId());
       refresh.setRevoked(false);
-      refresh.setExpiry(Instant.now().plusSeconds(600));
+      refresh.setExpiresAt(Instant.now().plusSeconds(600));
       refreshTokenRepository.save(refresh);
 
       var subscription = new PushSubscriptionEntity();

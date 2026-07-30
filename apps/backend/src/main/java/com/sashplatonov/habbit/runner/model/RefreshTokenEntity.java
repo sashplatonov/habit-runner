@@ -2,19 +2,20 @@ package com.sashplatonov.habbit.runner.model;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
-import lombok.Getter;
-import lombok.Setter;
 
 import java.time.Instant;
+import java.util.UUID;
 
 @Entity
 @Table(name = "refresh_tokens")
-@Getter
-@Setter
 public class RefreshTokenEntity extends UuidAuditedEntityBase {
-  @Column(nullable = false, unique = true)
-  private String token;
+  @Column(name = "tokenHash", nullable = false, unique = true)
+  private String tokenHash;
+
+  @Column(name = "familyId", nullable = false)
+  private String familyId;
 
   @Column(name = "userId", nullable = false)
   private String userId;
@@ -22,15 +23,29 @@ public class RefreshTokenEntity extends UuidAuditedEntityBase {
   @Column(nullable = false)
   private boolean revoked;
 
+  @Column(name = "replacementTokenHash")
+  private String replacementTokenHash;
+
+  @Column(name = "rotatedAt")
+  private Instant rotatedAt;
+
   @Column(name = "expiresAt", nullable = false)
   private Instant expiresAt;
 
-  public String getToken() {
-    return token;
+  public String getTokenHash() {
+    return tokenHash;
   }
 
-  public void setToken(String token) {
-    this.token = token;
+  public void setTokenHash(String tokenHash) {
+    this.tokenHash = tokenHash;
+  }
+
+  public String getFamilyId() {
+    return familyId;
+  }
+
+  public void setFamilyId(String familyId) {
+    this.familyId = familyId;
   }
 
   public String getUserId() {
@@ -49,6 +64,22 @@ public class RefreshTokenEntity extends UuidAuditedEntityBase {
     this.revoked = revoked;
   }
 
+  public String getReplacementTokenHash() {
+    return replacementTokenHash;
+  }
+
+  public void setReplacementTokenHash(String replacementTokenHash) {
+    this.replacementTokenHash = replacementTokenHash;
+  }
+
+  public Instant getRotatedAt() {
+    return rotatedAt;
+  }
+
+  public void setRotatedAt(Instant rotatedAt) {
+    this.rotatedAt = rotatedAt;
+  }
+
   public Instant getExpiresAt() {
     return expiresAt;
   }
@@ -65,11 +96,27 @@ public class RefreshTokenEntity extends UuidAuditedEntityBase {
     setRevoked(true);
   }
 
-  public void setExpiry(Instant instant) {
-    setExpiresAt(instant);
+  public boolean isRotated() {
+    return replacementTokenHash != null && !replacementTokenHash.isBlank();
   }
 
-  public String tokenValue() {
-    return getToken();
+  public void markRotated(String replacementTokenHash, Instant rotatedAt) {
+    setReplacementTokenHash(replacementTokenHash);
+    setRotatedAt(rotatedAt);
+    revoke();
+  }
+
+  public boolean shouldRevokeFamily(Instant now, long graceSeconds) {
+    if (rotatedAt == null) {
+      return true;
+    }
+    return now.isAfter(rotatedAt.plusSeconds(graceSeconds));
+  }
+
+  @PrePersist
+  void prePersistRefreshToken() {
+    if (!hasText(familyId)) {
+      familyId = UUID.randomUUID().toString();
+    }
   }
 }

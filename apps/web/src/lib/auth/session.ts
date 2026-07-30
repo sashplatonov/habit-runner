@@ -129,6 +129,14 @@ async function refreshSession(): Promise<AuthSession> {
       signal: controller.signal
     });
 
+    if (response.status === 409) {
+      await new Promise((resolve) => setTimeout(resolve, 50));
+      const recoveredSession = await loadAuthSessionFromServer();
+      if (recoveredSession) {
+        return recoveredSession;
+      }
+    }
+
     if (!response.ok) {
       throw new Error('Unable to refresh authentication token');
     }

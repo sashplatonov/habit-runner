@@ -20,6 +20,7 @@ import com.sashplatonov.habbit.runner.auth.service.UserService;
 import com.sashplatonov.habbit.runner.auth.support.AuthCollaborators;
 import com.sashplatonov.habbit.runner.auth.support.AuthCookieBuilder;
 import com.sashplatonov.habbit.runner.auth.support.AuthSupport;
+import com.sashplatonov.habbit.runner.auth.support.RefreshTokenDigest;
 import com.sashplatonov.habbit.runner.auth.support.OAuthCallbackSession;
 import com.sashplatonov.habbit.runner.auth.support.OAuthHelper;
 import com.sashplatonov.habbit.runner.auth.support.OAuthSupport;
@@ -32,10 +33,16 @@ import org.junit.jupiter.api.Test;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
 @QuarkusTest
 class AuthRefreshTest extends AuthenticatedApiTestSupport {
@@ -52,16 +59,17 @@ class AuthRefreshTest extends AuthenticatedApiTestSupport {
   }
 
   private String insertRefreshToken(boolean revoked, Instant expiresAt) throws Exception {
+    var rawToken = UUID.randomUUID().toString();
     var rt = new RefreshTokenEntity();
     rt.setUserId(userId);
-    rt.setToken(UUID.randomUUID().toString());
+    rt.setTokenHash(RefreshTokenDigest.hash(rawToken));
     rt.setRevoked(revoked);
-    rt.setExpiry(expiresAt);
+    rt.setExpiresAt(expiresAt);
     inTransaction(() -> {
       rt.persist();
       return null;
     });
-    return rt.tokenValue();
+    return rawToken;
   }
 
   // ─── Refresh token tests ──────────────────────────────────────────────────
@@ -70,14 +78,37 @@ class AuthRefreshTest extends AuthenticatedApiTestSupport {
   void shouldReturnNewAccessTokenWhenRefreshTokenIsActive() throws Exception {
     var refreshToken = insertRefreshToken(false, Instant.now().plus(30, ChronoUnit.DAYS));
 
-    givenRefreshCookies(refreshToken)
+    var response = givenRefreshCookies(refreshToken)
         .when()
         .post("/auth/refresh")
         .then()
         .statusCode(200)
       .cookie(AuthCookieBuilder.CSRF_TOKEN_COOKIE, CSRF_TOKEN)
       .body("userId", equalTo(userId))
-      .body("email", equalTo(email));
+      .body("email", equalTo(email))
+      .extract()
+      .response();
+
+    assertNotEquals(refreshToken, response.getCookie(AuthCookieBuilder.REFRESH_TOKEN_COOKIE));
+  }
+
+  @Test
+  void shouldAllowOneWinnerWhenRefreshRequestsRace() throws Exception {
+    var refreshToken = insertRefreshToken(false, Instant.now().plus(30, ChronoUnit.DAYS));
+    var start = new CountDownLatch(1);
+
+    try (var executor = Executors.newFixedThreadPool(2)) {
+      var first = executor.submit(() -> refreshAfterSignal(refreshToken, start));
+      var second = executor.submit(() -> refreshAfterSignal(refreshToken, start));
+
+      start.countDown();
+      var statuses = List.of(
+          first.get(10, TimeUnit.SECONDS),
+          second.get(10, TimeUnit.SECONDS)
+      ).stream().sorted().toList();
+
+      assertEquals(List.of(200, 409), statuses);
+    }
   }
 
   @Test
@@ -153,5 +184,13 @@ class AuthRefreshTest extends AuthenticatedApiTestSupport {
         .cookie(AuthCookieBuilder.REFRESH_TOKEN_COOKIE, refreshToken)
         .cookie(AuthCookieBuilder.CSRF_TOKEN_COOKIE, CSRF_TOKEN)
         .header("X-CSRF-Token", CSRF_TOKEN);
+  }
+
+  private int refreshAfterSignal(String refreshToken, CountDownLatch start) throws InterruptedException {
+    start.await();
+    return givenRefreshCookies(refreshToken)
+        .when()
+        .post("/auth/refresh")
+        .statusCode();
   }
 }

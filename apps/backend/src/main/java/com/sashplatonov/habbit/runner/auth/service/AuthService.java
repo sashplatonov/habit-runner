@@ -6,12 +6,12 @@ import com.sashplatonov.habbit.runner.auth.security.CurrentUser;
 import com.sashplatonov.habbit.runner.auth.support.AuthCollaborators;
 import com.sashplatonov.habbit.runner.auth.support.OAuthCallbackSession;
 import com.sashplatonov.habbit.runner.auth.support.AuthSupport;
+import com.sashplatonov.habbit.runner.auth.support.AuthServiceSupport;
+import com.sashplatonov.habbit.runner.auth.support.RefreshTokenRejectedException;
 import com.sashplatonov.habbit.runner.auth.dto.TokenResponse;
 import com.sashplatonov.habbit.runner.infrastructure.http.TraceContextSupport;
 import com.sashplatonov.habbit.runner.metrics.instrumentation.ServiceMetric;
-import com.sashplatonov.habbit.runner.metrics.instrumentation.ServiceMetricsInstrumentation;
 import com.sashplatonov.habbit.runner.model.OAuthStateEntity;
-import com.sashplatonov.habbit.runner.model.UserEntity;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
@@ -20,6 +20,7 @@ import jakarta.ws.rs.NotAuthorizedException;
 import lombok.extern.slf4j.Slf4j;
 
 import java.time.Instant;
+import java.time.Duration;
 
 @ApplicationScoped
 @Slf4j
@@ -28,14 +29,10 @@ public class AuthService {
   protected final AuthConfig authConfig;
   protected final AuthCollaborators collaborators;
   protected final OAuthStateAccess oauthStateAccess;
-  protected final ServiceMetricsInstrumentation serviceMetricsInstrumentation;
-
-  AuthService() {
-    this(null, null, null, null);
-  }
+  protected final AuthServiceSupport authServiceSupport;
 
   protected AuthService(AuthConfig authConfig, AuthCollaborators collaborators) {
-    this(authConfig, collaborators, null, null);
+    this(authConfig, collaborators, null, (AuthServiceSupport) null);
   }
 
   @Inject
@@ -43,28 +40,45 @@ public class AuthService {
       AuthConfig authConfig,
       AuthCollaborators collaborators,
       OAuthStateAccess oauthStateAccess,
-      ServiceMetricsInstrumentation serviceMetricsInstrumentation
+      AuthServiceSupport authServiceSupport
   ) {
     this.authConfig = authConfig;
     this.collaborators = collaborators;
     this.oauthStateAccess = oauthStateAccess;
-    this.serviceMetricsInstrumentation = serviceMetricsInstrumentation;
+    this.authServiceSupport = authServiceSupport;
   }
 
   @Transactional
   public TokenResponse refreshToken(String token) {
     var record = collaborators.requireActiveRefreshToken(token);
-    var user = requireUserById(record.getUserId());
+    if (authServiceSupport != null) {
+      authServiceSupport.checkAccountRateLimit(
+          "auth:refresh",
+          record.getFamilyId(),
+          10,
+          Duration.ofMinutes(10)
+      );
+    }
+    var user = collaborators.findRequiredUserById(record.getUserId());
+    if (user == null) {
+      log.warn(
+          "Refresh token rejected: userId={}, traceId={}, reason=user-not-found",
+          record.getUserId(),
+          TraceContextSupport.traceIdOrUnknown()
+      );
+      throw new RefreshTokenRejectedException();
+    }
     var accessToken = collaborators.createAccessToken(user.getId(), user.getEmail(), authConfig.accessTokenTtlSeconds());
+    var refreshToken = collaborators.rotateRefreshToken(record, authConfig.refreshTokenDays());
     log.info(
         "Access token refreshed: userId={}, authMethod=refresh-token, traceId={}",
         record.getUserId(),
         TraceContextSupport.traceIdOrUnknown()
     );
-    if (serviceMetricsInstrumentation != null) {
-      serviceMetricsInstrumentation.record(ServiceMetric.AUTH_REFRESH_SUCCESS);
+    if (authServiceSupport != null) {
+      authServiceSupport.record(ServiceMetric.AUTH_REFRESH_SUCCESS);
     }
-    return new TokenResponse(accessToken, record.getToken(), authConfig.accessTokenTtlSeconds(), "Bearer");
+    return new TokenResponse(accessToken, refreshToken, authConfig.accessTokenTtlSeconds(), "Bearer");
   }
 
   @Transactional
@@ -87,7 +101,7 @@ public class AuthService {
     payload.state = state;
     payload.returnTo = collaborators.normalizeReturnTo(returnTo);
     payload.setExpiry(now().plusSeconds(600));
-    oauthStateAccess().save(payload);
+    oauthStateAccess.save(payload);
     return collaborators.buildAuthorizationUrl(state);
   }
 
@@ -99,7 +113,7 @@ public class AuthService {
   @Transactional
   public OAuthCallbackSession handleOAuthCallbackSession(String code, String state) {
     validateOAuthCallbackInput(code, state);
-    var stateEntity = oauthStateAccess().consume(state);
+    var stateEntity = oauthStateAccess.consume(state);
     if (stateEntity == null || stateEntity.isExpiredAt(now())) {
       log.warn(
           "event=oauth_callback_failed, provider=google, traceId={}, reason=invalid-or-expired-state",
@@ -108,6 +122,14 @@ public class AuthService {
       throw new NotAuthorizedException("Invalid or expired OAuth state");
     }
     var email = collaborators.exchangeCodeForEmail(code);
+    if (authServiceSupport != null) {
+      authServiceSupport.checkAccountRateLimit(
+          "auth:google:callback",
+          email,
+          10,
+          Duration.ofMinutes(10)
+      );
+    }
     var user = collaborators.findOrCreateUser(email);
     var session = collaborators.issueTokenPair(user, authConfig.accessTokenTtlSeconds(), authConfig.refreshTokenDays());
     log.info(
@@ -115,8 +137,8 @@ public class AuthService {
         user.getId(),
         TraceContextSupport.traceIdOrUnknown()
     );
-    if (serviceMetricsInstrumentation != null) {
-      serviceMetricsInstrumentation.record(ServiceMetric.AUTH_LOGIN_SUCCESS_GOOGLE);
+    if (authServiceSupport != null) {
+      authServiceSupport.record(ServiceMetric.AUTH_LOGIN_SUCCESS_GOOGLE);
     }
     return new OAuthCallbackSession(collaborators.buildCallbackRedirect(stateEntity.returnTo), session);
   }
@@ -133,27 +155,6 @@ public class AuthService {
       );
       throw new BadRequestException("Missing OAuth callback parameters");
     }
-  }
-
-  protected UserEntity requireUserById(String userId) {
-    var user = findRequiredUserById(userId);
-    if (user == null) {
-      log.warn(
-          "Refresh token rejected: userId={}, traceId={}, reason=user-not-found",
-          userId,
-          TraceContextSupport.traceIdOrUnknown()
-      );
-      throw new NotAuthorizedException("User no longer exists");
-    }
-    return user;
-  }
-
-  protected UserEntity findRequiredUserById(String userId) {
-    return collaborators.findRequiredUserById(userId);
-  }
-
-  protected OAuthStateAccess oauthStateAccess() {
-    return oauthStateAccess;
   }
 
   protected Instant now() {

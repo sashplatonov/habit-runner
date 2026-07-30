@@ -36,8 +36,10 @@ final class StubCollaborators extends AuthCollaborators {
   private String exchangedCode;
   private String oauthEmail = "oauth@example.test";
   private UserEntity oauthUser = AuthServiceUnitCoverageTest.user("oauth-user", "oauth@example.test");
+  private UserEntity userById;
   private TokenResponse issuedSession = new TokenResponse("access-1", "refresh-1", 3600, "Bearer");
   private String callbackRedirect = "https://app.example.test/callback";
+  private String rotatedRefreshToken = "rotated-refresh";
 
   StubCollaborators() {
     super(null, null, null, null);
@@ -71,12 +73,20 @@ final class StubCollaborators extends AuthCollaborators {
     this.oauthUser = oauthUser;
   }
 
+  void setUserById(UserEntity userById) {
+    this.userById = userById;
+  }
+
   void setIssuedSession(TokenResponse issuedSession) {
     this.issuedSession = issuedSession;
   }
 
   void setCallbackRedirect(String callbackRedirect) {
     this.callbackRedirect = callbackRedirect;
+  }
+
+  void setRotatedRefreshToken(String rotatedRefreshToken) {
+    this.rotatedRefreshToken = rotatedRefreshToken;
   }
 
   @Override
@@ -92,6 +102,11 @@ final class StubCollaborators extends AuthCollaborators {
   @Override
   public String createRefreshToken(String token, String userId, int days) {
     return "refresh::" + userId + "::" + days;
+  }
+
+  @Override
+  public String rotateRefreshToken(RefreshTokenEntity token, int days) {
+    return rotatedRefreshToken;
   }
 
   @Override
@@ -126,6 +141,11 @@ final class StubCollaborators extends AuthCollaborators {
   @Override
   public UserEntity findOrCreateUser(String email) {
     return oauthUser;
+  }
+
+  @Override
+  public UserEntity findRequiredUserById(String userId) {
+    return userById;
   }
 
   @Override

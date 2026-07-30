@@ -65,6 +65,13 @@ final class TestRefreshTokenService extends RefreshTokenService {
   }
 
   @Override
+  public void revoke(String token) {
+    if (recordByToken != null) {
+      recordByToken.revoke();
+    }
+  }
+
+  @Override
   protected Instant now() {
     return currentTime;
   }

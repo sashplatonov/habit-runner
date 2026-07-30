@@ -36,6 +36,10 @@ public final class TestHelpers {
     return response.getLocation();
   }
 
+  public static String headerOf(Response response, String name) {
+    return response.getHeaderString(name);
+  }
+
   public static HabitFrequency frequencyOf(HabitEntity habit) {
     return habit.getFrequency();
   }

@@ -39,7 +39,6 @@ public class AuthCollaborators {
     return refreshTokenService;
   }
 
-
   public UserService getUserService() {
     return userService;
   }
@@ -54,6 +53,10 @@ public class AuthCollaborators {
 
   public String createRefreshToken(String token, String userId, int days) {
     return refreshTokenService.create(token, userId, days);
+  }
+
+  public String rotateRefreshToken(RefreshTokenEntity token, int days) {
+    return refreshTokenService.rotate(token, days);
   }
 
   public CurrentUser verifyToken(String token) {

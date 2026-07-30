@@ -3,6 +3,7 @@ package com.sashplatonov.habbit.runner.model;
 import org.junit.jupiter.api.Test;
 
 import java.time.Instant;
+import com.sashplatonov.habbit.runner.auth.support.RefreshTokenDigest;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -57,29 +58,31 @@ class AuthModelEntityTest {
   @Test
   void shouldInitializeRefreshTokenDefaultsAndRemainActiveWhenNotRevoked() {
     var token = new RefreshTokenEntity();
-    token.setToken("refresh-token");
-    token.setExpiry(Instant.now().plusSeconds(60));
+    token.setTokenHash(RefreshTokenDigest.hash("refresh-token"));
+    token.setExpiresAt(Instant.now().plusSeconds(60));
 
     runPrePersist(token);
 
     assertNotNull(token.getId());
+    assertNotNull(token.getFamilyId());
     assertNotNull(token.getCreatedAt());
     assertNotNull(token.getUpdatedAt());
     assertEquals(token.getCreatedAt(), token.getUpdatedAt());
+    assertEquals(RefreshTokenDigest.hash("refresh-token"), token.getTokenHash());
     assertTrue(token.isActiveAt(Instant.now()));
   }
 
   @Test
   void shouldRevokeRefreshTokenAndExposeTokenValueWhenRequested() {
     var token = new RefreshTokenEntity();
-    token.setToken("refresh-token");
-    token.setExpiry(Instant.now().minusSeconds(60));
+    token.setTokenHash(RefreshTokenDigest.hash("refresh-token"));
+    token.setExpiresAt(Instant.now().minusSeconds(60));
 
     token.revoke();
 
     assertTrue(token.isRevoked());
     assertFalse(token.isActiveAt(Instant.now()));
-    assertEquals("refresh-token", token.tokenValue());
+    assertEquals(RefreshTokenDigest.hash("refresh-token"), token.getTokenHash());
   }
 
   @Test
@@ -118,6 +121,7 @@ class AuthModelEntityTest {
   private void runPrePersist(RefreshTokenEntity entity) {
     entity.prePersistAudit();
     entity.prePersistUuidId();
+    entity.prePersistRefreshToken();
   }
 
   private void runPrePersist(PushSubscriptionEntity entity) {

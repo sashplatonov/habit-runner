@@ -23,6 +23,7 @@ import com.sashplatonov.habbit.runner.auth.support.AuthSupport;
 import com.sashplatonov.habbit.runner.auth.support.OAuthCallbackSession;
 import com.sashplatonov.habbit.runner.auth.support.OAuthHelper;
 import com.sashplatonov.habbit.runner.auth.support.OAuthSupport;
+import com.sashplatonov.habbit.runner.auth.support.RefreshTokenDigest;
 import com.sashplatonov.habbit.runner.auth.support.ThemeCatalog;
 import com.sashplatonov.habbit.runner.auth.dto.UpdatePreferencesRequest;
 import com.sashplatonov.habbit.runner.model.RefreshTokenEntity;
@@ -37,6 +38,7 @@ import java.time.Instant;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -82,16 +84,59 @@ class AuthPersistenceCoverageTest extends AuthenticatedApiTestSupport {
     var createdToken = inTransaction(() -> refreshTokenService.create(token, user.getId(), 30));
     var active = inTransaction(() -> refreshTokenService.requireActive(token));
     inTransaction(() -> refreshTokenService.revoke(token));
-    RefreshTokenEntity stored = inTransaction(() -> {
-      var q = RefreshTokenEntity.<RefreshTokenEntity>find("token", token);
-      return q.firstResult();
-    });
+    RefreshTokenEntity stored = inTransaction(() -> RefreshTokenEntity.<RefreshTokenEntity>find(
+        "tokenHash",
+        RefreshTokenDigest.hash(token)
+    ).firstResult());
 
     assertEquals(token, createdToken);
-    assertEquals(token, active.getToken());
+    assertEquals(RefreshTokenDigest.hash(token), active.getTokenHash());
     assertEquals(user.getId(), stored.getUserId());
     assertTrue(stored.isRevoked());
     assertThrows(NotAuthorizedException.class, () -> inTransaction(() -> refreshTokenService.requireActive(token)));
+  }
+
+  @Test
+  void shouldRotateRefreshTokensAndRevokeTheFamilyThroughRealPersistenceService() throws Exception {
+    var user = inTransaction(() -> {
+      var entity = new UserEntity();
+      entity.setEmail(UUID.randomUUID() + "@example.test");
+      entity.setTheme("cloud");
+      entity.persist();
+      return entity;
+    });
+
+    var token = "refresh-" + UUID.randomUUID();
+    var createdToken = inTransaction(() -> refreshTokenService.create(token, user.getId(), 30));
+    var rotatedToken = inTransaction(() -> refreshTokenService.rotate(refreshTokenService.requireActive(token), 30));
+    RefreshTokenEntity oldStored = inTransaction(() -> RefreshTokenEntity.<RefreshTokenEntity>find(
+        "tokenHash",
+        RefreshTokenDigest.hash(token)
+    ).firstResult());
+    RefreshTokenEntity rotatedStored = inTransaction(() -> RefreshTokenEntity.<RefreshTokenEntity>find(
+        "tokenHash",
+        RefreshTokenDigest.hash(rotatedToken)
+    ).firstResult());
+
+    assertEquals(token, createdToken);
+    assertNotEquals(token, rotatedToken);
+    assertEquals(oldStored.getFamilyId(), rotatedStored.getFamilyId());
+    assertTrue(oldStored.isRevoked());
+    assertTrue(rotatedStored.isActiveAt(Instant.now()));
+
+    inTransaction(() -> refreshTokenService.revoke(rotatedToken));
+
+    RefreshTokenEntity revokedOld = inTransaction(() -> RefreshTokenEntity.<RefreshTokenEntity>find(
+        "tokenHash",
+        RefreshTokenDigest.hash(token)
+    ).firstResult());
+    RefreshTokenEntity revokedNew = inTransaction(() -> RefreshTokenEntity.<RefreshTokenEntity>find(
+        "tokenHash",
+        RefreshTokenDigest.hash(rotatedToken)
+    ).firstResult());
+
+    assertTrue(revokedOld.isRevoked());
+    assertTrue(revokedNew.isRevoked());
   }
 
   @Test
@@ -135,18 +180,22 @@ class AuthPersistenceCoverageTest extends AuthenticatedApiTestSupport {
 
     inTransaction(() -> {
       var entity = new RefreshTokenEntity();
-      entity.setToken(token);
+      entity.setTokenHash(RefreshTokenDigest.hash(token));
+      entity.setFamilyId("family-" + UUID.randomUUID());
       entity.setUserId(userId);
       entity.setRevoked(false);
       entity.setCreatedAt(initialCreatedAt);
       entity.setUpdatedAt(initialUpdatedAt);
-      entity.setExpiry(Instant.parse("2026-05-09T08:00:00Z"));
+      entity.setExpiresAt(Instant.parse("2026-05-09T08:00:00Z"));
       entity.persist();
     });
 
     inTransaction(() -> refreshTokenService.revoke(token));
 
-    RefreshTokenEntity stored = inTransaction(() -> RefreshTokenEntity.<RefreshTokenEntity>find("token", token).firstResult());
+    RefreshTokenEntity stored = inTransaction(() -> RefreshTokenEntity.<RefreshTokenEntity>find(
+        "tokenHash",
+        RefreshTokenDigest.hash(token)
+    ).firstResult());
 
     assertEquals(initialCreatedAt, stored.createdAtValue());
     assertTrue(stored.updatedAtValue().isAfter(initialUpdatedAt));

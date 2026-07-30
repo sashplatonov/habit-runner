@@ -7,6 +7,7 @@ public class RecordingRefreshTokenService extends RefreshTokenService {
   private RefreshTokenEntity requireActiveResult;
   private String revokedToken;
   private String createdToken;
+  private String rotatedToken = "rotated-refresh";
   private String createdUserId;
   private int createdDays;
 
@@ -20,6 +21,10 @@ public class RecordingRefreshTokenService extends RefreshTokenService {
 
   public String getCreatedToken() {
     return createdToken;
+  }
+
+  public void setRotatedToken(String rotatedToken) {
+    this.rotatedToken = rotatedToken;
   }
 
   public String getCreatedUserId() {
@@ -46,5 +51,10 @@ public class RecordingRefreshTokenService extends RefreshTokenService {
     createdUserId = userId;
     createdDays = refreshTokenDays;
     return "created-refresh";
+  }
+
+  @Override
+  public String rotate(RefreshTokenEntity activeToken, int refreshTokenDays) {
+    return rotatedToken;
   }
 }

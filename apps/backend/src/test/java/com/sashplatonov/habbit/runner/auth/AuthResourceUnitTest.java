@@ -19,6 +19,8 @@ import com.sashplatonov.habbit.runner.auth.service.RefreshTokenService;
 import com.sashplatonov.habbit.runner.auth.service.UserService;
 import com.sashplatonov.habbit.runner.auth.support.AuthCollaborators;
 import com.sashplatonov.habbit.runner.auth.support.AuthCookieBuilder;
+import com.sashplatonov.habbit.runner.auth.support.AuthRateLimitService;
+import com.sashplatonov.habbit.runner.auth.support.AuthResourceSupport;
 import com.sashplatonov.habbit.runner.auth.support.AuthSupport;
 import com.sashplatonov.habbit.runner.auth.support.OAuthCallbackSession;
 import com.sashplatonov.habbit.runner.auth.support.OAuthHelper;
@@ -81,7 +83,10 @@ class AuthResourceUnitTest {
         authService,
         preferencesService,
         currentUserContext,
-        new AuthCookieBuilder(TestConfigFactory.defaultAuthConfig())
+        new AuthResourceSupport(
+            new AuthCookieBuilder(TestConfigFactory.defaultAuthConfig()),
+            new AuthRateLimitService()
+        )
     );
   }
 

@@ -7,28 +7,28 @@ import {
   saveAuthSession
 } from '$lib/auth/session';
 
+beforeEach(() => {
+  const values = new Map<string, string>();
+  const storage: Storage = {
+    get length() {
+      return values.size;
+    },
+    clear: () => values.clear(),
+    getItem: (key) => values.get(key) ?? null,
+    key: (index) => [...values.keys()][index] ?? null,
+    removeItem: (key) => values.delete(key),
+    setItem: (key, value) => values.set(key, value)
+  };
+  Object.defineProperty(globalThis, 'localStorage', { configurable: true, value: storage });
+  document.cookie = 'habbit_runner_csrf_token=csrf-token; path=/';
+  vi.restoreAllMocks();
+});
+
+afterEach(() => {
+  vi.unstubAllGlobals();
+});
+
 describe('authenticatedFetch', () => {
-  beforeEach(() => {
-    const values = new Map<string, string>();
-    const storage: Storage = {
-      get length() {
-        return values.size;
-      },
-      clear: () => values.clear(),
-      getItem: (key) => values.get(key) ?? null,
-      key: (index) => [...values.keys()][index] ?? null,
-      removeItem: (key) => values.delete(key),
-      setItem: (key, value) => values.set(key, value)
-    };
-    Object.defineProperty(globalThis, 'localStorage', { configurable: true, value: storage });
-    document.cookie = 'habbit_runner_csrf_token=csrf-token; path=/';
-    vi.restoreAllMocks();
-  });
-
-  afterEach(() => {
-    vi.unstubAllGlobals();
-  });
-
   it('shares one refresh request across concurrent authentication failures', async () => {
     const protectedAttempts = new Map<string, number>();
     let refreshAttempts = 0;
@@ -123,6 +123,40 @@ describe('authenticatedFetch', () => {
     expect(secondResponse.status).toBe(200);
     expect(refreshAttempts).toBe(2);
     expect(protectedAttempts).toBe(3);
+  });
+
+  it('recovers when another browser context wins refresh-token rotation', async () => {
+    let protectedAttempts = 0;
+    let sessionAttempts = 0;
+
+    vi.stubGlobal('fetch', vi.fn(async (input: RequestInfo | URL) => {
+      const url = String(input);
+      if (url.endsWith('/auth/refresh')) {
+        return new Response(null, { status: 409 });
+      }
+      if (url.endsWith('/auth/session')) {
+        sessionAttempts += 1;
+        return new Response(JSON.stringify({
+          userId: 'user-1',
+          email: 'user@example.test'
+        }), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' }
+        });
+      }
+
+      protectedAttempts += 1;
+      return new Response(null, { status: protectedAttempts === 1 ? 403 : 200 });
+    }));
+
+    const response = await authenticatedFetch('/api/habits');
+
+    expect(response.status).toBe(200);
+    expect(sessionAttempts).toBe(1);
+    expect(readAuthSession()).toEqual({
+      userId: 'user-1',
+      email: 'user@example.test'
+    });
   });
 
   it('does not refresh when logout with a query string is rejected', async () => {

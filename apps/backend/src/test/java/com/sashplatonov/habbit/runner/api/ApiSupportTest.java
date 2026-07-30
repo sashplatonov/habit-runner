@@ -1,6 +1,11 @@
 package com.sashplatonov.habbit.runner.api;
 
 import com.sashplatonov.habbit.runner.support.TestHelpers;
+import com.sashplatonov.habbit.runner.auth.support.AuthRateLimitException;
+import com.sashplatonov.habbit.runner.auth.support.AuthCookieBuilder;
+import com.sashplatonov.habbit.runner.auth.support.RefreshTokenRejectedException;
+import com.sashplatonov.habbit.runner.auth.support.RefreshTokenRotationConflictException;
+import com.sashplatonov.habbit.runner.support.TestConfigFactory;
 import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.Validation;
 import jakarta.ws.rs.BadRequestException;
@@ -107,6 +112,46 @@ class ApiSupportTest {
   }
 
   @Test
+  void shouldMapRefreshRotationConflictWithoutLosingItsStatus() {
+    var response = new RefreshTokenRotationConflictExceptionMapper()
+        .toResponse(new RefreshTokenRotationConflictException());
+
+    assertEquals(409, TestHelpers.statusOf(response));
+    var error = TestHelpers.entityOf(response, ErrorResponse.class);
+    assertEquals("Conflict", error.title());
+    assertEquals("Refresh token rotation already completed", error.detail());
+    assertEquals("REFRESH_ROTATION_CONFLICT", error.errorCode());
+  }
+
+  @Test
+  void shouldMapRateLimitedRequestsWithRetryAfter() {
+    var response = new AuthRateLimitExceptionMapper().toResponse(new AuthRateLimitException(37));
+    assertEquals(429, TestHelpers.statusOf(response));
+    var mediaType = TestHelpers.mediaTypeOf(response);
+    assertEquals("application/json", mediaType.toString());
+    var error = TestHelpers.entityOf(response, ErrorResponse.class);
+    assertEquals(429, error.status());
+    assertEquals("AUTH_RATE_LIMITED", error.errorCode());
+    assertEquals("37", TestHelpers.headerOf(response, "Retry-After"));
+  }
+
+  @Test
+  void shouldClearAuthCookiesWhenRefreshTokenIsRejected() {
+    var mapper = new RefreshTokenRejectedExceptionMapper(
+        new AuthCookieBuilder(TestConfigFactory.defaultAuthConfig())
+    );
+
+    var response = mapper.toResponse(new RefreshTokenRejectedException());
+
+    assertEquals(403, TestHelpers.statusOf(response));
+    assertEquals(0, response.getCookies().get(AuthCookieBuilder.ACCESS_TOKEN_COOKIE).getMaxAge());
+    assertEquals(0, response.getCookies().get(AuthCookieBuilder.REFRESH_TOKEN_COOKIE).getMaxAge());
+    assertEquals(0, response.getCookies().get(AuthCookieBuilder.CSRF_TOKEN_COOKIE).getMaxAge());
+    var error = TestHelpers.entityOf(response, ErrorResponse.class);
+    assertEquals("AUTH_REQUIRED", error.errorCode());
+  }
+
+  @Test
   void shouldPreserveForbiddenStatusWhenExceptionHasCustomMessage() {
     var response = new GlobalExceptionMapper().toResponse(new ForbiddenException("Invalid CSRF token"));
 
@@ -151,6 +196,20 @@ class ApiSupportTest {
     } finally {
       MDC.remove("traceId");
     }
+  }
+
+  @Test
+  void shouldPreferProxyControlledRealIpAndUseTheLastForwardedHopAsFallback() {
+    var realIpHeaders = proxy(HttpHeaders.class, Map.of(
+        "getHeaderString:X-Real-IP", "203.0.113.8",
+        "getHeaderString:X-Forwarded-For", "198.51.100.7, 10.0.0.1"
+    ));
+    var forwardedHeaders = proxy(HttpHeaders.class, Map.of(
+        "getHeaderString:X-Forwarded-For", "198.51.100.7, 10.0.0.1"
+    ));
+
+    assertEquals("203.0.113.8", ClientIpResolver.resolve(realIpHeaders));
+    assertEquals("10.0.0.1", ClientIpResolver.resolve(forwardedHeaders));
   }
 
   private ConstraintViolationException blankValueViolation() {
