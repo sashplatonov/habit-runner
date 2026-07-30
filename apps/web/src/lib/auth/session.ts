@@ -171,7 +171,8 @@ export async function ensureAuthSession(): Promise<AuthSession | null> {
 }
 
 function shouldRetryWithRefresh(url: string): boolean {
-  return !url.endsWith('/auth/refresh') && !url.endsWith('/auth/logout') && !url.endsWith('/auth/login');
+  const path = url.split(/[?#]/, 1)[0];
+  return !path.endsWith('/auth/refresh') && !path.endsWith('/auth/logout');
 }
 
 export async function authenticatedFetch(input: string, init: RequestInit = {}): Promise<Response> {

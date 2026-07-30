@@ -45,27 +45,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class AuthServiceUnitCoverageTest {
 
   @Test
-  void shouldReturnSessionWhenLoginFindsExistingUser() {
-    var collaborators = new StubCollaborators();
-    var service = new TestAuthService(collaborators);
-    var user = user("user-1", "user@example.test");
-    service.setUserByEmail(user);
-
-    var tokenResponse = service.login(user.getEmail());
-
-    assertEquals("access::user-1::user@example.test::3600", tokenResponse.accessToken());
-    assertEquals("refresh::user-1::30", tokenResponse.refreshToken());
-    assertEquals(3600, tokenResponse.expiresIn());
-  }
-
-  @Test
-  void shouldRejectLoginWhenUserIsMissing() {
-    var service = new TestAuthService(new StubCollaborators());
-
-    assertThrows(NotAuthorizedException.class, () -> service.login("missing@example.test"));
-  }
-
-  @Test
   void shouldRefreshTokenWhenActiveRefreshRecordAndUserExist() {
     var collaborators = new StubCollaborators();
     var service = new TestAuthService(collaborators);

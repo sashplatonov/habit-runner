@@ -24,7 +24,6 @@ import com.sashplatonov.habbit.runner.auth.support.OAuthCallbackSession;
 import com.sashplatonov.habbit.runner.auth.support.OAuthHelper;
 import com.sashplatonov.habbit.runner.auth.support.OAuthSupport;
 import com.sashplatonov.habbit.runner.auth.support.ThemeCatalog;
-import com.sashplatonov.habbit.runner.auth.dto.LoginRequest;
 import com.sashplatonov.habbit.runner.auth.dto.AuthSessionResponse;
 import com.sashplatonov.habbit.runner.auth.dto.TokenResponse;
 // Preference DTOs moved to AuthPreferencesResourceUnitTest
@@ -41,7 +40,6 @@ class AuthResourceUnitTest {
   @Test
   void shouldDelegateAuthEndpointsToAuthService() {
     var authService = new ResourceAuthService();
-    authService.setLoginResponse(new TokenResponse("access-1", "refresh-1", 3600, "Bearer"));
     authService.setRefreshResponse(new TokenResponse("access-2", "refresh-2", 3600, "Bearer"));
     authService.setGoogleStartRedirect("https://accounts.example.test/start");
     authService.setGoogleCallbackRedirect(new OAuthCallbackSession(
@@ -50,16 +48,11 @@ class AuthResourceUnitTest {
     ));
     var resource = resource(authService, new ResourcePreferencesService(), new CurrentUserContext());
 
-    var login = resource.login(new LoginRequest("user@example.test"));
     var googleStart = resource.startGoogle("/dashboard");
     var googleCallback = resource.googleCallback("code-123", "state-123");
     var refresh = resource.refresh("refresh-1", "csrf-1");
     var logout = resource.logout("refresh-1");
 
-    assertEquals("user@example.test", authService.getLastLoginEmail());
-    var loginSession = TestHelpers.entityOf(login, AuthSessionResponse.class);
-    assertSession(loginSession, "user-1", "user@example.test");
-    assertCookiesPresent(login.getCookies());
     assertEquals("/dashboard", authService.getLastReturnTo());
     assertRedirect(googleStart, "https://accounts.example.test/start");
     assertEquals("code-123", authService.getLastCode());

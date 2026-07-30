@@ -52,24 +52,6 @@ public class AuthService {
   }
 
   @Transactional
-  public TokenResponse login(String email) {
-    var user = findUserByEmail(email);
-    if (user == null) {
-      log.warn("Login rejected: authMethod=email, traceId={}, reason=unknown-user", TraceContextSupport.traceIdOrUnknown());
-      if (serviceMetricsInstrumentation != null) {
-        serviceMetricsInstrumentation.record(ServiceMetric.AUTH_LOGIN_FAILURE_EMAIL);
-      }
-      throw new NotAuthorizedException("Unknown user");
-    }
-    var session = issueTokenPair(user);
-    log.info("Login succeeded: userId={}, authMethod=email, traceId={}", user.getId(), TraceContextSupport.traceIdOrUnknown());
-    if (serviceMetricsInstrumentation != null) {
-      serviceMetricsInstrumentation.record(ServiceMetric.AUTH_LOGIN_SUCCESS_EMAIL);
-    }
-    return session;
-  }
-
-  @Transactional
   public TokenResponse refreshToken(String token) {
     var record = collaborators.requireActiveRefreshToken(token);
     var user = requireUserById(record.getUserId());
@@ -143,16 +125,6 @@ public class AuthService {
     return authConfig.refreshTokenDays();
   }
 
-  private TokenResponse issueTokenPair(UserEntity user) {
-    var accessToken = collaborators.createAccessToken(user.getId(), user.getEmail(), authConfig.accessTokenTtlSeconds());
-    var refreshToken = collaborators.createRefreshToken(
-        AuthSupport.randomToken(32),
-        user.getId(),
-        authConfig.refreshTokenDays()
-    );
-    return new TokenResponse(accessToken, refreshToken, authConfig.accessTokenTtlSeconds(), "Bearer");
-  }
-
   private void validateOAuthCallbackInput(String code, String state) {
     if (code == null || code.isBlank() || state == null || state.isBlank()) {
       log.warn(
@@ -174,10 +146,6 @@ public class AuthService {
       throw new NotAuthorizedException("User no longer exists");
     }
     return user;
-  }
-
-  protected UserEntity findUserByEmail(String email) {
-    return collaborators.findUserByEmail(email);
   }
 
   protected UserEntity findRequiredUserById(String userId) {

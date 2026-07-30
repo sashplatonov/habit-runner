@@ -124,6 +124,7 @@ Optional feature variables:
 The backend exposes standard Quarkus health endpoints under `/q/health`.
 
 - Readiness includes lightweight config checks for auth and push notifications.
+- In production deployments, startup and readiness reject placeholder auth secrets, missing Google OAuth credentials, and localhost callback URLs.
 - Database connectivity is left to Quarkus/Agroal health and is not duplicated here.
 - The health checks are config-only and do not perform network calls or heavy queries.
 

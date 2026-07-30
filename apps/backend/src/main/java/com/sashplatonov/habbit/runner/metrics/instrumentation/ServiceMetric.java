@@ -36,26 +36,12 @@ public enum ServiceMetric {
       "success",
       "internal"
   )),
-  AUTH_LOGIN_SUCCESS_EMAIL(new MetricDefinition(
-      "habittracker.auth.login.success",
-      "Successful email logins",
-      "login",
-      "success",
-      "email"
-  )),
   AUTH_LOGIN_SUCCESS_GOOGLE(new MetricDefinition(
       "habittracker.auth.login.success",
       "Successful Google logins",
       "login",
       "success",
       "google"
-  )),
-  AUTH_LOGIN_FAILURE_EMAIL(new MetricDefinition(
-      "habittracker.auth.login.failure",
-      "Failed email logins",
-      "login",
-      "failure",
-      "email"
   )),
   AUTH_REFRESH_SUCCESS(new MetricDefinition(
       "habittracker.auth.refresh.success",

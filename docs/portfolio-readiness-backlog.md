@@ -79,6 +79,8 @@ docker compose --profile db config --quiet
 
 ### PR-001 — Purge the leaked VAPID private key
 
+**Status:** local history rewrite done; remote force-push and secret rotation remain external follow-ups.
+
 **Problem and evidence**
 
 - Git history contains a private VAPID key in the deleted `docs/WEB_PUSH_SETUP.md`.
@@ -136,6 +138,8 @@ git diff --check
 
 ### PR-002 — Remove the production email-only login bypass
 
+**Status:** done.
+
 **Problem and evidence**
 
 - `POST /auth/login` accepts only an email address.
@@ -184,6 +188,8 @@ cd apps/backend && ./mvnw -B -ntp verify
 
 ### PR-003 — Reject insecure production secrets
 
+**Status:** done.
+
 **Problem and evidence**
 
 - `docker-compose.yml` falls back to `AUTH_SECRET=change-me` and `DB_PASSWORD=password`.
@@ -220,8 +226,8 @@ cd apps/backend && ./mvnw -B -ntp verify
 ```bash
 rg -n 'change-me|DB_PASSWORD:-password|AUTH_SECRET:-' docker-compose*.yml apps/backend
 docker compose --env-file .env.example --profile db config --quiet
-docker compose -f docker-compose.yml -f docker-compose.local.yml --profile db config --quiet
-docker compose -f docker-compose.yml -f docker-compose.native.yml --profile db config --quiet
+docker compose --env-file .env.example -f docker-compose.yml -f docker-compose.local.yml --profile db config --quiet
+docker compose --env-file .env.example -f docker-compose.native.yml --profile db config --quiet
 cd apps/backend && ./mvnw -B -ntp test
 ```
 

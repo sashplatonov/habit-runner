@@ -1,6 +1,5 @@
 package com.sashplatonov.habbit.runner.health;
 
-import com.sashplatonov.habbit.runner.auth.config.AuthConfig;
 import org.eclipse.microprofile.health.HealthCheck;
 import org.eclipse.microprofile.health.HealthCheckResponse;
 import org.eclipse.microprofile.health.Readiness;
@@ -11,32 +10,18 @@ import jakarta.inject.Inject;
 @Readiness
 @ApplicationScoped
 public class AuthReadinessHealthCheck implements HealthCheck {
-  private final AuthConfig authConfig;
+  private final AuthConfigurationValidator validator;
 
   @Inject
-  public AuthReadinessHealthCheck(AuthConfig authConfig) {
-    this.authConfig = authConfig;
+  AuthReadinessHealthCheck(AuthConfigurationValidator validator) {
+    this.validator = validator;
   }
 
   @Override
   public HealthCheckResponse call() {
-    if (isBlank(authConfig.secret())) {
-      return down("auth.secret is missing");
-    }
-    if (authConfig.accessTokenTtlSeconds() < 1) {
-      return down("auth.access-token-ttl-seconds must be positive");
-    }
-    if (authConfig.refreshTokenDays() < 1) {
-      return down("auth.refresh-token-days must be positive");
-    }
-    if (isBlank(authConfig.apiPublicUrl())) {
-      return down("auth.api-public-url is missing");
-    }
-    if (isBlank(authConfig.oauthDefaultReturnTo())) {
-      return down("auth.oauth-default-return-to is missing");
-    }
-    if (isBlank(authConfig.issuer())) {
-      return down("auth.issuer is missing");
+    var validationError = validator.validate();
+    if (validationError.isPresent()) {
+      return down(validationError.orElseThrow());
     }
     return HealthCheckResponse.up("auth-config");
   }
@@ -46,9 +31,5 @@ public class AuthReadinessHealthCheck implements HealthCheck {
         .down()
         .withData("reason", message)
         .build();
-  }
-
-  private boolean isBlank(String value) {
-    return value == null || value.isBlank();
   }
 }

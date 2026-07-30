@@ -28,23 +28,17 @@ import com.sashplatonov.habbit.runner.auth.dto.TokenResponse;
 import com.sashplatonov.habbit.runner.support.TestConfigFactory;
 
 public class ResourceAuthService extends AuthService {
-  private String lastLoginEmail;
   private String lastRefreshToken;
   private String lastReturnTo;
   private String lastCode;
   private String lastState;
   private String revokedToken;
-  private TokenResponse loginResponse;
   private TokenResponse refreshResponse;
   private String googleStartRedirect;
   private OAuthCallbackSession googleCallbackRedirect;
 
   public ResourceAuthService() {
     super(TestConfigFactory.defaultAuthConfig(), new AuthCollaborators(null, null, null, null));
-  }
-
-  public void setLoginResponse(TokenResponse loginResponse) {
-    this.loginResponse = loginResponse;
   }
 
   public void setRefreshResponse(TokenResponse refreshResponse) {
@@ -57,10 +51,6 @@ public class ResourceAuthService extends AuthService {
 
   public void setGoogleCallbackRedirect(OAuthCallbackSession googleCallbackRedirect) {
     this.googleCallbackRedirect = googleCallbackRedirect;
-  }
-
-  public String getLastLoginEmail() {
-    return lastLoginEmail;
   }
 
   public String getLastRefreshToken() {
@@ -77,16 +67,6 @@ public class ResourceAuthService extends AuthService {
 
   public String getLastState() {
     return lastState;
-  }
-
-  public String getRevokedToken() {
-    return revokedToken;
-  }
-
-  @Override
-  public TokenResponse login(String email) {
-    lastLoginEmail = email;
-    return loginResponse;
   }
 
   @Override
@@ -111,6 +91,10 @@ public class ResourceAuthService extends AuthService {
   @Override
   public void revokeToken(String token) {
     revokedToken = token;
+  }
+
+  public String getRevokedToken() {
+    return revokedToken;
   }
 
   @Override

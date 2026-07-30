@@ -133,7 +133,6 @@ Auth endpoints:
 
 | Method | Path | Notes |
 |---|---|---|
-| `POST` | `/auth/login` | Lightweight email login path used for non-OAuth flows/tests |
 | `GET` | `/auth/google/start` | Starts Google OAuth |
 | `GET` | `/auth/google/callback` | Handles provider callback |
 | `POST` | `/auth/refresh` | Refreshes access token |

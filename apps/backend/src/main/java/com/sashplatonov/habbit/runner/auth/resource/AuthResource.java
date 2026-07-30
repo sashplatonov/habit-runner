@@ -9,7 +9,6 @@ import com.sashplatonov.habbit.runner.auth.support.AuthSupport;
 import com.sashplatonov.habbit.runner.api.ApiResponses;
 import com.sashplatonov.habbit.runner.api.ErrorResponse;
 import com.sashplatonov.habbit.runner.auth.dto.AuthSessionResponse;
-import com.sashplatonov.habbit.runner.auth.dto.LoginRequest;
 import com.sashplatonov.habbit.runner.auth.dto.TokenResponse;
 import com.sashplatonov.habbit.runner.auth.dto.UpdatePreferencesRequest;
 import com.sashplatonov.habbit.runner.auth.dto.UserPreferencesResponse;
@@ -51,23 +50,6 @@ public class AuthResource {
     this.preferencesService = preferencesService;
     this.currentUserContext = currentUserContext;
     this.authCookieBuilder = authCookieBuilder;
-  }
-
-  @POST
-  @Path("/login")
-  @Consumes(MediaType.APPLICATION_JSON)
-  @Operation(summary = "Create login session", description = "Authenticates the user and issues auth cookies.")
-  @APIResponses({
-      @APIResponse(responseCode = "200", description = "Authenticated session",
-          content = @Content(schema = @Schema(implementation = AuthSessionResponse.class))),
-      @APIResponse(responseCode = "400", description = "Validation failed",
-          content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
-      @APIResponse(responseCode = "403", description = "Authentication rejected",
-          content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
-  })
-  public Response login(@Valid @NotNull LoginRequest request) {
-    var session = authService.login(request.email());
-    return authenticatedSessionResponse(session, null);
   }
 
   @GET

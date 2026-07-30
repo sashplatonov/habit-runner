@@ -124,4 +124,14 @@ describe('authenticatedFetch', () => {
     expect(refreshAttempts).toBe(2);
     expect(protectedAttempts).toBe(3);
   });
+
+  it('does not refresh when logout with a query string is rejected', async () => {
+    const fetchMock = vi.fn(async () => new Response(null, { status: 403 }));
+    vi.stubGlobal('fetch', fetchMock);
+
+    const response = await authenticatedFetch('/auth/logout?all=true', { method: 'POST' });
+
+    expect(response.status).toBe(403);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
 });

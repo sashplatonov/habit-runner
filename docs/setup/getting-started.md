@@ -90,7 +90,7 @@ For the standard local setup, the backend dev profile now provides matching defa
 - `DB_PASSWORD=password`
 - `DB_SCHEMA=habbit_runner`
 - `API_PORT=3000`
-- `AUTH_SECRET=change-me`
+- `AUTH_SECRET=change-me` (development profile only)
 - `ACCESS_TOKEN_TTL_SECONDS=3600`
 - `REFRESH_TOKEN_EXPIRES_DAYS=30`
 - `JWT_ISSUER=habittracker-local`
@@ -98,7 +98,7 @@ For the standard local setup, the backend dev profile now provides matching defa
 - `OAUTH_DEFAULT_RETURN_TO=http://localhost:5173`
 - `CORS_ORIGINS=http://localhost:5173`
 
-DB/auth secrets should come from your shell environment or from a local env file that you source before starting Quarkus.
+DB/auth secrets should come from your shell environment or from a local env file that you source before starting Quarkus. The dev profile still has fallback values for convenience, but production startup and readiness reject placeholder auth secrets and localhost callback URLs.
 
 Repo helper for that flow:
 
@@ -150,6 +150,10 @@ Copy the root env template:
 ```bash
 cp .env.example .env
 ```
+
+The template contains local-only database and auth values. Replace both before
+using the stack in any shared or production environment. Compose refuses to
+resolve when either required value is blank or missing.
 
 For the full local stack with the bundled database:
 
@@ -231,8 +235,8 @@ Use matching origins:
 | `API_PUBLIC_URL` | Yes | Public backend URL used in OAuth redirects |
 | `OAUTH_DEFAULT_RETURN_TO` | Yes | Frontend URL after auth |
 | `CORS_ORIGINS` | Yes | Allowed frontend origins |
-| `GOOGLE_OAUTH_CLIENT_ID` | Optional | Needed for real Google sign-in |
-| `GOOGLE_OAUTH_CLIENT_SECRET` | Optional | Needed for real Google sign-in |
+| `GOOGLE_OAUTH_CLIENT_ID` | Optional | Needed for real Google sign-in; required for production startup and readiness |
+| `GOOGLE_OAUTH_CLIENT_SECRET` | Optional | Needed for real Google sign-in; required for production startup and readiness |
 | `VAPID_PUBLIC_KEY` | Optional | Browser push public key |
 | `VAPID_PRIVATE_KEY` | Optional | Browser push private key |
 | `VAPID_SUBJECT` | Optional | Web Push contact |

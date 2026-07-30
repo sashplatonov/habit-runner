@@ -63,7 +63,6 @@ Use these metric names for dashboard aggregation:
 - `habittracker.checkin.upserted`
 - `habittracker.checkin.deleted`
 - `habittracker.auth.login.success`
-- `habittracker.auth.login.failure`
 - `habittracker.auth.refresh.success`
 - `habittracker.oauth.google.exchange.latency`
 - `habittracker.oauth.google.failure`
@@ -99,7 +98,6 @@ Suggested breakdowns:
 
 ### Error rate
 
-- `habittracker.auth.login.failure`
 - `habittracker.oauth.google.failure`
 - HTTP 4xx/5xx telemetry for habit and checkin request paths when a dedicated failure counter is not emitted
 

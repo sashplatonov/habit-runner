@@ -29,7 +29,6 @@ import com.sashplatonov.habbit.runner.support.TestConfigFactory;
 import java.time.Instant;
 
 final class TestAuthService extends AuthService {
-  private UserEntity userByEmail;
   private UserEntity userById;
   private OAuthStateEntity oauthState;
   private StoredState storedState;
@@ -38,10 +37,6 @@ final class TestAuthService extends AuthService {
 
   TestAuthService(StubCollaborators collaborators) {
     super(TestConfigFactory.defaultAuthConfig(), collaborators);
-  }
-
-  void setUserByEmail(UserEntity userByEmail) {
-    this.userByEmail = userByEmail;
   }
 
   void setUserById(UserEntity userById) {
@@ -62,11 +57,6 @@ final class TestAuthService extends AuthService {
 
   void setCurrentTime(Instant currentTime) {
     this.currentTime = currentTime;
-  }
-
-  @Override
-  protected UserEntity findUserByEmail(String email) {
-    return userByEmail;
   }
 
   @Override
