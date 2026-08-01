@@ -1,39 +1,30 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-label="Habbit Runner preview image">
-  <defs>
-    <linearGradient id="bg" x1="0" x2="1" y1="0" y2="1">
-      <stop offset="0%" stop-color="#f8fafc"/>
-      <stop offset="100%" stop-color="#e0f2fe"/>
-    </linearGradient>
-    <linearGradient id="line" x1="0" x2="1" y1="0" y2="0">
-      <stop offset="0%" stop-color="#22d3ee"/>
-      <stop offset="100%" stop-color="#34d399"/>
-    </linearGradient>
-  </defs>
+  <rect width="1200" height="630" fill="#F8F4E9"/>
+  <rect x="72" y="72" width="448" height="486" rx="72" fill="#17362B"/>
+  <rect x="146" y="132" width="300" height="352" rx="52" fill="#F8F4E9"/>
+  <path d="M146 216H446" stroke="#DDE5DC" stroke-width="16"/>
+  <rect x="194" y="108" width="32" height="72" rx="16" fill="#F8F4E9"/>
+  <rect x="366" y="108" width="32" height="72" rx="16" fill="#F8F4E9"/>
+  <circle cx="204" cy="266" r="12" fill="#B9C8BC"/>
+  <circle cx="260" cy="266" r="12" fill="#B9C8BC"/>
+  <circle cx="316" cy="266" r="12" fill="#B9C8BC"/>
+  <circle cx="372" cy="266" r="12" fill="#B9C8BC"/>
+  <path d="M202 358L254 406L390 278" fill="none" stroke="#2E8B62" stroke-width="38" stroke-linecap="round" stroke-linejoin="round"/>
 
-  <rect width="1200" height="630" fill="url(#bg)"/>
+  <text x="592" y="154" fill="#2E8B62" font-family="Avenir Next, Segoe UI, sans-serif" font-size="24" font-weight="700" letter-spacing="0.16em">HABBIT RUNNER</text>
+  <text x="592" y="238" fill="#17362B" font-family="Avenir Next, Segoe UI, sans-serif" font-size="64" font-weight="700" letter-spacing="-0.04em">Small steps.</text>
+  <text x="592" y="310" fill="#17362B" font-family="Avenir Next, Segoe UI, sans-serif" font-size="64" font-weight="700" letter-spacing="-0.04em">Done daily.</text>
+  <text x="592" y="366" fill="#596A60" font-family="Avenir Next, Segoe UI, sans-serif" font-size="26">Track habits, check in, keep going.</text>
 
-  <rect x="76" y="72" width="1048" height="486" rx="24" fill="#ffffff" stroke="#cbd5e1" stroke-width="2"/>
-  <rect x="108" y="114" width="220" height="46" rx="12" fill="#ecfeff" stroke="#67e8f9"/>
-  <text x="136" y="143" font-family="Inter, Arial, sans-serif" font-size="22" font-weight="700" fill="#0f172a">Habbit Runner</text>
-
-  <text x="108" y="218" font-family="Inter, Arial, sans-serif" font-size="52" font-weight="800" fill="#0f172a">Build Better Daily Habits</text>
-  <text x="108" y="264" font-family="Inter, Arial, sans-serif" font-size="28" fill="#334155">Track habits, grow streaks, and review your progress.</text>
-
-  <rect x="108" y="310" width="300" height="190" rx="18" fill="#f8fafc" stroke="#cbd5e1"/>
-  <text x="132" y="344" font-family="Inter, Arial, sans-serif" font-size="20" font-weight="700" fill="#0f172a">Today</text>
-  <text x="132" y="386" font-family="JetBrains Mono, monospace" font-size="40" font-weight="700" fill="#0891b2">78%</text>
-  <rect x="132" y="408" width="240" height="12" rx="6" fill="#e2e8f0"/>
-  <rect x="132" y="408" width="188" height="12" rx="6" fill="url(#line)"/>
-  <text x="132" y="455" font-family="Inter, Arial, sans-serif" font-size="18" fill="#475569">7/9 habits done</text>
-
-  <rect x="438" y="310" width="300" height="190" rx="18" fill="#f8fafc" stroke="#cbd5e1"/>
-  <text x="462" y="344" font-family="Inter, Arial, sans-serif" font-size="20" font-weight="700" fill="#0f172a">Best Streak</text>
-  <text x="462" y="388" font-family="JetBrains Mono, monospace" font-size="40" font-weight="700" fill="#0ea5e9">21d</text>
-  <text x="462" y="430" font-family="Inter, Arial, sans-serif" font-size="18" fill="#475569">Consistency rate: 84%</text>
-
-  <rect x="768" y="310" width="300" height="190" rx="18" fill="#f8fafc" stroke="#cbd5e1"/>
-  <text x="792" y="344" font-family="Inter, Arial, sans-serif" font-size="20" font-weight="700" fill="#0f172a">Dashboard + Stats</text>
-  <text x="792" y="386" font-family="Inter, Arial, sans-serif" font-size="18" fill="#475569">Simple execution view</text>
-  <text x="792" y="418" font-family="Inter, Arial, sans-serif" font-size="18" fill="#475569">Habit editing workflow</text>
-  <text x="792" y="450" font-family="Inter, Arial, sans-serif" font-size="18" fill="#475569">Progress analytics</text>
+  <g aria-label="A seven day habit streak">
+    <text x="592" y="444" fill="#596A60" font-family="Avenir Next, Segoe UI, sans-serif" font-size="17" font-weight="700" letter-spacing="0.12em">YOUR WEEK</text>
+    <circle cx="610" cy="496" r="18" fill="#2E8B62"/>
+    <circle cx="666" cy="496" r="18" fill="#2E8B62"/>
+    <circle cx="722" cy="496" r="18" fill="#2E8B62"/>
+    <circle cx="778" cy="496" r="18" fill="#2E8B62"/>
+    <circle cx="834" cy="496" r="18" fill="#2E8B62"/>
+    <circle cx="890" cy="496" r="18" fill="#2E8B62"/>
+    <circle cx="946" cy="496" r="18" fill="none" stroke="#B9C8BC" stroke-width="5"/>
+    <path d="M602 496L608 502L619 489M658 496L664 502L675 489M714 496L720 502L731 489M770 496L776 502L787 489M826 496L832 502L843 489M882 496L888 502L899 489" stroke="#F8F4E9" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
 </svg>

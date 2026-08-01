@@ -1,5 +1,20 @@
 # AI Fix Log
 
+## 2026-08-01 — Habit icon and share graphic simplification
+
+- Replaced the app icon with a flat calendar-and-check mark that communicates a
+  completed daily habit without decorative or abstract elements.
+- Reworked the social/share graphic to use the same restrained visual language:
+  one calendar mark, a plain message, and a seven-day completion row.
+- Regenerated the PNG favicon and touch-icon assets from the updated SVG source
+  so browser tabs, install prompts, and home-screen icons stay visually aligned.
+
+Risk: this changes brand presentation only. Check the icon at small sizes and on
+light/dark browser chrome before publishing.
+
+Rollback: restore the previous SVG and PNG assets in `apps/web/static/` and
+`apps/web/public/`, then rebuild the web app.
+
 ## 2026-07-30 — PR-004 review follow-up
 
 - Added the missing `V9__secure_refresh_token_families.sql` migration and verified

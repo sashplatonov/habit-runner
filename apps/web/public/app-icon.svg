@@ -1,8 +1,12 @@
-<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <rect x="40" y="40" width="432" height="432" rx="112" fill="#0B100D"/>
-  <rect x="72" y="72" width="368" height="368" rx="92" fill="#18211B"/>
-  <path d="M136 318L204 250C214 240 230 240 240 250L280 290C291 301 308 301 319 290L378 231" stroke="#65D6A0" stroke-width="40" stroke-linecap="round" stroke-linejoin="round"/>
-  <circle cx="136" cy="318" r="22" fill="#4E63D8"/>
-  <circle cx="378" cy="231" r="26" fill="#F3F7F4"/>
-  <path d="M366 232L375 241L392 223" stroke="#172019" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"/>
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Habbit Runner app icon">
+  <rect width="512" height="512" rx="112" fill="#17362B"/>
+  <rect x="104" y="88" width="304" height="336" rx="52" fill="#F8F4E9"/>
+  <path d="M104 164H408" stroke="#DDE5DC" stroke-width="16"/>
+  <rect x="152" y="64" width="32" height="72" rx="16" fill="#F8F4E9"/>
+  <rect x="328" y="64" width="32" height="72" rx="16" fill="#F8F4E9"/>
+  <circle cx="168" cy="212" r="13" fill="#B9C8BC"/>
+  <circle cx="224" cy="212" r="13" fill="#B9C8BC"/>
+  <circle cx="280" cy="212" r="13" fill="#B9C8BC"/>
+  <circle cx="336" cy="212" r="13" fill="#B9C8BC"/>
+  <path d="M164 302L220 354L348 230" fill="none" stroke="#2E8B62" stroke-width="40" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>
