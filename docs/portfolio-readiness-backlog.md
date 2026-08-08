@@ -641,9 +641,8 @@ cd apps/web && npm run check:web
 
 ### PR-011 — Verify and bound collection-loading query cost
 
-**Status:** in progress; PostgreSQL query-count test and batch fetching are
-implemented, but the repository-wide PMD gate still reports pre-existing
-complexity/coupling findings that must be resolved before ✅.
+**Status:** ✅ completed and verified with the full OrbStack PostgreSQL Maven
+quality gate.
 
 **Problem and evidence**
 

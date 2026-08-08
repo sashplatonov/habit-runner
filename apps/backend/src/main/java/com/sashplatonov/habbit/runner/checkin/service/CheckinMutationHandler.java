@@ -58,33 +58,39 @@ public class CheckinMutationHandler {
       CheckinUpsertRequestDto request
   ) {
     var habit = habitRepository.findByIdAndUserId(habitId, userId);
-    if (habit == null) return CheckinResponses.notFound("Habit not found", "HABIT_NOT_FOUND");
-    return upsertForHabit(userId, habitId, date, request, habit);
+    if (habit == null) {
+      return CheckinResponses.notFound("Habit not found", "HABIT_NOT_FOUND");
+    }
+    var parsedDate = parseDate(date);
+    if (parsedDate == null) {
+      return CheckinResponses.invalidDate();
+    }
+    return upsertForHabit(parsedDate, request, habit);
   }
 
   private OperationResult<CheckinResponseDto> upsertForHabit(
-      String userId,
-      String habitId,
-      String date,
+      LocalDate date,
       CheckinUpsertRequestDto request,
       HabitEntity habit
   ) {
-    var parsedDate = parseDate(date);
-    if (parsedDate == null) return CheckinResponses.invalidDate();
     if (!Boolean.TRUE.equals(request.done())) {
-      return deleteCheckin(userId, habitId, parsedDate, habit);
+      return deleteCheckin(habit.getUserId(), habit.getId(), date, habit);
     }
-    var existing = checkinRepository.findByHabitDateAndUserId(habitId, parsedDate, userId);
-    if (existing != null && request.version() != null && request.version() != existing.getVersion()) {
+    var existing = checkinRepository.findByHabitDateAndUserId(habit.getId(), date, habit.getUserId());
+    if (hasVersionConflict(existing, request)) {
       return CheckinResponses.conflict();
     }
     var checkin = existing != null ? existing : new CheckinEntity();
     if (existing == null) {
-      checkin.setHabitId(habitId);
-      checkin.setUserId(userId);
-      checkin.setDate(parsedDate);
+      checkin.setHabitId(habit.getId());
+      checkin.setUserId(habit.getUserId());
+      checkin.setDate(date);
     }
     return saveDoneCheckin(checkin, request, habit, existing == null);
+  }
+
+  private boolean hasVersionConflict(CheckinEntity existing, CheckinUpsertRequestDto request) {
+    return existing != null && request.version() != null && request.version() != existing.getVersion();
   }
 
   private LocalDate parseDate(String value) {
@@ -143,7 +149,7 @@ public class CheckinMutationHandler {
     if (habit == null) {
       return CheckinResponses.notFound("Habit not found", "HABIT_NOT_FOUND");
     }
-    var parsedDate = CheckinDateSupport.parseDate(date);
+    var parsedDate = parseDate(date);
     if (parsedDate == null) {
       return CheckinResponses.invalidDateVoid();
     }

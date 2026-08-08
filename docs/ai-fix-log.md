@@ -33,8 +33,8 @@ concurrent creation semantics.
 - Added PostgreSQL Hibernate statistics coverage for a representative
   multi-habit list and batch fetching for element collections.
 - The focused integration test passes with six collection loads for three
-  habits; full verify remains blocked by PMD findings in existing service
-  complexity/coupling plus cursor error handling being refined.
+  habits; full OrbStack `verify -Ppostgres-it` now passes after simplifying
+  mutation flow and cursor parsing to satisfy Checkstyle and PMD.
 
 ## 2026-08-08 — PR-007 PostgreSQL integration suite
 
