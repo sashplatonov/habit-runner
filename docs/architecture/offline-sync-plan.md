@@ -1,89 +1,30 @@
-# Legacy Offline Sync Plan
+# Backend-first data path
 
-Status: retired. The product uses a backend-first write path. New habit writes target the concrete
-`POST /habits`, `PUT /habits/{id}`, `PATCH /habits/{id}/status`, and `DELETE /habits/{id}` endpoints.
-The outbox design below is historical context only and is not implemented or promised by the public product.
+This document replaces the retired offline-sync design notes. Habbit Runner's
+current product contract is intentionally simpler: authenticated habit and
+check-in state is owned by the Quarkus API and persisted in PostgreSQL.
 
-<a name="top"></a>
+## Current flow
 
-Detailed notes on the outbox pattern and conflict handling.
-
-## 📋 Table of Contents
-
-- [Outbox pattern](#outbox-pattern)
-- [Conflict resolution](#conflict-resolution)
-- [Failure modes](#failure-modes)
-
----
-
-## 📤 Outbox pattern <a name="outbox-pattern"></a>
-
-Every mutation (create, update, delete) follows this flow:
-
-```
-1. Write to IndexedDB immediately     ← UI is unblocked
-2. Write to outbox table              ← pending for push
-3. Sync engine picks up outbox        ← next cycle
-4. POST /sync/push                    ← server processes
-5. On success: delete from outbox
-6. On conflict: mark failed, schedule retry
+```text
+SvelteKit route -> typed API client -> authenticated Quarkus resource
+  -> application service and ownership checks -> Panache repository
+  -> PostgreSQL -> DTO response -> in-memory route/store state
 ```
 
-**Outbox entry shape:**
+The browser uses IndexedDB only for local reminder preferences and migrations.
+It does not queue habit mutations or reconcile an outbox. If the API is
+unavailable, the UI keeps the current state and shows a safe degraded/error
+message; it does not claim that a write succeeded.
 
-```typescript
-{
-  id: string           // local UUID
-  opId: string         // server-facing unique ID (idempotency key)
-  entity: 'habit' | 'checkin'
-  type: 'upsert' | 'delete'
-  payload: object      // full entity snapshot
-  clientTime: string   // ISO timestamp of mutation
-  status: 'pending' | 'failed'
-  retryCount: number
-  nextRetryAt: number  // ms timestamp
-  lastError?: string
-}
-```
+## Conflict behavior
 
-[↑ Back to top](#top)
+Habit and check-in mutations carry the server version where applicable. The API
+returns a documented conflict response when another device has already changed
+the record. The frontend preserves the user's edits and asks them to refresh.
 
----
+## Future work
 
-## ⚖️ Conflict resolution <a name="conflict-resolution"></a>
-
-**Strategy**: Last-write-wins on `updatedAt`.
-
-When the server receives a push op:
-1. Compare `payload.updatedAt` with the server record's `updatedAt`
-2. If payload is newer → apply, mark `applied`
-3. If server is newer → reject, return in `conflicts[]`
-
-Conflicted entries are retried from the client after re-pulling the latest server state. After re-pull the client has the newer server version, so the conflict loop terminates.
-
-**Version field**: each entity has a monotonically incrementing `version` for optimistic concurrency. The server bumps `version` on every write.
-
-[↑ Back to top](#top)
-
----
-
-## ⚠️ Failure modes <a name="failure-modes"></a>
-
-| Scenario | Behaviour |
-|---|---|
-| Network offline | Sync skipped, status = `offline`. Resumes on `online` event. |
-| Server 5xx | Sync cycle aborted, status = `error`. Retried next cycle (30s). |
-| Push conflict | Op marked `failed`, retried with exponential backoff. |
-| Duplicate push | `opId` deduplicated by `SyncOpLog`. Server returns `applied` for known opIds. |
-| Deleted entity on client, updated on server | Tombstone wins — server records the delete in `Tombstone` table; pull distributes it to other clients. |
-| Stale op log | `SyncOpLog` entries older than `SYNC_OP_LOG_RETENTION_DAYS` (default 30) are pruned by a nightly cron. |
-
-**Retry backoff:**
-
-```
-delay = min((retryCount + 1) * 1000ms, 7000ms)
-```
-
-After 6 retries the entry stays in `failed` state and is not retried automatically. A full re-sync (pull) on next app open usually resolves stale conflicts.
-
-[↑ Back to top](#top)
+Any offline mutation feature would require a new explicit contract for durable
+outbox storage, retries, idempotency, conflict resolution, and data export. It
+must not be inferred from the PWA application-shell cache.

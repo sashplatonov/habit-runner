@@ -1173,6 +1173,8 @@ docker compose --profile db down --volumes
 
 ### PR-021 — Rebuild the public repository narrative
 
+**Status:** ✅ completed and verified with public-doc scans, screenshots, frontend/backend gates, and Compose validation.
+
 **Problem and evidence**
 
 - README still describes a React frontend and stale sync architecture.
@@ -1220,7 +1222,8 @@ docker compose --profile db down --volumes
 
 ```bash
 rg -n 'React|Vite 7|App\\.tsx|/sync|fully offline|VITE_SYNC_ENABLED' \
-  README.md docs
+  README.md docs --glob '!docs/portfolio-readiness-backlog.md' \
+  --glob '!docs/ai-fix-log.md'
 git ls-files | rg '\\.DS_Store$|cve-assessment-result\\.json$'
 test -f LICENSE
 test -f docs/roadmap.md

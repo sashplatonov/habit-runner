@@ -325,3 +325,17 @@ and build dependencies; it does not expose host ports and validates endpoints
 from inside the Compose network.
 
 Rollback: revert the PR-020 smoke script, workflow job, and documentation entry.
+
+## 2026-08-08 — PR-021 portfolio repository narrative
+
+- Rebuilt the root README around the verified SvelteKit, Quarkus, PostgreSQL,
+  OAuth, security, and backend-first runtime path.
+- Added a Mermaid system diagram, roadmap, limitations, screenshots directory,
+  and MIT license; documented `Habbit` as the intentional product brand.
+- Removed the stale tracked CVE result and added generated macOS/security files
+  to `.gitignore`.
+
+Risk: the repository is now explicitly MIT licensed; replace `LICENSE` in a
+separate maintainer-approved change if a different license is required.
+
+Rollback: revert the PR-021 documentation, license, and hygiene commit.

@@ -1,89 +1,30 @@
-# Habbit Runner Docs
+# Habbit Runner Documentation
 
-<a name="top"></a>
+This hub links the current engineering and operations contracts. The product
+brand intentionally uses the spelling `Habbit Runner`.
 
-This hub tracks the current repository shape and links to the operator and engineering docs that still match the checkout.
+## Start here
 
-## 📋 Table of Contents
+- [Repository README](../README.md) — recruiter-first overview and verified commands
+- [Getting started](setup/getting-started.md) — local frontend, backend, OAuth, and Docker setup
+- [Architecture overview](architecture/overview.md) — runtime topology and backend-first data path
+- [API contract](architecture/api-contract.md) — generated OpenAPI and security behavior
+- [Roadmap](roadmap.md) — small, evidence-driven next steps
+- [Limitations](limitations.md) — explicit product and verification boundaries
 
-- [Project snapshot](#project-snapshot)
-- [Repo layout](#repo-layout)
-- [Doc index](#doc-index)
-- [When docs drift](#when-docs-drift)
+## Operations
 
----
+- [Reliability and rollout](operations/reliability-rollout.md)
+- [GitHub automation](operations/github-automation.md)
+- [Monitoring contract](monitoring/newrelic.md)
+- [Web Push setup](setup/web-push-setup.md)
 
-## 🎯 Project snapshot <a name="project-snapshot"></a>
+## Project records
 
-- Frontend: `apps/web` with Svelte 5, SvelteKit 2, Vite, PWA support, Dexie-based offline storage, and Vitest tests.
-- Shared web DTOs: `apps/web/packages/shared`.
-- Backend: `apps/backend` with Quarkus, Panache, Flyway, PostgreSQL, Google OAuth, sync, notifications, and metrics endpoints.
-- Deployment baseline: root `docker-compose.yml` plus optional `docker-compose.local.yml`.
-- Important repo fact: there is no root `package.json`; npm workflows run from `apps/web`.
+- [Portfolio backlog](portfolio-readiness-backlog.md)
+- [AI fix log](ai-fix-log.md)
+- [Quality health](project/health.md)
+- [UI/UX backlog](project/ui-ux-backlog.md)
 
-[↑ Back to top](#top)
-
----
-
-## 🗂️ Repo layout <a name="repo-layout"></a>
-
-```text
-docs/
-├── architecture/
-│   ├── overview.md
-│   └── offline-sync-plan.md
-├── features/
-│   └── chart-tooltips.md
-├── monitoring/
-│   └── newrelic.md
-├── operations/
-│   ├── github-automation.md
-│   └── reliability-rollout.md
-├── project/
-│   ├── health.md
-│   ├── habit-detail-edit-motivation-backlog.md
-│   ├── today-ui-motivation-themes-backlog.md
-│   └── ui-ux-backlog.md
-└── setup/
-    ├── getting-started.md
-    └── web-push-setup.md
-```
-
-[↑ Back to top](#top)
-
----
-
-## 📚 Doc index <a name="doc-index"></a>
-
-| Document | Use it for |
-|---|---|
-| [setup/getting-started.md](./setup/getting-started.md) | Local frontend/backend startup, env requirements, Docker profile usage |
-| [architecture/overview.md](./architecture/overview.md) | Current app topology, key modules, API surface |
-| [architecture/offline-sync-plan.md](./architecture/offline-sync-plan.md) | Offline sync model, outbox flow, conflict notes |
-| [architecture/habit-mutation-api.md](./architecture/habit-mutation-api.md) | Habit create/update/status/delete contracts and frontend reconciliation |
-| [setup/web-push-setup.md](./setup/web-push-setup.md) | VAPID setup, notification verification |
-| [operations/reliability-rollout.md](./operations/reliability-rollout.md) | Health checks, rollout checklist, rollback notes |
-| [operations/github-automation.md](./operations/github-automation.md) | Renovate state and manual security scan guidance |
-| [monitoring/newrelic.md](./monitoring/newrelic.md) | Canonical backend observability contract and New Relic rollout guardrails |
-| [project/health.md](./project/health.md) | Quality gates, tests, repo-level verification habits |
-| [project/ui-ux-backlog.md](./project/ui-ux-backlog.md) | UI/UX, maintainability, and UI-code quality backlog tied to current `apps/web` files |
-| [project/habit-detail-edit-motivation-backlog.md](./project/habit-detail-edit-motivation-backlog.md) | Habit detail, create/edit form, shared controls, and description overlay backlog |
-| [project/today-ui-motivation-themes-backlog.md](./project/today-ui-motivation-themes-backlog.md) | Today UI, mobile interaction, motivation, theme architecture, and verification evidence |
-| [features/chart-tooltips.md](./features/chart-tooltips.md) | UX contract for chart guide tooltips |
-
-[↑ Back to top](#top)
-
----
-
-## ⚠️ When docs drift <a name="when-docs-drift"></a>
-
-Update docs in the same change whenever you touch:
-- runtime paths such as `apps/backend` or `apps/web/packages/shared`;
-- startup commands or environment variable names;
-- Docker profile assumptions, especially the `db` profile;
-- auth, sync, notification, or monitoring endpoints;
-- user-facing build or verification commands.
-
-Historical references to `apps/backend`, root workspaces, Prisma, or NestJS describe an older structure and should be treated as stale unless explicitly restored in code.
-
-[↑ Back to top](#top)
+When runtime paths, environment variables, authentication, API contracts, or
+Compose behavior change, update the affected document in the same commit.

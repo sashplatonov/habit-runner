@@ -1,178 +1,107 @@
 # Habbit Runner
 
-<a name="top"></a>
+Habbit Runner is a server-backed habit tracker for people who want a small,
+reviewable daily system instead of a noisy productivity suite. The intentional
+`Habbit` spelling is the product brand; it is not a pending repository rename.
 
-Server-backed habit tracker with a SvelteKit PWA frontend, a Quarkus backend, Google OAuth, and optional web push notifications.
+The portfolio demonstrates a SvelteKit 2 / Svelte 5 PWA, a Quarkus 3 API, and
+PostgreSQL persistence with Google OAuth, optimistic locking, Flyway migrations,
+safe error contracts, and optional web push notifications.
 
-## 📋 Table of Contents
+## Verified product path
 
-- [Current state](#current-state)
-- [Repository layout](#repository-layout)
-- [Quick start](#quick-start)
-- [Docker stack](#docker-stack)
-- [Quality checks](#quality-checks)
-- [Documentation map](#documentation-map)
+```mermaid
+flowchart LR
+  browser[Browser / installed PWA]
+  web[SvelteKit static app + nginx]
+  api[Quarkus API]
+  auth[Google OAuth + httpOnly access cookie]
+  db[(PostgreSQL + Flyway)]
+  push[Optional Web Push]
 
----
+  browser --> web
+  web -->|/api proxy| api
+  api --> auth
+  api --> db
+  api --> push
+```
 
-## ✅ Current state <a name="current-state"></a>
+Habit and check-in mutations are backend-first: the authenticated API is the
+source of truth and writes are reflected in the UI only after the server accepts
+them. The PWA caches the application shell for repeat visits; it is not an
+offline habit data store.
 
-- Frontend lives in `apps/web` and owns the JavaScript workspace, shared package, tests, and build scripts.
-- Backend lives in `apps/backend` and is a Quarkus 3 + Flyway + PostgreSQL service.
-- There is no root `package.json` in the current checkout, so frontend npm commands run from `apps/web`.
-- Docker Compose is rooted at the repository root and uses `apps/web/Dockerfile` plus `apps/backend/Dockerfile`.
-- The local Compose database service is behind the `db` profile, so full local stack startup requires `--profile db`.
+## Architecture decisions
 
-[↑ Back to top](#top)
+- SvelteKit frontend with typed API clients and shared TypeScript DTOs.
+- Quarkus resources delegate to services and repositories; PostgreSQL schema
+  changes are managed by Flyway.
+- HttpOnly access/refresh cookies, CSRF protection for mutations, resource
+  ownership checks, and optimistic version conflicts protect account data.
+- Micrometer metrics export to New Relic is opt-in. Default tracing is request
+  correlation via `x-trace-id`; OpenTelemetry is disabled until an OTLP receiver
+  is configured and verified.
 
----
+## Ten-minute local startup
 
-## 🗂️ Repository layout <a name="repository-layout"></a>
+Prerequisites: Docker Compose, Node.js 22.12+, Java 25, and OrbStack or Docker.
+
+```bash
+cp .env.example .env
+docker compose --profile db up --build --wait
+```
+
+Open the web container through the deployment's published route. For a bounded
+local proof of image build, Flyway startup, readiness, and nginx `/api` routing:
+
+```bash
+DOCKER_HOST=unix:///Users/sash/.orbstack/run/docker.sock ./scripts/ci/smoke-stack.sh
+```
+
+The script always removes its containers and database volume. Host-based
+frontend/backend development and Google OAuth setup are documented in
+[`docs/setup/getting-started.md`](docs/setup/getting-started.md).
+
+## Quality evidence
+
+```bash
+cd apps/web && npm run check:web
+cd apps/web && npm test
+cd apps/web && npm run test:e2e
+cd apps/backend && ./mvnw -B -ntp verify
+cd apps/backend && ./mvnw -B -ntp verify -Ppostgres-it
+actionlint .github/workflows/quality.yml
+```
+
+CI also runs Trivy, OpenAPI snapshot drift protection, and the Docker contract
+smoke job. Browser E2E uses deterministic API stubs for repeatability; it does
+not replace real OAuth, cookie, PostgreSQL, or deployed-environment proof.
+
+## Repository map
 
 ```text
-habbit-runner/
-├── apps/
-│   ├── web/
-│   │   ├── src/                  React app, PWA, Dexie sync client
-│   │   ├── tests/                Vitest unit tests
-│   │   └── packages/shared/      Shared TypeScript DTOs used by the web app
-│   └── backend/
-│       ├── src/main/java/        Auth, sync, notification, metrics resources
-│       ├── src/main/resources/   Quarkus config, Flyway migrations, logback
-│       └── src/test/java/        Quarkus tests
-├── docs/                         Setup, architecture, operations, monitoring
-├── docker-compose.yml
-├── docker-compose.local.yml
-└── .env.example
+apps/web/                  SvelteKit UI, API clients, unit and Playwright tests
+apps/backend/              Quarkus resources, services, persistence, migrations
+spec/openapi/              Generated OpenAPI snapshot
+scripts/ci/                Local/CI quality automation
+docs/                      Architecture, setup, operations, roadmap, limitations
+docker-compose.yml         Portable JVM + PostgreSQL + nginx stack
 ```
 
-[↑ Back to top](#top)
+## Screenshots
 
----
+![Landing page on desktop](docs/assets/screenshots/landing-desktop.png)
 
-## 🚀 Quick start <a name="quick-start"></a>
+![Features page on mobile](docs/assets/screenshots/features-mobile.png)
 
-### Frontend
+## Further reading
 
-```bash
-cd apps/web
-npm install
-npm run dev
-```
-
-The Vite dev server uses `http://localhost:3000` by default unless `VITE_API_BASE_URL` or `API_TARGET_URL` says otherwise.
-
-### Backend
-
-```bash
-docker compose --profile db up -d db
-
-export GOOGLE_OAUTH_CLIENT_ID=...
-export GOOGLE_OAUTH_CLIENT_SECRET=...
-
-cd apps/backend
-./mvnw clean quarkus:dev
-```
-
-The backend `%dev` profile now supplies the standard local defaults automatically:
-
-- Postgres at `localhost:5432`
-- API at `http://localhost:3000`
-- frontend return origin `http://localhost:5173`
-- DB connection details and auth secrets can come from your shell env or a sourced local env file
-
-If you keep local secrets in the workspace root `.env`, `cd apps/web && npm run dev:server` loads that file before starting Quarkus, lets those env values override the `%dev` fallbacks, and on macOS tries Java 25 via `java_home` with an SDKMAN fallback. OAuth still requires the corresponding local redirect URI to be registered in Google Cloud.
-
-UI-only flows can run against the frontend without configuring push notifications; authenticated habit data still requires the backend.
-
-[↑ Back to top](#top)
-
----
-
-## 🐳 Docker stack <a name="docker-stack"></a>
-
-For a full local stack with the bundled Postgres container:
-
-```bash
-cp .env.example .env
-docker compose --profile db up --build
-```
-
-Notes:
-
-- `db` starts only when the `db` profile is enabled.
-- `api` is reachable externally through the `web` nginx proxy at `/api`.
-- `docker-compose.local.yml` exposes the web app on `http://localhost:5137`.
-- `docker compose up --build` without `--profile db` assumes `DB_*` points at an already available database.
-
-Local compose modes
--------------------
-
-This repository provides two compose entrypoints:
-
-- `docker-compose.yml` — default: builds and runs the JVM Quarkus runner (uses `apps/backend/Dockerfile`).
-- `docker-compose.native.yml` — native mode (uses `apps/backend/Dockerfile.native`).
-
-Run local JVM mode (build + start):
-
-```bash
-cp .env.example .env
-docker compose up -d --build --profile db
-```
-
-Run native mode (build + start):
-
-Note: native builds require a compatible Mandrel/GraalVM builder image. The default
-builder image is set via the `MANDREL_BUILDER_IMAGE` build-arg in `apps/backend/Dockerfile.native`. If your
-`pom.xml` Java version differs from the builder, set `MANDREL_BUILDER_IMAGE` accordingly before running.
-
-```bash
-cp .env.example .env
-# Optionally override builder image if needed (example Mandrel image targeting JDK 25):
-# export MANDREL_BUILDER_IMAGE=quay.io/quarkus/ubi9-quarkus-mandrel-builder-image:jdk-25
-docker compose -f docker-compose.native.yml up -d --build --profile db
-```
-
-[↑ Back to top](#top)
-
----
-
-## 🧪 Quality checks <a name="quality-checks"></a>
-
-Frontend:
-
-```bash
-cd apps/web
-npm run lint
-npm run test
-npm run build
-npm run check
-```
-
-Backend:
-
-```bash
-cd apps/backend
-./mvnw test
-./mvnw package -DskipTests
-```
-
-`apps/web/scripts/check-runtime-undefined.cjs` is part of the frontend lint/build path and fails early on high-risk TypeScript regressions in `apps/web/src`.
-
-[↑ Back to top](#top)
-
----
-
-## 📚 Documentation map <a name="documentation-map"></a>
-
-- Docs hub: [docs/README.md](./docs/README.md)
-- Architecture: [docs/architecture/overview.md](./docs/architecture/overview.md)
-- Setup: [docs/setup/getting-started.md](./docs/setup/getting-started.md)
-- Runtime architecture notes: [docs/architecture/overview.md](./docs/architecture/overview.md)
-- Web Push setup: [docs/setup/web-push-setup.md](./docs/setup/web-push-setup.md)
-- Reliability and rollout: [docs/operations/reliability-rollout.md](./docs/operations/reliability-rollout.md)
-- GitHub automation: [docs/operations/github-automation.md](./docs/operations/github-automation.md)
-- Monitoring: [docs/monitoring/newrelic.md](./docs/monitoring/newrelic.md) for the default backend observability contract
-- Project health: [docs/project/health.md](./docs/project/health.md)
-
-[↑ Back to top](#top)
+- [Architecture overview](docs/architecture/overview.md)
+- [API contract](docs/architecture/api-contract.md)
+- [Security and setup](docs/setup/getting-started.md)
+- [Monitoring contract](docs/monitoring/newrelic.md)
+- [GitHub automation](docs/operations/github-automation.md)
+- [Roadmap](docs/roadmap.md)
+- [Limitations](docs/limitations.md)
+- [Portfolio backlog](docs/portfolio-readiness-backlog.md)
+- [License](LICENSE)

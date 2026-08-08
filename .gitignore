@@ -69,3 +69,6 @@ archive/**/dist/
 archive/**/build/
 
 TODO.md
+# macOS and generated security artifacts
+.DS_Store
+cve-assessment-result.json
