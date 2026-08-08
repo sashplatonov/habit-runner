@@ -538,6 +538,9 @@ cd apps/web && npm run test -- habits.store.test.ts checkins.api.test.ts
 
 ### PR-009 — Enforce mutation validation and database invariants
 
+**Status:** ✅ completed and verified with backend compilation plus OrbStack
+PostgreSQL migration/integration tests.
+
 **Problem and evidence**
 
 - Update DTOs permit blank or oversized text and invalid numeric values.

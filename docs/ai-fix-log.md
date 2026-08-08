@@ -11,6 +11,14 @@
 Remaining PR-008 work: deterministic duplicate-request recovery tests and
 concurrent creation semantics.
 
+## 2026-08-08 — PR-009 mutation validation and invariants
+
+- Added Bean Validation bounds for habit names, descriptions, icons, targets,
+  collections, custom weekdays, and schedule frequencies.
+- Added PostgreSQL V11 checks for scalar targets, ordering, check-in counts,
+  weekday ranges, and schedule limits.
+- Verified compilation and the PostgreSQL integration suite through OrbStack.
+
 ## 2026-08-08 — PR-007 PostgreSQL integration suite
 
 - Added the `postgres-it` Maven profile with Quarkus Dev Services PostgreSQL 18,

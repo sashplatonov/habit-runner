@@ -13,13 +13,13 @@ import java.util.List;
 
 @Builder
 public record HabitCreateRequestDto(
-    @NotBlank String id,
-    @NotBlank String name,
-    String description,
+    @NotBlank @Size(max = 100) String id,
+    @NotBlank @Size(max = 200) String name,
+    @Size(max = 2000) String description,
     @NotNull HabitColor color,
-    @NotBlank String icon,
+    @NotBlank @Size(max = 100) String icon,
     @NotNull HabitFrequency frequency,
-    List<Integer> customDays,
+    @Size(max = 7) List<Integer> customDays,
     HabitScheduleDto schedule,
     @Positive int targetStreak,
     @Positive int dailyTarget,
@@ -29,6 +29,6 @@ public record HabitCreateRequestDto(
     String reminderTime,
     Boolean reminderEnabled,
     HabitType type,
-    List<String> freezeDays
+    @Size(max = 366) List<String> freezeDays
 ) {
 }
