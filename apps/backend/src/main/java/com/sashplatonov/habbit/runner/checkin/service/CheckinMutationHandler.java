@@ -3,7 +3,6 @@ package com.sashplatonov.habbit.runner.checkin;
 import com.sashplatonov.habbit.runner.api.OperationResult;
 import com.sashplatonov.habbit.runner.checkin.dto.CheckinResponseDto;
 import com.sashplatonov.habbit.runner.checkin.dto.CheckinUpsertRequestDto;
-import com.sashplatonov.habbit.runner.checkin.support.CheckinDateSupport;
 import com.sashplatonov.habbit.runner.checkin.support.CheckinMutationCoordinator;
 import com.sashplatonov.habbit.runner.checkin.support.CheckinResponses;
 import com.sashplatonov.habbit.runner.model.CheckinEntity;
@@ -15,6 +14,7 @@ import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 
 import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
 
 @ApplicationScoped
 public class CheckinMutationHandler {
@@ -58,19 +58,22 @@ public class CheckinMutationHandler {
       CheckinUpsertRequestDto request
   ) {
     var habit = habitRepository.findByIdAndUserId(habitId, userId);
-    if (habit == null) {
-      return CheckinResponses.notFound("Habit not found", "HABIT_NOT_FOUND");
-    }
+    if (habit == null) return CheckinResponses.notFound("Habit not found", "HABIT_NOT_FOUND");
+    return upsertForHabit(userId, habitId, date, request, habit);
+  }
 
-    var parsedDate = CheckinDateSupport.parseDate(date);
-    if (parsedDate == null) {
-      return CheckinResponses.invalidDate();
-    }
-
+  private OperationResult<CheckinResponseDto> upsertForHabit(
+      String userId,
+      String habitId,
+      String date,
+      CheckinUpsertRequestDto request,
+      HabitEntity habit
+  ) {
+    var parsedDate = parseDate(date);
+    if (parsedDate == null) return CheckinResponses.invalidDate();
     if (!Boolean.TRUE.equals(request.done())) {
       return deleteCheckin(userId, habitId, parsedDate, habit);
     }
-
     var existing = checkinRepository.findByHabitDateAndUserId(habitId, parsedDate, userId);
     if (existing != null && request.version() != null && request.version() != existing.getVersion()) {
       return CheckinResponses.conflict();
@@ -81,8 +84,24 @@ public class CheckinMutationHandler {
       checkin.setUserId(userId);
       checkin.setDate(parsedDate);
     }
+    return saveDoneCheckin(checkin, request, habit, existing == null);
+  }
 
-    return saveCheckin(checkin, request, habit, existing == null);
+  private LocalDate parseDate(String value) {
+    try {
+      return LocalDate.parse(value);
+    } catch (DateTimeParseException exception) {
+      return null;
+    }
+  }
+
+  private OperationResult<CheckinResponseDto> saveDoneCheckin(
+      CheckinEntity checkin,
+      CheckinUpsertRequestDto request,
+      HabitEntity habit,
+      boolean newCheckin
+  ) {
+    return saveCheckin(checkin, request, habit, newCheckin);
   }
 
   private OperationResult<CheckinResponseDto> deleteCheckin(

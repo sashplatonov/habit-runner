@@ -15,19 +15,25 @@ public final class CursorCodec {
   }
 
   public static Cursor decode(String encoded) {
-    byte[] decodedBytes;
-    try {
-      decodedBytes = Base64.getUrlDecoder().decode(encoded);
-    } catch (IllegalArgumentException exception) {
-      throw new IllegalArgumentException("Malformed cursor", exception);
-    }
-    var value = new String(decodedBytes, StandardCharsets.UTF_8);
+    var value = decodeValue(encoded);
     var separator = value.indexOf('\n');
     if (separator <= 0 || separator == value.length() - 1) {
       throw new IllegalArgumentException("Malformed cursor");
     }
+    return new Cursor(parseInstant(value.substring(0, separator)), value.substring(separator + 1));
+  }
+
+  private static String decodeValue(String encoded) {
     try {
-      return new Cursor(Instant.parse(value.substring(0, separator)), value.substring(separator + 1));
+      return new String(Base64.getUrlDecoder().decode(encoded), StandardCharsets.UTF_8);
+    } catch (IllegalArgumentException exception) {
+      throw new IllegalArgumentException("Malformed cursor", exception);
+    }
+  }
+
+  private static Instant parseInstant(String value) {
+    try {
+      return Instant.parse(value);
     } catch (DateTimeParseException exception) {
       throw new IllegalArgumentException("Malformed cursor", exception);
     }

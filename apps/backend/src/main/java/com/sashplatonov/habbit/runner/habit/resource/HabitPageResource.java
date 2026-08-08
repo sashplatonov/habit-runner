@@ -33,25 +33,43 @@ public class HabitPageResource extends AuthenticatedResourceSupport {
       @QueryParam("cursor") String cursor,
       @QueryParam("limit") Integer limit
   ) {
-    var boundedLimit = limit == null ? 50 : limit;
-    if (boundedLimit < 1 || boundedLimit > 199) {
-      throw new BadRequestException("limit must be between 1 and 199");
-    }
+    var boundedLimit = boundedLimit(limit);
     try {
-      var decoded = cursor == null || cursor.isBlank() ? null : CursorCodec.decode(cursor);
-      var entities = habitRepository.findSyncPageForUser(
-          currentUserId(),
-          decoded == null ? null : decoded.updatedAt(),
-          decoded == null ? null : decoded.id(),
-          boundedLimit
-      );
+      var entities = loadEntities(cursor, boundedLimit);
       var items = entities.stream().map(habitMapper::toResponse).toList();
-      var nextCursor = items.size() == boundedLimit && !entities.isEmpty()
-          ? CursorCodec.encode(entities.getLast().getUpdatedAt(), entities.getLast().getId())
-          : null;
-      return new CursorPageDto<>(items, nextCursor);
+      return new CursorPageDto<>(items, nextCursor(entities, items.size(), boundedLimit));
     } catch (IllegalArgumentException exception) {
       throw new BadRequestException("Invalid cursor", exception);
     }
+  }
+
+  private int boundedLimit(Integer limit) {
+    var value = limit == null ? 50 : limit;
+    if (value < 1 || value > 199) {
+      throw new BadRequestException("limit must be between 1 and 199");
+    }
+    return value;
+  }
+
+  private java.util.List<com.sashplatonov.habbit.runner.model.HabitEntity> loadEntities(String cursor, int limit) {
+    var decoded = cursor == null || cursor.isBlank() ? null : CursorCodec.decode(cursor);
+    return habitRepository.findSyncPageForUser(
+        currentUserId(),
+        decoded == null ? null : decoded.updatedAt(),
+        decoded == null ? null : decoded.id(),
+        limit
+    );
+  }
+
+  private String nextCursor(
+      java.util.List<com.sashplatonov.habbit.runner.model.HabitEntity> entities,
+      int itemCount,
+      int limit
+  ) {
+    if (itemCount != limit || entities.isEmpty()) {
+      return null;
+    }
+    var last = entities.getLast();
+    return CursorCodec.encode(last.getUpdatedAt(), last.getId());
   }
 }
