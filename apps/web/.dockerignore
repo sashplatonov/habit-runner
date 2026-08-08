@@ -16,3 +16,6 @@ packages/*/.turbo
 packages/*/.cache
 docs
 tmp
+test-results
+playwright-report
+blob-report

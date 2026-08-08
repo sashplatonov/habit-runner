@@ -31,6 +31,12 @@ packages/*/.env
 packages/*/.env.*
 apps/*/.env
 apps/*/.env.*
+test-results
+playwright-report
+blob-report
+apps/*/test-results
+apps/*/playwright-report
+apps/*/blob-report
 packages/*/.cache
 packages/*/.vite
 packages/*/build

@@ -355,3 +355,16 @@ Risk: dependency upgrades are covered by the full local quality gates; the
 remaining advisory requires an upstream SvelteKit/cookie dependency update.
 
 Rollback: revert the PR-022 dependency commit.
+
+## 2026-08-08 — Ignore browser-test artifacts
+
+- Added `test-results`, `playwright-report`, and `blob-report` patterns to Git,
+  Codex, Claude, and Docker ignore files, including the `apps/web` build
+  context used by Compose.
+- Kept CI artifact upload paths unchanged so failed Playwright diagnostics are
+  still retained by GitHub Actions without entering commits or Docker images.
+
+Risk: local browser-test diagnostics are intentionally not available in the
+repository or image build context; CI retains its configured failure artifacts.
+
+Rollback: revert the ignore-file follow-up commit.

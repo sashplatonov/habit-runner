@@ -27,6 +27,14 @@ backups/
 .svelte-kit/
 apps/*/.svelte-kit/
 
+# Playwright and browser-test artifacts
+test-results/
+playwright-report/
+blob-report/
+apps/*/test-results/
+apps/*/playwright-report/
+apps/*/blob-report/
+
 # Archive folder - ignore generated artifacts inside archived legacy frontend
 archive/**/node_modules/
 archive/**/dist/
