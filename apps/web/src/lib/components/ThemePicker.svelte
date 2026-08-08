@@ -55,10 +55,10 @@
             class={`group flex min-h-14 items-center gap-3 rounded-[1.15rem] border px-3 py-2.5 text-left transition-colors ${theme === candidate.id ? 'border-accent/35 bg-accent/10 text-foreground shadow-[0_12px_24px_rgba(15,23,42,0.08)]' : 'border-border bg-bg-secondary/80 text-muted hover:border-border-hover hover:text-foreground'}`}
             aria-pressed={theme === candidate.id}
             aria-label={`Switch to ${candidate.name} theme`}
-            onclick={() => {
-              void themeStore.recordThemeSelection(candidate.id);
-              void onThemeChange(candidate.id);
-              void onChoose?.();
+            onclick={async () => {
+              await themeStore.recordThemeSelection(candidate.id);
+              await onThemeChange(candidate.id);
+              await onChoose?.();
             }}
           >
             <span

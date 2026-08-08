@@ -17,7 +17,7 @@ describe('dashboard preferences', () => {
       filter: 'unknown',
       sort: 'unknown',
       density: 'unknown',
-      tags: [' health ', '', 12],
+      tags: [' health ', 'health', '', 'x'.repeat(41), 12],
       themeUsage: { cloud: 4, broken: -1 }
     });
 

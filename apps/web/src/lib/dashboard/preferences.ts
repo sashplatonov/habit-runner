@@ -46,7 +46,8 @@ export function normalizeDashboardPreferences(value: unknown): DashboardPreferen
     tags: tags
       .filter((tag): tag is string => typeof tag === 'string')
       .map((tag) => tag.trim())
-      .filter(Boolean)
+      .filter((tag) => tag.length > 0 && tag.length <= 40)
+      .filter((tag, index, allTags) => allTags.indexOf(tag) === index)
       .slice(0, 50),
     sort: sort === 'smart' ? 'smart' : 'custom',
     density: density === 'compact' ? 'compact' : 'comfortable',

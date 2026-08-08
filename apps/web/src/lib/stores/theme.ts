@@ -103,20 +103,31 @@ export function createThemeStore(): ThemeStore {
   );
   let initialized = false;
   let hydrating = false;
+  let preferencePersistQueue = Promise.resolve();
 
-  async function persistPreferences() {
+  function persistPreferences(): Promise<void> {
     const state = get(store);
     if (!state.isAuthenticated || !state.serverSyncReady) {
-      return;
+      return Promise.resolve();
     }
 
-    try {
-      await saveUserPreferences({ theme: state.theme, timezone: state.timezone, dashboard: state.dashboard });
-    } catch (error) {
-      logClientError('theme.persist_failed', 'Failed to persist user theme preferences', {
-        error: error instanceof Error ? error.message : String(error)
+    const preferences = {
+      theme: state.theme,
+      timezone: state.timezone,
+      dashboard: state.dashboard
+    };
+    preferencePersistQueue = preferencePersistQueue
+      .catch(() => undefined)
+      .then(async () => {
+        try {
+          await saveUserPreferences(preferences);
+        } catch (error) {
+          logClientError('theme.persist_failed', 'Failed to persist user theme preferences', {
+            error: error instanceof Error ? error.message : String(error)
+          });
+        }
       });
-    }
+    return preferencePersistQueue;
   }
 
   async function hydrateFromServer() {
