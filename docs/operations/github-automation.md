@@ -43,6 +43,25 @@ Local smoke verification:
 ./scripts/ci/smoke-stack.sh
 ```
 
+## Dashboard delivery contract
+
+Dashboard view preferences are account-owned through `GET/PUT /auth/preferences`.
+The Flyway change is additive; rollback is to deploy the previous application
+version and, if required, remove only the new `dashboardPreferences` column in a
+forward migration after confirming no newer application is still writing it.
+Legacy clients that send only theme and timezone continue to receive the existing
+defaults. Search text remains URL state and is intentionally not persisted.
+
+Momentum visuals are derived at read time: a flame means a current scheduled
+streak, while an ice state means a positive, non-archived habit has missed at least
+seven scheduled non-frozen days since its latest successful completion. Frozen,
+negative, archived, and not-yet-due habits do not receive ice. This policy is
+shared by dashboard cards and compact rows.
+
+The path matrix above and the backlog document are the source of truth for CI
+lane selection. Local runs prove build and behavior only; GitHub Actions minute
+savings require fresh pushed workflow runs and their URLs/durations.
+
 [↑ Back to top](#top)
 
 ---

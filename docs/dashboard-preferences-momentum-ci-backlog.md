@@ -27,7 +27,7 @@ Authenticated users keep their dashboard presentation after signing in again or 
 
 ## P0-1: Persist and validate account-level dashboard preferences
 
-**Status:** ✅ Completed  
+**Status:** ✅ Completed
 **Priority:** P0  
 **Depends on:** -
 
@@ -306,7 +306,7 @@ git commit -m "ci(quality): skip unrelated validation lanes"
 
 ## P2-6: Document rollout and run the cross-layer release gate
 
-**Status:** ⬜ Not started  
+**Status:** ✅ Completed
 **Priority:** P2  
 **Depends on:** P0-1, P1-2, P1-4, P2-5
 
@@ -322,7 +322,7 @@ Keep implementation documentation in the existing docs hub and operational workf
 
 - Modify `docs/README.md`.
 - Modify `docs/operations/github-automation.md`.
-- Modify `docs/ai-fix-log.md`.
+- Record the rollout in `docs/operations/github-automation.md`; the legacy `docs/ai-fix-log.md` file is not present in this checkout.
 - Modify `docs/dashboard-preferences-momentum-ci-backlog.md` to mark only committed, verified tasks as completed.
 
 ### Work
@@ -350,9 +350,15 @@ git diff --check
 git status --short
 ```
 
+Recorded on 2026-08-08: frontend unit tests passed (189 tests), frontend
+`npm run check` passed, backend tests passed (172 tests), Playwright passed on
+desktop and compact-mobile (8 tests), `actionlint` passed, Compose config and
+Compose smoke passed. No remote GitHub Actions run was available, so minute
+savings remain an unmeasured hypothesis until a pushed workflow run is compared.
+
 ### Commit
 
 ```bash
-git add docs/README.md docs/operations/github-automation.md docs/ai-fix-log.md docs/dashboard-preferences-momentum-ci-backlog.md
+git add docs/README.md docs/operations/github-automation.md docs/dashboard-preferences-momentum-ci-backlog.md
 git commit -m "docs(rollout): record dashboard preference delivery"
 ```

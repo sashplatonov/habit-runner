@@ -10,6 +10,7 @@ brand intentionally uses the spelling `Habbit Runner`.
 - [Architecture overview](architecture/overview.md) — runtime topology and backend-first data path
 - [API contract](architecture/api-contract.md) — generated OpenAPI and security behavior
 - [Roadmap](roadmap.md) — small, evidence-driven next steps
+- [Dashboard preferences and momentum backlog](dashboard-preferences-momentum-ci-backlog.md) — completed persistence, visual signals, and CI delivery record
 - [Limitations](limitations.md) — explicit product and verification boundaries
 
 ## Operations
@@ -22,7 +23,7 @@ brand intentionally uses the spelling `Habbit Runner`.
 ## Project records
 
 - [Portfolio backlog](portfolio-readiness-backlog.md)
-- [AI fix log](ai-fix-log.md)
+- [AI fix log](ai-fix-log.md) (legacy link; file is not present in this checkout)
 - [Quality health](project/health.md)
 - [UI/UX backlog](project/ui-ux-backlog.md)
 
