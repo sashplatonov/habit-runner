@@ -116,7 +116,13 @@ test.describe.serial('critical habit journey', () => {
         await route.fulfill({
           status: 400,
           contentType: 'application/json',
-          body: JSON.stringify({ status: 400, detail: 'create.name must not be blank', errorCode: 'VALIDATION_FAILED' })
+          body: JSON.stringify({
+            type: 'https://habbit-runner.dev/errors/validation',
+            title: 'Constraint Violation',
+            status: 400,
+            detail: 'create.name must not be blank',
+            errorCode: 'VALIDATION_FAILED'
+          })
         });
         return;
       }
@@ -137,7 +143,13 @@ test.describe.serial('critical habit journey', () => {
         await route.fulfill({
           status: 409,
           contentType: 'application/json',
-          body: JSON.stringify({ status: 409, detail: 'stale version', errorCode: 'RESOURCE_VERSION_CONFLICT' })
+          body: JSON.stringify({
+            type: 'https://habbit-runner.dev/errors/conflict',
+            title: 'Conflict',
+            status: 409,
+            detail: 'stale version',
+            errorCode: 'RESOURCE_VERSION_CONFLICT'
+          })
         });
         return;
       }

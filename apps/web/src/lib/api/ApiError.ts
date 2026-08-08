@@ -36,6 +36,19 @@ function parseFieldErrors(detail: string | undefined): ApiFieldErrors {
   );
 }
 
+function isDocumentedErrorResponse(payload: unknown, responseStatus: number): payload is Record<string, unknown> {
+  if (typeof payload !== 'object' || payload === null) {
+    return false;
+  }
+
+  const record = payload as Record<string, unknown>;
+  return typeof record['type'] === 'string'
+    && typeof record['title'] === 'string'
+    && record['status'] === responseStatus
+    && typeof record['detail'] === 'string'
+    && typeof record['errorCode'] === 'string';
+}
+
 export class ApiError extends Error {
   readonly status: number;
   readonly code: string | null;
@@ -44,7 +57,9 @@ export class ApiError extends Error {
   readonly userMessage: string;
 
   constructor(status: number, options: { code?: string | null; detail?: string | null } = {}) {
-    const fieldErrors = parseFieldErrors(options.detail ?? undefined);
+    const fieldErrors = status === 400 && options.code === 'VALIDATION_FAILED'
+      ? parseFieldErrors(options.detail ?? undefined)
+      : {};
     super(safeStatusMessage(status));
     this.name = 'ApiError';
     this.status = status;
@@ -64,8 +79,8 @@ export class ApiError extends Error {
       payload = null;
     }
 
-    if (typeof payload === 'object' && payload !== null) {
-      const record = payload as Record<string, unknown>;
+    if (isDocumentedErrorResponse(payload, response.status)) {
+      const record = payload;
       return new ApiError(response.status, {
         code: typeof record['errorCode'] === 'string' ? record['errorCode'] : null,
         detail: typeof record['detail'] === 'string' ? record['detail'] : null
