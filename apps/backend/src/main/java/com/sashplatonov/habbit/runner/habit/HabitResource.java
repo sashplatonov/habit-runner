@@ -42,7 +42,7 @@ import java.util.List;
 public class HabitResource extends AuthenticatedResourceSupport {
   private final HabitService habitService;
 
-  public HabitResource(HabitService habitService, CurrentUserContext currentUserContext) {
+  HabitResource(HabitService habitService, CurrentUserContext currentUserContext) {
     super(currentUserContext);
     this.habitService = habitService;
   }

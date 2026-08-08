@@ -47,7 +47,7 @@ public class AuthResource {
   @Context
   HttpHeaders headers;
 
-  public AuthResource(
+  AuthResource(
       AuthService authService,
       PreferencesService preferencesService,
       CurrentUserContext currentUserContext,

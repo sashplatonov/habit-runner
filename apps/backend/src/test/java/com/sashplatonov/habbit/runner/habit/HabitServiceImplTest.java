@@ -1,4 +1,4 @@
-package com.sashplatonov.habbit.runner.habit.service;
+package com.sashplatonov.habbit.runner.habit;
 
 import com.sashplatonov.habbit.runner.api.OperationFailure;
 import com.sashplatonov.habbit.runner.api.OperationResult;

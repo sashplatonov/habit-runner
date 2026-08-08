@@ -38,7 +38,7 @@ import java.util.List;
 public class CheckinResource extends AuthenticatedResourceSupport {
   private final CheckinService checkinService;
 
-  public CheckinResource(CheckinService checkinService, CurrentUserContext currentUserContext) {
+  CheckinResource(CheckinService checkinService, CurrentUserContext currentUserContext) {
     super(currentUserContext);
     this.checkinService = checkinService;
   }

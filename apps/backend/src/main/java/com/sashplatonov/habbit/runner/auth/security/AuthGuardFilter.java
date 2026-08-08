@@ -19,7 +19,7 @@ public class AuthGuardFilter implements ContainerRequestFilter {
   final AuthService authService;
   final CurrentUserContext currentUserContext;
 
-  public AuthGuardFilter(AuthService authService, CurrentUserContext currentUserContext) {
+  AuthGuardFilter(AuthService authService, CurrentUserContext currentUserContext) {
     this.authService = authService;
     this.currentUserContext = currentUserContext;
   }

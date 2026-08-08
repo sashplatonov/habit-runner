@@ -15,7 +15,7 @@ public class CheckinServiceImpl implements CheckinService {
   private final CheckinMutationHandler checkinMutationHandler;
 
   @Inject
-  public CheckinServiceImpl(
+  CheckinServiceImpl(
       CheckinQueryHandler checkinQueryHandler,
       CheckinMutationHandler checkinMutationHandler
   ) {

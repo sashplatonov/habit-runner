@@ -1,4 +1,4 @@
-package com.sashplatonov.habbit.runner.checkin.service;
+package com.sashplatonov.habbit.runner.checkin;
 
 import com.sashplatonov.habbit.runner.api.OperationFailure;
 import com.sashplatonov.habbit.runner.api.OperationSuccess;

@@ -25,7 +25,7 @@ public class NotificationServiceImpl implements NotificationService {
   private final PushSubscriptionRepository pushSubscriptionRepository;
   private final ServiceMetricsInstrumentation serviceMetricsInstrumentation;
 
-  public NotificationServiceImpl(
+  NotificationServiceImpl(
       NotificationConfig notificationConfig,
       PushSubscriptionRepository pushSubscriptionRepository
   ) {
@@ -33,7 +33,7 @@ public class NotificationServiceImpl implements NotificationService {
   }
 
   @Inject
-  public NotificationServiceImpl(
+  NotificationServiceImpl(
       NotificationConfig notificationConfig,
       PushSubscriptionRepository pushSubscriptionRepository,
       ServiceMetricsInstrumentation serviceMetricsInstrumentation

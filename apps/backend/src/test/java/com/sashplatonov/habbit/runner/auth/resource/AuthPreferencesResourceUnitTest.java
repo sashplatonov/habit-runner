@@ -1,5 +1,7 @@
-package com.sashplatonov.habbit.runner.auth;
+package com.sashplatonov.habbit.runner.auth.resource;
 
+import com.sashplatonov.habbit.runner.auth.ResourceAuthService;
+import com.sashplatonov.habbit.runner.auth.ResourcePreferencesService;
 import com.sashplatonov.habbit.runner.auth.access.OAuthStateAccess;
 import com.sashplatonov.habbit.runner.auth.access.UserAccess;
 import com.sashplatonov.habbit.runner.auth.client.GoogleOAuthClient;

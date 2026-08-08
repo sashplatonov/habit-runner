@@ -36,7 +36,7 @@ public class NotificationResource {
   final NotificationService notificationService;
   final CurrentUserContext currentUserContext;
 
-  public NotificationResource(NotificationService notificationService, CurrentUserContext currentUserContext) {
+  NotificationResource(NotificationService notificationService, CurrentUserContext currentUserContext) {
     this.notificationService = notificationService;
     this.currentUserContext = currentUserContext;
   }

@@ -15,7 +15,7 @@ public class CheckinQueryHandler {
   private final CheckinMapper checkinMapper;
 
   @Inject
-  public CheckinQueryHandler(CheckinRepository checkinRepository, CheckinMapper checkinMapper) {
+  CheckinQueryHandler(CheckinRepository checkinRepository, CheckinMapper checkinMapper) {
     this.checkinRepository = checkinRepository;
     this.checkinMapper = checkinMapper;
   }

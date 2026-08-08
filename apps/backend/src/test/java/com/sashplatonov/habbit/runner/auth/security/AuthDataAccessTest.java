@@ -1,4 +1,4 @@
-package com.sashplatonov.habbit.runner.auth;
+package com.sashplatonov.habbit.runner.auth.security;
 
 import com.sashplatonov.habbit.runner.auth.access.OAuthStateAccess;
 import com.sashplatonov.habbit.runner.auth.access.UserAccess;

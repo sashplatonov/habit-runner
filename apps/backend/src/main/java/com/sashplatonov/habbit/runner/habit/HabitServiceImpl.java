@@ -26,7 +26,7 @@ public class HabitServiceImpl implements HabitService {
   private final HabitMapper habitMapper;
   private final ServiceMetricsInstrumentation serviceMetricsInstrumentation;
 
-  public HabitServiceImpl(
+  HabitServiceImpl(
       HabitRepository habitRepository,
       CheckinRepository checkinRepository,
       HabitMapper habitMapper,

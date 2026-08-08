@@ -18,7 +18,7 @@ public class HabitPageResource extends AuthenticatedResourceSupport {
   private final HabitRepository habitRepository;
   private final HabitMapper habitMapper;
 
-  public HabitPageResource(
+  HabitPageResource(
       HabitRepository habitRepository,
       HabitMapper habitMapper,
       CurrentUserContext currentUserContext

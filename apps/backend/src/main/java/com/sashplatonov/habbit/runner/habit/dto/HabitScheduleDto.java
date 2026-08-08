@@ -17,4 +17,18 @@ public record HabitScheduleDto(
     @Min(1) @Max(31) Integer timesPerMonth,
     @Size(max = 5) List<WeekOfMonthValue> weeksOfMonth
 ) {
+  public HabitScheduleDto {
+    weekdays = HabitRequestCollections.immutable(weekdays);
+    weeksOfMonth = HabitRequestCollections.immutable(weeksOfMonth);
+  }
+
+  @Override
+  public List<Integer> weekdays() {
+    return HabitRequestCollections.immutable(weekdays);
+  }
+
+  @Override
+  public List<WeekOfMonthValue> weeksOfMonth() {
+    return HabitRequestCollections.immutable(weeksOfMonth);
+  }
 }

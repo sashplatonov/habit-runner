@@ -29,4 +29,24 @@ public record HabitUpdateRequestDto(
     @Size(max = 366) List<String> freezeDays,
     Integer version
 ) {
+  public HabitUpdateRequestDto {
+    customDays = HabitRequestCollections.immutable(customDays);
+    tags = HabitRequestCollections.immutable(tags);
+    freezeDays = HabitRequestCollections.immutable(freezeDays);
+  }
+
+  @Override
+  public List<Integer> customDays() {
+    return HabitRequestCollections.immutable(customDays);
+  }
+
+  @Override
+  public List<String> tags() {
+    return HabitRequestCollections.immutable(tags);
+  }
+
+  @Override
+  public List<String> freezeDays() {
+    return HabitRequestCollections.immutable(freezeDays);
+  }
 }

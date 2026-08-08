@@ -24,7 +24,7 @@ public class CheckinMutationHandler {
   private final CheckinMutationCoordinator checkinMutationCoordinator;
 
   @Inject
-  public CheckinMutationHandler(
+  CheckinMutationHandler(
       CheckinRepository checkinRepository,
       HabitRepository habitRepository,
       CheckinMapper checkinMapper,

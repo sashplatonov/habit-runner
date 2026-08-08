@@ -29,6 +29,7 @@
         <pmd.version>7.26.0</pmd.version>
         <checkstyle-plugin.version>3.6.0</checkstyle-plugin.version>
         <spotbugs-plugin.version>4.10.2.0</spotbugs-plugin.version>
+        <enforcer-plugin.version>3.6.1</enforcer-plugin.version>
         <assertj.version>3.27.7</assertj.version>
         <jackson-core.version>2.22.1</jackson-core.version>
         <mapstruct.version>1.6.3</mapstruct.version>
@@ -146,6 +147,10 @@
             <scope>test</scope>
         </dependency>
         <dependency>
+            <groupId>jakarta.json.bind</groupId>
+            <artifactId>jakarta.json.bind-api</artifactId>
+        </dependency>
+        <dependency>
             <groupId>io.rest-assured</groupId>
             <artifactId>rest-assured</artifactId>
             <scope>test</scope>
@@ -177,6 +182,30 @@
 
     <build>
         <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-enforcer-plugin</artifactId>
+                <version>${enforcer-plugin.version}</version>
+                <executions>
+                    <execution>
+                        <id>enforce-toolchain</id>
+                        <goals>
+                            <goal>enforce</goal>
+                        </goals>
+                        <configuration>
+                            <rules>
+                                <requireJavaVersion>
+                                    <version>[25,26)</version>
+                                </requireJavaVersion>
+                                <requireMavenVersion>
+                                    <version>[3.9,)</version>
+                                </requireMavenVersion>
+                            </rules>
+                            <fail>true</fail>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
             <plugin>
                 <groupId>${quarkus.platform.group-id}</groupId>
                 <artifactId>quarkus-maven-plugin</artifactId>
@@ -234,13 +263,6 @@
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
                 <version>${jacoco.version}</version>
-                <configuration>
-                    <!-- ServiceMetricsInstrumentation registers Micrometer meters at container startup.
-                         The bean is configuration-only, so it is excluded from the coverage gate. -->
-                    <excludes>
-                        <exclude>**/ServiceMetricsInstrumentation.class</exclude>
-                    </excludes>
-                </configuration>
                 <executions>
                     <execution>
                         <id>jacoco-prepare-agent</id>
@@ -359,8 +381,7 @@
                 <artifactId>spotbugs-maven-plugin</artifactId>
                 <version>${spotbugs-plugin.version}</version>
                 <configuration>
-                    <failOnError>false</failOnError>
-                    <excludeFilterFile>spotbugs/exclude.xml</excludeFilterFile>
+                    <failOnError>true</failOnError>
                 </configuration>
                 <executions>
                     <execution>

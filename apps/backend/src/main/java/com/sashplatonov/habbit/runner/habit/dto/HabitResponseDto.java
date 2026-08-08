@@ -30,4 +30,24 @@ public record HabitResponseDto(
     HabitType type,
     List<String> freezeDays
 ) {
+  public HabitResponseDto {
+    customDays = HabitRequestCollections.immutable(customDays);
+    tags = HabitRequestCollections.immutable(tags);
+    freezeDays = HabitRequestCollections.immutable(freezeDays);
+  }
+
+  @Override
+  public List<Integer> customDays() {
+    return HabitRequestCollections.immutable(customDays);
+  }
+
+  @Override
+  public List<String> tags() {
+    return HabitRequestCollections.immutable(tags);
+  }
+
+  @Override
+  public List<String> freezeDays() {
+    return HabitRequestCollections.immutable(freezeDays);
+  }
 }

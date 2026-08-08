@@ -156,6 +156,24 @@ concurrency boundary for check-in writes.
 Rollback: revert the PR-008 follow-up commit and restore the prior create
 semantics and generic persistence exception handling.
 
+## 2026-08-08 — PR-013 quality-gate enforcement
+
+- Removed the broad SpotBugs filter and enabled `failOnError=true`; all
+  production findings are now resolved in code.
+- Made CDI/JAX-RS constructors package-private, keeping dependency wiring
+  container-controlled and removing false exposure findings without suppressions.
+- Added defensive immutable collection boundaries for habit request/response
+  DTOs and cursor pages.
+- Added direct coverage for `ServiceMetricsInstrumentation`, removed its JaCoCo
+  exclusion, and added Maven Enforcer rules for Java 25 and Maven 3.9+.
+- Added the JSON-B API dependency required for complete SpotBugs analysis.
+
+Risk: DTO collection accessors now return immutable snapshots; callers must
+create a new collection instead of mutating a returned list.
+
+Rollback: revert the PR-013 commit to restore the previous quality settings
+and mutable DTO collection behavior.
+
 ## 2026-08-08 — PR-012 package-path alignment
 
 - Moved Java sources so their filesystem directories match their declared

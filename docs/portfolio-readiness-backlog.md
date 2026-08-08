@@ -738,6 +738,10 @@ git status --short
 
 ### PR-013 — Remove quality-gate suppressions and enable integration tests
 
+**Status:** ✅ completed and verified with clean OrbStack PostgreSQL
+`verify -Ppostgres-it`, strict SpotBugs, JaCoCo, PMD, Checkstyle, and Maven
+toolchain enforcement.
+
 **Problem and evidence**
 
 - Maven defaults to `skipITs=true`.

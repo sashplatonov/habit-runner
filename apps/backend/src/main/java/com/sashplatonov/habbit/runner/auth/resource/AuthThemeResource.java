@@ -30,7 +30,7 @@ public class AuthThemeResource {
   private final PreferencesService preferencesService;
   private final CurrentUserContext currentUserContext;
 
-  public AuthThemeResource(PreferencesService preferencesService, CurrentUserContext currentUserContext) {
+  AuthThemeResource(PreferencesService preferencesService, CurrentUserContext currentUserContext) {
     this.preferencesService = preferencesService;
     this.currentUserContext = currentUserContext;
   }
