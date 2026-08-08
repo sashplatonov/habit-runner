@@ -50,4 +50,19 @@ describe('PublicNav', () => {
 
     expect(container.querySelector('header')?.getAttribute('data-theme')).toBe('cloud');
   });
+
+  it('opens and closes the mobile navigation with an accessible menu control', async () => {
+    const user = userEvent.setup();
+
+    render(PublicNav);
+
+    const menu = screen.getByRole('button', { name: 'Open navigation menu' });
+    await user.click(menu);
+
+    expect(menu.getAttribute('aria-expanded')).toBe('true');
+    expect(screen.getByRole('navigation', { name: 'Mobile navigation' })).toBeTruthy();
+
+    await user.click(screen.getByRole('button', { name: 'Close navigation menu' }));
+    expect(screen.queryByRole('navigation', { name: 'Mobile navigation' })).toBeNull();
+  });
 });
