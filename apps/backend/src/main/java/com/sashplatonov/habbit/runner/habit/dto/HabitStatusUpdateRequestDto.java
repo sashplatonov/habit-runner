@@ -5,6 +5,7 @@ import lombok.Builder;
 
 @Builder
 public record HabitStatusUpdateRequestDto(
-    @NotNull Boolean archived
+    @NotNull Boolean archived,
+    Integer version
 ) {
 }

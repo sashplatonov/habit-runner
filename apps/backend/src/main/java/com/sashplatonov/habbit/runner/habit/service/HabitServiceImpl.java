@@ -84,6 +84,9 @@ public class HabitServiceImpl implements HabitService {
       if (habit == null) {
         return notFound();
       }
+      if (request.version() != null && request.version() != habit.getVersion()) {
+        return versionConflict();
+      }
 
       habitMapper.applyUpdate(request, habit);
       HabitMutationSupport.normalize(habit);
@@ -107,6 +110,9 @@ public class HabitServiceImpl implements HabitService {
       var habit = habitRepository.findByIdAndUserId(habitId, userId);
       if (habit == null) {
         return notFound();
+      }
+      if (request.version() != null && request.version() != habit.getVersion()) {
+        return versionConflict();
       }
 
       habit.setArchived(Boolean.TRUE.equals(request.archived()));
@@ -145,6 +151,16 @@ public class HabitServiceImpl implements HabitService {
         404,
         "Habit not found",
         "HABIT_NOT_FOUND"
+    ));
+  }
+
+  private OperationResult<HabitResponseDto> versionConflict() {
+    return OperationResult.failure(new ErrorResponse(
+        "https://habbit-runner.dev/errors/conflict",
+        "Conflict",
+        409,
+        "The resource was changed by another request",
+        "RESOURCE_VERSION_CONFLICT"
     ));
   }
 }

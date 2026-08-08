@@ -72,6 +72,9 @@ public class CheckinMutationHandler {
     }
 
     var existing = checkinRepository.findByHabitDateAndUserId(habitId, parsedDate, userId);
+    if (existing != null && request.version() != null && request.version() != existing.getVersion()) {
+      return CheckinResponses.conflict();
+    }
     var checkin = existing != null ? existing : new CheckinEntity();
     if (existing == null) {
       checkin.setHabitId(habitId);

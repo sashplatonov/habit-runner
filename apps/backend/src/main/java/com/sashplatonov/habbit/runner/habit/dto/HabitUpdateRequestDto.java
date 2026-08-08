@@ -24,6 +24,7 @@ public record HabitUpdateRequestDto(
     String reminderTime,
     Boolean reminderEnabled,
     HabitType type,
-    List<String> freezeDays
+    List<String> freezeDays,
+    Integer version
 ) {
 }

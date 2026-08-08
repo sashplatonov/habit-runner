@@ -37,4 +37,14 @@ public final class CheckinResponses {
         code
     ));
   }
+
+  public static <T> OperationResult<T> conflict() {
+    return OperationResult.failure(new ErrorResponse(
+        "https://habbit-runner.dev/errors/conflict",
+        "Conflict",
+        409,
+        "The resource was changed by another request",
+        "RESOURCE_VERSION_CONFLICT"
+    ));
+  }
 }

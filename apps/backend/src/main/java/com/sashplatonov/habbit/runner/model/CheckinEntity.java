@@ -7,6 +7,7 @@ import jakarta.persistence.Index;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
+import jakarta.persistence.Version;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
@@ -45,6 +46,7 @@ public class CheckinEntity extends UuidAuditedEntityBase {
   private int count;
 
   @Column(nullable = false)
+  @Version
   private int version;
 
   @PrePersist

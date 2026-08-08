@@ -1,6 +1,7 @@
 package com.sashplatonov.habbit.runner.api;
 
 import jakarta.validation.ValidationException;
+import jakarta.persistence.OptimisticLockException;
 import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.ForbiddenException;
 import jakarta.ws.rs.NotAuthorizedException;
@@ -33,6 +34,7 @@ public class GlobalExceptionMapper implements ExceptionMapper<Exception> {
   public Response toResponse(Exception exception) {
     return switch (exception) {
       case ValidationException e -> validationResponse(e);
+      case OptimisticLockException ignored -> conflictResponse("The resource was changed by another request", "RESOURCE_VERSION_CONFLICT");
       case NotAuthorizedException e -> notAuthorizedResponse(e);
       case ForbiddenException e -> forbiddenResponse(e);
       case NotFoundException e -> notFoundResponse(e);
@@ -49,6 +51,26 @@ public class GlobalExceptionMapper implements ExceptionMapper<Exception> {
         Response.Status.BAD_REQUEST.getStatusCode(),
         ExceptionResponseSupport.messageOrDefault(exception, "Validation failed"),
         "VALIDATION_FAILED"
+    );
+    log.debug(
+        "event=request_rejected method={} path={} clientIp={} traceId={} status={} detail={}",
+        ExceptionResponseSupport.requestMethod(request),
+        ExceptionResponseSupport.requestPath(uriInfo),
+        ExceptionResponseSupport.clientIp(headers),
+        ExceptionResponseSupport.traceId(),
+        error.status(),
+        error.detail()
+    );
+    return ExceptionResponseSupport.response(error);
+  }
+
+  private Response conflictResponse(String detail, String code) {
+    var error = new ErrorResponse(
+        ERR_BASE + "conflict",
+        "Conflict",
+        Response.Status.CONFLICT.getStatusCode(),
+        detail,
+        code
     );
     log.debug(
         "event=request_rejected method={} path={} clientIp={} traceId={} status={} detail={}",

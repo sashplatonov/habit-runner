@@ -1,6 +1,7 @@
 export interface CheckinUpsertRequestDto {
   done: boolean;
   count?: number;
+  version?: number;
 }
 
 export interface CheckinResponseDto {

@@ -481,6 +481,9 @@ same profile on an Ubuntu runner and uploads Failsafe diagnostics on failure.
 
 ### PR-008 — Enforce optimistic locking and duplicate-request safety
 
+**Status:** in progress; JPA versioning, expected-version checks, and V10
+schema defaults are implemented. Duplicate-request recovery remains.
+
 **Problem and evidence**
 
 - Habit and check-in entities expose a `version` field but do not use JPA `@Version`.

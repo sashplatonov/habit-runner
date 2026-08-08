@@ -1,5 +1,16 @@
 # AI Fix Log
 
+## 2026-08-08 — PR-008 optimistic locking foundation
+
+- Added JPA `@Version` management to habits and check-ins.
+- Added V10 defaults and non-null constraints for persisted entity versions.
+- Added optional expected-version fields to habit and check-in mutation DTOs;
+  stale writes are rejected before persistence.
+- Added a stable `409 RESOURCE_VERSION_CONFLICT` response for stale writes.
+
+Remaining PR-008 work: deterministic duplicate-request recovery tests and
+concurrent creation semantics.
+
 ## 2026-08-08 — PR-007 PostgreSQL integration suite
 
 - Added the `postgres-it` Maven profile with Quarkus Dev Services PostgreSQL 18,

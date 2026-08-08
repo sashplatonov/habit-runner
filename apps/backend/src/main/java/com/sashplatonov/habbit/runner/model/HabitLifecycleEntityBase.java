@@ -8,6 +8,7 @@ import jakarta.persistence.CollectionTable;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.MappedSuperclass;
 import jakarta.persistence.OrderColumn;
+import jakarta.persistence.Version;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -44,5 +45,6 @@ public abstract class HabitLifecycleEntityBase extends HabitSchedulingEntityBase
   private HabitType type;
 
   @Column(nullable = false)
+  @Version
   private int version;
 }

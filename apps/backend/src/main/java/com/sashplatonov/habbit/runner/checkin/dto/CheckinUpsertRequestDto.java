@@ -7,6 +7,7 @@ import lombok.Builder;
 @Builder
 public record CheckinUpsertRequestDto(
     @NotNull Boolean done,
-    @Positive Integer count
+    @Positive Integer count,
+    Integer version
 ) {
 }

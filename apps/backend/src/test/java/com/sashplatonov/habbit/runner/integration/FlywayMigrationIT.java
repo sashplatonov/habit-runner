@@ -21,8 +21,8 @@ class FlywayMigrationIT {
         "SELECT version FROM flyway_schema_history WHERE success = TRUE ORDER BY installed_rank"
     ).getResultList();
 
-    assertEquals(9, appliedVersions.size());
-    assertEquals("9", appliedVersions.getLast().toString());
+    assertEquals(10, appliedVersions.size());
+    assertEquals("10", appliedVersions.getLast().toString());
   }
 
   @Test
