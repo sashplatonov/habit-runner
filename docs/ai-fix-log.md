@@ -192,6 +192,16 @@ snapshot through the documented generation command.
 Rollback: revert the PR-014 commit and restore the previous contract snapshot
 and CI configuration.
 
+## 2026-08-08 — Phase 3 review: OpenAPI CI path
+
+- Fixed the OpenAPI drift check to execute Git from the repository root. The
+  workflow runs in `apps/backend`, where the original `spec/...` path was not
+  resolvable and would fail independently of specification drift.
+
+Risk: none; the check now evaluates the intended repository snapshot.
+
+Rollback: revert this review follow-up commit.
+
 ## 2026-08-08 — PR-012 package-path alignment
 
 - Moved Java sources so their filesystem directories match their declared

@@ -47,7 +47,7 @@ jobs:
         run: |
           ./mvnw -B -ntp package -DskipTests \
             -Dquarkus.smallrye-openapi.store-schema-directory=../../spec/openapi
-          git diff --exit-code -- spec/openapi/openapi.yaml
+          git -C ../.. diff --exit-code -- spec/openapi/openapi.yaml
 
       - name: Upload SpotBugs reports
         if: failure()
