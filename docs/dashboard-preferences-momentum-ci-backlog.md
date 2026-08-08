@@ -148,7 +148,7 @@ git commit -m "feat(dashboard): restore account view preferences"
 
 ## P1-3: Define schedule-aware flame and inactivity signals
 
-**Status:** ⬜ Not started  
+**Status:** ✅ Completed  
 **Priority:** P1  
 **Depends on:** -
 
