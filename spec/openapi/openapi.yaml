@@ -649,6 +649,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+      security:
+      - accessTokenCookie: []
     get:
       summary: Get current theme
       description: Returns the current theme for the authenticated user.
@@ -667,6 +669,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+      security:
+      - accessTokenCookie: []
   /checkins:
     get:
       summary: List checkins
@@ -687,6 +691,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+      security:
+      - accessTokenCookie: []
   /checkins/habits/{habitId}/dates/{date}:
     put:
       summary: Upsert checkin
@@ -729,6 +735,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+      security:
+      - accessTokenCookie: []
     delete:
       summary: Delete checkin
       description: Deletes a checkin for a concrete habit and date.
@@ -760,6 +768,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+      security:
+      - accessTokenCookie: []
   /checkins/page:
     get:
       summary: Page checkins
@@ -783,6 +793,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/CursorPageDtoCheckinResponseDto"
+      security:
+      - accessTokenCookie: []
   /habits:
     get:
       summary: List habits
@@ -803,6 +815,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+      security:
+      - accessTokenCookie: []
     post:
       summary: Create habit
       description: Creates or replaces a habit for the authenticated user.
@@ -839,6 +853,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+      security:
+      - accessTokenCookie: []
   /habits/page:
     get:
       parameters:
@@ -858,6 +874,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/CursorPageDtoHabitResponseDto"
+      security:
+      - accessTokenCookie: []
       summary: Find Page
       tags:
       - Habit Page Resource
@@ -904,6 +922,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+      security:
+      - accessTokenCookie: []
     delete:
       summary: Delete habit
       description: Deletes a habit for the authenticated user.
@@ -930,6 +950,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+      security:
+      - accessTokenCookie: []
   /habits/{habitId}/status:
     patch:
       summary: Update habit status
@@ -973,6 +995,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+      security:
+      - accessTokenCookie: []
   /notifications/subscribe:
     post:
       summary: Subscribe to push notifications
@@ -1010,6 +1034,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+      security:
+      - accessTokenCookie: []
   /notifications/unsubscribe:
     delete:
       summary: Unsubscribe from push notifications
@@ -1038,6 +1064,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+      security:
+      - accessTokenCookie: []
   /notifications/vapid-public-key:
     get:
       summary: Get VAPID public key

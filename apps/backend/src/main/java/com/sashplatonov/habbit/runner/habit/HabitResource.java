@@ -30,6 +30,7 @@ import org.eclipse.microprofile.openapi.annotations.media.Schema;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponses;
 import org.eclipse.microprofile.openapi.annotations.tags.Tag;
+import org.eclipse.microprofile.openapi.annotations.security.SecurityRequirement;
 
 import java.util.List;
 
@@ -39,6 +40,7 @@ import java.util.List;
 @RequireAuth
 @Tag(name = "Habits")
 @Slf4j
+@SecurityRequirement(name = "accessTokenCookie")
 public class HabitResource extends AuthenticatedResourceSupport {
   private final HabitService habitService;
 

@@ -11,9 +11,11 @@ import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.QueryParam;
+import org.eclipse.microprofile.openapi.annotations.security.SecurityRequirement;
 
 @Path("/habits/page")
 @RequireAuth
+@SecurityRequirement(name = "accessTokenCookie")
 public class HabitPageResource extends AuthenticatedResourceSupport {
   private final HabitRepository habitRepository;
   private final HabitMapper habitMapper;

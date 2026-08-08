@@ -27,6 +27,7 @@ import org.eclipse.microprofile.openapi.annotations.media.Schema;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponses;
 import org.eclipse.microprofile.openapi.annotations.tags.Tag;
+import org.eclipse.microprofile.openapi.annotations.security.SecurityRequirement;
 
 import java.util.List;
 
@@ -35,6 +36,7 @@ import java.util.List;
 @Consumes(MediaType.APPLICATION_JSON)
 @RequireAuth
 @Tag(name = "Checkins")
+@SecurityRequirement(name = "accessTokenCookie")
 public class CheckinResource extends AuthenticatedResourceSupport {
   private final CheckinService checkinService;
 

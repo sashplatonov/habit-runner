@@ -202,6 +202,16 @@ Risk: none; the check now evaluates the intended repository snapshot.
 
 Rollback: revert this review follow-up commit.
 
+## 2026-08-08 — Phase 3 review: OpenAPI protected-route security
+
+- Declared the access-token cookie requirement on authenticated habit,
+  check-in, theme, and notification operations so the generated contract no
+  longer presents them as public.
+
+Risk: documentation-only; runtime authorization is unchanged.
+
+Rollback: revert this review follow-up commit.
+
 ## 2026-08-08 — PR-012 package-path alignment
 
 - Moved Java sources so their filesystem directories match their declared

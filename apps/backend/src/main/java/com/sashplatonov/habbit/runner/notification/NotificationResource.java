@@ -27,6 +27,7 @@ import org.eclipse.microprofile.openapi.annotations.media.Schema;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponses;
 import org.eclipse.microprofile.openapi.annotations.tags.Tag;
+import org.eclipse.microprofile.openapi.annotations.security.SecurityRequirement;
 
 @Path("/notifications")
 @Produces(MediaType.APPLICATION_JSON)
@@ -57,6 +58,7 @@ public class NotificationResource {
   @RequireAuth
   @POST
   @Path("/subscribe")
+  @SecurityRequirement(name = "accessTokenCookie")
   @Consumes(MediaType.APPLICATION_JSON)
   @Operation(summary = "Subscribe to push notifications", description = "Stores the browser push subscription for the authenticated user.")
   @APIResponses({
@@ -77,6 +79,7 @@ public class NotificationResource {
   @RequireAuth
   @DELETE
   @Path("/unsubscribe")
+  @SecurityRequirement(name = "accessTokenCookie")
   @Consumes(MediaType.APPLICATION_JSON)
   @Operation(summary = "Unsubscribe from push notifications",
       description = "Removes the stored browser push subscription for the authenticated user.")
