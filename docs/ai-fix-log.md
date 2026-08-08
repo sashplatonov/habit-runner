@@ -1,5 +1,18 @@
 # AI Fix Log
 
+## 2026-08-08 — Phase 5 review: future-proof the Vite config import
+
+- Made the Vite configuration import explicit for the native config loader
+  introduced by Vite 8.
+- Kept the TypeScript configuration declaration-only with generated output in
+  SvelteKit's ignored directory, so the config remains type-checked without a
+  compatibility warning or tracked JavaScript output.
+
+Risk: build configuration only; the API proxy target resolver and its unit
+contract remain unchanged.
+
+Rollback: revert this Phase 5 review follow-up commit.
+
 ## 2026-08-08 — Phase 5 review: publish the local web entry point
 
 - Published the JVM and native Compose web service on `WEB_PORT`, defaulting

@@ -5,7 +5,7 @@ import { defineConfig, type Plugin, type ResolvedConfig } from 'vite';
 import tailwindcss from '@tailwindcss/vite';
 import { sveltekit } from '@sveltejs/kit/vite';
 import { SvelteKitPWA } from '@vite-pwa/sveltekit';
-import { resolveApiProxyTarget } from './src/lib/api/devProxy';
+import { resolveApiProxyTarget } from './src/lib/api/devProxy.ts';
 
 const dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -21,7 +21,6 @@ function prepareInjectManifestServiceWorker(rootDir: string): Plugin {
     },
     closeBundle: {
       sequential: true,
-      enforce: 'pre',
       async handler() {
         if (!resolvedConfig.build.ssr || process.env.SKIP_PWA === '1') {
           return;
