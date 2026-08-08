@@ -81,6 +81,19 @@ class HabitServiceImplTest {
   }
 
   @Test
+  void shouldRejectCreateWhenHabitAlreadyExistsForOwner() {
+    var existing = new HabitEntity();
+    existing.setUserId("user-1");
+    when(habitRepository.findHabitById("habit-1")).thenReturn(existing);
+
+    var result = service.create("user-1", createRequest());
+
+    var failure = assertInstanceOf(OperationFailure.class, result);
+    assertEquals("HABIT_CONFLICT", failure.toErrorResponse().errorCode());
+    verify(habitRepository, never()).save(ArgumentMatchers.any());
+  }
+
+  @Test
   void shouldUpdateStatusAndDeleteHabitForOwner() {
     var existing = new HabitEntity();
     existing.setId("habit-1");

@@ -481,8 +481,8 @@ same profile on an Ubuntu runner and uploads Failsafe diagnostics on failure.
 
 ### PR-008 — Enforce optimistic locking and duplicate-request safety
 
-**Status:** in progress; JPA versioning, expected-version checks, and V10
-schema defaults are implemented. Duplicate-request recovery remains.
+**Status:** ✅ completed and verified with unit tests, web API tests, and the
+full OrbStack PostgreSQL quality gate.
 
 **Problem and evidence**
 

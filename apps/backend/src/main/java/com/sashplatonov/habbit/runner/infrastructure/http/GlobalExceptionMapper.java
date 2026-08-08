@@ -2,6 +2,7 @@ package com.sashplatonov.habbit.runner.api;
 
 import jakarta.validation.ValidationException;
 import jakarta.persistence.OptimisticLockException;
+import jakarta.persistence.PersistenceException;
 import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.ForbiddenException;
 import jakarta.ws.rs.NotAuthorizedException;
@@ -35,6 +36,7 @@ public class GlobalExceptionMapper implements ExceptionMapper<Exception> {
     return switch (exception) {
       case ValidationException e -> validationResponse(e);
       case OptimisticLockException ignored -> conflictResponse("The resource was changed by another request", "RESOURCE_VERSION_CONFLICT");
+      case PersistenceException ignored -> conflictResponse("The request conflicts with existing data", "RESOURCE_CONFLICT");
       case NotAuthorizedException e -> notAuthorizedResponse(e);
       case ForbiddenException e -> forbiddenResponse(e);
       case NotFoundException e -> notFoundResponse(e);

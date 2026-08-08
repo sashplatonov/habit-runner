@@ -51,26 +51,24 @@ public class HabitServiceImpl implements HabitService {
     return serviceMetricsInstrumentation.measureMutation(() -> {
       log.debug("Creating habit userId={} habitId={}", userId, request.id());
       var existing = habitRepository.findHabitById(request.id());
-      if (existing != null && !userId.equals(existing.getUserId())) {
+      if (existing != null) {
         return OperationResult.failure(new ErrorResponse(
             "https://habbit-runner.dev/errors/habit-conflict",
             "Conflict",
             409,
-            "Habit id already belongs to another user",
+            "Habit id already exists",
             "HABIT_CONFLICT"
         ));
       }
 
-      var habit = existing != null ? existing : new HabitEntity();
+      var habit = new HabitEntity();
       habitMapper.applyCreate(request, habit);
       habit.setId(request.id());
       habit.setUserId(userId);
       HabitMutationSupport.normalize(habit);
       HabitMutationSupport.touch(habit);
-      if (existing == null) {
-        habitRepository.save(habit);
-        serviceMetricsInstrumentation.record(ServiceMetric.HABIT_CREATED);
-      }
+      habitRepository.save(habit);
+      serviceMetricsInstrumentation.record(ServiceMetric.HABIT_CREATED);
       return OperationResult.success(habitMapper.toResponse(habit));
     });
   }

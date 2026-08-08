@@ -138,3 +138,20 @@ their compatibility contracts are unchanged.
 
 Rollback: revert the review commit; pagination will return to the previous
 exact-limit heuristic and the frontend lint errors will return.
+
+## 2026-08-08 — PR-008 duplicate-request safety
+
+- Made habit creation strict: POST now conflicts whenever the requested ID
+  already exists, including for the same owner; updates remain the replacement
+  path.
+- Mapped persistence constraint races to a stable HTTP 409 `RESOURCE_CONFLICT`
+  response instead of an unhandled 500.
+- Added unit coverage for same-owner create conflicts and persistence conflict
+  mapping.
+
+Risk: clients retrying POST with an existing habit ID must use the update
+endpoint after this contract clarification. Database uniqueness remains the
+concurrency boundary for check-in writes.
+
+Rollback: revert the PR-008 follow-up commit and restore the prior create
+semantics and generic persistence exception handling.

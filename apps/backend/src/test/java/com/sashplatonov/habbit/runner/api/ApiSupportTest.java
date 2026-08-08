@@ -8,6 +8,7 @@ import com.sashplatonov.habbit.runner.auth.support.RefreshTokenRotationConflictE
 import com.sashplatonov.habbit.runner.support.TestConfigFactory;
 import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.Validation;
+import jakarta.persistence.PersistenceException;
 import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.ForbiddenException;
 import jakarta.ws.rs.NotAuthorizedException;
@@ -173,6 +174,15 @@ class ApiSupportTest {
 
     assertEquals("Internal Server Error", error.title());
     assertEquals("Internal server error", error.detail());
+  }
+
+  @Test
+  void shouldMapPersistenceConflictToStableConflictResponse() {
+    var response = new GlobalExceptionMapper().toResponse(new PersistenceException("duplicate key"));
+
+    assertEquals(409, TestHelpers.statusOf(response));
+    var error = TestHelpers.entityOf(response, ErrorResponse.class);
+    assertEquals("RESOURCE_CONFLICT", error.errorCode());
   }
 
   @Test
