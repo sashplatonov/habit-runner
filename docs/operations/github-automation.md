@@ -14,9 +14,23 @@
 
 The current checkout includes:
 - `.github/renovate.json`
-- `.github/workflows/quality.yml` with backend verify, frontend verify, and Trivy security scans
+- `.github/workflows/quality.yml` with backend verify, PostgreSQL integration,
+  frontend verification, Trivy security scans, and a bounded Compose smoke job
 
 The current checkout now treats Trivy as an active CI gate rather than a manual-only check.
+
+The Compose smoke job runs [`scripts/ci/smoke-stack.sh`](../../scripts/ci/smoke-stack.sh)
+after the build and test jobs. The script uses `.env.example`, builds both images,
+waits for PostgreSQL/Flyway and container health, checks API liveness/readiness,
+checks the web container and its `/api` proxy, and always removes the stack and
+database volume with a shell trap. The OpenAPI snapshot drift check remains in
+the backend verification job and is a prerequisite of the smoke job.
+
+Local smoke verification:
+
+```bash
+./scripts/ci/smoke-stack.sh
+```
 
 [↑ Back to top](#top)
 

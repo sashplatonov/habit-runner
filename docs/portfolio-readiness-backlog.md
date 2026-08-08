@@ -1123,6 +1123,8 @@ docker compose --profile db down
 
 ### PR-020 — Add Docker and contract smoke gates to CI
 
+**Status:** ✅ completed and verified with actionlint, Compose config validation, and OrbStack runtime smoke checks.
+
 **Problem and evidence**
 
 - CI validates backend, frontend, and Trivy but does not prove container build/startup.

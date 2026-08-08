@@ -310,3 +310,18 @@ Risk: monitoring automation must use `/q/health/ready`; notification absence
 does not block the API, while missing core auth configuration still does.
 
 Rollback: revert the PR-019 observability documentation commit.
+
+## 2026-08-08 — PR-020 Docker and contract smoke gate
+
+- Added a single checked-in Compose smoke script used locally and from CI.
+- The script builds the backend and web images, waits for the database and
+  service health checks, verifies API liveness/readiness and web proxy routing,
+  and removes containers, volumes, and orphan services on every exit.
+- Added a bounded CI job after backend, PostgreSQL, frontend, and security gates;
+  failure logs retain the existing three-day limit.
+
+Risk: the smoke job requires Docker BuildKit and network access to resolve image
+and build dependencies; it does not expose host ports and validates endpoints
+from inside the Compose network.
+
+Rollback: revert the PR-020 smoke script, workflow job, and documentation entry.
