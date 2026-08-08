@@ -427,6 +427,8 @@ cd apps/backend && ./mvnw -B -ntp test
 
 ### PR-007 — Add PostgreSQL integration tests
 
+**Status:** ✅ completed and verified with OrbStack Docker plus CI configuration.
+
 **Problem and evidence**
 
 - Backend tests use H2 with schema recreation and Flyway disabled.
@@ -443,11 +445,14 @@ cd apps/backend && ./mvnw -B -ntp test
 **Files**
 
 - `apps/backend/pom.xml`
+- `.github/workflows/quality.yml`
 - `apps/backend/src/test/resources/application-postgres-it.properties`
+- `apps/backend/src/test/resources/application.properties`
+- `apps/backend/src/test/java/com/sashplatonov/habbit/runner/integration/PostgresTestProfile.java`
 - New: `apps/backend/src/test/java/com/sashplatonov/habbit/runner/integration/FlywayMigrationIT.java`
 - New: `apps/backend/src/test/java/com/sashplatonov/habbit/runner/integration/PostgreSqlRepositoryIT.java`
 - `apps/backend/src/main/resources/db/migration/`
-- `.github/workflows/quality.yml`
+- `apps/backend/src/main/resources/application.properties`
 
 **Acceptance criteria**
 
@@ -465,9 +470,12 @@ cd apps/backend && ./mvnw -B -ntp verify -Ppostgres-it
 cd apps/backend && ./mvnw -B -ntp flyway:info -Ppostgres-it
 ```
 
+The `postgres-it` profile requires a running Docker daemon. CI executes the
+same profile on an Ubuntu runner and uploads Failsafe diagnostics on failure.
+
 [↑ Back to top](#top)
 
-**AI agent commit command:** `git add apps/backend/pom.xml apps/backend/src/test apps/backend/src/main/resources/db/migration .github/workflows/quality.yml && git commit -m "test(database): verify postgres migrations"`
+**AI agent commit command:** `git add apps/backend/pom.xml apps/backend/src/test .github/workflows/quality.yml docs/portfolio-readiness-backlog.md docs/ai-fix-log.md && git commit -m "test(database): verify postgres migrations"`
 
 <a id="pr-008"></a>
 
@@ -493,6 +501,9 @@ cd apps/backend && ./mvnw -B -ntp flyway:info -Ppostgres-it
 - `apps/backend/src/main/java/com/sashplatonov/habbit/runner/model/CheckinEntity.java`
 - `apps/backend/src/main/java/com/sashplatonov/habbit/runner/habit/service/HabitServiceImpl.java`
 - `apps/backend/src/main/java/com/sashplatonov/habbit/runner/checkin/service/CheckinMutationHandler.java`
+- `apps/backend/src/main/java/com/sashplatonov/habbit/runner/habit/dto/HabitUpdateRequestDto.java`
+- `apps/backend/src/main/java/com/sashplatonov/habbit/runner/habit/dto/HabitStatusUpdateRequestDto.java`
+- `apps/backend/src/main/java/com/sashplatonov/habbit/runner/checkin/dto/CheckinUpsertRequestDto.java`
 - `apps/backend/src/main/java/com/sashplatonov/habbit/runner/infrastructure/http/GlobalExceptionMapper.java`
 - New: `apps/backend/src/main/resources/db/migration/V10__enforce_entity_versions.sql`
 - Backend resource/service/integration tests

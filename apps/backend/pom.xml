@@ -377,6 +377,13 @@
 
     <profiles>
         <profile>
+            <id>postgres-it</id>
+            <properties>
+                <skipITs>false</skipITs>
+                <quarkus.profile>postgres-it</quarkus.profile>
+            </properties>
+        </profile>
+        <profile>
             <id>native</id>
             <activation>
                 <property>

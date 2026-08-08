@@ -56,6 +56,42 @@ jobs:
           retention-days: 3
           compression-level: 9
 
+  verify-postgres-integration:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    defaults:
+      run:
+        working-directory: apps/backend
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Set up Java
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '25'
+          cache: maven
+          cache-dependency-path: apps/backend/pom.xml
+
+      - name: Verify PostgreSQL integration suite
+        run: ./mvnw -B -ntp verify -Ppostgres-it
+
+      - name: Upload PostgreSQL diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v6
+        with:
+          name: postgres-integration-reports
+          path: |
+            apps/backend/target/surefire-reports
+            apps/backend/target/failsafe-reports
+            apps/backend/target/quarkus.log
+          if-no-files-found: ignore
+          retention-days: 3
+          compression-level: 9
+
   security:
     runs-on: ubuntu-latest
     timeout-minutes: 15

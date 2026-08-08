@@ -1,5 +1,21 @@
 # AI Fix Log
 
+## 2026-08-08 — PR-007 PostgreSQL integration suite
+
+- Added the `postgres-it` Maven profile with Quarkus Dev Services PostgreSQL 18,
+  explicit test configuration, Flyway migration coverage, and repository tests
+  for PostgreSQL constraints, sorting, cursors, indexes, and converted storage.
+- Added a dedicated CI job that runs the profile on Ubuntu and uploads Failsafe
+  diagnostics only when the integration gate fails.
+- Local profile execution is green through OrbStack Docker; five PostgreSQL
+  integration tests and the full Maven verify quality gate pass.
+
+Risk: CI still needs one remote run to validate the hosted runner environment;
+fast H2 tests remain unchanged and continue to run.
+
+Rollback: remove the `postgres-it` Maven profile, integration test sources,
+test resources, and the dedicated CI job. Keep the existing H2 test profile.
+
 ## 2026-08-01 — Habit icon and share graphic simplification
 
 - Replaced the app icon with a flat calendar-and-check mark that communicates a
