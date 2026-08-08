@@ -1,5 +1,8 @@
-# Dokploy deployment overlay. Apply this file after either the JVM or native
-# Compose file so the API joins the external network used by Dokploy routing.
+# Dokploy deployment Compose entry point. Dokploy invokes this file directly,
+# so include the complete JVM stack before applying the routing-network overlay.
+
+include:
+  - path: ./docker-compose.yml
 
 services:
   api:
