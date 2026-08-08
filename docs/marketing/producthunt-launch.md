@@ -2,31 +2,31 @@
 
 ## Tagline (< 60 chars)
 
-> Offline-first habit tracker — no app store, works anywhere
+> Server-backed habit tracker — no app store, focused anywhere
 
 ## Short Description (< 260 chars)
 
-A free, offline-first Progressive Web App for building daily habits. Tracks streaks, completion rates, and push reminders — all from your browser, no install from an app store required. Your data stays on your device first.
+A free Progressive Web App for building daily habits. Tracks streaks, completion rates, and push reminders through a secure backend — all from your browser, no install from an app store required.
 
 ## Maker Comment (first comment on launch day)
 
 Hi ProductHunt! 👋
 
 I built Habbit Runner because every habit app I tried either:
-- Required an internet connection to log a simple check-in
+- Made it hard to review progress across devices
 - Locked data behind a subscription
 - Needed a native app install from an app store
 
-Habbit Runner stores everything locally in IndexedDB first, then syncs in the background when you're online. If you never connect, your streaks still work.
+Habbit Runner stores account data in a Quarkus backend and keeps the PWA shell installable for fast repeat visits. Habit changes require a connection and are refreshed from the server.
 
 **What makes it different:**
-- ✅ Full offline support — works on the subway, in a cabin, anywhere
+- ✅ Clear server-backed data model with predictable degraded behavior
 - ✅ PWA — install directly from Chrome/Safari, no App Store
 - ✅ Streak analytics with completion rate trends
 - ✅ Web push notifications
 - ✅ Free — no subscription required for core features
 
-**Tech for the curious:** SvelteKit 5, Dexie (IndexedDB), Quarkus backend, PostgreSQL.
+**Tech for the curious:** SvelteKit 5, Quarkus backend, PostgreSQL.
 
 Would love feedback on the analytics dashboard and onboarding flow. Happy to answer questions below!
 
@@ -45,7 +45,7 @@ Take all screenshots at 1280×800 (desktop) and 390×844 (iPhone frame). Export 
 - [ ] `01-dashboard.png` — Dashboard with 3–4 habits, streaks visible, at least one "completed today" state
 - [ ] `02-habit-detail.png` — Single habit detail view with streak calendar and completion trend chart
 - [ ] `03-add-habit.png` — Add habit form with emoji picker and frequency selector
-- [ ] `04-offline-badge.png` — App running in Chrome with DevTools showing "Offline" mode — data still visible
+- [ ] `04-degraded-state.png` — App showing the disconnected state without claiming offline writes
 - [ ] `05-install-prompt.png` — PWA install prompt on Android Chrome or desktop Chrome
 - [ ] `06-push-notification.png` — Push notification reminder on desktop or Android
 - [ ] `07-stats-view.png` — Stats/analytics page with completion rate graph
@@ -54,16 +54,16 @@ Take all screenshots at 1280×800 (desktop) and 390×844 (iPhone frame). Export 
 
 A 15–30 second GIF showing:
 1. Open app in browser (already installed)
-2. Switch Chrome DevTools to Offline
-3. Log a habit check-in
-4. Show streak counter update
-5. Switch back to Online — sync indicator appears briefly
+2. Sign in and load the dashboard
+3. Save a habit check-in while online
+4. Switch Chrome DevTools to Offline and verify the degraded state
+5. Switch back to Online and refresh the server-backed state
 
 ## Pricing Table (for PH listing)
 
 | Plan   | Price | Features                                      |
 |--------|-------|-----------------------------------------------|
-| Free   | $0    | All core features — offline tracking, streaks, push notifications, analytics |
+| Free   | $0    | All core features — server-backed tracking, streaks, push notifications, analytics |
 
 ## Launch Day Checklist
 
@@ -76,7 +76,7 @@ A 15–30 second GIF showing:
 
 ## Follow-up Posts (within 30 days)
 
-1. **Maker story post**: "How I built an offline-first habit tracker with SvelteKit and IndexedDB"
+1. **Maker story post**: "How I built a server-backed habit tracker with SvelteKit and Quarkus"
 2. **Dev.to cross-post** of the blog article at `/blog/building-offline-pwa-sveltekit-dexie`
 3. **Indie Hackers milestone post**: First 100 users, what worked
 

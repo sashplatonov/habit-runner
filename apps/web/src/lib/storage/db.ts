@@ -1,16 +1,11 @@
 import type { Table } from 'dexie';
 import Dexie from 'dexie';
-import type { Habit } from '@/types/habit';
-import type { HabitSchedule } from '@habbit-runner/shared';
 import { normalizeToCompletionKey } from '@/lib/completionKey';
+import type { HabitSchedule } from '@habbit-runner/shared';
 import { DEFAULT_USER_ID } from '@/lib/core/config';
 import { generateId } from '@/lib/core/id';
 import { nowSyncISO } from '@habbit-runner/shared';
-import {
-  normalizeCompletions,
-  normalizeNumberArray,
-  normalizeStringArray
-} from './habitEntity';
+import { normalizeCompletions, normalizeNumberArray, normalizeStringArray } from './habitEntity';
 
 export { habitEntityToDomain } from './habitEntity';
 
@@ -243,124 +238,6 @@ export class HabbitRunnerDb extends Dexie {
 }
 
 export const db = new HabbitRunnerDb();
-
-export function domainToHabitEntity(habit: Habit): HabitEntity {
-  const userId = getCurrentUserId();
-  function clone<T>(v: T | undefined): T | undefined {
-    if (v === undefined) {
-      return undefined;
-    }
-
-    if (typeof globalThis.structuredClone === 'function') {
-      return globalThis.structuredClone(v);
-    }
-
-    throw new Error('structuredClone is not available in this environment. Please run on Node 18+/modern browser or provide a polyfill.');
-  }
-
-  return {
-    id: habit.id,
-    userId,
-    name: habit.name,
-    description: habit.description,
-    color: habit.color,
-    icon: habit.icon,
-    frequency: habit.frequency,
-    targetStreak: habit.targetStreak,
-    dailyTarget: Math.max(1, Math.trunc(habit.dailyTarget ?? 1)),
-    tags: clone(habit.tags) ?? [],
-    customDays: clone(habit.customDays),
-    schedule: clone(habit.schedule),
-    archived: habit.archived,
-    completions: {},
-    createdAt: habit.createdAt,
-    updatedAt: habit.updatedAt ?? habit.createdAt,
-    version: habit.version ?? 1,
-    sortOrder: habit.sortOrder ?? Date.parse(habit.createdAt),
-    reminderTime: habit.reminderTime ?? null,
-    reminderEnabled: habit.reminderEnabled ?? true,
-    freezeDays: clone(habit.freezeDays) ?? [],
-    type: habit.type ?? 'positive'
-  };
-}
-
-export async function persistHabitInDb(habit: Habit): Promise<void> {
-  await db.habits.put(domainToHabitEntity(habit));
-}
-
-export async function removeHabitFromDb(id: string): Promise<void> {
-  const userId = getCurrentUserId();
-  const target = await db.habits.get(id);
-  if (target?.userId === userId) {
-    await db.habits.delete(id);
-  }
-  await db.checkins.where({ habitId: id, userId }).delete();
-}
-
-export async function upsertCheckinInDb(
-  habitId: string,
-  date: string,
-  done: boolean,
-  count = 1,
-  updatedAt?: string
-): Promise<string> {
-  const userId = getCurrentUserId();
-  const normalized = normalizeCheckinDateKey(date);
-  const ts = updatedAt ?? nowSyncISO();
-  const existing = await getCheckinByNaturalKey(habitId, normalized, userId);
-
-  if (existing) {
-    if (!done) {
-      await db.checkins.delete(existing.id);
-      return ts;
-    }
-    const normalizedCount = Math.max(1, Math.trunc(count));
-    await db.checkins.update(existing.id, {
-      done,
-      count: normalizedCount,
-      updatedAt: ts,
-      version: Math.max(existing.version, 1) + 1
-    });
-    return ts;
-  }
-
-  if (!done) {return ts;}
-  const normalizedCount = Math.max(1, Math.trunc(count));
-  await db.checkins.add({
-    id: generateId(),
-    userId,
-    habitId,
-    date: normalized,
-    done,
-    count: normalizedCount,
-    updatedAt: ts,
-    version: 1
-  });
-  return ts;
-}
-
-export async function deleteCheckinInDb(habitId: string, date: string): Promise<CheckinEntity | undefined> {
-  const userId = getCurrentUserId();
-  const normalized = normalizeCheckinDateKey(date);
-  const existing = await getCheckinByNaturalKey(habitId, normalized, userId);
-  if (existing) {
-    await db.checkins.delete(existing.id);
-    return existing;
-  }
-  return undefined;
-}
-
-export async function getCheckinByNaturalKey(
-  habitId: string,
-  date: string,
-  userId = getCurrentUserId()
-): Promise<CheckinEntity | undefined> {
-  const normalized = normalizeCheckinDateKey(date);
-  return await db.checkins
-    .where('[userId+habitId+date]')
-    .equals([userId, habitId, normalized])
-    .first();
-}
 
 export async function addPendingReminder(
   habitId: string,

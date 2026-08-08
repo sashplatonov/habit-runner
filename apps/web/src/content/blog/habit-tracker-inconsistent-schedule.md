@@ -61,7 +61,7 @@ Alternatively, log each habit immediately after completing it. This removes the 
 
 Shift workers and field workers often have unreliable connectivity. A warehouse, a construction site, a hospital floor — all of these may have poor WiFi or no connectivity for long stretches.
 
-If your habit tracker requires a connection to log check-ins, you'll miss the moment to log and then forget. An offline-first app stores your logs locally and syncs when you reconnect, so the act of tracking isn't dependent on signal.
+If your habit tracker requires a connection to log check-ins, you need a clear degraded state and a quick retry path when signal is unavailable.
 
 ## Frequently Asked Questions
 
@@ -79,4 +79,4 @@ For shift workers and people with physically demanding work, sleep and rest are 
 
 ---
 
-*Habbit Runner works offline and adapts to any frequency — daily, a few times a week, or custom schedules. [Try it free →](/)*
+*Habbit Runner supports flexible schedules when the backend connection is available. [Try it free →](/)*

@@ -61,10 +61,10 @@ These academic habits compound in the same way physical ones do. A student who r
 Students need an app that:
 - Works on any device — phone, laptop, tablet — because you don't always have the same device
 - Doesn't require an account to start (low barrier to entry)
-- Works offline (library WiFi is often unreliable)
+- Shows a clear disconnected state when library WiFi is unreliable
 - Is free or has no mandatory subscription
 
-A PWA fits naturally here. Installable on any device, no App Store required, works offline, free to start.
+A PWA fits naturally here. Installable on any device, no App Store required, and free to start.
 
 ## Semester Transitions
 
@@ -90,4 +90,4 @@ Use event-based triggers entirely. Anchor every habit to an event that happens i
 
 ---
 
-*Habbit Runner works on any device, no account required, fully offline. Install it once, use it everywhere this semester. [Try it free →](/)*
+*Habbit Runner works on any device with a browser; sign in to access your account data. [Try it free →](/)*

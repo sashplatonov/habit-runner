@@ -23,7 +23,7 @@
     url: 'https://habbit-runner.app',
     description: PUBLIC_FEATURES_SEO.description,
     featureList: [
-      'Offline-first habit tracking with IndexedDB storage',
+      'Backend-backed habit tracking with a responsive PWA shell',
       'Direct habit and check-in saves over a secure REST API',
       'Streak tracking: current streak and longest streak',
       'Push notifications for habit reminders',
@@ -66,24 +66,24 @@
         Habbit Runner Features
       </h1>
       <p class="mt-4 max-w-2xl text-base leading-7 text-slate-600">
-        Everything you need to build consistent daily habits — offline, fast, and without app store
+        Everything you need to build consistent daily habits — fast, focused, and without app store
         friction.
       </p>
     </section>
 
     <div class="mt-10 space-y-12">
-      <!-- Offline-First -->
+      <!-- Backend-backed tracking -->
       <section class="rounded-[1.75rem] border border-slate-200/80 bg-white/92 p-6 shadow-[0_18px_50px_rgba(15,23,42,0.08)]">
-        <h2 class="text-xl font-semibold text-slate-900">Offline-First Storage</h2>
+        <h2 class="text-xl font-semibold text-slate-900">Reliable Server Storage</h2>
         <p class="mt-3 text-sm text-slate-600">
-          All habit data, check-ins, and settings are stored locally on your device using IndexedDB
-          via Dexie. The app works fully without an internet connection — you can track habits,
-          review your streak, and check stats even on a plane.
+          Habit data and check-ins are stored by the authenticated backend and loaded through the
+          API. The installed PWA keeps its application shell available between sessions, while
+          habit changes require a connection.
         </p>
         <ul class="mt-4 space-y-2 text-sm text-slate-600">
-          <li class="flex gap-2"><span class="mt-0.5 text-emerald-600">✓</span> Habits and check-ins stored in IndexedDB</li>
-          <li class="flex gap-2"><span class="mt-0.5 text-emerald-600">✓</span> Full stats available without internet</li>
-          <li class="flex gap-2"><span class="mt-0.5 text-emerald-600">✓</span> No data loss on connectivity interruptions</li>
+          <li class="flex gap-2"><span class="mt-0.5 text-emerald-600">✓</span> Authenticated API writes</li>
+          <li class="flex gap-2"><span class="mt-0.5 text-emerald-600">✓</span> Latest server state on refresh</li>
+          <li class="flex gap-2"><span class="mt-0.5 text-emerald-600">✓</span> Clear degraded state when disconnected</li>
         </ul>
         <div class="mt-4">
           <a href={resolve<'/habit-tracker'>('/habit-tracker', {})} class="text-xs text-cyan-700 underline">See habit tracker details →</a>
@@ -95,12 +95,12 @@
         <h2 class="text-xl font-semibold text-slate-900">Secure Account Sync</h2>
         <p class="mt-3 text-sm text-slate-600">
           When you sign in, habit and check-in changes are saved directly through the backend REST
-          API and then refreshed across your devices. Local IndexedDB storage keeps the interface
-          fast while the server stays the canonical source for signed-in sessions.
+          API and then refreshed across your devices. The server is the canonical source for every
+          signed-in session.
         </p>
         <ul class="mt-4 space-y-2 text-sm text-slate-600">
           <li class="flex gap-2"><span class="mt-0.5 text-emerald-600">✓</span> Direct saves to secure backend endpoints</li>
-          <li class="flex gap-2"><span class="mt-0.5 text-emerald-600">✓</span> Fast local cache backed by IndexedDB</li>
+          <li class="flex gap-2"><span class="mt-0.5 text-emerald-600">✓</span> Application shell cached by the PWA</li>
           <li class="flex gap-2"><span class="mt-0.5 text-emerald-600">✓</span> Pull-to-refresh to reload the latest server state</li>
         </ul>
       </section>

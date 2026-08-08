@@ -41,11 +41,11 @@
 
       <section class="mt-6">
         <h2 class="text-lg font-semibold text-slate-900">2. Data We Collect</h2>
-        <h3 class="mt-3 text-base font-semibold text-slate-800">2.1 Local Storage (IndexedDB)</h3>
+        <h3 class="mt-3 text-base font-semibold text-slate-800">2.1 Application Storage</h3>
         <p class="mt-2 text-slate-600">
-          Habbit Runner stores habit data, check-in history, and settings locally on your device
-          using IndexedDB. This local cache keeps the application responsive and available without
-          reloading every screen from the network.
+          The PWA may cache its application shell on your device so repeat visits can load quickly.
+          Habit data and check-in history are stored on our servers for your signed-in account and
+          require a network connection to read or change.
         </p>
         <h3 class="mt-3 text-base font-semibold text-slate-800">2.2 Google OAuth</h3>
         <p class="mt-2 text-slate-600">
@@ -85,8 +85,8 @@
       <section class="mt-6">
         <h2 class="text-lg font-semibold text-slate-900">4. Data Retention</h2>
         <p class="mt-2 text-slate-600">
-          Local data (IndexedDB) persists on your device until you clear your browser data or
-          uninstall the app. Synced data on our servers is retained while your account is active.
+          Cached application assets persist on your device until you clear your browser data or
+          uninstall the app. Account data on our servers is retained while your account is active.
           You may request deletion of your account and associated server-side data by contacting us.
         </p>
       </section>

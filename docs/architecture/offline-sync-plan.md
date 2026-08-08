@@ -1,6 +1,8 @@
-# Offline Sync
+# Legacy Offline Sync Plan
 
-Status: legacy. New habit writes should target the concrete `POST /habits`, `PUT /habits/{id}`, `PATCH /habits/{id}/status`, and `DELETE /habits/{id}` endpoints; this document remains as the description of the old sync model during migration.
+Status: retired. The product uses a backend-first write path. New habit writes target the concrete
+`POST /habits`, `PUT /habits/{id}`, `PATCH /habits/{id}/status`, and `DELETE /habits/{id}` endpoints.
+The outbox design below is historical context only and is not implemented or promised by the public product.
 
 <a name="top"></a>
 

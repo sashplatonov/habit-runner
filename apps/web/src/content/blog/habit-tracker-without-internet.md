@@ -18,19 +18,19 @@ Offline habit tracking solves this by making the tracking itself independent of 
 
 There's a spectrum of offline support:
 
-**Fully offline**: The app stores all data locally. Every feature — logging, streaks, analytics — works without any network connection.
+**Local-only**: The app stores all data locally. Every feature can work without a network connection.
 
-**Partially offline**: Basic logging works offline, but some features (analytics, sync, notifications) require connectivity.
+**Partially connected**: Basic screens may be cached, but analytics, sync, and notifications require connectivity.
 
 **Offline-capable with degradation**: The app caches some content but loses functionality without a connection.
 
 **Not offline at all**: The app requires internet for every interaction.
 
-For reliable habit tracking, you want fully offline or at minimum "offline for core logging." Anything less means your tracking depends on having a signal, which is the problem you're trying to solve.
+For reliable habit tracking, choose an app whose connection requirements match your routine and clearly explains degraded behavior.
 
 ## How Offline Habit Tracking Works Technically
 
-Offline-first apps use your device's local storage to write data immediately when you make a change. On mobile web apps and PWAs, this is typically IndexedDB. Native apps use SQLite or similar.
+Local-only apps use device storage to write data immediately. On mobile web apps and PWAs, this is typically IndexedDB. Native apps use SQLite or similar.
 
 The write happens instantly, on-device, without any network call. The app doesn't know or care whether you're connected.
 
@@ -64,7 +64,7 @@ No internet required — ever. Loop is entirely local. No sync, no server, no ac
 
 ### Streaks (iOS)
 
-Fully offline. Data stores locally with optional iCloud sync. Works in airplane mode.
+Local storage with optional iCloud sync. Works without a network connection.
 
 ## Setting Up an Offline Habit Tracker
 
@@ -80,7 +80,7 @@ For native apps, installation from the App Store or Google Play handles offline 
 
 ### Will my habit data still sync when I reconnect?
 
-Yes, if the app supports sync. In Habbit Runner, any habits logged offline are stored in a local outbox and synced automatically when connectivity returns. You don't need to do anything.
+Yes, if the app supports sync. In Habbit Runner, habit changes are saved through the backend and refreshed when connectivity returns.
 
 ### Can I receive habit reminders without internet?
 

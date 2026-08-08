@@ -31,7 +31,7 @@ Cloud trackers work well for people who use multiple devices regularly and aren'
 
 ## How Offline Habit Trackers Work
 
-Offline-first apps write to local storage — typically IndexedDB on the web or SQLite in native apps. Your data is readable and writable without any network connection. Sync, if it exists, is a secondary operation that runs when connectivity is available.
+Local-only apps write to device storage. Their data is readable and writable without a network connection; cloud sync, if it exists, is a secondary operation.
 
 **Advantages:**
 - Full functionality without internet
@@ -44,7 +44,7 @@ Offline-first apps write to local storage — typically IndexedDB on the web or 
 - Some offline apps don't sync at all
 - Backup is your responsibility if the app doesn't offer it
 
-For anyone who commutes, travels frequently, or just wants reliability, offline-first removes a recurring failure point.
+For anyone who commutes, travels frequently, or just wants reliability, local-only storage removes a recurring network dependency.
 
 ## The Sync Question
 
@@ -52,7 +52,7 @@ The main limitation of pure offline apps is that they don't move your data betwe
 
 The solution is an app that combines both: local-first storage with optional background sync.
 
-Habbit Runner uses this model. All data is written to IndexedDB on your device first. When you reconnect, a sync cycle pulls any remote changes and pushes local ones. Conflict resolution uses timestamps — the most recent write wins. You get offline reliability with cross-device access as an opt-in feature.
+Habbit Runner uses a backend-first model. Account data is written through the API, and refresh pulls the latest remote state. Conflict handling is enforced by the server's version checks.
 
 ## Privacy: Where the Real Difference Lies
 
@@ -62,7 +62,7 @@ With a local-first app, this data never leaves your device unless you opt into s
 
 ## Which Model Fits Your Situation
 
-**Choose offline-first if:**
+**Choose local-only if:**
 - You frequently use apps in low-connectivity situations
 - You value data privacy and want control over your information
 - You use a single primary device
@@ -81,11 +81,11 @@ With a local-first app, this data never leaves your device unless you opt into s
 
 ### Can an offline habit tracker sync to multiple devices?
 
-Yes, if the app is built with optional sync. Habbit Runner supports this — it works fully offline and syncs when you're connected. [Read more about offline habit tracking →](/blog/best-offline-habit-tracker)
+Yes, if the app is built with a backend sync contract. Habbit Runner refreshes account data through its API when you're connected. [Read more about habit tracking →](/blog/best-offline-habit-tracker)
 
 ### Is offline storage safer than cloud storage?
 
-Data stored locally is only accessible on your device. Cloud storage involves transmission and server-side storage, which introduces additional risk if the provider has a security incident. Offline-first reduces that exposure.
+Data stored locally is only accessible on your device. Cloud storage involves transmission and server-side storage, which introduces additional risk if the provider has a security incident.
 
 ### What happens to my habit data if an offline app gets deleted?
 

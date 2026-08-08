@@ -81,4 +81,4 @@ Don't try to return to everything at once. Pick two or three habits, do them for
 
 ---
 
-*Habbit Runner works fully offline — log your habits on the plane, in a hotel, anywhere without signal. [Install it before your next trip →](/)*
+*Habbit Runner keeps the installed app shell available, but habit changes require a connection. [Install it before your next trip →](/)*

@@ -88,4 +88,4 @@ That's normal. Don't treat it as evidence that you've failed. Identify what chan
 
 ---
 
-*Habbit Runner works offline, tracks your streaks, and keeps your habit data available anywhere — with or without a signal. [Try it free →](/)*
+*Habbit Runner tracks your streaks through the backend and keeps the workflow focused. [Try it free →](/)*

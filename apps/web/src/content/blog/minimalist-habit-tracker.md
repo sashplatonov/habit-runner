@@ -30,7 +30,7 @@ That last point matters more than it seems. If an app takes three seconds to ope
 
 Habbit Runner opens directly to your habit list. The UI is clean — habits, streaks, and a checkbox or tap to complete. No tutorials, no onboarding wizard, no forced setup.
 
-Because it's a PWA, it loads quickly even on slow connections (or none at all — it's offline-first). The analytics section is available for when you want it, but the default view is your habits for today.
+Because it's a PWA, it loads quickly even on slow connections. The analytics section is available for when you want it, but the default view is your habits for today.
 
 The design philosophy is: get in, log your habit, get out.
 

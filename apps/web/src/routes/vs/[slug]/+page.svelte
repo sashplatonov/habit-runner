@@ -157,7 +157,7 @@
     <!-- CTA -->
     <section class="rounded-[1.75rem] bg-slate-950 px-8 py-10 text-center text-white shadow-[0_24px_60px_rgba(15,23,42,0.2)]">
       <h2 class="mb-2 text-2xl font-semibold">Try Habbit Runner — Free</h2>
-      <p class="mb-6 text-slate-300">No App Store. No subscription. Works offline from day one.</p>
+      <p class="mb-6 text-slate-300">No App Store. No subscription. Server-backed tracking from day one.</p>
       <a
             href={resolve('/', {})}
             class="inline-block rounded-full bg-white px-8 py-3 font-semibold text-slate-950 transition-all hover:-translate-y-0.5 hover:bg-sky-50"

@@ -42,14 +42,14 @@ export const PUBLIC_LANDING_SEO = {
         'Yes. You can define daily targets, set reminders, and track routines for work and personal goals.'
     },
     {
-      question: 'Does Habbit Runner work without an internet connection?',
+      question: 'What happens when my connection is unavailable?',
       answer:
-        'Yes. Habbit Runner caches habit data locally with IndexedDB so you can still open the app and review your progress when connectivity is unstable.'
+        'The installed PWA can open its cached application shell, but authenticated habit data and mutations require a network connection.'
     },
     {
       question: 'Is my habit data private?',
       answer:
-        'Your data is stored locally on your device first. Sync uses secure JWT tokens over HTTPS. No habit data is shared with third parties or used for advertising.'
+        'Your signed-in data is stored on our backend and protected by JWT tokens over HTTPS. No habit data is shared with third parties or used for advertising.'
     },
     {
       question: 'Do I need to download an app from an app store?',
@@ -62,9 +62,9 @@ export const PUBLIC_LANDING_SEO = {
         'Yes. Web push notifications work through your browser. You can enable reminders for individual habits from the habit settings screen.'
     },
     {
-      question: 'How does background sync work?',
+      question: 'How does cross-device refresh work?',
       answer:
-        'Signed-in sessions save habit and check-in changes directly through the REST API, and pull-to-refresh reloads the latest server state into the local cache.'
+        'Signed-in sessions save habit and check-in changes directly through the REST API, and refresh reloads the latest server state.'
     }
   ] satisfies FaqItem[]
 };
@@ -211,18 +211,18 @@ export function buildSoftwareSchema(description: string, pathname: string) {
 }
 
 export const PUBLIC_ABOUT_SEO = {
-  title: 'About Habbit Runner — Offline-First Habit Tracker PWA',
+  title: 'About Habbit Runner — Server-Backed Habit Tracker PWA',
   description:
-    'Learn about Habbit Runner: an offline-first habit tracker Progressive Web App built for daily consistency, streak analytics, and privacy-first design.',
+    'Learn about Habbit Runner: a server-backed habit tracker Progressive Web App built for daily consistency, streak analytics, and privacy-first design.',
   keywords:
-    'about habbit runner, habit tracker pwa, offline habit tracker team, habit tracking app',
+    'about habbit runner, habit tracker pwa, habit tracking team, habit tracking app',
   pathname: '/about'
 };
 
 export const PUBLIC_PRIVACY_SEO = {
   title: 'Privacy Policy — Habbit Runner',
   description:
-    'Habbit Runner privacy policy: how we handle your data, Google OAuth, IndexedDB storage, sync, and push notifications.',
+    'Habbit Runner privacy policy: how we handle your data, Google OAuth, server storage, and push notifications.',
   keywords: 'habbit runner privacy policy, habit tracker data privacy, gdpr habit tracker',
   pathname: '/privacy-policy'
 };
@@ -230,8 +230,8 @@ export const PUBLIC_PRIVACY_SEO = {
 export const PUBLIC_FEATURES_SEO = {
   title: 'Features — Habbit Runner Habit Tracker',
   description:
-    'Explore all Habbit Runner features: offline-first storage, streak tracking, push notifications, Google sync, daily routine planning, and more.',
+    'Explore all Habbit Runner features: server-backed storage, streak tracking, push notifications, Google sign-in, daily routine planning, and more.',
   keywords:
-    'habit tracker features, offline habit tracker, streak tracker features, pwa habit tracker, habit push notifications',
+    'habit tracker features, streak tracker features, pwa habit tracker, habit push notifications',
   pathname: '/features'
 };

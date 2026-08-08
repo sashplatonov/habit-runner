@@ -14,7 +14,7 @@
       <p class="text-[10px] uppercase tracking-[0.26em] text-muted">Clear daily execution</p>
       <h2 class="mt-3 text-xl font-semibold tracking-tight text-foreground">Habbit Runner keeps habits tangible.</h2>
       <p class="mt-3 max-w-md text-sm leading-6 text-muted">
-        Built for offline-first tracking, streak integrity, and practical review without the noise
+        Built for reliable tracking, streak integrity, and practical review without the noise
         of gamified clutter.
       </p>
       <p class="mt-5 text-xs text-muted">&copy; {new Date().getFullYear()} Habbit Runner</p>

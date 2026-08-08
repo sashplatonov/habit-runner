@@ -22,7 +22,7 @@
     url: 'https://habbit-runner.app',
     logo: 'https://habbit-runner.app/og-image.svg',
     description:
-      'Habbit Runner is an offline-first habit tracker PWA built for daily consistency and streak analytics.',
+      'Habbit Runner is a server-backed habit tracker PWA built for daily consistency and streak analytics.',
     sameAs: []
   }).replace(/</g, '\u003c')}</script>
 </svelte:head>
@@ -37,7 +37,7 @@
         About Habbit Runner
       </h1>
       <p class="mt-4 max-w-2xl text-base leading-7 text-slate-600">
-        Habbit Runner is an offline-first habit tracker Progressive Web App built for people who
+        Habbit Runner is a server-backed habit tracker Progressive Web App built for people who
         want clear progress data without noise.
       </p>
     </section>
@@ -49,7 +49,7 @@
         <p class="mt-3 text-sm text-slate-600">
           Building habits requires consistency over motivation. Habbit Runner is designed to make
           daily execution visible, streak progress measurable, and the entire product accessible
-          whether you have internet or not.
+          whenever your connection is available.
         </p>
         <p class="mt-3 text-sm text-slate-600">
           We believe a habit tracker should get out of your way: no gamification noise, no dark
@@ -61,10 +61,10 @@
         <h2 class="text-xl font-semibold text-slate-900">Technology</h2>
         <div class="mt-4 grid gap-3 sm:grid-cols-2">
           <div class="rounded-[1.5rem] border border-slate-200/80 bg-white/92 p-5 shadow-[0_14px_38px_rgba(15,23,42,0.06)]">
-            <p class="text-sm font-semibold text-slate-900">Offline-First Architecture</p>
+            <p class="text-sm font-semibold text-slate-900">Backend-First Architecture</p>
             <p class="mt-2 text-xs text-slate-600">
-              Habits and check-ins are cached locally in IndexedDB (via Dexie) so the interface
-              stays fast and responsive during daily use.
+              Habits and check-ins are persisted by the authenticated Quarkus API, with the PWA
+              shell cached for fast repeat visits.
             </p>
           </div>
           <div class="rounded-[1.5rem] border border-slate-200/80 bg-white/92 p-5 shadow-[0_14px_38px_rgba(15,23,42,0.06)]">
@@ -84,7 +84,7 @@
           <div class="rounded-[1.5rem] border border-slate-200/80 bg-white/92 p-5 shadow-[0_14px_38px_rgba(15,23,42,0.06)]">
             <p class="text-sm font-semibold text-slate-900">Built With</p>
             <p class="mt-2 text-xs text-slate-600">
-              SvelteKit 5, TypeScript, Tailwind CSS, Dexie, Quarkus (Java), PostgreSQL, Flyway.
+              SvelteKit 5, TypeScript, Tailwind CSS, Quarkus (Java), PostgreSQL, Flyway.
             </p>
           </div>
         </div>
@@ -95,7 +95,7 @@
         <p class="mt-3 text-sm text-slate-600">
           Your habit data is your data. We do not sell data, do not use it for advertising, and do
           not share it with third parties. Data is stored locally on your device first and only
-          synced to our servers when you choose to sign in.
+          stored on our servers for your signed-in account.
         </p>
         <p class="mt-3 text-sm text-slate-600">
           See our full <a href={resolve<'/privacy-policy'>('/privacy-policy', {})} class="text-cyan-700 underline">Privacy Policy</a> for details.

@@ -29,7 +29,7 @@ Apps that work without sign-in tend to:
 
 ### Habbit Runner (PWA — Free)
 
-Open the app, add a habit, start tracking. No account required. Habbit Runner works fully offline from first launch — your habits and streaks are stored locally in your browser.
+Open the app, add a habit, start tracking. No account required. Habbit Runner requires a signed-in connection for habit data and streaks.
 
 If you later want to sync your data across devices, you can sign in with Google. But the app is fully functional without it. Your data is yours from the start.
 

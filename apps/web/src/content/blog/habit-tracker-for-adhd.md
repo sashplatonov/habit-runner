@@ -32,7 +32,7 @@ Here's what actually tends to work.
 
 The fewer taps between opening the app and completing a log entry, the better. Any friction between intention and action creates an opportunity for the intention to vanish.
 
-An offline-first app that loads instantly and requires one tap per habit is significantly better than an app that requires login, loading time, and navigation.
+A fast app with one tap per habit is significantly better than an app that requires extra loading time and navigation.
 
 ### Visual, not list-based
 

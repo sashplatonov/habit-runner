@@ -3,7 +3,7 @@ title: "Local-First Apps: Why Your Data Belongs on Your Device"
 description: "Local-first software stores your data on your device by default. Here's why that matters, how it works, and which apps use this approach for productivity and habit tracking."
 publishedAt: "2026-03-30"
 author: "Habbit Runner Team"
-keywords: "local-first apps, local-first software, local-first productivity, local data storage apps, offline-first productivity apps"
+keywords: "local-first apps, local-first software, local-first productivity, local data storage apps, productivity apps"
 readingTimeMinutes: 7
 coverImage: /blog/local-first-productivity-apps.svg
 ---
@@ -19,7 +19,7 @@ This distinction has practical implications for reliability, privacy, and long-t
 A local-first app:
 
 - Stores data on your device immediately when you make changes
-- Works fully offline — no degradation, no "you must be connected to use this"
+- Keeps core screens usable with a clear connection status
 - Treats sync as a secondary, optional capability
 - Lets you access and export your data without depending on a company's service
 
@@ -74,7 +74,7 @@ For personal productivity tools — habit trackers, notes, journals — these tr
 ## How to Evaluate Whether an App Is Local-First
 
 Questions to ask:
-1. Does the app work fully offline without degradation?
+1. Does the app communicate its connection requirements clearly?
 2. Can you export your data in a usable format?
 3. Does the app work without creating an account?
 4. If the company shuts down, is your data still accessible?

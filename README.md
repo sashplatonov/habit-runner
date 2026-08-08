@@ -2,7 +2,7 @@
 
 <a name="top"></a>
 
-Offline-first habit tracker with a React PWA frontend, a Quarkus backend, Google OAuth, background sync, and optional web push notifications.
+Server-backed habit tracker with a SvelteKit PWA frontend, a Quarkus backend, Google OAuth, and optional web push notifications.
 
 ## 📋 Table of Contents
 
@@ -83,7 +83,7 @@ The backend `%dev` profile now supplies the standard local defaults automaticall
 
 If you keep local secrets in the workspace root `.env`, `cd apps/web && npm run dev:server` loads that file before starting Quarkus, lets those env values override the `%dev` fallbacks, and on macOS tries Java 25 via `java_home` with an SDKMAN fallback. OAuth still requires the corresponding local redirect URI to be registered in Google Cloud.
 
-If you do not need sign-in or push notifications while working on UI-only flows, the frontend can still run with sync disabled via `VITE_SYNC_ENABLED=false`.
+UI-only flows can run against the frontend without configuring push notifications; authenticated habit data still requires the backend.
 
 [↑ Back to top](#top)
 
@@ -168,7 +168,7 @@ cd apps/backend
 - Docs hub: [docs/README.md](./docs/README.md)
 - Architecture: [docs/architecture/overview.md](./docs/architecture/overview.md)
 - Setup: [docs/setup/getting-started.md](./docs/setup/getting-started.md)
-- Offline sync notes: [docs/architecture/offline-sync-plan.md](./docs/architecture/offline-sync-plan.md)
+- Runtime architecture notes: [docs/architecture/overview.md](./docs/architecture/overview.md)
 - Web Push setup: [docs/setup/web-push-setup.md](./docs/setup/web-push-setup.md)
 - Reliability and rollout: [docs/operations/reliability-rollout.md](./docs/operations/reliability-rollout.md)
 - GitHub automation: [docs/operations/github-automation.md](./docs/operations/github-automation.md)

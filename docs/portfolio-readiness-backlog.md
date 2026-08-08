@@ -849,6 +849,9 @@ rg -n '/auth|/checkins|/habits|/notifications|nextCursor|409|429' \
 
 ### PR-015 — Remove unsupported offline-first behavior and claims
 
+**Status:** ✅ completed and verified with frontend tests, Svelte checks, build,
+repository-wide claim scan, and Compose validation.
+
 **Problem and evidence**
 
 - `apps/web/src/lib/stores/habits.ts` performs backend mutations before updating in-memory state.

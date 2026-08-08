@@ -18,7 +18,6 @@ COPY . ./
 # Build-time args — must be declared here so Vite embeds them into the JS bundle.
 # Values are supplied via docker-compose build.args (or CI build-args).
 ARG VITE_API_BASE_URL
-ARG VITE_SYNC_ENABLED
 ARG VITE_DEFAULT_USER_ID
 ARG VITE_GSC_VERIFICATION_TOKEN
 ARG VITE_BING_VERIFICATION_TOKEN

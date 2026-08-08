@@ -1,5 +1,19 @@
 # AI Fix Log
 
+## 2026-08-08 — PR-015 backend-first frontend contract
+
+- Removed unused IndexedDB habit/check-in mutation helpers and the unused
+  sync build configuration while retaining the reminder store
+  and historical migration schema.
+- Reworded public pages, SEO metadata, blog claims, setup docs, and marketing
+  copy to describe server-backed habit data and PWA shell caching accurately.
+- Marked the retired offline-sync design as historical rather than active.
+
+Risk: public-copy and dead-code cleanup; authenticated online CRUD behavior is
+unchanged.
+
+Rollback: revert the PR-015 commit to restore the previous copy and helpers.
+
 ## 2026-08-08 — PR-008 optimistic locking foundation
 
 - Added JPA `@Version` management to habits and check-ins.

@@ -28,7 +28,7 @@ For habit tracking, the PWA format has specific advantages over traditional app 
 
 Not all PWAs are equal. A good habit tracker PWA should:
 
-- Work **fully offline** — not just "somewhat degraded" without connection
+- Keep the application shell available between visits, with a clear degraded state when disconnected
 - Be **installable** on all major platforms
 - Load quickly from the **device cache** (not requiring a server round-trip on open)
 - Support **push notifications** without a native app
@@ -38,12 +38,12 @@ Not all PWAs are equal. A good habit tracker PWA should:
 
 ### Habbit Runner
 
-Habbit Runner is built as an offline-first PWA from the ground up. All data lives in IndexedDB on your device via Dexie. The service worker caches the full application shell, so it opens instantly even without a connection.
+Habbit Runner is a server-backed PWA. The service worker caches the application shell for fast repeat visits, while account data is loaded through the API.
 
 Installable on Android (Chrome), iOS (Safari 16.4+), and desktop (Chrome/Edge). Once installed, it behaves as a standalone app — no browser chrome, no address bar.
 
 Features:
-- Full offline functionality
+- Clear disconnected state when the API is unavailable
 - Streak tracking and analytics
 - Freeze days for streak protection
 - Web push notifications
@@ -96,4 +96,4 @@ Yes. PWAs run in the browser security sandbox. Well-built PWAs (HTTPS, strict Co
 
 ---
 
-*Habbit Runner is a fully offline-capable PWA — installable on any device, no app store required. [Install it now →](/)*
+*Habbit Runner is an installable PWA backed by a secure API — no app store required. [Install it now →](/)*

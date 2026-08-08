@@ -27,7 +27,7 @@ No app is perfectly private. But the gap between local-first, no-account apps an
 
 ### Habbit Runner (PWA — Free)
 
-Habbit Runner stores all habit data locally in your browser's IndexedDB using Dexie. The app runs fully offline. No account is required to start tracking — sign-in is only needed if you want to sync across devices.
+Habbit Runner stores signed-in habit data in the backend; the PWA shell is cached for repeat visits.
 
 There is no advertising. Data is not sold or used for analytics outside the app itself. Because the app is a PWA, there's no App Store middleman analyzing install behavior.
 
@@ -62,7 +62,7 @@ Not a dedicated habit tracker, but the privacy model is excellent: your data is 
 
 ## Privacy and Offline Support Often Go Together
 
-There's a natural overlap between privacy-friendly apps and offline-first apps. When data doesn't need to reach a server to function, it usually doesn't — which means less data transmission by default.
+There's a natural overlap between privacy-friendly apps and carefully scoped server-backed apps. Minimizing unnecessary data transmission reduces exposure by default.
 
 Habbit Runner was built with this in mind. Your habits are readable and writable without a network connection. The privacy benefit is a byproduct of the architecture, not a marketing checkbox.
 

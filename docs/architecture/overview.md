@@ -66,7 +66,8 @@ Important paths:
 
 Configuration notes:
 - `VITE_API_BASE_URL` sets the API origin; if omitted, dev defaults to `http://localhost:3000` and production defaults to `/api`.
-- `VITE_SYNC_ENABLED=false` disables background sync for offline-only or UI-focused work.
+- The PWA caches its application shell for repeat visits; authenticated habit mutations remain
+  backend-first and require a network connection.
 
 [↑ Back to top](#top)
 
@@ -121,7 +122,8 @@ Client-side behavior:
 - the backend returns timing headers such as `x-sync-duration-ms` and `Server-Timing`;
 - theme and timezone preferences use `GET /auth/preferences` and `PUT /auth/preferences`.
 
-The frontend also keeps a write-through path so local habit changes can remain usable even when scheduled background sync is paused or unavailable.
+The frontend keeps the server as the canonical source and exposes a clear degraded state when the
+network is unavailable; it does not queue offline habit mutations.
 
 [↑ Back to top](#top)
 
