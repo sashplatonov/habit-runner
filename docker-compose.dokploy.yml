@@ -1,15 +1,22 @@
-# Dokploy deployment Compose entry point. Dokploy invokes this file directly,
-# so include the complete JVM stack before applying the routing-network overlay.
-
-include:
-  - path: ./docker-compose.yml
+# Dokploy deployment Compose entry point. Keep the deployable services explicit
+# because Dokploy validates domain targets from this file before Compose starts.
 
 services:
   api:
+    extends:
+      file: ./docker-compose.yml
+      service: api
     networks:
       - backend
       - dokploy-ipv6
 
+  web:
+    extends:
+      file: ./docker-compose.yml
+      service: web
+
 networks:
+  backend:
+    driver: bridge
   dokploy-ipv6:
     external: true

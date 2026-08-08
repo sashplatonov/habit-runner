@@ -184,8 +184,9 @@ Current Compose behavior:
 - `api` is exposed only to the internal Docker network;
 - browser traffic reaches the backend through the `web` nginx proxy at `/api`;
 - `docker-compose.local.yml` exposes the web app on `http://localhost:5137`.
-- `docker-compose.dokploy.yml` is the Dokploy entry point. It includes the JVM
-  stack and attaches the API to the external `dokploy-ipv6` routing network.
+- `docker-compose.dokploy.yml` is the Dokploy entry point. It explicitly
+  exposes `api` and `web`, reuses their JVM Compose definitions, and attaches
+  the API to the external `dokploy-ipv6` routing network.
 - When `VAPID_PUBLIC_KEY` is empty, `/q/health/ready` stays UP and the
   notification check reports `status=disabled` instead of blocking startup.
 
