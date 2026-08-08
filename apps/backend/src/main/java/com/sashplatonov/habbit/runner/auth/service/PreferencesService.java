@@ -9,7 +9,6 @@ import com.sashplatonov.habbit.runner.auth.support.ThemeCatalog;
 import com.sashplatonov.habbit.runner.model.UserEntity;
 import com.sashplatonov.habbit.runner.repository.UserRepository;
 import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.NotAuthorizedException;
 import lombok.extern.slf4j.Slf4j;
@@ -19,21 +18,15 @@ import java.util.Objects;
 @ApplicationScoped
 @Slf4j
 public class PreferencesService {
+  private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
   private final UserRepository userRepository;
-  private final ObjectMapper objectMapper;
 
   public PreferencesService() {
-    this(null, new ObjectMapper());
+    this(null);
   }
 
   public PreferencesService(UserRepository userRepository) {
-    this(userRepository, new ObjectMapper());
-  }
-
-  @Inject
-  public PreferencesService(UserRepository userRepository, ObjectMapper objectMapper) {
     this.userRepository = userRepository;
-    this.objectMapper = objectMapper;
   }
 
   @Transactional
@@ -81,7 +74,7 @@ public class PreferencesService {
   private DashboardPreferences readDashboardPreferences(String value) {
     try {
       return DashboardPreferencesNormalizer.normalize(
-          objectMapper.readValue(value == null || value.isBlank() ? "{}" : value, DashboardPreferences.class)
+          OBJECT_MAPPER.readValue(value == null || value.isBlank() ? "{}" : value, DashboardPreferences.class)
       );
     } catch (JsonProcessingException exception) {
       log.warn("Invalid dashboard preferences payload; using defaults");
@@ -91,7 +84,7 @@ public class PreferencesService {
 
   private String writeDashboardPreferences(DashboardPreferences value) {
     try {
-      return objectMapper.writeValueAsString(DashboardPreferencesNormalizer.normalize(value));
+      return OBJECT_MAPPER.writeValueAsString(DashboardPreferencesNormalizer.normalize(value));
     } catch (JsonProcessingException exception) {
       throw new IllegalArgumentException("Dashboard preferences could not be serialized", exception);
     }

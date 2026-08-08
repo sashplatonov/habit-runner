@@ -4,6 +4,9 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import java.util.List;
 import java.util.Map;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedHashMap;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record DashboardPreferences(
@@ -14,6 +17,23 @@ public record DashboardPreferences(
     String density,
     Map<String, Integer> themeUsage
 ) {
+  public DashboardPreferences {
+    tags = Collections.unmodifiableList(new ArrayList<>(tags == null ? List.of() : tags));
+    themeUsage = Collections.unmodifiableMap(
+        new LinkedHashMap<>(themeUsage == null ? Map.of() : themeUsage)
+    );
+  }
+
+  @Override
+  public List<String> tags() {
+    return Collections.unmodifiableList(new ArrayList<>(tags));
+  }
+
+  @Override
+  public Map<String, Integer> themeUsage() {
+    return Collections.unmodifiableMap(new LinkedHashMap<>(themeUsage));
+  }
+
   public DashboardPreferences() {
     this(1, "pending", List.of(), "custom", "comfortable", Map.of());
   }
