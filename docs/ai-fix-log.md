@@ -174,6 +174,24 @@ create a new collection instead of mutating a returned list.
 Rollback: revert the PR-013 commit to restore the previous quality settings
 and mutable DTO collection behavior.
 
+## 2026-08-08 — PR-014 verified OpenAPI contract
+
+- Replaced the stale partial specification with the Quarkus-generated contract
+  covering authentication, habits, check-ins, notifications, pagination, DTO
+  validation, and shared error schemas.
+- Added static OpenAPI components for cookie access-token and CSRF-header
+  security schemes plus reusable 400/401/403/404/409/429/500 error responses.
+- Added CI generation and `git diff --exit-code` drift protection.
+- Added `docs/architecture/api-contract.md` with security behavior and read,
+  mutation, and conflict request examples.
+
+Risk: the checked-in YAML is regenerated from the current Quarkus annotations
+and static components; any route or DTO change now requires updating the
+snapshot through the documented generation command.
+
+Rollback: revert the PR-014 commit and restore the previous contract snapshot
+and CI configuration.
+
 ## 2026-08-08 — PR-012 package-path alignment
 
 - Moved Java sources so their filesystem directories match their declared

@@ -792,6 +792,10 @@ rg -n 'failOnError>false|skipITs>true|ServiceMetricsInstrumentation.class' \
 
 ### PR-014 — Publish a complete verified OpenAPI contract
 
+**Status:** ✅ completed and verified with deterministic Quarkus generation,
+snapshot drift comparison, route/status checks, and the full OrbStack backend
+quality gate.
+
 **Problem and evidence**
 
 - `spec/openapi/openapi.yaml` covers only a small subset of the implemented API.

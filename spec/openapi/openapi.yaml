@@ -1,50 +1,1064 @@
-openapi: 3.0.3
+---
+openapi: 3.1.0
 info:
-  title: Habbit Runner API (contract)
+  title: Habbit Runner API
   version: 1.0.0
-  description: Language-independent OpenAPI contract for frontend↔backend sync
-servers:
-  - url: /api
-paths:
-  /habits:
-    get:
-      summary: List habits
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Habit'
-    post:
-      summary: Create habit
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/Habit'
-      responses:
-        '201':
-          description: Created
 components:
+  securitySchemes:
+    accessTokenCookie:
+      type: apiKey
+      in: cookie
+      name: access_token
+      description: HttpOnly access-token cookie
+    csrfTokenHeader:
+      type: apiKey
+      in: header
+      name: X-CSRF-Token
+      description: CSRF header required for cookie-authenticated mutations
+  responses:
+    BadRequest:
+      description: Validation failed
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    Unauthorized:
+      description: Authentication required
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    Forbidden:
+      description: Request forbidden
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    Conflict:
+      description: Resource conflict
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    TooManyRequests:
+      description: Rate limit exceeded
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    InternalServerError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
   schemas:
-    Habit:
+    AuthSessionResponse:
+      type: object
+      properties:
+        userId:
+          type: string
+        email:
+          type: string
+    CheckinResponseDto:
       type: object
       properties:
         id:
           type: string
-          format: uuid
-        name:
+        habitId:
           type: string
-        emoji:
+        date:
           type: string
+        done:
+          type: boolean
+        count:
+          type: integer
+          format: int32
         createdAt:
           type: string
-          format: date-time
         updatedAt:
           type: string
-          format: date-time
-      required: [id, name]
+        version:
+          type: integer
+          format: int32
+    CheckinUpsertRequestDto:
+      type: object
+      required:
+      - done
+      properties:
+        done:
+          type: boolean
+        count:
+          type: integer
+          format: int32
+          exclusiveMinimum: 0
+        version:
+          type: integer
+          format: int32
+    CursorPageDtoCheckinResponseDto:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/CheckinResponseDto"
+        nextCursor:
+          type: string
+    CursorPageDtoHabitResponseDto:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/HabitResponseDto"
+        nextCursor:
+          type: string
+    ErrorResponse:
+      type: object
+      properties:
+        type:
+          type: string
+        title:
+          type: string
+        status:
+          type: integer
+          format: int32
+        detail:
+          type: string
+        errorCode:
+          type: string
+    HabitColor:
+      type: string
+      enum:
+      - blue
+      - green
+      - purple
+      - orange
+      - red
+      - cyan
+      - "#5E81AC"
+      - "#1F2937"
+      - "#111827"
+    HabitCreateRequestDto:
+      type: object
+      required:
+      - id
+      - name
+      - color
+      - icon
+      - frequency
+      properties:
+        id:
+          type: string
+          pattern: \S
+          maxLength: 100
+        name:
+          type: string
+          pattern: \S
+          maxLength: 200
+        description:
+          type: string
+          maxLength: 2000
+        color:
+          $ref: "#/components/schemas/HabitColor"
+        icon:
+          type: string
+          pattern: \S
+          maxLength: 100
+        frequency:
+          $ref: "#/components/schemas/HabitFrequency"
+        customDays:
+          type: array
+          items:
+            type: integer
+            format: int32
+          maxItems: 7
+        schedule:
+          $ref: "#/components/schemas/HabitScheduleDto"
+        targetStreak:
+          type: integer
+          format: int32
+          exclusiveMinimum: 0
+        dailyTarget:
+          type: integer
+          format: int32
+          exclusiveMinimum: 0
+        tags:
+          type: array
+          items:
+            type: string
+          maxItems: 50
+        archived:
+          type: boolean
+        sortOrder:
+          type: integer
+          format: int64
+        reminderTime:
+          type: string
+        reminderEnabled:
+          type: boolean
+        type:
+          $ref: "#/components/schemas/HabitType"
+        freezeDays:
+          type: array
+          items:
+            type: string
+          maxItems: 366
+    HabitFrequency:
+      type: string
+      enum:
+      - daily
+      - weekdays
+      - weekends
+      - custom
+    HabitResponseDto:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        color:
+          $ref: "#/components/schemas/HabitColor"
+        icon:
+          type: string
+        frequency:
+          $ref: "#/components/schemas/HabitFrequency"
+        customDays:
+          type: array
+          items:
+            type: integer
+            format: int32
+        schedule:
+          $ref: "#/components/schemas/HabitScheduleDto"
+        targetStreak:
+          type: integer
+          format: int32
+        dailyTarget:
+          type: integer
+          format: int32
+        tags:
+          type: array
+          items:
+            type: string
+        archived:
+          type: boolean
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+        version:
+          type: integer
+          format: int32
+        sortOrder:
+          type: integer
+          format: int64
+        reminderTime:
+          type: string
+        reminderEnabled:
+          type: boolean
+        type:
+          $ref: "#/components/schemas/HabitType"
+        freezeDays:
+          type: array
+          items:
+            type: string
+    HabitScheduleDto:
+      type: object
+      properties:
+        type:
+          $ref: "#/components/schemas/HabitScheduleType"
+        weekdays:
+          type: array
+          items:
+            type: integer
+            format: int32
+            maximum: 7
+            minimum: 1
+          maxItems: 7
+        timesPerWeek:
+          type: integer
+          format: int32
+          maximum: 7
+          minimum: 1
+        timesPerMonth:
+          type: integer
+          format: int32
+          maximum: 31
+          minimum: 1
+        weeksOfMonth:
+          type: array
+          items:
+            $ref: "#/components/schemas/WeekOfMonthValue"
+          maxItems: 5
+    HabitScheduleType:
+      type: string
+      enum:
+      - daily
+      - weekly_days
+      - weekly_quota
+      - monthly_weeks
+      - monthly_quota
+    HabitStatusUpdateRequestDto:
+      type: object
+      required:
+      - archived
+      properties:
+        archived:
+          type: boolean
+        version:
+          type: integer
+          format: int32
+    HabitType:
+      type: string
+      enum:
+      - positive
+      - negative
+    HabitUpdateRequestDto:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 200
+        description:
+          type: string
+          maxLength: 2000
+        color:
+          $ref: "#/components/schemas/HabitColor"
+        icon:
+          type: string
+          maxLength: 100
+        frequency:
+          $ref: "#/components/schemas/HabitFrequency"
+        customDays:
+          type: array
+          items:
+            type: integer
+            format: int32
+          maxItems: 7
+        schedule:
+          $ref: "#/components/schemas/HabitScheduleDto"
+        targetStreak:
+          type: integer
+          format: int32
+          exclusiveMinimum: 0
+        dailyTarget:
+          type: integer
+          format: int32
+          exclusiveMinimum: 0
+        tags:
+          type: array
+          items:
+            type: string
+        archived:
+          type: boolean
+        sortOrder:
+          type: integer
+          format: int64
+        reminderTime:
+          type: string
+        reminderEnabled:
+          type: boolean
+        type:
+          $ref: "#/components/schemas/HabitType"
+        freezeDays:
+          type: array
+          items:
+            type: string
+          maxItems: 366
+        version:
+          type: integer
+          format: int32
+    PushSubscriptionEndpointRequest:
+      type: object
+      required:
+      - endpoint
+      properties:
+        endpoint:
+          type: string
+          pattern: \S
+    PushSubscriptionKeys:
+      type: object
+      required:
+      - p256dh
+      - auth
+      properties:
+        p256dh:
+          type: string
+          pattern: \S
+        auth:
+          type: string
+          pattern: \S
+    PushSubscriptionRequest:
+      type: object
+      required:
+      - endpoint
+      - keys
+      properties:
+        endpoint:
+          type: string
+          pattern: \S
+        keys:
+          $ref: "#/components/schemas/PushSubscriptionKeys"
+    SubscriptionStatusResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+    ThemeResponse:
+      type: object
+      properties:
+        theme:
+          type: string
+    UpdatePreferencesRequest:
+      type: object
+      required:
+      - theme
+      properties:
+        theme:
+          type: string
+          pattern: \S
+        timezone:
+          type: string
+    UpdateThemeRequest:
+      type: object
+      required:
+      - theme
+      properties:
+        theme:
+          type: string
+          pattern: \S
+    UserPreferencesResponse:
+      type: object
+      properties:
+        theme:
+          type: string
+        timezone:
+          type: string
+    VapidPublicKeyResponse:
+      type: object
+      properties:
+        publicKey:
+          type: string
+    WeekOfMonthValue:
+      type: integer
+      format: int32
+      enum:
+      - 1
+      - 2
+      - 3
+      - 4
+      - last
+tags:
+- name: Authentication
+- name: Checkins
+- name: Habits
+- name: Notifications
+paths:
+  /auth/google/callback:
+    get:
+      summary: Handle Google OAuth callback
+      description: "Completes the OAuth exchange, sets auth cookies, and redirects\
+        \ back to the web app."
+      tags:
+      - Authentication
+      parameters:
+      - name: code
+        in: query
+        schema:
+          type: string
+      - name: state
+        in: query
+        schema:
+          type: string
+      responses:
+        "302":
+          description: OAuth callback completed
+        "400":
+          description: Invalid callback parameters
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: OAuth callback rejected
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /auth/google/start:
+    get:
+      summary: Start Google OAuth
+      description: Redirects the browser to Google OAuth authorization.
+      tags:
+      - Authentication
+      parameters:
+      - name: returnTo
+        in: query
+        schema:
+          type: string
+      responses:
+        "302":
+          description: OAuth redirect initiated
+  /auth/logout:
+    post:
+      summary: Logout current session
+      description: Revokes the refresh token and clears all auth cookies.
+      tags:
+      - Authentication
+      parameters:
+      - name: habbit_runner_refresh_token
+        in: cookie
+        schema:
+          type: string
+      responses:
+        "204":
+          description: Session cleared
+  /auth/preferences:
+    put:
+      summary: Update user preferences
+      description: Updates the stored preferences for the authenticated user.
+      tags:
+      - Authentication
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdatePreferencesRequest"
+        required: true
+      responses:
+        "200":
+          description: User preferences updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserPreferencesResponse"
+        "400":
+          description: Validation failed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Authentication required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    get:
+      summary: Get user preferences
+      description: Returns the stored preferences for the authenticated user.
+      tags:
+      - Authentication
+      responses:
+        "200":
+          description: User preferences
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserPreferencesResponse"
+        "403":
+          description: Authentication required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /auth/refresh:
+    post:
+      summary: Refresh auth session
+      description: Refreshes the access token using the refresh-token cookie.
+      tags:
+      - Authentication
+      parameters:
+      - name: habbit_runner_csrf_token
+        in: cookie
+        schema:
+          type: string
+      - name: habbit_runner_refresh_token
+        in: cookie
+        schema:
+          type: string
+      responses:
+        "200":
+          description: Session refreshed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthSessionResponse"
+        "403":
+          description: Refresh rejected
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /auth/session:
+    get:
+      summary: Get current auth session
+      description: Returns the authenticated user resolved from the request auth context.
+      tags:
+      - Authentication
+      responses:
+        "200":
+          description: Authenticated session
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthSessionResponse"
+        "403":
+          description: Authentication required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /auth/theme:
+    put:
+      summary: Update current theme
+      description: Updates the active theme for the authenticated user.
+      tags:
+      - Authentication
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateThemeRequest"
+        required: true
+      responses:
+        "200":
+          description: Theme updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ThemeResponse"
+        "400":
+          description: Validation failed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Authentication required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    get:
+      summary: Get current theme
+      description: Returns the current theme for the authenticated user.
+      tags:
+      - Authentication
+      responses:
+        "200":
+          description: Current theme
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ThemeResponse"
+        "403":
+          description: Authentication required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /checkins:
+    get:
+      summary: List checkins
+      description: Returns up to the default page of checkins for the authenticated
+        user.
+      tags:
+      - Checkins
+      responses:
+        "200":
+          description: Checkins loaded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CheckinResponseDto"
+        "403":
+          description: Authentication required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /checkins/habits/{habitId}/dates/{date}:
+    put:
+      summary: Upsert checkin
+      description: Creates or updates a checkin for a concrete habit and date.
+      tags:
+      - Checkins
+      parameters:
+      - name: date
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: habitId
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CheckinUpsertRequestDto"
+        required: true
+      responses:
+        "200":
+          description: Checkin upserted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CheckinResponseDto"
+        "400":
+          description: Validation failed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Habit or checkin not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    delete:
+      summary: Delete checkin
+      description: Deletes a checkin for a concrete habit and date.
+      tags:
+      - Checkins
+      parameters:
+      - name: date
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: habitId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "204":
+          description: Checkin deleted
+        "400":
+          description: Validation failed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Habit or checkin not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /checkins/page:
+    get:
+      summary: Page checkins
+      description: Returns checkins using a stable updatedAt/id cursor.
+      tags:
+      - Checkins
+      parameters:
+      - name: cursor
+        in: query
+        schema:
+          type: string
+      - name: limit
+        in: query
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CursorPageDtoCheckinResponseDto"
+  /habits:
+    get:
+      summary: List habits
+      description: Returns up to the default page of habits for the authenticated
+        user.
+      tags:
+      - Habits
+      responses:
+        "200":
+          description: Habits loaded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HabitResponseDto"
+        "403":
+          description: Authentication required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    post:
+      summary: Create habit
+      description: Creates or replaces a habit for the authenticated user.
+      tags:
+      - Habits
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/HabitCreateRequestDto"
+        required: true
+      responses:
+        "201":
+          description: Habit created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HabitResponseDto"
+        "400":
+          description: Validation failed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Authentication required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "409":
+          description: Habit id belongs to another user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /habits/page:
+    get:
+      parameters:
+      - name: cursor
+        in: query
+        schema:
+          type: string
+      - name: limit
+        in: query
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CursorPageDtoHabitResponseDto"
+      summary: Find Page
+      tags:
+      - Habit Page Resource
+  /habits/{habitId}:
+    put:
+      summary: Update habit
+      description: Updates a habit with a concrete domain-specific request DTO.
+      tags:
+      - Habits
+      parameters:
+      - name: habitId
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/HabitUpdateRequestDto"
+        required: true
+      responses:
+        "200":
+          description: Habit updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HabitResponseDto"
+        "400":
+          description: Validation failed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Authentication required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Habit not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    delete:
+      summary: Delete habit
+      description: Deletes a habit for the authenticated user.
+      tags:
+      - Habits
+      parameters:
+      - name: habitId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "204":
+          description: Habit deleted
+        "403":
+          description: Authentication required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Habit not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /habits/{habitId}/status:
+    patch:
+      summary: Update habit status
+      description: Toggles the habit archive status using a dedicated request DTO.
+      tags:
+      - Habits
+      parameters:
+      - name: habitId
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/HabitStatusUpdateRequestDto"
+        required: true
+      responses:
+        "200":
+          description: Habit status updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HabitResponseDto"
+        "400":
+          description: Validation failed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Authentication required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Habit not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /notifications/subscribe:
+    post:
+      summary: Subscribe to push notifications
+      description: Stores the browser push subscription for the authenticated user.
+      tags:
+      - Notifications
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PushSubscriptionRequest"
+        required: true
+      responses:
+        "201":
+          description: Subscription stored
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SubscriptionStatusResponse"
+        "400":
+          description: Validation failed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Authentication required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "409":
+          description: Subscription endpoint already owned
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /notifications/unsubscribe:
+    delete:
+      summary: Unsubscribe from push notifications
+      description: Removes the stored browser push subscription for the authenticated
+        user.
+      tags:
+      - Notifications
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PushSubscriptionEndpointRequest"
+        required: true
+      responses:
+        "204":
+          description: Subscription removed
+        "400":
+          description: Validation failed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Authentication required or endpoint not owned
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /notifications/vapid-public-key:
+    get:
+      summary: Get VAPID public key
+      description: Returns the public VAPID key used by web push clients.
+      tags:
+      - Notifications
+      responses:
+        "200":
+          description: VAPID public key
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VapidPublicKeyResponse"
+        "503":
+          description: VAPID key missing
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+servers:
+- url: http://localhost:8080
+  description: Auto generated value
+- url: http://0.0.0.0:8080
+  description: Auto generated value
