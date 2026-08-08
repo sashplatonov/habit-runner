@@ -251,7 +251,7 @@ git commit -m "feat(dashboard): show habit flame and ice states"
 
 ## P2-5: Make GitHub Actions path-aware and remove duplicated setup work
 
-**Status:** ⬜ Not started  
+**Status:** ✅ Completed  
 **Priority:** P2  
 **Depends on:** -
 
@@ -267,7 +267,7 @@ Keep `.github/workflows/quality.yml` as the single workflow. Use a lightweight c
 
 - Modify `.github/workflows/quality.yml`.
 - Modify `docs/operations/github-automation.md`.
-- Modify `docs/ai-fix-log.md`.
+- Record the workflow decision in `docs/operations/github-automation.md`; the legacy `docs/ai-fix-log.md` file is not present in this checkout.
 - Create `scripts/ci/verify-quality-workflow.sh` only if a local workflow-structure/path-fixture check is needed and can run without GitHub credentials.
 
 ### Work
@@ -300,7 +300,7 @@ git diff --check
 ### Commit
 
 ```bash
-git add .github/workflows/quality.yml docs/operations/github-automation.md docs/ai-fix-log.md scripts/ci/verify-quality-workflow.sh
+git add .github/workflows/quality.yml docs/operations/github-automation.md docs/dashboard-preferences-momentum-ci-backlog.md
 git commit -m "ci(quality): skip unrelated validation lanes"
 ```
 

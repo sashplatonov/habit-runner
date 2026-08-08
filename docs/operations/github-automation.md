@@ -19,6 +19,17 @@ The current checkout includes:
 
 The current checkout now treats Trivy as an active CI gate rather than a manual-only check.
 
+The quality workflow first classifies changed paths. Frontend and shared-package changes run
+frontend checks; backend, migration, and OpenAPI changes run backend and PostgreSQL checks;
+security-sensitive application and workflow changes run Trivy. Compose smoke remains reserved
+for backend, runtime, Docker/Compose, CI-script, workflow, and OpenAPI changes. Documentation-only
+changes continue to be ignored by the workflow trigger. Workflow changes themselves select every
+dependent lane so the classifier cannot hide a broken gate.
+
+All jobs keep the existing cancellation, timeout, Maven/npm caches, and three-day failure-artifact
+retention. Local checks validate the decision table, but actual GitHub-hosted minute savings must
+be measured from fresh pushed workflow runs.
+
 The Compose smoke job runs [`scripts/ci/smoke-stack.sh`](../../scripts/ci/smoke-stack.sh)
 after the build and test jobs. The script uses `.env.example`, builds both images,
 waits for PostgreSQL/Flyway and container health, checks API liveness/readiness,

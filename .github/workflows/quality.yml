@@ -20,7 +20,63 @@ permissions:
   contents: read
 
 jobs:
+  changes:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      backend: ${{ steps.filter.outputs.backend }}
+      frontend: ${{ steps.filter.outputs.frontend }}
+      security: ${{ steps.filter.outputs.security }}
+      smoke: ${{ steps.filter.outputs.smoke }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Classify changed paths
+        id: filter
+        shell: bash
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          BEFORE_SHA: ${{ github.event.before }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.sha }}
+        run: |
+          set -Eeuo pipefail
+          if [[ "$EVENT_NAME" == "pull_request" ]]; then
+            changed_files="$(git diff --name-only "$BASE_SHA" "$HEAD_SHA")"
+          elif [[ "$BEFORE_SHA" =~ ^0+$ ]]; then
+            changed_files="$(git diff-tree --no-commit-id --name-only -r "$HEAD_SHA")"
+          else
+            changed_files="$(git diff --name-only "$BEFORE_SHA" "$HEAD_SHA")"
+          fi
+
+          has_path() {
+            grep -Eq "$1" <<<"$changed_files"
+          }
+
+          backend=false
+          frontend=false
+          security=false
+          smoke=false
+
+          if has_path '^(apps/backend/|spec/openapi/|\.github/workflows/|\.github/renovate\.json)'; then backend=true; fi
+          if has_path '^(apps/web/|apps/web/packages/shared/|\.github/workflows/|\.github/renovate\.json)'; then frontend=true; fi
+          if has_path '^(apps/(backend|web)/|docker-compose|apps/.*/Dockerfile|\.github/|package-lock\.json|pom\.xml|scripts/ci/)'; then security=true; fi
+          if has_path '^(apps/backend/|apps/web/Dockerfile|docker-compose|scripts/ci/|\.github/workflows/|spec/openapi/)'; then smoke=true; fi
+
+          {
+            echo "backend=$backend"
+            echo "frontend=$frontend"
+            echo "security=$security"
+            echo "smoke=$smoke"
+          } >> "$GITHUB_OUTPUT"
+
   verify-backend:
+    needs: changes
+    if: ${{ needs.changes.outputs.backend == 'true' }}
     runs-on: ubuntu-latest
     timeout-minutes: 20
 
@@ -63,6 +119,8 @@ jobs:
           compression-level: 9
 
   verify-postgres-integration:
+    needs: changes
+    if: ${{ needs.changes.outputs.backend == 'true' }}
     runs-on: ubuntu-latest
     timeout-minutes: 30
 
@@ -99,6 +157,8 @@ jobs:
           compression-level: 9
 
   security:
+    needs: changes
+    if: ${{ needs.changes.outputs.security == 'true' }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
 
@@ -133,6 +193,8 @@ jobs:
           skip-setup-trivy: true
 
   verify-frontend:
+    needs: changes
+    if: ${{ needs.changes.outputs.frontend == 'true' }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
 
@@ -179,8 +241,14 @@ jobs:
           compression-level: 9
 
   smoke-stack:
+    if: >-
+      ${{ always() && needs.changes.outputs.smoke == 'true' &&
+      needs.verify-backend.result == 'success' &&
+      needs.verify-postgres-integration.result == 'success' &&
+      (needs.verify-frontend.result == 'success' || needs.verify-frontend.result == 'skipped') }}
     runs-on: ubuntu-latest
     needs:
+      - changes
       - verify-backend
       - verify-postgres-integration
       - verify-frontend
