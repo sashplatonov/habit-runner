@@ -129,6 +129,8 @@ Rollback: restore the previous `apps/web/package.json` and
 - Added a regression test for the check-in query handler's final-page contract.
 - Restored required braces in the new frontend pagination helpers; `npm run
   check` had been failing its ESLint quality gate on these committed changes.
+- Extracted the cursor value object into its own top-level Java type to keep the
+  pagination API aligned with the repository's one-type-per-file rule.
 
 Risk: paged endpoints perform one additional bounded row read (maximum 200)
 to determine whether another page exists. Existing non-paged endpoints and

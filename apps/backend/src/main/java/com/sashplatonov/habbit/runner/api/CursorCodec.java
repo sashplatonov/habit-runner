@@ -38,7 +38,4 @@ public final class CursorCodec {
       throw new IllegalArgumentException("Malformed cursor", exception);
     }
   }
-
-  public record Cursor(Instant updatedAt, String id) {
-  }
 }
