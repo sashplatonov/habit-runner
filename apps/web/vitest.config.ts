@@ -20,7 +20,13 @@ export default defineConfig({
     include: ['tests/**/*.test.{ts,tsx}'],
     coverage: {
       reporter: ['text', 'lcov'],
-      exclude: ['.svelte-kit', 'node_modules', 'tests/helpers']
+      exclude: ['.svelte-kit', 'node_modules', 'tests/helpers'],
+      thresholds: {
+        statements: 70,
+        branches: 55,
+        functions: 70,
+        lines: 70
+      }
     }
   }
 });

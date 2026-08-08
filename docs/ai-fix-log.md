@@ -28,6 +28,19 @@ unchanged.
 
 Rollback: revert the PR-016 commit to restore the previous generic errors.
 
+## 2026-08-08 — PR-017 critical browser proof
+
+- Added a serial Playwright suite for create, check-in, progress, edit, and
+  delete plus expired-session recovery on desktop and compact mobile Chromium.
+- Added a conservative measured Vitest threshold (70% statements/lines,
+  55% branches, 70% functions) and installed the V8 coverage provider.
+- Added frontend CI browser, coverage, and failure-artifact gates.
+
+Risk: test infrastructure only; browser journeys use a deterministic API
+stub and do not replace deployment smoke tests.
+
+Rollback: revert the PR-017 commit to restore the previous frontend-only CI gate.
+
 ## 2026-08-08 — PR-008 optimistic locking foundation
 
 - Added JPA `@Version` management to habits and check-ins.

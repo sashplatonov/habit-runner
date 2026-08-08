@@ -961,6 +961,9 @@ rg -n 'response\\.statusText|error\\.message' apps/web/src/lib/api apps/web/src/
 
 ### PR-017 — Add critical Playwright journeys
 
+**Status:** ✅ completed and verified with desktop and compact-mobile browser
+journeys, session-expiry coverage, frontend coverage thresholds, and CI gates.
+
 **Problem and evidence**
 
 - `@playwright/test` is installed but no maintained Playwright configuration or E2E suite proves the product journey.
