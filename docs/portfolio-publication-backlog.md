@@ -124,7 +124,7 @@ git commit -m "ci(security): Scan repository history for secrets"
 
 ## P0-2: Make the Flyway migration integration test version-independent
 
-**Status:** ⬜ Not started  
+**Status:** ✅ Completed  
 **Priority:** P0  
 **Depends on:** -
 
