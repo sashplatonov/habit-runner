@@ -120,3 +120,19 @@ or Workbox publishes a fixed dependency graph.
 
 Rollback: restore the previous `apps/web/package.json` and
 `apps/web/package-lock.json`, then run `npm install`.
+
+## 2026-08-08 — Phase 2 committed-task review
+
+- Fixed cursor pagination in both habit and check-in page endpoints so they
+  fetch one look-ahead row, return at most the requested limit, and omit
+  `nextCursor` on the final page.
+- Added a regression test for the check-in query handler's final-page contract.
+- Restored required braces in the new frontend pagination helpers; `npm run
+  check` had been failing its ESLint quality gate on these committed changes.
+
+Risk: paged endpoints perform one additional bounded row read (maximum 200)
+to determine whether another page exists. Existing non-paged endpoints and
+their compatibility contracts are unchanged.
+
+Rollback: revert the review commit; pagination will return to the previous
+exact-limit heuristic and the frontend lint errors will return.

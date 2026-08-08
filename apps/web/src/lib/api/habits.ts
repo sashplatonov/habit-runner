@@ -44,7 +44,9 @@ export async function fetchHabits(): Promise<HabitResponseDto[]> {
 
 export async function fetchHabitsPage(limit = 50, cursor?: string): Promise<CursorPageDto<HabitResponseDto>> {
   const params = new URLSearchParams({ limit: String(limit) });
-  if (cursor) params.set('cursor', cursor);
+  if (cursor) {
+    params.set('cursor', cursor);
+  }
   return await request<CursorPageDto<HabitResponseDto>>(`/habits/page?${params.toString()}`, { method: 'GET' });
 }
 

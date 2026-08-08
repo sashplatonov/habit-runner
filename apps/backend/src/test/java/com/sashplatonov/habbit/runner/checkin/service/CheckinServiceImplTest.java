@@ -26,6 +26,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -134,6 +135,20 @@ class CheckinServiceImplTest {
   }
 
   @Test
+  void shouldOnlyExposeNextCursorWhenAnotherRowExists() {
+    var first = checkin("checkin-1", LocalDate.of(2026, 4, 10));
+    var second = checkin("checkin-2", LocalDate.of(2026, 4, 11));
+    when(checkinRepository.findSyncPageForUser("user-1", null, null, 3))
+        .thenReturn(List.of(first, second));
+
+    var page = queryHandler.findPage("user-1", null, 2);
+
+    assertEquals(2, page.items().size());
+    assertNull(page.nextCursor());
+    verify(checkinRepository).findSyncPageForUser("user-1", null, null, 3);
+  }
+
+  @Test
   void shouldRejectInvalidDateWhenHabitExists() {
     when(habitRepository.findByIdAndUserId("habit-1", "user-1")).thenReturn(habit());
 
@@ -192,6 +207,19 @@ class CheckinServiceImplTest {
     entity.setUpdatedAt(Instant.parse("2026-04-10T10:00:00Z"));
     entity.setSortOrder(BigInteger.ONE);
     entity.setType(HabitType.POSITIVE);
+    return entity;
+  }
+
+  private CheckinEntity checkin(String id, LocalDate date) {
+    var entity = new CheckinEntity();
+    entity.setId(id);
+    entity.setHabitId("habit-1");
+    entity.setUserId("user-1");
+    entity.setDate(date);
+    entity.setDone(true);
+    entity.setCount(1);
+    entity.setVersion(1);
+    entity.setUpdatedAt(date.atStartOfDay().toInstant(java.time.ZoneOffset.UTC));
     return entity;
   }
 

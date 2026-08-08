@@ -34,7 +34,9 @@ export async function fetchCheckins(): Promise<CheckinResponseDto[]> {
 
 export async function fetchCheckinsPage(limit = 50, cursor?: string): Promise<CursorPageDto<CheckinResponseDto>> {
   const params = new URLSearchParams({ limit: String(limit) });
-  if (cursor) params.set('cursor', cursor);
+  if (cursor) {
+    params.set('cursor', cursor);
+  }
   return await request<CursorPageDto<CheckinResponseDto>>(`/checkins/page?${params.toString()}`, { method: 'GET' });
 }
 

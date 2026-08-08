@@ -36,8 +36,8 @@ public class HabitPageResource extends AuthenticatedResourceSupport {
     var boundedLimit = boundedLimit(limit);
     try {
       var entities = loadEntities(cursor, boundedLimit);
-      var items = entities.stream().map(habitMapper::toResponse).toList();
-      return new CursorPageDto<>(items, nextCursor(entities, items.size(), boundedLimit));
+      var items = entities.stream().limit(boundedLimit).map(habitMapper::toResponse).toList();
+      return new CursorPageDto<>(items, nextCursor(entities, boundedLimit));
     } catch (IllegalArgumentException exception) {
       throw new BadRequestException("Invalid cursor", exception);
     }
@@ -57,19 +57,18 @@ public class HabitPageResource extends AuthenticatedResourceSupport {
         currentUserId(),
         decoded == null ? null : decoded.updatedAt(),
         decoded == null ? null : decoded.id(),
-        limit
+        limit + 1
     );
   }
 
   private String nextCursor(
       java.util.List<com.sashplatonov.habbit.runner.model.HabitEntity> entities,
-      int itemCount,
       int limit
   ) {
-    if (itemCount != limit || entities.isEmpty()) {
+    if (entities.size() <= limit || entities.isEmpty()) {
       return null;
     }
-    var last = entities.getLast();
+    var last = entities.get(limit - 1);
     return CursorCodec.encode(last.getUpdatedAt(), last.getId());
   }
 }

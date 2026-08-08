@@ -32,11 +32,11 @@ public class CheckinQueryHandler {
         userId,
         decoded == null ? null : decoded.updatedAt(),
         decoded == null ? null : decoded.id(),
-        limit
+        limit + 1
     );
-    var items = entities.stream().map(checkinMapper::toResponse).toList();
-    var nextCursor = items.size() == limit && !entities.isEmpty()
-        ? CursorCodec.encode(entities.getLast().getUpdatedAt(), entities.getLast().getId())
+    var items = entities.stream().limit(limit).map(checkinMapper::toResponse).toList();
+    var nextCursor = entities.size() > limit
+        ? CursorCodec.encode(entities.get(limit - 1).getUpdatedAt(), entities.get(limit - 1).getId())
         : null;
     return new CursorPageDto<>(items, nextCursor);
   }
