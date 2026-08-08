@@ -2,5 +2,6 @@ export type {
   HabitCreateRequestDto,
   HabitUpdateRequestDto,
   HabitStatusUpdateRequestDto,
-  HabitResponseDto
+  HabitResponseDto,
+  CursorPageDto
 } from '@habbit-runner/shared';

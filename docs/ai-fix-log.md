@@ -19,6 +19,15 @@ concurrent creation semantics.
   weekday ranges, and schedule limits.
 - Verified compilation and the PostgreSQL integration suite through OrbStack.
 
+## 2026-08-08 — PR-010 cursor pagination
+
+- Added stable opaque `updatedAt/id` cursors and bounded page limits for habits
+  and check-ins without breaking the existing list endpoints.
+- Added additive `/habits/page` and `/checkins/page` API contracts plus shared
+  frontend pagination types and API helpers.
+- Invalid cursors and out-of-range limits return 400; existing indexes remain
+  the query path.
+
 ## 2026-08-08 — PR-007 PostgreSQL integration suite
 
 - Added the `postgres-it` Maven profile with Quarkus Dev Services PostgreSQL 18,

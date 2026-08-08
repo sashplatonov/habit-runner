@@ -2,7 +2,8 @@ import type {
   HabitCreateRequestDto,
   HabitResponseDto,
   HabitStatusUpdateRequestDto,
-  HabitUpdateRequestDto
+  HabitUpdateRequestDto,
+  CursorPageDto
 } from '@/types/habit-api';
 import { buildApiUrl } from '@/lib/api/url';
 import { authenticatedFetch } from '@/lib/auth/session';
@@ -39,6 +40,12 @@ export async function fetchHabits(): Promise<HabitResponseDto[]> {
   return await request<HabitResponseDto[]>('/habits', {
     method: 'GET'
   });
+}
+
+export async function fetchHabitsPage(limit = 50, cursor?: string): Promise<CursorPageDto<HabitResponseDto>> {
+  const params = new URLSearchParams({ limit: String(limit) });
+  if (cursor) params.set('cursor', cursor);
+  return await request<CursorPageDto<HabitResponseDto>>(`/habits/page?${params.toString()}`, { method: 'GET' });
 }
 
 export async function updateHabit(habitId: string, requestBody: HabitUpdateRequestDto): Promise<HabitResponseDto> {

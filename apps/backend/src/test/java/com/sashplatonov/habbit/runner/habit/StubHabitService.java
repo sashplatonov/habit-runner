@@ -1,6 +1,7 @@
 package com.sashplatonov.habbit.runner.habit;
 
 import com.sashplatonov.habbit.runner.api.OperationResult;
+import com.sashplatonov.habbit.runner.api.CursorPageDto;
 import com.sashplatonov.habbit.runner.habit.dto.HabitCreateRequestDto;
 import com.sashplatonov.habbit.runner.habit.dto.HabitResponseDto;
 import com.sashplatonov.habbit.runner.habit.dto.HabitStatusUpdateRequestDto;
@@ -50,6 +51,12 @@ final class StubHabitService implements HabitService {
   public List<HabitResponseDto> findAll(String userId) {
     lastUserId = userId;
     return listResponse;
+  }
+
+  @Override
+  public CursorPageDto<HabitResponseDto> findPage(String userId, String cursor, int limit) {
+    lastUserId = userId;
+    return new CursorPageDto<>(listResponse, null);
   }
 
   public void setListResponse(List<HabitResponseDto> listResponse) {

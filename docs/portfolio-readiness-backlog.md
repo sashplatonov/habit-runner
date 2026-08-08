@@ -589,6 +589,9 @@ cd apps/web && npm run check:web
 
 ### PR-010 — Replace the silent 200-row cap with cursor pagination
 
+**Status:** ✅ completed with additive `/habits/page` and `/checkins/page`
+contracts, bounded limits, opaque cursors, and OrbStack verification.
+
 **Problem and evidence**
 
 - Repository methods call `.page(0, 200)` without exposing a page or cursor contract.

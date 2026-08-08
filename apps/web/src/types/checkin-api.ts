@@ -1,4 +1,5 @@
 export type {
   CheckinResponseDto,
-  CheckinUpsertRequestDto
+  CheckinUpsertRequestDto,
+  CursorPageDto
 } from '@habbit-runner/shared';

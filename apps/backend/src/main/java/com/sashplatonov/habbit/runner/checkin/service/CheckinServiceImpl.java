@@ -2,6 +2,7 @@ package com.sashplatonov.habbit.runner.checkin;
 
 import com.sashplatonov.habbit.runner.api.OperationResult;
 import com.sashplatonov.habbit.runner.checkin.dto.CheckinResponseDto;
+import com.sashplatonov.habbit.runner.api.CursorPageDto;
 import com.sashplatonov.habbit.runner.checkin.dto.CheckinUpsertRequestDto;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -25,6 +26,11 @@ public class CheckinServiceImpl implements CheckinService {
   @Override
   public List<CheckinResponseDto> findAll(String userId) {
     return checkinQueryHandler.findAll(userId);
+  }
+
+  @Override
+  public CursorPageDto<CheckinResponseDto> findPage(String userId, String cursor, int limit) {
+    return checkinQueryHandler.findPage(userId, cursor, limit);
   }
 
   @Override

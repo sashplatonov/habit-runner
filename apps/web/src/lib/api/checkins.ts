@@ -1,4 +1,4 @@
-import type { CheckinResponseDto, CheckinUpsertRequestDto } from '@/types/checkin-api';
+import type { CheckinResponseDto, CheckinUpsertRequestDto, CursorPageDto } from '@/types/checkin-api';
 import { completionKeyToCalendarDate } from '@/lib/completionKey';
 import { buildApiUrl } from '@/lib/api/url';
 import { authenticatedFetch } from '@/lib/auth/session';
@@ -30,6 +30,12 @@ function toCheckinPathDate(date: string): string {
 
 export async function fetchCheckins(): Promise<CheckinResponseDto[]> {
   return await request<CheckinResponseDto[]>('/checkins', { method: 'GET' });
+}
+
+export async function fetchCheckinsPage(limit = 50, cursor?: string): Promise<CursorPageDto<CheckinResponseDto>> {
+  const params = new URLSearchParams({ limit: String(limit) });
+  if (cursor) params.set('cursor', cursor);
+  return await request<CursorPageDto<CheckinResponseDto>>(`/checkins/page?${params.toString()}`, { method: 'GET' });
 }
 
 export async function upsertCheckin(
