@@ -695,6 +695,9 @@ cd apps/backend && ./mvnw -B -ntp verify
 
 ### PR-012 — Align Java packages with source paths
 
+**Status:** ✅ completed and verified with package-path audit, backend
+compilation, and the full OrbStack PostgreSQL quality gate.
+
 **Problem and evidence**
 
 - Multiple Java files are stored under `resource`, `service`, or `infrastructure/http` paths while declaring a different package.

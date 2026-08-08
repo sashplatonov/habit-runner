@@ -155,3 +155,17 @@ concurrency boundary for check-in writes.
 
 Rollback: revert the PR-008 follow-up commit and restore the prior create
 semantics and generic persistence exception handling.
+
+## 2026-08-08 — PR-012 package-path alignment
+
+- Moved Java sources so their filesystem directories match their declared
+  packages across habit, check-in, notification, API, model, and test code.
+- Preserved package names, REST paths, DTO shapes, and runtime behavior; this
+  was a mechanical source-layout refactor only.
+- Added a package-path audit to verification and confirmed no mismatches remain.
+
+Risk: source moves can affect IDE indexing or stale incremental build caches;
+the clean Maven compiler and integration gate provide the authoritative proof.
+
+Rollback: revert the package-path alignment commit to restore the previous
+filesystem layout.
