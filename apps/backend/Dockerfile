@@ -11,7 +11,6 @@ COPY --chmod=0755 mvnw mvnw
 COPY pom.xml .
 COPY checkstyle checkstyle
 COPY pmd pmd
-COPY spotbugs spotbugs
 
 RUN --mount=type=cache,target=/root/.m2 ./mvnw -B -T1 -Dmaven.test.skip=true dependency:go-offline
 
