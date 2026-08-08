@@ -136,7 +136,7 @@ curl http://localhost/api/notifications/vapid-public-key
 ## ⚠️ Troubleshooting <a name="troubleshooting"></a>
 
 Common issues:
-- `VAPID_PUBLIC_KEY not configured`: <REDACTED>
+- `VAPID_PUBLIC_KEY not configured`: generate a fresh key pair and configure both VAPID environment variables.
 - browser permission denied: reset site notification permission and retry.
 - no subscription request reaches the backend: check `VITE_API_BASE_URL` and dev proxy behavior.
 - Docker stack works but direct local backend does not: confirm env vars are exported in the shell, not only written to a file.
