@@ -25,6 +25,7 @@ import com.sashplatonov.habbit.runner.auth.support.OAuthHelper;
 import com.sashplatonov.habbit.runner.auth.support.OAuthSupport;
 import com.sashplatonov.habbit.runner.auth.support.RefreshTokenDigest;
 import com.sashplatonov.habbit.runner.auth.support.ThemeCatalog;
+import com.sashplatonov.habbit.runner.auth.dto.DashboardPreferences;
 import com.sashplatonov.habbit.runner.auth.dto.UpdatePreferencesRequest;
 import com.sashplatonov.habbit.runner.model.RefreshTokenEntity;
 import com.sashplatonov.habbit.runner.model.UserEntity;
@@ -35,6 +36,8 @@ import jakarta.ws.rs.NotAuthorizedException;
 import org.junit.jupiter.api.Test;
 
 import java.time.Instant;
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -229,5 +232,40 @@ class AuthPersistenceCoverageTest extends AuthenticatedApiTestSupport {
     assertEquals("matrix", updated.theme());
     assertNull(updated.timezone());
     assertNull(unchangedTimezone.timezone());
+  }
+
+  @Test
+  void shouldNormalizeDashboardPreferencesAndPreserveThemForLegacyClients() throws Exception {
+    var user = inTransaction(() -> {
+      var entity = new UserEntity();
+      entity.setEmail(UUID.randomUUID() + "@example.test");
+      entity.setTheme("cloud");
+      entity.persist();
+      return entity;
+    });
+    var requestedDashboard = new DashboardPreferences(
+        99,
+        "unsupported",
+        List.of(" focus ", "focus", "x".repeat(41)),
+        "unsupported",
+        "compact",
+        Map.of("cloud", 4, "broken", -1)
+    );
+
+    var updated = inTransaction(() -> preferencesService.updateUserPreferences(
+        user.getId(),
+        new UpdatePreferencesRequest("matrix", "Europe/Belgrade", requestedDashboard)
+    ));
+    var legacyUpdated = inTransaction(() -> preferencesService.updateUserPreferences(
+        user.getId(),
+        new UpdatePreferencesRequest("sakura", null)
+    ));
+
+    assertEquals("pending", updated.dashboard().filter());
+    assertEquals(List.of("focus"), updated.dashboard().tags());
+    assertEquals("custom", updated.dashboard().sort());
+    assertEquals("compact", updated.dashboard().density());
+    assertEquals(Map.of("cloud", 4), updated.dashboard().themeUsage());
+    assertEquals(updated.dashboard(), legacyUpdated.dashboard());
   }
 }
