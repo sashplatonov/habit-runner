@@ -123,6 +123,8 @@ services:
       start_period: 10s
     expose:
       - "80"
+    ports:
+      - "${WEB_PORT:-5137}:80"
     networks:
       - backend
 

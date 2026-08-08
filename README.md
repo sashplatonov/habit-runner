@@ -51,8 +51,9 @@ cp .env.example .env
 docker compose --profile db up --build --wait
 ```
 
-Open the web container through the deployment's published route. For a bounded
-local proof of image build, Flyway startup, readiness, and nginx `/api` routing:
+Open [http://localhost:5137](http://localhost:5137) (or the value of
+`WEB_PORT`). For a bounded local proof of image build, Flyway startup,
+readiness, and nginx `/api` routing:
 
 ```bash
 DOCKER_HOST=unix:///Users/sash/.orbstack/run/docker.sock ./scripts/ci/smoke-stack.sh

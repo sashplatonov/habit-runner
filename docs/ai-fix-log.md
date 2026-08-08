@@ -1,5 +1,17 @@
 # AI Fix Log
 
+## 2026-08-08 — Phase 5 review: publish the local web entry point
+
+- Published the JVM and native Compose web service on `WEB_PORT`, defaulting
+  to `5137` to match the checked-in local OAuth and CORS example values.
+- Updated the README and operations docs with the concrete local entry point;
+  the Dokploy-specific network overlay remains separate and unchanged.
+
+Risk: local stacks now reserve host port 5137 by default. Existing deployments
+can preserve another binding by setting `WEB_PORT` explicitly.
+
+Rollback: revert this Phase 5 review follow-up commit.
+
 ## 2026-08-08 — Phase 5 review: document the Java agent as opt-in
 
 - Restored the packaged New Relic Java agent as an explicit, independent

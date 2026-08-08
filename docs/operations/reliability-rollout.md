@@ -33,6 +33,7 @@ Docker Compose health checks currently monitor:
 Important current behavior:
 - `db` is behind the `db` profile;
 - `api` does not publish a host port in the default stack;
+- `web` publishes `${WEB_PORT:-5137}` on the host and proxies API traffic at `/api`;
 - external browser traffic reaches the API through the `web` proxy at `/api`;
 - backend observability details live in [docs/monitoring/newrelic.md](../monitoring/newrelic.md).
 
@@ -133,10 +134,13 @@ docker compose --profile db ps
 ```
 
 ```bash
-curl --fail http://localhost/api/q/health/live
-curl --fail http://localhost/api/q/health/ready
+curl --fail http://localhost:5137/api/q/health/live
+curl --fail http://localhost:5137/api/q/health/ready
 ```
 
-If you use `docker-compose.local.yml`, the web app is available on `http://localhost:5137`, so the equivalent health paths become `http://localhost:5137/api/q/health/live` and `http://localhost:5137/api/q/health/ready`.
+The default JVM and native Compose stacks, as well as `docker-compose.local.yml`,
+use `http://localhost:5137` unless `WEB_PORT` is overridden. The equivalent
+health paths are `http://localhost:5137/api/q/health/live` and
+`http://localhost:5137/api/q/health/ready`.
 
 [↑ Back to top](#top)

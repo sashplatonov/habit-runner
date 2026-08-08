@@ -232,7 +232,7 @@ Use matching origins:
 
 | Variable | Required | Purpose |
 |---|---|---|
-| `WEB_PORT` | Yes | Internal web service port mapping in templates |
+| `WEB_PORT` | Yes | Host port mapped to the web container (default: `5137`) |
 | `API_PORT` | Yes | Backend HTTP port inside the container |
 | `DB_HOST` | Yes | Database host for the backend |
 | `DB_PORT` | Yes | Database connection port used by the backend |
