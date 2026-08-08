@@ -1,5 +1,18 @@
 # AI Fix Log
 
+## 2026-08-08 — Phase 5 review: document the Java agent as opt-in
+
+- Restored the packaged New Relic Java agent as an explicit, independent
+  observability runtime mode in the monitoring contract.
+- Made APM dashboard and validation claims conditional on agent activation;
+  Micrometer metrics, OpenTelemetry, and browser telemetry remain separately
+  configured paths.
+
+Risk: documentation-only clarification; default container startup and telemetry
+settings are unchanged.
+
+Rollback: revert this Phase 5 review follow-up commit.
+
 ## 2026-08-08 — Phase 5 review: retain smoke failure diagnostics
 
 - The Compose smoke script now writes service state and logs to the exact
