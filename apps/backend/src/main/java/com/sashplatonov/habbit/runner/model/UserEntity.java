@@ -23,6 +23,9 @@ public class UserEntity extends UuidAuditedEntityBase {
   @Column
   private String timezone;
 
+  @Column(name = "dashboardPreferences", nullable = false, columnDefinition = "TEXT")
+  private String dashboardPreferences = "{}";
+
   @PrePersist
   void prePersist() {
     if (getTheme() == null || getTheme().isBlank()) {

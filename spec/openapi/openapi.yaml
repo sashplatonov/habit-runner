@@ -119,6 +119,27 @@ components:
             $ref: "#/components/schemas/HabitResponseDto"
         nextCursor:
           type: string
+    DashboardPreferences:
+      type: object
+      properties:
+        version:
+          type: integer
+          format: int32
+        filter:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+        sort:
+          type: string
+        density:
+          type: string
+        themeUsage:
+          type: object
+          additionalProperties:
+            type: integer
+            format: int32
     ErrorResponse:
       type: object
       properties:
@@ -428,6 +449,8 @@ components:
           pattern: \S
         timezone:
           type: string
+        dashboard:
+          $ref: "#/components/schemas/DashboardPreferences"
     UpdateThemeRequest:
       type: object
       required:
@@ -443,6 +466,8 @@ components:
           type: string
         timezone:
           type: string
+        dashboard:
+          $ref: "#/components/schemas/DashboardPreferences"
     VapidPublicKeyResponse:
       type: object
       properties:

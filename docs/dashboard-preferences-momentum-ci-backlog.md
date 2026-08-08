@@ -27,7 +27,7 @@ Authenticated users keep their dashboard presentation after signing in again or 
 
 ## P0-1: Persist and validate account-level dashboard preferences
 
-**Status:** ⬜ Not started  
+**Status:** ✅ Completed  
 **Priority:** P0  
 **Depends on:** -
 

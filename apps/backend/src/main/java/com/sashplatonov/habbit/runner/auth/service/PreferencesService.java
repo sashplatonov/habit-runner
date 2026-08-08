@@ -1,5 +1,8 @@
 package com.sashplatonov.habbit.runner.auth.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sashplatonov.habbit.runner.auth.dto.DashboardPreferences;
 import com.sashplatonov.habbit.runner.auth.dto.UpdatePreferencesRequest;
 import com.sashplatonov.habbit.runner.auth.dto.UserPreferencesResponse;
 import com.sashplatonov.habbit.runner.auth.support.ThemeCatalog;
@@ -17,14 +20,20 @@ import java.util.Objects;
 @Slf4j
 public class PreferencesService {
   private final UserRepository userRepository;
+  private final ObjectMapper objectMapper;
 
   public PreferencesService() {
-    this(null);
+    this(null, new ObjectMapper());
+  }
+
+  public PreferencesService(UserRepository userRepository) {
+    this(userRepository, new ObjectMapper());
   }
 
   @Inject
-  public PreferencesService(UserRepository userRepository) {
+  public PreferencesService(UserRepository userRepository, ObjectMapper objectMapper) {
     this.userRepository = userRepository;
+    this.objectMapper = objectMapper;
   }
 
   @Transactional
@@ -33,7 +42,11 @@ public class PreferencesService {
     if (user == null) {
       throw new NotAuthorizedException("User no longer exists");
     }
-    return new UserPreferencesResponse(ThemeCatalog.normalize(user.getTheme()), user.getTimezone());
+    return new UserPreferencesResponse(
+        ThemeCatalog.normalize(user.getTheme()),
+        user.getTimezone(),
+        readDashboardPreferences(user.getDashboardPreferences())
+    );
   }
 
   @Transactional
@@ -49,13 +62,39 @@ public class PreferencesService {
     if (request.timezone() != null) {
       user.setTimezone(request.timezone().isBlank() ? null : request.timezone());
     }
+    if (request.dashboard() != null) {
+      user.setDashboardPreferences(writeDashboardPreferences(request.dashboard()));
+    }
     log.info(
         "User preferences updated: userId={}, themeChanged={}, timezoneChanged={}",
         user.getId(),
         !Objects.equals(previousTheme, user.getTheme()),
         !Objects.equals(previousTimezone, user.getTimezone())
     );
-    return new UserPreferencesResponse(user.getTheme(), user.getTimezone());
+    return new UserPreferencesResponse(
+        user.getTheme(),
+        user.getTimezone(),
+        readDashboardPreferences(user.getDashboardPreferences())
+    );
+  }
+
+  private DashboardPreferences readDashboardPreferences(String value) {
+    try {
+      return DashboardPreferencesNormalizer.normalize(
+          objectMapper.readValue(value == null || value.isBlank() ? "{}" : value, DashboardPreferences.class)
+      );
+    } catch (JsonProcessingException exception) {
+      log.warn("Invalid dashboard preferences payload; using defaults");
+      return DashboardPreferencesNormalizer.defaults();
+    }
+  }
+
+  private String writeDashboardPreferences(DashboardPreferences value) {
+    try {
+      return objectMapper.writeValueAsString(DashboardPreferencesNormalizer.normalize(value));
+    } catch (JsonProcessingException exception) {
+      throw new IllegalArgumentException("Dashboard preferences could not be serialized", exception);
+    }
   }
 
   protected UserEntity findUserById(String userId) {

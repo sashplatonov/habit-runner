@@ -1,7 +1,7 @@
 import { API_BASE_URL } from '@/lib/core/config';
 import { authenticatedFetch } from '@/lib/auth/session';
 import { THEME_IDS, type ThemeId } from '@/lib/theme/themes';
-import type { UserPreferences } from '@habbit-runner/shared';
+import type { DashboardPreferences, UserPreferences } from '@habbit-runner/shared';
 import { getCurrentUserTimeZone } from '@/lib/time/userTimezone';
 
 export async function fetchUserPreferences(): Promise<UserPreferences> {
@@ -17,11 +17,16 @@ export async function fetchUserPreferences(): Promise<UserPreferences> {
   const payload = (await response.json()) as UserPreferences;
   return {
     theme: payload.theme,
-    timezone: payload.timezone ?? null
+    timezone: payload.timezone ?? null,
+    dashboard: payload.dashboard
   };
 }
 
-export async function saveUserPreferences(preferences: { theme: ThemeId; timezone: string }): Promise<void> {
+export async function saveUserPreferences(preferences: {
+  theme: ThemeId;
+  timezone: string;
+  dashboard?: DashboardPreferences;
+}): Promise<void> {
   const response = await authenticatedFetch(
     `${API_BASE_URL}/auth/preferences`,
     {
