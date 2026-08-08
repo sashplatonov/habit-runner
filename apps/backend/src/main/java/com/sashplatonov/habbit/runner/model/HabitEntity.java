@@ -14,6 +14,7 @@ import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.BatchSize;
 
 import java.math.BigInteger;
 import java.util.List;
@@ -50,12 +51,14 @@ public class HabitEntity extends HabitLifecycleEntityBase {
   private HabitFrequency frequency;
 
   @ElementCollection
+  @BatchSize(size = 50)
   @CollectionTable(name = "habit_custom_days", joinColumns = @JoinColumn(name = "habit_id"))
   @OrderColumn(name = "position_index")
   @Column(name = "day_value", nullable = false)
   private List<Integer> customDays;
 
   @ElementCollection
+  @BatchSize(size = 50)
   @CollectionTable(name = "habit_freeze_days", joinColumns = @JoinColumn(name = "habit_id"))
   @OrderColumn(name = "position_index")
   @Column(name = "freeze_day_value", nullable = false)

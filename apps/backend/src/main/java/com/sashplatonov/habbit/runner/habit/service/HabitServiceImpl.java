@@ -1,8 +1,6 @@
 package com.sashplatonov.habbit.runner.habit;
 
 import com.sashplatonov.habbit.runner.api.ErrorResponse;
-import com.sashplatonov.habbit.runner.api.CursorCodec;
-import com.sashplatonov.habbit.runner.api.CursorPageDto;
 import com.sashplatonov.habbit.runner.api.OperationResult;
 import com.sashplatonov.habbit.runner.habit.dto.HabitCreateRequestDto;
 import com.sashplatonov.habbit.runner.habit.dto.HabitResponseDto;
@@ -45,22 +43,6 @@ public class HabitServiceImpl implements HabitService {
     return habitRepository.findListForUser(userId).stream()
         .map(habitMapper::toResponse)
         .toList();
-  }
-
-  @Override
-  public CursorPageDto<HabitResponseDto> findPage(String userId, String cursor, int limit) {
-    var decoded = cursor == null || cursor.isBlank() ? null : CursorCodec.decode(cursor);
-    var entities = habitRepository.findSyncPageForUser(
-        userId,
-        decoded == null ? null : decoded.updatedAt(),
-        decoded == null ? null : decoded.id(),
-        limit
-    );
-    var items = entities.stream().map(habitMapper::toResponse).toList();
-    var nextCursor = items.size() == limit && !entities.isEmpty()
-        ? CursorCodec.encode(entities.getLast().getUpdatedAt(), entities.getLast().getId())
-        : null;
-    return new CursorPageDto<>(items, nextCursor);
   }
 
   @Override

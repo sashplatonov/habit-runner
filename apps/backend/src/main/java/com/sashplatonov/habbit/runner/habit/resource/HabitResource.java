@@ -4,7 +4,6 @@ import com.sashplatonov.habbit.runner.api.ErrorResponse;
 import com.sashplatonov.habbit.runner.api.AuthenticatedResourceSupport;
 import com.sashplatonov.habbit.runner.api.OperationFailure;
 import com.sashplatonov.habbit.runner.api.OperationSuccess;
-import com.sashplatonov.habbit.runner.api.CursorPageDto;
 import com.sashplatonov.habbit.runner.auth.security.CurrentUserContext;
 import com.sashplatonov.habbit.runner.auth.security.RequireAuth;
 import com.sashplatonov.habbit.runner.habit.dto.HabitCreateRequestDto;
@@ -21,7 +20,6 @@ import jakarta.ws.rs.PATCH;
 import jakarta.ws.rs.PUT;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
-import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
@@ -61,23 +59,6 @@ public class HabitResource extends AuthenticatedResourceSupport {
     return habitService.findAll(currentUserId());
   }
 
-  @GET
-  @Path("/page")
-  @Operation(summary = "Page habits", description = "Returns habits using a stable updatedAt/id cursor.")
-  public CursorPageDto<HabitResponseDto> findPage(
-      @QueryParam("cursor") String cursor,
-      @QueryParam("limit") Integer limit
-  ) {
-    var boundedLimit = limit == null ? 50 : limit;
-    if (boundedLimit < 1 || boundedLimit > 199) {
-      throw new jakarta.ws.rs.BadRequestException("limit must be between 1 and 199");
-    }
-    try {
-      return habitService.findPage(currentUserId(), cursor, boundedLimit);
-    } catch (IllegalArgumentException exception) {
-      throw new jakarta.ws.rs.BadRequestException("Invalid cursor", exception);
-    }
-  }
 
   @POST
   @Operation(summary = "Create habit", description = "Creates or replaces a habit for the authenticated user.")

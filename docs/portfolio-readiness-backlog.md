@@ -641,6 +641,10 @@ cd apps/web && npm run check:web
 
 ### PR-011 — Verify and bound collection-loading query cost
 
+**Status:** in progress; PostgreSQL query-count test and batch fetching are
+implemented, but the repository-wide PMD gate still reports pre-existing
+complexity/coupling findings that must be resolved before ✅.
+
 **Problem and evidence**
 
 - Habit mapping reads multiple element collections for list responses.

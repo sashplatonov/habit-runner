@@ -8,6 +8,7 @@ import jakarta.persistence.CollectionTable;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.MappedSuperclass;
 import jakarta.persistence.OrderColumn;
+import org.hibernate.annotations.BatchSize;
 import jakarta.persistence.Version;
 import lombok.Getter;
 import lombok.Setter;
@@ -20,6 +21,7 @@ import java.util.List;
 @Setter
 public abstract class HabitLifecycleEntityBase extends HabitSchedulingEntityBase {
   @ElementCollection
+  @BatchSize(size = 50)
   @CollectionTable(name = "habit_tags", joinColumns = @JoinColumn(name = "habit_id"))
   @OrderColumn(name = "position_index")
   @Column(name = "tag_value", nullable = false)

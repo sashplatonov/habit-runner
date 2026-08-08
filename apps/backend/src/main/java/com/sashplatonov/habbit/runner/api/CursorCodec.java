@@ -2,6 +2,7 @@ package com.sashplatonov.habbit.runner.api;
 
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
+import java.time.format.DateTimeParseException;
 import java.util.Base64;
 
 public final class CursorCodec {
@@ -14,14 +15,20 @@ public final class CursorCodec {
   }
 
   public static Cursor decode(String encoded) {
+    byte[] decodedBytes;
     try {
-      var value = new String(Base64.getUrlDecoder().decode(encoded), StandardCharsets.UTF_8);
-      var separator = value.indexOf('\n');
-      if (separator <= 0 || separator == value.length() - 1) {
-        throw new IllegalArgumentException("Malformed cursor");
-      }
+      decodedBytes = Base64.getUrlDecoder().decode(encoded);
+    } catch (IllegalArgumentException exception) {
+      throw new IllegalArgumentException("Malformed cursor", exception);
+    }
+    var value = new String(decodedBytes, StandardCharsets.UTF_8);
+    var separator = value.indexOf('\n');
+    if (separator <= 0 || separator == value.length() - 1) {
+      throw new IllegalArgumentException("Malformed cursor");
+    }
+    try {
       return new Cursor(Instant.parse(value.substring(0, separator)), value.substring(separator + 1));
-    } catch (RuntimeException exception) {
+    } catch (DateTimeParseException exception) {
       throw new IllegalArgumentException("Malformed cursor", exception);
     }
   }

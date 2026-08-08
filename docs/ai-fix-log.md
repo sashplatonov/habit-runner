@@ -28,6 +28,14 @@ concurrent creation semantics.
 - Invalid cursors and out-of-range limits return 400; existing indexes remain
   the query path.
 
+## 2026-08-08 — PR-011 query-cost measurement
+
+- Added PostgreSQL Hibernate statistics coverage for a representative
+  multi-habit list and batch fetching for element collections.
+- The focused integration test passes with six collection loads for three
+  habits; full verify remains blocked by PMD findings in existing service
+  complexity/coupling plus cursor error handling being refined.
+
 ## 2026-08-08 — PR-007 PostgreSQL integration suite
 
 - Added the `postgres-it` Maven profile with Quarkus Dev Services PostgreSQL 18,

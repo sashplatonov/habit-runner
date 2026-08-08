@@ -8,6 +8,7 @@ import jakarta.persistence.CollectionTable;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.MappedSuperclass;
 import jakarta.persistence.OrderColumn;
+import org.hibernate.annotations.BatchSize;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -28,12 +29,14 @@ public abstract class HabitSchedulingEntityBase extends UuidAuditedEntityBase {
   private Integer scheduleTimesPerMonth;
 
   @ElementCollection
+  @BatchSize(size = 50)
   @CollectionTable(name = "habit_schedule_weekdays", joinColumns = @JoinColumn(name = "habit_id"))
   @OrderColumn(name = "position_index")
   @Column(name = "weekday_value", nullable = false)
   private List<Integer> scheduleWeekdays;
 
   @ElementCollection(targetClass = WeekOfMonthValue.class)
+  @BatchSize(size = 50)
   @CollectionTable(name = "habit_schedule_weeks_of_month", joinColumns = @JoinColumn(name = "habit_id"))
   @OrderColumn(name = "position_index")
   @Enumerated(EnumType.STRING)
