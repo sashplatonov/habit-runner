@@ -124,7 +124,7 @@
         <dependency>
             <groupId>com.auth0</groupId>
             <artifactId>java-jwt</artifactId>
-            <version>4.5.2</version>
+            <version>4.6.0</version>
         </dependency>
 
         <!-- Lombok for convenient logging and boilerplate reduction (compile-time only) -->

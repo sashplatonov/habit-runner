@@ -339,3 +339,19 @@ Risk: the repository is now explicitly MIT licensed; replace `LICENSE` in a
 separate maintainer-approved change if a different license is required.
 
 Rollback: revert the PR-021 documentation, license, and hygiene commit.
+
+## 2026-08-08 — PR-022 verified dependency upgrades
+
+- Updated `java-jwt` to 4.6.0 and refreshed compatible SvelteKit, Svelte,
+  Vite, ESLint, Playwright, Tailwind, DOMPurify, Marked, and related patch
+  dependencies with a reproducible lockfile install.
+- Backend verification, frontend checks, PostgreSQL integration tests, and all
+  eight Playwright E2E scenarios pass.
+- `npm audit` still reports four low-severity `cookie` advisories inherited by
+  SvelteKit 2.70.2. The only suggested remediation is a breaking forced
+  downgrade, so no override or suppression was introduced.
+
+Risk: dependency upgrades are covered by the full local quality gates; the
+remaining advisory requires an upstream SvelteKit/cookie dependency update.
+
+Rollback: revert the PR-022 dependency commit.

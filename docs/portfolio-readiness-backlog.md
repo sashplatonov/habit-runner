@@ -1241,6 +1241,8 @@ cd apps/backend && ./mvnw -B -ntp verify
 
 ### PR-022 — Apply remaining verified patch upgrades
 
+**Status:** in progress — compatible upgrades are applied and all executable gates pass except the upstream `cookie` advisory inherited by SvelteKit 2.70.2; `npm audit fix --force` would select a breaking SvelteKit release and is intentionally not used.
+
 **Problem and evidence**
 
 - Quarkus, `java-jwt`, SvelteKit, and several build dependencies have newer compatible patch/minor releases.
