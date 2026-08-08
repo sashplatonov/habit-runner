@@ -39,7 +39,7 @@
 <button
   type="button"
   onclick={handleClick}
-  class="inline-flex items-center justify-center gap-2 rounded-full font-semibold uppercase tracking-widest transition-all {variants[variant]} {sizes[size]} {className}"
+  class="inline-flex items-center justify-center gap-2 rounded-full font-semibold uppercase tracking-widest transition-[transform,background-color,border-color,color,box-shadow] {variants[variant]} {sizes[size]} {className}"
 >
   {@render children()}
 </button>

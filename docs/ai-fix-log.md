@@ -41,6 +41,19 @@ stub and do not replace deployment smoke tests.
 
 Rollback: revert the PR-017 commit to restore the previous frontend-only CI gate.
 
+## 2026-08-08 — PR-018 production UI hardening
+
+- Removed the `/debug/mini-heatmap` production route.
+- Replaced broad `transition-all` declarations with property-specific
+  transitions, retained reduced-motion CSS, and corrected `Adding…` copy.
+- Added intrinsic dimensions to app icons and explicit decorative-icon
+  accessibility treatment.
+
+Risk: presentation and route-surface cleanup; core interaction behavior is
+unchanged.
+
+Rollback: revert the PR-018 commit to restore the prior UI declarations and route.
+
 ## 2026-08-08 — PR-008 optimistic locking foundation
 
 - Added JPA `@Version` management to habits and check-ins.

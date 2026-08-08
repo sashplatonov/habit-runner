@@ -15,7 +15,7 @@
 <div class="flex min-h-[calc(100vh-56px)] flex-col items-center justify-center px-4 py-12 sm:px-6">
   <div class="w-full max-w-4xl space-y-8">
     <div class="space-y-3 text-center">
-      <Sparkles class="mx-auto text-accent" size={32} />
+      <Sparkles class="mx-auto text-accent" size={32} aria-hidden="true" />
       <h1 class="text-3xl font-semibold text-foreground">Habbit Runner is ready</h1>
       <p class="text-sm text-muted">
         Research shows starting with <span class="font-bold text-accent">3 habits</span> is optimal for success.
@@ -26,7 +26,7 @@
         class="inline-flex items-center justify-center gap-2 rounded-full border border-border px-4 py-2 text-xs font-semibold uppercase tracking-widest text-accent transition hover:border-accent-secondary/50"
         onclick={onCreateCustom}
       >
-        <PlusCircle size={16} />
+        <PlusCircle size={16} aria-hidden="true" />
         Create custom habit
       </button>
     </div>
@@ -34,7 +34,7 @@
     <div class="grid gap-3 sm:grid-cols-3">
       {#each ONBOARDING_STEPS as step, si (step.title + '-' + si)}
         <div class="rounded-2xl border border-border bg-bg-secondary p-4 text-center">
-          <step.icon class="mx-auto mb-2 text-accent" size={22} />
+          <step.icon class="mx-auto mb-2 text-accent" size={22} aria-hidden="true" />
           <p class="text-xs font-semibold uppercase tracking-[0.3em] text-muted">{step.title}</p>
           <p class="mt-2 text-sm text-foreground">{step.description}</p>
         </div>
@@ -76,9 +76,9 @@
               }}
             >
               {#if isActive}
-                <span>Adding...</span>
+                <span>Adding…</span>
               {:else}
-                <PlusCircle size={12} />
+                <PlusCircle size={12} aria-hidden="true" />
                 <span>Add</span>
               {/if}
             </button>

@@ -51,7 +51,7 @@
 
     <div class="mt-10 space-y-6">
       {#each data.posts as post (post.id)}
-        <article class="rounded-[1.75rem] border border-slate-200/80 bg-white/92 p-5 shadow-[0_18px_50px_rgba(15,23,42,0.08)] transition-all hover:-translate-y-0.5 hover:border-slate-300">
+        <article class="rounded-[1.75rem] border border-slate-200/80 bg-white/92 p-5 shadow-[0_18px_50px_rgba(15,23,42,0.08)] transition-[transform,border-color] hover:-translate-y-0.5 hover:border-slate-300">
           {#if post.coverImage}
             <a href={resolve<'/blog/[slug]'>('/blog/[slug]', { slug: post.slug })} tabindex="-1" aria-hidden="true">
               <img src={post.coverImage} alt={post.title} class="w-full h-44 object-cover rounded-xl mb-4" loading="lazy" width="1200" height="630" />

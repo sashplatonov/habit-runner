@@ -1013,6 +1013,9 @@ cd apps/web && npm run check:web
 
 ### PR-018 — Remove production debug UI and accessibility defects
 
+**Status:** ✅ completed and verified with debug-route scan, transition/copy
+scan, unit tests, frontend checks, and desktop/compact-mobile Playwright runs.
+
 **Problem and evidence**
 
 - `/debug/mini-heatmap` is included in the production bundle.

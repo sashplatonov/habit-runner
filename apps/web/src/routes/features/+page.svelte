@@ -181,9 +181,9 @@
       <h2 class="text-lg font-semibold text-slate-900">Compare Habbit Runner</h2>
       <p class="mt-2 text-sm text-slate-600">See how Habbit Runner compares to other habit trackers.</p>
       <div class="mt-4 flex flex-wrap gap-3">
-        <a href={resolve<'/vs/habitica'>('/vs/habitica', {})} class="rounded-full border border-slate-300 bg-white px-3 py-2 text-xs text-slate-700 shadow-sm transition-all hover:-translate-y-0.5 hover:border-slate-400">vs Habitica</a>
-        <a href={resolve<'/vs/streaks-app'>('/vs/streaks-app', {})} class="rounded-full border border-slate-300 bg-white px-3 py-2 text-xs text-slate-700 shadow-sm transition-all hover:-translate-y-0.5 hover:border-slate-400">vs Streaks App</a>
-        <a href={resolve<'/vs/beeminder'>('/vs/beeminder', {})} class="rounded-full border border-slate-300 bg-white px-3 py-2 text-xs text-slate-700 shadow-sm transition-all hover:-translate-y-0.5 hover:border-slate-400">vs Beeminder</a>
+        <a href={resolve<'/vs/habitica'>('/vs/habitica', {})} class="rounded-full border border-slate-300 bg-white px-3 py-2 text-xs text-slate-700 shadow-sm transition-[transform,border-color] hover:-translate-y-0.5 hover:border-slate-400">vs Habitica</a>
+        <a href={resolve<'/vs/streaks-app'>('/vs/streaks-app', {})} class="rounded-full border border-slate-300 bg-white px-3 py-2 text-xs text-slate-700 shadow-sm transition-[transform,border-color] hover:-translate-y-0.5 hover:border-slate-400">vs Streaks App</a>
+        <a href={resolve<'/vs/beeminder'>('/vs/beeminder', {})} class="rounded-full border border-slate-300 bg-white px-3 py-2 text-xs text-slate-700 shadow-sm transition-[transform,border-color] hover:-translate-y-0.5 hover:border-slate-400">vs Beeminder</a>
       </div>
     </div>
   </main>

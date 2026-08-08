@@ -108,7 +108,7 @@
           onclick={() => {
             startOAuthLogin();
           }}
-          class="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white px-5 py-2.5 text-sm font-semibold text-slate-950 transition-all hover:-translate-y-0.5 hover:bg-sky-50"
+          class="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white px-5 py-2.5 text-sm font-semibold text-slate-950 transition-[transform,background-color] hover:-translate-y-0.5 hover:bg-sky-50"
         >
           Start Using Habbit Runner
           <ArrowRight size={15} />

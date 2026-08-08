@@ -55,7 +55,7 @@
   aria-label="Sidebar navigation"
 >
   <a class="mb-5 flex items-center gap-3 rounded-[1.5rem] border border-border bg-bg-card/96 px-3 py-3 shadow-[0_16px_36px_rgba(15,23,42,0.08)]" href={dashboardHref}>
-    <img src="/app-icon.svg" alt="Habbit Runner" class="h-10 w-10 flex-shrink-0 rounded-2xl object-contain" />
+    <img src="/app-icon.svg" alt="Habbit Runner" width="40" height="40" class="h-10 w-10 flex-shrink-0 rounded-2xl object-contain" />
     <div>
       <span class="block text-[9px] uppercase tracking-[0.26em] text-muted">Workspace</span>
       <span class="block text-sm font-semibold tracking-tight">Habbit Runner</span>

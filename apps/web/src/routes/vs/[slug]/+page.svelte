@@ -160,7 +160,7 @@
       <p class="mb-6 text-slate-300">No App Store. No subscription. Server-backed tracking from day one.</p>
       <a
             href={resolve('/', {})}
-            class="inline-block rounded-full bg-white px-8 py-3 font-semibold text-slate-950 transition-all hover:-translate-y-0.5 hover:bg-sky-50"
+            class="inline-block rounded-full bg-white px-8 py-3 font-semibold text-slate-950 transition-[transform,background-color] hover:-translate-y-0.5 hover:bg-sky-50"
           >
             Get Started
           </a>

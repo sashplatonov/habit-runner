@@ -139,7 +139,7 @@
 <div bind:this={rootElement} class="relative min-h-screen">
   <div
     aria-hidden={!indicatorVisible}
-    class={`pointer-events-none fixed left-1/2 z-40 -translate-x-1/2 transition-all duration-200 ${indicatorVisible ? 'opacity-100' : 'opacity-0'}`}
+    class={`pointer-events-none fixed left-1/2 z-40 -translate-x-1/2 transition-[opacity,transform] duration-200 ${indicatorVisible ? 'opacity-100' : 'opacity-0'}`}
     style:top="calc(var(--safe-area-inset-top, 0px) + 0.75rem)"
     style:transform={`translateX(-50%) translateY(${indicatorVisible ? 0 : -12}px)`}
   >

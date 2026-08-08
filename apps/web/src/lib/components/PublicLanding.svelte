@@ -73,7 +73,7 @@
             </PublicCta>
             <a
               href={resolve('/habit-tracker', {})}
-              class="rounded-full border border-border bg-bg-card px-4 py-2.5 text-sm text-foreground shadow-[0_12px_24px_rgba(15,23,42,0.06)] transition-all hover:-translate-y-0.5 hover:border-progress/25 hover:text-progress"
+              class="rounded-full border border-border bg-bg-card px-4 py-2.5 text-sm text-foreground shadow-[0_12px_24px_rgba(15,23,42,0.06)] transition-[transform,border-color,color] hover:-translate-y-0.5 hover:border-progress/25 hover:text-progress"
             >
               Explore habit tracker page
             </a>

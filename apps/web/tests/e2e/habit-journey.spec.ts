@@ -109,4 +109,42 @@ test.describe.serial('critical habit journey', () => {
     await page.getByRole('button', { name: 'Delete habit' }).click();
     await page.getByRole('button', { name: 'Delete', exact: true }).click();
   });
+
+  test('shows safe validation state', async ({ page }) => {
+    await page.route(/\/(?:api\/)?habits$/, async (route) => {
+      if (route.request().method() === 'POST') {
+        await route.fulfill({
+          status: 400,
+          contentType: 'application/json',
+          body: JSON.stringify({ status: 400, detail: 'create.name must not be blank', errorCode: 'VALIDATION_FAILED' })
+        });
+        return;
+      }
+      await route.continue();
+    });
+    await page.goto('/app/habit/new');
+    await page.getByLabel('Name *').fill('Conflict proof');
+    await page.getByRole('button', { name: 'Create habit' }).last().click();
+    await expect(page.getByRole('alert')).toContainText('Check the highlighted fields');
+  });
+
+  test('shows safe conflict state', async ({ page }) => {
+    await page.goto('/app/dashboard');
+    await page.getByRole('button', { name: /Read for ten minutes/ }).first().click();
+    await page.getByRole('button', { name: 'Edit habit' }).click();
+    await page.route(/\/(?:api\/)?habits\//, async (route) => {
+      if (route.request().method() === 'PUT') {
+        await route.fulfill({
+          status: 409,
+          contentType: 'application/json',
+          body: JSON.stringify({ status: 409, detail: 'stale version', errorCode: 'RESOURCE_VERSION_CONFLICT' })
+        });
+        return;
+      }
+      await route.continue();
+    });
+    await page.getByLabel('Name *').fill('Conflict proof updated');
+    await page.getByRole('button', { name: 'Save habit' }).last().click();
+    await expect(page.getByRole('alert')).toContainText('changed elsewhere');
+  });
 });

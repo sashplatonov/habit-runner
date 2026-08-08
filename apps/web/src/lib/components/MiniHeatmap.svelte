@@ -33,7 +33,7 @@
     {@const lookupKey = calendarDateToCompletionKey(dateKey)}
     {@const isCompleted = (completions[lookupKey] ?? 0) >= dailyTarget}
     <div
-      class="h-[4px] w-[4px] rounded-[1px] transition-all duration-300"
+      class="h-[4px] w-[4px] rounded-[1px] transition-[background-color,box-shadow,opacity] duration-300"
       data-date={dateKey}
       data-lookup-key={lookupKey}
       data-completed={isCompleted}

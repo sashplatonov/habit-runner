@@ -48,7 +48,6 @@ Create `apps/web/.env.local` when you want explicit local overrides:
 
 ```env
 VITE_API_BASE_URL=http://localhost:3000
-VITE_SYNC_ENABLED=true
 VITE_DEFAULT_USER_ID=demo-user
 ```
 
@@ -263,7 +262,6 @@ Use matching origins:
 | Variable | Default | Purpose |
 |---|---|---|
 | `VITE_API_BASE_URL` | `http://localhost:3000` in dev | API origin override |
-| `VITE_SYNC_ENABLED` | `true` | Set `false` to disable sync |
 | `VITE_DEFAULT_USER_ID` | `demo-user` | Demo/default user seed |
 |  |  |  |
 
