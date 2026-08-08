@@ -1,5 +1,17 @@
 # AI Fix Log
 
+## 2026-08-08 — Phase 5 review: readiness probe alignment
+
+- Changed the JVM Compose API healthcheck from aggregate `/q/health` to the
+  documented core-readiness endpoint `/q/health/ready`.
+- Corrected the rollout runbook to name the `wget` executable actually present
+  in the API image.
+
+Risk: a container now becomes healthy only after core API configuration is
+ready, matching the dependency contract for the web service.
+
+Rollback: revert this Phase 5 review follow-up commit.
+
 ## 2026-08-08 — PR-015 backend-first frontend contract
 
 - Removed unused IndexedDB habit/check-in mutation helpers and the unused

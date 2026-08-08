@@ -27,7 +27,7 @@ Docker Compose health checks currently monitor:
 | Service | Check |
 |---|---|
 | `db` | `pg_isready -U ${DB_USER} -d ${DB_NAME}` |
-| `api` | `curl -f http://127.0.0.1:${API_PORT}/q/health/ready` |
+| `api` | `wget -q -O /dev/null http://127.0.0.1:${API_PORT}/q/health/ready` |
 | `web` | `wget -q -O /dev/null http://127.0.0.1:80` |
 
 Important current behavior:

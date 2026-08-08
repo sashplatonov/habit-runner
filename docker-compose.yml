@@ -84,7 +84,7 @@ services:
     expose:
       - "${API_PORT:-8080}"
     healthcheck:
-      test: ["CMD-SHELL","wget -q -O /dev/null http://127.0.0.1:${API_PORT:-8080}/q/health >/dev/null 2>&1 || exit 1"]
+      test: ["CMD-SHELL","wget -q -O /dev/null http://127.0.0.1:${API_PORT:-8080}/q/health/ready >/dev/null 2>&1 || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 10
