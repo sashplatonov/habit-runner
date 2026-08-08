@@ -202,7 +202,6 @@ docker-compose.yml         Portable JVM + PostgreSQL + nginx stack
 - [Getting started and OAuth setup](docs/setup/getting-started.md)
 - [GitHub Actions and smoke checks](docs/operations/github-automation.md)
 - [Monitoring contract](docs/monitoring/newrelic.md)
-- [Dashboard preferences and momentum delivery](docs/dashboard-preferences-momentum-ci-backlog.md)
 - [Documentation hub](docs/README.md)
 - [License](LICENSE)
 

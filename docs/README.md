@@ -17,7 +17,6 @@ brand intentionally uses the spelling `Habbit Runner`.
 - [Getting started](setup/getting-started.md) — local frontend, backend, OAuth, and Docker setup
 - [Architecture overview](architecture/overview.md) — runtime topology and backend-first data path
 - [API contract](architecture/api-contract.md) — generated OpenAPI and security behavior
-- [Dashboard preferences and momentum backlog](dashboard-preferences-momentum-ci-backlog.md) — completed persistence, visual signals, and CI delivery record
 
 [↑ Back to top](#top)
 
@@ -32,7 +31,6 @@ brand intentionally uses the spelling `Habbit Runner`.
 
 ## 🗂️ Project records <a id="project-records"></a>
 
-- [Dashboard preferences and momentum backlog](dashboard-preferences-momentum-ci-backlog.md)
 
 [↑ Back to top](#top)
 
