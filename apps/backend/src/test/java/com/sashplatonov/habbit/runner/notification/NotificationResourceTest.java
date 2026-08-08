@@ -21,7 +21,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 @QuarkusTest
 class NotificationResourceTest extends AuthenticatedApiTestSupport {
 
-VAPID_PUBLIC_KEY=
+  private static final String TEST_VAPID_PUBLIC_KEY = "test-vapid-public-key";
 
   private String userId;
   private String token;

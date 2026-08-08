@@ -26,7 +26,7 @@ import com.sashplatonov.habbit.runner.support.TestHelpers;
 @QuarkusTest
 class NotificationResourceCoverageTest extends AuthenticatedApiTestSupport {
 
-VAPID_PUBLIC_KEY=
+  private static final String TEST_VAPID_PUBLIC_KEY = "test-vapid-public-key";
 
   @Inject
   PushSubscriptionRepository pushSubscriptionRepository;
@@ -43,7 +43,7 @@ VAPID_PUBLIC_KEY=
 
   @Test
   void shouldReturnConfiguredPublicKeyWhenDirectResourceCallUsesConfiguredValue() {
-    var resource =<REDACTED>
+    var resource = directResource(TEST_VAPID_PUBLIC_KEY);
     var response = resource.getVapidPublicKey();
 
     assertEquals(200, TestHelpers.statusOf(response));
@@ -64,7 +64,7 @@ VAPID_PUBLIC_KEY=
   @Test
   void shouldPersistSubscriptionWhenDirectResourceSubscribeReceivesNewEndpoint() throws Exception {
     var endpoint = subscriptionEndpoint();
-    var resource =<REDACTED>
+    var resource = resourceWithUser(TEST_VAPID_PUBLIC_KEY);
 
     var response = inTransaction(() -> {
       return resource.subscribe(new PushSubscriptionRequest(
@@ -82,7 +82,7 @@ VAPID_PUBLIC_KEY=
   @Test
   void shouldSkipPersistWhenDirectResourceSubscribeReceivesExistingEndpoint() throws Exception {
     var endpoint = subscriptionEndpoint();
-    var resource =<REDACTED>
+    var resource = resourceWithUser(TEST_VAPID_PUBLIC_KEY);
 
     inTransaction(() -> resource.subscribe(new PushSubscriptionRequest(endpoint, new PushSubscriptionKeys("first", "first"))));
     inTransaction(() -> resource.subscribe(new PushSubscriptionRequest(endpoint, new PushSubscriptionKeys("second", "second"))));
@@ -96,7 +96,7 @@ VAPID_PUBLIC_KEY=
   @Test
   void shouldDeleteSubscriptionWhenDirectResourceUnsubscribeReceivesEndpoint() throws Exception {
     var endpoint = subscriptionEndpoint();
-    var resource =<REDACTED>
+    var resource = resourceWithUser(TEST_VAPID_PUBLIC_KEY);
 
     inTransaction(() -> resource.subscribe(new PushSubscriptionRequest(endpoint, new PushSubscriptionKeys("p256dh", "auth"))));
     var response = inTransaction(() -> {
@@ -109,7 +109,7 @@ VAPID_PUBLIC_KEY=
 
   @Test
   void shouldIgnoreNullEndpointWhenDirectResourceUnsubscribeReceivesMissingBody() throws Exception {
-    var resource =<REDACTED>
+    var resource = resourceWithUser(TEST_VAPID_PUBLIC_KEY);
 
     var response = inTransaction(() -> {
       return resource.unsubscribe(new PushSubscriptionEndpointRequest(null));
