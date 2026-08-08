@@ -148,6 +148,21 @@ class AuthRefreshTest extends AuthenticatedApiTestSupport {
   }
 
   @Test
+  void shouldRejectRefreshWhenCsrfHeaderDoesNotMatchCookie() throws Exception {
+    var refreshToken = insertRefreshToken(false, Instant.now().plus(30, ChronoUnit.DAYS));
+
+    given()
+        .cookie(AuthCookieBuilder.REFRESH_TOKEN_COOKIE, refreshToken)
+        .cookie(AuthCookieBuilder.CSRF_TOKEN_COOKIE, CSRF_TOKEN)
+        .header("X-CSRF-Token", "mismatched-token")
+        .when()
+        .post("/auth/refresh")
+        .then()
+        .statusCode(403)
+        .body("detail", equalTo("Invalid CSRF token"));
+  }
+
+  @Test
   void shouldReturn400WhenRefreshTokenIsBlank() {
     givenRefreshCookies("")
         .when()

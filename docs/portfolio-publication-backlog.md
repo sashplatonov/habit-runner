@@ -180,7 +180,7 @@ git commit -m "test(flyway): Cover current migration schema"
 
 ## P1-1: Complete the CORS contract for cookie-based CSRF mutations
 
-**Status:** ⬜ Not started  
+**Status:** ✅ Completed  
 **Priority:** P1  
 **Depends on:** -
 
