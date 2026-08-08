@@ -67,3 +67,5 @@ apps/*/.svelte-kit/
 archive/**/node_modules/
 archive/**/dist/
 archive/**/build/
+
+TODO.md
