@@ -1,0 +1,82 @@
+import type { DashboardPreferences } from '@habbit-runner/shared';
+
+export const DEFAULT_DASHBOARD_PREFERENCES: DashboardPreferences = {
+  version: 1,
+  filter: 'pending',
+  tags: [],
+  sort: 'custom',
+  density: 'comfortable',
+  themeUsage: {}
+};
+
+const LEGACY_KEYS = {
+  filter: 'hr_dashboard_filter_v1',
+  density: 'hr_dashboard_density_v1',
+  sort: 'hr_dashboard_sort_mode_v1',
+  tags: 'hr_dashboard_tags_v1'
+} as const;
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
+}
+
+function readJson(key: string): unknown {
+  if (typeof window === 'undefined') {
+    return undefined;
+  }
+  try {
+    const raw = window.localStorage.getItem(key);
+    return raw === null ? undefined : JSON.parse(raw) as unknown;
+  } catch {
+    return undefined;
+  }
+}
+
+export function normalizeDashboardPreferences(value: unknown): DashboardPreferences {
+  const source = isRecord(value) ? value : {};
+  const filter = source.filter;
+  const sort = source.sort;
+  const density = source.density;
+  const tags = Array.isArray(source.tags) ? source.tags : [];
+  const usage = isRecord(source.themeUsage) ? source.themeUsage : {};
+
+  return {
+    version: 1,
+    filter: filter === 'all' || filter === 'done' || filter === 'archived' ? filter : 'pending',
+    tags: tags
+      .filter((tag): tag is string => typeof tag === 'string')
+      .map((tag) => tag.trim())
+      .filter(Boolean)
+      .slice(0, 50),
+    sort: sort === 'smart' ? 'smart' : 'custom',
+    density: density === 'compact' ? 'compact' : 'comfortable',
+    themeUsage: Object.fromEntries(
+      Object.entries(usage)
+        .filter(([, count]) => Number.isSafeInteger(count) && (count as number) >= 0)
+        .map(([theme, count]) => [theme, Math.min(count as number, 1_000_000)])
+    )
+  };
+}
+
+export function readLegacyDashboardPreferences(): DashboardPreferences {
+  return normalizeDashboardPreferences({
+    filter: readJson(LEGACY_KEYS.filter),
+    density: readJson(LEGACY_KEYS.density),
+    sort: readJson(LEGACY_KEYS.sort),
+    tags: readJson(LEGACY_KEYS.tags)
+  });
+}
+
+export function persistLegacyDashboardPreferences(value: DashboardPreferences): void {
+  if (typeof window === 'undefined') {
+    return;
+  }
+  try {
+    window.localStorage.setItem(LEGACY_KEYS.filter, JSON.stringify(value.filter));
+    window.localStorage.setItem(LEGACY_KEYS.density, JSON.stringify(value.density));
+    window.localStorage.setItem(LEGACY_KEYS.sort, JSON.stringify(value.sort));
+    window.localStorage.setItem(LEGACY_KEYS.tags, JSON.stringify(value.tags));
+  } catch {
+    // The account API remains the source of truth when browser storage is unavailable.
+  }
+}

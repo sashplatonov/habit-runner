@@ -2,11 +2,10 @@
   import { CheckIcon, MoonIcon, SunIcon } from 'lucide-svelte';
   import {
     rankThemesByUsage,
-    readThemeUsage,
-    recordThemeSelection,
     THEMES,
     type ThemeId
   } from '$lib/theme/themes';
+  import { themeStore } from '$lib/stores/theme';
 
   type Props = {
     theme: ThemeId;
@@ -16,7 +15,7 @@
   };
 
   let { theme, onThemeChange, onChoose, class: className = '' }: Props = $props();
-  let themeUsage = $state(readThemeUsage());
+  const themeUsage = $derived($themeStore.dashboard.themeUsage);
 
   const rankedThemes = $derived(rankThemesByUsage(THEMES, themeUsage));
   const sections = $derived([
@@ -57,7 +56,7 @@
             aria-pressed={theme === candidate.id}
             aria-label={`Switch to ${candidate.name} theme`}
             onclick={() => {
-              themeUsage = recordThemeSelection(candidate.id);
+              void themeStore.recordThemeSelection(candidate.id);
               void onThemeChange(candidate.id);
               void onChoose?.();
             }}

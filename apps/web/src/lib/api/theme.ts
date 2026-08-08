@@ -3,6 +3,7 @@ import { authenticatedFetch } from '@/lib/auth/session';
 import { THEME_IDS, type ThemeId } from '@/lib/theme/themes';
 import type { DashboardPreferences, UserPreferences } from '@habbit-runner/shared';
 import { getCurrentUserTimeZone } from '@/lib/time/userTimezone';
+import { normalizeDashboardPreferences } from '$lib/dashboard/preferences';
 
 export async function fetchUserPreferences(): Promise<UserPreferences> {
   const response = await authenticatedFetch(
@@ -18,7 +19,7 @@ export async function fetchUserPreferences(): Promise<UserPreferences> {
   return {
     theme: payload.theme,
     timezone: payload.timezone ?? null,
-    dashboard: payload.dashboard
+    dashboard: normalizeDashboardPreferences(payload.dashboard)
   };
 }
 

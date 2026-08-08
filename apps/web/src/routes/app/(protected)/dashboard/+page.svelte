@@ -23,6 +23,7 @@
   import HabitCompactRow from '$lib/components/dashboard/HabitCompactRow.svelte';
   import type { OnboardingTemplate } from '$lib/components/onboarding';
   import { readDashboardStateFromURL, updateDashboardURL } from '$lib/dashboard/urlState';
+  import { readLegacyDashboardPreferences } from '$lib/dashboard/preferences';
   import { buildTodaySummary } from '$lib/dashboard/todaySummary';
   import { normalizeDashboardFilter, shouldShowDashboardOnboarding, type DashboardFilter } from '$lib/dashboard/viewState';
   import { formatAppDate } from '@/lib/i18n';
@@ -34,6 +35,7 @@
   import { buildCelebrationParticles, getCelebrationLabel, type CelebrationParticle } from '$lib/habits/completionCelebration';
   import { formatDate, getDaysSinceLastCompletion } from '$lib/habits/habitStats';
   import { habitsStore } from '$lib/stores/habits';
+  import { themeStore } from '$lib/stores/theme';
   import { HABIT_COLOR_THEMES } from '$lib/theme/habit-colors';
   import { isPhaseTransition } from '$lib/habits/phases';
   import { sortHabits } from '$lib/habits/dashboardSort';
@@ -42,6 +44,7 @@
   import { isApiError, userMessageForError } from '$lib/api/ApiError';
   import { formatHabitLabel } from '$lib/habits/formatHabitLabel';
   import type { Habit } from '@/types/habit';
+  import type { DashboardPreferences } from '@habbit-runner/shared';
 
   // ─── Types ────────────────────────────────────────────────────────────────────
   type SortMode = 'custom' | 'smart';
@@ -49,34 +52,17 @@
   type DropHint = { habitId: string; position: 'above' | 'below' };
   type SwipeDirection = 'left' | 'right' | null;
 
-  // ─── LocalStorage helpers ─────────────────────────────────────────────────────
-  const LS_FILTER    = 'hr_dashboard_filter_v1';
-  const LS_DENSITY   = 'hr_dashboard_density_v1';
-  const LS_SORT      = 'hr_dashboard_sort_mode_v1';
-  const LS_TAGS      = 'hr_dashboard_tags_v1';
-
-  function lsGet<T>(key: string, fallback: T): T {
-    if (typeof localStorage === 'undefined') { return fallback; }
-    try {
-      const v = localStorage.getItem(key);
-      return v !== null ? (JSON.parse(v) as T) : fallback;
-    } catch { return fallback; }
-  }
-
-  function lsSet(key: string, value: unknown) {
-    if (typeof localStorage === 'undefined') { return; }
-    try { localStorage.setItem(key, JSON.stringify(value)); } catch {}
-  }
-
   // ─── State ────────────────────────────────────────────────────────────────────
   let addingTemplate   = $state<string | null>(null);
-  // Initialize from URL first, then localStorage as fallback
+  // Initialize from URL first, then the legacy local fallback until account hydration completes.
   const urlState = readDashboardStateFromURL();
-  let filter           = $state<DashboardFilter>((urlState.filter as DashboardFilter) ?? lsGet<DashboardFilter>(LS_FILTER, 'pending'));
+  const legacyPreferences = readLegacyDashboardPreferences();
+  let filter           = $state<DashboardFilter>((urlState.filter as DashboardFilter) ?? legacyPreferences.filter);
   let searchQuery      = $state(urlState.search ?? '');
-  let sortMode         = $state<SortMode>((urlState.sort as SortMode) ?? lsGet<SortMode>(LS_SORT, 'custom'));
-  let viewDensity      = $state<ViewDensity>((urlState.density as ViewDensity) ?? lsGet<ViewDensity>(LS_DENSITY, 'comfortable'));
-  let selectedTags     = $state<string[]>(urlState.tags ? urlState.tags.split(',').map(t => t.trim()).filter(Boolean) : lsGet<string[]>(LS_TAGS, []));
+  let sortMode         = $state<SortMode>((urlState.sort as SortMode) ?? legacyPreferences.sort);
+  let viewDensity      = $state<ViewDensity>((urlState.density as ViewDensity) ?? legacyPreferences.density);
+  let selectedTags     = $state<string[]>(urlState.tags ? urlState.tags.split(',').map(t => t.trim()).filter(Boolean) : legacyPreferences.tags);
+  let accountPreferencesApplied = $state(false);
 
   let animatingHabitId = $state<string | null>(null);
   let animParticles    = $state<CelebrationParticle[]>([]);
@@ -103,11 +89,21 @@
   let touchDragOriginY = 0;
   let touchDragOriginTop = 0;
 
-  // ─── Persist to localStorage ─────────────────────────────────────────────────
-  $effect(() => { lsSet(LS_FILTER, filter); });
-  $effect(() => { lsSet(LS_SORT, sortMode); });
-  $effect(() => { lsSet(LS_DENSITY, viewDensity); });
-  $effect(() => { lsSet(LS_TAGS, selectedTags); });
+  $effect(() => {
+    if (!$themeStore.serverSyncReady || accountPreferencesApplied) {
+      return;
+    }
+    const preferences = $themeStore.dashboard;
+    if (urlState.filter === undefined) { filter = preferences.filter; }
+    if (urlState.sort === undefined) { sortMode = preferences.sort; }
+    if (urlState.density === undefined) { viewDensity = preferences.density; }
+    if (urlState.tags === undefined) { selectedTags = preferences.tags; }
+    accountPreferencesApplied = true;
+  });
+
+  function persistDashboardPreferences(patch: Partial<DashboardPreferences>) {
+    void themeStore.setDashboardPreferences({ ...$themeStore.dashboard, ...patch });
+  }
 
   // ─── Sync to URL ────────────────────────────────────────────────────
   $effect(() => {
@@ -750,6 +746,7 @@
           availableTags={allTags}
           onFilterChange={(nextFilter) => {
             filter = nextFilter;
+            persistDashboardPreferences({ filter: nextFilter });
           }}
           onSearchChange={(nextQuery) => {
             searchQuery = nextQuery;
@@ -759,15 +756,22 @@
           }}
           onSortChange={(nextSortMode) => {
             sortMode = nextSortMode;
+            persistDashboardPreferences({ sort: nextSortMode });
           }}
           onDensityChange={(nextDensity) => {
             viewDensity = nextDensity;
+            persistDashboardPreferences({ density: nextDensity });
           }}
           onToggleTag={(tag) => {
+            const nextTags = selectedTags.includes(tag)
+              ? selectedTags.filter((item) => item !== tag)
+              : [...selectedTags, tag];
             toggleTag(tag);
+            persistDashboardPreferences({ tags: nextTags });
           }}
           onClearTags={() => {
             selectedTags = [];
+            persistDashboardPreferences({ tags: [] });
           }}
           onAddHabit={navigateToNewHabit}
           onExportCsv={exportCSV}

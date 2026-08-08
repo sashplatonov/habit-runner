@@ -87,7 +87,7 @@ git commit -m "feat(preferences): persist dashboard view settings"
 
 ## P1-2: Hydrate all intended durable UI preferences after authentication
 
-**Status:** ⬜ Not started  
+**Status:** ✅ Completed  
 **Priority:** P1  
 **Depends on:** P0-1
 
