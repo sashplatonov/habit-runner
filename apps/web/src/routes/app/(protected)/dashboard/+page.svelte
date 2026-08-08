@@ -39,6 +39,7 @@
   import { sortHabits } from '$lib/habits/dashboardSort';
   import { getHabitCompletionState } from '$lib/habits/completionState';
   import { logClientError } from '$lib/logging/clientLogger';
+  import { isApiError, userMessageForError } from '$lib/api/ApiError';
   import { formatHabitLabel } from '$lib/habits/formatHabitLabel';
   import type { Habit } from '@/types/habit';
 
@@ -407,11 +408,12 @@
     } catch (error) {
       completionError = {
         habitId: habit.id,
-        message: `Could not update ${formatHabitLabel(habit)}. Try again.`
+        message: userMessageForError(error, `Could not update ${formatHabitLabel(habit)}. Try again.`)
       };
       logClientError('dashboard.completion_failed', 'Failed to update habit completion', {
         habitId: habit.id,
-        error: error instanceof Error ? error.message : String(error)
+        errorStatus: isApiError(error) ? error.status : 'unknown',
+        errorCode: isApiError(error) ? error.code : null
       });
     } finally {
       setHabitPending(habit.id, false);

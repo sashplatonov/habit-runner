@@ -14,6 +14,20 @@ unchanged.
 
 Rollback: revert the PR-015 commit to restore the previous copy and helpers.
 
+## 2026-08-08 — PR-016 typed frontend API errors
+
+- Added a single `ApiError` representation that parses only the documented
+  problem response fields and maps statuses to safe user messages.
+- Preserved validation field names for form-level highlighting without
+  rendering arbitrary server details or stack traces.
+- Updated habit, check-in, dashboard, form, and route-error consumers while
+  keeping the authentication refresh single-flight path unchanged.
+
+Risk: client-side error presentation only; request and retry behavior is
+unchanged.
+
+Rollback: revert the PR-016 commit to restore the previous generic errors.
+
 ## 2026-08-08 — PR-008 optimistic locking foundation
 
 - Added JPA `@Version` management to habits and check-ins.

@@ -910,6 +910,9 @@ docker compose --profile db config --quiet
 
 ### PR-016 — Preserve typed backend errors in the web client
 
+**Status:** ✅ completed and verified with typed API-error tests, frontend
+quality checks, and safe-message scan.
+
 **Problem and evidence**
 
 - API helpers reduce backend failures to HTTP status and status text.

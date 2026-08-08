@@ -7,6 +7,7 @@ import type {
 } from '@/types/habit-api';
 import { buildApiUrl } from '@/lib/api/url';
 import { authenticatedFetch } from '@/lib/auth/session';
+import { ApiError } from '$lib/api/ApiError';
 
 async function parseResponse<T>(response: Response): Promise<T> {
   return await response.json() as T;
@@ -21,7 +22,7 @@ async function request<T>(path: string, init: RequestInit): Promise<T> {
     ...init
   });
   if (!response.ok) {
-    throw new Error(`Habit request failed: ${response.status} ${response.statusText}`);
+    throw await ApiError.fromResponse(response);
   }
   if (response.status === 204) {
     return undefined as T;

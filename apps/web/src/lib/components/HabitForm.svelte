@@ -25,6 +25,7 @@
   import HabitPreview from './habits/HabitPreview.svelte';
   import FormActionBar from './habit-form/FormActionBar.svelte';
   import Overlay from './overlays/Overlay.svelte';
+  import { isApiError } from '$lib/api/ApiError';
 
   type Props = {
     mode: 'create' | 'edit';
@@ -219,7 +220,12 @@
         }) as HabitUpsertInput
       );
     } catch (err) {
-      saveError = err instanceof Error ? err.message : 'Something went wrong. Please try again.';
+      if (isApiError(err)) {
+        errors = { ...errors, ...err.fieldErrors };
+        saveError = err.userMessage;
+      } else {
+        saveError = 'Something went wrong. Please try again.';
+      }
     } finally {
       isSaving = false;
     }
