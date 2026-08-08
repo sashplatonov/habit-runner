@@ -15,5 +15,6 @@ describe('HabitCompactRow momentum rendering contract', () => {
     expect(source).toContain('<Flame');
     expect(source).toContain('<SnowflakeIcon');
     expect(source).toContain('aria-label={momentum.label}');
+    expect(source).toContain('class="flex items-center gap-0.5 text-[10px] font-mono text-sky-500"');
   });
 });

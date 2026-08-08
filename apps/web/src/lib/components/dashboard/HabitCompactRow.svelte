@@ -259,12 +259,12 @@
         <!-- Right metrics -->
         <div class="flex flex-shrink-0 items-center gap-2">
           {#if momentum.kind === 'flame'}
-            <span class="hidden sm:flex items-center gap-0.5 text-[10px] font-mono text-accent-secondary">
+            <span class="flex items-center gap-0.5 text-[10px] font-mono text-accent-secondary">
               <Flame size={10} aria-hidden="true" />
               <span aria-label={momentum.label}>{momentum.streak}</span>
             </span>
           {:else if momentum.kind === 'ice'}
-            <span class="hidden sm:flex items-center gap-0.5 text-[10px] font-mono text-sky-500" aria-label={momentum.label}>
+            <span class="flex items-center gap-0.5 text-[10px] font-mono text-sky-500" aria-label={momentum.label}>
               <SnowflakeIcon size={10} aria-hidden="true" />
               {momentum.inactiveScheduledDays}d
             </span>
