@@ -2,7 +2,7 @@
   import { createEventDispatcher } from 'svelte';
   import type { Habit } from '@/types/habit';
   import { HABIT_COLOR_THEMES } from '$lib/theme/habit-colors';
-  import { getHabitPhase } from '$lib/habits/phases';
+  import { getDashboardMomentumStatus } from '$lib/habits/dashboardMomentumStatus';
   import { computeTileHint } from '$lib/habits/tileHint';
   import { calculateScheduledStreak, calculateScheduledCompletionRate } from '$lib/habits/schedule';
   import { getScheduleStatusForDate, isMandatoryToday } from '$lib/habits/schedule';
@@ -73,7 +73,7 @@
     return (habit.completions[key] ?? 0) >= tgt;
   });
   $: hint = computeTileHint(habit, completionRate, streak);
-  $: phase = getHabitPhase(streak);
+  $: momentum = getDashboardMomentumStatus(habit, todayDate);
   $: isAnimating = animatingHabitId === habit.id;
   $: dropHintPosition = dropHint?.habitId === habit.id ? dropHint.position : null;
   $: showDropAbove = dropHintPosition === 'above';
@@ -258,20 +258,15 @@
 
         <!-- Right metrics -->
         <div class="flex flex-shrink-0 items-center gap-2">
-          {#if streak > 0}
+          {#if momentum.kind === 'flame'}
             <span class="hidden sm:flex items-center gap-0.5 text-[10px] font-mono text-accent-secondary">
-              {#if habit.type === 'negative'}
-                <Trophy size={10} />
-              {:else if phase.id === 1}
-                <Shield size={10} />
-              {:else if phase.id === 2}
-                <Zap size={10} />
-              {:else if phase.id === 3}
-                <Activity size={10} />
-              {:else}
-                <Star size={10} />
-              {/if}
-              {streak}
+              <Flame size={10} aria-hidden="true" />
+              <span aria-label={momentum.label}>{momentum.streak}</span>
+            </span>
+          {:else if momentum.kind === 'ice'}
+            <span class="hidden sm:flex items-center gap-0.5 text-[10px] font-mono text-sky-500" aria-label={momentum.label}>
+              <SnowflakeIcon size={10} aria-hidden="true" />
+              {momentum.inactiveScheduledDays}d
             </span>
           {/if}
           <CompletionRing percentage={completionRate} size={26} strokeWidth={2.5} color={habit.color} showText={false} />
@@ -297,5 +292,5 @@
 </li>
 
 <script context="module">
-  import { GripVertical, SnowflakeIcon, Shield, Zap, Activity, Star, Trophy, Moon } from 'lucide-svelte';
+  import { Flame, GripVertical, SnowflakeIcon, Moon } from 'lucide-svelte';
 </script>

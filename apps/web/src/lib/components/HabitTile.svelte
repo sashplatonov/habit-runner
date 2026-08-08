@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Shield, Zap, Activity, Star, Trophy, SnowflakeIcon, Moon } from 'lucide-svelte';
+  import { Flame, SnowflakeIcon, Moon } from 'lucide-svelte';
   import CompletionRing from '$lib/components/CompletionRing.svelte';
   import HabitCompletionControl from '$lib/components/habits/HabitCompletionControl.svelte';
   import DescriptionTooltip from '$lib/components/DescriptionTooltip.svelte';
@@ -14,7 +14,7 @@
     isMandatoryToday
   } from '$lib/habits/schedule';
   import type { CelebrationParticle } from '$lib/habits/completionCelebration';
-  import { getHabitPhase } from '$lib/habits/phases';
+  import { getDashboardMomentumStatus } from '$lib/habits/dashboardMomentumStatus';
   import {
     getHabitCompletionActionLabel,
     getHabitCompletionState
@@ -63,7 +63,7 @@
   const streak = $derived(calculateScheduledStreak(habit, habit.completions).current);
   const completionRate = $derived(calculateScheduledCompletionRate(habit, habit.completions));
   const hint = $derived(computeTileHint(habit, completionRate, streak));
-  const phase = $derived(getHabitPhase(streak));
+  const momentum = $derived(getDashboardMomentumStatus(habit, todayDate));
   const animDelay = $derived(`${Math.min(Math.max(appearanceIndex, 0), 12) * 0.05}s`);
 
   function handleToggle(e?: MouseEvent) {
@@ -120,7 +120,7 @@
         {/if}
       </div>
 
-      <!-- Streak with phase icon -->
+      <!-- Streak and recovery signal -->
       <div class="mt-0.5 h-4 flex items-center">
         {#if isFrozen}
           <span class="flex items-center gap-0.5 text-[10px] font-mono text-muted">
@@ -130,33 +130,16 @@
           <span class="flex items-center gap-0.5 text-[10px] font-mono text-muted">
             <Moon size={9} /><span>Not today</span>
           </span>
-        {:else if streak > 0}
-          {#if habit.type === 'negative'}
-            <span class="flex items-center gap-0.5 text-accent-secondary">
-              <Trophy size={9} />
-              <span class="text-[10px] font-mono">{streak}d</span>
-            </span>
-          {:else if phase.id === 1}
-            <span class="flex items-center gap-0.5 text-accent-secondary">
-              <Shield size={9} />
-              <span class="text-[10px] font-mono">{streak}d</span>
-            </span>
-          {:else if phase.id === 2}
-            <span class="flex items-center gap-0.5 text-accent-secondary">
-              <Zap size={9} />
-              <span class="text-[10px] font-mono">{streak}d</span>
-            </span>
-          {:else if phase.id === 3}
-            <span class="flex items-center gap-0.5 text-accent-secondary">
-              <Activity size={9} />
-              <span class="text-[10px] font-mono">{streak}d</span>
-            </span>
-          {:else}
-            <span class="flex items-center gap-0.5 text-accent-secondary">
-              <Star size={9} />
-              <span class="text-[10px] font-mono">{streak}d</span>
-            </span>
-          {/if}
+        {:else if momentum.kind === 'flame'}
+          <span class="flex items-center gap-0.5 text-accent-secondary" aria-label={momentum.label}>
+            <Flame size={9} aria-hidden="true" />
+            <span class="text-[10px] font-mono">{momentum.streak}d</span>
+          </span>
+        {:else if momentum.kind === 'ice'}
+          <span class="flex items-center gap-0.5 text-sky-500" aria-label={momentum.label}>
+            <SnowflakeIcon size={9} aria-hidden="true" />
+            <span class="text-[10px] font-mono">{momentum.inactiveScheduledDays}d inactive</span>
+          </span>
         {/if}
       </div>
 

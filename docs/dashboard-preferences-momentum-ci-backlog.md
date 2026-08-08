@@ -197,7 +197,7 @@ git commit -m "feat(habits): derive dashboard momentum signals"
 
 ## P1-4: Render flame and ice signals in dashboard cards and rows
 
-**Status:** ⬜ Not started  
+**Status:** ✅ Completed  
 **Priority:** P1  
 **Depends on:** P1-3
 
