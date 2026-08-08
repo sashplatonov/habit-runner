@@ -296,3 +296,17 @@ connection. The compact navigation uses a disclosure menu below the header.
 
 Rollback: revert this review follow-up commit to restore the prior copy, error
 parser, and navigation presentation.
+
+## 2026-08-08 — PR-019 observability contract
+
+- Documented liveness, core readiness, and optional notification capability as
+  separate signals.
+- Removed claims that the current runtime provides Java-agent APM, default
+  distributed tracing, or an HTTP `/metrics` endpoint.
+- Documented Micrometer New Relic export and OpenTelemetry as explicitly
+  configured, opt-in integrations.
+
+Risk: monitoring automation must use `/q/health/ready`; notification absence
+does not block the API, while missing core auth configuration still does.
+
+Rollback: revert the PR-019 observability documentation commit.

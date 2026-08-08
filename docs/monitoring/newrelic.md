@@ -13,8 +13,8 @@
 
 New Relic is the primary backend observability path for this repository.
 
-- Backend APM, JVM telemetry, and logs-in-context go through the Java agent in `apps/backend`
-- JSON ECS logs stay on stdout and carry `trace_id`, `span_id`, `service.name`, and `deployment.environment`
+- Backend JVM/HTTP telemetry and custom meters use the Micrometer New Relic registry when explicitly enabled
+- JSON ECS logs stay on stdout and carry `trace_id`, `span_id`, `service.name`, and `deployment.environment`; `span_id` is populated only when an OTel span is active
 - Request correlation uses `x-trace-id` inbound and propagates to outbound HTTP calls
 - Browser observability is optional and only enabled when the frontend build-time New Relic browser config is present
 - The backend does not expose a Grafana/Prometheus path anymore
@@ -23,7 +23,7 @@ New Relic is the primary backend observability path for this repository.
 
 ## 🎯 Scope <a name="scope"></a>
 
-- Backend health, metrics, logs, and trace correlation for `habittracker-api`
+- Backend health, Micrometer metrics, logs, and trace-ID correlation for `habittracker-api`
 - Runtime knobs that affect backend visibility in New Relic
 - Only the active New Relic contract is documented here
 
@@ -51,7 +51,7 @@ New Relic dashboards should be built from:
 - APM service/entity health
 - JVM and HTTP telemetry
 - log search by `traceId`, `service.name`, and `deployment.environment`
-- custom business metrics from `apps/backend/src/main/java/com/sashplatonov/habbit/runner/metrics/instrumentation/ServiceMetricsInstrumentation.java` are exported through the New Relic Micrometer registry
+- custom business metrics from `apps/backend/src/main/java/com/sashplatonov/habbit/runner/metrics/instrumentation/ServiceMetricsInstrumentation.java` are exported through the New Relic Micrometer registry only when `NEW_RELIC_METRICS_ENABLED=true`
 
 ### Business KPI set
 
@@ -130,7 +130,7 @@ Panel rule:
 Backend runtime:
 
 - `NEW_RELIC_METRICS_ENABLED=false`
-- `NEW_RELIC_LICENSE_KEY` (required when metrics or the Java agent are enabled)
+- `NEW_RELIC_LICENSE_KEY` (required when metrics export is enabled)
 - `NEW_RELIC_APP_NAME=habittracker-api`
 - `NEW_RELIC_AGENT_ENABLED=false`
 - `NEW_RELIC_APPLICATION_LOGGING_FORWARDING_ENABLED=false`
@@ -158,39 +158,37 @@ Notes:
 
 ## 🚀 Runtime modes <a name="runtime-modes"></a>
 
-1. `NEW_RELIC_AGENT_ENABLED=false`
+1. `NEW_RELIC_METRICS_ENABLED=false`
    - local default
-   - backend runs without agent attachment
+   - no remote metrics export is attempted
 2. `NEW_RELIC_METRICS_ENABLED=true` with a license key
    - Micrometer exports JVM and HTTP metrics
    - can be enabled independently from the Java agent
-3. `NEW_RELIC_AGENT_ENABLED=true` with forwarding off
-   - APM, JVM telemetry, and logs-in-context only
-   - safe first rollout mode
+3. `quarkus.otel.enabled=true` with a configured OTLP receiver
+   - enables distributed tracing only after an end-to-end receiver test
+   - remains disabled by default in this repository
 4. browser config present with `VITE_NEW_RELIC_BROWSER_ENABLED=true`
    - browser page views, JS errors, and client logs are enabled
    - configure from the Browser app snippet before building the web image
-5. `NEW_RELIC_AGENT_ENABLED=true` with forwarding on
-   - only after log-volume review
-   - keep `debug,trace` denied
-   - keep the sample cap explicit
+5. `NEW_RELIC_APPLICATION_LOGGING_FORWARDING_ENABLED=true`
+   - not enabled by the repository defaults
+   - only after log-volume review and an explicit New Relic deployment decision
 
 [↑ Back to top](#top)
 
 ## 🧪 Validate <a name="validate"></a>
 
 ```bash
-cd habbit-runner
-docker compose --env-file .env.example config
-docker compose --env-file .env.example --profile db up --build
+docker compose --profile db config --quiet
+docker compose --profile db up --build --wait
 ```
 
 Checks:
 
-- backend entity appears in New Relic APM
+- backend metric entity appears in New Relic after metrics export is enabled with a valid license key
 - browser entity appears in New Relic Browser after opening the web app
 - logs contain `traceId`, `service.name`, and `deployment.environment`
-- custom business KPI metrics appear in New Relic `Metric` data after a few scrape intervals
+- custom business KPI metrics appear in New Relic `Metric` data after export intervals when metrics export is enabled
 - the backend health endpoints still respond from the compose stack
 
 [↑ Back to top](#top)

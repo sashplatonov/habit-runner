@@ -18,14 +18,16 @@ Current runtime endpoints:
 
 | Endpoint | Purpose |
 |---|---|
-| `/q/health` | Quarkus health |
+| `/q/health/live` | Process liveness only |
+| `/q/health/ready` | Core API readiness, including required auth configuration |
+| `/q/health` | Combined MicroProfile health response |
 
 Docker Compose health checks currently monitor:
 
 | Service | Check |
 |---|---|
 | `db` | `pg_isready -U ${DB_USER} -d ${DB_NAME}` |
-| `api` | `curl -f http://127.0.0.1:${API_PORT}/q/health` |
+| `api` | `curl -f http://127.0.0.1:${API_PORT}/q/health/ready` |
 | `web` | `wget -q -O /dev/null http://127.0.0.1:80` |
 
 Important current behavior:
@@ -64,7 +66,7 @@ docker compose up -d --build --no-deps web
 Before rollout:
 - confirm `DB_*`, `DB_SCHEMA`, `AUTH_SECRET`, `API_PUBLIC_URL`, and `OAUTH_DEFAULT_RETURN_TO`;
 - confirm Google OAuth redirect URIs match the deployed public URL;
-- confirm VAPID vars are present if notifications are expected;
+- confirm VAPID vars are present if notifications are expected; missing VAPID configuration is reported as a disabled optional capability and does not block core readiness;
 - confirm the target DB is reachable if you are not enabling the `db` profile.
 
 [↑ Back to top](#top)
@@ -131,10 +133,10 @@ docker compose --profile db ps
 ```
 
 ```bash
-curl http://localhost/api/q/health
-curl http://localhost/api/metrics
+curl --fail http://localhost/api/q/health/live
+curl --fail http://localhost/api/q/health/ready
 ```
 
-If you use `docker-compose.local.yml`, the web app is available on `http://localhost:5137`, so the equivalent health path becomes `http://localhost:5137/api/q/health`.
+If you use `docker-compose.local.yml`, the web app is available on `http://localhost:5137`, so the equivalent health paths become `http://localhost:5137/api/q/health/live` and `http://localhost:5137/api/q/health/ready`.
 
 [↑ Back to top](#top)
