@@ -1,5 +1,17 @@
 # AI Fix Log
 
+## 2026-08-08 — Phase 5 review: retain smoke failure diagnostics
+
+- The Compose smoke script now writes service state and logs to the exact
+  temporary directory uploaded by the CI failure-artifact step before teardown.
+- Cleanup preserves the original smoke failure status while still removing
+  containers, volumes, and orphan services.
+
+Risk: failed CI runs retain short-lived diagnostics only; successful runs leave
+no diagnostic directory or persistent Compose resources.
+
+Rollback: revert this Phase 5 review follow-up commit.
+
 ## 2026-08-08 — Phase 5 review: readiness probe alignment
 
 - Changed the JVM Compose API healthcheck from aggregate `/q/health` to the

@@ -3,9 +3,19 @@ set -Eeuo pipefail
 
 project_name="${COMPOSE_PROJECT_NAME:-habbit-runner-smoke-${GITHUB_RUN_ID:-local}}"
 compose=(docker compose --env-file .env.example --project-name "$project_name" --profile db)
+diagnostics_dir="/tmp/habbit-runner-smoke-logs"
 
 cleanup() {
-  "${compose[@]}" down --volumes --remove-orphans
+  local exit_code=$?
+
+  if (( exit_code != 0 )); then
+    mkdir -p "$diagnostics_dir"
+    "${compose[@]}" ps --all >"$diagnostics_dir/compose-ps.txt" 2>&1 || true
+    "${compose[@]}" logs --no-color >"$diagnostics_dir/compose.log" 2>&1 || true
+  fi
+
+  "${compose[@]}" down --volumes --remove-orphans || true
+  return "$exit_code"
 }
 
 trap cleanup EXIT
