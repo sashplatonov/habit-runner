@@ -109,7 +109,7 @@ export default defineConfig({
       manifest: {
         name: 'Habbit Runner',
         short_name: 'HabitRunner',
-        description: 'Offline-first habit tracking with sync',
+        description: 'Server-backed habit tracking with progress analytics',
         id: '/',
         start_url: '/',
         theme_color: '#0b100d',

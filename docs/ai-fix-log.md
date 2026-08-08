@@ -279,3 +279,20 @@ the clean Maven compiler and integration gate provide the authoritative proof.
 
 Rollback: revert the package-path alignment commit to restore the previous
 filesystem layout.
+
+## 2026-08-08 — Phase 4 review follow-up
+
+- Replaced remaining public offline-first and anonymous-account claims in the
+  PWA manifest, public pages, machine-readable site summary, architecture
+  overview, and affected blog content with the current server-backed contract.
+- Restricted frontend error-detail parsing to the documented API error schema
+  and to validation failures, with unit coverage for malformed and conflict
+  responses.
+- Replaced undersized mobile navigation links with an accessible 44px menu and
+  applied the same minimum target height to public CTAs and onboarding actions.
+
+Risk: public copy now accurately states that habit data requires an authenticated
+connection. The compact navigation uses a disclosure menu below the header.
+
+Rollback: revert this review follow-up commit to restore the prior copy, error
+parser, and navigation presentation.

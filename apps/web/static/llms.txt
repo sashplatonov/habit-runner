@@ -1,15 +1,15 @@
 # Habbit Runner
 
-> Habbit Runner is an offline-first habit tracker Progressive Web App (PWA) with sync, streak analytics, and push notifications.
+> Habbit Runner is a server-backed habit tracker Progressive Web App (PWA) with streak analytics and push notifications.
 
 ## Product Overview
 
-Habbit Runner helps users build and maintain daily habits through clear progress tracking, streak analytics, and reliable offline support. No app store download required — install directly from any modern browser.
+Habbit Runner helps users build and maintain daily habits through clear progress tracking and streak analytics. No app store download required — install directly from any modern browser.
 
 ## Key Features
 
-- **Offline-first**: All data stored locally using IndexedDB (Dexie). Works fully without internet connection.
-- **Background sync**: Pull-push-pull sync cycle automatically syncs changes when reconnecting.
+- **Server-backed habits**: Signed-in habit data and check-ins are stored through the API.
+- **Cached app shell**: The PWA caches static application resources for repeat visits; data mutations require a connection.
 - **Streak tracking**: Current streak, longest streak, completion rate, and trend analytics per habit.
 - **Daily routine planner**: Define daily targets, set reminders, track routines for work and personal goals.
 - **Push notifications**: Web push reminders for individual habits, no native app required.
@@ -34,7 +34,7 @@ Habbit Runner helps users build and maintain daily habits through clear progress
 ## Technology Stack
 
 - **Frontend**: SvelteKit 5, TypeScript, Tailwind CSS, Vite PWA
-- **Offline storage**: Dexie (IndexedDB wrapper)
+- **Browser-local storage**: Dexie (IndexedDB wrapper) for reminder preferences and browser-local settings
 - **Backend**: Quarkus (Java), Flyway, PostgreSQL
 - **Auth**: Google OAuth 2.0, JWT tokens
 - **Deployment**: Docker, static PWA build

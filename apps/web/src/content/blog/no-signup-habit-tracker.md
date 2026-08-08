@@ -24,11 +24,9 @@ For many users, a no-sign-up habit tracker is the right default. If you later de
 
 ### Habbit Runner
 
-Open the web app, add a habit, start tracking. No account required at any step. Your habits, streaks, and history are stored locally in your browser.
+Habbit Runner is an installable, server-backed PWA. Sign in with Google to create and track habits, view streaks, and use the same account across supported devices.
 
-If you later want to sync across devices or use the app on multiple phones/tablets, you can create an account via Google OAuth. That's optional — the full tracking experience exists without it.
-
-The PWA can also be added to your home screen without signing in, giving you an app-like experience from a single tap.
+The PWA can be added to your home screen; habit data and mutations require an authenticated connection.
 
 ### Loop Habit Tracker (Android)
 
@@ -57,22 +55,20 @@ Obsidian's core product requires no account for local use. With a habit tracking
 
 For a single-device user, the account limitation is often irrelevant. If you track on one phone or one computer, you don't need multi-device sync.
 
-## The "Optional Account" Model
+## Choosing an Account Model
 
-The cleanest approach — and the one Habbit Runner uses — is to make accounts fully optional. The app works completely without one. The account adds sync capability but doesn't gate any core feature.
+The right account model depends on the product. Habbit Runner uses Google sign-in for the server-backed habit, check-in, and streak experience.
 
 This is a meaningful distinction from apps that require registration to use even basic features. An optional account model respects that many users don't need sync and shouldn't be required to share personal information to get value from the app.
 
-## Getting Started Without an Account
+## Getting Started With Habbit Runner
 
 With Habbit Runner:
 1. Open [habbit.run](/) in your browser
-2. Add your first habit
-3. Start tracking
+2. Sign in with Google
+3. Add your first habit and start tracking
 
-That's it. No form to fill out. No email to confirm.
-
-The app will work offline, track your streaks, and show your analytics — all without ever knowing who you are.
+The PWA does not require an app-store installation. The service stores habits and streaks for your signed-in account.
 
 ## Frequently Asked Questions
 
@@ -86,8 +82,8 @@ No — different risks, not higher risks. Without an account, the main risk is d
 
 ### Can I add an account later without losing my existing data?
 
-Yes, in Habbit Runner. When you sign in for the first time, your existing local data is merged with any server data. You don't start fresh.
+Habbit Runner does not provide anonymous local habit data to merge. Sign in before creating habits so the service can retain your account data.
 
 ---
 
-*Habbit Runner: open it, add your first habit, start tracking. No account required, no email, no waiting. [Try it now →](/)*
+*Habbit Runner: sign in, add your first habit, and start tracking in an installable PWA. [Try it now →](/)*

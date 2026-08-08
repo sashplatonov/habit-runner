@@ -29,9 +29,7 @@ Apps that work without sign-in tend to:
 
 ### Habbit Runner (PWA — Free)
 
-Open the app, add a habit, start tracking. No account required. Habbit Runner requires a signed-in connection for habit data and streaks.
-
-If you later want to sync your data across devices, you can sign in with Google. But the app is fully functional without it. Your data is yours from the start.
+Habbit Runner requires a signed-in connection for habit data and streaks. Google sign-in supports the server-backed experience across supported devices.
 
 ### Loop Habit Tracker (Android — Free/Open Source)
 
@@ -57,19 +55,19 @@ Being clear about trade-offs is useful:
 
 **No cross-device access.** You can't check your streaks on a laptop if the data is only on your phone.
 
-These are real trade-offs. For users who track on a single device, they're mostly irrelevant. For multi-device users, an optional account model — like Habbit Runner's — is a good compromise.
+These are real trade-offs. For multi-device users, a server-backed account model can keep habit data available across supported devices.
 
 ## Starting Without an Account Is a Good Default
 
 Even if you eventually want sync, starting without an account is often better. You can evaluate whether the app fits your needs before giving it any personal information. If it doesn't, nothing was shared.
 
-Habbit Runner is designed with this approach in mind. The local-first architecture means you get the full experience before you ever decide whether sync is useful for you.
+Habbit Runner uses a server-backed architecture: sign in before creating habits, then access your account data through the API.
 
 ## Frequently Asked Questions
 
 ### Can I start tracking habits without creating an account?
 
-Yes. Apps like Loop Habit Tracker and Habbit Runner work without any account from first launch. You can log habits, view streaks, and check analytics immediately.
+Yes. Apps like Loop Habit Tracker work without an account from first launch. Habbit Runner requires sign-in for habit logging, streaks, and analytics.
 
 ### What happens to my habits if I don't have an account?
 
@@ -77,7 +75,7 @@ Your data is stored locally on your device. It persists as long as you keep the 
 
 ### If I eventually want to sync, do I lose my existing data?
 
-No. In Habbit Runner, signing in for sync merges your local data with the server — your history isn't lost. You simply gain the ability to access the same data from other devices.
+Habbit Runner stores habit data for the signed-in account, rather than merging anonymous local habit data later.
 
 ### Is it less secure to use a habit tracker without an account?
 
@@ -85,4 +83,4 @@ No. In most cases it's more private, since your data never leaves your device. S
 
 ---
 
-*Habbit Runner works immediately — no signup, no email, no friction. Start tracking today, create an account later if you need sync. [Try it free →](/)*
+*Habbit Runner is an installable, server-backed PWA for signed-in habit tracking. [Try it free →](/)*

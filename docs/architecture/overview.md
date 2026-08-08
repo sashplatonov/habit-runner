@@ -7,7 +7,7 @@
 - [System overview](#system-overview)
 - [Frontend](#frontend)
 - [Backend](#backend)
-- [Sync and preferences flow](#sync-and-preferences-flow)
+- [Habit and preferences flow](#habit-and-preferences-flow)
 - [Auth and notification endpoints](#auth-and-notification-endpoints)
 - [Deployment shape](#deployment-shape)
 
@@ -17,15 +17,16 @@
 
 ```text
 Browser
-├── React app in apps/web
-│   ├── IndexedDB via Dexie
+├── SvelteKit app in apps/web
 │   ├── OAuth callback handling
-│   ├── Sync engine and write-through fallback
+│   ├── Backend-first habit and check-in API clients
+│   ├── IndexedDB only for browser-local reminder preferences
 │   └── PWA service worker and notification subscription flow
 │
 Backend API in apps/backend
 ├── /auth           login, refresh, Google OAuth, preferences
-├── /sync           pull and push for habits/checkins/tombstones
+├── /habits         authenticated habit CRUD
+├── /checkins       authenticated check-in CRUD
 ├── /notifications  VAPID key, subscribe, unsubscribe
 ├── /q/health       Quarkus health endpoint
 └── New Relic       APM, logs-in-context, browser telemetry
@@ -34,7 +35,7 @@ PostgreSQL
 └── Flyway-managed schema selected by DB_SCHEMA
 ```
 
-The frontend keeps UX responsive by writing local state first and syncing in the background. The backend is the source of truth for authenticated cross-device state, OAuth, push subscriptions, and schema migrations.
+The frontend renders authenticated data returned by the API. The backend is the source of truth for habit state, check-ins, OAuth, push subscriptions, and schema migrations; changing habit data requires an authenticated network request.
 
 [↑ Back to top](#top)
 
@@ -43,8 +44,8 @@ The frontend keeps UX responsive by writing local state first and syncing in the
 ## 🖥️ Frontend <a name="frontend"></a>
 
 Stack:
-- React 19
-- Vite 7
+- Svelte 5 and SvelteKit 2
+- Vite 8
 - TypeScript
 - Dexie 4
 - Vitest
@@ -54,13 +55,11 @@ Important paths:
 
 | Path | Purpose |
 |---|---|
-| `apps/web/src/App.tsx` | App shell, auth callback, route registration |
-| `apps/web/src/lib/core/config.ts` | Runtime config derived from `VITE_*` env |
-| `apps/web/src/lib/api/` | HTTP clients for auth, sync, theme/preferences |
-| `apps/web/src/lib/storage/` | IndexedDB schema and persistence helpers |
-| `apps/web/src/lib/sync/` | Pull/push cycle, write-through fallback, sync logging |
-| `apps/web/src/lib/pwa/` | Runtime caching and push subscription client flow |
-| `apps/web/src/hooks/` | Theme, habits, sync engine hooks |
+| `apps/web/src/routes/` | SvelteKit routes, layouts, and error pages |
+| `apps/web/src/lib/api/` | HTTP clients for auth, habits, check-ins, and preferences |
+| `apps/web/src/lib/storage/` | IndexedDB for browser-local reminder preferences |
+| `apps/web/src/sw-custom.ts` | PWA runtime caching and push subscription flow |
+| `apps/web/src/lib/stores/` | Shared client-side view state |
 | `apps/web/packages/shared` | Shared DTOs consumed by the web app |
 | `apps/web/tests/unit` | Frontend unit tests |
 
@@ -87,9 +86,10 @@ Important paths:
 
 | Path | Purpose |
 |---|---|
-| `apps/backend/src/main/java/com/habittracker/auth` | Login, refresh, Google OAuth, preferences, JWT guard |
-| `apps/backend/src/main/java/com/habittracker/sync` | Pull/push resources, DTOs, server-side sync logic |
-| `apps/backend/src/main/java/com/habittracker/notification` | VAPID public key and push subscription endpoints |
+| `apps/backend/src/main/java/com/sashplatonov/habbit/runner/auth` | Login, refresh, Google OAuth, preferences, JWT guard |
+| `apps/backend/src/main/java/com/sashplatonov/habbit/runner/habit` | Authenticated habit resources, services, and DTOs |
+| `apps/backend/src/main/java/com/sashplatonov/habbit/runner/checkin` | Authenticated check-in resources, services, and DTOs |
+| `apps/backend/src/main/java/com/sashplatonov/habbit/runner/notification` | VAPID public key and push subscription endpoints |
 | `apps/backend/src/main/java/com/sashplatonov/habbit/runner/metrics` | Business metrics exported through New Relic Micrometer registry |
 | `apps/backend/src/main/java/com/habittracker/model` | Panache entities |
 | `apps/backend/src/main/resources/application.properties` | Quarkus, datasource, CORS, Flyway, auth config |
@@ -105,21 +105,17 @@ Operational notes:
 
 ---
 
-## 🔄 Sync and preferences flow <a name="sync-and-preferences-flow"></a>
+## 🔄 Habit and preferences flow <a name="habit-and-preferences-flow"></a>
 
-Current sync surface:
-- `GET /sync/pull?since=<cursor>`
-- `POST /sync/push`
-
-Payload families currently handled by the backend:
-- habits
-- checkins
-- tombstones
+Current habit surface:
+- `GET`, `POST /habits`
+- `GET`, `PUT`, `DELETE /habits/{habitId}`
+- authenticated check-in resources under `/checkins`
 
 Client-side behavior:
-- sync requests are authenticated with the access token;
-- responses are marked `no-store`;
-- the backend returns timing headers such as `x-sync-duration-ms` and `Server-Timing`;
+- habit and check-in requests are authenticated with the access-token cookie;
+- mutations are applied only after the API confirms the write;
+- responses are marked `no-store` where appropriate;
 - theme and timezone preferences use `GET /auth/preferences` and `PUT /auth/preferences`.
 
 The frontend keeps the server as the canonical source and exposes a clear degraded state when the

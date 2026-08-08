@@ -81,4 +81,4 @@ Don't restart everything at once. Pick the one habit that matters most to you, d
 
 ---
 
-*Habbit Runner is fast, offline, and simple enough to use one-handed while managing everything else. [Try it free →](/)*
+*Habbit Runner is fast and simple enough to use one-handed while managing everything else. [Try it free →](/)*

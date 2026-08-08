@@ -30,7 +30,7 @@ Habbit Runner is built around a server-backed API. Habit data, check-ins, and an
 
 When you reconnect, a pull-push-pull sync cycle reconciles your local changes with the server using last-write-wins conflict resolution. Web push notifications work through the browser without a native app.
 
-- Offline: Full functionality, no degradation
+- Offline: Cached application shell; habit data requires a connection
 - Sync: Background, automatic on reconnect
 - PWA: Installable on Android, iOS (Safari 16.4+), desktop
 - Price: Free
@@ -62,7 +62,7 @@ Best for: Android users who want maximum privacy with no cloud sync at all.
 
 ## How to Choose an Offline Habit Tracker
 
-If you use multiple devices or want cross-device access, you need both offline storage AND background sync. Habbit Runner and iCloud-backed apps cover this. Loop is perfect if you use one device and value simplicity.
+If you use multiple devices or want cross-device access, choose an app with a supported account-backed data model. Habbit Runner provides that through its API; Loop is a local-only option for one device.
 
 If you're on a tight budget and want cross-platform access from any browser, a PWA like Habbit Runner is the clearest choice — no purchase, no App Store, works everywhere.
 

@@ -51,7 +51,7 @@ Obsidian stores all notes as plain markdown files on your device. No server requ
 
 ### Habbit Runner (Habit Tracking — PWA)
 
-Habbit Runner stores all habit data locally in your browser's IndexedDB. The app works completely offline. Sync to a server is optional and only required for multi-device access. Habit data is stored locally first and always accessible without a connection.
+Habbit Runner is a server-backed PWA: signed-in habit data and check-ins are loaded and changed through its API. Its cached application shell supports repeat visits, but habit mutations require a connection.
 
 ### Bear (Notes — iOS/macOS)
 
@@ -97,4 +97,4 @@ Local-first apps require local backups or optional cloud sync for recovery from 
 
 ---
 
-*Habbit Runner is local-first: your habits live on your device, sync is optional, and the app works anywhere. [Try it free →](/)*
+*Habbit Runner is an installable, server-backed PWA for tracking habits and reviewing progress. [Try it free →](/)*

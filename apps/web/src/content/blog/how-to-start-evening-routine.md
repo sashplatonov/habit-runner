@@ -96,4 +96,4 @@ Yes. Tracking the routine components as habits is a practical way to stay consis
 
 ---
 
-*Habbit Runner makes it easy to check in on your habits at the end of the day — quick, offline, and out of the way. [Try it free →](/)*
+*Habbit Runner makes it easy to check in on your habits at the end of the day — quick and out of the way. [Try it free →](/)*

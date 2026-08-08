@@ -86,4 +86,4 @@ Start with one. Seriously. One habit tracked consistently for four weeks is more
 
 ---
 
-*Habbit Runner is simple by design — no mandatory sign-up, one tap to log, offline always-available. It gets out of the way so you can focus on the habit. [Try it free →](/)*
+*Habbit Runner is simple by design — sign in, log a habit, and review your progress in one focused flow. [Try it free →](/)*

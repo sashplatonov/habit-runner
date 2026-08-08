@@ -78,4 +78,4 @@ Drop it. A habit you've lost interest in isn't a failure — circumstances and p
 
 ---
 
-*Habbit Runner tracks your habits with minimal friction — one tap to log, offline by default, no setup required to start. [Try it free →](/)*
+*Habbit Runner tracks your habits with minimal friction — sign in, log, and review progress in one flow. [Try it free →](/)*

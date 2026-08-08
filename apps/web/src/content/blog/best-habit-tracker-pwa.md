@@ -32,7 +32,7 @@ Not all PWAs are equal. A good habit tracker PWA should:
 - Be **installable** on all major platforms
 - Load quickly from the **device cache** (not requiring a server round-trip on open)
 - Support **push notifications** without a native app
-- Store data **locally first**, with optional sync
+- Explain whether habit data is local or server-backed and what requires a connection
 
 ## Best Habit Tracker PWAs
 
@@ -47,7 +47,7 @@ Features:
 - Streak tracking and analytics
 - Freeze days for streak protection
 - Web push notifications
-- Google OAuth (optional, for multi-device sync)
+- Google OAuth for signed-in habit data and account access
 - Free to use
 
 ### Habitica (PWA available)

@@ -81,4 +81,4 @@ Three habits completed daily for a year will move the needle on your life more t
 
 ---
 
-*Habbit Runner tracks your habits offline, shows your streaks, and lets you freeze days when life gets in the way. [Try it free →](/)*
+*Habbit Runner tracks your habits, shows your streaks, and lets you freeze days when life gets in the way. [Try it free →](/)*

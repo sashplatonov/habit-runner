@@ -56,7 +56,7 @@ In all of these cases, an offline-capable tracker lets you log immediately rathe
 
 ### Habbit Runner (PWA)
 
-Full offline functionality. The service worker caches the app shell and all data lives in IndexedDB on your device. Works in airplane mode, on the subway, in remote areas. When you reconnect, changes sync automatically. [Read the full comparison of offline habit trackers →](/blog/best-offline-habit-tracker)
+The service worker caches the app shell for repeat visits. Habit data and changes are handled through the signed-in API, so this product is not suitable for offline habit logging. [Read the full comparison of offline habit trackers →](/blog/best-offline-habit-tracker)
 
 ### Loop Habit Tracker (Android)
 
@@ -68,7 +68,7 @@ Local storage with optional iCloud sync. Works without a network connection.
 
 ## Setting Up an Offline Habit Tracker
 
-For a PWA like Habbit Runner:
+For a PWA that explicitly supports offline data:
 1. Open the app in your browser (Chrome or Safari)
 2. Add to home screen via the browser's share/install menu
 3. The service worker will cache the app for offline use
@@ -80,7 +80,7 @@ For native apps, installation from the App Store or Google Play handles offline 
 
 ### Will my habit data still sync when I reconnect?
 
-Yes, if the app supports sync. In Habbit Runner, habit changes are saved through the backend and refreshed when connectivity returns.
+Yes, if the app supports sync. In Habbit Runner, habit changes are saved through the backend while connected.
 
 ### Can I receive habit reminders without internet?
 
@@ -92,4 +92,4 @@ Your local data is intact. When you reconnect, the sync catches up automatically
 
 ---
 
-*Habbit Runner stores every log locally first. No internet required to track your habits. [Install it free →](/)*
+*Habbit Runner is an installable PWA for signed-in, server-backed habit tracking. [Install it free →](/)*

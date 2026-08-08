@@ -93,7 +93,7 @@
               <h2 class="mt-3 text-2xl font-semibold tracking-tight text-foreground">A calmer surface for daily follow-through.</h2>
             </div>
             <div class="rounded-2xl bg-foreground px-4 py-2 text-right text-bg-primary shadow-[0_14px_32px_rgba(15,23,42,0.18)]">
-              <p class="text-[10px] uppercase tracking-[0.22em] text-progress">Offline ready</p>
+              <p class="text-[10px] uppercase tracking-[0.22em] text-progress">Progress ready</p>
               <p class="mt-1 text-lg font-semibold">From day one</p>
             </div>
           </div>

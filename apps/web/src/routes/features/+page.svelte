@@ -171,8 +171,8 @@
       <section class="rounded-[1.75rem] border border-slate-200/80 bg-white/92 p-6 shadow-[0_18px_50px_rgba(15,23,42,0.08)]">
         <h2 class="text-xl font-semibold text-slate-900">Privacy-First Design</h2>
         <p class="mt-3 text-sm text-slate-600">
-          Your data lives on your device first. No advertising. No data selling. Sync requires
-          sign-in and is opt-in via Google OAuth.
+          No advertising. No data selling. Habit tracking requires sign-in via Google OAuth and
+          stores account data through the API.
         </p>
       </section>
     </div>

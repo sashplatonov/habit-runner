@@ -30,7 +30,7 @@ Habbit Runner is built around streaks as a first-class feature. Each habit card 
 
 The standout feature is **freeze days** — a built-in mechanism to pause a streak for a day without breaking it. This makes streaks resilient rather than brittle. If you travel, get sick, or have an exceptional week, you don't lose months of progress.
 
-- Offline: Full functionality without internet
+- Offline: Habit data requires a connection
 - Multiple habits: Yes, with individual streaks per habit
 - Freeze days: Yes (snowflake icon per habit)
 - Streak recovery: Via freeze days
@@ -70,7 +70,7 @@ Apps that offer some form of streak protection — freeze days, streak shields, 
 
 **For fitness habits**: Streaks (iOS) with HealthKit integration auto-logs runs and workouts.
 
-**For privacy-first users**: Habbit Runner or Loop Habit Tracker — both local-first with no data sharing.
+**For privacy-first users**: compare each product's published account and data-handling model before choosing.
 
 **For cross-platform access**: Habbit Runner as a PWA — the same app works on your phone, tablet, and desktop with the same streak data.
 

@@ -94,8 +94,8 @@
         <h2 class="text-xl font-semibold text-slate-900">Privacy Commitment</h2>
         <p class="mt-3 text-sm text-slate-600">
           Your habit data is your data. We do not sell data, do not use it for advertising, and do
-          not share it with third parties. Data is stored locally on your device first and only
-          stored on our servers for your signed-in account.
+          not share it with third parties. Habit data is stored for your signed-in account and
+          is not used for advertising.
         </p>
         <p class="mt-3 text-sm text-slate-600">
           See our full <a href={resolve<'/privacy-policy'>('/privacy-policy', {})} class="text-cyan-700 underline">Privacy Policy</a> for details.

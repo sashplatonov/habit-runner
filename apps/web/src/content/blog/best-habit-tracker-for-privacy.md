@@ -31,8 +31,8 @@ Habbit Runner stores signed-in habit data in the backend; the PWA shell is cache
 
 There is no advertising. Data is not sold or used for analytics outside the app itself. Because the app is a PWA, there's no App Store middleman analyzing install behavior.
 
-- Data stored: Locally on device (IndexedDB)
-- Account required: No (optional for sync)
+- Data stored: Server-backed for signed-in accounts
+- Account required: Yes, for habit data and streaks
 - Ads: None
 - Export: Available
 - Open for inspection: Yes (PWA, inspectable in browser DevTools)
@@ -64,13 +64,13 @@ Not a dedicated habit tracker, but the privacy model is excellent: your data is 
 
 There's a natural overlap between privacy-friendly apps and carefully scoped server-backed apps. Minimizing unnecessary data transmission reduces exposure by default.
 
-Habbit Runner was built with this in mind. Your habits are readable and writable without a network connection. The privacy benefit is a byproduct of the architecture, not a marketing checkbox.
+Habbit Runner was built with this in mind. Its server-backed product avoids advertising and data sales; habit changes require a signed-in network connection.
 
 ## Frequently Asked Questions
 
 ### Can I use a habit tracker without creating an account?
 
-Yes. Loop Habit Tracker requires no account at all. Habbit Runner also works without sign-in — you only need an account if you want multi-device sync.
+Yes. Loop Habit Tracker requires no account at all. Habbit Runner requires sign-in for habit data and streaks.
 
 ### Do privacy-focused habit trackers still have notifications?
 
@@ -82,8 +82,8 @@ Generally, yes — because the code can be audited. Closed-source apps may make 
 
 ### Does Habbit Runner sell user data?
 
-No. Habbit Runner does not sell or share user data. Habit data is stored locally first and only synced to the server if you choose to create an account and use the sync feature.
+No. Habbit Runner does not sell or share user data. Habit data for signed-in accounts is handled by the service backend.
 
 ---
 
-*Track your habits locally. No ads, no data selling. Habbit Runner keeps your routine private by default. [Try it free →](/)*
+*Track habits with a server-backed PWA. No ads and no data selling. [Try it free →](/)*

@@ -50,7 +50,7 @@ For anyone who commutes, travels frequently, or just wants reliability, local-on
 
 The main limitation of pure offline apps is that they don't move your data between devices. If you track habits on your phone in the morning and want to check stats on your laptop at lunch, a local-only app won't help.
 
-The solution is an app that combines both: local-first storage with optional background sync.
+Some products combine local storage with synchronization; others, such as Habbit Runner, use a server-backed model.
 
 Habbit Runner uses a backend-first model. Account data is written through the API, and refresh pulls the latest remote state. Conflict handling is enforced by the server's version checks.
 
@@ -58,7 +58,7 @@ Habbit Runner uses a backend-first model. Account data is written through the AP
 
 Every time a cloud app syncs your data, it goes to a server. This is often necessary, but it's a data exposure surface. What habits you track, how often you succeed or fail, your daily routine patterns — this is more personal than most people realize.
 
-With a local-first app, this data never leaves your device unless you opt into sync. That's a meaningful privacy difference for users who track health habits, mental health practices, or other sensitive routines.
+With a local-first app, this data may never leave your device unless you opt into sync. That can be a meaningful privacy difference for users who track sensitive routines.
 
 ## Which Model Fits Your Situation
 
@@ -93,8 +93,8 @@ If you uninstall an app that uses local storage, the data is typically removed w
 
 ### Do I need to create an account to use an offline habit tracker?
 
-Not always. Apps like Loop Habit Tracker require no account. Habbit Runner also works without an account — you only need to sign in if you want sync across devices.
+Not always. Apps like Loop Habit Tracker require no account. Habbit Runner requires sign-in for habit data and streaks.
 
 ---
 
-*Habbit Runner stores your habits locally first, syncs when you're connected, and works whether or not you have a signal. [Try it free →](/)*
+*Habbit Runner stores signed-in habit data through its API and provides an installable PWA interface. [Try it free →](/)*
