@@ -30,7 +30,7 @@ ARG VITE_NEW_RELIC_BROWSER_LOADER_CONFIG
 # Compile service worker source to a JS file expected by workbox injectManifest
 # Ensure SvelteKit sync runs to populate .svelte-kit, then compile the service worker
 RUN npm run sync:svelte
-RUN mkdir -p .svelte-kit/output/client && npx esbuild src/service-worker.ts --bundle --platform=browser --outfile=.svelte-kit/output/client/service-worker.js || true
+RUN mkdir -p .svelte-kit/output/client && npx esbuild src/service-worker.ts --bundle --platform=browser --outfile=.svelte-kit/output/client/service-worker.js
 
 # Run vite build directly (skip npm prebuild lifecycle to avoid lint/checks in this stage)
 # Enable PWA plugin during Docker build so the service worker and manifest are included

@@ -238,7 +238,7 @@ git commit -m "fix(cors): Allow CSRF request header"
 
 ## P1-2: Fail Docker builds when the service worker cannot compile
 
-**Status:** ⬜ Not started  
+**Status:** ✅ Completed  
 **Priority:** P1  
 **Depends on:** -
 
