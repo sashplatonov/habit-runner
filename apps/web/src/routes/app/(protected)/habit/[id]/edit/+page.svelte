@@ -4,8 +4,12 @@
   import { page } from '$app/state';
   import EmptyState from '$lib/components/EmptyState.svelte';
   import HabitForm from '$lib/components/HabitForm.svelte';
-  import { habitsStore } from '$lib/stores/habits';
+  import { getAppRuntime } from '$lib/app/runtime';
   import type { HabitUpsertInput } from '$lib/stores/habits';
+
+  const runtime = getAppRuntime();
+  const habitsStore = runtime.habitsStore;
+  const appResolve = runtime.resolve;
 
   const allHabits = $derived($habitsStore.allHabits);
   const habit = $derived(allHabits.find((entry) => entry.id === page.params.id) ?? null);
@@ -13,7 +17,7 @@
   const isResolvingHabit = $derived(!habit && !$habitsStore.hasHydrated);
 
   function handleBack() {
-    void goto(resolve('/app/(protected)/habit/[id]', { id: page.params.id }));
+    void goto(resolve(appResolve('/app/(protected)/habit/[id]', { id: page.params.id })));
   }
 
   async function handleSubmit(payload: HabitUpsertInput) {
@@ -25,7 +29,7 @@
 
     await habitsStore.updateHabit(habitId, payload);
 
-    await goto(resolve('/app/(protected)/habit/[id]', { id: habitId }));
+    await goto(resolve(appResolve('/app/(protected)/habit/[id]', { id: habitId })));
   }
 </script>
 
@@ -46,7 +50,7 @@
       {#snippet action()}
         <a
           class="inline-flex items-center justify-center rounded-full border border-border px-4 py-2 text-xs font-semibold uppercase tracking-widest text-accent transition hover:border-accent-secondary/50"
-          href={resolve<'/app/(protected)/dashboard'>('/app/(protected)/dashboard', {})}
+          href={resolve(appResolve('/app/(protected)/dashboard', {}))}
         >
           Back to dashboard
         </a>

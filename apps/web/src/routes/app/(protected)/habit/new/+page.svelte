@@ -2,13 +2,17 @@
   import { goto } from '$app/navigation';
   import { resolve } from '$app/paths';
   import HabitForm from '$lib/components/HabitForm.svelte';
-  import { habitsStore } from '$lib/stores/habits';
+  import { getAppRuntime } from '$lib/app/runtime';
   import type { HabitUpsertInput } from '$lib/stores/habits';
+
+  const runtime = getAppRuntime();
+  const habitsStore = runtime.habitsStore;
+  const appResolve = runtime.resolve;
 
   const allHabits = $derived($habitsStore.allHabits);
 
   function handleBack() {
-    void goto(resolve<'/app/(protected)/dashboard'>('/app/(protected)/dashboard', {}));
+    void goto(resolve(appResolve('/app/(protected)/dashboard', {})));
   }
 
   async function handleSubmit(payload: HabitUpsertInput) {
@@ -21,7 +25,7 @@
       sortOrder
     });
 
-    await goto(resolve('/app/(protected)/habit/[id]', { id: habitId }));
+    await goto(resolve(appResolve('/app/(protected)/habit/[id]', { id: habitId })));
   }
 </script>
 

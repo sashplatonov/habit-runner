@@ -7,9 +7,13 @@
   import SegmentedControl from '$lib/components/ui/SegmentedControl.svelte';
   import StatusPill from '$lib/components/ui/StatusPill.svelte';
   import Surface from '$lib/components/ui/Surface.svelte';
-  import { habitsStore } from '$lib/stores/habits';
+  import { getAppRuntime } from '$lib/app/runtime';
   import { formatHabitLabel } from '$lib/habits/formatHabitLabel';
   import { buildModernStatsSnapshot, type StatsWindowId } from '$lib/stats/modernStats';
+
+  const runtime = getAppRuntime();
+  const habitsStore = runtime.habitsStore;
+  const appResolve = runtime.resolve;
 
   const windowOptions = [
     { id: '4w', label: '4 weeks' },
@@ -49,7 +53,7 @@
       {#snippet action()}
         <a
           class="inline-flex items-center justify-center rounded-full border border-border bg-bg-card px-4 py-2 text-sm font-medium text-foreground transition-colors hover:border-accent/40 hover:text-accent"
-          href={resolve('/app/(protected)/habit/new', {})}
+          href={resolve(appResolve('/app/(protected)/habit/new', {}))}
         >
           Add habit
         </a>
@@ -89,14 +93,14 @@
               onChange={(next) => { windowId = next as StatsWindowId; }}
             />
             <a
-              href={resolve('/app/(protected)/habit/new', {})}
+              href={resolve(appResolve('/app/(protected)/habit/new', {}))}
               class="inline-flex min-h-11 items-center gap-2 rounded-full border border-border bg-bg-card px-3 py-2 text-sm font-medium text-foreground transition-colors hover:border-accent/40 hover:text-accent"
             >
               <Plus size={14} />
               Add habit
             </a>
             <a
-              href={resolve('/app/(protected)/dashboard', {})}
+              href={resolve(appResolve('/app/(protected)/dashboard', {}))}
               class="inline-flex min-h-11 items-center gap-2 rounded-full border border-border bg-bg-secondary px-3 py-2 text-sm font-medium text-muted transition-colors hover:text-foreground"
             >
               Back to today
@@ -256,7 +260,7 @@
             <div class="mt-4 space-y-3">
               {#each snapshot.focusHabits as habit (habit.id)}
                 <a
-                  href={resolve('/app/(protected)/habit/[id]', { id: habit.habit.id })}
+                  href={resolve(appResolve('/app/(protected)/habit/[id]', { id: habit.habit.id }))}
                   class="block rounded-[1.25rem] border border-border bg-bg-card p-4 transition-colors hover:border-accent/35 hover:bg-bg-secondary"
                 >
                   <div class="flex items-start justify-between gap-3">

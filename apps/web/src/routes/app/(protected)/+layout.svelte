@@ -17,6 +17,8 @@
   import PullToRefresh from '$lib/components/PullToRefresh.svelte';
   import { habitsStore } from '$lib/stores/habits';
   import { themeStore } from '$lib/stores/theme';
+  import { createAppRuntime } from '$lib/app/runtime';
+  import AppRuntimeProvider from '$lib/app/AppRuntimeProvider.svelte';
 
   type Props = {
     data: {
@@ -28,6 +30,7 @@
   let { data, children }: Props = $props();
   let sessionClearInFlight = false;
   let isRefreshing = $state(false);
+  const runtime = createAppRuntime({ habitsStore, routeBase: '/app/(protected)', theme: 'cloud', isDemo: false });
 
   afterNavigate(() => {
     if (browser) {
@@ -100,11 +103,13 @@
   isRefreshing={isRefreshing}
   onRefresh={refreshHabits}
 >
-  <AppLayout
-    theme={$themeStore.theme}
-    onThemeChange={(id) => themeStore.setTheme(id)}
-    onLogout={logout}
-  >
-    {@render children()}
-  </AppLayout>
+  <AppRuntimeProvider runtime={{ ...runtime, theme: $themeStore.theme }}>
+    <AppLayout
+      theme={$themeStore.theme}
+      onThemeChange={(id) => themeStore.setTheme(id)}
+      onLogout={logout}
+    >
+      {@render children()}
+    </AppLayout>
+  </AppRuntimeProvider>
 </PullToRefresh>

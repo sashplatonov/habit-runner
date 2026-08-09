@@ -15,15 +15,17 @@
     theme: ThemeId;
     onThemeChange: (id: ThemeId) => void | Promise<void>;
     onLogout?: () => void | Promise<void>;
+    routeBase?: '/app/(protected)' | '/showcase';
   };
 
-  let { theme, onThemeChange, onLogout }: Props = $props();
+  let { theme, onThemeChange, onLogout, routeBase = '/app/(protected)' }: Props = $props();
 
   let isMoreOpen = $state(false);
   let moreButton = $state<HTMLButtonElement | null>(null);
 
-  const dashboardHref = resolve<'/app/(protected)/dashboard'>('/app/(protected)/dashboard', {});
-  const statsHref = resolve<'/app/(protected)/stats'>('/app/(protected)/stats', {});
+  const dashboardHref = routeBase === '/showcase' ? resolve('/showcase') : resolve<'/app/(protected)/dashboard'>('/app/(protected)/dashboard', {});
+  const statsHref = routeBase === '/showcase' ? resolve('/showcase/stats') : resolve<'/app/(protected)/stats'>('/app/(protected)/stats', {});
+  const newHabitHref = routeBase === '/showcase' ? resolve('/showcase/habit/new') : resolve<'/app/(protected)/habit/new'>('/app/(protected)/habit/new', {});
   const isDashboard = $derived(page.url.pathname === dashboardHref);
   const isStats = $derived(page.url.pathname === statsHref);
 
@@ -72,7 +74,7 @@
   <div class="flex flex-[0_0_72px] items-center justify-center">
     <a
       class="flex h-[54px] w-[54px] items-center justify-center rounded-[1.4rem] bg-progress text-bg-primary shadow-[0_14px_26px_rgba(15,23,42,0.18)]"
-      href={resolve<'/app/(protected)/habit/new'>('/app/(protected)/habit/new', {})}
+      href={newHabitHref}
       aria-label="New habit"
     >
       <PlusIcon size={24} />

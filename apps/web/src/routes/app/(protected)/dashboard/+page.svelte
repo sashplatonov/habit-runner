@@ -34,7 +34,7 @@
   } from '$lib/habits/schedule';
   import { buildCelebrationParticles, getCelebrationLabel, type CelebrationParticle } from '$lib/habits/completionCelebration';
   import { formatDate, getDaysSinceLastCompletion } from '$lib/habits/habitStats';
-  import { habitsStore } from '$lib/stores/habits';
+  import { getAppRuntime } from '$lib/app/runtime';
   import { themeStore } from '$lib/stores/theme';
   import { HABIT_COLOR_THEMES } from '$lib/theme/habit-colors';
   import { isPhaseTransition } from '$lib/habits/phases';
@@ -45,6 +45,10 @@
   import { formatHabitLabel } from '$lib/habits/formatHabitLabel';
   import type { Habit } from '@/types/habit';
   import type { DashboardPreferences } from '@habbit-runner/shared';
+
+  const runtime = getAppRuntime();
+  const habitsStore = runtime.habitsStore;
+  const appResolve = runtime.resolve;
 
   // ─── Types ────────────────────────────────────────────────────────────────────
   type SortMode = 'custom' | 'smart';
@@ -418,11 +422,11 @@
 
   // ─── Navigation ───────────────────────────────────────────────────────────────
   function navigateToDetail(habitId: string) {
-    void goto(resolve('/app/(protected)/habit/[id]', { id: habitId }));
+    void goto(resolve(appResolve('/app/(protected)/habit/[id]', { id: habitId })));
   }
 
   function navigateToNewHabit() {
-    void goto(resolve<'/app/(protected)/habit/new'>('/app/(protected)/habit/new', {}));
+    void goto(resolve(appResolve('/app/(protected)/habit/new', {})));
   }
 
   function navigateToNextHabit() {
@@ -705,7 +709,7 @@
         archived: false,
         sortOrder
       });
-      await goto(resolve('/app/(protected)/habit/[id]', { id: habitId }));
+      await goto(resolve(appResolve('/app/(protected)/habit/[id]', { id: habitId })));
     } finally {
       addingTemplate = null;
     }

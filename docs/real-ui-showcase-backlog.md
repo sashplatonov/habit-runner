@@ -127,7 +127,7 @@ git commit -m "feat(showcase): add in-memory habit runtime"
 
 ## P1-2: Make the existing app screens runtime and route-base aware
 
-**Status:** ⬜ Not started  
+**Status:** ✅ Complete  
 **Priority:** P1  
 **Depends on:** P1-1
 

@@ -19,10 +19,14 @@
   import { formatHabitLabel } from '$lib/habits/formatHabitLabel';
   import { calculateScheduledStreak } from '$lib/habits/schedule';
   import { isPhaseTransition } from '$lib/habits/phases';
-  import { habitsStore } from '$lib/stores/habits';
+  import { getAppRuntime } from '$lib/app/runtime';
   import { getUndoContext } from '$lib/stores/undo';
   import { getCurrentUserTimeZone } from '$lib/time/userTimezone';
   import { HABIT_COLOR_THEMES } from '$lib/theme/habit-colors';
+
+  const runtime = getAppRuntime();
+  const habitsStore = runtime.habitsStore;
+  const appResolve = runtime.resolve;
 
   const undoStore = getUndoContext();
   const habitId = $derived(page.params.id);
@@ -102,7 +106,7 @@
         });
       }
 
-      await goto(resolve<'/app/(protected)/dashboard'>('/app/(protected)/dashboard', {}));
+      await goto(resolve(appResolve('/app/(protected)/dashboard', {})));
     } catch (err) {
       mutationError = err instanceof Error ? err.message : 'Failed to delete habit';
     } finally {
@@ -291,11 +295,11 @@
       return;
     }
 
-    void goto(resolve('/app/(protected)/habit/[id]/edit', { id: habit.id }));
+    void goto(resolve(appResolve('/app/(protected)/habit/[id]/edit', { id: habit.id })));
   }
 
   function handleBack() {
-    void goto(resolve<'/app/(protected)/dashboard'>('/app/(protected)/dashboard', {}));
+    void goto(resolve(appResolve('/app/(protected)/dashboard', {})));
   }
 </script>
 
@@ -316,7 +320,7 @@
       {#snippet action()}
         <a
           class="inline-flex items-center justify-center rounded-full border border-border px-4 py-2 text-xs font-semibold uppercase tracking-widest text-accent transition hover:border-accent-secondary/50"
-          href={resolve<'/app/(protected)/dashboard'>('/app/(protected)/dashboard', {})}
+          href={resolve(appResolve('/app/(protected)/dashboard', {}))}
         >
           Back to dashboard
         </a>

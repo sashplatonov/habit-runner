@@ -9,10 +9,11 @@
     theme: ThemeId;
     onThemeChange: (id: ThemeId) => void | Promise<void>;
     onLogout?: () => void | Promise<void>;
+    routeBase?: '/app/(protected)' | '/showcase';
     children: Snippet;
   };
 
-  let { theme, onThemeChange, onLogout, children }: Props = $props();
+  let { theme, onThemeChange, onLogout, routeBase = '/app/(protected)', children }: Props = $props();
 
   const isHabitFormRoute = $derived(
     page.url.pathname.endsWith('/habit/new') || /\/habit\/[^/]+\/edit$/.test(page.url.pathname)
@@ -37,6 +38,7 @@
     {theme}
     {onThemeChange}
     {onLogout}
+    {routeBase}
   />
 
   <div class="sm:ml-[252px]">
@@ -69,6 +71,6 @@
   </div>
 
   {#if !isHabitFormRoute}
-    <BottomNav {theme} {onThemeChange} {onLogout} />
+    <BottomNav {theme} {onThemeChange} {onLogout} {routeBase} />
   {/if}
 </div>

@@ -15,15 +15,17 @@
     theme: ThemeId;
     onThemeChange: (id: ThemeId) => void | Promise<void>;
     onLogout?: () => void | Promise<void>;
+    routeBase?: '/app/(protected)' | '/showcase';
   };
 
-  let { theme, onThemeChange, onLogout }: Props = $props();
+  let { theme, onThemeChange, onLogout, routeBase = '/app/(protected)' }: Props = $props();
 
   let isThemeOpen = $state(false);
   let themeElement = $state<HTMLDivElement | null>(null);
 
-  const dashboardHref = resolve<'/app/(protected)/dashboard'>('/app/(protected)/dashboard', {});
-  const statsHref = resolve<'/app/(protected)/stats'>('/app/(protected)/stats', {});
+  const dashboardHref = routeBase === '/showcase' ? resolve('/showcase') : resolve<'/app/(protected)/dashboard'>('/app/(protected)/dashboard', {});
+  const statsHref = routeBase === '/showcase' ? resolve('/showcase/stats') : resolve<'/app/(protected)/stats'>('/app/(protected)/stats', {});
+  const newHabitHref = routeBase === '/showcase' ? resolve('/showcase/habit/new') : resolve<'/app/(protected)/habit/new'>('/app/(protected)/habit/new', {});
 
   function isActive(path: string) {
     return page.url.pathname === path || (path !== dashboardHref && page.url.pathname.startsWith(path));
@@ -64,7 +66,7 @@
 
   <a
     class="mb-4 flex items-center gap-2 rounded-[1.25rem] border border-progress/20 bg-progress/10 px-3 py-3 text-sm font-semibold text-progress transition-colors hover:border-progress/30 hover:bg-progress/10"
-    href={resolve<'/app/(protected)/habit/new'>('/app/(protected)/habit/new', {})}
+    href={newHabitHref}
   >
     <PlusIcon size={16} />
     New Habit
