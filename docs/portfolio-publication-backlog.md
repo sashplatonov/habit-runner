@@ -359,7 +359,7 @@ git commit -m "test(stack): Cover authenticated habit journey"
 
 ## P2-2: Add concise API evidence for portfolio reviewers
 
-**Status:** ⬜ Not started  
+**Status:** ✅ Complete
 **Priority:** P2  
 **Depends on:** P1-1
 

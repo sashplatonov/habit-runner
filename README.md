@@ -119,6 +119,9 @@ The installed PWA caches the application shell for repeat visits. It is not an
 offline habit database, so users do not receive a false “saved” state when the
 server has not accepted a mutation.
 
+For the current authenticated API contract, start with the generated [OpenAPI
+snapshot](spec/openapi/openapi.yaml) and the short [request examples](docs/architecture/api-contract.md).
+
 [↑ Back to top](#top)
 
 ## 🚀 Run locally <a id="run-locally"></a>
