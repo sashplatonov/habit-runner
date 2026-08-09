@@ -6,6 +6,8 @@ import com.sashplatonov.habbit.runner.auth.service.AuthService;
 import com.sashplatonov.habbit.runner.auth.service.PreferencesService;
 import com.sashplatonov.habbit.runner.auth.telegram.TelegramInitDataVerifier;
 import com.sashplatonov.habbit.runner.auth.telegram.TelegramSessionRequest;
+import com.sashplatonov.habbit.runner.auth.telegram.TelegramLinkRequest;
+import com.sashplatonov.habbit.runner.auth.identity.AccountLinkService;
 import com.sashplatonov.habbit.runner.auth.support.AuthCookieBuilder;
 import com.sashplatonov.habbit.runner.auth.support.AuthRateLimitService;
 import com.sashplatonov.habbit.runner.auth.support.AuthResourceSupport;
@@ -46,6 +48,8 @@ public class AuthResource {
   final CurrentUserContext currentUserContext;
   final AuthCookieBuilder authCookieBuilder;
   final AuthRateLimitService authRateLimitService;
+  @jakarta.inject.Inject
+  AccountLinkService accountLinkService;
   @jakarta.inject.Inject
   TelegramInitDataVerifier telegramInitDataVerifier;
   @Context
@@ -108,6 +112,23 @@ public class AuthResource {
     var telegramUser = telegramInitDataVerifier.verify(request.initData());
     var session = authService.authenticateTelegram(telegramUser);
     return authenticatedSessionResponse(session.accessToken(), session.refreshToken(), session.expiresIn(), null);
+  }
+
+  @RequireAuth
+  @POST
+  @Path("/link/telegram/start")
+  public Response startTelegramLink() {
+    return Response.ok(java.util.Map.of("token", accountLinkService.startTelegramLink(
+        currentUserContext.requireUser().id()))).build();
+  }
+
+  @RequireAuth
+  @POST
+  @Path("/link/telegram/complete")
+  @Consumes(MediaType.APPLICATION_JSON)
+  public Response completeTelegramLink(@Valid @NotNull TelegramLinkRequest request) {
+    accountLinkService.completeTelegramLink(request.token(), request.initData());
+    return Response.noContent().build();
   }
 
   @POST

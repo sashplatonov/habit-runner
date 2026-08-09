@@ -222,7 +222,7 @@ git commit -m "feat(auth): Verify Telegram Mini App sessions"
 
 ## P1-1: Add explicit bidirectional linking and account merge APIs
 
-**Status:** ⬜ Not started  
+**Status:** 🔄 In progress  
 **Priority:** P1  
 **Depends on:** P0-1, P0-2
 
