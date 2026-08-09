@@ -34,6 +34,8 @@ public abstract class AuthenticatedApiTestSupport {
     finishActiveTransaction();
     inTransaction(() -> {
       entityManager.createNativeQuery("SET REFERENTIAL_INTEGRITY FALSE").executeUpdate();
+      entityManager.createNativeQuery("TRUNCATE TABLE account_link_challenges").executeUpdate();
+      entityManager.createNativeQuery("TRUNCATE TABLE auth_identities").executeUpdate();
       entityManager.createNativeQuery("TRUNCATE TABLE checkins").executeUpdate();
       entityManager.createNativeQuery("TRUNCATE TABLE habits").executeUpdate();
       entityManager.createNativeQuery("TRUNCATE TABLE refresh_tokens").executeUpdate();

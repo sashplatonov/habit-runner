@@ -53,6 +53,7 @@ class AuthPersistenceCoverageTest extends AuthenticatedApiTestSupport {
   @Inject
   UserService userService;
 
+
   @Inject
   RefreshTokenService refreshTokenService;
 
@@ -72,6 +73,7 @@ class AuthPersistenceCoverageTest extends AuthenticatedApiTestSupport {
     assertEquals(created.getId(), found.getId());
     assertEquals(1L, UserEntity.count("email", email));
   }
+
 
   @Test
   void shouldCreateRequireAndRevokeRefreshTokensThroughRealPersistenceService() throws Exception {

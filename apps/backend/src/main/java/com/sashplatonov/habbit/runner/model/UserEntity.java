@@ -14,7 +14,7 @@ import java.time.Instant;
 @Getter
 @Setter
 public class UserEntity extends UuidAuditedEntityBase {
-  @Column(nullable = false, unique = true)
+  @Column(unique = true)
   private String email;
 
   @Column(nullable = false)

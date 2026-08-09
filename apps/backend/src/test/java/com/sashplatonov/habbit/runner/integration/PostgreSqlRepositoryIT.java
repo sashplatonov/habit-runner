@@ -1,6 +1,9 @@
 package com.sashplatonov.habbit.runner.integration;
 
 import com.sashplatonov.habbit.runner.model.CheckinEntity;
+import com.sashplatonov.habbit.runner.auth.identity.AccountMergeService;
+import com.sashplatonov.habbit.runner.auth.identity.AuthProvider;
+import com.sashplatonov.habbit.runner.model.AuthIdentityEntity;
 import com.sashplatonov.habbit.runner.model.HabitColor;
 import com.sashplatonov.habbit.runner.model.HabitEntity;
 import com.sashplatonov.habbit.runner.model.HabitFrequency;
@@ -22,6 +25,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 @QuarkusTest
 @TestProfile(PostgresTestProfile.class)
@@ -31,6 +35,9 @@ class PostgreSqlRepositoryIT {
 
   @Inject
   HabitRepository habitRepository;
+
+  @Inject
+  AccountMergeService accountMergeService;
 
   @Test
   @TestTransaction
@@ -71,6 +78,28 @@ class PostgreSqlRepositoryIT {
     entityManager.persist(checkin("checkin-two", habit.getId(), user.getId(), LocalDate.of(2026, 1, 1)));
 
     assertThrows(PersistenceException.class, entityManager::flush);
+  }
+
+  @Test
+  @TestTransaction
+  void shouldTransferIdentityAndRemoveAbsorbedUserDuringMerge() {
+    var survivor = user("merge-survivor");
+    var absorbed = user("merge-absorbed");
+    entityManager.persist(survivor);
+    entityManager.persist(absorbed);
+
+    var identity = new AuthIdentityEntity();
+    identity.setProvider(AuthProvider.TELEGRAM);
+    identity.setProviderSubject("telegram-merge-absorbed");
+    identity.setUserId(absorbed.getId());
+    entityManager.persist(identity);
+    entityManager.flush();
+
+    accountMergeService.merge(survivor.getId(), absorbed.getId());
+    entityManager.clear();
+
+    assertEquals(survivor.getId(), AuthIdentityEntity.<AuthIdentityEntity>findAll().firstResult().getUserId());
+    assertNull(UserEntity.findById(absorbed.getId()));
   }
 
   private UserEntity user(String id) {
