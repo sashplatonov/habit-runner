@@ -478,7 +478,7 @@ git commit -m "docs(ops): Define health endpoint ingress"
 
 ## P2-4: Add a safe read-only portfolio showcase route
 
-**Status:** ⬜ Not started  
+**Status:** ✅ Complete
 **Priority:** P2  
 **Depends on:** -
 

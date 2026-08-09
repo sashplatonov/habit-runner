@@ -26,7 +26,9 @@
 
   onMount(() => {
     loadGA4();
-    void themeStore.initialize(Boolean(readAuthSession()));
+    if (window.location.pathname !== '/showcase') {
+      void themeStore.initialize(Boolean(readAuthSession()));
+    }
 
     // Capture beforeinstallprompt — delay showing until user has taken action
     if (!isStandaloneMode()) {

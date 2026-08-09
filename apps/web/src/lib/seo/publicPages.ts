@@ -219,6 +219,15 @@ export const PUBLIC_ABOUT_SEO = {
   pathname: '/about'
 };
 
+export const PUBLIC_SHOWCASE_SEO = {
+  title: 'Habbit Runner Showcase — Read-Only Product Preview',
+  description:
+    'Explore a fictional, read-only Habbit Runner dashboard preview with habits, schedule rhythm, progress signals, and conflict-safe collaboration.',
+  keywords:
+    'habit tracker showcase, habit dashboard demo, server-backed habit tracker preview, streak analytics demo',
+  pathname: '/showcase'
+};
+
 export const PUBLIC_PRIVACY_SEO = {
   title: 'Privacy Policy — Habbit Runner',
   description:

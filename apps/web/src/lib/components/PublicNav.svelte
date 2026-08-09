@@ -16,6 +16,7 @@
   const featuresHref = resolve<'/features'>('/features', {});
   const blogHref = resolve<'/blog'>('/blog', {});
   const aboutHref = resolve<'/about'>('/about', {});
+  const showcaseHref = resolve<'/showcase'>('/showcase', {});
 
   function closeMobileNavigation() {
     mobileNavigationOpen = false;
@@ -53,6 +54,11 @@
           aria-current={page.url.pathname === blogHref ? 'page' : undefined}
           class="inline-flex min-h-11 items-center rounded-full px-3 py-2 text-xs font-medium transition-[background-color,color,box-shadow] {page.url.pathname === blogHref ? 'bg-bg-card text-foreground shadow-[0_12px_24px_rgba(15,23,42,0.12)]' : 'text-muted hover:bg-bg-card hover:text-foreground'}"
         >Blog</a>
+        <a
+          href={showcaseHref}
+          aria-current={page.url.pathname === showcaseHref ? 'page' : undefined}
+          class="inline-flex min-h-11 items-center rounded-full px-3 py-2 text-xs font-medium transition-[background-color,color,box-shadow] {page.url.pathname === showcaseHref ? 'bg-bg-card text-foreground shadow-[0_12px_24px_rgba(15,23,42,0.12)]' : 'text-muted hover:bg-bg-card hover:text-foreground'}"
+        >Showcase</a>
         <a
           href={resolve<'/about'>('/about', {})}
           aria-current={page.url.pathname === aboutHref ? 'page' : undefined}
@@ -94,6 +100,7 @@
       <div class="mx-auto grid max-w-6xl gap-2">
         <a href={resolve<'/features'>('/features', {})} aria-current={page.url.pathname === featuresHref ? 'page' : undefined} onclick={closeMobileNavigation} class="flex min-h-11 items-center rounded-xl px-3 text-sm font-medium transition-colors {page.url.pathname === featuresHref ? 'bg-bg-card text-foreground' : 'text-muted hover:bg-bg-card hover:text-foreground'}">Features</a>
         <a href={resolve<'/blog'>('/blog', {})} aria-current={page.url.pathname === blogHref ? 'page' : undefined} onclick={closeMobileNavigation} class="flex min-h-11 items-center rounded-xl px-3 text-sm font-medium transition-colors {page.url.pathname === blogHref ? 'bg-bg-card text-foreground' : 'text-muted hover:bg-bg-card hover:text-foreground'}">Blog</a>
+        <a href={showcaseHref} aria-current={page.url.pathname === showcaseHref ? 'page' : undefined} onclick={closeMobileNavigation} class="flex min-h-11 items-center rounded-xl px-3 text-sm font-medium transition-colors {page.url.pathname === showcaseHref ? 'bg-bg-card text-foreground' : 'text-muted hover:bg-bg-card hover:text-foreground'}">Showcase</a>
         <a href={resolve<'/about'>('/about', {})} aria-current={page.url.pathname === aboutHref ? 'page' : undefined} onclick={closeMobileNavigation} class="flex min-h-11 items-center rounded-xl px-3 text-sm font-medium transition-colors {page.url.pathname === aboutHref ? 'bg-bg-card text-foreground' : 'text-muted hover:bg-bg-card hover:text-foreground'}">About</a>
       </div>
     </nav>
