@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 
 test.describe('public showcase', () => {
-  test('renders a read-only preview without API or persistence activity', async ({ page }) => {
+  test('runs an interactive demo without API or persistence activity', async ({ page }) => {
     const apiRequests: string[] = [];
     const persistenceWrites: string[] = [];
     await page.on('request', (request) => {
@@ -29,6 +29,11 @@ test.describe('public showcase', () => {
     await expect(page.getByRole('heading', { name: 'A calm next-action list' })).toBeVisible();
     await expect(page.getByRole('heading', { name: 'A change needs your attention' })).toBeVisible();
     await expect(page.getByRole('link', { name: 'Sign in to use the app' })).toHaveAttribute('href', '/');
+    await expect(page.getByTestId('showcase-completed')).toHaveText('4/6');
+    await page.getByRole('article').filter({ hasText: 'Walk outside' }).getByRole('button', { name: 'Complete habit' }).click();
+    await expect(page.getByTestId('showcase-completed')).toHaveText('5/6');
+    await page.getByRole('button', { name: 'Reset demo' }).click();
+    await expect(page.getByTestId('showcase-completed')).toHaveText('4/6');
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
     expect(apiRequests).toEqual([]);
     expect(persistenceWrites).toEqual([]);

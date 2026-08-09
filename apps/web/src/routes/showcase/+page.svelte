@@ -7,6 +7,37 @@
   import { PUBLIC_SHOWCASE_SEO } from '$lib/seo/publicPages';
 
   const fixture = portfolioFixture;
+  const hiddenCompletedCount = fixture.summary.completed
+    - fixture.habits.filter((habit) => habit.status === 'Complete').length;
+  const createDemoHabits = () => fixture.habits.map((habit) => ({
+    ...habit,
+    demoCompleted: habit.status === 'Complete'
+  }));
+
+  let demoHabits = createDemoHabits();
+  let completedCount = fixture.summary.completed;
+
+  function toggleHabit(index: number) {
+    demoHabits = demoHabits.map((habit, habitIndex) => {
+      if (habitIndex !== index) {
+        return habit;
+      }
+
+      const demoCompleted = !habit.demoCompleted;
+      return {
+        ...habit,
+        demoCompleted,
+        progress: demoCompleted ? 100 : habit.progress === 100 ? 60 : habit.progress,
+        status: demoCompleted ? 'Complete' : 'In progress'
+      };
+    });
+    completedCount = demoHabits.filter((habit) => habit.demoCompleted).length + hiddenCompletedCount;
+  }
+
+  function resetDemo() {
+    demoHabits = createDemoHabits();
+    completedCount = fixture.summary.completed;
+  }
 </script>
 
 <PublicSeoHead
@@ -27,16 +58,16 @@
           See the habit loop before you sign in.
         </h1>
         <p class="mt-5 max-w-2xl text-base leading-7 text-slate-600 sm:text-lg">
-          A fictional, read-only snapshot of the dashboard: habits, schedule rhythm, durable progress,
-          and the conflict state that protects shared data.
+          A fictional interactive snapshot of the dashboard: habits, schedule rhythm, durable progress,
+          and the conflict state that protects shared data. Try completing a habit to see the loop.
         </p>
       </div>
       <aside role="status" class="rounded-[1.75rem] border border-cyan-200/80 bg-white/85 p-5 shadow-[0_18px_50px_rgba(15,23,42,0.08)]" aria-label="Showcase status">
         <div class="flex items-start gap-3">
           <span class="mt-0.5 flex h-11 w-11 items-center justify-center rounded-2xl bg-cyan-100 text-xl" aria-hidden="true">◎</span>
           <div>
-            <p class="text-sm font-semibold text-slate-950">Read-only showcase</p>
-            <p class="mt-1 text-sm leading-6 text-slate-600">No account, API calls, writes, or browser persistence are used on this page.</p>
+            <p class="text-sm font-semibold text-slate-950">Interactive demo mode</p>
+            <p class="mt-1 text-sm leading-6 text-slate-600">Try the habit flow in memory. No account, API calls, writes, or browser persistence are used.</p>
           </div>
         </div>
       </aside>
@@ -45,7 +76,7 @@
     <section class="mt-10 grid gap-4 sm:grid-cols-3" aria-label="Fictional progress summary">
       <div class="rounded-3xl border border-slate-200 bg-white/90 p-5 shadow-[0_14px_36px_rgba(15,23,42,0.06)]">
         <p class="text-[10px] font-semibold uppercase tracking-[0.24em] text-slate-400">Today</p>
-        <p class="mt-3 text-3xl font-semibold text-slate-950">{fixture.summary.completed}<span class="text-base text-slate-400">/{fixture.summary.total}</span></p>
+        <p data-testid="showcase-completed" class="mt-3 text-3xl font-semibold text-slate-950">{completedCount}<span class="text-base text-slate-400">/{fixture.summary.total}</span></p>
         <p class="mt-1 text-sm text-slate-500">habits completed</p>
       </div>
       <div class="rounded-3xl border border-slate-200 bg-white/90 p-5 shadow-[0_14px_36px_rgba(15,23,42,0.06)]">
@@ -67,10 +98,10 @@
             <p class="text-[10px] font-semibold uppercase tracking-[0.24em] text-slate-400">Dashboard snapshot</p>
             <h2 id="dashboard-preview-heading" class="mt-2 text-2xl font-semibold tracking-tight text-slate-950">A calm next-action list</h2>
           </div>
-          <span class="rounded-full bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700">Friday · 16</span>
+          <button type="button" class="inline-flex min-h-11 items-center rounded-full border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-600 transition hover:border-slate-300 hover:text-slate-950 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-500" onclick={resetDemo}>Reset demo</button>
         </div>
         <div class="mt-6 space-y-3">
-          {#each fixture.habits as habit, index (`habit-${index}`)}
+          {#each demoHabits as habit, index (`habit-${index}`)}
             <article class="rounded-2xl border border-slate-200 bg-slate-50/70 p-4">
               <div class="flex items-start gap-3">
                 <span class="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl bg-white text-xl shadow-sm" aria-hidden="true">{habit.icon}</span>
@@ -83,12 +114,18 @@
                   <div class="mt-3 h-2 overflow-hidden rounded-full bg-slate-200" aria-label={`${habit.progress}% complete`} role="img">
                     <div class="h-full rounded-full" style={`width: ${habit.progress}%; background: ${habit.accent};`}></div>
                   </div>
+                  <button
+                    type="button"
+                    aria-pressed={habit.demoCompleted}
+                    class="mt-4 inline-flex min-h-11 items-center rounded-full px-4 py-2 text-xs font-semibold transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-500 {habit.demoCompleted ? 'bg-emerald-100 text-emerald-800 hover:bg-emerald-200' : 'bg-slate-900 text-white hover:bg-slate-700'}"
+                    onclick={() => toggleHabit(index)}
+                  >{habit.demoCompleted ? 'Completed · undo' : 'Complete habit'}</button>
                 </div>
               </div>
             </article>
           {/each}
         </div>
-        <p class="mt-5 text-xs leading-5 text-slate-500">Controls are intentionally inactive in this preview. Sign in to create and complete your own habits.</p>
+        <p class="mt-5 text-xs leading-5 text-slate-500" aria-live="polite">Changes are temporary and stay in memory. Sign in to create and complete your own habits.</p>
       </div>
 
       <div class="space-y-6">
