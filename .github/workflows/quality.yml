@@ -48,7 +48,7 @@ jobs:
           set -Eeuo pipefail
           if [[ "$EVENT_NAME" == "pull_request" ]]; then
             changed_files="$(git diff --name-only "$BASE_SHA" "$HEAD_SHA")"
-          elif [[ "$BEFORE_SHA" =~ ^0+$ ]]; then
+          elif [[ "$BEFORE_SHA" =~ ^0+$ ]] || ! git cat-file -e "$BEFORE_SHA^{commit}" 2>/dev/null; then
             changed_files="$(git diff-tree --no-commit-id --name-only -r "$HEAD_SHA")"
           else
             changed_files="$(git diff --name-only "$BEFORE_SHA" "$HEAD_SHA")"
