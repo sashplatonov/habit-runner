@@ -1,6 +1,7 @@
 package com.sashplatonov.habbit.runner.auth.telegram;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.sashplatonov.habbit.runner.auth.config.AuthConfig;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.ws.rs.BadRequestException;
@@ -56,7 +57,7 @@ public class TelegramInitDataVerifier {
     }
     try {
       return objectMapper.readValue(fields.get("user"), TelegramWebAppUser.class);
-    } catch (Exception ex) {
+    } catch (JsonProcessingException ex) {
       throw new BadRequestException("Invalid Telegram user", ex);
     }
   }
@@ -93,7 +94,7 @@ public class TelegramInitDataVerifier {
       var mac = Mac.getInstance("HmacSHA256");
       mac.init(new SecretKeySpec(key, "HmacSHA256"));
       return mac.doFinal(value.getBytes(StandardCharsets.UTF_8));
-    } catch (Exception ex) {
+    } catch (java.security.GeneralSecurityException ex) {
       throw new IllegalStateException("Unable to verify Telegram initData", ex);
     }
   }

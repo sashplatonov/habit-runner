@@ -51,21 +51,25 @@ public class AccountLinkService {
     }
     TelegramWebAppUser telegramUser = telegramVerifier.verify(initData);
     var existing = identityRepository.findByProviderAndSubject(AuthProvider.TELEGRAM, Long.toString(telegramUser.id()));
+    linkIdentity(challenge, existing, telegramUser);
+    challenge.setTelegramUserId(Long.toString(telegramUser.id()));
+    challenge.setTelegramUsername(telegramUser.username());
+  }
+
+  private void linkIdentity(AccountLinkChallengeEntity challenge, AuthIdentityEntity existing,
+      TelegramWebAppUser telegramUser) {
     if (existing != null && !challenge.getOwnerUserId().equals(existing.getUserId())) {
       challenge.setStatus("AWAITING_OWNER_CONFIRMATION");
-    } else if (existing == null) {
+      return;
+    }
+    if (existing == null) {
       var identity = new AuthIdentityEntity();
       identity.setProvider(AuthProvider.TELEGRAM);
       identity.setProviderSubject(Long.toString(telegramUser.id()));
       identity.setUserId(challenge.getOwnerUserId());
-      identity.setEmail(null);
       identityRepository.save(identity);
     }
-    challenge.setTelegramUserId(Long.toString(telegramUser.id()));
-    challenge.setTelegramUsername(telegramUser.username());
-    if (existing == null || challenge.getOwnerUserId().equals(existing.getUserId())) {
-      challenge.setStatus("COMPLETED");
-    }
+    challenge.setStatus("COMPLETED");
   }
 
   @Transactional
@@ -100,22 +104,24 @@ public class AccountLinkService {
       throw new BadRequestException("Invalid account link challenge");
     }
     var challenge = challengeRepository.findByTokenHash(hash(token));
-    if (challenge == null || !ownerUserId.equals(challenge.getOwnerUserId())
-        || challenge.isExpiredAt(Instant.now())
-        || "CANCELLED".equals(challenge.getStatus())) {
+    if (challenge == null || !ownerUserId.equals(challenge.getOwnerUserId())) {
       throw new BadRequestException("Invalid or expired account link challenge");
     }
-    if (challenge.isExpiredAt(Instant.now()) && !"EXPIRED".equals(challenge.getStatus())) {
-      challenge.setStatus("EXPIRED");
-    }
+    ensureUsable(challenge);
     return challenge;
+  }
+
+  private void ensureUsable(AccountLinkChallengeEntity challenge) {
+    if (challenge.isExpiredAt(Instant.now()) || "CANCELLED".equals(challenge.getStatus())) {
+      throw new BadRequestException("Invalid or expired account link challenge");
+    }
   }
 
   private String hash(String value) {
     try {
       return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256")
           .digest(value.getBytes(StandardCharsets.UTF_8)));
-    } catch (Exception ex) {
+    } catch (java.security.NoSuchAlgorithmException ex) {
       throw new IllegalStateException("Unable to hash link token", ex);
     }
   }

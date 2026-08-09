@@ -6,8 +6,6 @@ import com.sashplatonov.habbit.runner.auth.service.AuthService;
 import com.sashplatonov.habbit.runner.auth.service.PreferencesService;
 import com.sashplatonov.habbit.runner.auth.telegram.TelegramInitDataVerifier;
 import com.sashplatonov.habbit.runner.auth.telegram.TelegramSessionRequest;
-import com.sashplatonov.habbit.runner.auth.telegram.TelegramLinkRequest;
-import com.sashplatonov.habbit.runner.auth.identity.AccountLinkService;
 import com.sashplatonov.habbit.runner.auth.support.AuthCookieBuilder;
 import com.sashplatonov.habbit.runner.auth.support.AuthRateLimitService;
 import com.sashplatonov.habbit.runner.auth.support.AuthResourceSupport;
@@ -25,7 +23,6 @@ import jakarta.ws.rs.CookieParam;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.PUT;
-import jakarta.ws.rs.DELETE;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.QueryParam;
@@ -49,8 +46,6 @@ public class AuthResource {
   final CurrentUserContext currentUserContext;
   final AuthCookieBuilder authCookieBuilder;
   final AuthRateLimitService authRateLimitService;
-  @jakarta.inject.Inject
-  AccountLinkService accountLinkService;
   @jakarta.inject.Inject
   TelegramInitDataVerifier telegramInitDataVerifier;
   @Context
@@ -115,47 +110,6 @@ public class AuthResource {
     return authenticatedSessionResponse(session.accessToken(), session.refreshToken(), session.expiresIn(), null);
   }
 
-  @RequireAuth
-  @POST
-  @Path("/link/telegram/start")
-  public Response startTelegramLink() {
-    return Response.ok(java.util.Map.of("token", accountLinkService.startTelegramLink(
-        currentUserContext.requireUser().id()))).build();
-  }
-
-  @RequireAuth
-  @POST
-  @Path("/link/telegram/complete")
-  @Consumes(MediaType.APPLICATION_JSON)
-  public Response completeTelegramLink(@Valid @NotNull TelegramLinkRequest request) {
-    accountLinkService.completeTelegramLink(currentUserContext.requireUser().id(), request.token(), request.initData());
-    return Response.noContent().build();
-  }
-
-  @RequireAuth
-  @POST
-  @Path("/link/telegram/confirm")
-  @Consumes(MediaType.APPLICATION_JSON)
-  public Response confirmTelegramLink(@Valid @NotNull TelegramLinkRequest request) {
-    accountLinkService.confirmTelegramLink(currentUserContext.requireUser().id(), request.token());
-    return Response.noContent().build();
-  }
-
-  @RequireAuth
-  @GET
-  @Path("/link/telegram/status")
-  public Response telegramLinkStatus(@QueryParam("token") String token) {
-    return Response.ok(java.util.Map.of("status", accountLinkService.status(
-        currentUserContext.requireUser().id(), token))).build();
-  }
-
-  @RequireAuth
-  @DELETE
-  @Path("/link/telegram")
-  public Response cancelTelegramLink(@QueryParam("token") String token) {
-    accountLinkService.cancel(currentUserContext.requireUser().id(), token);
-    return Response.noContent().build();
-  }
 
   @POST
   @Path("/refresh")
