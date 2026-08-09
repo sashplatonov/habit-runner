@@ -47,6 +47,40 @@ The backend observability contract is intentionally small and explicit:
 - outbound correlation:
   - OAuth and other slow-path HTTP calls reuse the active `traceId` when present
 
+### Ingress boundary
+
+Quarkus owns the health resources, while the web container owns the only
+browser-facing ingress:
+
+| Surface | Local Compose | Dokploy overlay | Audience |
+|---|---|---|---|
+| `/q/health/live` | API-container healthcheck and `/api/q/health/live` through nginx | `/api/q/health/live` through the web service and configured domain | liveness/probe tooling; no authentication |
+| `/q/health/ready` | API-container healthcheck and `/api/q/health/ready` through nginx | `/api/q/health/ready` through the web service and configured domain | readiness/probe tooling; no authentication |
+| `/q/health` | Available at the same internal API path and nginx `/api` proxy | Available through the web service `/api` proxy | combined health inspection |
+| Metrics | No public HTTP metrics endpoint; Micrometer exports outbound to New Relic only when enabled | Same; the overlay does not route a metrics path | New Relic backend telemetry |
+
+The default Compose `api` service uses `expose`, not `ports`, so it has no host
+API port. Nginx forwards `/api/...` to the internal API service and strips the
+`/api` prefix. The Dokploy file attaches `web` to the external routing network
+and keeps the API behind that web proxy; it does not publish a separate API or
+metrics port. A deployed router may therefore reach the health paths through
+the configured web domain, but no deployment claim should treat metrics as a
+public endpoint.
+
+Local checks intentionally discard response bodies:
+
+```bash
+docker compose --env-file .env.example --profile db up -d --build --wait
+curl -fsS -o /dev/null -w 'web live HTTP %{http_code}\n' http://localhost:5137/api/q/health/live
+curl -fsS -o /dev/null -w 'web ready HTTP %{http_code}\n' http://localhost:5137/api/q/health/ready
+docker compose --env-file .env.example --profile db exec -T api \
+  wget -q -O /dev/null http://127.0.0.1:8080/q/health/ready
+```
+
+These commands prove local routing and container readiness only. A deployed
+health response requires a fresh check against the actual Dokploy domain and
+router configuration; it is separate from local Compose proof.
+
 New Relic dashboards should be built from:
 
 - APM service/entity health only when the Java agent is enabled

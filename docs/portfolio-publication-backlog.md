@@ -416,7 +416,7 @@ git commit -m "docs(api): Add portfolio request examples"
 
 ## P2-3: Document health and metrics ingress boundaries
 
-**Status:** ⬜ Not started  
+**Status:** ✅ Complete
 **Priority:** P2  
 **Depends on:** -
 

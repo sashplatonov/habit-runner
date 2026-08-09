@@ -184,9 +184,13 @@ Current Compose behavior:
 - `api` is exposed only to the internal Docker network;
 - browser traffic reaches the backend through the `web` nginx proxy at `/api`;
 - `docker-compose.local.yml` exposes the web app on `http://localhost:5137`.
-- `docker-compose.dokploy.yml` is the Dokploy entry point. It explicitly
-  exposes `api` and `web`, reuses their JVM Compose definitions, and attaches
-  the API to the external `dokploy-ipv6` routing network.
+- health probes are available through `/api/q/health/live` and
+  `/api/q/health/ready` on the web ingress; the API container also checks
+  readiness internally;
+- metrics are outbound New Relic telemetry, not a public `/metrics` route;
+- `docker-compose.dokploy.yml` is the Dokploy entry point. It keeps the API
+  without a host port, exposes web port 80 to the configured router, and
+  attaches both services to the external `dokploy-ipv6` network.
 - When `VAPID_PUBLIC_KEY` is empty, `/q/health/ready` stays UP and the
   notification check reports `status=disabled` instead of blocking startup.
 
@@ -196,6 +200,17 @@ Dokploy deployment:
 docker compose -f docker-compose.dokploy.yml config --quiet
 docker compose -f docker-compose.dokploy.yml up -d --build --remove-orphans
 ```
+
+The local health checks above do not prove deployed ingress. After a Dokploy
+rollout, verify the actual configured domain separately with a body-suppressing
+request such as:
+
+```bash
+curl -fsS -o /dev/null -w 'deployed ready HTTP %{http_code}\n' \
+  https://<configured-domain>/api/q/health/ready
+```
+
+Do not add credentials or metrics payloads to these checks or to shell history.
 
 [↑ Back to top](#top)
 
