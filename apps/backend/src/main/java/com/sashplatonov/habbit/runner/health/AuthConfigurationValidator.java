@@ -54,6 +54,9 @@ class AuthConfigurationValidator {
     if (isBlank(authConfig.issuer())) {
       return Optional.of("auth.issuer is missing");
     }
+    if (authConfig.telegramInitDataMaxAgeSeconds() < 1) {
+      return Optional.of("auth.telegram-init-data-max-age-seconds must be positive");
+    }
     return Optional.empty();
   }
 
@@ -66,6 +69,9 @@ class AuthConfigurationValidator {
     }
     if (isBlank(authConfig.googleClientSecret().orElse(null))) {
       return Optional.of("auth.google-client-secret is missing");
+    }
+    if (isBlank(authConfig.telegramBotToken().orElse(null))) {
+      return Optional.of("auth.telegram-bot-token is missing");
     }
     if (isLocalUrl(authConfig.apiPublicUrl())) {
       return Optional.of("auth.api-public-url must not point to localhost in production");

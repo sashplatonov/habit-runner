@@ -4,6 +4,7 @@ import com.sashplatonov.habbit.runner.auth.security.CurrentUser;
 import com.sashplatonov.habbit.runner.auth.security.JwtUtil;
 import com.sashplatonov.habbit.runner.auth.service.RefreshTokenService;
 import com.sashplatonov.habbit.runner.auth.service.UserService;
+import com.sashplatonov.habbit.runner.auth.identity.IdentityService;
 import com.sashplatonov.habbit.runner.auth.dto.TokenResponse;
 import com.sashplatonov.habbit.runner.model.RefreshTokenEntity;
 import com.sashplatonov.habbit.runner.model.UserEntity;
@@ -18,6 +19,22 @@ public class AuthCollaborators {
   private final OAuthSupport oauthSupport;
 
   private final UserService userService;
+  private final IdentityService identityService;
+
+  @jakarta.inject.Inject
+  public AuthCollaborators(
+      JwtUtil jwtUtil,
+      RefreshTokenService refreshTokenService,
+      OAuthSupport oauthSupport,
+      UserService userService,
+      IdentityService identityService
+  ) {
+    this.jwtUtil = jwtUtil;
+    this.refreshTokenService = refreshTokenService;
+    this.oauthSupport = oauthSupport;
+    this.userService = userService;
+    this.identityService = identityService;
+  }
 
   public AuthCollaborators(
       JwtUtil jwtUtil,
@@ -25,10 +42,7 @@ public class AuthCollaborators {
       OAuthSupport oauthSupport,
       UserService userService
   ) {
-    this.jwtUtil = jwtUtil;
-    this.refreshTokenService = refreshTokenService;
-    this.oauthSupport = oauthSupport;
-    this.userService = userService;
+    this(jwtUtil, refreshTokenService, oauthSupport, userService, null);
   }
 
   public JwtUtil getJwtUtil() {
@@ -89,6 +103,13 @@ public class AuthCollaborators {
 
   public UserEntity findOrCreateUser(String email) {
     return userService.findOrCreateUser(email);
+  }
+
+  public UserEntity findOrCreateTelegramUser(String subject) {
+    if (identityService == null) {
+      throw new IllegalStateException("Telegram identity service is not configured");
+    }
+    return identityService.findOrCreateTelegram(subject);
   }
 
   public String buildCallbackRedirect(String returnTo) {

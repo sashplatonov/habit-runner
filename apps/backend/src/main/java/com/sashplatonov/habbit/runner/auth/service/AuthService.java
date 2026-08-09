@@ -7,6 +7,7 @@ import com.sashplatonov.habbit.runner.auth.support.AuthCollaborators;
 import com.sashplatonov.habbit.runner.auth.support.OAuthCallbackSession;
 import com.sashplatonov.habbit.runner.auth.support.AuthSupport;
 import com.sashplatonov.habbit.runner.auth.support.AuthServiceSupport;
+import com.sashplatonov.habbit.runner.auth.telegram.TelegramWebAppUser;
 import com.sashplatonov.habbit.runner.auth.support.RefreshTokenRejectedException;
 import com.sashplatonov.habbit.runner.auth.dto.TokenResponse;
 import com.sashplatonov.habbit.runner.infrastructure.http.TraceContextSupport;
@@ -79,6 +80,20 @@ public class AuthService {
       authServiceSupport.record(ServiceMetric.AUTH_REFRESH_SUCCESS);
     }
     return new TokenResponse(accessToken, refreshToken, authConfig.accessTokenTtlSeconds(), "Bearer");
+  }
+
+  @Transactional
+  public TokenResponse authenticateTelegram(TelegramWebAppUser telegramUser) {
+    if (telegramUser == null || telegramUser.id() <= 0) {
+      throw new BadRequestException("Invalid Telegram user");
+    }
+    var user = collaborators.findOrCreateTelegramUser(Long.toString(telegramUser.id()));
+    var session = collaborators.issueTokenPair(user, authConfig.accessTokenTtlSeconds(), authConfig.refreshTokenDays());
+    if (authServiceSupport != null) {
+      authServiceSupport.checkAccountRateLimit("auth:telegram:session", Long.toString(telegramUser.id()), 10, Duration.ofMinutes(10));
+      authServiceSupport.record(ServiceMetric.AUTH_LOGIN_SUCCESS_GOOGLE);
+    }
+    return session;
   }
 
   @Transactional

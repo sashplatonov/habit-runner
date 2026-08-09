@@ -54,6 +54,22 @@ public final class TestConfigFactory {
     ));
   }
 
+  public static AuthConfig telegramAuthConfig(String botToken) {
+    var base = defaultAuthConfig();
+    return new AuthConfig() {
+      public String secret() { return base.secret(); }
+      public int accessTokenTtlSeconds() { return base.accessTokenTtlSeconds(); }
+      public int refreshTokenDays() { return base.refreshTokenDays(); }
+      public String apiPublicUrl() { return base.apiPublicUrl(); }
+      public String oauthDefaultReturnTo() { return base.oauthDefaultReturnTo(); }
+      public Optional<String> googleClientId() { return base.googleClientId(); }
+      public Optional<String> googleClientSecret() { return base.googleClientSecret(); }
+      public String issuer() { return base.issuer(); }
+      public Optional<String> telegramBotToken() { return Optional.of(botToken); }
+      public long telegramInitDataMaxAgeSeconds() { return 86400L; }
+    };
+  }
+
   private static AuthConfig authConfig(AuthConfigOptions options) {
     return new AuthConfig() {
       @Override
@@ -94,6 +110,14 @@ public final class TestConfigFactory {
       @Override
       public String issuer() {
         return options.issuer();
+      }
+
+      public Optional<String> telegramBotToken() {
+        return Optional.empty();
+      }
+
+      public long telegramInitDataMaxAgeSeconds() {
+        return 86400L;
       }
     };
   }

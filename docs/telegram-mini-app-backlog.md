@@ -144,7 +144,7 @@ git commit -m "feat(auth): Add linked account identities"
 
 ## P0-2: Authenticate Telegram Mini App sessions on the backend
 
-**Status:** ⬜ Not started  
+**Status:** ✅ Completed
 **Priority:** P0  
 **Depends on:** P0-1
 

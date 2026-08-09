@@ -21,4 +21,8 @@ public interface AuthConfig {
   Optional<String> googleClientSecret();
 
   String issuer();
+
+  Optional<String> telegramBotToken();
+
+  long telegramInitDataMaxAgeSeconds();
 }

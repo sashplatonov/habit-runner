@@ -213,6 +213,14 @@ class GoogleOAuthClientTest {
       public String issuer() {
         return "habittracker-test";
       }
+
+      public Optional<String> telegramBotToken() {
+        return Optional.empty();
+      }
+
+      public long telegramInitDataMaxAgeSeconds() {
+        return 86400L;
+      }
     };
   }
 
