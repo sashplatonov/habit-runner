@@ -14,5 +14,5 @@ test('expired session returns the user to the public entry point', async ({ page
   });
   await page.goto('/app/dashboard');
   await expect(page).toHaveURL(/\/$/);
-  await expect(page.getByRole('button', { name: /Continue with Google/ })).toBeVisible();
+  await expect(page.getByRole('button', { name: /Sign in with Google/ })).toBeVisible();
 });
