@@ -383,7 +383,7 @@ git commit -m "feat(telegram): Add Mini App experience"
 
 ## P1-3: Add the web account-linking experience
 
-**Status:** ⬜ Not started  
+**Status:** ✅ Completed
 **Priority:** P1  
 **Depends on:** P1-1
 

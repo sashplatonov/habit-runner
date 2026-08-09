@@ -4,6 +4,7 @@ import com.sashplatonov.habbit.runner.auth.identity.AccountLinkService;
 import com.sashplatonov.habbit.runner.auth.security.CurrentUserContext;
 import com.sashplatonov.habbit.runner.auth.security.RequireAuth;
 import com.sashplatonov.habbit.runner.auth.telegram.TelegramLinkRequest;
+import com.sashplatonov.habbit.runner.auth.telegram.TelegramLinkConfirmRequest;
 import jakarta.inject.Inject;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
@@ -52,7 +53,7 @@ public class AccountLinkResource {
   @POST
   @Path("/telegram/confirm")
   @Consumes(MediaType.APPLICATION_JSON)
-  public Response confirmTelegramLink(@Valid @NotNull TelegramLinkRequest request) {
+  public Response confirmTelegramLink(@Valid @NotNull TelegramLinkConfirmRequest request) {
     accountLinkService.confirmTelegramLink(currentUserContext.requireUser().id(), request.token());
     return Response.noContent().build();
   }
