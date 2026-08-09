@@ -10,10 +10,10 @@
   let { children }: Props = $props();
   const showcaseStore = createShowcaseHabitsStore();
   let theme = $state<ThemeId>('cloud');
-  const runtime = createAppRuntime({ habitsStore: showcaseStore, routeBase: '/showcase', theme, isDemo: true });
+  const runtime = createAppRuntime({ habitsStore: showcaseStore, routeBase: '/showcase', isDemo: true });
 </script>
 
-<AppRuntimeProvider runtime={{ ...runtime, theme }}>
+<AppRuntimeProvider {runtime}>
   <AppLayout
     {theme}
     routeBase="/showcase"

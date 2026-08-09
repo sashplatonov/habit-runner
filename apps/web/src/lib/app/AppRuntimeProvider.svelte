@@ -4,8 +4,8 @@
   import { provideAppRuntime } from '$lib/app/runtime';
 
   type Props = { runtime: AppRuntime; children: Snippet };
-  let { runtime, children }: Props = $props();
-  provideAppRuntime(runtime);
+  const props: Props = $props();
+  provideAppRuntime(() => props.runtime);
 </script>
 
-{@render children()}
+{@render props.children()}

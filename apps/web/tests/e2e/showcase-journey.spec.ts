@@ -69,6 +69,7 @@ test.describe('real anonymous showcase journey', () => {
 
     await page.goto('/showcase/stats');
     await expect(page).toHaveURL(/\/showcase\/stats$/);
+    await expect(page.getByRole('heading', { name: 'Simple progress that pushes you forward.' })).toBeVisible();
     await page.goto('/showcase');
     await page.getByRole('button', { name: 'Reset demo' }).click();
     await expect(page.getByRole('button', { name: '✍️ Morning pages', exact: true })).toBeVisible();
@@ -80,5 +81,17 @@ test.describe('real anonymous showcase journey', () => {
     expect(apiRequests).toEqual([]);
     expect(authRequests).toEqual([]);
     expect(persistenceWrites).toEqual([]);
+  });
+
+  test('keeps mobile navigation inside the anonymous showcase', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto('/showcase');
+
+    await page.getByRole('link', { name: 'Stats' }).click();
+    await expect(page).toHaveURL(/\/showcase\/stats$/);
+    await expect(page.getByRole('heading', { name: 'Simple progress that pushes you forward.' })).toBeVisible();
+
+    await page.getByRole('link', { name: 'Dashboard' }).click();
+    await expect(page).toHaveURL(/\/showcase$/);
   });
 });

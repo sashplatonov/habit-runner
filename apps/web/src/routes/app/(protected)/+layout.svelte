@@ -30,7 +30,7 @@
   let { data, children }: Props = $props();
   let sessionClearInFlight = false;
   let isRefreshing = $state(false);
-  const runtime = createAppRuntime({ habitsStore, routeBase: '/app/(protected)', theme: 'cloud', isDemo: false });
+  const runtime = createAppRuntime({ habitsStore, routeBase: '/app/(protected)', isDemo: false });
 
   afterNavigate(() => {
     if (browser) {
@@ -103,7 +103,7 @@
   isRefreshing={isRefreshing}
   onRefresh={refreshHabits}
 >
-  <AppRuntimeProvider runtime={{ ...runtime, theme: $themeStore.theme }}>
+  <AppRuntimeProvider {runtime}>
     <AppLayout
       theme={$themeStore.theme}
       onThemeChange={(id) => themeStore.setTheme(id)}

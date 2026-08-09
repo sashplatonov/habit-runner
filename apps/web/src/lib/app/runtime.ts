@@ -1,14 +1,12 @@
 import { getContext, setContext } from 'svelte';
 import { resolve as kitResolve } from '$app/paths';
 import type { HabitsStore } from '$lib/stores/habits';
-import type { ThemeId } from '$lib/theme/themes';
 
 const APP_RUNTIME_KEY = Symbol('habbit-runner-app-runtime');
 
 export type AppRuntime = {
   habitsStore: HabitsStore;
   routeBase: '/app/(protected)' | '/showcase';
-  theme: ThemeId;
   resolve: <Path extends string>(path: Path, params: Record<string, string>) => string;
   isDemo: boolean;
 };
@@ -26,12 +24,13 @@ export function createAppRuntime(input: Omit<AppRuntime, 'resolve'>): AppRuntime
   };
 }
 
-export function provideAppRuntime(runtime: AppRuntime): void {
+export function provideAppRuntime(runtime: AppRuntime | (() => AppRuntime)): void {
   setContext(APP_RUNTIME_KEY, runtime);
 }
 
 export function getAppRuntime(): AppRuntime {
-  const runtime = getContext<AppRuntime | undefined>(APP_RUNTIME_KEY);
+  const providedRuntime = getContext<AppRuntime | (() => AppRuntime) | undefined>(APP_RUNTIME_KEY);
+  const runtime = typeof providedRuntime === 'function' ? providedRuntime() : providedRuntime;
   if (!runtime) {
     throw new Error('App runtime is not available. Render this screen inside an app layout.');
   }

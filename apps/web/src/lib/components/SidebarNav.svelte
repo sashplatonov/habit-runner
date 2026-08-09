@@ -23,9 +23,9 @@
   let isThemeOpen = $state(false);
   let themeElement = $state<HTMLDivElement | null>(null);
 
-  const dashboardHref = routeBase === '/showcase' ? resolve('/showcase', {}) : resolve<'/app/(protected)/dashboard'>('/app/(protected)/dashboard', {});
-  const statsHref = routeBase === '/showcase' ? resolve('/showcase/stats', {}) : resolve<'/app/(protected)/stats'>('/app/(protected)/stats', {});
-  const newHabitHref = routeBase === '/showcase' ? resolve('/showcase/habit/new', {}) : resolve<'/app/(protected)/habit/new'>('/app/(protected)/habit/new', {});
+  const dashboardHref = $derived(routeBase === '/showcase' ? resolve('/showcase', {}) : resolve<'/app/(protected)/dashboard'>('/app/(protected)/dashboard', {}));
+  const statsHref = $derived(routeBase === '/showcase' ? resolve('/showcase/stats', {}) : resolve<'/app/(protected)/stats'>('/app/(protected)/stats', {}));
+  const newHabitHref = $derived(routeBase === '/showcase' ? resolve('/showcase/habit/new', {}) : resolve<'/app/(protected)/habit/new'>('/app/(protected)/habit/new', {}));
 
   function isActive(path: string) {
     return page.url.pathname === path || (path !== dashboardHref && page.url.pathname.startsWith(path));
@@ -56,7 +56,7 @@
   style:padding-top="calc(var(--safe-area-inset-top, 0px) + 1rem)"
   aria-label="Sidebar navigation"
 >
-  <a class="mb-5 flex items-center gap-3 rounded-[1.5rem] border border-border bg-bg-card/96 px-3 py-3 shadow-[0_16px_36px_rgba(15,23,42,0.08)]" href={dashboardHref}>
+  <a class="mb-5 flex items-center gap-3 rounded-[1.5rem] border border-border bg-bg-card/96 px-3 py-3 shadow-[0_16px_36px_rgba(15,23,42,0.08)]" href={resolve(dashboardHref, {})}>
     <img src="/app-icon.svg" alt="Habbit Runner" width="40" height="40" class="h-10 w-10 flex-shrink-0 rounded-2xl object-contain" />
     <div>
       <span class="block text-[9px] uppercase tracking-[0.26em] text-muted">Workspace</span>
@@ -66,7 +66,7 @@
 
   <a
     class="mb-4 flex items-center gap-2 rounded-[1.25rem] border border-progress/20 bg-progress/10 px-3 py-3 text-sm font-semibold text-progress transition-colors hover:border-progress/30 hover:bg-progress/10"
-    href={newHabitHref}
+    href={resolve(newHabitHref, {})}
   >
     <PlusIcon size={16} />
     New Habit
@@ -76,7 +76,7 @@
   <nav class="flex flex-col gap-1">
     <a
       class={`flex items-center gap-2.5 rounded-[1.25rem] px-3 py-2.5 text-sm font-medium transition-colors ${isActive(dashboardHref) ? 'border border-progress/20 bg-bg-card text-foreground shadow-[0_12px_30px_rgba(15,23,42,0.08)]' : 'text-muted hover:bg-bg-card/80 hover:text-foreground'}`}
-      href={dashboardHref}
+      href={resolve(dashboardHref, {})}
       aria-current={isActive(dashboardHref) ? 'page' : undefined}
     >
       <LayoutDashboardIcon size={16} />
@@ -84,7 +84,7 @@
     </a>
     <a
       class={`flex items-center gap-2.5 rounded-[1.25rem] px-3 py-2.5 text-sm font-medium transition-colors ${isActive(statsHref) ? 'border border-progress/20 bg-bg-card text-foreground shadow-[0_12px_30px_rgba(15,23,42,0.08)]' : 'text-muted hover:bg-bg-card/80 hover:text-foreground'}`}
-      href={statsHref}
+      href={resolve(statsHref, {})}
       aria-current={isActive(statsHref) ? 'page' : undefined}
     >
       <BarChart2Icon size={16} />
