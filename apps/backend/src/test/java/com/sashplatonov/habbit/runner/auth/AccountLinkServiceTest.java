@@ -80,6 +80,19 @@ class AccountLinkServiceTest {
     verify(identities, org.mockito.Mockito.never()).save(any());
   }
 
+  @Test
+  void exposesPendingStatusForTheChallengeOwner() {
+    var challenges = mock(AccountLinkChallengeRepository.class);
+    var challenge = challenge("owner", "PENDING");
+    when(challenges.findByTokenHash(any())).thenReturn(challenge);
+    var service = new AccountLinkService(challenges, mock(AuthIdentityRepository.class),
+        mock(TelegramInitDataVerifier.class), mock(AccountMergeService.class));
+
+    org.junit.jupiter.api.Assertions.assertEquals("PENDING", service.status("owner", "token"));
+    service.cancel("owner", "token");
+    org.junit.jupiter.api.Assertions.assertEquals("CANCELLED", challenge.getStatus());
+  }
+
   private AccountLinkChallengeEntity challenge(String owner, String status) {
     var challenge = new AccountLinkChallengeEntity();
     challenge.setOwnerUserId(owner);
