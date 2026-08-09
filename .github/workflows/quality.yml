@@ -266,6 +266,9 @@ jobs:
       - name: Run Docker and contract smoke checks
         run: ./scripts/ci/smoke-stack.sh
 
+      - name: Run authenticated browser-to-database contract
+        run: ./scripts/ci/run-stack-e2e.sh
+
       - name: Upload smoke diagnostics
         if: failure()
         uses: actions/upload-artifact@v6

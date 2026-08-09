@@ -25,5 +25,5 @@ export default defineConfig({
         reuseExistingServer: !process.env.CI,
         timeout: 120_000
       },
-  outputDir: 'test-results'
+  outputDir: process.env.PLAYWRIGHT_OUTPUT_DIR ?? 'test-results'
 });

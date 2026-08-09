@@ -361,7 +361,7 @@ function createHabitCrudActions(runtime: HabitsStoreRuntime): Pick<
       const { safeData, changedKeys } = updateHabitImpl(data);
       const updatedHabit = buildUpdatedHabit(existing, safeData);
       const response = changedKeys.length === 1 && changedKeys[0] === 'archived'
-        ? await updateHabitStatusApi(id, { archived: Boolean(safeData.archived) })
+        ? await updateHabitStatusApi(id, { archived: Boolean(safeData.archived), version: existing.version })
         : await updateHabitApi(id, {
             name: safeData.name,
             description: safeData.description,
@@ -378,7 +378,8 @@ function createHabitCrudActions(runtime: HabitsStoreRuntime): Pick<
             reminderTime: safeData.reminderTime,
             reminderEnabled: safeData.reminderEnabled,
             type: safeData.type,
-            freezeDays: safeData.freezeDays
+            freezeDays: safeData.freezeDays,
+            version: existing.version
           });
       runtime.currentHabits = replaceHabitInCollection(
         runtime.currentHabits,

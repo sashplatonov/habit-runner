@@ -289,7 +289,7 @@ git commit -m "fix(web): Fail on service worker build errors"
 
 ## P2-1: Add a real authenticated browser-to-database contract journey
 
-**Status:** ⬜ Not started  
+**Status:** ✅ Complete
 **Priority:** P2  
 **Depends on:** P0-2, P1-1, P1-2
 

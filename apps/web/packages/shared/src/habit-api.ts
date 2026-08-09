@@ -38,6 +38,7 @@ export interface HabitUpdateRequestDto {
   reminderEnabled?: boolean;
   type?: HabitType;
   freezeDays?: string[];
+  version?: number;
 }
 
 export interface HabitStatusUpdateRequestDto {
