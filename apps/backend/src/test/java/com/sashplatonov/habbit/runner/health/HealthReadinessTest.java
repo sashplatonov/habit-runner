@@ -129,6 +129,8 @@ class HealthReadinessTest {
     when(authConfig.googleClientId()).thenReturn(Optional.of("client-id"));
     when(authConfig.googleClientSecret()).thenReturn(Optional.of("client-secret"));
     when(authConfig.issuer()).thenReturn("issuer");
+    when(authConfig.telegramBotToken()).thenReturn(Optional.of("telegram-bot-token"));
+    when(authConfig.telegramInitDataMaxAgeSeconds()).thenReturn(86400L);
   }
 
   private void stubProductionUnsafeAuthConfig(AuthConfig authConfig) {
@@ -140,6 +142,8 @@ class HealthReadinessTest {
     when(authConfig.googleClientId()).thenReturn(Optional.empty());
     when(authConfig.googleClientSecret()).thenReturn(Optional.empty());
     when(authConfig.issuer()).thenReturn("issuer");
+    when(authConfig.telegramBotToken()).thenReturn(Optional.of("telegram-bot-token"));
+    when(authConfig.telegramInitDataMaxAgeSeconds()).thenReturn(86400L);
   }
 
   private void assertDownReason(HealthCheckResponse response, String reason) {

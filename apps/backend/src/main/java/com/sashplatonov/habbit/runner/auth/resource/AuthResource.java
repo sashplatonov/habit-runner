@@ -25,6 +25,7 @@ import jakarta.ws.rs.CookieParam;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.PUT;
+import jakarta.ws.rs.DELETE;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.QueryParam;
@@ -127,7 +128,32 @@ public class AuthResource {
   @Path("/link/telegram/complete")
   @Consumes(MediaType.APPLICATION_JSON)
   public Response completeTelegramLink(@Valid @NotNull TelegramLinkRequest request) {
-    accountLinkService.completeTelegramLink(request.token(), request.initData());
+    accountLinkService.completeTelegramLink(currentUserContext.requireUser().id(), request.token(), request.initData());
+    return Response.noContent().build();
+  }
+
+  @RequireAuth
+  @POST
+  @Path("/link/telegram/confirm")
+  @Consumes(MediaType.APPLICATION_JSON)
+  public Response confirmTelegramLink(@Valid @NotNull TelegramLinkRequest request) {
+    accountLinkService.confirmTelegramLink(currentUserContext.requireUser().id(), request.token());
+    return Response.noContent().build();
+  }
+
+  @RequireAuth
+  @GET
+  @Path("/link/telegram/status")
+  public Response telegramLinkStatus(@QueryParam("token") String token) {
+    return Response.ok(java.util.Map.of("status", accountLinkService.status(
+        currentUserContext.requireUser().id(), token))).build();
+  }
+
+  @RequireAuth
+  @DELETE
+  @Path("/link/telegram")
+  public Response cancelTelegramLink(@QueryParam("token") String token) {
+    accountLinkService.cancel(currentUserContext.requireUser().id(), token);
     return Response.noContent().build();
   }
 
