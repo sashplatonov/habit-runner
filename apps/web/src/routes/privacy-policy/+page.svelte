@@ -59,7 +59,16 @@
           on our servers over HTTPS using JWT authentication so they can be loaded on your signed-in
           devices. No financial information is collected or stored.
         </p>
-        <h3 class="mt-3 text-base font-semibold text-slate-800">2.4 Push Notifications</h3>
+        <h3 class="mt-3 text-base font-semibold text-slate-800">2.4 Telegram Mini App</h3>
+        <p class="mt-2 text-slate-600">
+          If you open Habbit Runner in Telegram, we receive the Telegram user identifier and the
+          public profile fields Telegram includes in Mini App initialization data. The server
+          verifies Telegram's signed data before creating a session. If you link Telegram and email
+          sign-in, these identifiers are associated with the same account so your habits and
+          check-ins remain available from both entry points. We do not receive your Telegram chats,
+          contacts, or messages.
+        </p>
+        <h3 class="mt-3 text-base font-semibold text-slate-800">2.5 Push Notifications</h3>
         <p class="mt-2 text-slate-600">
           If you enable push notifications, we store a browser push subscription endpoint. This is
           used only to deliver habit reminders you configure. You can revoke this permission at any

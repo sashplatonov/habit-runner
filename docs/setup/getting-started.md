@@ -242,6 +242,34 @@ Use matching origins:
 
 ---
 
+## 📱 Telegram Mini App setup <a name="telegram-mini-app-setup"></a>
+
+1. In [@BotFather](https://t.me/BotFather), create or select the production
+   bot and use **Bot Settings → Mini Apps → Configure Mini App** to set the
+   Main Mini App URL to the deployed HTTPS web origin (for example,
+   `https://habbit-runner.app`). Telegram must be able to reach this URL over
+   HTTPS; localhost is for local browser testing only.
+2. Keep local, staging, and production bots/URLs separate. A test account must
+   launch the staging Mini App, sign in with Telegram, link an email account in
+   both directions, close/reopen the webview, and confirm the same habits and
+   check-ins are visible before production rollout.
+3. Provision `TELEGRAM_BOT_TOKEN` only in the backend runtime secret store.
+   Never put it in `VITE_*`, the static web image, source control, logs, or a
+   client request. Set `TELEGRAM_INIT_DATA_MAX_AGE_SECONDS` to the freshness
+   bound accepted by the deployment (the default is 86400 seconds).
+4. Set the public `VITE_TELEGRAM_MINI_APP_URL` build variable to the same HTTPS
+   URL when the web UI should render a launch/link entry point. This value is
+   public and contains no credential.
+
+Telegram deep links may use `https://t.me/<bot_username>?startapp=<payload>`;
+the payload is non-secret routing context and must not contain the bot token.
+After changing BotFather settings or runtime secrets, restart the backend and
+check `/api/q/health/ready` before manual testing.
+
+[↑ Back to top](#top)
+
+---
+
 ## 🧾 Environment reference <a name="environment-reference"></a>
 
 ### Root `.env` for Docker Compose
@@ -268,6 +296,9 @@ Use matching origins:
 | `NEW_RELIC_METRICS_ENABLED` | No | Enables New Relic metric export; requires `NEW_RELIC_LICENSE_KEY` when `true` |
 | `GOOGLE_OAUTH_CLIENT_ID` | Optional | Needed for real Google sign-in; required for production startup and readiness |
 | `GOOGLE_OAUTH_CLIENT_SECRET` | Optional | Needed for real Google sign-in; required for production startup and readiness |
+| `TELEGRAM_BOT_TOKEN` | Optional locally; required in production | Backend-only bot token used to verify Telegram Mini App init data |
+| `TELEGRAM_INIT_DATA_MAX_AGE_SECONDS` | No | Maximum Telegram init-data age; defaults to `86400` seconds |
+| `VITE_TELEGRAM_MINI_APP_URL` | No | Public HTTPS Main Mini App URL exposed to the static frontend |
 | `VAPID_PUBLIC_KEY` | Optional | Browser push public key |
 | `VAPID_PRIVATE_KEY` | Optional | Browser push private key |
 | `VAPID_SUBJECT` | Optional | Web Push contact |

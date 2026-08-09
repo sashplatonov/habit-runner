@@ -527,7 +527,7 @@ git commit -m "test(auth): Cover Telegram account linking"
 
 ## P2-2: Document, configure, and release the Mini App safely
 
-**Status:** ⬜ Not started  
+**Status:** ✅ Completed
 **Priority:** P2  
 **Depends on:** P2-1
 

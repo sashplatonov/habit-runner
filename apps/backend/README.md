@@ -110,6 +110,8 @@ Optional feature variables:
 
 - `GOOGLE_OAUTH_CLIENT_ID`
 - `GOOGLE_OAUTH_CLIENT_SECRET`
+- `TELEGRAM_BOT_TOKEN` (required for Telegram Mini App authentication and production readiness)
+- `TELEGRAM_INIT_DATA_MAX_AGE_SECONDS` (optional; defaults to `86400` and bounds Telegram init-data freshness)
 - `VAPID_PUBLIC_KEY`
 - `VAPID_PRIVATE_KEY`
 - `VAPID_SUBJECT`

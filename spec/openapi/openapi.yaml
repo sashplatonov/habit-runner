@@ -434,6 +434,14 @@ components:
       properties:
         success:
           type: boolean
+    TelegramLinkConfirmRequest:
+      type: object
+      required:
+      - token
+      properties:
+        token:
+          type: string
+          pattern: \S
     TelegramLinkRequest:
       type: object
       required:
@@ -589,7 +597,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/TelegramLinkRequest"
+              $ref: "#/components/schemas/TelegramLinkConfirmRequest"
         required: true
       responses:
         "200":

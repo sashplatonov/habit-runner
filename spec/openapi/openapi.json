@@ -581,6 +581,16 @@
           }
         }
       },
+      "TelegramLinkConfirmRequest" : {
+        "type" : "object",
+        "required" : [ "token" ],
+        "properties" : {
+          "token" : {
+            "type" : "string",
+            "pattern" : "\\S"
+          }
+        }
+      },
       "TelegramLinkRequest" : {
         "type" : "object",
         "required" : [ "token", "initData" ],
@@ -791,7 +801,7 @@
           "content" : {
             "application/json" : {
               "schema" : {
-                "$ref" : "#/components/schemas/TelegramLinkRequest"
+                "$ref" : "#/components/schemas/TelegramLinkConfirmRequest"
               }
             }
           },
