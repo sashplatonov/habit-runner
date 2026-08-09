@@ -30,9 +30,10 @@ class FlywayMigrationIT {
     var expectedMigrationCount = Arrays.stream(flyway.info().all())
         .filter(migration -> migration.getVersion() != null)
         .count();
+    var expectedCurrentVersion = flyway.info().current().getVersion().getVersion();
 
     assertEquals(expectedMigrationCount, appliedVersions.size());
-    assertEquals("12", appliedVersions.getLast().toString());
+    assertEquals(expectedCurrentVersion, appliedVersions.getLast().toString());
   }
 
   @Test
