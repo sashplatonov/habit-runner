@@ -1,0 +1,1 @@
+<script lang="ts">import { onMount } from 'svelte'; onMount(() => { const parts = location.pathname.split('/'); window.location.replace('/app/habit/' + parts[3] + '/edit'); });</script><p>Opening habit editor…</p>

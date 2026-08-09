@@ -300,7 +300,7 @@ git commit -m "feat(auth): Link Google and Telegram accounts"
 
 ## P1-2: Deliver the Telegram Mini App entry and authenticated shell
 
-**Status:** ⬜ Not started  
+**Status:** ✅ Completed
 **Priority:** P1  
 **Depends on:** P0-2, P1-1
 
