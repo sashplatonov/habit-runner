@@ -39,7 +39,9 @@ describe('Telegram Mini App session', () => {
 
   it('submits a startapp pairing token only after Telegram authentication', async () => {
     const webApp = window.Telegram?.WebApp;
-    if (!webApp) throw new Error('Telegram Web App test adapter is missing');
+    if (!webApp) {
+      throw new Error('Telegram Web App test adapter is missing');
+    }
     webApp.startParam = 'pairing-token';
     const fetchMock = vi.fn().mockResolvedValue(new Response(null, { status: 204 }));
     vi.stubGlobal('fetch', fetchMock);

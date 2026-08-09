@@ -106,6 +106,7 @@
       isMoreOpen = false;
     }}
     {onLogout}
+    showAccount={routeBase !== '/showcase'}
     onSearch={() => {
       void focusSearch();
     }}

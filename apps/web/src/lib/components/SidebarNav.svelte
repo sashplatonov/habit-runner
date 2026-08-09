@@ -7,6 +7,7 @@
     LogOutIcon,
     PaletteIcon,
     PlusIcon,
+    SettingsIcon,
   } from 'lucide-svelte';
   import type { ThemeId } from '$lib/theme/themes';
   import ThemePicker from '$lib/components/ThemePicker.svelte';
@@ -25,6 +26,7 @@
 
   const dashboardHref = $derived(routeBase === '/showcase' ? resolve('/showcase', {}) : resolve<'/app/(protected)/dashboard'>('/app/(protected)/dashboard', {}));
   const statsHref = $derived(routeBase === '/showcase' ? resolve('/showcase/stats', {}) : resolve<'/app/(protected)/stats'>('/app/(protected)/stats', {}));
+  const accountHref = $derived(resolve<'/app/(protected)/account'>('/app/(protected)/account', {}));
 
   function isActive(path: string) {
     return page.url.pathname === path || (path !== dashboardHref && page.url.pathname.startsWith(path));
@@ -89,6 +91,16 @@
       <BarChart2Icon size={16} />
       Progress
     </a>
+    {#if routeBase !== '/showcase'}
+      <a
+        class={`flex items-center gap-2.5 rounded-[1.25rem] px-3 py-2.5 text-sm font-medium transition-colors ${isActive(accountHref) ? 'border border-progress/20 bg-bg-card text-foreground shadow-[0_12px_30px_rgba(15,23,42,0.08)]' : 'text-muted hover:bg-bg-card/80 hover:text-foreground'}`}
+        href={resolve<'/app/(protected)/account'>('/app/(protected)/account', {})}
+        aria-current={isActive(accountHref) ? 'page' : undefined}
+      >
+        <SettingsIcon size={16} />
+        Account
+      </a>
+    {/if}
   </nav>
 
   <div class="flex-1"></div>

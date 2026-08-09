@@ -1,5 +1,6 @@
 <script lang="ts">
-  import { SearchIcon, LogOutIcon, XIcon } from 'lucide-svelte';
+  import { SearchIcon, LogOutIcon, SettingsIcon, XIcon } from 'lucide-svelte';
+  import { resolve } from '$app/paths';
   import Overlay from '$lib/components/overlays/Overlay.svelte';
   import type { ThemeId } from '$lib/theme/themes';
   import ThemePicker from '$lib/components/ThemePicker.svelte';
@@ -12,9 +13,10 @@
     onClose: () => void;
     onLogout?: () => void | Promise<void>;
     onSearch?: () => void | Promise<void>;
+    showAccount?: boolean;
   };
 
-  let { open, triggerEl = null, theme, onThemeChange, onClose, onLogout, onSearch }: Props = $props();
+  let { open, triggerEl = null, theme, onThemeChange, onClose, onLogout, onSearch, showAccount = false }: Props = $props();
 
 </script>
 
@@ -58,6 +60,19 @@
           </span>
           Search habits
         </button>
+
+        {#if showAccount}
+          <a
+            class="flex w-full items-center gap-3 rounded-[1.25rem] border border-border bg-bg-card px-4 py-3 text-left text-sm font-medium text-foreground"
+            href={resolve<'/app/(protected)/account'>('/app/(protected)/account', {})}
+            onclick={onClose}
+          >
+            <span class="flex h-10 w-10 items-center justify-center rounded-2xl bg-progress/10 text-progress">
+              <SettingsIcon size={18} />
+            </span>
+            Account connections
+          </a>
+        {/if}
 
         <div class="rounded-[1.25rem] border border-border bg-bg-card p-3">
           <p class="px-1 text-[10px] font-medium uppercase tracking-[0.24em] text-muted">Theme</p>
