@@ -788,7 +788,9 @@
         </div>
       {/if}
 
-      <RemindersPanel />
+      {#if !runtime.isDemo}
+        <RemindersPanel />
+      {/if}
 
       <div class="w-full max-w-6xl">
         {#if filteredHabits.length === 0}

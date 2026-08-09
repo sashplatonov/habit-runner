@@ -5,7 +5,7 @@ test.describe('public showcase', () => {
     const apiRequests: string[] = [];
     const persistenceWrites: string[] = [];
     await page.on('request', (request) => {
-      if (request.url().includes('/api/')) {
+      if (new URL(request.url()).pathname.startsWith('/api/')) {
         apiRequests.push(request.url());
       }
     });

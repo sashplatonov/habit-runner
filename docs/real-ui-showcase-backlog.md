@@ -49,7 +49,7 @@ instead of presenting static screen previews as the primary product evidence.
 
 ## P1-1: Provide an in-memory habit runtime for the showcase
 
-**Status:** ✅ Complete  
+**Status:** ✅ Complete
 **Priority:** P1  
 **Depends on:** -
 
@@ -127,7 +127,7 @@ git commit -m "feat(showcase): add in-memory habit runtime"
 
 ## P1-2: Make the existing app screens runtime and route-base aware
 
-**Status:** ✅ Complete  
+**Status:** ✅ Complete
 **Priority:** P1  
 **Depends on:** P1-1
 
@@ -216,7 +216,7 @@ git commit -m "refactor(app): share screens across runtimes"
 
 ## P1-3: Publish the complete real-UI showcase route family
 
-**Status:** ✅ Complete  
+**Status:** ✅ Complete
 **Priority:** P1  
 **Depends on:** P1-2
 
@@ -296,7 +296,7 @@ git commit -m "feat(showcase): expose full demo journey"
 
 ## P1-4: Make showcase the public product entry point
 
-**Status:** ✅ Complete  
+**Status:** ✅ Complete
 **Priority:** P1  
 **Depends on:** P1-3
 
@@ -371,7 +371,7 @@ git commit -m "feat(public): promote interactive showcase"
 
 ## P2-1: Prove demo isolation and the full browser journey
 
-**Status:** ⬜ Not started  
+**Status:** ✅ Complete
 **Priority:** P2  
 **Depends on:** P1-1, P1-2, P1-3, P1-4
 

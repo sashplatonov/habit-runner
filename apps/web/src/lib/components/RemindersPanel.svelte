@@ -4,12 +4,7 @@
   import type { Habit } from '@/types/habit';
   import ChartGuideTooltip from '$lib/components/ChartGuideTooltip.svelte';
   import { isMandatoryToday } from '$lib/habits/schedule';
-  import { habitsStore } from '$lib/stores/habits';
-  import {
-    addPendingReminder,
-    getPendingReminders,
-    removePendingReminder
-  } from '$lib/storage/db';
+  import { getAppRuntime } from '$lib/app/runtime';
 
   type Reminder = {
     id: string;
@@ -22,8 +17,13 @@
   let reminderTracker: Record<string, string> = {};
   let reminderLastCheck: number | null = null;
 
+  const habitsStore = getAppRuntime().habitsStore;
   const activeHabits = $derived($habitsStore.habits);
   const allHabits = $derived($habitsStore.allHabits);
+
+  async function reminderDb() {
+    return import('$lib/storage/db');
+  }
   const habitsById = $derived.by(() => new Map(allHabits.map((habit) => [habit.id, habit])));
   const visibleReminders = $derived(reminders.filter((reminder) => habitsById.has(reminder.habitId)));
 
@@ -47,7 +47,7 @@
   }
 
   function dismissReminder(reminderId: string) {
-    void removePendingReminder(reminderId).catch(() => undefined);
+    void reminderDb().then(({ removePendingReminder }) => removePendingReminder(reminderId)).catch(() => undefined);
     reminders = reminders.filter((reminder) => reminder.id !== reminderId);
   }
 
@@ -70,7 +70,7 @@
 
   async function restorePendingReminderState() {
     try {
-      const pending = await getPendingReminders();
+      const pending = await (await reminderDb()).getPendingReminders();
       reminders = pending.map((reminder) => ({
         id: reminder.id,
         habitId: reminder.habitId,
@@ -92,6 +92,7 @@
     await habitsStore.updateHabit(habit.id, { reminderEnabled: false });
     const staleIds = reminders.filter((reminder) => reminder.habitId === habit.id).map((reminder) => reminder.id);
     reminders = reminders.filter((reminder) => reminder.habitId !== habit.id);
+    const { removePendingReminder } = await reminderDb();
     await Promise.all(staleIds.map((id) => removePendingReminder(id).catch(() => undefined)));
     delete reminderTracker[habit.id];
   }
@@ -137,7 +138,7 @@
       }
 
       try {
-        const reminderId = await addPendingReminder(habit.id, habit.name, habit.reminderTime);
+        const reminderId = await (await reminderDb()).addPendingReminder(habit.id, habit.name, habit.reminderTime);
         reminders = [
           ...reminders,
           {
@@ -193,7 +194,7 @@
     const staleIds = new Set(stale.map((reminder) => reminder.id));
     reminders = reminders.filter((reminder) => !staleIds.has(reminder.id));
     stale.forEach((reminder) => {
-      void removePendingReminder(reminder.id).catch(() => undefined);
+      void reminderDb().then(({ removePendingReminder }) => removePendingReminder(reminder.id)).catch(() => undefined);
     });
   });
 </script>

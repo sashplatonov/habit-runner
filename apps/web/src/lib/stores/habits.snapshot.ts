@@ -1,7 +1,6 @@
 import type { Habit } from '@/types/habit';
 import { buildCompletionsByHabitId } from '@/hooks/useHabits.helpers';
 import { formatDate } from '$lib/habits/habitStats';
-import { habitEntityToDomain, type CheckinEntity, type HabitEntity } from '$lib/storage/db';
 
 export interface HabitsSnapshot {
   habits: Habit[];
@@ -11,7 +10,10 @@ export interface HabitsSnapshot {
   hasHydrated: boolean;
 }
 
-type CheckinSnapshotItem = Pick<CheckinEntity, 'habitId' | 'date' | 'done' | 'count'>;
+type CheckinSnapshotItem = { habitId: string; date: string; done: boolean; count?: number };
+
+type CheckinEntity = CheckinSnapshotItem;
+type HabitEntity = Habit;
 
 function applyFreezeDays(
   baseCompletions: Record<string, number>,
@@ -43,7 +45,7 @@ export function createHabitsSnapshot(
   checkinEntities: CheckinEntity[]
 ): HabitsSnapshot {
   return createHabitsSnapshotFromDomain(
-    habitEntities.map((entity) => habitEntityToDomain(entity)),
+    habitEntities.map((entity) => ({ ...entity, completions: { ...entity.completions } })),
     checkinEntities
   );
 }

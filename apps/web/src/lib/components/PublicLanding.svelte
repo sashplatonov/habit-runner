@@ -51,14 +51,13 @@
             Habit Runner surfaces today&apos;s action, the trend behind your progress, and the patterns that matter without turning the app into a dashboard maze.
           </p>
           <div class="mt-7 flex flex-wrap items-center gap-3">
-            <PublicCta
+            <a
               href={resolve('/showcase', {})}
-              variant="primary"
-              size="lg"
+              class="inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-progress px-5 py-3 text-sm font-semibold uppercase tracking-widest text-bg-primary shadow-[0_18px_36px_rgba(15,23,42,0.16)] transition hover:-translate-y-0.5 hover:bg-progress/90"
             >
               Try the interactive demo — no sign-in
               <ArrowRight size={15} />
-            </PublicCta>
+            </a>
             <PublicCta
               onclick={() => {
                 startOAuthLogin();
