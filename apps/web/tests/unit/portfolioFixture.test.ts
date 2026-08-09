@@ -1,18 +1,21 @@
 import { describe, expect, it } from 'vitest';
-import { portfolioFixture } from '../../src/lib/showcase/portfolioFixture';
+import { createPortfolioFixture } from '../../src/lib/showcase/portfolioFixture';
 
 describe('portfolioFixture', () => {
-  it('contains fictional, read-only dashboard evidence', () => {
-    expect(portfolioFixture.habits).toHaveLength(3);
-    expect(portfolioFixture.habits.every((habit) => habit.name.length > 0)).toBe(true);
-    expect(portfolioFixture.habits.every((habit) => habit.progress >= 0 && habit.progress <= 100)).toBe(true);
-    expect(portfolioFixture.conflict.message).toContain('changed elsewhere');
+  it('contains realistic domain habits and history', () => {
+    const fixture = createPortfolioFixture();
+    expect(fixture.habits).toHaveLength(4);
+    expect(fixture.habits.some((habit) => habit.type === 'negative')).toBe(true);
+    expect(fixture.habits.some((habit) => (habit.dailyTarget ?? 1) > 1)).toBe(true);
+    expect(fixture.checkins.length).toBeGreaterThan(10);
   });
 
-  it('keeps the weekly rhythm deterministic', () => {
-    expect(portfolioFixture.week).toHaveLength(7);
-    expect(portfolioFixture.week.filter((day) => day.completed)).toHaveLength(4);
-    expect(portfolioFixture.week.filter((day) => day.current)).toHaveLength(1);
+  it('creates independent mutable fixture values', () => {
+    const first = createPortfolioFixture();
+    const second = createPortfolioFixture();
+    first.habits[0].tags.push('changed');
+    first.checkins[0].count = 99;
+    expect(second.habits[0].tags).not.toContain('changed');
+    expect(second.checkins[0].count).not.toBe(99);
   });
 });
-
