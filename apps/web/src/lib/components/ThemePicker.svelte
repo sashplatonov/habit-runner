@@ -57,7 +57,7 @@
             aria-pressed={theme === candidate.id}
             aria-label={`Switch to ${candidate.name} theme`}
             onclick={async () => {
-              if ($themeStore.isAuthenticated && !page.url.pathname.startsWith('/showcase')) {
+              if (!page.url.pathname.startsWith('/showcase')) {
                 await themeStore.recordThemeSelection(candidate.id);
               }
               await onThemeChange(candidate.id);

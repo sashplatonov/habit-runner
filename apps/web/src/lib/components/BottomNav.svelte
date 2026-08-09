@@ -25,13 +25,14 @@
 
   const dashboardHref = $derived(routeBase === '/showcase' ? resolve('/showcase', {}) : resolve<'/app/(protected)/dashboard'>('/app/(protected)/dashboard', {}));
   const statsHref = $derived(routeBase === '/showcase' ? resolve('/showcase/stats', {}) : resolve<'/app/(protected)/stats'>('/app/(protected)/stats', {}));
-  const newHabitHref = $derived(routeBase === '/showcase' ? resolve('/showcase/habit/new', {}) : resolve<'/app/(protected)/habit/new'>('/app/(protected)/habit/new', {}));
   const isDashboard = $derived(page.url.pathname === dashboardHref);
   const isStats = $derived(page.url.pathname === statsHref);
 
   async function focusSearch() {
     if (!isDashboard) {
-      await goto(resolve(`${dashboardHref}#habit-search`, {}));
+      await goto(routeBase === '/showcase'
+        ? resolve('/showcase#habit-search', {})
+        : resolve<'/app/(protected)/dashboard#habit-search'>('/app/(protected)/dashboard#habit-search', {}));
     }
 
     window.setTimeout(() => {
@@ -49,7 +50,7 @@
 >
   <a
     class={`flex-1 flex flex-col items-center justify-center gap-1 transition-colors ${isDashboard ? 'text-accent' : 'text-muted'}`}
-    href={resolve(dashboardHref, {})}
+    href={routeBase === '/showcase' ? resolve('/showcase', {}) : resolve<'/app/(protected)/dashboard'>('/app/(protected)/dashboard', {})}
     aria-label="Dashboard"
     aria-current={isDashboard ? 'page' : undefined}
   >
@@ -61,7 +62,7 @@
 
   <a
     class={`flex-1 flex flex-col items-center justify-center gap-1 transition-colors ${isStats ? 'text-accent' : 'text-muted'}`}
-    href={resolve(statsHref, {})}
+    href={routeBase === '/showcase' ? resolve('/showcase/stats', {}) : resolve<'/app/(protected)/stats'>('/app/(protected)/stats', {})}
     aria-label="Stats"
     aria-current={isStats ? 'page' : undefined}
   >
@@ -74,7 +75,7 @@
   <div class="flex flex-[0_0_72px] items-center justify-center">
     <a
       class="flex h-[54px] w-[54px] items-center justify-center rounded-[1.4rem] bg-progress text-bg-primary shadow-[0_14px_26px_rgba(15,23,42,0.18)]"
-      href={resolve(newHabitHref, {})}
+      href={routeBase === '/showcase' ? resolve('/showcase/habit/new', {}) : resolve<'/app/(protected)/habit/new'>('/app/(protected)/habit/new', {})}
       aria-label="New habit"
     >
       <PlusIcon size={24} />

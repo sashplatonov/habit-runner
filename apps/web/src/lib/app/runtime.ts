@@ -19,7 +19,10 @@ export function createAppRuntime(input: Omit<AppRuntime, 'resolve'>): AppRuntime
         ? path.replace('/app/(protected)', '/showcase')
         : path;
       const resolver = kitResolve as unknown as (route: string, routeParams?: Record<string, string>) => string;
-      return resolver(normalizedPath, params);
+      const resolvedPath = resolver(normalizedPath, params);
+      return input.routeBase === '/showcase'
+        ? resolvedPath.replace(/^(?:\.\.\/|\.\/)+/, '/')
+        : resolvedPath;
     }
   };
 }

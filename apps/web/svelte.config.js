@@ -9,6 +9,9 @@ const dirname = path.dirname(fileURLToPath(import.meta.url));
 const config = {
   preprocess: vitePreprocess(),
   kit: {
+    paths: {
+      relative: false
+    },
     adapter: adapter({
       pages: 'build',
       assets: 'build',
