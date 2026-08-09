@@ -220,11 +220,11 @@ export const PUBLIC_ABOUT_SEO = {
 };
 
 export const PUBLIC_SHOWCASE_SEO = {
-  title: 'Habbit Runner Showcase — Read-Only Product Preview',
+  title: 'Habbit Runner Showcase — Try the Real UI Without Sign-In',
   description:
-    'Explore a fictional, read-only Habbit Runner dashboard preview with habits, schedule rhythm, progress signals, and conflict-safe collaboration.',
+    'Try the real Habbit Runner dashboard, habit details, editing, check-ins, and progress screens in a temporary in-memory demo with no sign-in required.',
   keywords:
-    'habit tracker showcase, habit dashboard demo, server-backed habit tracker preview, streak analytics demo',
+    'habit tracker showcase, interactive habit dashboard demo, no sign-in habit tracker, streak analytics demo',
   pathname: '/showcase'
 };
 

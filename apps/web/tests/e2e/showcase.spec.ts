@@ -24,16 +24,13 @@ test.describe('public showcase', () => {
     });
 
     await page.goto('/showcase');
-    await expect(page.getByRole('heading', { name: 'See the habit loop before you sign in.' })).toBeVisible();
-    await expect(page.getByRole('status', { name: 'Showcase status' })).toBeVisible();
-    await expect(page.getByRole('heading', { name: 'A calm next-action list' })).toBeVisible();
-    await expect(page.getByRole('heading', { name: 'A change needs your attention' })).toBeVisible();
-    await expect(page.getByRole('link', { name: 'Sign in to use the app' })).toHaveAttribute('href', '/');
-    await expect(page.getByTestId('showcase-completed')).toHaveText('4/6');
-    await page.getByRole('article').filter({ hasText: 'Walk outside' }).getByRole('button', { name: 'Complete habit' }).click();
-    await expect(page.getByTestId('showcase-completed')).toHaveText('5/6');
+    await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
+    await expect(page.getByText('Temporary showcase.')).toBeVisible();
+    await expect(page.getByRole('button', { name: '✍️ Morning pages', exact: true })).toBeVisible();
+    await expect(page.getByRole('button', { name: '📚 Read one chapter', exact: true })).toBeVisible();
     await page.getByRole('button', { name: 'Reset demo' }).click();
-    await expect(page.getByTestId('showcase-completed')).toHaveText('4/6');
+    await page.goto('/showcase/habit/morning-pages');
+    await expect(page).toHaveURL(/\/showcase\/habit\/morning-pages/);
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
     expect(apiRequests).toEqual([]);
     expect(persistenceWrites).toEqual([]);

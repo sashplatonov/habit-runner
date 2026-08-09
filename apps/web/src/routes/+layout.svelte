@@ -26,7 +26,7 @@
 
   onMount(() => {
     loadGA4();
-    if (window.location.pathname !== '/showcase') {
+    if (!window.location.pathname.startsWith('/showcase')) {
       void themeStore.initialize(Boolean(readAuthSession()));
     }
 

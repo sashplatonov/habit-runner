@@ -216,7 +216,7 @@ git commit -m "refactor(app): share screens across runtimes"
 
 ## P1-3: Publish the complete real-UI showcase route family
 
-**Status:** ⬜ Not started  
+**Status:** ✅ Complete  
 **Priority:** P1  
 **Depends on:** P1-2
 
