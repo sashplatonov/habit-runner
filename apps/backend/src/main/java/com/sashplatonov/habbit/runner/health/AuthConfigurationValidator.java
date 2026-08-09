@@ -36,28 +36,18 @@ class AuthConfigurationValidator {
   }
 
   private Optional<String> validateBasicConfiguration() {
-    if (isBlank(authConfig.secret())) {
-      return Optional.of("auth.secret is missing");
-    }
-    if (authConfig.accessTokenTtlSeconds() < 1) {
-      return Optional.of("auth.access-token-ttl-seconds must be positive");
-    }
-    if (authConfig.refreshTokenDays() < 1) {
-      return Optional.of("auth.refresh-token-days must be positive");
-    }
-    if (isBlank(authConfig.apiPublicUrl())) {
-      return Optional.of("auth.api-public-url is missing");
-    }
-    if (isBlank(authConfig.oauthDefaultReturnTo())) {
-      return Optional.of("auth.oauth-default-return-to is missing");
-    }
-    if (isBlank(authConfig.issuer())) {
-      return Optional.of("auth.issuer is missing");
-    }
-    if (authConfig.telegramInitDataMaxAgeSeconds() < 1) {
-      return Optional.of("auth.telegram-init-data-max-age-seconds must be positive");
-    }
-    return Optional.empty();
+    java.util.List<java.util.function.Supplier<String>> checks = java.util.List.of(
+        () -> isBlank(authConfig.secret()) ? "auth.secret is missing" : null,
+        () -> authConfig.accessTokenTtlSeconds() < 1 ? "auth.access-token-ttl-seconds must be positive" : null,
+        () -> authConfig.refreshTokenDays() < 1 ? "auth.refresh-token-days must be positive" : null,
+        () -> isBlank(authConfig.apiPublicUrl()) ? "auth.api-public-url is missing" : null,
+        () -> isBlank(authConfig.oauthDefaultReturnTo()) ? "auth.oauth-default-return-to is missing" : null,
+        () -> isBlank(authConfig.issuer()) ? "auth.issuer is missing" : null,
+        () -> authConfig.telegramInitDataMaxAgeSeconds() < 1
+            ? "auth.telegram-init-data-max-age-seconds must be positive" : null
+    );
+    return checks.stream().map(java.util.function.Supplier::get)
+        .filter(java.util.Objects::nonNull).findFirst();
   }
 
   private Optional<String> validateProductionConfiguration() {

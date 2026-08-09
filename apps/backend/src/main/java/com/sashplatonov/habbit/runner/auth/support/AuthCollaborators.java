@@ -19,30 +19,20 @@ public class AuthCollaborators {
   private final OAuthSupport oauthSupport;
 
   private final UserService userService;
-  private final IdentityService identityService;
+  @jakarta.inject.Inject
+  IdentityService identityService;
 
   @jakarta.inject.Inject
   public AuthCollaborators(
       JwtUtil jwtUtil,
       RefreshTokenService refreshTokenService,
       OAuthSupport oauthSupport,
-      UserService userService,
-      IdentityService identityService
+      UserService userService
   ) {
     this.jwtUtil = jwtUtil;
     this.refreshTokenService = refreshTokenService;
     this.oauthSupport = oauthSupport;
     this.userService = userService;
-    this.identityService = identityService;
-  }
-
-  public AuthCollaborators(
-      JwtUtil jwtUtil,
-      RefreshTokenService refreshTokenService,
-      OAuthSupport oauthSupport,
-      UserService userService
-  ) {
-    this(jwtUtil, refreshTokenService, oauthSupport, userService, null);
   }
 
   public JwtUtil getJwtUtil() {

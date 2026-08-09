@@ -4,8 +4,6 @@ import com.sashplatonov.habbit.runner.auth.security.CurrentUserContext;
 import com.sashplatonov.habbit.runner.auth.security.RequireAuth;
 import com.sashplatonov.habbit.runner.auth.service.AuthService;
 import com.sashplatonov.habbit.runner.auth.service.PreferencesService;
-import com.sashplatonov.habbit.runner.auth.telegram.TelegramInitDataVerifier;
-import com.sashplatonov.habbit.runner.auth.telegram.TelegramSessionRequest;
 import com.sashplatonov.habbit.runner.auth.support.AuthCookieBuilder;
 import com.sashplatonov.habbit.runner.auth.support.AuthRateLimitService;
 import com.sashplatonov.habbit.runner.auth.support.AuthResourceSupport;
@@ -46,8 +44,6 @@ public class AuthResource {
   final CurrentUserContext currentUserContext;
   final AuthCookieBuilder authCookieBuilder;
   final AuthRateLimitService authRateLimitService;
-  @jakarta.inject.Inject
-  TelegramInitDataVerifier telegramInitDataVerifier;
   @Context
   HttpHeaders headers;
 
@@ -99,17 +95,6 @@ public class AuthResource {
         .cookie(authCookieBuilder.csrfToken(csrfToken(null), refreshCookieMaxAgeSeconds()))
         .build();
   }
-
-  @POST
-  @Path("/telegram/session")
-  @Consumes(MediaType.APPLICATION_JSON)
-  public Response telegramSession(@Valid @NotNull TelegramSessionRequest request) {
-    enforceIpLimit("auth:telegram:session", 20, 60L);
-    var telegramUser = telegramInitDataVerifier.verify(request.initData());
-    var session = authService.authenticateTelegram(telegramUser);
-    return authenticatedSessionResponse(session.accessToken(), session.refreshToken(), session.expiresIn(), null);
-  }
-
 
   @POST
   @Path("/refresh")

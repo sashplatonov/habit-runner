@@ -434,6 +434,26 @@ components:
       properties:
         success:
           type: boolean
+    TelegramLinkRequest:
+      type: object
+      required:
+      - token
+      - initData
+      properties:
+        token:
+          type: string
+          pattern: \S
+        initData:
+          type: string
+          pattern: \S
+    TelegramSessionRequest:
+      type: object
+      required:
+      - initData
+      properties:
+        initData:
+          type: string
+          pattern: \S
     ThemeResponse:
       type: object
       properties:
@@ -482,11 +502,6 @@ components:
       - 3
       - 4
       - last
-tags:
-- name: Authentication
-- name: Checkins
-- name: Habits
-- name: Notifications
 paths:
   /auth/google/callback:
     get:
@@ -533,6 +548,87 @@ paths:
       responses:
         "302":
           description: OAuth redirect initiated
+  /auth/link/telegram:
+    delete:
+      parameters:
+      - name: token
+        in: query
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: {}
+      summary: Cancel Telegram Link
+      tags:
+      - Account Link Resource
+  /auth/link/telegram/complete:
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TelegramLinkRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: {}
+        "400":
+          description: Bad Request
+      summary: Complete Telegram Link
+      tags:
+      - Account Link Resource
+  /auth/link/telegram/confirm:
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TelegramLinkRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: {}
+        "400":
+          description: Bad Request
+      summary: Confirm Telegram Link
+      tags:
+      - Account Link Resource
+  /auth/link/telegram/start:
+    post:
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: {}
+      summary: Start Telegram Link
+      tags:
+      - Account Link Resource
+  /auth/link/telegram/status:
+    get:
+      parameters:
+      - name: token
+        in: query
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: {}
+      summary: Telegram Link Status
+      tags:
+      - Account Link Resource
   /auth/logout:
     post:
       summary: Logout current session
@@ -643,6 +739,25 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+  /auth/telegram/session:
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TelegramSessionRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: {}
+        "400":
+          description: Bad Request
+      summary: Session
+      tags:
+      - Telegram Auth Resource
   /auth/theme:
     put:
       summary: Update current theme
@@ -1110,6 +1225,11 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+tags:
+- name: Authentication
+- name: Checkins
+- name: Habits
+- name: Notifications
 servers:
 - url: http://localhost:8080
   description: Auto generated value

@@ -20,11 +20,13 @@ import jakarta.ws.rs.core.Response;
 @Path("/auth/link")
 @Produces(MediaType.APPLICATION_JSON)
 public class AccountLinkResource {
-  private final AccountLinkService accountLinkService;
-  private final CurrentUserContext currentUserContext;
+  @Inject
+  AccountLinkService accountLinkService;
+  @Inject
+  CurrentUserContext currentUserContext;
 
   @Inject
-  public AccountLinkResource(AccountLinkService accountLinkService, CurrentUserContext currentUserContext) {
+  AccountLinkResource(AccountLinkService accountLinkService, CurrentUserContext currentUserContext) {
     this.accountLinkService = accountLinkService;
     this.currentUserContext = currentUserContext;
   }

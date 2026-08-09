@@ -17,12 +17,16 @@ import java.util.UUID;
 
 @ApplicationScoped
 public class AccountLinkService {
-  private final AccountLinkChallengeRepository challengeRepository;
-  private final AuthIdentityRepository identityRepository;
-  private final TelegramInitDataVerifier telegramVerifier;
-  private final AccountMergeService mergeService;
+  @jakarta.inject.Inject
+  AccountLinkChallengeRepository challengeRepository;
+  @jakarta.inject.Inject
+  AuthIdentityRepository identityRepository;
+  @jakarta.inject.Inject
+  TelegramInitDataVerifier telegramVerifier;
+  @jakarta.inject.Inject
+  AccountMergeService mergeService;
 
-  public AccountLinkService(AccountLinkChallengeRepository challengeRepository,
+  AccountLinkService(AccountLinkChallengeRepository challengeRepository,
       AuthIdentityRepository identityRepository, TelegramInitDataVerifier telegramVerifier,
       AccountMergeService mergeService) {
     this.challengeRepository = challengeRepository;
@@ -104,11 +108,15 @@ public class AccountLinkService {
       throw new BadRequestException("Invalid account link challenge");
     }
     var challenge = challengeRepository.findByTokenHash(hash(token));
+    validateOwner(challenge, ownerUserId);
+    ensureUsable(challenge);
+    return challenge;
+  }
+
+  private void validateOwner(AccountLinkChallengeEntity challenge, String ownerUserId) {
     if (challenge == null || !ownerUserId.equals(challenge.getOwnerUserId())) {
       throw new BadRequestException("Invalid or expired account link challenge");
     }
-    ensureUsable(challenge);
-    return challenge;
   }
 
   private void ensureUsable(AccountLinkChallengeEntity challenge) {

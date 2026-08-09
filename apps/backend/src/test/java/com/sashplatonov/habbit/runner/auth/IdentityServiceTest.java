@@ -1,4 +1,4 @@
-package com.sashplatonov.habbit.runner.auth;
+package com.sashplatonov.habbit.runner.auth.identity;
 
 import com.sashplatonov.habbit.runner.auth.identity.AuthProvider;
 import com.sashplatonov.habbit.runner.auth.identity.IdentityService;

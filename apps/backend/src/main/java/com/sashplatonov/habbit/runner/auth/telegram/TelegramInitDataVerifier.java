@@ -18,26 +18,46 @@ import javax.crypto.spec.SecretKeySpec;
 
 @ApplicationScoped
 public class TelegramInitDataVerifier {
-  private final AuthConfig authConfig;
-  private final ObjectMapper objectMapper;
+  @jakarta.inject.Inject
+  AuthConfig authConfig;
+  @jakarta.inject.Inject
+  ObjectMapper objectMapper;
 
-  public TelegramInitDataVerifier(AuthConfig authConfig, ObjectMapper objectMapper) {
+  TelegramInitDataVerifier(AuthConfig authConfig, ObjectMapper objectMapper) {
     this.authConfig = authConfig;
     this.objectMapper = objectMapper;
   }
 
   public TelegramWebAppUser verify(String rawInitData) {
+    validateConfigured(rawInitData);
+    var fields = parse(rawInitData);
+    var hash = fields.remove("hash");
+    validateFields(hash, fields);
+    validateFreshness(fields.get("auth_date"));
+    validateHash(hash, fields);
+    try {
+      return objectMapper.readValue(fields.get("user"), TelegramWebAppUser.class);
+    } catch (JsonProcessingException ex) {
+      throw new BadRequestException("Invalid Telegram user", ex);
+    }
+  }
+
+  private void validateConfigured(String rawInitData) {
     if (rawInitData == null || rawInitData.isBlank() || authConfig.telegramBotToken().isEmpty()) {
       throw new BadRequestException("Telegram authentication is not configured");
     }
-    var fields = parse(rawInitData);
-    var hash = fields.remove("hash");
+  }
+
+  private void validateFields(String hash, Map<String, String> fields) {
     if (hash == null || fields.get("auth_date") == null || fields.get("user") == null) {
       throw new BadRequestException("Invalid Telegram initData");
     }
-    long authDate;
+  }
+
+  private void validateFreshness(String value) {
+    final long authDate;
     try {
-      authDate = Long.parseLong(fields.get("auth_date"));
+      authDate = Long.parseLong(value);
     } catch (NumberFormatException ex) {
       throw new BadRequestException("Invalid Telegram auth_date", ex);
     }
@@ -45,20 +65,18 @@ public class TelegramInitDataVerifier {
     if (authDate > now + 60 || now - authDate > authConfig.telegramInitDataMaxAgeSeconds()) {
       throw new BadRequestException("Expired Telegram initData");
     }
-    var expected = hmac(hmac(authConfig.telegramBotToken().orElseThrow(), "WebAppData"), dataCheckString(fields));
+  }
+
+  private void validateHash(String hash, Map<String, String> fields) {
     final byte[] provided;
     try {
       provided = HexFormat.of().parseHex(hash);
     } catch (IllegalArgumentException ex) {
       throw new BadRequestException("Invalid Telegram hash", ex);
     }
+    var expected = hmac(hmac(authConfig.telegramBotToken().orElseThrow(), "WebAppData"), dataCheckString(fields));
     if (!MessageDigest.isEqual(expected, provided)) {
       throw new BadRequestException("Invalid Telegram hash");
-    }
-    try {
-      return objectMapper.readValue(fields.get("user"), TelegramWebAppUser.class);
-    } catch (JsonProcessingException ex) {
-      throw new BadRequestException("Invalid Telegram user", ex);
     }
   }
 
