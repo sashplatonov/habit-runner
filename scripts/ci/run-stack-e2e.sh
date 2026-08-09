@@ -6,6 +6,7 @@ compose=(docker compose --env-file .env.example --project-name "$project_name" -
 web_url="http://localhost:${WEB_PORT:-5137}"
 output_dir="/tmp/${project_name}-playwright"
 cookie_jar="/tmp/${project_name}-cookies.txt"
+diagnostics_dir="/tmp/habbit-runner-smoke-logs"
 user_id="stack-e2e-user-${RANDOM}-${RANDOM}"
 email="${user_id}@example.test"
 refresh_token="${user_id}-refresh"
@@ -13,6 +14,15 @@ csrf_token="${user_id}-csrf"
 
 cleanup() {
   local exit_code=$?
+  if (( exit_code != 0 )); then
+    mkdir -p "$diagnostics_dir"
+    "${compose[@]}" ps --all >"$diagnostics_dir/stack-e2e-compose-ps.txt" 2>&1 || true
+    "${compose[@]}" logs --no-color >"$diagnostics_dir/stack-e2e-compose.log" 2>&1 || true
+    if [[ -d "$output_dir" ]]; then
+      rm -rf "$diagnostics_dir/stack-e2e-playwright"
+      cp -R "$output_dir" "$diagnostics_dir/stack-e2e-playwright"
+    fi
+  fi
   "${compose[@]}" down --volumes --remove-orphans >/dev/null 2>&1 || true
   rm -rf "$output_dir" "$cookie_jar"
   return "$exit_code"
