@@ -65,7 +65,7 @@ function updateThemeColorMeta(themeColor: string) {
   }
 }
 
-function applyTheme(themeId: ThemeId) {
+export function applyTheme(themeId: ThemeId, persist = true) {
   if (typeof document === 'undefined') {
     return;
   }
@@ -73,10 +73,12 @@ function applyTheme(themeId: ThemeId) {
   const theme = resolveCurrentTheme(themeId);
   document.documentElement.setAttribute('data-theme', themeId);
   updateThemeColorMeta(theme.themeColor);
-  try {
-    window.localStorage.setItem(STORAGE_KEY, themeId);
-  } catch {
-    // Keep the current theme in memory when storage is unavailable.
+  if (persist) {
+    try {
+      window.localStorage.setItem(STORAGE_KEY, themeId);
+    } catch {
+      // Keep the current theme in memory when storage is unavailable.
+    }
   }
 }
 
@@ -178,7 +180,7 @@ export function createThemeStore(): ThemeStore {
     },
     async setTheme(theme) {
       const state = get(store);
-      applyTheme(theme);
+      applyTheme(theme, true);
       store.set(createSnapshot(theme, state.timezone, state.serverSyncReady, state.isAuthenticated, state.dashboard));
       await persistPreferences();
     },

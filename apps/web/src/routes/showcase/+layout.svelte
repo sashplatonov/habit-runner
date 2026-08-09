@@ -3,6 +3,7 @@
   import AppLayout from '$lib/components/AppLayout.svelte';
   import AppRuntimeProvider from '$lib/app/AppRuntimeProvider.svelte';
   import { createAppRuntime } from '$lib/app/runtime';
+  import { applyTheme } from '$lib/stores/theme';
   import { createShowcaseHabitsStore } from '$lib/showcase/createShowcaseHabitsStore';
   import type { ThemeId } from '$lib/theme/themes';
 
@@ -17,7 +18,10 @@
   <AppLayout
     {theme}
     routeBase="/showcase"
-    onThemeChange={(nextTheme) => { theme = nextTheme; }}
+    onThemeChange={(nextTheme) => {
+      theme = nextTheme;
+      applyTheme(nextTheme, false);
+    }}
   >
     <div class="border-b border-progress/20 bg-progress/10 px-4 py-3 text-sm text-foreground sm:px-6">
       <div class="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3">

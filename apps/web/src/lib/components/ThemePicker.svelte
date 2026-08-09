@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { page } from '$app/state';
   import { CheckIcon, MoonIcon, SunIcon } from 'lucide-svelte';
   import {
     rankThemesByUsage,
@@ -56,7 +57,9 @@
             aria-pressed={theme === candidate.id}
             aria-label={`Switch to ${candidate.name} theme`}
             onclick={async () => {
-              await themeStore.recordThemeSelection(candidate.id);
+              if ($themeStore.isAuthenticated && !page.url.pathname.startsWith('/showcase')) {
+                await themeStore.recordThemeSelection(candidate.id);
+              }
               await onThemeChange(candidate.id);
               await onChoose?.();
             }}
