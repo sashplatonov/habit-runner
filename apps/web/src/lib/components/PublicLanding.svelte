@@ -8,7 +8,6 @@
   import PublicCta from '$lib/components/public/PublicCta.svelte';
   import PublicFeatureCard from '$lib/components/public/PublicFeatureCard.svelte';
   import PublicFaq from '$lib/components/public/PublicFaq.svelte';
-  import PublicPreviewCarousel from '$lib/components/PublicPreviewCarousel.svelte';
   import PublicSeoHead from '$lib/components/PublicSeoHead.svelte';
   import { PUBLIC_LANDING_SEO } from '$lib/seo/publicPages';
 
@@ -24,12 +23,6 @@
     'Simple habit detail and editing'
   ];
 
-  function scrollToPreview() {
-    document.getElementById('product-preview')?.scrollIntoView({
-      behavior: 'smooth',
-      block: 'start'
-    });
-  }
 </script>
 
 <PublicSeoHead
@@ -49,7 +42,7 @@
         <div>
           <div class="mb-5 inline-flex items-center gap-2 rounded-full border border-progress/20 bg-bg-card/92 px-3 py-1.5 text-xs font-medium text-progress shadow-[0_10px_24px_rgba(15,23,42,0.06)]">
             <Sparkles size={14} />
-            See progress before sign-in
+            Try the real interface before sign-in
           </div>
           <h1 class="max-w-2xl text-4xl font-semibold leading-[1.02] tracking-tight text-foreground sm:text-5xl">
             Habit tracking that keeps the next step obvious.
@@ -59,17 +52,20 @@
           </p>
           <div class="mt-7 flex flex-wrap items-center gap-3">
             <PublicCta
-              onclick={() => {
-                startOAuthLogin();
-              }}
+              href={resolve('/showcase', {})}
               variant="primary"
               size="lg"
             >
-              Continue with Google
+              Try the interactive demo — no sign-in
               <ArrowRight size={15} />
             </PublicCta>
-            <PublicCta onclick={scrollToPreview} variant="secondary">
-              See product preview
+            <PublicCta
+              onclick={() => {
+                startOAuthLogin();
+              }}
+              variant="secondary"
+            >
+              Sign in with Google
             </PublicCta>
             <a
               href={resolve('/habit-tracker', {})}
@@ -122,8 +118,6 @@
         </p>
       </div>
     {/if}
-
-    <PublicPreviewCarousel />
 
     <PublicSection title="What Makes Habit Runner Different" subtitle="Habit Runner is a habit tracking app focused on execution. You set daily targets, check progress in a clear dashboard, and monitor streaks without clutter.">
       <ul class="mt-4 space-y-2 text-sm text-muted">

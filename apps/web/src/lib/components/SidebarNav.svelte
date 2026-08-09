@@ -23,9 +23,9 @@
   let isThemeOpen = $state(false);
   let themeElement = $state<HTMLDivElement | null>(null);
 
-  const dashboardHref = routeBase === '/showcase' ? resolve('/showcase') : resolve<'/app/(protected)/dashboard'>('/app/(protected)/dashboard', {});
-  const statsHref = routeBase === '/showcase' ? resolve('/showcase/stats') : resolve<'/app/(protected)/stats'>('/app/(protected)/stats', {});
-  const newHabitHref = routeBase === '/showcase' ? resolve('/showcase/habit/new') : resolve<'/app/(protected)/habit/new'>('/app/(protected)/habit/new', {});
+  const dashboardHref = routeBase === '/showcase' ? resolve('/showcase', {}) : resolve<'/app/(protected)/dashboard'>('/app/(protected)/dashboard', {});
+  const statsHref = routeBase === '/showcase' ? resolve('/showcase/stats', {}) : resolve<'/app/(protected)/stats'>('/app/(protected)/stats', {});
+  const newHabitHref = routeBase === '/showcase' ? resolve('/showcase/habit/new', {}) : resolve<'/app/(protected)/habit/new'>('/app/(protected)/habit/new', {});
 
   function isActive(path: string) {
     return page.url.pathname === path || (path !== dashboardHref && page.url.pathname.startsWith(path));

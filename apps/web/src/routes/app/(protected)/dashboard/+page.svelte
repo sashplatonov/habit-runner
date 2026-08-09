@@ -422,11 +422,11 @@
 
   // ─── Navigation ───────────────────────────────────────────────────────────────
   function navigateToDetail(habitId: string) {
-    void goto(resolve(appResolve('/app/(protected)/habit/[id]', { id: habitId })));
+    void goto(resolve(appResolve('/app/(protected)/habit/[id]', { id: habitId }), {}));
   }
 
   function navigateToNewHabit() {
-    void goto(resolve(appResolve('/app/(protected)/habit/new', {})));
+    void goto(resolve(appResolve('/app/(protected)/habit/new', {}), {}));
   }
 
   function navigateToNextHabit() {
@@ -709,7 +709,7 @@
         archived: false,
         sortOrder
       });
-      await goto(resolve(appResolve('/app/(protected)/habit/[id]', { id: habitId })));
+      await goto(resolve(appResolve('/app/(protected)/habit/[id]', { id: habitId }), {}));
     } finally {
       addingTemplate = null;
     }

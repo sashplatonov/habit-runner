@@ -296,7 +296,7 @@ git commit -m "feat(showcase): expose full demo journey"
 
 ## P1-4: Make showcase the public product entry point
 
-**Status:** ⬜ Not started  
+**Status:** ✅ Complete  
 **Priority:** P1  
 **Depends on:** P1-3
 

@@ -7,8 +7,9 @@
 
 <p align="center">
   <a href="#product">Product</a> ·
+  <a href="https://habbit-runner.app/showcase">Try the live showcase</a> ·
   <a href="#engineering-highlights">Engineering</a> ·
-  <a href="#screenshots">Screenshots</a> ·
+  <a href="#showcase">Showcase</a> ·
   <a href="#run-locally">Run locally</a> ·
   <a href="#quality-evidence">Quality</a>
 </p>
@@ -19,7 +20,7 @@
 
 - [🎯 Product](#product)
 - [🧩 Engineering highlights](#engineering-highlights)
-- [🖼️ Screenshots](#screenshots)
+- [🧭 Interactive showcase](#showcase)
 - [🏗️ Architecture](#architecture)
 - [🚀 Run locally](#run-locally)
 - [🧪 Quality evidence](#quality-evidence)
@@ -64,24 +65,16 @@ first-paint fallbacks.
 
 [↑ Back to top](#top)
 
-## 🖼️ Screenshots <a id="screenshots"></a>
+## 🧭 Interactive showcase <a id="showcase"></a>
 
-The images are tracked repository assets with explicit relative paths, so they
-render in GitHub, pull requests, and local Markdown previews.
+Try the real application UI anonymously at
+[habbit-runner.app/showcase](https://habbit-runner.app/showcase). The public
+showcase uses fictional in-memory data, so you can check in habits, open detail
+views, create or edit a habit, archive/delete, reorder, and inspect progress
+without OAuth, API requests, database writes, or browser persistence.
 
-<p>
-  <img src="./docs/assets/screenshots/landing-desktop.png" alt="Habbit Runner landing page on desktop" width="100%" />
-</p>
-<p align="center"><em>Landing page — desktop presentation and product positioning.</em></p>
-
-<p align="center">
-  <img src="./docs/assets/screenshots/features-mobile.png" alt="Habbit Runner features page on a mobile viewport" width="360" />
-</p>
-<p align="center"><em>Features page — mobile layout and responsive information hierarchy.</em></p>
-
-To replace these captures, keep the same tracked paths and export PNG files under
-`docs/assets/screenshots/`. The repository also contains the capture note at
-[`apps/web/static/screenshots/README.md`](apps/web/static/screenshots/README.md).
+The normal account flow remains available through Google OAuth; authenticated
+data is server-backed and is never mixed with the showcase fixture.
 
 [↑ Back to top](#top)
 

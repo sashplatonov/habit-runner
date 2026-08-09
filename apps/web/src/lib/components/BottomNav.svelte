@@ -23,9 +23,9 @@
   let isMoreOpen = $state(false);
   let moreButton = $state<HTMLButtonElement | null>(null);
 
-  const dashboardHref = routeBase === '/showcase' ? resolve('/showcase') : resolve<'/app/(protected)/dashboard'>('/app/(protected)/dashboard', {});
-  const statsHref = routeBase === '/showcase' ? resolve('/showcase/stats') : resolve<'/app/(protected)/stats'>('/app/(protected)/stats', {});
-  const newHabitHref = routeBase === '/showcase' ? resolve('/showcase/habit/new') : resolve<'/app/(protected)/habit/new'>('/app/(protected)/habit/new', {});
+  const dashboardHref = routeBase === '/showcase' ? resolve('/showcase', {}) : resolve<'/app/(protected)/dashboard'>('/app/(protected)/dashboard', {});
+  const statsHref = routeBase === '/showcase' ? resolve('/showcase/stats', {}) : resolve<'/app/(protected)/stats'>('/app/(protected)/stats', {});
+  const newHabitHref = routeBase === '/showcase' ? resolve('/showcase/habit/new', {}) : resolve<'/app/(protected)/habit/new'>('/app/(protected)/habit/new', {});
   const isDashboard = $derived(page.url.pathname === dashboardHref);
   const isStats = $derived(page.url.pathname === statsHref);
 
