@@ -33,6 +33,16 @@ class TelegramInitDataVerifierTest {
         "auth_date=" + Instant.now().getEpochSecond() + "&user=%7B%22id%22%3A42%7D&hash=00"));
   }
 
+  @Test
+  void rejectsStaleAndFutureInitDataBeforeIdentityResolution() {
+    var verifier = new TelegramInitDataVerifier(TestConfigFactory.telegramAuthConfig("bot-token"), new ObjectMapper());
+    var stale = "auth_date=1&user=%7B%22id%22%3A42%7D&hash=00";
+    var future = "auth_date=" + (Instant.now().getEpochSecond() + 120)
+        + "&user=%7B%22id%22%3A42%7D&hash=00";
+    assertThrows(BadRequestException.class, () -> verifier.verify(stale));
+    assertThrows(BadRequestException.class, () -> verifier.verify(future));
+  }
+
   private byte[] hmac(byte[] key, String value) throws Exception {
     var mac = Mac.getInstance("HmacSHA256");
     mac.init(new SecretKeySpec(key, "HmacSHA256"));

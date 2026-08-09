@@ -102,6 +102,27 @@ class PostgreSqlRepositoryIT {
     assertNull(UserEntity.findById(absorbed.getId()));
   }
 
+  @Test
+  @TestTransaction
+  void shouldPreserveCombinedHabitAndCheckinDataAfterApprovedMerge() {
+    var survivor = user("parity-survivor");
+    var absorbed = user("parity-absorbed");
+    entityManager.persist(survivor);
+    entityManager.persist(absorbed);
+    entityManager.persist(habit("parity-habit-one", survivor.getId(), BigInteger.ONE, Instant.now()));
+    entityManager.persist(habit("parity-habit-two", absorbed.getId(), BigInteger.TWO, Instant.now()));
+    entityManager.persist(checkin("parity-checkin-one", "parity-habit-one", survivor.getId(), LocalDate.of(2026, 2, 1)));
+    entityManager.persist(checkin("parity-checkin-two", "parity-habit-two", absorbed.getId(), LocalDate.of(2026, 2, 2)));
+    entityManager.flush();
+
+    accountMergeService.merge(survivor.getId(), absorbed.getId());
+    entityManager.clear();
+
+    assertEquals(2, habitRepository.findListForUser(survivor.getId()).size());
+    assertEquals(2, CheckinEntity.<CheckinEntity>find("userId", survivor.getId()).list().size());
+    assertNull(UserEntity.findById(absorbed.getId()));
+  }
+
   private UserEntity user(String id) {
     var user = new UserEntity();
     user.setId(id);

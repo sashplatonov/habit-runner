@@ -459,7 +459,7 @@ git commit -m "feat(web): Add Telegram account linking"
 
 ## P2-1: Prove cross-surface identity, merge, and data parity
 
-**Status:** ⬜ Not started  
+**Status:** ✅ Completed
 **Priority:** P2  
 **Depends on:** P1-1, P1-2, P1-3
 
