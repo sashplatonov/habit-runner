@@ -27,10 +27,10 @@ public class IdentityService {
   }
 
   @Transactional
-  public AuthIdentityEntity findOrCreateTelegram(String providerSubject) {
+  public UserEntity findOrCreateTelegram(String providerSubject) {
     var existing = find(AuthProvider.TELEGRAM, providerSubject);
     if (existing != null) {
-      return existing;
+      return userRepository.findRequiredById(existing.getUserId());
     }
 
     var user = new UserEntity();
@@ -41,6 +41,6 @@ public class IdentityService {
     identity.setProviderSubject(providerSubject);
     identity.setUserId(user.getId());
     identityRepository.save(identity);
-    return identity;
+    return user;
   }
 }
