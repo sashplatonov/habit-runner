@@ -48,32 +48,20 @@ public class AccountLinkService {
   }
 
   @Transactional
-  public void completeTelegramLink(String ownerUserId, String token, String initData) {
-    var challenge = requireChallenge(ownerUserId, token);
+  public void completeTelegramLink(String token, String initData) {
+    var challenge = requireChallenge(token);
     if (!"PENDING".equals(challenge.getStatus())) {
       throw new BadRequestException("Account link challenge is not pending");
     }
     TelegramWebAppUser telegramUser = telegramVerifier.verify(initData);
     var existing = identityRepository.findByProviderAndSubject(AuthProvider.TELEGRAM, Long.toString(telegramUser.id()));
-    linkIdentity(challenge, existing, telegramUser);
     challenge.setTelegramUserId(Long.toString(telegramUser.id()));
     challenge.setTelegramUsername(telegramUser.username());
-  }
-
-  private void linkIdentity(AccountLinkChallengeEntity challenge, AuthIdentityEntity existing,
-      TelegramWebAppUser telegramUser) {
-    if (existing != null && !challenge.getOwnerUserId().equals(existing.getUserId())) {
+    if (existing != null && challenge.getOwnerUserId().equals(existing.getUserId())) {
+      challenge.setStatus("COMPLETED");
+    } else {
       challenge.setStatus("AWAITING_OWNER_CONFIRMATION");
-      return;
     }
-    if (existing == null) {
-      var identity = new AuthIdentityEntity();
-      identity.setProvider(AuthProvider.TELEGRAM);
-      identity.setProviderSubject(Long.toString(telegramUser.id()));
-      identity.setUserId(challenge.getOwnerUserId());
-      identityRepository.save(identity);
-    }
-    challenge.setStatus("COMPLETED");
   }
 
   @Transactional
@@ -84,10 +72,15 @@ public class AccountLinkService {
     }
     var identity = identityRepository.findByProviderAndSubject(
         AuthProvider.TELEGRAM, challenge.getTelegramUserId());
-    if (identity == null || ownerUserId.equals(identity.getUserId())) {
-      throw new BadRequestException("Telegram identity proof is missing");
+    if (identity == null) {
+      var newIdentity = new AuthIdentityEntity();
+      newIdentity.setProvider(AuthProvider.TELEGRAM);
+      newIdentity.setProviderSubject(challenge.getTelegramUserId());
+      newIdentity.setUserId(ownerUserId);
+      identityRepository.save(newIdentity);
+    } else if (!ownerUserId.equals(identity.getUserId())) {
+      mergeService.merge(ownerUserId, identity.getUserId());
     }
-    mergeService.merge(ownerUserId, identity.getUserId());
     challenge.setStatus("COMPLETED");
   }
 
@@ -109,6 +102,18 @@ public class AccountLinkService {
     }
     var challenge = challengeRepository.findByTokenHash(hash(token));
     validateOwner(challenge, ownerUserId);
+    ensureUsable(challenge);
+    return challenge;
+  }
+
+  private AccountLinkChallengeEntity requireChallenge(String token) {
+    if (token == null || token.isBlank()) {
+      throw new BadRequestException("Invalid account link challenge");
+    }
+    var challenge = challengeRepository.findByTokenHash(hash(token));
+    if (challenge == null) {
+      throw new BadRequestException("Invalid or expired account link challenge");
+    }
     ensureUsable(challenge);
     return challenge;
   }

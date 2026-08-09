@@ -29,7 +29,7 @@ class AccountLinkServiceTest {
   }
 
   @Test
-  void completesNewTelegramIdentityAndCanCancelChallenge() {
+  void waitsForOwnerConfirmationBeforeLinkingNewTelegramIdentity() {
     var challenges = mock(AccountLinkChallengeRepository.class);
     var identities = mock(AuthIdentityRepository.class);
     var verifier = mock(TelegramInitDataVerifier.class);
@@ -37,10 +37,13 @@ class AccountLinkServiceTest {
     var challenge = challenge("user-1", "PENDING");
     when(challenges.findByTokenHash(any())).thenReturn(challenge);
     when(verifier.verify("signed")).thenReturn(new TelegramWebAppUser(42, "alice", null, null));
-    service.completeTelegramLink("user-1", "token", "signed");
+    service.completeTelegramLink("token", "signed");
+    verify(identities, org.mockito.Mockito.never()).save(any());
+    org.junit.jupiter.api.Assertions.assertEquals("AWAITING_OWNER_CONFIRMATION", challenge.getStatus());
+    service.confirmTelegramLink("user-1", "token");
     verify(identities).save(any());
     service.cancel("user-1", "token");
-    verify(challenges, org.mockito.Mockito.times(2)).findByTokenHash(any());
+    verify(challenges, org.mockito.Mockito.times(3)).findByTokenHash(any());
   }
 
   @Test
@@ -73,7 +76,7 @@ class AccountLinkServiceTest {
     when(challenges.findByTokenHash(any())).thenReturn(challenge);
     when(verifier.verify("signed")).thenReturn(new TelegramWebAppUser(7, "seven", null, null));
     when(identities.findByProviderAndSubject(AuthProvider.TELEGRAM, "7")).thenReturn(identity);
-    service.completeTelegramLink("owner", "token", "signed");
+    service.completeTelegramLink("token", "signed");
     verify(identities, org.mockito.Mockito.never()).save(any());
   }
 

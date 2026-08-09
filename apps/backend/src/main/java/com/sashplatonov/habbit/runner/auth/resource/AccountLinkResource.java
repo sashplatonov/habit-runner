@@ -45,7 +45,8 @@ public class AccountLinkResource {
   @Path("/telegram/complete")
   @Consumes(MediaType.APPLICATION_JSON)
   public Response completeTelegramLink(@Valid @NotNull TelegramLinkRequest request) {
-    accountLinkService.completeTelegramLink(currentUserContext.requireUser().id(), request.token(), request.initData());
+    currentUserContext.requireUser();
+    accountLinkService.completeTelegramLink(request.token(), request.initData());
     return Response.noContent().build();
   }
 

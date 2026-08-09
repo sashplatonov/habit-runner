@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { clearAuthSession, readAuthSession } from '$lib/auth/session';
-import { authenticateTelegramMiniApp } from '$lib/telegram/session';
+import { authenticateTelegramMiniApp, completeTelegramPairing } from '$lib/telegram/session';
 
 describe('Telegram Mini App session', () => {
   beforeEach(() => {
@@ -35,5 +35,21 @@ describe('Telegram Mini App session', () => {
       expect.stringContaining('/auth/telegram/session'),
       expect.objectContaining({ body: JSON.stringify({ initData: 'signed-init-data' }) })
     );
+  });
+
+  it('submits a startapp pairing token only after Telegram authentication', async () => {
+    const webApp = window.Telegram?.WebApp;
+    if (!webApp) throw new Error('Telegram Web App test adapter is missing');
+    webApp.startParam = 'pairing-token';
+    const fetchMock = vi.fn().mockResolvedValue(new Response(null, { status: 204 }));
+    vi.stubGlobal('fetch', fetchMock);
+
+    await completeTelegramPairing(webApp);
+
+    expect(fetchMock).toHaveBeenCalledWith('/api/auth/link/telegram/complete', expect.objectContaining({
+      method: 'POST',
+      body: JSON.stringify({ token: 'pairing-token', initData: 'signed-init-data' }),
+      credentials: 'include'
+    }));
   });
 });

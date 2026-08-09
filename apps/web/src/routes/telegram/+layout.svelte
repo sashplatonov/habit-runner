@@ -3,14 +3,22 @@
   import { resolve } from '$app/paths';
   import { onMount } from 'svelte';
   import type { Snippet } from 'svelte';
-  import { authenticateTelegramMiniApp } from '@/lib/telegram/session';
+  import { authenticateTelegramMiniApp, completeTelegramPairing } from '@/lib/telegram/session';
+  import { loadTelegramWebApp } from '@/lib/telegram/webApp';
   type Props = { children: Snippet };
   let { children }: Props = $props();
   let phase = $state<'loading' | 'ready' | 'error'>('loading');
   let errorMessage = $state('');
   onMount(() => {
     authenticateTelegramMiniApp()
-      .then(() => { phase = 'ready'; void goto(resolve('/app/(protected)/dashboard', {}), { replaceState: true }); })
+      .then(async () => {
+        const telegram = await loadTelegramWebApp();
+        if (telegram) {
+          await completeTelegramPairing(telegram);
+        }
+        phase = 'ready';
+        await goto(resolve('/app/(protected)/dashboard', {}), { replaceState: true });
+      })
       .catch((cause: unknown) => { phase = 'error'; errorMessage = cause instanceof Error ? cause.message : 'Telegram authentication failed.'; });
   });
 </script>

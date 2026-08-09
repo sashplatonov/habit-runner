@@ -1,6 +1,6 @@
 import { API_BASE_URL } from '@/lib/core/config';
-import { saveAuthSession, type AuthSession } from '@/lib/auth/session';
-import { loadTelegramWebApp } from './webApp';
+import { authenticatedFetch, saveAuthSession, type AuthSession } from '@/lib/auth/session';
+import { loadTelegramWebApp, type TelegramWebAppAdapter } from './webApp';
 
 export async function authenticateTelegramMiniApp(): Promise<AuthSession> {
   const webApp = await loadTelegramWebApp();
@@ -21,4 +21,17 @@ export async function authenticateTelegramMiniApp(): Promise<AuthSession> {
     throw new Error('Telegram session response did not include a userId.');
   }
   return saveAuthSession({ userId: payload.userId, email: payload.email });
+}
+
+export async function completeTelegramPairing(webApp: TelegramWebAppAdapter): Promise<void> {
+  if (!webApp.startParam) {
+    return;
+  }
+  const response = await authenticatedFetch('/api/auth/link/telegram/complete', {
+    method: 'POST',
+    body: JSON.stringify({ token: webApp.startParam, initData: webApp.initData })
+  });
+  if (!response.ok) {
+    throw new Error(`Telegram account linking failed: ${response.status}`);
+  }
 }
