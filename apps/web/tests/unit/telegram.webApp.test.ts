@@ -25,6 +25,9 @@ describe('Telegram Web App SDK loader', () => {
     const { loadTelegramWebApp } = await import('$lib/telegram/webApp');
 
     await expect(loadTelegramWebApp()).resolves.toBe(webApp);
+    expect(webApp.ready).toHaveBeenCalledOnce();
+    expect(webApp.expand).toHaveBeenCalledOnce();
+    expect(document.documentElement.style.getPropertyValue('--telegram-bg-color')).toBe('#102030');
   });
 
   it('loads the SDK script and exposes the initialized Web App', async () => {

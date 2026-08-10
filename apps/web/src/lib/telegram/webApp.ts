@@ -27,7 +27,7 @@ let sdkLoad: Promise<void> | null = null;
 
 export async function loadTelegramWebApp(): Promise<TelegramWebAppAdapter | null> {
   if (!browser) { return null; }
-  if (window.Telegram?.WebApp) { return window.Telegram.WebApp; }
+  if (window.Telegram?.WebApp) { return initializeWebApp(window.Telegram.WebApp); }
 
   if (!sdkLoad) {
     sdkLoad = loadTelegramSdk().catch((cause: unknown) => {
@@ -39,6 +39,10 @@ export async function loadTelegramWebApp(): Promise<TelegramWebAppAdapter | null
 
   const webApp = window.Telegram?.WebApp;
   if (!webApp) { return null; }
+  return initializeWebApp(webApp);
+}
+
+function initializeWebApp(webApp: TelegramWebAppAdapter): TelegramWebAppAdapter {
   webApp.ready();
   webApp.expand();
   applySafeArea(webApp);
