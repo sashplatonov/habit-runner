@@ -5,6 +5,7 @@
   import { readAuthSession } from '$lib/auth/session';
   import PublicLanding from '$lib/components/PublicLanding.svelte';
   import TelegramRootEntry from '$lib/components/TelegramRootEntry.svelte';
+  import { loadTelegramWebApp } from '$lib/telegram/webApp';
 
   let redirecting = $state(false);
   let telegramEntry = $state(false);
@@ -33,7 +34,6 @@
       }
       telegramEntry = true;
       try {
-        const { loadTelegramWebApp } = await import('$lib/telegram/webApp');
         const telegram = await loadTelegramWebApp();
         telegramEntry = telegramLaunch || Boolean(telegram?.initData);
         if (!telegramEntry && readAuthSession()) {
