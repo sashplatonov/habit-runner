@@ -38,7 +38,7 @@
         token = null;
         linkUrl = null;
         status = null;
-        error = 'Your previous Telegram link expired. Create a new link to continue.';
+        error = '';
       } else {
         error = cause instanceof Error ? cause.message : 'Unable to load link status.';
       }
@@ -46,13 +46,24 @@
     finally { loading = false; }
   }
 
-  async function createLink() {
-    if (!telegramMiniAppUrl('')) {
+  async function openTelegramMiniApp() {
+    if (!telegramMiniAppUrl('link')) {
       error = 'Telegram launch is not configured for this environment.';
       return;
     }
     working = true; error = '';
-    try { const result = await startTelegramLink(); token = result.token; savePendingTelegramLink(token); linkUrl = telegramMiniAppUrl(token); status = 'PENDING'; }
+    try {
+      const result = await startTelegramLink();
+      token = result.token;
+      savePendingTelegramLink(token);
+      const miniAppUrl = telegramMiniAppUrl(token);
+      if (!miniAppUrl) {
+        throw new Error('Telegram launch is not configured for this environment.');
+      }
+      linkUrl = miniAppUrl;
+      status = 'PENDING';
+      window.location.assign(miniAppUrl);
+    }
     catch (cause) { error = cause instanceof Error ? cause.message : 'Unable to create a Telegram link.'; }
     finally { working = false; }
   }
@@ -105,7 +116,7 @@
   {:else if status === 'PENDING' || status === 'AWAITING_OWNER_CONFIRMATION'}
     <div class="pending" role="status"><strong>{status === 'PENDING' ? 'Open Telegram to continue' : 'Telegram identity verified'}</strong><p>{status === 'PENDING' ? 'Open the Telegram Mini App, then return here to confirm.' : 'Confirming will merge only after your explicit approval.'}</p>{#if linkUrl}<button class="button primary" type="button" onclick={() => window.location.assign(linkUrl ?? '')}>Open Telegram</button>{/if}{#if status === 'AWAITING_OWNER_CONFIRMATION'}<button class="button primary" type="button" disabled={working} onclick={() => void confirm()}>Confirm Telegram account</button>{/if}<button class="button" type="button" disabled={working} onclick={() => void cancel()}>Cancel link</button></div>
   {:else if status === 'COMPLETED'}<p class="success" role="status">Telegram is linked. Your data is shared across both apps.</p>
-  {:else}<button class="button primary" type="button" disabled={working} onclick={() => void createLink()}>Link Telegram account</button>{/if}
+  {:else}<button class="button primary" type="button" disabled={working} onclick={() => void openTelegramMiniApp()}>Open Telegram Mini App</button>{/if}
 </section>
 
 <style>

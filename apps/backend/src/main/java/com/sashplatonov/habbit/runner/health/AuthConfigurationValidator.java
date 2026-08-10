@@ -5,6 +5,10 @@ import io.quarkus.runtime.StartupEvent;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.event.Observes;
 import jakarta.inject.Inject;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.HexFormat;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import java.net.InetAddress;
@@ -12,9 +16,12 @@ import java.net.URI;
 import java.net.UnknownHostException;
 import java.util.Locale;
 import java.util.Optional;
+import lombok.extern.slf4j.Slf4j;
 
 @ApplicationScoped
+@Slf4j
 class AuthConfigurationValidator {
+  private static final int TOKEN_REFERENCE_LENGTH = 12;
   private final AuthConfig authConfig;
   private final String deploymentEnv;
 
@@ -76,6 +83,20 @@ class AuthConfigurationValidator {
     validate().ifPresent(reason -> {
       throw new IllegalStateException("Invalid auth configuration: " + reason);
     });
+    authConfig.telegramBotToken()
+        .map(String::trim)
+        .filter(token -> !token.isEmpty())
+        .ifPresent(token -> log.info("event=telegram_auth_configuration_loaded botTokenRef={}",
+            fingerprint(token)));
+  }
+
+  private String fingerprint(String value) {
+    try {
+      return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256")
+          .digest(value.getBytes(StandardCharsets.UTF_8))).substring(0, TOKEN_REFERENCE_LENGTH);
+    } catch (NoSuchAlgorithmException ex) {
+      throw new IllegalStateException("Unable to fingerprint Telegram configuration", ex);
+    }
   }
 
   private boolean isBlank(String value) {

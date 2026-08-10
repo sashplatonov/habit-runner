@@ -47,6 +47,19 @@ healthy. If compromise is suspected, revoke immediately, remove the runtime
 secret, disable the Mini App URL, and redeploy; readiness should fail until a
 valid token is provisioned.
 
+After a deployment, the API logs `event=telegram_auth_configuration_loaded`
+with a 12-character SHA-256 reference for the token it actually received. To
+compare it with the intended secret without printing that secret, run this in a
+terminal where the secret is already set:
+
+```sh
+printf %s "$TELEGRAM_BOT_TOKEN" | shasum -a 256 | cut -c1-12
+```
+
+The output must equal `botTokenRef` in the startup log and in any
+`telegram_init_data_rejected` event. A mismatch means the deployed runtime has
+a different secret; the bot username does not participate in HMAC validation.
+
 ## Release evidence
 
 Collect these as separate evidence classes:
@@ -77,7 +90,8 @@ and link records intact so a later recovery does not create duplicate accounts.
 - **Change:** document and configure Telegram Mini App authentication and
   bidirectional email linking. Website-origin links now use the bot's `t.me`
   deep link so they open inside Telegram; BotFather still points the Mini App
-  itself at the website root.
+  itself at the website root. Expired saved website links are discarded without
+  an error, and the account action opens a fresh Mini App link directly.
 - **Risk:** an exposed or stale bot token could permit forged init data; an
   incorrect HTTPS URL prevents the webview from launching.
 - **Mitigation:** backend-only secret, bounded init-data age, readiness checks,
