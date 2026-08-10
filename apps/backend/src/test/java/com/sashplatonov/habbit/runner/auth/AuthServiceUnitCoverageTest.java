@@ -188,8 +188,8 @@ class AuthServiceUnitCoverageTest {
     collaborators.setUserById(telegramOwner);
     collaborators.setOauthUser(googleUser);
     var service = new TestAuthService(collaborators);
-    var merge = new RecordingOAuthAccountLinkService();
-    service.setAccountLinkService(merge);
+    var merge = new RecordingAccountMergeService();
+    service.setAccountLinkService(new TestOAuthAccountLinkService(collaborators, merge));
     var oauthState = new OAuthStateEntity();
     oauthState.state = "state-token";
     oauthState.returnTo = "/app/account";
@@ -201,6 +201,7 @@ class AuthServiceUnitCoverageTest {
 
     assertEquals("telegram-user", merge.survivor());
     assertEquals("google-user", merge.absorbed());
+    assertEquals("oauth@example.test", telegramOwner.getEmail());
   }
 
   @Test

@@ -12,6 +12,7 @@ import com.sashplatonov.habbit.runner.auth.security.CsrfGuardFilter;
 import com.sashplatonov.habbit.runner.auth.security.JwtUtil;
 import com.sashplatonov.habbit.runner.auth.security.RequireAuth;
 import com.sashplatonov.habbit.runner.auth.service.AuthService;
+import com.sashplatonov.habbit.runner.auth.service.OAuthAccountLinkService;
 import com.sashplatonov.habbit.runner.auth.service.PreferencesService;
 import com.sashplatonov.habbit.runner.auth.service.RefreshTokenService;
 import com.sashplatonov.habbit.runner.auth.support.AuthCollaborators;
@@ -67,7 +68,7 @@ final class TestAuthService extends AuthService {
     this.currentTime = currentTime;
   }
 
-  void setAccountLinkService(RecordingOAuthAccountLinkService linkService) {
+  void setAccountLinkService(OAuthAccountLinkService linkService) {
     try {
       Field field = AuthService.class.getDeclaredField("oauthAccountLinkService");
       field.setAccessible(true);

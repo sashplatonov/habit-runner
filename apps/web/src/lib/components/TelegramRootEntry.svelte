@@ -60,7 +60,7 @@
 {:else if mode === 'link'}
   <main class="entry"><div class="card"><h1>Link your existing account</h1><p class="muted">Paste the short-lived code from Account connections on the website.</p><label for="telegram-link-code">Link code</label><input id="telegram-link-code" bind:value={linkCode} autocomplete="one-time-code" /><button class="primary" type="button" disabled={!linkCode.trim() || working} onclick={() => void connect(linkCode.trim())}>Link account</button><button class="secondary" type="button" onclick={() => { mode = 'choice'; }}>Back</button></div></main>
 {:else}
-  <main class="entry"><div class="card"><h1>Telegram connection needs a retry</h1><p class="error" role="alert">{errorMessage}</p><button class="primary" type="button" onclick={() => { mode = 'choice'; }}>Try again</button></div></main>
+  <main class="entry"><div class="card"><h1>Telegram connection needs a retry</h1><p class="error" role="alert">{errorMessage}</p><button class="primary" type="button" onclick={() => void connect(webApp?.startParam ?? undefined)}>Try again</button></div></main>
 {/if}
 
 <style>

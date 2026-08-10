@@ -8,23 +8,28 @@
 
   let redirecting = $state(false);
   let telegramEntry = $state(false);
-  let telegramChecked = $state(false);
 
   onMount(() => {
     void (async () => {
-      const { loadTelegramWebApp } = await import('$lib/telegram/webApp');
-      const telegram = await loadTelegramWebApp();
-      telegramEntry = Boolean(telegram?.initData);
-      telegramChecked = true;
-      if (!telegramEntry && readAuthSession()) {
-        redirecting = true;
-        await goto(resolve<'/app/(protected)/dashboard'>('/app/(protected)/dashboard', {}), { replaceState: true });
+      try {
+        const { loadTelegramWebApp } = await import('$lib/telegram/webApp');
+        const telegram = await loadTelegramWebApp();
+        telegramEntry = Boolean(telegram?.initData);
+        if (!telegramEntry && readAuthSession()) {
+          redirecting = true;
+          await goto(resolve<'/app/(protected)/dashboard'>('/app/(protected)/dashboard', {}), { replaceState: true });
+        }
+      } catch {
+        if (readAuthSession()) {
+          redirecting = true;
+          await goto(resolve<'/app/(protected)/dashboard'>('/app/(protected)/dashboard', {}), { replaceState: true });
+        }
       }
     })();
   });
 </script>
 
-{#if !telegramChecked || telegramEntry}
+{#if telegramEntry}
   <TelegramRootEntry enabled={telegramEntry} />
 {:else}
   <PublicLanding {redirecting} />
