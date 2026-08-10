@@ -16,9 +16,12 @@ import java.util.Map;
 import java.util.Optional;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
+import lombok.extern.slf4j.Slf4j;
 
 @ApplicationScoped
+@Slf4j
 public class TelegramInitDataVerifier {
+  private static final int FINGERPRINT_LENGTH = 12;
   @jakarta.inject.Inject
   AuthConfig authConfig;
   @jakarta.inject.Inject
@@ -77,6 +80,8 @@ public class TelegramInitDataVerifier {
     }
     var expected = hmac(hmac(configuredBotToken().orElseThrow(), "WebAppData"), dataCheckString(fields));
     if (!MessageDigest.isEqual(expected, provided)) {
+      log.warn("event=telegram_init_data_rejected reason=invalid_hash botTokenRef={} telegramUserRef={} authDate={}",
+          fingerprint(configuredBotToken().orElseThrow()), fingerprint(fields.get("user")), fields.get("auth_date"));
       throw new BadRequestException("Invalid Telegram hash");
     }
   }
@@ -106,6 +111,15 @@ public class TelegramInitDataVerifier {
 
   private Optional<String> configuredBotToken() {
     return authConfig.telegramBotToken().map(String::trim).filter(token -> !token.isEmpty());
+  }
+
+  private String fingerprint(String value) {
+    try {
+      return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256")
+          .digest(value.getBytes(StandardCharsets.UTF_8))).substring(0, FINGERPRINT_LENGTH);
+    } catch (java.security.NoSuchAlgorithmException ex) {
+      throw new IllegalStateException("Unable to fingerprint Telegram authentication data", ex);
+    }
   }
 
   private byte[] hmac(String key, String value) {

@@ -14,9 +14,12 @@ import java.security.MessageDigest;
 import java.time.Instant;
 import java.util.HexFormat;
 import java.util.UUID;
+import lombok.extern.slf4j.Slf4j;
 
 @ApplicationScoped
+@Slf4j
 public class AccountLinkService {
+  private static final int TOKEN_REFERENCE_LENGTH = 12;
   @jakarta.inject.Inject
   AccountLinkChallengeRepository challengeRepository;
   @jakarta.inject.Inject
@@ -44,6 +47,8 @@ public class AccountLinkService {
     challenge.setStatus("PENDING");
     challenge.setExpiresAt(Instant.now().plusSeconds(600));
     challengeRepository.save(challenge);
+    log.info("event=telegram_link_challenge_started tokenRef={} ownerRef={} expiresAt={}",
+        tokenReference(token), fingerprint(ownerUserId), challenge.getExpiresAt());
     return token;
   }
 
@@ -62,6 +67,8 @@ public class AccountLinkService {
     } else {
       challenge.setStatus("AWAITING_OWNER_CONFIRMATION");
     }
+    log.info("event=telegram_link_challenge_verified tokenRef={} telegramUserRef={} status={} existingIdentity={}",
+        tokenReference(token), fingerprint(Long.toString(telegramUser.id())), challenge.getStatus(), existing != null);
   }
 
   @Transactional
@@ -104,9 +111,10 @@ public class AccountLinkService {
     if (ownerUserId == null || token == null || token.isBlank()) {
       throw new BadRequestException("Invalid account link challenge");
     }
-    var challenge = challengeRepository.findByTokenHash(hash(token));
-    validateOwner(challenge, ownerUserId);
-    ensureUsable(challenge);
+    var tokenHash = hash(token);
+    var challenge = challengeRepository.findByTokenHash(tokenHash);
+    validateOwner(challenge, ownerUserId, tokenHash);
+    ensureUsable(challenge, tokenHash);
     return challenge;
   }
 
@@ -114,24 +122,45 @@ public class AccountLinkService {
     if (token == null || token.isBlank()) {
       throw new BadRequestException("Invalid account link challenge");
     }
-    var challenge = challengeRepository.findByTokenHash(hash(token));
+    var tokenHash = hash(token);
+    var challenge = challengeRepository.findByTokenHash(tokenHash);
     if (challenge == null) {
+      log.warn("event=telegram_link_challenge_rejected reason=not_found tokenRef={}", tokenReferenceFromHash(tokenHash));
       throw new BadRequestException("Invalid or expired account link challenge");
     }
-    ensureUsable(challenge);
+    ensureUsable(challenge, tokenHash);
     return challenge;
   }
 
-  private void validateOwner(AccountLinkChallengeEntity challenge, String ownerUserId) {
+  private void validateOwner(AccountLinkChallengeEntity challenge, String ownerUserId, String tokenHash) {
     if (challenge == null || !ownerUserId.equals(challenge.getOwnerUserId())) {
+      log.warn("event=telegram_link_challenge_rejected reason=owner_mismatch tokenRef={} ownerRef={} storedOwnerRef={}",
+          tokenReferenceFromHash(tokenHash), fingerprint(ownerUserId),
+          challenge == null ? "absent" : fingerprint(challenge.getOwnerUserId()));
       throw new BadRequestException("Invalid or expired account link challenge");
     }
   }
 
-  private void ensureUsable(AccountLinkChallengeEntity challenge) {
-    if (challenge.isExpiredAt(Instant.now()) || "CANCELLED".equals(challenge.getStatus())) {
+  private void ensureUsable(AccountLinkChallengeEntity challenge, String tokenHash) {
+    var expired = challenge.isExpiredAt(Instant.now());
+    if (expired || "CANCELLED".equals(challenge.getStatus())) {
+      log.warn("event=telegram_link_challenge_rejected reason={} tokenRef={} status={} expiresAt={}",
+          expired ? "expired" : "cancelled", tokenReferenceFromHash(tokenHash),
+          challenge.getStatus(), challenge.getExpiresAt());
       throw new BadRequestException("Invalid or expired account link challenge");
     }
+  }
+
+  private String tokenReference(String token) {
+    return tokenReferenceFromHash(hash(token));
+  }
+
+  private String tokenReferenceFromHash(String tokenHash) {
+    return tokenHash.substring(0, TOKEN_REFERENCE_LENGTH);
+  }
+
+  private String fingerprint(String value) {
+    return hash(value).substring(0, TOKEN_REFERENCE_LENGTH);
   }
 
   private String hash(String value) {
