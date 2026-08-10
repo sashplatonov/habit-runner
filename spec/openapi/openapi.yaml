@@ -542,6 +542,27 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+  /auth/google/link/start:
+    get:
+      summary: Start Google account linking
+      description: Starts Google OAuth to attach a Google email to the authenticated
+        account.
+      tags:
+      - Authentication
+      parameters:
+      - name: returnTo
+        in: query
+        schema:
+          type: string
+      responses:
+        "302":
+          description: OAuth redirect initiated
+        "403":
+          description: Authentication required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
   /auth/google/start:
     get:
       summary: Start Google OAuth
@@ -608,6 +629,17 @@ paths:
         "400":
           description: Bad Request
       summary: Confirm Telegram Link
+      tags:
+      - Account Link Resource
+  /auth/link/telegram/connection:
+    get:
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: {}
+      summary: Telegram Connection
       tags:
       - Account Link Resource
   /auth/link/telegram/start:
