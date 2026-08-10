@@ -27,6 +27,18 @@ class TelegramInitDataVerifierTest {
   }
 
   @Test
+  void ignoresAccidentalWhitespaceAroundTheConfiguredBotToken() throws Exception {
+    var verifier = new TelegramInitDataVerifier(TestConfigFactory.telegramAuthConfig("  bot-token\n"), new ObjectMapper());
+    var data = "auth_date=" + Instant.now().getEpochSecond()
+        + "&user=%7B%22id%22%3A42%7D";
+    var secret = hmac("bot-token".getBytes(StandardCharsets.UTF_8), "WebAppData");
+    var hash = hmac(secret, "auth_date=" + data.substring(10, data.indexOf("&user="))
+        + "\nuser={\"id\":42}");
+
+    assertEquals(42L, verifier.verify(data + "&hash=" + HexFormat.of().formatHex(hash)).id());
+  }
+
+  @Test
   void rejectsTamperedSignature() {
     var verifier = new TelegramInitDataVerifier(TestConfigFactory.telegramAuthConfig("bot-token"), new ObjectMapper());
     assertThrows(BadRequestException.class, () -> verifier.verify(

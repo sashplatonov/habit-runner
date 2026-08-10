@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HexFormat;
 import java.util.Map;
+import java.util.Optional;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 
@@ -43,7 +44,7 @@ public class TelegramInitDataVerifier {
   }
 
   private void validateConfigured(String rawInitData) {
-    if (rawInitData == null || rawInitData.isBlank() || authConfig.telegramBotToken().isEmpty()) {
+    if (rawInitData == null || rawInitData.isBlank() || configuredBotToken().isEmpty()) {
       throw new BadRequestException("Telegram authentication is not configured");
     }
   }
@@ -74,7 +75,7 @@ public class TelegramInitDataVerifier {
     } catch (IllegalArgumentException ex) {
       throw new BadRequestException("Invalid Telegram hash", ex);
     }
-    var expected = hmac(hmac(authConfig.telegramBotToken().orElseThrow(), "WebAppData"), dataCheckString(fields));
+    var expected = hmac(hmac(configuredBotToken().orElseThrow(), "WebAppData"), dataCheckString(fields));
     if (!MessageDigest.isEqual(expected, provided)) {
       throw new BadRequestException("Invalid Telegram hash");
     }
@@ -101,6 +102,10 @@ public class TelegramInitDataVerifier {
 
   private String decode(String value) {
     return URLDecoder.decode(value, StandardCharsets.UTF_8);
+  }
+
+  private Optional<String> configuredBotToken() {
+    return authConfig.telegramBotToken().map(String::trim).filter(token -> !token.isEmpty());
   }
 
   private byte[] hmac(String key, String value) {
