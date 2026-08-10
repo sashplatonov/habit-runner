@@ -29,6 +29,7 @@ export function cancelTelegramLink(token: string): Promise<void> {
 }
 
 export function telegramMiniAppUrl(token: string): string {
-  const base = import.meta.env.VITE_TELEGRAM_MINI_APP_URL as string | undefined;
-  return `${base ?? '/telegram'}${base?.includes('?') ? '&' : '?'}startapp=${encodeURIComponent(token)}`;
+  const configuredUrl = import.meta.env.VITE_TELEGRAM_MINI_APP_URL as string | undefined;
+  const base = configuredUrl?.trim().replace(/\/telegram\/?(?=(?:\?|$))/, '/') || '/';
+  return `${base}${base.includes('?') ? '&' : '?'}startapp=${encodeURIComponent(token)}`;
 }
