@@ -55,7 +55,8 @@ function loadTelegramSdk(): Promise<void> {
         return;
       }
       if (state === 'failed') {
-        reject(new Error('Telegram SDK failed to load'));
+        existing.remove();
+        loadTelegramSdk().then(resolve, reject);
         return;
       }
       existing.addEventListener('load', () => resolve(), { once: true });

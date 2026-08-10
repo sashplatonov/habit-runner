@@ -7,19 +7,26 @@
 
   type Props = { enabled: boolean };
   let { enabled }: Props = $props();
-  let webApp = $state<TelegramWebAppAdapter | null>(null);
   let mode = $state<'loading' | 'choice' | 'error'>('loading');
   let errorMessage = $state('');
   let working = $state(false);
 
+  async function requireTelegramWebApp(): Promise<TelegramWebAppAdapter> {
+    const loaded = await loadTelegramWebApp();
+    if (!loaded?.initData) {
+      throw new Error('Open this page inside the official Telegram app.');
+    }
+    return loaded;
+  }
+
   async function connect() {
-    if (!webApp) return;
     working = true;
     mode = 'loading';
     errorMessage = '';
     try {
+      const loaded = await requireTelegramWebApp();
       await authenticateTelegramMiniApp();
-      await completeTelegramPairing(webApp);
+      await completeTelegramPairing(loaded);
       await goto(resolve('/app/(protected)/dashboard', {}), { replaceState: true });
     } catch (cause) {
       mode = 'error';
@@ -30,11 +37,11 @@
   }
 
   async function connectGoogleAccount() {
-    if (!webApp) return;
     working = true;
     mode = 'loading';
     errorMessage = '';
     try {
+      await requireTelegramWebApp();
       await authenticateTelegramMiniApp();
       window.location.assign('/api/auth/google/link/start?returnTo=%2Fapp%2Faccount');
     } catch (cause) {
@@ -47,7 +54,6 @@
   onMount(() => {
     if (!enabled) return;
     void loadTelegramWebApp().then((loaded) => {
-      webApp = loaded;
       if (!loaded?.initData) {
         mode = 'error';
         errorMessage = 'Open this page inside the official Telegram app.';

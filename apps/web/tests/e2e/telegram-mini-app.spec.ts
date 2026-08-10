@@ -24,11 +24,27 @@ test('Telegram launch intent never falls back to Google sign-in', async ({ page 
 });
 
 test('Telegram launch shows a retry action when the SDK cannot load', async ({ page }) => {
-  await page.route('**/telegram-web-app.js*', (route) => route.abort());
+  let sdkRequests = 0;
+  await page.route('**/telegram-web-app.js*', (route) => {
+    sdkRequests += 1;
+    if (sdkRequests === 1) {
+      return route.abort();
+    }
+    return route.fulfill({
+      contentType: 'application/javascript',
+      body: `window.Telegram = { WebApp: { initData: 'signed-telegram-init-data', startParam: null, themeParams: {}, ready() {}, expand() {}, close() {} } };`
+    });
+  });
+  await page.route('**/api/auth/telegram/session', (route) => route.fulfill({
+    contentType: 'application/json',
+    body: JSON.stringify({ userId: 'telegram-user', email: null })
+  }));
 
   await page.goto('/?startapp=pairing-token');
   await expect(page.getByRole('heading', { name: 'Telegram connection needs a retry' })).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Try again' })).toBeVisible();
+  await page.getByRole('button', { name: 'Try again' }).click();
+  await expect.poll(() => sdkRequests).toBe(2);
+  await expect(page).toHaveURL(/\/app\/dashboard$/);
 });
 
 test('root authenticates a Telegram Mini App user without showing Google sign-in', async ({ page }) => {
