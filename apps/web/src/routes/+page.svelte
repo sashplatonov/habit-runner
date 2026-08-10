@@ -9,8 +9,20 @@
   let redirecting = $state(false);
   let telegramEntry = $state(false);
 
+  function isTelegramContainer(): boolean {
+    return Boolean(window.Telegram?.WebApp)
+      || /Telegram/i.test(window.navigator.userAgent);
+  }
+
   onMount(() => {
     void (async () => {
+      if (!isTelegramContainer()) {
+        if (readAuthSession()) {
+          redirecting = true;
+          await goto(resolve<'/app/(protected)/dashboard'>('/app/(protected)/dashboard', {}), { replaceState: true });
+        }
+        return;
+      }
       try {
         const { loadTelegramWebApp } = await import('$lib/telegram/webApp');
         const telegram = await loadTelegramWebApp();
