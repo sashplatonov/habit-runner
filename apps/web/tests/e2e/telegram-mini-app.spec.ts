@@ -5,6 +5,13 @@ test('website root keeps the public landing available while Telegram SDK is abse
   await expect(page.getByRole('heading', { name: 'Habit tracking that keeps the next step obvious.' })).toBeVisible();
 });
 
+test('website root has no horizontal overflow at 320px', async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 800 });
+  await page.goto('/');
+
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+});
+
 test('root authenticates a Telegram Mini App user without showing Google sign-in', async ({ page }) => {
   await page.addInitScript(() => {
     window.Telegram = {
