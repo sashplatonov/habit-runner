@@ -55,18 +55,18 @@ describe('Telegram Mini App session', () => {
     }));
   });
 
-  it('accepts a manually entered pairing token when Telegram has no start parameter', async () => {
-    const webApp = window.Telegram?.WebApp;
-    if (!webApp) {
-      throw new Error('Telegram Web App test adapter is missing');
-    }
-    const fetchMock = vi.fn().mockResolvedValue(new Response(null, { status: 204 }));
+  it('explains when the API has no Telegram bot token configured', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify({
+      type: 'https://habbit-runner.dev/errors/bad-request',
+      title: 'Bad Request',
+      status: 400,
+      detail: 'Telegram authentication is not configured',
+      errorCode: 'BAD_REQUEST'
+    }), { status: 400, headers: { 'Content-Type': 'application/json' } }));
     vi.stubGlobal('fetch', fetchMock);
 
-    await completeTelegramPairing(webApp, 'manual-pairing-token');
-
-    expect(fetchMock).toHaveBeenCalledWith('/api/auth/link/telegram/complete', expect.objectContaining({
-      body: JSON.stringify({ token: 'manual-pairing-token', initData: 'signed-init-data' })
-    }));
+    await expect(authenticateTelegramMiniApp()).rejects.toThrow(
+      'Telegram sign-in is not configured for this environment.'
+    );
   });
 });

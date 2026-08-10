@@ -19,6 +19,10 @@
   }
 
   async function createLink() {
+    if (!telegramMiniAppUrl('')) {
+      error = 'Telegram launch is not configured for this environment.';
+      return;
+    }
     working = true; error = '';
     try { const result = await startTelegramLink(); token = result.token; linkUrl = telegramMiniAppUrl(token); status = 'PENDING'; }
     catch (cause) { error = cause instanceof Error ? cause.message : 'Unable to create a Telegram link.'; }
@@ -39,16 +43,6 @@
     try { await confirmTelegramLink(token); status = 'COMPLETED'; }
     catch (cause) { error = cause instanceof Error ? cause.message : 'Unable to confirm the link.'; }
     finally { working = false; }
-  }
-
-  async function copyLinkCode() {
-    if (!token) return;
-    try {
-      await navigator.clipboard.writeText(token);
-      error = '';
-    } catch {
-      error = 'Unable to copy the link code. Select and copy it manually.';
-    }
   }
 
   onMount(() => {
@@ -79,7 +73,7 @@
   {#if error}<p class="error" role="alert">{error}</p>{/if}
   {#if loading}<p aria-live="polite">Loading connection status…</p>
   {:else if status === 'PENDING' || status === 'AWAITING_OWNER_CONFIRMATION'}
-    <div class="pending" role="status"><strong>{status === 'PENDING' ? 'Open Telegram to continue' : 'Telegram identity verified'}</strong><p>{status === 'PENDING' ? 'Open the Telegram Mini App, then return here to confirm.' : 'Confirming will merge only after your explicit approval.'}</p>{#if linkUrl}<button class="button primary" type="button" onclick={() => window.location.assign(linkUrl ?? '')}>Open Telegram</button>{:else if token}<label class="link-code" for="telegram-link-code">Telegram link code<input id="telegram-link-code" readonly value={token} /></label><p class="hint">Set VITE_TELEGRAM_BOT_USERNAME to open Telegram directly, or paste this code in the Mini App.</p><button class="button" type="button" onclick={() => void copyLinkCode()}>Copy link code</button>{/if}{#if status === 'AWAITING_OWNER_CONFIRMATION'}<button class="button primary" type="button" disabled={working} onclick={() => void confirm()}>Confirm Telegram account</button>{/if}<button class="button" type="button" disabled={working} onclick={() => void cancel()}>Cancel link</button></div>
+    <div class="pending" role="status"><strong>{status === 'PENDING' ? 'Open Telegram to continue' : 'Telegram identity verified'}</strong><p>{status === 'PENDING' ? 'Open the Telegram Mini App, then return here to confirm.' : 'Confirming will merge only after your explicit approval.'}</p>{#if linkUrl}<button class="button primary" type="button" onclick={() => window.location.assign(linkUrl ?? '')}>Open Telegram</button>{/if}{#if status === 'AWAITING_OWNER_CONFIRMATION'}<button class="button primary" type="button" disabled={working} onclick={() => void confirm()}>Confirm Telegram account</button>{/if}<button class="button" type="button" disabled={working} onclick={() => void cancel()}>Cancel link</button></div>
   {:else if status === 'COMPLETED'}<p class="success" role="status">Telegram is linked. Your data is shared across both apps.</p>
   {:else}<button class="button primary" type="button" disabled={working} onclick={() => void createLink()}>Link Telegram account</button>{/if}
 </section>
@@ -95,8 +89,5 @@
   .pending { display: grid; justify-content: stretch; }
   .button { min-height: 44px; border: 1px solid var(--color-border, #cbd5e1); border-radius: .8rem; padding: 0 1rem; cursor: pointer; }
   .primary { background: var(--color-progress, #15803d); color: white; text-align: center; display: inline-flex; align-items: center; justify-content: center; text-decoration: none; }
-  .link-code { display: grid; gap: .4rem; font-weight: 600; }
-  .link-code input { min-height: 44px; width: 100%; border: 1px solid var(--color-border, #cbd5e1); border-radius: .5rem; padding: 0 .75rem; font: .85rem monospace; }
-  .hint { margin: 0; font-size: .875rem; }
   .error { color: #b91c1c; } .success { color: #15803d; }
 </style>

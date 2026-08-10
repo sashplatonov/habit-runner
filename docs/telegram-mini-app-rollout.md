@@ -17,6 +17,18 @@ the static frontend URL as public configuration.
    control. The manual test account must be able to launch the webview and
    complete both email→Telegram and Telegram→email linking flows.
 
+## Account-linking flows
+
+There are two supported flows. Do not ask users to paste pairing codes into
+the Mini App.
+
+1. **Website → Telegram:** an authenticated Google/email user starts a link
+   from Account connections. The `t.me` deep link opens the Mini App, which
+   verifies Telegram and waits for the website owner to confirm the merge.
+2. **Telegram → Google:** a Mini App user chooses **Sign in with Google**.
+   Telegram authentication runs first, then Google OAuth merges the selected
+   Google/email account into that Telegram account.
+
 ## Provision and rotate secrets
 
 Set these variables in the backend runtime environment (Dokploy/CI secret
