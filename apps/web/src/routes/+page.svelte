@@ -14,19 +14,28 @@
       || /Telegram/i.test(window.navigator.userAgent);
   }
 
+  function hasTelegramLaunchIntent(): boolean {
+    const search = new URLSearchParams(window.location.search);
+    const hash = new URLSearchParams(window.location.hash.replace(/^#/, ''));
+    return ['startapp', 'tgWebAppStartParam', 'tgWebAppData', 'tgWebAppVersion', 'tgWebAppPlatform']
+      .some((key) => search.has(key) || hash.has(key));
+  }
+
   onMount(() => {
     void (async () => {
-      if (!isTelegramContainer()) {
+      const telegramLaunch = isTelegramContainer() || hasTelegramLaunchIntent();
+      if (!telegramLaunch) {
         if (readAuthSession()) {
           redirecting = true;
           await goto(resolve<'/app/(protected)/dashboard'>('/app/(protected)/dashboard', {}), { replaceState: true });
         }
         return;
       }
+      telegramEntry = true;
       try {
         const { loadTelegramWebApp } = await import('$lib/telegram/webApp');
         const telegram = await loadTelegramWebApp();
-        telegramEntry = Boolean(telegram?.initData);
+        telegramEntry = telegramLaunch || Boolean(telegram?.initData);
         if (!telegramEntry && readAuthSession()) {
           redirecting = true;
           await goto(resolve<'/app/(protected)/dashboard'>('/app/(protected)/dashboard', {}), { replaceState: true });

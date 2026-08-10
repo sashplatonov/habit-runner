@@ -12,6 +12,17 @@ test('website root has no horizontal overflow at 320px', async ({ page }) => {
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
 });
 
+test('Telegram launch intent never falls back to Google sign-in', async ({ page }) => {
+  await page.route('**/telegram-web-app.js*', (route) => route.fulfill({
+    contentType: 'application/javascript',
+    body: `window.Telegram = { WebApp: { initData: '', startParam: 'pairing-token', themeParams: {}, ready() {}, expand() {}, close() {} } };`
+  }));
+
+  await page.goto('/?startapp=pairing-token');
+  await expect(page.getByRole('heading', { name: 'Telegram connection needs a retry' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Sign in with Google' })).not.toBeVisible();
+});
+
 test('root authenticates a Telegram Mini App user without showing Google sign-in', async ({ page }) => {
   await page.addInitScript(() => {
     window.Telegram = {
