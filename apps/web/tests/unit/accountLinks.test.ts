@@ -1,12 +1,20 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { telegramMiniAppUrl } from '$lib/api/accountLinks';
 
 describe('account links', () => {
-  it('builds a pairing URL without persisting the token', () => {
-    expect(telegramMiniAppUrl('secret-token')).toContain('startapp=secret-token');
+  afterEach(() => {
+    vi.unstubAllEnvs();
   });
 
-  it('uses the website root when no Mini App URL is configured', () => {
-    expect(telegramMiniAppUrl('pairing-token')).toBe('/?startapp=pairing-token');
+  it('builds a Telegram deep link for the configured bot', () => {
+    vi.stubEnv('VITE_TELEGRAM_BOT_USERNAME', '@HabbitRunnerBot');
+
+    expect(telegramMiniAppUrl('pairing-token')).toBe('https://t.me/HabbitRunnerBot?startapp=pairing-token');
+  });
+
+  it('requires a configured Telegram bot username instead of opening the website outside Telegram', () => {
+    vi.stubEnv('VITE_TELEGRAM_BOT_USERNAME', '');
+
+    expect(telegramMiniAppUrl('pairing-token')).toBeNull();
   });
 });

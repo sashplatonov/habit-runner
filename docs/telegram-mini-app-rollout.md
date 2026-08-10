@@ -9,9 +9,10 @@ the static frontend URL as public configuration.
 1. Create a dedicated test bot and a production bot in [@BotFather](https://t.me/BotFather).
 2. Configure each bot's Main Mini App URL to its own deployed HTTPS origin.
    Do not point a production bot at localhost or staging.
-3. Use deep links such as
-   `https://t.me/<bot_username>?startapp=<payload>` only for non-secret routing
-   context. Never place a bot token in a payload or URL.
+3. Configure the web build with the public `VITE_TELEGRAM_BOT_USERNAME`. The
+   account page uses `https://t.me/<bot_username>?startapp=<pairing-code>` to
+   open this bot's Mini App. The pairing code is short-lived and requires the
+   account owner's explicit confirmation; never place the bot token in a URL.
 4. Record the bot username and URL in the deployment system, not in source
    control. The manual test account must be able to launch the webview and
    complete both email→Telegram and Telegram→email linking flows.
@@ -23,7 +24,8 @@ store or a local ignored `.env` file):
 
 - `TELEGRAM_BOT_TOKEN` — required for production readiness and HMAC verification.
 - `TELEGRAM_INIT_DATA_MAX_AGE_SECONDS` — optional freshness bound; default `86400`.
-- `VITE_TELEGRAM_MINI_APP_URL` — public build-time URL; safe for the web image.
+- `VITE_TELEGRAM_BOT_USERNAME` — public build-time bot username used for
+  website-to-Telegram deep links.
 
 The token must never be a `VITE_*` variable, checked into Git, or printed in
 logs. To rotate it, create a replacement token in BotFather, update the backend
@@ -61,7 +63,9 @@ and link records intact so a later recovery does not create duplicate accounts.
 ## Change record
 
 - **Change:** document and configure Telegram Mini App authentication and
-  bidirectional email linking.
+  bidirectional email linking. Website-origin links now use the bot's `t.me`
+  deep link so they open inside Telegram; BotFather still points the Mini App
+  itself at the website root.
 - **Risk:** an exposed or stale bot token could permit forged init data; an
   incorrect HTTPS URL prevents the webview from launching.
 - **Mitigation:** backend-only secret, bounded init-data age, readiness checks,

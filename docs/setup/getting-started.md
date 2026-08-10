@@ -257,12 +257,14 @@ Use matching origins:
    Never put it in `VITE_*`, the static web image, source control, logs, or a
    client request. Set `TELEGRAM_INIT_DATA_MAX_AGE_SECONDS` to the freshness
    bound accepted by the deployment (the default is 86400 seconds).
-4. Set the public `VITE_TELEGRAM_MINI_APP_URL` build variable to the same HTTPS
-   URL when the web UI should render a launch/link entry point. This value is
-   public and contains no credential.
+4. Set the public `VITE_TELEGRAM_BOT_USERNAME` build variable to the bot
+   username (without a required `@`). The account page uses it to open a
+   `t.me` deep link; the Main Mini App URL itself remains the deployed HTTPS
+   website root configured in BotFather.
 
-Telegram deep links may use `https://t.me/<bot_username>?startapp=<payload>`;
-the payload is non-secret routing context and must not contain the bot token.
+Telegram deep links use `https://t.me/<bot_username>?startapp=<pairing-code>`
+for short-lived account-link challenges. The account owner must still confirm
+the link, and the payload must never contain the bot token.
 After changing BotFather settings or runtime secrets, restart the backend and
 check `/api/q/health/ready` before manual testing.
 
@@ -298,7 +300,7 @@ check `/api/q/health/ready` before manual testing.
 | `GOOGLE_OAUTH_CLIENT_SECRET` | Optional | Needed for real Google sign-in; required for production startup and readiness |
 | `TELEGRAM_BOT_TOKEN` | Optional locally; required in production | Backend-only bot token used to verify Telegram Mini App init data |
 | `TELEGRAM_INIT_DATA_MAX_AGE_SECONDS` | No | Maximum Telegram init-data age; defaults to `86400` seconds |
-| `VITE_TELEGRAM_MINI_APP_URL` | No | Public HTTPS Main Mini App URL exposed to the static frontend |
+| `VITE_TELEGRAM_BOT_USERNAME` | No | Public bot username for website-to-Telegram Mini App deep links |
 | `VAPID_PUBLIC_KEY` | Optional | Browser push public key |
 | `VAPID_PRIVATE_KEY` | Optional | Browser push private key |
 | `VAPID_SUBJECT` | Optional | Web Push contact |

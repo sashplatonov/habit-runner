@@ -28,8 +28,11 @@ export function cancelTelegramLink(token: string): Promise<void> {
   return request(`/auth/link/telegram?token=${encodeURIComponent(token)}`, { method: 'DELETE' });
 }
 
-export function telegramMiniAppUrl(token: string): string {
-  const configuredUrl = import.meta.env.VITE_TELEGRAM_MINI_APP_URL as string | undefined;
-  const base = configuredUrl?.trim() || '/';
-  return `${base}${base.includes('?') ? '&' : '?'}startapp=${encodeURIComponent(token)}`;
+export function telegramMiniAppUrl(token: string): string | null {
+  const configuredUsername = import.meta.env.VITE_TELEGRAM_BOT_USERNAME as string | undefined;
+  const username = configuredUsername?.trim().replace(/^@/, '');
+  if (!username || !/^[A-Za-z][A-Za-z0-9_]{4,31}$/.test(username)) {
+    return null;
+  }
+  return `https://t.me/${username}?startapp=${encodeURIComponent(token)}`;
 }
