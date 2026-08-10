@@ -21,13 +21,43 @@ declare global {
 
 const SCRIPT_ID = 'telegram-web-app-sdk';
 const SCRIPT_URL = 'https://telegram.org/js/telegram-web-app.js?57';
+const SCRIPT_STATE_ATTRIBUTE = 'data-telegram-sdk-state';
+
+let sdkLoad: Promise<void> | null = null;
 
 export async function loadTelegramWebApp(): Promise<TelegramWebAppAdapter | null> {
   if (!browser) { return null; }
   if (window.Telegram?.WebApp) { return window.Telegram.WebApp; }
-  await new Promise<void>((resolve, reject) => {
+
+  if (!sdkLoad) {
+    sdkLoad = loadTelegramSdk().catch((cause: unknown) => {
+      sdkLoad = null;
+      throw cause;
+    });
+  }
+  await sdkLoad;
+
+  const webApp = window.Telegram?.WebApp;
+  if (!webApp) { return null; }
+  webApp.ready();
+  webApp.expand();
+  applySafeArea(webApp);
+  return webApp;
+}
+
+function loadTelegramSdk(): Promise<void> {
+  return new Promise<void>((resolve, reject) => {
     const existing = document.getElementById(SCRIPT_ID);
     if (existing) {
+      const state = existing.getAttribute(SCRIPT_STATE_ATTRIBUTE);
+      if (state === 'loaded') {
+        resolve();
+        return;
+      }
+      if (state === 'failed') {
+        reject(new Error('Telegram SDK failed to load'));
+        return;
+      }
       existing.addEventListener('load', () => resolve(), { once: true });
       existing.addEventListener('error', () => reject(new Error('Telegram SDK failed to load')), { once: true });
       return;
@@ -36,16 +66,17 @@ export async function loadTelegramWebApp(): Promise<TelegramWebAppAdapter | null
     script.id = SCRIPT_ID;
     script.src = SCRIPT_URL;
     script.async = true;
-    script.onload = () => resolve();
-    script.onerror = () => reject(new Error('Telegram SDK failed to load'));
+    script.setAttribute(SCRIPT_STATE_ATTRIBUTE, 'loading');
+    script.onload = () => {
+      script.setAttribute(SCRIPT_STATE_ATTRIBUTE, 'loaded');
+      resolve();
+    };
+    script.onerror = () => {
+      script.setAttribute(SCRIPT_STATE_ATTRIBUTE, 'failed');
+      reject(new Error('Telegram SDK failed to load'));
+    };
     document.head.appendChild(script);
   });
-  const webApp = window.Telegram?.WebApp;
-  if (!webApp) { return null; }
-  webApp.ready();
-  webApp.expand();
-  applySafeArea(webApp);
-  return webApp;
 }
 
 function applySafeArea(webApp: TelegramWebAppAdapter): void {
