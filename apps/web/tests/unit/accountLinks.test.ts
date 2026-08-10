@@ -8,6 +8,7 @@ vi.mock('$lib/auth/session', () => ({
 }));
 
 import { startTelegramLink, telegramMiniAppUrl } from '$lib/api/accountLinks';
+import type { AccountLinkRequestError } from '$lib/api/accountLinks';
 
 describe('account links', () => {
   afterEach(() => {
@@ -35,8 +36,10 @@ describe('account links', () => {
       headers: { 'X-Trace-Id': 'trace-123' }
     }));
 
-    await expect(startTelegramLink()).rejects.toThrow(
-      'Account linking is temporarily unavailable (reference: trace-123)'
-    );
+    await expect(startTelegramLink()).rejects.toMatchObject({
+      message: 'Account linking is temporarily unavailable (reference: trace-123)',
+      name: 'AccountLinkRequestError',
+      status: 400
+    } satisfies Partial<AccountLinkRequestError>);
   });
 });

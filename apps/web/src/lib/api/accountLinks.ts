@@ -2,6 +2,13 @@ import { authenticatedFetch } from '@/lib/auth/session';
 
 export type AccountLinkStatus = 'PENDING' | 'AWAITING_OWNER_CONFIRMATION' | 'COMPLETED' | 'CANCELLED' | 'EXPIRED';
 
+export class AccountLinkRequestError extends Error {
+  constructor(message: string, readonly status: number) {
+    super(message);
+    this.name = 'AccountLinkRequestError';
+  }
+}
+
 async function errorMessage(response: Response): Promise<string> {
   let detail: string | null = null;
   try {
@@ -17,7 +24,7 @@ async function errorMessage(response: Response): Promise<string> {
 
 async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
   const response = await authenticatedFetch(`/api${path}`, init);
-  if (!response.ok) { throw new Error(await errorMessage(response)); }
+  if (!response.ok) { throw new AccountLinkRequestError(await errorMessage(response), response.status); }
   if (response.status === 204) { return undefined as T; }
   return await response.json() as T;
 }

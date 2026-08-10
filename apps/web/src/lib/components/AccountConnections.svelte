@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { cancelTelegramLink, confirmTelegramLink, getTelegramConnection, getTelegramLinkStatus, startTelegramLink, telegramMiniAppUrl, type AccountLinkStatus } from '@/lib/api/accountLinks';
+  import { AccountLinkRequestError, cancelTelegramLink, confirmTelegramLink, getTelegramConnection, getTelegramLinkStatus, startTelegramLink, telegramMiniAppUrl, type AccountLinkStatus } from '@/lib/api/accountLinks';
   import { ensureAuthSession, readAuthSession } from '@/lib/auth/session';
   import { clearPendingTelegramLink, readPendingTelegramLink, savePendingTelegramLink } from '@/lib/telegram/pendingLink';
 
@@ -11,6 +11,12 @@
   let working = $state(false);
   let error = $state('');
   let email = $state<string | undefined>(undefined);
+
+  function isExpiredChallenge(cause: unknown): boolean {
+    return cause instanceof AccountLinkRequestError
+      && cause.status === 400
+      && cause.message.startsWith('Invalid or expired account link challenge');
+  }
 
   async function refresh() {
     try {
@@ -26,7 +32,17 @@
       }
       error = '';
     }
-    catch (cause) { error = cause instanceof Error ? cause.message : 'Unable to load link status.'; }
+    catch (cause) {
+      if (token && isExpiredChallenge(cause)) {
+        clearPendingTelegramLink();
+        token = null;
+        linkUrl = null;
+        status = null;
+        error = 'Your previous Telegram link expired. Create a new link to continue.';
+      } else {
+        error = cause instanceof Error ? cause.message : 'Unable to load link status.';
+      }
+    }
     finally { loading = false; }
   }
 
