@@ -2,9 +2,22 @@ import { authenticatedFetch } from '@/lib/auth/session';
 
 export type AccountLinkStatus = 'PENDING' | 'AWAITING_OWNER_CONFIRMATION' | 'COMPLETED' | 'CANCELLED' | 'EXPIRED';
 
+async function errorMessage(response: Response): Promise<string> {
+  let detail: string | null = null;
+  try {
+    const payload = await response.json() as { detail?: unknown };
+    detail = typeof payload.detail === 'string' && payload.detail.trim() ? payload.detail.trim() : null;
+  } catch {
+    detail = null;
+  }
+  const traceId = response.headers.get('X-Trace-Id');
+  const message = detail ?? `Request failed with status ${response.status}`;
+  return traceId ? `${message} (reference: ${traceId})` : message;
+}
+
 async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
   const response = await authenticatedFetch(`/api${path}`, init);
-  if (!response.ok) { throw new Error(`Account linking request failed: ${response.status}`); }
+  if (!response.ok) { throw new Error(await errorMessage(response)); }
   if (response.status === 204) { return undefined as T; }
   return await response.json() as T;
 }
