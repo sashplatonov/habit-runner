@@ -26,5 +26,5 @@ import com.sashplatonov.habbit.runner.auth.support.OAuthSupport;
 import com.sashplatonov.habbit.runner.auth.support.ThemeCatalog;
 import java.time.Instant;
 
-record StoredState(String state, String returnTo, Instant expiresAt) {
+record StoredState(String state, String returnTo, Instant expiresAt, String linkUserId) {
 }

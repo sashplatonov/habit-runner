@@ -75,6 +75,20 @@ class AuthResourceUnitTest {
     assertEquals("refresh-1", authService.getRevokedToken());
   }
 
+  @Test
+  void shouldStartGoogleLinkForAuthenticatedUser() {
+    var authService = new ResourceAuthService();
+    authService.setGoogleLinkStartRedirect("https://accounts.example.test/link");
+    var context = new CurrentUserContext();
+    context.setUser(new CurrentUser("telegram-user", null));
+    var resource = resource(authService, new ResourcePreferencesService(), context);
+
+    var response = resource.startGoogleLink("/app/account");
+
+    assertRedirect(response, "https://accounts.example.test/link");
+    assertEquals("/app/account", authService.getLastReturnTo());
+  }
+
 
   private AuthResource resource(
       ResourceAuthService authService,

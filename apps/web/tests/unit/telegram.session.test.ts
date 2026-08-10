@@ -54,4 +54,19 @@ describe('Telegram Mini App session', () => {
       credentials: 'include'
     }));
   });
+
+  it('accepts a manually entered pairing token when Telegram has no start parameter', async () => {
+    const webApp = window.Telegram?.WebApp;
+    if (!webApp) {
+      throw new Error('Telegram Web App test adapter is missing');
+    }
+    const fetchMock = vi.fn().mockResolvedValue(new Response(null, { status: 204 }));
+    vi.stubGlobal('fetch', fetchMock);
+
+    await completeTelegramPairing(webApp, 'manual-pairing-token');
+
+    expect(fetchMock).toHaveBeenCalledWith('/api/auth/link/telegram/complete', expect.objectContaining({
+      body: JSON.stringify({ token: 'manual-pairing-token', initData: 'signed-init-data' })
+    }));
+  });
 });

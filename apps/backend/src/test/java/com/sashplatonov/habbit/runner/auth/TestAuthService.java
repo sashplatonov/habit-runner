@@ -27,6 +27,7 @@ import com.sashplatonov.habbit.runner.model.UserEntity;
 import com.sashplatonov.habbit.runner.support.TestConfigFactory;
 
 import java.time.Instant;
+import java.lang.reflect.Field;
 
 final class TestAuthService extends AuthService {
   private final TestOAuthStateAccess oauthStateAccess;
@@ -64,6 +65,16 @@ final class TestAuthService extends AuthService {
 
   void setCurrentTime(Instant currentTime) {
     this.currentTime = currentTime;
+  }
+
+  void setAccountLinkService(RecordingOAuthAccountLinkService linkService) {
+    try {
+      Field field = AuthService.class.getDeclaredField("oauthAccountLinkService");
+      field.setAccessible(true);
+      field.set(this, linkService);
+    } catch (ReflectiveOperationException exception) {
+      throw new AssertionError(exception);
+    }
   }
 
   @Override

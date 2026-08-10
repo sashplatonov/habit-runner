@@ -32,6 +32,9 @@ public class AuthService {
   protected final OAuthStateAccess oauthStateAccess;
   protected final AuthServiceSupport authServiceSupport;
 
+  @Inject
+  OAuthAccountLinkService oauthAccountLinkService;
+
   protected AuthService(AuthConfig authConfig, AuthCollaborators collaborators) {
     this(authConfig, collaborators, null, (AuthServiceSupport) null);
   }
@@ -111,10 +114,23 @@ public class AuthService {
 
   @Transactional
   public String createOAuthAuthorizationUrl(String returnTo) {
+    return createOAuthAuthorizationUrl(returnTo, null);
+  }
+
+  @Transactional
+  public String createGoogleLinkAuthorizationUrl(String ownerUserId, String returnTo) {
+    if (ownerUserId == null || ownerUserId.isBlank()) {
+      throw new NotAuthorizedException("Authentication required");
+    }
+    return createOAuthAuthorizationUrl(returnTo, ownerUserId);
+  }
+
+  private String createOAuthAuthorizationUrl(String returnTo, String linkUserId) {
     var state = AuthSupport.randomToken(16);
     var payload = new OAuthStateEntity();
     payload.state = state;
     payload.returnTo = collaborators.normalizeReturnTo(returnTo);
+    payload.setLinkUserId(linkUserId);
     payload.setExpiry(now().plusSeconds(600));
     oauthStateAccess.save(payload);
     return collaborators.buildAuthorizationUrl(state);
@@ -145,7 +161,10 @@ public class AuthService {
           Duration.ofMinutes(10)
       );
     }
-    var user = collaborators.findOrCreateUser(email);
+    var googleUser = collaborators.findOrCreateUser(email);
+    var user = oauthAccountLinkService == null
+        ? googleUser
+        : oauthAccountLinkService.resolve(googleUser, email, stateEntity.linkUserId());
     var session = collaborators.issueTokenPair(user, authConfig.accessTokenTtlSeconds(), authConfig.refreshTokenDays());
     log.info(
         "OAuth login succeeded: userId={}, provider=google, traceId={}",

@@ -72,6 +72,23 @@ public class AuthResource {
     return ApiResponses.redirect(redirect);
   }
 
+  @RequireAuth
+  @GET
+  @Path("/google/link/start")
+  @Operation(summary = "Start Google account linking",
+      description = "Starts Google OAuth to attach a Google email to the authenticated account.")
+  @APIResponses({
+      @APIResponse(responseCode = "302", description = "OAuth redirect initiated"),
+      @APIResponse(responseCode = "403", description = "Authentication required",
+          content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+  })
+  public Response startGoogleLink(@QueryParam("returnTo") String returnTo) {
+    enforceIpLimit("auth:google:link:start", 30, 60L);
+    var owner = currentUserContext.requireUser();
+    var redirect = authService.createGoogleLinkAuthorizationUrl(owner.id(), returnTo);
+    return ApiResponses.redirect(redirect);
+  }
+
   @GET
   @Path("/google/callback")
   @Operation(summary = "Handle Google OAuth callback",

@@ -15,6 +15,7 @@ import com.sashplatonov.habbit.runner.auth.security.JwtUtil;
 import com.sashplatonov.habbit.runner.auth.security.RequireAuth;
 import com.sashplatonov.habbit.runner.auth.service.AuthService;
 import com.sashplatonov.habbit.runner.auth.service.PreferencesService;
+import com.sashplatonov.habbit.runner.auth.service.OAuthAccountLinkService;
 import com.sashplatonov.habbit.runner.auth.service.RefreshTokenService;
 import com.sashplatonov.habbit.runner.auth.service.UserService;
 import com.sashplatonov.habbit.runner.auth.support.AuthCollaborators;
@@ -120,6 +121,19 @@ class AuthServiceUnitCoverageTest {
   }
 
   @Test
+  void shouldCreateGoogleLinkAuthorizationUrlWithOwnerIntent() {
+    var collaborators = new StubCollaborators();
+    collaborators.setNormalizedReturnTo("/app/account");
+    var service = new TestAuthService(collaborators);
+
+    var authorizationUrl = service.createGoogleLinkAuthorizationUrl("telegram-user", "/app/account");
+
+    assertTrue(authorizationUrl.startsWith("https://accounts.example.test/start?state="));
+    assertEquals("telegram-user", service.getStoredState().linkUserId());
+    assertEquals("/app/account", service.getStoredState().returnTo());
+  }
+
+  @Test
   void shouldRejectOAuthCallbackWhenParametersAreMissing() {
     var service = new TestAuthService(new StubCollaborators());
 
@@ -164,6 +178,50 @@ class AuthServiceUnitCoverageTest {
     assertEquals("https://app.example.test/callback?ok=1", redirect);
     assertEquals("state-token", service.getDeletedState());
     assertEquals("code-123", collaborators.getExchangedCode());
+  }
+
+  @Test
+  void shouldMergeGoogleAccountIntoTelegramOwnerWhenLinkIntentIsPresent() {
+    var collaborators = new StubCollaborators();
+    var telegramOwner = user("telegram-user", null);
+    var googleUser = user("google-user", "oauth@example.test");
+    collaborators.setUserById(telegramOwner);
+    collaborators.setOauthUser(googleUser);
+    var service = new TestAuthService(collaborators);
+    var merge = new RecordingOAuthAccountLinkService();
+    service.setAccountLinkService(merge);
+    var oauthState = new OAuthStateEntity();
+    oauthState.state = "state-token";
+    oauthState.returnTo = "/app/account";
+    oauthState.setExpiry(Instant.parse("2026-04-10T13:10:00Z"));
+    oauthState.setLinkUserId("telegram-user");
+    service.setOauthState(oauthState);
+
+    service.handleOAuthCallback("code-123", "state-token");
+
+    assertEquals("telegram-user", merge.survivor());
+    assertEquals("google-user", merge.absorbed());
+  }
+
+  @Test
+  void shouldKeepExistingUserWhenGoogleLinkAlreadyPointsToThatUser() {
+    var collaborators = new StubCollaborators();
+    var user = user("same-user", "old@example.test");
+    collaborators.setUserById(user);
+    var service = new OAuthAccountLinkService(collaborators);
+
+    var resolved = service.resolve(user, "new@example.test", "same-user");
+
+    assertEquals(user, resolved);
+    assertEquals("new@example.test", user.getEmail());
+  }
+
+  @Test
+  void shouldReturnGoogleUserWhenNoLinkIntentExists() {
+    var user = user("google-user", "oauth@example.test");
+    var service = new OAuthAccountLinkService();
+
+    assertEquals(user, service.resolve(user, user.getEmail(), null));
   }
 
   @Test

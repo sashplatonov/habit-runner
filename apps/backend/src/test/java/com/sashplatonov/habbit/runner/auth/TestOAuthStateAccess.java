@@ -28,6 +28,6 @@ final class TestOAuthStateAccess implements OAuthStateAccess {
 
   @Override
   public void save(OAuthStateEntity payload) {
-    storedState = new StoredState(payload.state, payload.returnTo, payload.expiry());
+    storedState = new StoredState(payload.state, payload.returnTo, payload.expiry(), payload.linkUserId());
   }
 }

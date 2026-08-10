@@ -20,6 +20,9 @@ public class OAuthStateEntity extends AuditedEntityBase {
   @Column(name = "expiresAt", nullable = false)
   private Instant expiresAt;
 
+  @Column(name = "linkUserId")
+  private String linkUserId;
+
   public boolean isExpiredAt(Instant instant) {
     return expiresAt.isBefore(instant);
   }
@@ -30,5 +33,13 @@ public class OAuthStateEntity extends AuditedEntityBase {
 
   public Instant expiry() {
     return expiresAt;
+  }
+
+  public String linkUserId() {
+    return linkUserId;
+  }
+
+  public void setLinkUserId(String linkUserId) {
+    this.linkUserId = linkUserId;
   }
 }

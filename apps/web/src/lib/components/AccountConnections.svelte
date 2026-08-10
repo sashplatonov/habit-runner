@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { cancelTelegramLink, confirmTelegramLink, getTelegramLinkStatus, startTelegramLink, telegramMiniAppUrl, type AccountLinkStatus } from '@/lib/api/accountLinks';
+  import { ensureAuthSession, readAuthSession } from '@/lib/auth/session';
 
   let status = $state<AccountLinkStatus | null>(null);
   let token = $state<string | null>(null);
@@ -8,6 +9,7 @@
   let loading = $state(true);
   let working = $state(false);
   let error = $state('');
+  let email = $state<string | undefined>(undefined);
 
   async function refresh() {
     if (!token) { loading = false; return; }
@@ -39,7 +41,13 @@
     finally { working = false; }
   }
 
-  onMount(() => { void refresh(); const timer = window.setInterval(() => void refresh(), 10_000); return () => window.clearInterval(timer); });
+  onMount(() => {
+    email = readAuthSession()?.email;
+    void ensureAuthSession().then((session) => { email = session?.email; });
+    void refresh();
+    const timer = window.setInterval(() => void refresh(), 10_000);
+    return () => window.clearInterval(timer);
+  });
 </script>
 
 <section class="connections" aria-labelledby="connections-title">
@@ -47,8 +55,12 @@
   <h1 id="connections-title">Account connections</h1>
   <p class="muted">Link Telegram to use the same habits and check-ins in both apps.</p>
   <div class="card">
-    <div><strong>Google / email</strong><span>Current signed-in account</span></div>
-    <span class="badge">Connected</span>
+    <div><strong>Google / email</strong><span>{email ?? 'Not connected yet'}</span></div>
+    {#if email}
+      <span class="badge">Connected</span>
+    {:else}
+      <button class="button" type="button" onclick={() => window.location.assign('/api/auth/google/link/start?returnTo=%2Fapp%2Faccount')}>Link Google account</button>
+    {/if}
   </div>
   <div class="card">
     <div><strong>Telegram</strong><span>{status === 'COMPLETED' ? 'Connected' : 'Not connected'}</span></div>

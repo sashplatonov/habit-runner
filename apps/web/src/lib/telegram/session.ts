@@ -23,13 +23,13 @@ export async function authenticateTelegramMiniApp(): Promise<AuthSession> {
   return saveAuthSession({ userId: payload.userId, email: payload.email });
 }
 
-export async function completeTelegramPairing(webApp: TelegramWebAppAdapter): Promise<void> {
-  if (!webApp.startParam) {
+export async function completeTelegramPairing(webApp: TelegramWebAppAdapter, pairingToken = webApp.startParam): Promise<void> {
+  if (!pairingToken) {
     return;
   }
   const response = await authenticatedFetch('/api/auth/link/telegram/complete', {
     method: 'POST',
-    body: JSON.stringify({ token: webApp.startParam, initData: webApp.initData })
+    body: JSON.stringify({ token: pairingToken, initData: webApp.initData })
   });
   if (!response.ok) {
     throw new Error(`Telegram account linking failed: ${response.status}`);

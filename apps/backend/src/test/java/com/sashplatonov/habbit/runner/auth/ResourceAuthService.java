@@ -35,6 +35,7 @@ public class ResourceAuthService extends AuthService {
   private String revokedToken;
   private TokenResponse refreshResponse;
   private String googleStartRedirect;
+  private String googleLinkStartRedirect;
   private OAuthCallbackSession googleCallbackRedirect;
 
   public ResourceAuthService() {
@@ -51,6 +52,10 @@ public class ResourceAuthService extends AuthService {
 
   public void setGoogleCallbackRedirect(OAuthCallbackSession googleCallbackRedirect) {
     this.googleCallbackRedirect = googleCallbackRedirect;
+  }
+
+  public void setGoogleLinkStartRedirect(String redirect) {
+    googleLinkStartRedirect = redirect;
   }
 
   public String getLastRefreshToken() {
@@ -73,6 +78,12 @@ public class ResourceAuthService extends AuthService {
   public String createOAuthAuthorizationUrl(String returnTo) {
     lastReturnTo = returnTo;
     return googleStartRedirect;
+  }
+
+  @Override
+  public String createGoogleLinkAuthorizationUrl(String ownerUserId, String returnTo) {
+    lastReturnTo = returnTo;
+    return googleLinkStartRedirect;
   }
 
   @Override
