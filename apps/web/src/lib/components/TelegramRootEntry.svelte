@@ -83,7 +83,7 @@
 
 <style>
   .entry { min-height: 100dvh; display: grid; place-items: center; padding: max(1rem, env(safe-area-inset-top)) 1rem max(1rem, env(safe-area-inset-bottom)); background: var(--telegram-bg-color, #f8fafc); color: var(--telegram-text-color, #0f172a); }
-  .card { width: min(100%, 25rem); display: grid; gap: .85rem; padding: 1.5rem; border: 1px solid #e2e8f0; border-radius: 1.5rem; background: #fff; box-shadow: 0 20px 50px rgb(15 23 42 / 12%); }
+  .card { width: min(100%, 25rem); display: grid; gap: .85rem; padding: 1.5rem; border: 1px solid #e2e8f0; border-radius: 1.5rem; background: #fff; color: #0f172a; box-shadow: 0 20px 50px rgb(15 23 42 / 12%); }
   h1 { margin: 0; font-size: 1.35rem; }
   .eyebrow { margin: 0; color: #64748b; font: 600 .7rem/1 monospace; letter-spacing: .2em; text-transform: uppercase; }
   .muted { margin: 0; color: #64748b; line-height: 1.5; }

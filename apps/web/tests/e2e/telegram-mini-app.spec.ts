@@ -15,11 +15,12 @@ test('website root has no horizontal overflow at 320px', async ({ page }) => {
 test('Telegram launch intent never falls back to Google sign-in', async ({ page }) => {
   await page.route('**/telegram-web-app.js*', (route) => route.fulfill({
     contentType: 'application/javascript',
-    body: `window.Telegram = { WebApp: { initData: '', startParam: 'pairing-token', themeParams: {}, ready() {}, expand() {}, close() {} } };`
+    body: `window.Telegram = { WebApp: { initData: '', startParam: 'pairing-token', themeParams: { bg_color: '#ffffff', text_color: '#ffffff' }, ready() {}, expand() {}, close() {} } };`
   }));
 
   await page.goto('/?startapp=pairing-token');
   await expect(page.getByRole('heading', { name: 'Telegram connection needs a retry' })).toBeVisible();
+  await expect(page.locator('.card')).toHaveCSS('color', 'rgb(15, 23, 42)');
   await expect(page.getByRole('button', { name: 'Sign in with Google' })).not.toBeVisible();
 });
 
