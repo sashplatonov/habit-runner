@@ -59,6 +59,8 @@ printf %s "$TELEGRAM_BOT_TOKEN" | shasum -a 256 | cut -c1-12
 The output must equal `botTokenRef` in the startup log and in any
 `telegram_init_data_rejected` event. A mismatch means the deployed runtime has
 a different secret; the bot username does not participate in HMAC validation.
+The verification key is derived as `HMAC-SHA-256(key="WebAppData",
+message=botToken)` before signing the sorted init-data fields.
 
 ## Release evidence
 
@@ -91,7 +93,8 @@ and link records intact so a later recovery does not create duplicate accounts.
   bidirectional email linking. Website-origin links now use the bot's `t.me`
   deep link so they open inside Telegram; BotFather still points the Mini App
   itself at the website root. Expired saved website links are discarded without
-  an error, and the account action opens a fresh Mini App link directly.
+  an error, and the account action opens a fresh Mini App link directly. The
+  backend validates Telegram init data with the specified HMAC key order.
 - **Risk:** an exposed or stale bot token could permit forged init data; an
   incorrect HTTPS URL prevents the webview from launching.
 - **Mitigation:** backend-only secret, bounded init-data age, readiness checks,

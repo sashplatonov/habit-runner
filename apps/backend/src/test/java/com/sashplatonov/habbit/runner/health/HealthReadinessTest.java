@@ -73,6 +73,7 @@ class HealthReadinessTest {
 
     when(authConfig.oauthDefaultReturnTo()).thenReturn("https://app.example.test");
     assertEquals(HealthCheckResponse.Status.UP, healthCheck.call().getStatus());
+    validator.validateOnStartup(null);
 
     when(authConfig.apiPublicUrl()).thenReturn("https://localhost.example.test");
     assertEquals(HealthCheckResponse.Status.UP, healthCheck.call().getStatus());

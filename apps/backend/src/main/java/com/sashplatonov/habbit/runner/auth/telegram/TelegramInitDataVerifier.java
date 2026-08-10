@@ -78,7 +78,7 @@ public class TelegramInitDataVerifier {
     } catch (IllegalArgumentException ex) {
       throw new BadRequestException("Invalid Telegram hash", ex);
     }
-    var expected = hmac(hmac(configuredBotToken().orElseThrow(), "WebAppData"), dataCheckString(fields));
+    var expected = hmac(hmac("WebAppData", configuredBotToken().orElseThrow()), dataCheckString(fields));
     if (!MessageDigest.isEqual(expected, provided)) {
       log.warn("event=telegram_init_data_rejected reason=invalid_hash botTokenRef={} telegramUserRef={} authDate={}",
           fingerprint(configuredBotToken().orElseThrow()), fingerprint(fields.get("user")), fields.get("auth_date"));

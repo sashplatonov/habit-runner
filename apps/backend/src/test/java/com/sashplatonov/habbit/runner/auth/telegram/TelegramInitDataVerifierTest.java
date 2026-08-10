@@ -18,7 +18,7 @@ class TelegramInitDataVerifierTest {
     var verifier = new TelegramInitDataVerifier(TestConfigFactory.telegramAuthConfig("bot-token"), new ObjectMapper());
     var data = "auth_date=" + Instant.now().getEpochSecond()
         + "&user=%7B%22id%22%3A42%2C%22username%22%3A%22alice%22%7D";
-    var secret = hmac("bot-token".getBytes(StandardCharsets.UTF_8), "WebAppData");
+    var secret = hmac("WebAppData".getBytes(StandardCharsets.UTF_8), "bot-token");
     var hash = hmac(secret, "auth_date=" + data.substring(10, data.indexOf("&user="))
         + "\nuser={\"id\":42,\"username\":\"alice\"}");
     var user = verifier.verify(data + "&hash=" + HexFormat.of().formatHex(hash));
@@ -31,7 +31,7 @@ class TelegramInitDataVerifierTest {
     var verifier = new TelegramInitDataVerifier(TestConfigFactory.telegramAuthConfig("  bot-token\n"), new ObjectMapper());
     var data = "auth_date=" + Instant.now().getEpochSecond()
         + "&user=%7B%22id%22%3A42%7D";
-    var secret = hmac("bot-token".getBytes(StandardCharsets.UTF_8), "WebAppData");
+    var secret = hmac("WebAppData".getBytes(StandardCharsets.UTF_8), "bot-token");
     var hash = hmac(secret, "auth_date=" + data.substring(10, data.indexOf("&user="))
         + "\nuser={\"id\":42}");
 
