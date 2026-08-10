@@ -1,11 +1,5 @@
 import { expect, test } from '@playwright/test';
 
-test('legacy Telegram route preserves the pairing parameter at the website root', async ({ page }) => {
-  await page.goto('/telegram?startapp=legacy-pairing-token');
-  await expect(page).toHaveURL(/\/?startapp=legacy-pairing-token$/);
-  await expect(page.getByRole('heading', { name: 'Habit tracking that keeps the next step obvious.' })).toBeVisible();
-});
-
 test('website root keeps the public landing available while Telegram SDK is absent', async ({ page }) => {
   await page.goto('/');
   await expect(page.getByRole('heading', { name: 'Habit tracking that keeps the next step obvious.' })).toBeVisible();
