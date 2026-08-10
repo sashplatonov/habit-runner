@@ -93,6 +93,18 @@ class AccountLinkServiceTest {
     org.junit.jupiter.api.Assertions.assertEquals("CANCELLED", challenge.getStatus());
   }
 
+  @Test
+  void reportsWhetherTheAuthenticatedOwnerHasATelegramIdentity() {
+    var identities = mock(AuthIdentityRepository.class);
+    var service = new AccountLinkService(mock(AccountLinkChallengeRepository.class), identities,
+        mock(TelegramInitDataVerifier.class), mock(AccountMergeService.class));
+    when(identities.findByUserIdAndProvider("owner", AuthProvider.TELEGRAM))
+        .thenReturn(new AuthIdentityEntity());
+
+    org.junit.jupiter.api.Assertions.assertTrue(service.isTelegramLinked("owner"));
+    org.junit.jupiter.api.Assertions.assertFalse(service.isTelegramLinked("other"));
+  }
+
   private AccountLinkChallengeEntity challenge(String owner, String status) {
     var challenge = new AccountLinkChallengeEntity();
     challenge.setOwnerUserId(owner);

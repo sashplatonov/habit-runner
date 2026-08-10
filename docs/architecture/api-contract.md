@@ -19,10 +19,11 @@ development exposes it at `http://localhost:3000/openapi` (or the configured
 - `POST /auth/telegram/session` accepts Telegram's raw `initData`; the backend
   verifies its HMAC with the backend-only bot token, creates the same session
   cookies, and never returns the bot token.
-- Account linking uses the authenticated email session plus
+- Account linking uses the authenticated account session plus
   `POST /auth/link/telegram/start`, `POST /auth/link/telegram/complete`, and
   `POST /auth/link/telegram/confirm`. `GET /auth/link/telegram/status` reads a
-  pending challenge and `DELETE /auth/link/telegram` unlinks the identity.
+  pending challenge, `GET /auth/link/telegram/connection` reports the durable
+  Telegram identity, and `DELETE /auth/link/telegram` cancels a pending link.
 - Authentication and validation failures use the shared `ErrorResponse` shape.
 
 The examples below use placeholders only. Set the base URL and cookie values
@@ -98,7 +99,6 @@ Cursor endpoints return `items` and an optional `nextCursor`; use the generated
 OpenAPI document for the complete schema rather than duplicating it here.
 
 Telegram session/link failures use the shared `ErrorResponse` shape. Expect
-HTTP 400 for malformed or expired init data, HTTP 403 for a challenge owned by
-another account or a failed Telegram signature, and HTTP 409 when the identity
-is already linked to a different account. Challenge tokens are short-lived and
-must be treated as secrets by the client.
+HTTP 400 for malformed, expired, or incorrectly signed init data and for a
+challenge owned by another account. Challenge tokens are short-lived and are
+kept only in browser session storage while owner confirmation is pending.

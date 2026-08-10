@@ -13,6 +13,10 @@ export function startTelegramLink(): Promise<{ token: string }> {
   return request('/auth/link/telegram/start', { method: 'POST' });
 }
 
+export function getTelegramConnection(): Promise<{ connected: boolean }> {
+  return request('/auth/link/telegram/connection');
+}
+
 export function getTelegramLinkStatus(token: string): Promise<{ status: AccountLinkStatus }> {
   return request(`/auth/link/telegram/status?token=${encodeURIComponent(token)}`);
 }

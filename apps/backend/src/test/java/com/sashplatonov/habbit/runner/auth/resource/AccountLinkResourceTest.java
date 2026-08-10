@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 class AccountLinkResourceTest {
@@ -20,6 +21,7 @@ class AccountLinkResourceTest {
     when(userContext.requireUser()).thenReturn(new CurrentUser("owner", "owner@example.com"));
     when(service.startTelegramLink("owner")).thenReturn("challenge-token");
     when(service.status("owner", "challenge-token")).thenReturn("PENDING");
+    when(service.isTelegramLinked("owner")).thenReturn(true);
     var resource = new AccountLinkResource(service, userContext);
 
     assertEquals(Response.Status.OK.getStatusCode(), resource.startTelegramLink().getStatus());
@@ -29,7 +31,9 @@ class AccountLinkResourceTest {
         resource.confirmTelegramLink(new TelegramLinkConfirmRequest("challenge-token")).getStatus());
     assertEquals(Response.Status.OK.getStatusCode(),
         resource.telegramLinkStatus("challenge-token").getStatus());
+    assertEquals(Response.Status.OK.getStatusCode(), resource.telegramConnection().getStatus());
     assertEquals(Response.Status.NO_CONTENT.getStatusCode(),
         resource.cancelTelegramLink("challenge-token").getStatus());
+    verify(service).isTelegramLinked("owner");
   }
 }

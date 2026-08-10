@@ -1,7 +1,8 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { cancelTelegramLink, confirmTelegramLink, getTelegramLinkStatus, startTelegramLink, telegramMiniAppUrl, type AccountLinkStatus } from '@/lib/api/accountLinks';
+  import { cancelTelegramLink, confirmTelegramLink, getTelegramConnection, getTelegramLinkStatus, startTelegramLink, telegramMiniAppUrl, type AccountLinkStatus } from '@/lib/api/accountLinks';
   import { ensureAuthSession, readAuthSession } from '@/lib/auth/session';
+  import { clearPendingTelegramLink, readPendingTelegramLink, savePendingTelegramLink } from '@/lib/telegram/pendingLink';
 
   let status = $state<AccountLinkStatus | null>(null);
   let token = $state<string | null>(null);
@@ -12,8 +13,19 @@
   let email = $state<string | undefined>(undefined);
 
   async function refresh() {
-    if (!token) { loading = false; return; }
-    try { status = (await getTelegramLinkStatus(token)).status; error = ''; }
+    try {
+      if (!token) {
+        status = (await getTelegramConnection()).connected ? 'COMPLETED' : null;
+      } else {
+        status = (await getTelegramLinkStatus(token)).status;
+        if (status === 'COMPLETED') {
+          clearPendingTelegramLink();
+          token = null;
+          linkUrl = null;
+        }
+      }
+      error = '';
+    }
     catch (cause) { error = cause instanceof Error ? cause.message : 'Unable to load link status.'; }
     finally { loading = false; }
   }
@@ -24,7 +36,7 @@
       return;
     }
     working = true; error = '';
-    try { const result = await startTelegramLink(); token = result.token; linkUrl = telegramMiniAppUrl(token); status = 'PENDING'; }
+    try { const result = await startTelegramLink(); token = result.token; savePendingTelegramLink(token); linkUrl = telegramMiniAppUrl(token); status = 'PENDING'; }
     catch (cause) { error = cause instanceof Error ? cause.message : 'Unable to create a Telegram link.'; }
     finally { working = false; }
   }
@@ -32,7 +44,7 @@
   async function cancel() {
     if (!token) return;
     working = true;
-    try { await cancelTelegramLink(token); status = 'CANCELLED'; }
+    try { await cancelTelegramLink(token); clearPendingTelegramLink(); status = 'CANCELLED'; token = null; linkUrl = null; }
     catch (cause) { error = cause instanceof Error ? cause.message : 'Unable to cancel the link.'; }
     finally { working = false; }
   }
@@ -40,7 +52,7 @@
   async function confirm() {
     if (!token) return;
     working = true;
-    try { await confirmTelegramLink(token); status = 'COMPLETED'; }
+    try { await confirmTelegramLink(token); clearPendingTelegramLink(); status = 'COMPLETED'; token = null; linkUrl = null; }
     catch (cause) { error = cause instanceof Error ? cause.message : 'Unable to confirm the link.'; }
     finally { working = false; }
   }
@@ -48,6 +60,8 @@
   onMount(() => {
     email = readAuthSession()?.email;
     void ensureAuthSession().then((session) => { email = session?.email; });
+    token = readPendingTelegramLink();
+    linkUrl = token ? telegramMiniAppUrl(token) : null;
     void refresh();
     const timer = window.setInterval(() => void refresh(), 10_000);
     return () => window.clearInterval(timer);

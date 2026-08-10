@@ -88,6 +88,10 @@ public class AccountLinkService {
     return requireChallenge(ownerUserId, token).getStatus();
   }
 
+  public boolean isTelegramLinked(String ownerUserId) {
+    return identityRepository.findByUserIdAndProvider(ownerUserId, AuthProvider.TELEGRAM) != null;
+  }
+
   @Transactional
   public void cancel(String ownerUserId, String token) {
     var challenge = requireChallenge(ownerUserId, token);

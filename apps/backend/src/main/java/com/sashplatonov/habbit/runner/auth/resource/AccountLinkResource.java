@@ -68,6 +68,14 @@ public class AccountLinkResource {
   }
 
   @RequireAuth
+  @GET
+  @Path("/telegram/connection")
+  public Response telegramConnection() {
+    return Response.ok(java.util.Map.of("connected", accountLinkService.isTelegramLinked(
+        currentUserContext.requireUser().id()))).build();
+  }
+
+  @RequireAuth
   @DELETE
   @Path("/telegram")
   public Response cancelTelegramLink(@QueryParam("token") String token) {
