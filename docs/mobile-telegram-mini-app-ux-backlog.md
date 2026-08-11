@@ -446,15 +446,15 @@ git commit -m "feat(mobile): Improve account and theme controls"
 
 ## P2-1: Complete release validation and Telegram rollout evidence
 
-**Status:** ✅ Completed
+**Status:** 🟡 Local validation completed; external release validation pending
 **Priority:** P2  
 **Depends on:** P1-1, P1-2, P1-3, P1-4, P1-5
 
 ### Outcome
 
 The completed mobile and Telegram UX has a documented proof boundary: static
-and browser tests pass locally, and staging Telegram-client validation confirms
-the behavior that mocks cannot establish.
+and browser tests pass locally. Official Telegram-client staging validation and
+a fresh remote CI run remain required before release completion can be claimed.
 
 ### Architectural decision
 
