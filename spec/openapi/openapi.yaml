@@ -450,14 +450,6 @@ components:
       properties:
         success:
           type: boolean
-    TelegramLinkConfirmRequest:
-      type: object
-      required:
-      - token
-      properties:
-        token:
-          type: string
-          pattern: \S
     TelegramLinkRequest:
       type: object
       required:
@@ -622,24 +614,13 @@ paths:
       summary: Detach
       tags:
       - Account Link Resource
-  /auth/link/telegram:
-    delete:
-      parameters:
-      - name: token
-        in: query
-        schema:
-          type: string
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema: {}
-      summary: Cancel Telegram Link
-      tags:
-      - Account Link Resource
   /auth/link/telegram/complete:
     post:
+      parameters:
+      - name: habbit_runner_csrf_token
+        in: cookie
+        schema:
+          type: string
       requestBody:
         content:
           application/json:
@@ -655,25 +636,6 @@ paths:
         "400":
           description: Bad Request
       summary: Complete Telegram Link
-      tags:
-      - Account Link Resource
-  /auth/link/telegram/confirm:
-    post:
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/TelegramLinkConfirmRequest"
-        required: true
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema: {}
-        "400":
-          description: Bad Request
-      summary: Confirm Telegram Link
       tags:
       - Account Link Resource
   /auth/link/telegram/connection:
@@ -696,22 +658,6 @@ paths:
             application/json:
               schema: {}
       summary: Start Telegram Link
-      tags:
-      - Account Link Resource
-  /auth/link/telegram/status:
-    get:
-      parameters:
-      - name: token
-        in: query
-        schema:
-          type: string
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema: {}
-      summary: Telegram Link Status
       tags:
       - Account Link Resource
   /auth/logout:

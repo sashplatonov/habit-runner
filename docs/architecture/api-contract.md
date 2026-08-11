@@ -20,10 +20,11 @@ development exposes it at `http://localhost:3000/openapi` (or the configured
   verifies its HMAC with the backend-only bot token, creates the same session
   cookies, and never returns the bot token.
 - Account linking uses the authenticated account session plus
-  `POST /auth/link/telegram/start`, `POST /auth/link/telegram/complete`, and
-  `POST /auth/link/telegram/confirm`. `GET /auth/link/telegram/status` reads a
-  pending challenge, `GET /auth/link/telegram/connection` reports the durable
-  Telegram identity, and `DELETE /auth/link/telegram` cancels a pending link.
+  `POST /auth/link/telegram/start` and `POST /auth/link/telegram/complete`.
+  Completion verifies Telegram, merges the Telegram session into the account
+  that created the short-lived challenge, and returns replacement auth cookies
+  for that canonical account. `GET /auth/link/telegram/connection` reports the
+  durable Telegram identity.
 - `GET /auth/link/connections` returns `{ "connections": [{ "provider":
   "GOOGLE"|"TELEGRAM", "connected": true|false, "displayName": string|null
   }] }`. Telegram `displayName` is verified provider metadata (normally
@@ -108,7 +109,8 @@ OpenAPI document for the complete schema rather than duplicating it here.
 Telegram session/link failures use the shared `ErrorResponse` shape. Expect
 HTTP 400 for malformed, expired, or incorrectly signed init data and for a
 challenge owned by another account. Challenge tokens are short-lived and are
-kept only in browser session storage while owner confirmation is pending.
+kept only for the duration of the Telegram completion request and are never
+shown in the Account page.
 For a pairing 403, compare the non-HttpOnly `habbit_runner_csrf_token` cookie
 with the `X-CSRF-Token` request header and use the response `X-Trace-Id` when
 checking server logs; do not disable CSRF checks or paste cookie values into

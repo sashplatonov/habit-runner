@@ -88,7 +88,7 @@ flow; do not exempt Telegram endpoints in `CsrfGuardFilter`.
 3. Keep the sequence strict: raw server-verified `initData` creates the
    Telegram session first; only then may the `startParam` pairing request run.
    A failure must not silently fall back to Google sign-in or consume/clear the
-   website owner’s pending challenge.
+   website owner’s short-lived challenge.
 4. Add unit coverage for a pre-existing CSRF cookie and a browser E2E route
    sequence that asserts the session POST and completion POST carry the expected
    header and the completion call is accepted.
@@ -257,17 +257,15 @@ infer connections from `readAuthSession().email`.
 
 1. Replace the boolean Telegram client with typed consolidated connection and
    detach calls. Refresh the server state after completion or successful
-   detachment; retain pending-challenge recovery only for the short-lived
-   pairing state.
+   detachment; do not render a pending-challenge block.
 2. Render two accessible provider cards. The Google/email card shows the linked
    address; the Telegram card shows the verified `@username` or an explicit
    linked-without-username fallback. Never display a numeric Telegram ID.
 3. When Telegram is unlinked, place **Link Telegram** inside its card. Start
-   the existing challenge, retain it in pending-link storage, and open the
-   resulting `t.me?...startapp=...` destination in a new browsing context with
-   safe opener isolation. Keep the current Account page open so the owner can
-   return to its pending/confirmation state; handle a blocked new window with a
-   visible retryable link rather than losing the challenge.
+   the existing challenge and open the resulting `t.me?...startapp=...`
+   destination in a new browsing context with safe opener isolation. Telegram
+   completion performs the merge immediately and refreshes the Account cards;
+   there is no pending/confirmation block in the Account page.
 4. For a linked non-final provider, offer an explicit **Unlink** action with a
    confirmation that names the provider and warns that this sign-in method will
    stop working. Disable the action while the request is running; render the
@@ -341,9 +339,9 @@ BotFather configuration, deployed cookies, or a real Telegram webview.
 ### Work
 
 1. Make the Playwright deep-link test set an existing cookie session and assert
-   the CSRF-correct session-to-completion sequence, pending owner confirmation,
-   and an unchanged current website page when the external Telegram destination
-   opens.
+   the CSRF-correct session-to-completion sequence, canonical-account session
+   replacement, and an unchanged current website page when the external
+   Telegram destination opens.
 2. Add browser assertions for a populated Telegram username, no-username
    fallback, each unlink outcome, last-provider rejection, and primary versus
    utility navigation at desktop/compact-mobile viewport sizes.

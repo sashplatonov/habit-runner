@@ -87,6 +87,24 @@ class AuthServiceUnitCoverageTest {
   }
 
   @Test
+  void shouldIssueCanonicalSessionAfterTelegramPairingMerge() {
+    var collaborators = new StubCollaborators();
+    collaborators.setUserById(user("owner", "owner@example.test"));
+    var service = new TestAuthService(collaborators);
+
+    var session = service.issueSessionForUserId("owner");
+
+    assertEquals("access-1", session.accessToken());
+  }
+
+  @Test
+  void shouldRejectCanonicalSessionWhenOwnerWasRemoved() {
+    var service = new TestAuthService(new StubCollaborators());
+
+    assertThrows(NotAuthorizedException.class, () -> service.issueSessionForUserId("missing"));
+  }
+
+  @Test
   void shouldTranslateInvalidAccessTokenToUnauthorized() {
     var collaborators = new StubCollaborators();
     collaborators.setVerifyFailure(new IllegalArgumentException("invalid"));

@@ -12,20 +12,11 @@ const { getAccountConnections, telegramMiniAppUrl, startTelegramLink, open, popu
 }));
 
 vi.mock('$lib/api/accountLinks', () => ({
-  AccountLinkRequestError: class AccountLinkRequestError extends Error {},
-  cancelTelegramLink: vi.fn(),
-  confirmTelegramLink: vi.fn(),
   detachAccountConnection: vi.fn(),
   getAccountConnections,
   getTelegramLinkStatus: vi.fn(),
   startTelegramLink,
   telegramMiniAppUrl
-}));
-
-vi.mock('$lib/telegram/pendingLink', () => ({
-  clearPendingTelegramLink: vi.fn(),
-  readPendingTelegramLink: vi.fn(() => null),
-  savePendingTelegramLink: vi.fn()
 }));
 
 describe('AccountConnections', () => {
@@ -56,6 +47,7 @@ describe('AccountConnections', () => {
     render(AccountConnections);
 
     expect(await screen.findByText('Not connected')).toBeTruthy();
+    expect(screen.queryByText('Open Telegram to continue')).toBeNull();
     await user.click(screen.getByRole('button', { name: 'Link Telegram' }));
 
     expect(open).toHaveBeenCalledWith('', '_blank');

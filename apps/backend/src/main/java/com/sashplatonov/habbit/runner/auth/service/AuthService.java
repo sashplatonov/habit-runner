@@ -106,6 +106,15 @@ public class AuthService {
     collaborators.revokeRefreshToken(token);
   }
 
+  @Transactional
+  public TokenResponse issueSessionForUserId(String userId) {
+    var user = collaborators.findRequiredUserById(userId);
+    if (user == null) {
+      throw new NotAuthorizedException("Linked account no longer exists");
+    }
+    return collaborators.issueTokenPair(user, authConfig.accessTokenTtlSeconds(), authConfig.refreshTokenDays());
+  }
+
   public CurrentUser verifyAccessToken(String token) {
     try {
       return collaborators.verifyToken(token);

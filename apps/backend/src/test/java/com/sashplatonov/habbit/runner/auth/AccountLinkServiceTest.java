@@ -25,11 +25,10 @@ class AccountLinkServiceTest {
         mock(TelegramInitDataVerifier.class), mock(AccountMergeService.class));
     var token = service.startTelegramLink("user-1");
     verify(challenges).save(any());
-    assertThrows(BadRequestException.class, () -> service.status("user-2", token));
   }
 
   @Test
-  void waitsForOwnerConfirmationBeforeLinkingNewTelegramIdentity() {
+  void linksNewTelegramIdentityImmediatelyAfterVerification() {
     var challenges = mock(AccountLinkChallengeRepository.class);
     var identities = mock(AuthIdentityRepository.class);
     var verifier = mock(TelegramInitDataVerifier.class);
@@ -38,38 +37,37 @@ class AccountLinkServiceTest {
     when(challenges.findByTokenHash(any())).thenReturn(challenge);
     when(verifier.verify("signed")).thenReturn(new TelegramWebAppUser(42, "alice", null, null));
     service.completeTelegramLink("token", "signed");
-    verify(identities, org.mockito.Mockito.never()).save(any());
-    org.junit.jupiter.api.Assertions.assertEquals("AWAITING_OWNER_CONFIRMATION", challenge.getStatus());
-    service.confirmTelegramLink("user-1", "token");
     verify(identities).save(any());
-    service.cancel("user-1", "token");
-    verify(challenges, org.mockito.Mockito.times(3)).findByTokenHash(any());
+    org.junit.jupiter.api.Assertions.assertEquals("COMPLETED", challenge.getStatus());
   }
 
   @Test
-  void confirmsExistingIdentityOnlyAfterOwnerConfirmation() {
+  void mergesExistingTelegramIdentityImmediatelyAfterVerification() {
     var challenges = mock(AccountLinkChallengeRepository.class);
     var identities = mock(AuthIdentityRepository.class);
     var merge = mock(AccountMergeService.class);
-    var service = new AccountLinkService(challenges, identities, mock(TelegramInitDataVerifier.class), merge);
-    var challenge = challenge("owner", "AWAITING_OWNER_CONFIRMATION");
-    challenge.setTelegramUserId("42");
+    var verifier = mock(TelegramInitDataVerifier.class);
+    var service = new AccountLinkService(challenges, identities, verifier, merge);
+    var challenge = challenge("owner", "PENDING");
     var identity = new AuthIdentityEntity();
     identity.setProvider(AuthProvider.TELEGRAM);
     identity.setProviderSubject("42");
     identity.setUserId("absorbed");
     when(challenges.findByTokenHash(any())).thenReturn(challenge);
     when(identities.findByProviderAndSubject(AuthProvider.TELEGRAM, "42")).thenReturn(identity);
-    service.confirmTelegramLink("owner", "token");
+    when(verifier.verify("signed")).thenReturn(new TelegramWebAppUser(42, "updated", null, null));
+    service.completeTelegramLink("token", "signed");
     verify(merge).merge("owner", "absorbed");
+    org.junit.jupiter.api.Assertions.assertEquals("COMPLETED", challenge.getStatus());
   }
 
   @Test
-  void defersMergeUntilOwnerConfirmationWhenTelegramBelongsElsewhere() {
+  void mergesTelegramIdentityBelongingToAnotherAccountImmediately() {
     var challenges = mock(AccountLinkChallengeRepository.class);
     var identities = mock(AuthIdentityRepository.class);
     var verifier = mock(TelegramInitDataVerifier.class);
-    var service = new AccountLinkService(challenges, identities, verifier, mock(AccountMergeService.class));
+    var merge = mock(AccountMergeService.class);
+    var service = new AccountLinkService(challenges, identities, verifier, merge);
     var challenge = challenge("owner", "PENDING");
     var identity = new AuthIdentityEntity();
     identity.setUserId("other");
@@ -77,20 +75,7 @@ class AccountLinkServiceTest {
     when(verifier.verify("signed")).thenReturn(new TelegramWebAppUser(7, "seven", null, null));
     when(identities.findByProviderAndSubject(AuthProvider.TELEGRAM, "7")).thenReturn(identity);
     service.completeTelegramLink("token", "signed");
-    verify(identities, org.mockito.Mockito.never()).save(any());
-  }
-
-  @Test
-  void exposesPendingStatusForTheChallengeOwner() {
-    var challenges = mock(AccountLinkChallengeRepository.class);
-    var challenge = challenge("owner", "PENDING");
-    when(challenges.findByTokenHash(any())).thenReturn(challenge);
-    var service = new AccountLinkService(challenges, mock(AuthIdentityRepository.class),
-        mock(TelegramInitDataVerifier.class), mock(AccountMergeService.class));
-
-    org.junit.jupiter.api.Assertions.assertEquals("PENDING", service.status("owner", "token"));
-    service.cancel("owner", "token");
-    org.junit.jupiter.api.Assertions.assertEquals("CANCELLED", challenge.getStatus());
+    verify(merge).merge("owner", "other");
   }
 
   @Test
