@@ -11,8 +11,9 @@ the static frontend URL as public configuration.
    Do not point a production bot at localhost or staging.
 3. Configure the web build with the public `VITE_TELEGRAM_BOT_USERNAME`. The
    account page uses `https://t.me/<bot_username>?startapp=<pairing-code>` to
-   open this bot's Mini App. The pairing code is short-lived and requires the
-   account owner's explicit confirmation; never place the bot token in a URL.
+   open this bot's Mini App. The pairing code is short-lived and is completed
+   automatically after the Mini App authenticates with Telegram; never place
+   the bot token in a URL.
 4. Record the bot username and URL in the deployment system, not in source
    control. The manual test account must be able to launch the webview and
    complete both email→Telegram and Telegram→email linking flows.
