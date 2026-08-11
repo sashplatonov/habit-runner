@@ -171,10 +171,12 @@ actionlint .github/workflows/quality.yml
 docker compose --env-file .env.example --profile db config --quiet
 ```
 
-The current local evidence includes 190 frontend unit tests, 173 backend tests,
-and 8 Playwright scenarios across desktop and compact mobile. Local checks prove
-the checkout; they do not prove a pushed GitHub Actions run, deployed OAuth, or
-production-device PWA update behavior.
+The local browser matrix includes desktop, compact-mobile, a 390px mobile
+project, and a Telegram-webview project. Mobile UX coverage checks Today,
+Progress, More/theme controls, search focus, and Telegram entry states. Local
+checks prove the checkout; they do not prove a pushed GitHub Actions run,
+deployed OAuth, an official Telegram client session, or production-device PWA
+update behavior.
 
 [↑ Back to top](#top)
 

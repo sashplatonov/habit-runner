@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test';
 
-test('expired session returns the user to the public entry point', async ({ page }) => {
+test('expired session returns the user to the public entry point', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name === 'telegram-webview', 'Telegram user agents intentionally enter the Mini App flow.');
   await page.addInitScript(() => {
     localStorage.setItem('habbitRunner.auth.session', JSON.stringify({ userId: 'expired-user' }));
   });

@@ -80,6 +80,29 @@ Collect these as separate evidence classes:
    to the Telegram username, then test unlinking each provider
    while the other remains, then verify final-provider unlink is rejected.
 
+## Mobile and Mini App UX evidence
+
+The responsive release gate covers the same protected account and preference
+contracts as desktop. The browser matrix uses `compact-mobile` (device
+baseline), `mobile` (390px), and `telegram-webview` (390px Telegram user-agent)
+projects. The focused checks are:
+
+```bash
+cd apps/web && npm run test -- telegram.webApp telegram.session AccountConnections ThemePicker modernStats
+cd apps/web && npm run test:e2e -- --project=mobile --project=telegram-webview mobile-ux.spec.ts telegram-mini-app.spec.ts account-linking.spec.ts
+cd apps/web && npm run check:web
+cd apps/backend && ./mvnw clean verify
+```
+
+The browser projects use a controlled SDK adapter and therefore prove layout,
+focus, safe-area variables, color mapping, and request sequencing only. They do
+not prove BotFather configuration, real Telegram HMAC validation, webview
+cookies, or device-specific viewport behavior. Before release, record the
+official Telegram-app test separately: open the deployed HTTPS Mini App, verify
+dark and light Telegram themes, close/reopen, use Today and Progress, open
+More/theme, link and unlink both providers, and confirm the same habits and
+preferences remain after reload.
+
 Do not claim local checks prove BotFather configuration, deployed ingress,
 Telegram signature verification against the real bot, or webview cookie
 behavior.

@@ -5,6 +5,10 @@ async function expectNoHorizontalOverflow(page: Page) {
 }
 
 test.describe('compact mobile UX baseline', () => {
+  test.beforeEach(async ({}, testInfo) => {
+    test.skip(testInfo.project.name === 'desktop', 'These assertions target the mobile shell.');
+  });
+
   test('keeps Today actions and navigation reachable', async ({ page }) => {
     await page.goto('/showcase');
 

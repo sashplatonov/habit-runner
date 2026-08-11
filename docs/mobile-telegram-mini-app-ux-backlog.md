@@ -446,7 +446,7 @@ git commit -m "feat(mobile): Improve account and theme controls"
 
 ## P2-1: Complete release validation and Telegram rollout evidence
 
-**Status:** ⬜ Not started  
+**Status:** ✅ Completed
 **Priority:** P2  
 **Depends on:** P1-1, P1-2, P1-3, P1-4, P1-5
 

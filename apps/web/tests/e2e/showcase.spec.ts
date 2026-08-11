@@ -1,6 +1,10 @@
 import { expect, test } from '@playwright/test';
 
 test.describe('public showcase', () => {
+  test.beforeEach(async ({}, testInfo) => {
+    test.skip(testInfo.project.name === 'telegram-webview', 'Telegram user agents intentionally enter the Mini App flow.');
+  });
+
   test('runs an interactive demo without API or persistence activity', async ({ page }) => {
     const apiRequests: string[] = [];
     const persistenceWrites: string[] = [];
