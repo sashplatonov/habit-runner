@@ -145,7 +145,7 @@ email claim or browser state.
 
 ### Files
 
-- Create `apps/backend/src/main/resources/db/migration/V14__add_auth_identity_display_metadata.sql`.
+- Create `apps/backend/src/main/resources/db/migration/V15__add_auth_identity_display_metadata.sql`.
 - Modify `apps/backend/src/main/java/com/sashplatonov/habbit/runner/model/AuthIdentityEntity.java`.
 - Modify `apps/backend/src/main/java/com/sashplatonov/habbit/runner/repository/AuthIdentityRepository.java`.
 - Modify `apps/backend/src/main/java/com/sashplatonov/habbit/runner/auth/identity/IdentityService.java`.
@@ -216,7 +216,7 @@ cd apps/backend && ./mvnw clean verify
 ### Commit
 
 ```bash
-git add apps/backend/src/main/resources/db/migration/V14__add_auth_identity_display_metadata.sql apps/backend/src/main/java/com/sashplatonov/habbit/runner/model/AuthIdentityEntity.java apps/backend/src/main/java/com/sashplatonov/habbit/runner/repository/AuthIdentityRepository.java apps/backend/src/main/java/com/sashplatonov/habbit/runner/auth/identity/IdentityService.java apps/backend/src/main/java/com/sashplatonov/habbit/runner/auth/identity/AccountLinkService.java apps/backend/src/main/java/com/sashplatonov/habbit/runner/auth/service/AuthService.java apps/backend/src/main/java/com/sashplatonov/habbit/runner/auth/service/OAuthAccountLinkService.java apps/backend/src/main/java/com/sashplatonov/habbit/runner/auth/resource/AccountLinkResource.java apps/backend/src/main/java/com/sashplatonov/habbit/runner/auth/dto apps/backend/src/test/java/com/sashplatonov/habbit/runner/auth/AccountLinkServiceTest.java apps/backend/src/test/java/com/sashplatonov/habbit/runner/auth/resource/AccountLinkResourceTest.java spec/openapi/openapi.yaml
+git add apps/backend/src/main/resources/db/migration/V15__add_auth_identity_display_metadata.sql apps/backend/src/main/java/com/sashplatonov/habbit/runner/model/AuthIdentityEntity.java apps/backend/src/main/java/com/sashplatonov/habbit/runner/repository/AuthIdentityRepository.java apps/backend/src/main/java/com/sashplatonov/habbit/runner/auth/identity/IdentityService.java apps/backend/src/main/java/com/sashplatonov/habbit/runner/auth/identity/AccountLinkService.java apps/backend/src/main/java/com/sashplatonov/habbit/runner/auth/service/AuthService.java apps/backend/src/main/java/com/sashplatonov/habbit/runner/auth/service/OAuthAccountLinkService.java apps/backend/src/main/java/com/sashplatonov/habbit/runner/auth/resource/AccountLinkResource.java apps/backend/src/main/java/com/sashplatonov/habbit/runner/auth/dto apps/backend/src/test/java/com/sashplatonov/habbit/runner/auth/AccountLinkServiceTest.java apps/backend/src/test/java/com/sashplatonov/habbit/runner/auth/resource/AccountLinkResourceTest.java spec/openapi/openapi.yaml
 git commit -m "feat(account): Manage linked identities"
 ```
 
