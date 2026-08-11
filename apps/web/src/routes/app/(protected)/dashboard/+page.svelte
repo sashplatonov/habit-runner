@@ -739,7 +739,10 @@
         onPrimaryAction={todaySummary.nextHabitId ? navigateToNextHabit : undefined}
       />
 
-      <div class="sticky top-0 z-[70]">
+      <div
+        class="sticky z-[70] rounded-[1.25rem] bg-bg-primary/95 py-1 backdrop-blur-sm"
+        style:top="var(--safe-area-inset-top, 0px)"
+      >
         <DashboardToolbar
           filter={filter}
           {searchQuery}
@@ -809,7 +812,7 @@
           </div>
         {:else if viewDensity === 'comfortable'}
           <div
-            class={`${selectedTags.length === 0 ? 'grid gap-4 [grid-template-columns:repeat(auto-fit,minmax(18rem,1fr))]' : ''}`}
+            class={`${selectedTags.length === 0 ? 'grid gap-4 [grid-template-columns:repeat(auto-fit,minmax(min(18rem,100%),1fr))]' : ''}`}
             role="list"
             aria-label="Habit list"
           >
@@ -837,7 +840,7 @@
                       <span class="h-1.5 w-1.5 rounded-full bg-accent"></span>
                       <h3 class="text-[10px] font-mono font-bold uppercase tracking-widest text-muted">{group.tag}</h3>
                     </div>
-                    <div class="mt-3 grid gap-4 [grid-template-columns:repeat(auto-fit,minmax(18rem,1fr))]">
+                    <div class="mt-3 grid gap-4 [grid-template-columns:repeat(auto-fit,minmax(min(18rem,100%),1fr))]">
                       {#each group.habits as habit, idx (habit.id)}
                         <HabitTile
                           {habit}

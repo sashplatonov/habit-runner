@@ -36,7 +36,13 @@
     }
 
     window.setTimeout(() => {
-      document.getElementById('habit-search')?.focus();
+      const search = document.getElementById('habit-search');
+      if (search instanceof HTMLInputElement && search.offsetParent === null) {
+        document.querySelector<HTMLButtonElement>('button[aria-label="Open search"]')?.click();
+      }
+      window.setTimeout(() => {
+        document.getElementById('habit-search')?.focus();
+      }, 0);
     }, 100);
   }
 </script>

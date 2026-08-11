@@ -169,7 +169,7 @@ git commit -m "fix(mobile): Respect safe areas in app shell"
 
 ## P1-2: Streamline the Today dashboard for thumb-first check-ins
 
-**Status:** ⬜ Not started  
+**Status:** ✅ Completed
 **Priority:** P1  
 **Depends on:** P0-1, P1-1
 

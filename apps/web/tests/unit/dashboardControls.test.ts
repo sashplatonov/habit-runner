@@ -35,6 +35,14 @@ describe('dashboard controls', () => {
     expect(screen.queryByRole('region', { name: 'Dashboard view options' })).toBeNull();
   });
 
+  it('keeps primary mobile controls touch-sized', () => {
+    renderToolbar();
+
+    expect(screen.getByRole('button', { name: 'Add habit' }).classList.contains('min-h-11')).toBe(true);
+    expect(screen.getByRole('button', { name: 'Open search' }).classList.contains('min-h-11')).toBe(true);
+    expect(screen.getByRole('button', { name: 'View options' }).classList.contains('min-h-11')).toBe(true);
+  });
+
   it('opens and closes view options from the same trigger', async () => {
     const user = userEvent.setup();
     renderToolbar();

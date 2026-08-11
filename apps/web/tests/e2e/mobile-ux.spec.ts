@@ -18,6 +18,11 @@ test.describe('compact mobile UX baseline', () => {
     await expect(page.getByRole('button', { name: 'Choose color theme' })).toHaveCount(0);
     await page.getByRole('button', { name: 'Close menu' }).last().click();
     await expect(page.getByRole('button', { name: 'More actions' })).toBeFocused();
+
+    await page.getByRole('button', { name: 'More actions' }).click();
+    await page.getByRole('button', { name: 'Search habits' }).click();
+    await expect(page.getByRole('searchbox', { name: 'Search habits' })).toBeFocused();
+    await expectNoHorizontalOverflow(page);
   });
 
   test('keeps Progress readable and switchable', async ({ page }) => {

@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { page } from '$app/state';
   import { SearchIcon, SlidersHorizontalIcon, PlusIcon, ArchiveIcon, XIcon, Grid3x3Icon, TagIcon, DownloadIcon, Settings2Icon } from 'lucide-svelte';
   import DashboardIconButton from '$lib/components/dashboard/DashboardIconButton.svelte';
   import DashboardSegmentedControl from '$lib/components/dashboard/DashboardSegmentedControl.svelte';
@@ -48,6 +49,12 @@
   let isOptionsOpen = $state(false);
   let isMobileSearchOpen = $state(false);
   let optionsElement = $state<HTMLDivElement | null>(null);
+
+  $effect(() => {
+    if (page.url.hash === '#habit-search') {
+      isMobileSearchOpen = true;
+    }
+  });
 
   const filterOptions = $derived([
     { id: 'pending', label: 'To do', count: pendingCount },
