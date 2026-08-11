@@ -630,6 +630,20 @@
           }
         }
       },
+      "TelegramSessionResponse" : {
+        "type" : "object",
+        "properties" : {
+          "userId" : {
+            "type" : "string"
+          },
+          "email" : {
+            "type" : "string"
+          },
+          "existingAccount" : {
+            "type" : "boolean"
+          }
+        }
+      },
       "ThemeResponse" : {
         "type" : "object",
         "properties" : {
@@ -1065,6 +1079,7 @@
     },
     "/auth/telegram/session" : {
       "post" : {
+        "summary" : "Authenticate Telegram Mini App session",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -1077,18 +1092,19 @@
         },
         "responses" : {
           "200" : {
-            "description" : "OK",
+            "description" : "Authenticated Telegram session",
             "content" : {
               "application/json" : {
-                "schema" : { }
+                "schema" : {
+                  "$ref" : "#/components/schemas/TelegramSessionResponse"
+                }
               }
             }
           },
           "400" : {
-            "description" : "Bad Request"
+            "description" : "Telegram authentication rejected"
           }
         },
-        "summary" : "Session",
         "tags" : [ "Telegram Auth Resource" ]
       }
     },

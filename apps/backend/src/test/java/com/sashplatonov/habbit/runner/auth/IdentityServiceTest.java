@@ -8,6 +8,8 @@ import com.sashplatonov.habbit.runner.repository.AuthIdentityRepository;
 import com.sashplatonov.habbit.runner.repository.UserRepository;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -29,6 +31,7 @@ class IdentityServiceTest {
     service.identityRepository = identities;
     service.userRepository = users;
     assertNotNull(service.findOrCreateTelegram("42"));
+    assertTrue(service.resolveTelegram("42", null).existingAccount());
   }
 
   @Test
@@ -39,9 +42,10 @@ class IdentityServiceTest {
     var service = new IdentityService();
     service.identityRepository = identities;
     service.userRepository = users;
-    var result = service.findOrCreateTelegram("42");
+    var result = service.resolveTelegram("42", null);
     verify(users).save(any(UserEntity.class));
     verify(identities).save(any(AuthIdentityEntity.class));
     assertNotNull(result);
+    assertFalse(result.existingAccount());
   }
 }

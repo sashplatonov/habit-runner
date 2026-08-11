@@ -3,7 +3,9 @@ import { ApiError } from '@/lib/api/ApiError';
 import { authenticatedFetch, saveAuthSession, type AuthSession } from '@/lib/auth/session';
 import { loadTelegramWebApp, telegramStartParam, type TelegramWebAppAdapter } from './webApp';
 
-export async function authenticateTelegramMiniApp(): Promise<AuthSession> {
+export type TelegramAuthenticationSession = AuthSession & { existingAccount: boolean };
+
+export async function authenticateTelegramMiniApp(): Promise<TelegramAuthenticationSession> {
   const webApp = await loadTelegramWebApp();
   if (!webApp || !webApp.initData) {
     throw new Error('Open this page from the Habbit Runner Telegram Mini App.');
@@ -15,11 +17,14 @@ export async function authenticateTelegramMiniApp(): Promise<AuthSession> {
   if (!response.ok) {
     throw await telegramAuthenticationError(response);
   }
-  const payload = await response.json() as { userId?: string; email?: string };
+  const payload = await response.json() as { userId?: string; email?: string; existingAccount?: boolean };
   if (!payload.userId) {
     throw new Error('Telegram session response did not include a userId.');
   }
-  return saveAuthSession({ userId: payload.userId, email: payload.email });
+  return {
+    ...saveAuthSession({ userId: payload.userId, email: payload.email }),
+    existingAccount: payload.existingAccount === true
+  };
 }
 
 async function telegramAuthenticationError(response: Response): Promise<Error> {

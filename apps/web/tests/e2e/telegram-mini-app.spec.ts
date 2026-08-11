@@ -91,7 +91,17 @@ test('Telegram launch shows a retry action when the SDK cannot load', async ({ p
   await expect(page).toHaveURL(/\/app\/dashboard$/);
 });
 
-test('root authenticates a Telegram Mini App user without showing Google sign-in', async ({ page }) => {
+test('Telegram SDK retry keeps a retryable error when loading fails again', async ({ page }) => {
+  await page.route('**/telegram-web-app.js*', (route) => route.abort());
+
+  await page.goto('/?startapp=pairing-token');
+  await expect(page.getByRole('heading', { name: 'Telegram connection needs a retry' })).toBeVisible();
+  await page.getByRole('button', { name: 'Try again' }).click();
+  await expect(page.getByRole('heading', { name: 'Telegram connection needs a retry' })).toBeVisible();
+  await expect(page.getByRole('alert')).toContainText('Telegram SDK failed to load');
+});
+
+test('root enters the dashboard for an already linked Telegram account', async ({ page }) => {
   await page.addInitScript(() => {
     window.Telegram = {
       WebApp: {
@@ -107,14 +117,35 @@ test('root authenticates a Telegram Mini App user without showing Google sign-in
   await page.route('**/api/auth/telegram/session', async (route) => {
     await route.fulfill({
       contentType: 'application/json',
-      body: JSON.stringify({ userId: 'telegram-user', email: null })
+      body: JSON.stringify({ userId: 'telegram-user', email: null, existingAccount: true })
     });
   });
 
   await page.goto('/');
+  await expect(page).toHaveURL(/\/app\/dashboard$/);
+});
+
+test('root offers account linking only for a new Telegram account', async ({ page }) => {
+  await page.addInitScript(() => {
+    window.Telegram = {
+      WebApp: {
+        initData: 'signed-telegram-init-data',
+        initDataUnsafe: {},
+        themeParams: {},
+        ready: () => undefined,
+        expand: () => undefined,
+        close: () => undefined
+      }
+    };
+  });
+  await page.route('**/api/auth/telegram/session', (route) => route.fulfill({
+    contentType: 'application/json',
+    body: JSON.stringify({ userId: 'new-telegram-user', email: null, existingAccount: false })
+  }));
+
+  await page.goto('/');
   await expect(page.getByRole('button', { name: 'Continue with Telegram' })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Sign in with Google' })).toBeVisible();
-  await expect(page.getByText('I have a link code')).not.toBeVisible();
 });
 
 test('Telegram entry follows dark webview theme parameters', async ({ page }) => {
@@ -138,6 +169,11 @@ test('Telegram entry follows dark webview theme parameters', async ({ page }) =>
     };
   });
 
+  await page.route('**/api/auth/telegram/session', (route) => route.fulfill({
+    contentType: 'application/json',
+    body: JSON.stringify({ userId: 'new-telegram-user', email: null, existingAccount: false })
+  }));
+
   await page.goto('/');
   await expect(page.getByRole('button', { name: 'Continue with Telegram' })).toBeVisible();
   await expect(page.locator('.entry')).toHaveCSS('background-color', 'rgb(16, 16, 16)');
@@ -149,7 +185,7 @@ test('Telegram Mini App starts Google account linking from a verified Telegram s
   await page.addInitScript(() => {
     window.Telegram = { WebApp: { initData: 'signed-telegram-init-data', initDataUnsafe: {}, themeParams: {}, ready: () => undefined, expand: () => undefined, close: () => undefined } };
   });
-  await page.route('**/api/auth/telegram/session', (route) => route.fulfill({ contentType: 'application/json', body: JSON.stringify({ userId: 'telegram-user', email: null }) }));
+  await page.route('**/api/auth/telegram/session', (route) => route.fulfill({ contentType: 'application/json', body: JSON.stringify({ userId: 'telegram-user', email: null, existingAccount: false }) }));
   await page.route('**/api/auth/google/link/start*', (route) => route.fulfill({ contentType: 'text/html', body: '<title>Google OAuth</title>' }));
 
   await page.goto('/');

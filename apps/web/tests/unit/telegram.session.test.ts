@@ -22,7 +22,7 @@ describe('Telegram Mini App session', () => {
 
   it('exchanges raw initData and persists the server session', async () => {
     const fetchMock = vi.fn().mockResolvedValue(new Response(
-      JSON.stringify({ userId: 'user-42', email: null }),
+      JSON.stringify({ userId: 'user-42', email: null, existingAccount: true }),
       { status: 200, headers: { 'Content-Type': 'application/json' } }
     ));
     vi.stubGlobal('fetch', fetchMock);
@@ -30,6 +30,7 @@ describe('Telegram Mini App session', () => {
     const session = await authenticateTelegramMiniApp();
 
     expect(session.userId).toBe('user-42');
+    expect(session.existingAccount).toBe(true);
     expect(readAuthSession()?.userId).toBe('user-42');
     expect(fetchMock).toHaveBeenCalledWith(
       expect.stringContaining('/auth/telegram/session'),

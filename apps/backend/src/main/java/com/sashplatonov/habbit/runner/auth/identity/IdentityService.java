@@ -29,12 +29,18 @@ public class IdentityService {
 
   @Transactional
   public UserEntity findOrCreateTelegram(String providerSubject, String displayName) {
+    var resolution = resolveTelegram(providerSubject, displayName);
+    return userRepository.findRequiredById(resolution.userId());
+  }
+
+  @Transactional
+  public TelegramIdentityResolution resolveTelegram(String providerSubject, String displayName) {
     var existing = find(AuthProvider.TELEGRAM, providerSubject);
     if (existing != null) {
       if (displayName != null && !displayName.isBlank()) {
         existing.setDisplayName(displayName);
       }
-      return userRepository.findRequiredById(existing.getUserId());
+      return new TelegramIdentityResolution(existing.getUserId(), true);
     }
 
     var user = new UserEntity();
@@ -46,6 +52,6 @@ public class IdentityService {
     identity.setUserId(user.getId());
     identity.setDisplayName(displayName);
     identityRepository.save(identity);
-    return user;
+    return new TelegramIdentityResolution(user.getId(), false);
   }
 }

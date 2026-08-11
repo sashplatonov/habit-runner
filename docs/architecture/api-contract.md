@@ -18,7 +18,9 @@ development exposes it at `http://localhost:3000/openapi` (or the configured
   public; habit and check-in routes require the authenticated user context.
 - `POST /auth/telegram/session` accepts Telegram's raw `initData`; the backend
   verifies its HMAC with the backend-only bot token, creates the same session
-  cookies, and never returns the bot token.
+  cookies, and never returns the bot token. Its response includes
+  `existingAccount`, which is true only when the Telegram identity existed
+  before this session exchange.
 - Account linking uses the authenticated account session plus
   `POST /auth/link/telegram/start` and `POST /auth/link/telegram/complete`.
   Completion verifies Telegram, merges the Telegram session into the account

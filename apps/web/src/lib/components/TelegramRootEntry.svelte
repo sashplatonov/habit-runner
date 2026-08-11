@@ -51,6 +51,39 @@
     }
   }
 
+  async function authenticateExistingTelegramAccount() {
+    working = true;
+    mode = 'loading';
+    errorMessage = '';
+    try {
+      const session = await authenticateTelegramMiniApp();
+      if (session.existingAccount) {
+        await goto(resolve('/app/(protected)/dashboard', {}), { replaceState: true });
+        return;
+      }
+      mode = 'choice';
+    } catch (cause) {
+      mode = 'error';
+      errorMessage = cause instanceof Error ? cause.message : 'Telegram authentication failed.';
+    } finally {
+      working = false;
+    }
+  }
+
+  async function retry() {
+    try {
+      const loaded = await requireTelegramWebApp();
+      if (telegramStartParam(loaded)) {
+        await connect();
+        return;
+      }
+      await authenticateExistingTelegramAccount();
+    } catch (cause) {
+      mode = 'error';
+      errorMessage = cause instanceof Error ? cause.message : 'Telegram authentication failed.';
+    }
+  }
+
   onMount(() => {
     if (!enabled) return;
     void loadTelegramWebApp().then((loaded) => {
@@ -62,7 +95,7 @@
       if (telegramStartParam(loaded)) {
         void connect();
       } else {
-        mode = 'choice';
+        void authenticateExistingTelegramAccount();
       }
     }).catch((cause: unknown) => {
       mode = 'error';
@@ -78,7 +111,7 @@
 {:else if mode === 'choice'}
   <main class="entry"><div class="card"><p class="eyebrow">Habbit Runner</p><h1>Continue in Telegram</h1><p class="muted">Use Telegram, or sign in with Google to link both accounts and share the same habits.</p><button class="primary" type="button" disabled={working} onclick={() => void connect()}>Continue with Telegram</button><button class="secondary" type="button" disabled={working} onclick={() => void connectGoogleAccount()}>Sign in with Google</button></div></main>
 {:else}
-  <main class="entry"><div class="card"><h1>Telegram connection needs a retry</h1><p class="error" role="alert">{errorMessage}</p><button class="primary" type="button" onclick={() => void connect()}>Try again</button></div></main>
+  <main class="entry"><div class="card"><h1>Telegram connection needs a retry</h1><p class="error" role="alert">{errorMessage}</p><button class="primary" type="button" onclick={() => void retry()}>Try again</button></div></main>
 {/if}
 
 <style>

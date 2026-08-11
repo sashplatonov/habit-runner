@@ -92,13 +92,15 @@ public class AuthService {
     }
     var displayName = telegramUser.username() == null || telegramUser.username().isBlank()
         ? null : "@" + telegramUser.username();
-    var user = collaborators.findOrCreateTelegramUser(Long.toString(telegramUser.id()), displayName);
+    var resolution = collaborators.findOrCreateTelegramUser(Long.toString(telegramUser.id()), displayName);
+    var user = collaborators.findRequiredUserById(resolution.userId());
     var session = collaborators.issueTokenPair(user, authConfig.accessTokenTtlSeconds(), authConfig.refreshTokenDays());
     if (authServiceSupport != null) {
       authServiceSupport.checkAccountRateLimit("auth:telegram:session", Long.toString(telegramUser.id()), 10, Duration.ofMinutes(10));
       authServiceSupport.record(ServiceMetric.AUTH_LOGIN_SUCCESS_GOOGLE);
     }
-    return session;
+    return new TokenResponse(session.accessToken(), session.refreshToken(), session.expiresIn(),
+        session.tokenType(), resolution.existingAccount());
   }
 
   @Transactional

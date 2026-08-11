@@ -5,6 +5,7 @@ import com.sashplatonov.habbit.runner.auth.security.JwtUtil;
 import com.sashplatonov.habbit.runner.auth.service.RefreshTokenService;
 import com.sashplatonov.habbit.runner.auth.service.UserService;
 import com.sashplatonov.habbit.runner.auth.identity.IdentityService;
+import com.sashplatonov.habbit.runner.auth.identity.TelegramIdentityResolution;
 import com.sashplatonov.habbit.runner.auth.dto.TokenResponse;
 import com.sashplatonov.habbit.runner.model.RefreshTokenEntity;
 import com.sashplatonov.habbit.runner.model.UserEntity;
@@ -95,11 +96,11 @@ public class AuthCollaborators {
     return userService.findOrCreateUser(email);
   }
 
-  public UserEntity findOrCreateTelegramUser(String subject, String displayName) {
+  public TelegramIdentityResolution findOrCreateTelegramUser(String subject, String displayName) {
     if (identityService == null) {
       throw new IllegalStateException("Telegram identity service is not configured");
     }
-    return identityService.findOrCreateTelegram(subject, displayName);
+    return identityService.resolveTelegram(subject, displayName);
   }
 
   public String buildCallbackRedirect(String returnTo) {
