@@ -8,10 +8,8 @@ export async function authenticateTelegramMiniApp(): Promise<AuthSession> {
   if (!webApp || !webApp.initData) {
     throw new Error('Open this page from the Habbit Runner Telegram Mini App.');
   }
-  const response = await fetch(`${API_BASE_URL}/auth/telegram/session`, {
+  const response = await authenticatedFetch(`${API_BASE_URL}/auth/telegram/session`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    credentials: 'include',
     body: JSON.stringify({ initData: webApp.initData })
   });
   if (!response.ok) {
@@ -47,6 +45,19 @@ export async function completeTelegramPairing(webApp: TelegramWebAppAdapter): Pr
     body: JSON.stringify({ token: webApp.startParam, initData: webApp.initData })
   });
   if (!response.ok) {
-    throw new Error(`Telegram account linking failed: ${response.status}`);
+    const responseCopy = response.clone();
+    const error = await ApiError.fromResponse(response);
+    let detail = error.detail;
+    if (!detail) {
+      try {
+        const payload = await responseCopy.json() as { detail?: unknown };
+        detail = typeof payload.detail === 'string' ? payload.detail : null;
+      } catch {
+        detail = null;
+      }
+    }
+    throw new Error(detail
+      ? `Telegram account linking failed: ${detail}`
+      : `Telegram account linking failed: ${response.status}`);
   }
 }

@@ -33,8 +33,26 @@ describe('Telegram Mini App session', () => {
     expect(readAuthSession()?.userId).toBe('user-42');
     expect(fetchMock).toHaveBeenCalledWith(
       expect.stringContaining('/auth/telegram/session'),
-      expect.objectContaining({ body: JSON.stringify({ initData: 'signed-init-data' }) })
+      expect.objectContaining({
+        body: JSON.stringify({ initData: 'signed-init-data' }),
+        credentials: 'include',
+        headers: expect.any(Headers)
+      })
     );
+  });
+
+  it('sends the current CSRF cookie when a browser session already exists', async () => {
+    document.cookie = 'habbit_runner_csrf_token=csrf-telegram';
+    const fetchMock = vi.fn().mockResolvedValue(new Response(
+      JSON.stringify({ userId: 'telegram-user', email: null }),
+      { status: 200, headers: { 'Content-Type': 'application/json' } }
+    ));
+    vi.stubGlobal('fetch', fetchMock);
+
+    await authenticateTelegramMiniApp();
+
+    const request = fetchMock.mock.calls[0]?.[1] as RequestInit;
+    expect(new Headers(request.headers).get('X-CSRF-Token')).toBe('csrf-telegram');
   });
 
   it('submits a startapp pairing token only after Telegram authentication', async () => {
@@ -67,6 +85,22 @@ describe('Telegram Mini App session', () => {
 
     await expect(authenticateTelegramMiniApp()).rejects.toThrow(
       'Telegram sign-in is not configured for this environment.'
+    );
+  });
+
+  it('surfaces the pairing API detail when completion is rejected', async () => {
+    const webApp = window.Telegram?.WebApp;
+    if (!webApp) {
+      throw new Error('Telegram Web App test adapter is missing');
+    }
+    webApp.startParam = 'pairing-token';
+    const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify({
+      detail: 'Invalid or expired account link challenge'
+    }), { status: 400, headers: { 'Content-Type': 'application/json' } }));
+    vi.stubGlobal('fetch', fetchMock);
+
+    await expect(completeTelegramPairing(webApp)).rejects.toThrow(
+      'Telegram account linking failed: Invalid or expired account link challenge'
     );
   });
 });
