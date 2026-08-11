@@ -9,7 +9,7 @@ import com.sashplatonov.habbit.runner.model.AccountLinkChallengeEntity;
 import com.sashplatonov.habbit.runner.model.AuthIdentityEntity;
 import com.sashplatonov.habbit.runner.repository.AccountLinkChallengeRepository;
 import com.sashplatonov.habbit.runner.repository.AuthIdentityRepository;
-import jakarta.ws.rs.BadRequestException;
+import jakarta.ws.rs.ClientErrorException;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
@@ -34,7 +34,7 @@ class AccountLinkServiceTest {
     var verifier = mock(TelegramInitDataVerifier.class);
     var service = new AccountLinkService(challenges, identities, verifier, mock(AccountMergeService.class));
     var challenge = challenge("user-1", "PENDING");
-    when(challenges.findByTokenHash(any())).thenReturn(challenge);
+    when(challenges.findByTokenHashForUpdate(any())).thenReturn(challenge);
     when(verifier.verify("signed")).thenReturn(new TelegramWebAppUser(42, "alice", null, null));
     service.completeTelegramLink("token", "signed");
     verify(identities).save(any());
@@ -53,7 +53,7 @@ class AccountLinkServiceTest {
     identity.setProvider(AuthProvider.TELEGRAM);
     identity.setProviderSubject("42");
     identity.setUserId("absorbed");
-    when(challenges.findByTokenHash(any())).thenReturn(challenge);
+    when(challenges.findByTokenHashForUpdate(any())).thenReturn(challenge);
     when(identities.findByProviderAndSubject(AuthProvider.TELEGRAM, "42")).thenReturn(identity);
     when(verifier.verify("signed")).thenReturn(new TelegramWebAppUser(42, "updated", null, null));
     service.completeTelegramLink("token", "signed");
@@ -71,7 +71,7 @@ class AccountLinkServiceTest {
     var challenge = challenge("owner", "PENDING");
     var identity = new AuthIdentityEntity();
     identity.setUserId("other");
-    when(challenges.findByTokenHash(any())).thenReturn(challenge);
+    when(challenges.findByTokenHashForUpdate(any())).thenReturn(challenge);
     when(verifier.verify("signed")).thenReturn(new TelegramWebAppUser(7, "seven", null, null));
     when(identities.findByProviderAndSubject(AuthProvider.TELEGRAM, "7")).thenReturn(identity);
     service.completeTelegramLink("token", "signed");
@@ -88,6 +88,25 @@ class AccountLinkServiceTest {
 
     org.junit.jupiter.api.Assertions.assertTrue(service.isTelegramLinked("owner"));
     org.junit.jupiter.api.Assertions.assertFalse(service.isTelegramLinked("other"));
+  }
+
+  @Test
+  void rejectsLinkingAnotherTelegramAccountWhenTheOwnerAlreadyHasOne() {
+    var challenges = mock(AccountLinkChallengeRepository.class);
+    var identities = mock(AuthIdentityRepository.class);
+    var verifier = mock(TelegramInitDataVerifier.class);
+    var service = new AccountLinkService(challenges, identities, verifier, mock(AccountMergeService.class));
+    var challenge = challenge("owner", "PENDING");
+    var ownerIdentity = new AuthIdentityEntity();
+    ownerIdentity.setProviderSubject("42");
+    when(challenges.findByTokenHashForUpdate(any())).thenReturn(challenge);
+    when(verifier.verify("signed")).thenReturn(new TelegramWebAppUser(7, "seven", null, null));
+    when(identities.findByUserIdAndProvider("owner", AuthProvider.TELEGRAM)).thenReturn(ownerIdentity);
+
+    var exception = assertThrows(ClientErrorException.class,
+        () -> service.completeTelegramLink("token", "signed"));
+
+    org.junit.jupiter.api.Assertions.assertEquals(409, exception.getResponse().getStatus());
   }
 
   private AccountLinkChallengeEntity challenge(String owner, String status) {

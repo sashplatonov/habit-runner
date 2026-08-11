@@ -61,7 +61,10 @@ describe('Telegram Mini App session', () => {
       throw new Error('Telegram Web App test adapter is missing');
     }
     webApp.startParam = 'pairing-token';
-    const fetchMock = vi.fn().mockResolvedValue(new Response(null, { status: 204 }));
+    const fetchMock = vi.fn().mockResolvedValue(new Response(
+      JSON.stringify({ userId: 'web-owner', email: 'owner@example.test' }),
+      { status: 200, headers: { 'Content-Type': 'application/json' } }
+    ));
     vi.stubGlobal('fetch', fetchMock);
 
     await completeTelegramPairing(webApp);
@@ -71,6 +74,7 @@ describe('Telegram Mini App session', () => {
       body: JSON.stringify({ token: 'pairing-token', initData: 'signed-init-data' }),
       credentials: 'include'
     }));
+    expect(readAuthSession()).toEqual({ userId: 'web-owner', email: 'owner@example.test' });
   });
 
   it('explains when the API has no Telegram bot token configured', async () => {

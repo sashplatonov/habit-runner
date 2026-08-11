@@ -56,45 +56,60 @@ public class AccountLinkService {
 
   @Transactional
   public String completeTelegramLink(String token, String initData) {
-    var challenge = requireChallenge(token);
+    var challenge = requireChallengeForCompletion(token);
     if (!"PENDING".equals(challenge.getStatus())) {
       throw new BadRequestException("Account link challenge is not pending");
     }
     TelegramWebAppUser telegramUser = telegramVerifier.verify(initData);
     var existing = identityRepository.findByProviderAndSubject(AuthProvider.TELEGRAM, Long.toString(telegramUser.id()));
+    ensureOwnerCanLinkTelegramIdentity(challenge.getOwnerUserId(), existing);
     challenge.setTelegramUserId(Long.toString(telegramUser.id()));
     challenge.setTelegramUsername(telegramUser.username());
     var displayName = telegramUser.username() == null || telegramUser.username().isBlank()
         ? null : "@" + telegramUser.username();
-    if (existing == null) {
-      var identity = new AuthIdentityEntity();
-      identity.setProvider(AuthProvider.TELEGRAM);
-      identity.setProviderSubject(Long.toString(telegramUser.id()));
-      identity.setUserId(challenge.getOwnerUserId());
-      identity.setDisplayName(displayName);
-      identityRepository.save(identity);
-    } else {
-      if (!challenge.getOwnerUserId().equals(existing.getUserId())) {
-        mergeService.merge(challenge.getOwnerUserId(), existing.getUserId());
-      }
-      existing.setDisplayName(displayName);
-    }
+    linkTelegramIdentity(challenge.getOwnerUserId(), telegramUser.id(), displayName, existing);
     challenge.setStatus("COMPLETED");
     log.info("event=telegram_link_challenge_verified tokenRef={} telegramUserRef={} status={} existingIdentity={}",
         tokenReference(token), fingerprint(Long.toString(telegramUser.id())), challenge.getStatus(), existing != null);
     return challenge.getOwnerUserId();
   }
 
+  private void ensureOwnerCanLinkTelegramIdentity(String ownerUserId, AuthIdentityEntity incomingIdentity) {
+    var ownerTelegramIdentity = identityRepository.findByUserIdAndProvider(ownerUserId, AuthProvider.TELEGRAM);
+    if (ownerTelegramIdentity != null && (incomingIdentity == null
+        || !ownerTelegramIdentity.getProviderSubject().equals(incomingIdentity.getProviderSubject()))) {
+      throw new jakarta.ws.rs.ClientErrorException(
+          "A different Telegram account is already linked", jakarta.ws.rs.core.Response.Status.CONFLICT);
+    }
+  }
+
+  private void linkTelegramIdentity(String ownerUserId, long telegramUserId, String displayName,
+      AuthIdentityEntity existing) {
+    if (existing == null) {
+      var identity = new AuthIdentityEntity();
+      identity.setProvider(AuthProvider.TELEGRAM);
+      identity.setProviderSubject(Long.toString(telegramUserId));
+      identity.setUserId(ownerUserId);
+      identity.setDisplayName(displayName);
+      identityRepository.save(identity);
+    } else {
+      if (!ownerUserId.equals(existing.getUserId())) {
+        mergeService.merge(ownerUserId, existing.getUserId());
+      }
+      existing.setDisplayName(displayName);
+    }
+  }
+
   public boolean isTelegramLinked(String ownerUserId) {
     return identityRepository.findByUserIdAndProvider(ownerUserId, AuthProvider.TELEGRAM) != null;
   }
 
-  private AccountLinkChallengeEntity requireChallenge(String token) {
+  private AccountLinkChallengeEntity requireChallengeForCompletion(String token) {
     if (token == null || token.isBlank()) {
       throw new BadRequestException("Invalid account link challenge");
     }
     var tokenHash = hash(token);
-    var challenge = challengeRepository.findByTokenHash(tokenHash);
+    var challenge = challengeRepository.findByTokenHashForUpdate(tokenHash);
     if (challenge == null) {
       log.warn("event=telegram_link_challenge_rejected reason=not_found tokenRef={}", tokenReferenceFromHash(tokenHash));
       throw new BadRequestException("Invalid or expired account link challenge");

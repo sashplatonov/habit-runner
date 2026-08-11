@@ -36,9 +36,9 @@ async function telegramAuthenticationError(response: Response): Promise<Error> {
   return new Error(`Telegram authentication failed: ${response.status}`);
 }
 
-export async function completeTelegramPairing(webApp: TelegramWebAppAdapter): Promise<void> {
+export async function completeTelegramPairing(webApp: TelegramWebAppAdapter): Promise<AuthSession | null> {
   if (!webApp.startParam) {
-    return;
+    return null;
   }
   const response = await authenticatedFetch('/api/auth/link/telegram/complete', {
     method: 'POST',
@@ -60,4 +60,9 @@ export async function completeTelegramPairing(webApp: TelegramWebAppAdapter): Pr
       ? `Telegram account linking failed: ${detail}`
       : `Telegram account linking failed: ${response.status}`);
   }
+  const payload = await response.json() as { userId?: string; email?: string };
+  if (!payload.userId) {
+    throw new Error('Telegram account linking response did not include a userId.');
+  }
+  return saveAuthSession({ userId: payload.userId, email: payload.email });
 }

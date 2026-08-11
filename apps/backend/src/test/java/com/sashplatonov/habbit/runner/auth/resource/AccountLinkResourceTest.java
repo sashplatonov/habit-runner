@@ -29,6 +29,7 @@ class AccountLinkResourceTest {
     when(service.completeTelegramLink("challenge-token", "signed")).thenReturn("owner");
     when(authService.issueSessionForUserId("owner"))
         .thenReturn(new TokenResponse("access", "refresh", 3600, "Bearer"));
+    when(authService.verifyAccessToken("access")).thenReturn(new CurrentUser("owner", "owner@example.com"));
     when(authService.refreshTokenDays()).thenReturn(30);
     when(service.isTelegramLinked("owner")).thenReturn(true);
     var resource = new AccountLinkResource(service, userContext);
@@ -39,8 +40,10 @@ class AccountLinkResourceTest {
         .thenReturn(new com.sashplatonov.habbit.runner.auth.dto.AccountConnectionsResponse(java.util.List.of()));
 
     assertEquals(Response.Status.OK.getStatusCode(), resource.startTelegramLink().getStatus());
-    assertEquals(Response.Status.OK.getStatusCode(),
-        resource.completeTelegramLink(new TelegramLinkRequest("challenge-token", "signed"), "csrf").getStatus());
+    var completion = resource.completeTelegramLink(new TelegramLinkRequest("challenge-token", "signed"), "csrf");
+    assertEquals(Response.Status.OK.getStatusCode(), completion.getStatus());
+    assertEquals(new com.sashplatonov.habbit.runner.auth.dto.AuthSessionResponse("owner", "owner@example.com"),
+        completion.getEntity());
     assertEquals(Response.Status.OK.getStatusCode(), resource.telegramConnection().getStatus());
     assertEquals(0, resource.connections().connections().size());
     assertEquals(Response.Status.NO_CONTENT.getStatusCode(), resource.detach("telegram").getStatus());

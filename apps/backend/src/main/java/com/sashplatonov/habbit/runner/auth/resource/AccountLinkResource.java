@@ -7,6 +7,7 @@ import com.sashplatonov.habbit.runner.auth.security.RequireAuth;
 import com.sashplatonov.habbit.runner.auth.service.AuthService;
 import com.sashplatonov.habbit.runner.auth.support.AuthCookieBuilder;
 import com.sashplatonov.habbit.runner.auth.telegram.TelegramLinkRequest;
+import com.sashplatonov.habbit.runner.auth.dto.AuthSessionResponse;
 import jakarta.inject.Inject;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
@@ -61,9 +62,10 @@ public class AccountLinkResource {
     currentUserContext.requireUser();
     var ownerUserId = accountLinkService.completeTelegramLink(request.token(), request.initData());
     var session = authService.issueSessionForUserId(ownerUserId);
+    var owner = authService.verifyAccessToken(session.accessToken());
     var nextCsrfToken = csrfToken == null || csrfToken.isBlank()
         ? UUID.randomUUID().toString().replace("-", "") : csrfToken;
-    return Response.ok()
+    return Response.ok(new AuthSessionResponse(owner.id(), owner.email()))
         .cookie(authCookieBuilder.accessToken(session.accessToken(), session.expiresIn()))
         .cookie(authCookieBuilder.refreshToken(session.refreshToken(), authService.refreshTokenDays() * 24 * 60 * 60))
         .cookie(authCookieBuilder.csrfToken(nextCsrfToken, authService.refreshTokenDays() * 24 * 60 * 60))
