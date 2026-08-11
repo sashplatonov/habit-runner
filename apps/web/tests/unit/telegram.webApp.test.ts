@@ -1,10 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import type { TelegramWebAppAdapter } from '$lib/telegram/webApp';
+import { telegramStartParam, type TelegramWebAppAdapter } from '$lib/telegram/webApp';
 
 function adapter(initData = 'signed-init-data'): TelegramWebAppAdapter {
   return {
     initData,
-    startParam: null,
+    initDataUnsafe: {},
     themeParams: { bg_color: '#102030', text_color: '#f8fafc' },
     ready: vi.fn(),
     expand: vi.fn(),
@@ -63,5 +63,18 @@ describe('Telegram Web App SDK loader', () => {
     retryScript?.dispatchEvent(new Event('load'));
 
     await expect(secondAttempt).resolves.toBe(webApp);
+  });
+
+  it('reads a direct-link pairing token from Telegram init data', () => {
+    const webApp = adapter();
+    webApp.initDataUnsafe = { start_param: 'pairing-token' };
+
+    expect(telegramStartParam(webApp)).toBe('pairing-token');
+  });
+
+  it('uses Telegram query fallback when init data does not include the start parameter', () => {
+    window.history.replaceState({}, '', '/?tgWebAppStartParam=pairing-token');
+
+    expect(telegramStartParam(adapter())).toBe('pairing-token');
   });
 });

@@ -3,7 +3,7 @@
   import { resolve } from '$app/paths';
   import { onMount } from 'svelte';
   import { authenticateTelegramMiniApp, completeTelegramPairing } from '$lib/telegram/session';
-  import { loadTelegramWebApp, type TelegramWebAppAdapter } from '$lib/telegram/webApp';
+  import { loadTelegramWebApp, telegramStartParam, type TelegramWebAppAdapter } from '$lib/telegram/webApp';
 
   type Props = { enabled: boolean };
   let { enabled }: Props = $props();
@@ -59,7 +59,7 @@
         errorMessage = 'Open this page inside the official Telegram app.';
         return;
       }
-      if (loaded.startParam) {
+      if (telegramStartParam(loaded)) {
         void connect();
       } else {
         mode = 'choice';

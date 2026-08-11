@@ -10,7 +10,7 @@ describe('Telegram Mini App session', () => {
       value: {
         WebApp: {
           initData: 'signed-init-data',
-          startParam: null,
+          initDataUnsafe: {},
           themeParams: { bg_color: '#fff' },
           ready: vi.fn(),
           expand: vi.fn(),
@@ -60,7 +60,7 @@ describe('Telegram Mini App session', () => {
     if (!webApp) {
       throw new Error('Telegram Web App test adapter is missing');
     }
-    webApp.startParam = 'pairing-token';
+    webApp.initDataUnsafe = { start_param: 'pairing-token' };
     const fetchMock = vi.fn().mockResolvedValue(new Response(
       JSON.stringify({ userId: 'web-owner', email: 'owner@example.test' }),
       { status: 200, headers: { 'Content-Type': 'application/json' } }
@@ -97,7 +97,7 @@ describe('Telegram Mini App session', () => {
     if (!webApp) {
       throw new Error('Telegram Web App test adapter is missing');
     }
-    webApp.startParam = 'pairing-token';
+    webApp.initDataUnsafe = { start_param: 'pairing-token' };
     const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify({
       detail: 'Invalid or expired account link challenge'
     }), { status: 400, headers: { 'Content-Type': 'application/json' } }));

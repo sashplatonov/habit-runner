@@ -4,7 +4,7 @@ export type TelegramThemeParams = Record<string, string | undefined>;
 
 export interface TelegramWebAppAdapter {
   initData: string;
-  startParam: string | null;
+  initDataUnsafe?: { start_param?: string };
   themeParams: TelegramThemeParams;
   ready(): void;
   expand(): void;
@@ -47,6 +47,25 @@ function initializeWebApp(webApp: TelegramWebAppAdapter): TelegramWebAppAdapter 
   webApp.expand();
   applySafeArea(webApp);
   return webApp;
+}
+
+export function telegramStartParam(webApp: TelegramWebAppAdapter): string | null {
+  return nonEmpty(webApp.initDataUnsafe?.start_param)
+    ?? queryStartParam();
+}
+
+function queryStartParam(): string | null {
+  const query = new URLSearchParams(window.location.search);
+  const hash = new URLSearchParams(window.location.hash.replace(/^#/, ''));
+  return nonEmpty(query.get('tgWebAppStartParam'))
+    ?? nonEmpty(query.get('startapp'))
+    ?? nonEmpty(hash.get('tgWebAppStartParam'))
+    ?? nonEmpty(hash.get('startapp'));
+}
+
+function nonEmpty(value: string | null | undefined): string | null {
+  const trimmed = value?.trim();
+  return trimmed ? trimmed : null;
 }
 
 function loadTelegramSdk(): Promise<void> {

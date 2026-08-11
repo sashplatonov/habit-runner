@@ -1,7 +1,7 @@
 import { API_BASE_URL } from '@/lib/core/config';
 import { ApiError } from '@/lib/api/ApiError';
 import { authenticatedFetch, saveAuthSession, type AuthSession } from '@/lib/auth/session';
-import { loadTelegramWebApp, type TelegramWebAppAdapter } from './webApp';
+import { loadTelegramWebApp, telegramStartParam, type TelegramWebAppAdapter } from './webApp';
 
 export async function authenticateTelegramMiniApp(): Promise<AuthSession> {
   const webApp = await loadTelegramWebApp();
@@ -37,12 +37,13 @@ async function telegramAuthenticationError(response: Response): Promise<Error> {
 }
 
 export async function completeTelegramPairing(webApp: TelegramWebAppAdapter): Promise<AuthSession | null> {
-  if (!webApp.startParam) {
+  const startParam = telegramStartParam(webApp);
+  if (!startParam) {
     return null;
   }
   const response = await authenticatedFetch('/api/auth/link/telegram/complete', {
     method: 'POST',
-    body: JSON.stringify({ token: webApp.startParam, initData: webApp.initData })
+    body: JSON.stringify({ token: startParam, initData: webApp.initData })
   });
   if (!response.ok) {
     const responseCopy = response.clone();

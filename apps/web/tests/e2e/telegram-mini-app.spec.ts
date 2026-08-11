@@ -15,13 +15,45 @@ test('website root has no horizontal overflow at 320px', async ({ page }) => {
 test('Telegram launch intent never falls back to Google sign-in', async ({ page }) => {
   await page.route('**/telegram-web-app.js*', (route) => route.fulfill({
     contentType: 'application/javascript',
-    body: `window.Telegram = { WebApp: { initData: '', startParam: 'pairing-token', themeParams: { bg_color: '#ffffff', text_color: '#ffffff' }, ready() {}, expand() {}, close() {} } };`
+    body: `window.Telegram = { WebApp: { initData: '', initDataUnsafe: { start_param: 'pairing-token' }, themeParams: { bg_color: '#ffffff', text_color: '#ffffff' }, ready() {}, expand() {}, close() {} } };`
   }));
 
   await page.goto('/?startapp=pairing-token');
   await expect(page.getByRole('heading', { name: 'Telegram connection needs a retry' })).toBeVisible();
   await expect(page.locator('.card')).toHaveCSS('color', 'rgb(15, 23, 42)');
   await expect(page.getByRole('button', { name: 'Sign in with Google' })).not.toBeVisible();
+});
+
+test('Telegram direct link completes pairing with the SDK start parameter', async ({ page }) => {
+  await page.addInitScript(() => {
+    window.Telegram = {
+      WebApp: {
+        initData: 'signed-telegram-init-data',
+        initDataUnsafe: { start_param: 'pairing-token' },
+        themeParams: {},
+        ready: () => undefined,
+        expand: () => undefined,
+        close: () => undefined
+      }
+    };
+  });
+  await page.route('**/api/auth/telegram/session', (route) => route.fulfill({
+    contentType: 'application/json',
+    body: JSON.stringify({ userId: 'temporary-telegram-user', email: null })
+  }));
+  await page.route('**/api/auth/link/telegram/complete', async (route) => {
+    expect(route.request().postDataJSON()).toEqual({
+      token: 'pairing-token',
+      initData: 'signed-telegram-init-data'
+    });
+    await route.fulfill({
+      contentType: 'application/json',
+      body: JSON.stringify({ userId: 'web-owner', email: 'owner@example.test' })
+    });
+  });
+
+  await page.goto('/?tgWebAppStartParam=pairing-token');
+  await expect(page).toHaveURL(/\/app\/dashboard$/);
 });
 
 test('Telegram launch shows a retry action when the SDK cannot load', async ({ page }) => {
@@ -33,7 +65,7 @@ test('Telegram launch shows a retry action when the SDK cannot load', async ({ p
     }
     return route.fulfill({
       contentType: 'application/javascript',
-      body: `window.Telegram = { WebApp: { initData: 'signed-telegram-init-data', startParam: null, themeParams: {}, ready() {}, expand() {}, close() {} } };`
+      body: `window.Telegram = { WebApp: { initData: 'signed-telegram-init-data', initDataUnsafe: {}, themeParams: {}, ready() {}, expand() {}, close() {} } };`
     });
   });
   await page.route('**/api/auth/telegram/session', (route) => route.fulfill({
@@ -53,7 +85,7 @@ test('root authenticates a Telegram Mini App user without showing Google sign-in
     window.Telegram = {
       WebApp: {
         initData: 'signed-telegram-init-data',
-        startParam: null,
+        initDataUnsafe: {},
         themeParams: {},
         ready: () => undefined,
         expand: () => undefined,
@@ -76,7 +108,7 @@ test('root authenticates a Telegram Mini App user without showing Google sign-in
 
 test('Telegram Mini App starts Google account linking from a verified Telegram session', async ({ page }) => {
   await page.addInitScript(() => {
-    window.Telegram = { WebApp: { initData: 'signed-telegram-init-data', startParam: null, themeParams: {}, ready: () => undefined, expand: () => undefined, close: () => undefined } };
+    window.Telegram = { WebApp: { initData: 'signed-telegram-init-data', initDataUnsafe: {}, themeParams: {}, ready: () => undefined, expand: () => undefined, close: () => undefined } };
   });
   await page.route('**/api/auth/telegram/session', (route) => route.fulfill({ contentType: 'application/json', body: JSON.stringify({ userId: 'telegram-user', email: null }) }));
   await page.route('**/api/auth/google/link/start*', (route) => route.fulfill({ contentType: 'text/html', body: '<title>Google OAuth</title>' }));
@@ -90,7 +122,7 @@ test('Telegram Mini App starts Google account linking from a verified Telegram s
 test('Telegram Mini App preserves the CSRF header for an existing browser session', async ({ page }) => {
   await page.context().addCookies([{ name: 'habbit_runner_csrf_token', value: 'csrf-token', url: 'http://127.0.0.1:4173' }]);
   await page.addInitScript(() => {
-    window.Telegram = { WebApp: { initData: 'signed-telegram-init-data', startParam: null, themeParams: {}, ready: () => undefined, expand: () => undefined, close: () => undefined } };
+    window.Telegram = { WebApp: { initData: 'signed-telegram-init-data', initDataUnsafe: {}, themeParams: {}, ready: () => undefined, expand: () => undefined, close: () => undefined } };
   });
 
   let csrfHeader = '';
