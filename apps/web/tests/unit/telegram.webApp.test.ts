@@ -9,6 +9,7 @@ function adapter(initData = 'signed-init-data'): TelegramWebAppAdapter {
     safeAreaInset: { top: 4, bottom: 20 },
     contentSafeAreaInset: { top: 8, bottom: 12 },
     viewportHeight: 812,
+    onEvent: vi.fn(),
     ready: vi.fn(),
     expand: vi.fn(),
     close: vi.fn()
@@ -52,6 +53,29 @@ describe('Telegram Web App SDK loader', () => {
     expect(webApp.ready).toHaveBeenCalledOnce();
     expect(webApp.expand).toHaveBeenCalledOnce();
     expect(document.documentElement.style.getPropertyValue('--telegram-bg-color')).toBe('#102030');
+  });
+
+  it('refreshes theme and safe-area CSS variables when the SDK reports visual changes', async () => {
+    const webApp = adapter();
+    const handlers = new Map<string, () => void>();
+    webApp.onEvent = vi.fn((eventType, handler) => {
+      handlers.set(eventType, handler);
+    });
+    window.Telegram = { WebApp: webApp };
+    const { loadTelegramWebApp } = await import('$lib/telegram/webApp');
+
+    await loadTelegramWebApp();
+    webApp.themeParams.bg_color = '#ffffff';
+    webApp.safeAreaInset = { top: 24, bottom: 34 };
+    webApp.viewportHeight = 744;
+    handlers.get('themeChanged')?.();
+    handlers.get('viewportChanged')?.();
+
+    expect(webApp.onEvent).toHaveBeenCalledWith('themeChanged', expect.any(Function));
+    expect(webApp.onEvent).toHaveBeenCalledWith('viewportChanged', expect.any(Function));
+    expect(document.documentElement.style.getPropertyValue('--telegram-bg-color')).toBe('#ffffff');
+    expect(document.documentElement.style.getPropertyValue('--safe-area-inset-top')).toBe('24px');
+    expect(document.documentElement.style.getPropertyValue('--telegram-viewport-height')).toBe('744px');
   });
 
   it('removes a failed script so a later retry can load the SDK again', async () => {

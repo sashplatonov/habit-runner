@@ -17,6 +17,7 @@ export interface TelegramWebAppAdapter {
   contentSafeAreaInset?: TelegramInsets;
   viewportHeight?: number;
   viewportStableHeight?: number;
+  onEvent?(eventType: 'themeChanged' | 'viewportChanged' | 'safeAreaChanged' | 'contentSafeAreaChanged', eventHandler: () => void): void;
   ready(): void;
   expand(): void;
   close(): void;
@@ -35,6 +36,7 @@ const SCRIPT_URL = 'https://telegram.org/js/telegram-web-app.js?57';
 const SCRIPT_STATE_ATTRIBUTE = 'data-telegram-sdk-state';
 
 let sdkLoad: Promise<void> | null = null;
+const initializedWebApps = new WeakSet<TelegramWebAppAdapter>();
 
 export async function loadTelegramWebApp(): Promise<TelegramWebAppAdapter | null> {
   if (!browser) { return null; }
@@ -54,9 +56,20 @@ export async function loadTelegramWebApp(): Promise<TelegramWebAppAdapter | null
 }
 
 function initializeWebApp(webApp: TelegramWebAppAdapter): TelegramWebAppAdapter {
+  if (initializedWebApps.has(webApp)) {
+    applyVisualState(webApp);
+    return webApp;
+  }
+
+  initializedWebApps.add(webApp);
   webApp.ready();
   webApp.expand();
-  applySafeArea(webApp);
+  applyVisualState(webApp);
+  const refreshVisualState = () => applyVisualState(webApp);
+  webApp.onEvent?.('themeChanged', refreshVisualState);
+  webApp.onEvent?.('viewportChanged', refreshVisualState);
+  webApp.onEvent?.('safeAreaChanged', refreshVisualState);
+  webApp.onEvent?.('contentSafeAreaChanged', refreshVisualState);
   return webApp;
 }
 
@@ -114,7 +127,7 @@ function loadTelegramSdk(): Promise<void> {
   });
 }
 
-function applySafeArea(webApp: TelegramWebAppAdapter): void {
+function applyVisualState(webApp: TelegramWebAppAdapter): void {
   const root = document.documentElement;
   const params = webApp.themeParams;
   for (const [key, value] of Object.entries(params)) {
