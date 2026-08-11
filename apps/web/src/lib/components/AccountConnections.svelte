@@ -54,6 +54,10 @@
       error = 'Telegram launch is not configured for this environment.';
       return;
     }
+    const popup = window.open('', '_blank');
+    if (popup) {
+      popup.opener = null;
+    }
     working = true; error = '';
     try {
       const result = await startTelegramLink();
@@ -63,9 +67,13 @@
       if (!miniAppUrl) throw new Error('Telegram launch is not configured for this environment.');
       linkUrl = miniAppUrl;
       status = 'PENDING';
-      const popup = window.open(miniAppUrl, '_blank', 'noopener,noreferrer');
-      if (!popup) error = 'Your browser blocked the Telegram window. Use Open Telegram to retry.';
+      if (popup) {
+        popup.location.replace(miniAppUrl);
+      } else {
+        error = 'Your browser blocked the Telegram window. Use Open Telegram to retry.';
+      }
     } catch (cause) {
+      popup?.close();
       error = cause instanceof Error ? cause.message : 'Unable to create a Telegram link.';
     } finally { working = false; }
   }

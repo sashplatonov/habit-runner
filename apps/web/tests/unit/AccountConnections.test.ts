@@ -3,11 +3,12 @@ import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import AccountConnections from '$lib/components/AccountConnections.svelte';
 
-const { getAccountConnections, telegramMiniAppUrl, startTelegramLink, open } = vi.hoisted(() => ({
+const { getAccountConnections, telegramMiniAppUrl, startTelegramLink, open, popup } = vi.hoisted(() => ({
   getAccountConnections: vi.fn(),
   telegramMiniAppUrl: vi.fn(),
   startTelegramLink: vi.fn(),
-  open: vi.fn()
+  open: vi.fn(),
+  popup: { close: vi.fn(), location: { replace: vi.fn() }, opener: null as Window | null }
 }));
 
 vi.mock('$lib/api/accountLinks', () => ({
@@ -35,9 +36,13 @@ describe('AccountConnections', () => {
     ] });
     telegramMiniAppUrl.mockImplementation((token: string) => `https://t.me/HabbitRunnerBot?startapp=${token}`);
     startTelegramLink.mockResolvedValue({ token: 'pairing-token' });
+    open.mockReturnValue(popup);
     vi.stubGlobal('open', open);
     vi.spyOn(window, 'open').mockImplementation(open);
     open.mockReset();
+    open.mockReturnValue(popup);
+    popup.close.mockReset();
+    popup.location.replace.mockReset();
   });
 
   it('renders the linked Telegram identity state and starts linking in a new window', async () => {
@@ -47,10 +52,10 @@ describe('AccountConnections', () => {
     expect(await screen.findByText('Not connected')).toBeTruthy();
     await user.click(screen.getByRole('button', { name: 'Link Telegram' }));
 
-    await waitFor(() => expect(open).toHaveBeenCalledWith(
+    expect(open).toHaveBeenCalledWith('', '_blank');
+    await waitFor(() => expect(popup.location.replace).toHaveBeenCalledWith(
       'https://t.me/HabbitRunnerBot?startapp=pairing-token',
-      '_blank',
-      'noopener,noreferrer'
     ));
+    expect(popup.opener).toBeNull();
   });
 });
