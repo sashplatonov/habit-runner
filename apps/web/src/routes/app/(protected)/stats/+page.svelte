@@ -85,11 +85,12 @@
             </p>
           </div>
 
-          <div class="flex flex-wrap items-center gap-2">
+          <div class="flex w-full flex-wrap items-center gap-2 lg:w-auto">
             <SegmentedControl
               options={windowOptions}
               value={windowId}
               ariaLabel="Statistics window"
+              class="w-full justify-between sm:w-auto"
               onChange={(next) => { windowId = next as StatsWindowId; }}
             />
             <a
@@ -101,7 +102,7 @@
             </a>
             <a
               href={resolve(appResolve('/app/(protected)/dashboard', {}), {})}
-              class="inline-flex min-h-11 items-center gap-2 rounded-full border border-border bg-bg-secondary px-3 py-2 text-sm font-medium text-muted transition-colors hover:text-foreground"
+              class="hidden min-h-11 items-center gap-2 rounded-full border border-border bg-bg-secondary px-3 py-2 text-sm font-medium text-muted transition-colors hover:text-foreground sm:inline-flex"
             >
               Back to today
               <ArrowRight size={14} />

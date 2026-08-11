@@ -20,7 +20,7 @@
     <button
       type="button"
       aria-pressed={value === option.id}
-      class={`rounded-full px-3 py-1.5 text-sm transition-colors ${value === option.id ? 'bg-bg-card text-foreground shadow-sm' : 'text-muted hover:text-foreground'}`}
+      class={`min-h-11 rounded-full px-3 py-1.5 text-sm transition-colors ${value === option.id ? 'bg-bg-card text-foreground shadow-sm' : 'text-muted hover:text-foreground'}`}
       onclick={() => onChange(option.id)}
     >
       {option.label}

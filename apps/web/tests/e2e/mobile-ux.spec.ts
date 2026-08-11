@@ -31,6 +31,8 @@ test.describe('compact mobile UX baseline', () => {
     await expect(page.getByRole('heading', { name: 'Simple progress that pushes you forward.' })).toBeVisible();
     await expect(page.getByRole('button', { name: '4 weeks' })).toBeVisible();
     await expect(page.getByRole('button', { name: '12 weeks' })).toBeVisible();
+    await expect(page.getByRole('button', { name: '4 weeks' })).toHaveCSS('min-height', '44px');
+    await expect(page.getByRole('link', { name: 'Back to today' })).toBeHidden();
     await page.getByRole('button', { name: '4 weeks' }).click();
     await expect(page.getByRole('button', { name: '4 weeks' })).toHaveAttribute('aria-pressed', 'true');
     await expectNoHorizontalOverflow(page);
