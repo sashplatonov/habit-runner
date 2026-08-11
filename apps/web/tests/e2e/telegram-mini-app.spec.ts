@@ -21,7 +21,7 @@ test('Telegram launch intent never falls back to Google sign-in', async ({ page 
 
   await page.goto('/?startapp=pairing-token');
   await expect(page.getByRole('heading', { name: 'Telegram connection needs a retry' })).toBeVisible();
-  await expect(page.locator('.card')).toHaveCSS('color', 'rgb(15, 23, 42)');
+  await expect(page.locator('.card')).toHaveCSS('color', 'rgb(255, 255, 255)');
   await expect(page.getByRole('button', { name: 'Sign in with Google' })).not.toBeVisible();
 });
 
@@ -115,6 +115,34 @@ test('root authenticates a Telegram Mini App user without showing Google sign-in
   await expect(page.getByRole('button', { name: 'Continue with Telegram' })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Sign in with Google' })).toBeVisible();
   await expect(page.getByText('I have a link code')).not.toBeVisible();
+});
+
+test('Telegram entry follows dark webview theme parameters', async ({ page }) => {
+  await page.addInitScript(() => {
+    window.Telegram = {
+      WebApp: {
+        initData: 'signed-telegram-init-data',
+        initDataUnsafe: {},
+        themeParams: {
+          bg_color: '#101010',
+          secondary_bg_color: '#2a2a2a',
+          text_color: '#f8fafc',
+          hint_color: '#a1a1aa',
+          button_color: '#2ea043',
+          button_text_color: '#ffffff'
+        },
+        ready: () => undefined,
+        expand: () => undefined,
+        close: () => undefined
+      }
+    };
+  });
+
+  await page.goto('/');
+  await expect(page.getByRole('button', { name: 'Continue with Telegram' })).toBeVisible();
+  await expect(page.locator('.entry')).toHaveCSS('background-color', 'rgb(16, 16, 16)');
+  await expect(page.locator('.card')).toHaveCSS('background-color', 'rgb(42, 42, 42)');
+  await expect(page.getByRole('button', { name: 'Continue with Telegram' })).toHaveCSS('min-height', '44px');
 });
 
 test('Telegram Mini App starts Google account linking from a verified Telegram session', async ({ page }) => {

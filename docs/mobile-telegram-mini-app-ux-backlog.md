@@ -300,7 +300,7 @@ git commit -m "feat(mobile): Simplify progress review"
 
 ## P1-4: Make Telegram entry and theme integration native to the webview
 
-**Status:** ⬜ Not started  
+**Status:** ✅ Completed
 **Priority:** P1  
 **Depends on:** P0-1, P1-1
 
