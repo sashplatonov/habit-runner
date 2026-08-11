@@ -92,16 +92,16 @@
   {#if loading}<p aria-live="polite">Loading connection status…</p>
   {:else}
     <div class="card">
-      <div><strong>Google / email</strong><span>{connection('GOOGLE')?.displayName ?? 'Not connected'}</span></div>
+      <div class="card-main"><strong>Google / email</strong><span class="identity">{connection('GOOGLE')?.displayName ?? 'Not connected'}</span></div>
       {#if connection('GOOGLE')?.connected}
-        <div class="card-actions"><span class="badge">Connected</span>{#if canDetach('GOOGLE')}<button class="button" type="button" disabled={working} onclick={() => void unlink('GOOGLE')}>Unlink</button>{:else}<span class="badge">Required while Telegram is unlinked</span>{/if}</div>
+        <div class="card-actions"><div class="status-group" aria-label={canDetach('GOOGLE') ? 'Google/email connected' : 'Google/email connected and required while Telegram is unlinked'}><span class="status-chip connected"><span class="status-dot" aria-hidden="true"></span>Connected</span>{#if !canDetach('GOOGLE')}<span class="status-chip required" title="Required while Telegram is unlinked">Required</span>{/if}</div>{#if canDetach('GOOGLE')}<button class="button" type="button" disabled={working} onclick={() => void unlink('GOOGLE')}>Unlink</button>{/if}</div>
       {:else}<span class="badge">Available</span>{/if}
     </div>
 
     <div class="card">
-      <div><strong>Telegram</strong><span>{connection('TELEGRAM')?.connected ? (connection('TELEGRAM')?.displayName ?? 'Connected Telegram user') : 'Not connected'}</span></div>
+      <div class="card-main"><strong>Telegram</strong><span class="identity">{connection('TELEGRAM')?.connected ? (connection('TELEGRAM')?.displayName ?? 'Connected Telegram user') : 'Not connected'}</span></div>
       {#if connection('TELEGRAM')?.connected}
-        <div class="card-actions"><span class="badge">Connected</span>{#if canDetach('TELEGRAM')}<button class="button" type="button" disabled={working} onclick={() => void unlink('TELEGRAM')}>Unlink</button>{:else}<span class="badge">Required while Google/email is unlinked</span>{/if}</div>
+        <div class="card-actions"><div class="status-group" aria-label={canDetach('TELEGRAM') ? 'Telegram connected' : 'Telegram connected and required while Google/email is unlinked'}><span class="status-chip connected"><span class="status-dot" aria-hidden="true"></span>Connected</span>{#if !canDetach('TELEGRAM')}<span class="status-chip required" title="Required while Google/email is unlinked">Required</span>{/if}</div>{#if canDetach('TELEGRAM')}<button class="button" type="button" disabled={working} onclick={() => void unlink('TELEGRAM')}>Unlink</button>{/if}</div>
       {:else}<button class="button primary" type="button" disabled={working} onclick={() => void openTelegramMiniApp()}>Link Telegram</button>{/if}
     </div>
 
@@ -119,15 +119,20 @@
   .connections { max-width: 40rem; margin: 0 auto; padding: 1.5rem; }
   .eyebrow { font: 600 0.7rem/1 monospace; letter-spacing: .2em; text-transform: uppercase; color: var(--color-muted, #64748b); }
   h1 { margin: .5rem 0; font-size: clamp(1.6rem, 5vw, 2.4rem); }
-  .muted, .card span { color: var(--color-muted, #64748b); }
+  .muted, .identity { color: var(--color-muted, #64748b); }
   .card { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-top: 1rem; padding: 1rem; border: 1px solid var(--color-border, #e2e8f0); border-radius: 1rem; }
-  .card div:first-child { display: grid; gap: .35rem; min-width: 0; }
+  .card-main { display: grid; gap: .35rem; min-width: 0; }
   .card-actions { display: flex; align-items: center; gap: .75rem; }
+  .status-group { display: flex; align-items: center; flex-wrap: wrap; gap: .4rem; }
+  .status-chip { display: inline-flex; align-items: center; gap: .35rem; min-height: 28px; padding: 0 .65rem; border: 1px solid transparent; border-radius: 999px; font-size: .75rem; font-weight: 700; letter-spacing: .01em; white-space: nowrap; }
+  .status-chip.connected { color: #166534; background: #dcfce7; border-color: #bbf7d0; }
+  .status-chip.required { color: #92400e; background: #fef3c7; border-color: #fde68a; }
+  .status-dot { width: .4rem; height: .4rem; border-radius: 50%; background: currentColor; }
   .badge { color: var(--color-progress, #15803d); font-size: .8rem; }
   .confirm { max-width: min(30rem, calc(100vw - 2rem)); display: grid; gap: .75rem; padding: 1rem; border: 1px solid var(--color-border, #e2e8f0); border-radius: 1rem; }
   .confirm::backdrop { background: rgb(15 23 42 / .45); }
   .button { min-height: 44px; border: 1px solid var(--color-border, #cbd5e1); border-radius: .8rem; padding: 0 1rem; cursor: pointer; }
   .primary { background: var(--color-progress, #15803d); color: white; text-align: center; display: inline-flex; align-items: center; justify-content: center; text-decoration: none; }
   .error { color: #b91c1c; }
-  @media (max-width: 480px) { .card { align-items: flex-start; flex-direction: column; } .card-actions { width: 100%; justify-content: space-between; } .button.primary { width: 100%; } }
+  @media (max-width: 480px) { .card { align-items: flex-start; flex-direction: column; } .card-actions { width: 100%; justify-content: space-between; } .status-group { flex: 1; } .button.primary { width: 100%; } }
 </style>

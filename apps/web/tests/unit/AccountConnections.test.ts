@@ -77,7 +77,8 @@ describe('AccountConnections', () => {
 
     await screen.findByText('person@example.com');
     expect(screen.queryByRole('button', { name: 'Unlink' })).toBeNull();
-    expect(screen.getByText('Required while Telegram is unlinked')).toBeTruthy();
+    expect(screen.getByText('Connected')).toBeTruthy();
+    expect(screen.getByText('Required').getAttribute('title')).toBe('Required while Telegram is unlinked');
   });
 
   it('does not offer unlink when Telegram is the only sign-in method', async () => {
@@ -89,6 +90,7 @@ describe('AccountConnections', () => {
 
     await screen.findByText('@person');
     expect(screen.queryByRole('button', { name: 'Unlink' })).toBeNull();
-    expect(screen.getByText('Required while Google/email is unlinked')).toBeTruthy();
+    expect(screen.getByText('Connected')).toBeTruthy();
+    expect(screen.getByText('Required').getAttribute('title')).toBe('Required while Google/email is unlinked');
   });
 });
