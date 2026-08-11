@@ -314,7 +314,7 @@ git commit -m "feat(account): Streamline connections UI"
 
 ## P2-1: Prove the full account-linking and unlinking contract
 
-**Status:** ⬜ Not started  
+**Status:** ✅ Completed  
 **Priority:** P2  
 **Depends on:** P0-1, P1-1, P1-2
 

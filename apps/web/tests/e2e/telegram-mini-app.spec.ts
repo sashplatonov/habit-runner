@@ -86,3 +86,21 @@ test('Telegram Mini App starts Google account linking from a verified Telegram s
   await page.getByRole('button', { name: 'Sign in with Google' }).click();
   await request;
 });
+
+test('Telegram Mini App preserves the CSRF header for an existing browser session', async ({ page }) => {
+  await page.context().addCookies([{ name: 'habbit_runner_csrf_token', value: 'csrf-token', url: 'http://127.0.0.1:4173' }]);
+  await page.addInitScript(() => {
+    window.Telegram = { WebApp: { initData: 'signed-telegram-init-data', startParam: null, themeParams: {}, ready: () => undefined, expand: () => undefined, close: () => undefined } };
+  });
+
+  let csrfHeader = '';
+  await page.route('**/api/auth/telegram/session', async (route) => {
+    csrfHeader = route.request().headers()['x-csrf-token'] ?? '';
+    await route.fulfill({ contentType: 'application/json', body: JSON.stringify({ userId: 'telegram-user', email: null }) });
+  });
+
+  await page.goto('/');
+  await expect(page.getByRole('button', { name: 'Continue with Telegram' })).toBeVisible();
+  await page.getByRole('button', { name: 'Continue with Telegram' }).click();
+  await expect.poll(() => csrfHeader).toBe('csrf-token');
+});
