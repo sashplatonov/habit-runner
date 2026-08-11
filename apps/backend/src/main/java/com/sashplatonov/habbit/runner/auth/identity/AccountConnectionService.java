@@ -31,7 +31,7 @@ public class AccountConnectionService {
 
   @Transactional
   public void detach(String ownerUserId, String providerName) {
-    var user = requireUser(ownerUserId);
+    var user = requireUserForUpdate(ownerUserId);
     var provider = parseProvider(providerName);
     var hasGoogle = user.getEmail() != null;
     var hasTelegram = identityRepository.findByUserIdAndProvider(ownerUserId, AuthProvider.TELEGRAM) != null;
@@ -49,6 +49,14 @@ public class AccountConnectionService {
 
   private UserEntity requireUser(String ownerUserId) {
     var user = userRepository.findRequiredById(ownerUserId);
+    if (user == null) {
+      throw new NotFoundException("Account not found");
+    }
+    return user;
+  }
+
+  private UserEntity requireUserForUpdate(String ownerUserId) {
+    var user = userRepository.findRequiredByIdForUpdate(ownerUserId);
     if (user == null) {
       throw new NotFoundException("Account not found");
     }

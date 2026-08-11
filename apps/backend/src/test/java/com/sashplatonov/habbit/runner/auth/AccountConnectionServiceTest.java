@@ -29,6 +29,7 @@ class AccountConnectionServiceTest {
     var telegram = new AuthIdentityEntity();
     telegram.setDisplayName("@owner");
     when(users.findRequiredById("owner")).thenReturn(user);
+    when(users.findRequiredByIdForUpdate("owner")).thenReturn(user);
     when(identities.findByUserIdAndProvider("owner", AuthProvider.TELEGRAM)).thenReturn(telegram);
 
     var response = service.connections("owner");
@@ -41,6 +42,7 @@ class AccountConnectionServiceTest {
     service.detach("owner", "google");
     assertNull(user.getEmail());
     verify(identities).deleteByUserIdAndProvider("owner", AuthProvider.GOOGLE);
+    verify(users, org.mockito.Mockito.times(2)).findRequiredByIdForUpdate("owner");
   }
 
   @Test
@@ -53,6 +55,7 @@ class AccountConnectionServiceTest {
     var user = new UserEntity();
     user.setEmail("owner@example.test");
     when(users.findRequiredById("owner")).thenReturn(user);
+    when(users.findRequiredByIdForUpdate("owner")).thenReturn(user);
     when(identities.findByUserIdAndProvider("owner", AuthProvider.TELEGRAM)).thenReturn(null);
 
     var error = assertThrows(jakarta.ws.rs.WebApplicationException.class,
