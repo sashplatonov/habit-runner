@@ -1,6 +1,12 @@
 import { authenticatedFetch } from '@/lib/auth/session';
 
 export type AccountLinkStatus = 'PENDING' | 'AWAITING_OWNER_CONFIRMATION' | 'COMPLETED' | 'CANCELLED' | 'EXPIRED';
+export type AccountProvider = 'GOOGLE' | 'TELEGRAM';
+export type AccountConnection = {
+  provider: AccountProvider;
+  connected: boolean;
+  displayName: string | null;
+};
 
 export class AccountLinkRequestError extends Error {
   constructor(message: string, readonly status: number) {
@@ -35,6 +41,14 @@ export function startTelegramLink(): Promise<{ token: string }> {
 
 export function getTelegramConnection(): Promise<{ connected: boolean }> {
   return request('/auth/link/telegram/connection');
+}
+
+export function getAccountConnections(): Promise<{ connections: AccountConnection[] }> {
+  return request('/auth/link/connections');
+}
+
+export function detachAccountConnection(provider: AccountProvider): Promise<void> {
+  return request(`/auth/link/connections/${provider.toLowerCase()}`, { method: 'DELETE' });
 }
 
 export function getTelegramLinkStatus(token: string): Promise<{ status: AccountLinkStatus }> {

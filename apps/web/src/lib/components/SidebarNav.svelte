@@ -91,21 +91,21 @@
       <BarChart2Icon size={16} />
       Progress
     </a>
-    {#if routeBase !== '/showcase'}
-      <a
-        class={`flex items-center gap-2.5 rounded-[1.25rem] px-3 py-2.5 text-sm font-medium transition-colors ${isActive(accountHref) ? 'border border-progress/20 bg-bg-card text-foreground shadow-[0_12px_30px_rgba(15,23,42,0.08)]' : 'text-muted hover:bg-bg-card/80 hover:text-foreground'}`}
-        href={resolve<'/app/(protected)/account'>('/app/(protected)/account', {})}
-        aria-current={isActive(accountHref) ? 'page' : undefined}
-      >
-        <SettingsIcon size={16} />
-        Account
-      </a>
-    {/if}
   </nav>
 
   <div class="flex-1"></div>
 
   <div class="border-t border-border pt-3">
+    {#if routeBase !== '/showcase'}
+      <a
+        class={`mb-2 flex min-h-11 items-center gap-2.5 rounded-[1.25rem] px-3 py-2.5 text-sm font-medium transition-colors ${isActive(accountHref) ? 'bg-bg-card text-foreground' : 'text-muted hover:bg-bg-card/80 hover:text-foreground'}`}
+        href={resolve<'/app/(protected)/account'>('/app/(protected)/account', {})}
+        aria-current={isActive(accountHref) ? 'page' : undefined}
+      >
+        <SettingsIcon size={16} />
+        Account settings
+      </a>
+    {/if}
     <div class="mb-1 px-2 text-[10px] font-mono uppercase tracking-[0.2em] text-muted">Appearance</div>
     <div class="relative" bind:this={themeElement}>
       <button

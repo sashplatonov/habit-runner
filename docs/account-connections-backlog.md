@@ -222,7 +222,7 @@ git commit -m "feat(account): Manage linked identities"
 
 ## P1-2: De-emphasize navigation and complete the Account page
 
-**Status:** ⬜ Not started  
+**Status:** ✅ Completed  
 **Priority:** P1  
 **Depends on:** P1-1
 
@@ -300,7 +300,7 @@ infer connections from `readAuthSession().email`.
 ### Verification
 
 ```bash
-cd apps/web && npm run test -- tests/unit/accountLinks.test.ts tests/unit/account-connections.test.ts
+cd apps/web && npm run test -- tests/unit/accountLinks.test.ts tests/unit/AccountConnections.test.ts
 cd apps/web && npm run test:e2e -- --project=desktop --project=compact-mobile tests/e2e/account-linking.spec.ts
 cd apps/web && npm run check
 ```
@@ -308,7 +308,7 @@ cd apps/web && npm run check
 ### Commit
 
 ```bash
-git add apps/web/src/lib/api/accountLinks.ts apps/web/src/lib/components/AccountConnections.svelte apps/web/src/lib/components/SidebarNav.svelte apps/web/src/lib/components/MobileMoreSheet.svelte apps/web/tests/unit/accountLinks.test.ts apps/web/tests/unit/account-connections.test.ts apps/web/tests/e2e/account-linking.spec.ts
+git add apps/web/src/lib/api/accountLinks.ts apps/web/src/lib/components/AccountConnections.svelte apps/web/src/lib/components/SidebarNav.svelte apps/web/src/lib/components/MobileMoreSheet.svelte apps/web/tests/unit/accountLinks.test.ts apps/web/tests/unit/AccountConnections.test.ts apps/web/tests/e2e/account-linking.spec.ts
 git commit -m "feat(account): Streamline connections UI"
 ```
 

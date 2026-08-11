@@ -7,7 +7,7 @@ vi.mock('$lib/auth/session', () => ({
   authenticatedFetch: mockAuthenticatedFetch
 }));
 
-import { startTelegramLink, telegramMiniAppUrl } from '$lib/api/accountLinks';
+import { detachAccountConnection, getAccountConnections, startTelegramLink, telegramMiniAppUrl } from '$lib/api/accountLinks';
 import type { AccountLinkRequestError } from '$lib/api/accountLinks';
 
 describe('account links', () => {
@@ -41,5 +41,19 @@ describe('account links', () => {
       name: 'AccountLinkRequestError',
       status: 400
     } satisfies Partial<AccountLinkRequestError>);
+  });
+
+  it('loads consolidated connections and detaches a selected provider', async () => {
+    mockAuthenticatedFetch
+      .mockResolvedValueOnce(new Response(JSON.stringify({ connections: [
+        { provider: 'TELEGRAM', connected: true, displayName: '@alice' }
+      ] }), { status: 200 }))
+      .mockResolvedValueOnce(new Response(null, { status: 204 }));
+
+    await expect(getAccountConnections()).resolves.toMatchObject({
+      connections: [{ provider: 'TELEGRAM', connected: true, displayName: '@alice' }]
+    });
+    await expect(detachAccountConnection('TELEGRAM')).resolves.toBeUndefined();
+    expect(mockAuthenticatedFetch).toHaveBeenLastCalledWith('/api/auth/link/connections/telegram', expect.objectContaining({ method: 'DELETE' }));
   });
 });
