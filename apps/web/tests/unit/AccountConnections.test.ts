@@ -67,6 +67,10 @@ describe('AccountConnections', () => {
 
   it('opens provider detachment in a native modal dialog', async () => {
     const user = userEvent.setup();
+    getAccountConnections.mockResolvedValue({ connections: [
+      { provider: 'GOOGLE', connected: true, displayName: 'person@example.com' },
+      { provider: 'TELEGRAM', connected: true, displayName: '@person' }
+    ] });
     render(AccountConnections);
 
     await screen.findByText('person@example.com');
@@ -74,5 +78,25 @@ describe('AccountConnections', () => {
 
     expect(screen.getByRole('dialog').getAttribute('open')).not.toBeNull();
     expect(screen.getByText('Unlink Google/email?')).toBeTruthy();
+  });
+
+  it('does not offer unlink when Google/email is the only sign-in method', async () => {
+    render(AccountConnections);
+
+    await screen.findByText('person@example.com');
+    expect(screen.queryByRole('button', { name: 'Unlink' })).toBeNull();
+    expect(screen.getByText('Required while Telegram is unlinked')).toBeTruthy();
+  });
+
+  it('does not offer unlink when Telegram is the only sign-in method', async () => {
+    getAccountConnections.mockResolvedValue({ connections: [
+      { provider: 'GOOGLE', connected: false, displayName: null },
+      { provider: 'TELEGRAM', connected: true, displayName: '@person' }
+    ] });
+    render(AccountConnections);
+
+    await screen.findByText('@person');
+    expect(screen.queryByRole('button', { name: 'Unlink' })).toBeNull();
+    expect(screen.getByText('Required while Google/email is unlinked')).toBeTruthy();
   });
 });

@@ -64,4 +64,23 @@ class AccountConnectionServiceTest {
     assertEquals(409, error.getResponse().getStatus());
     verify(identities, never()).deleteByUserIdAndProvider(any(), any());
   }
+
+  @Test
+  void rejectsDetachingTelegramWhenEmailIsNotConnected() {
+    var identities = mock(AuthIdentityRepository.class);
+    var users = mock(UserRepository.class);
+    var service = new AccountConnectionService();
+    service.identityRepository = identities;
+    service.userRepository = users;
+    var user = new UserEntity();
+    var telegram = new AuthIdentityEntity();
+    when(users.findRequiredByIdForUpdate("owner")).thenReturn(user);
+    when(identities.findByUserIdAndProvider("owner", AuthProvider.TELEGRAM)).thenReturn(telegram);
+
+    var error = assertThrows(jakarta.ws.rs.WebApplicationException.class,
+        () -> service.detach("owner", "telegram"));
+
+    assertEquals(409, error.getResponse().getStatus());
+    verify(identities, never()).deleteByUserIdAndProvider(any(), any());
+  }
 }

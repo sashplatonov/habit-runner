@@ -23,6 +23,11 @@
     return connections.find((item) => item.provider === provider);
   }
 
+  function canDetach(provider: AccountProvider): boolean {
+    const otherProvider = provider === 'GOOGLE' ? 'TELEGRAM' : 'GOOGLE';
+    return connection(provider)?.connected === true && connection(otherProvider)?.connected === true;
+  }
+
   async function refresh() {
     try {
       if (token) {
@@ -142,14 +147,14 @@
     <div class="card">
       <div><strong>Google / email</strong><span>{connection('GOOGLE')?.displayName ?? 'Not connected'}</span></div>
       {#if connection('GOOGLE')?.connected}
-        <div class="card-actions"><span class="badge">Connected</span><button class="button" type="button" disabled={working} onclick={() => void unlink('GOOGLE')}>Unlink</button></div>
+        <div class="card-actions"><span class="badge">Connected</span>{#if canDetach('GOOGLE')}<button class="button" type="button" disabled={working} onclick={() => void unlink('GOOGLE')}>Unlink</button>{:else}<span class="badge">Required while Telegram is unlinked</span>{/if}</div>
       {:else}<span class="badge">Available</span>{/if}
     </div>
 
     <div class="card">
       <div><strong>Telegram</strong><span>{connection('TELEGRAM')?.connected ? (connection('TELEGRAM')?.displayName ?? 'Connected Telegram user') : 'Not connected'}</span></div>
       {#if connection('TELEGRAM')?.connected}
-        <div class="card-actions"><span class="badge">Connected</span><button class="button" type="button" disabled={working} onclick={() => void unlink('TELEGRAM')}>Unlink</button></div>
+        <div class="card-actions"><span class="badge">Connected</span>{#if canDetach('TELEGRAM')}<button class="button" type="button" disabled={working} onclick={() => void unlink('TELEGRAM')}>Unlink</button>{:else}<span class="badge">Required while Google/email is unlinked</span>{/if}</div>
       {:else}<button class="button primary" type="button" disabled={working} onclick={() => void openTelegramMiniApp()}>Link Telegram</button>{/if}
     </div>
 
