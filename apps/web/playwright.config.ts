@@ -15,7 +15,16 @@ export default defineConfig({
   },
   projects: [
     { name: 'desktop', use: { ...devices['Desktop Chrome'] } },
-    { name: 'compact-mobile', use: { ...devices['Pixel 5'] } }
+    { name: 'compact-mobile', use: { ...devices['Pixel 5'] } },
+    { name: 'mobile', use: { ...devices['Pixel 5'], viewport: { width: 390, height: 844 } } },
+    {
+      name: 'telegram-webview',
+      use: {
+        ...devices['Pixel 5'],
+        viewport: { width: 390, height: 844 },
+        userAgent: `${devices['Pixel 5'].userAgent} TelegramWebview`
+      }
+    }
   ],
   webServer: process.env.PLAYWRIGHT_BASE_URL
     ? undefined
