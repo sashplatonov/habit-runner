@@ -93,4 +93,14 @@ describe('AccountConnections', () => {
     expect(screen.getByText('Connected')).toBeTruthy();
     expect(screen.getByText('Required').getAttribute('title')).toBe('Required while Google/email is unlinked');
   });
+
+  it('keeps provider status available to assistive technology while loading', async () => {
+    let resolveConnections: ((value: { connections: never[] }) => void) | undefined;
+    getAccountConnections.mockReturnValue(new Promise((resolve) => { resolveConnections = resolve; }));
+    render(AccountConnections);
+
+    expect(screen.getByRole('region').getAttribute('aria-busy')).toBe('true');
+    resolveConnections?.({ connections: [] });
+    await waitFor(() => expect(screen.getByRole('region').getAttribute('aria-busy')).toBe('false'));
+  });
 });

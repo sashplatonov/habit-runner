@@ -368,7 +368,7 @@ git commit -m "feat(telegram): Polish Mini App entry"
 
 ## P1-5: Rework account connections and theme controls for compact use
 
-**Status:** ⬜ Not started  
+**Status:** ✅ Completed
 **Priority:** P1  
 **Depends on:** P0-1, P1-1, P1-4
 

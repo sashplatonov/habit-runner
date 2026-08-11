@@ -83,12 +83,18 @@
   });
 </script>
 
-<section class="connections" aria-labelledby="connections-title">
+<section class="connections" aria-labelledby="connections-title" aria-busy={loading || working}>
   <p class="eyebrow">Account</p>
   <h1 id="connections-title">Account connections</h1>
   <p class="muted">Use the same habits and check-ins wherever you sign in.</p>
 
-  {#if error}<p class="error" role="alert">{error}</p>{/if}
+  {#if error}
+    <div class="error-row" role="alert">
+      <p class="error">{error}</p>
+      <button class="button" type="button" disabled={working} onclick={() => void refresh()}>Retry</button>
+    </div>
+  {/if}
+  {#if working}<p class="status" role="status">Updating account connections…</p>{/if}
   {#if loading}<p aria-live="polite">Loading connection status…</p>
   {:else}
     <div class="card">
@@ -106,10 +112,10 @@
     </div>
 
   {/if}
-  <dialog bind:this={unlinkDialog} class="confirm" aria-labelledby="unlink-title" onclose={() => { confirmingProvider = null; }}>
+  <dialog bind:this={unlinkDialog} class="confirm" aria-labelledby="unlink-title" aria-describedby="unlink-description" onclose={() => { confirmingProvider = null; }}>
     {#if confirmingProvider}
       <strong id="unlink-title">Unlink {confirmingProvider === 'TELEGRAM' ? 'Telegram' : 'Google/email'}?</strong>
-      <p>You will no longer be able to use this provider to sign in.</p>
+      <p id="unlink-description">You will no longer be able to use this provider to sign in.</p>
       <div class="card-actions"><button class="button" type="button" onclick={closeUnlinkDialog}>Cancel</button><button class="button primary" type="button" disabled={working} onclick={() => void confirmUnlink()}>Unlink</button></div>
     {/if}
   </dialog>
@@ -120,9 +126,9 @@
   .eyebrow { font: 600 0.7rem/1 monospace; letter-spacing: .2em; text-transform: uppercase; color: var(--color-muted, #64748b); }
   h1 { margin: .5rem 0; font-size: clamp(1.6rem, 5vw, 2.4rem); }
   .muted, .identity { color: var(--color-muted, #64748b); }
-  .card { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-top: 1rem; padding: 1rem; border: 1px solid var(--color-border, #e2e8f0); border-radius: 1rem; }
-  .card-main { display: grid; gap: .35rem; min-width: 0; }
-  .card-actions { display: flex; align-items: center; gap: .75rem; }
+  .card { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; margin-top: 1rem; padding: 1rem; border: 1px solid var(--color-border, #e2e8f0); border-radius: 1rem; }
+  .card-main { display: grid; gap: .35rem; min-width: 0; overflow-wrap: anywhere; }
+  .card-actions { display: flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: .75rem; }
   .status-group { display: flex; align-items: center; flex-wrap: wrap; gap: .4rem; }
   .status-chip { display: inline-flex; align-items: center; gap: .35rem; min-height: 28px; padding: 0 .65rem; border: 1px solid transparent; border-radius: 999px; font-size: .75rem; font-weight: 700; letter-spacing: .01em; white-space: nowrap; }
   .status-chip.connected { color: #166534; background: #dcfce7; border-color: #bbf7d0; }
@@ -133,6 +139,8 @@
   .confirm::backdrop { background: rgb(15 23 42 / .45); }
   .button { min-height: 44px; border: 1px solid var(--color-border, #cbd5e1); border-radius: .8rem; padding: 0 1rem; cursor: pointer; }
   .primary { background: var(--color-progress, #15803d); color: white; text-align: center; display: inline-flex; align-items: center; justify-content: center; text-decoration: none; }
-  .error { color: #b91c1c; }
-  @media (max-width: 480px) { .card { align-items: flex-start; flex-direction: column; } .card-actions { width: 100%; justify-content: space-between; } .status-group { flex: 1; } .button.primary { width: 100%; } }
+  .error { margin: 0; color: #b91c1c; }
+  .error-row { display: flex; align-items: center; justify-content: space-between; gap: .75rem; margin-top: 1rem; }
+  .status { margin: .75rem 0 0; color: var(--color-muted, #64748b); font-size: .8rem; }
+  @media (max-width: 480px) { .card { flex-direction: column; } .card-actions { width: 100%; justify-content: stretch; } .status-group { flex: 1 1 100%; } .card-actions .button { width: 100%; } .error-row { align-items: stretch; flex-direction: column; } .error-row .button { width: 100%; } }
 </style>
