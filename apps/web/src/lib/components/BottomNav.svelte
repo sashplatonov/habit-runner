@@ -44,8 +44,8 @@
 <nav
   class="fixed bottom-0 left-0 right-0 z-40 flex border-t border-border bg-bg-secondary/92 shadow-[0_-18px_40px_rgba(15,23,42,0.12)] backdrop-blur-xl sm:hidden"
   style="touch-action: manipulation;"
-  style:height="calc(76px + env(safe-area-inset-bottom))"
-  style:padding-bottom="env(safe-area-inset-bottom)"
+  style:height="calc(76px + var(--safe-area-inset-bottom, 0px))"
+  style:padding-bottom="var(--safe-area-inset-bottom, 0px)"
   aria-label="Mobile navigation"
 >
   <a

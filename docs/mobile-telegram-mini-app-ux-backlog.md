@@ -41,7 +41,7 @@ parallel mobile product.
 
 ## P0-1: Add mobile and Telegram UX regression baselines
 
-**Status:** ✅ Completed  
+**Status:** ✅ Completed
 **Priority:** P0  
 **Depends on:** -
 
@@ -103,7 +103,7 @@ git commit -m "test(mobile): Add UX regression baselines"
 
 ## P1-1: Make the shared shell safe-area and webview resilient
 
-**Status:** ⬜ Not started  
+**Status:** ✅ Completed
 **Priority:** P1  
 **Depends on:** P0-1
 

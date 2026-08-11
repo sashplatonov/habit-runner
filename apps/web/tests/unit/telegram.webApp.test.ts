@@ -6,6 +6,9 @@ function adapter(initData = 'signed-init-data'): TelegramWebAppAdapter {
     initData,
     initDataUnsafe: {},
     themeParams: { bg_color: '#102030', text_color: '#f8fafc' },
+    safeAreaInset: { top: 4, bottom: 20 },
+    contentSafeAreaInset: { top: 8, bottom: 12 },
+    viewportHeight: 812,
     ready: vi.fn(),
     expand: vi.fn(),
     close: vi.fn()
@@ -28,6 +31,9 @@ describe('Telegram Web App SDK loader', () => {
     expect(webApp.ready).toHaveBeenCalledOnce();
     expect(webApp.expand).toHaveBeenCalledOnce();
     expect(document.documentElement.style.getPropertyValue('--telegram-bg-color')).toBe('#102030');
+    expect(document.documentElement.style.getPropertyValue('--safe-area-inset-top')).toBe('8px');
+    expect(document.documentElement.style.getPropertyValue('--safe-area-inset-bottom')).toBe('20px');
+    expect(document.documentElement.style.getPropertyValue('--telegram-viewport-height')).toBe('812px');
   });
 
   it('loads the SDK script and exposes the initialized Web App', async () => {

@@ -30,7 +30,7 @@
     class="inset-0 sm:hidden"
   >
     <button type="button" tabindex="-1" class="absolute inset-0 bg-black/35 backdrop-blur-[2px]" aria-label="Close menu" onclick={onClose}></button>
-    <div class="absolute inset-x-0 bottom-0 max-h-[min(84vh,46rem)] overflow-y-auto rounded-t-[2rem] border-t border-border bg-bg-secondary/96 px-4 pb-[calc(env(safe-area-inset-bottom)+1rem)] pt-4 shadow-[0_-18px_48px_rgba(15,23,42,0.18)]">
+    <div class="absolute inset-x-0 bottom-0 max-h-[min(84dvh,46rem)] overflow-y-auto rounded-t-[2rem] border-t border-border bg-bg-secondary/96 px-4 pb-[calc(var(--safe-area-inset-bottom, 0px)+1rem)] pt-4 shadow-[0_-18px_48px_rgba(15,23,42,0.18)]">
       <div class="mx-auto flex max-w-md items-center justify-between gap-3">
         <div>
           <p class="text-[10px] font-medium uppercase tracking-[0.28em] text-muted">More</p>

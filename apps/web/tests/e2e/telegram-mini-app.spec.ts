@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test';
 
-test('website root keeps the public landing available while Telegram SDK is absent', async ({ page }) => {
+test('website root keeps the public landing available while Telegram SDK is absent', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name === 'telegram-webview', 'Telegram user agents intentionally enter the Mini App flow.');
   await page.goto('/');
   await expect(page.getByRole('heading', { name: 'Habit tracking that keeps the next step obvious.' })).toBeVisible();
 });

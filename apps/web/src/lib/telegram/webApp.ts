@@ -2,10 +2,21 @@ import { browser } from '$app/environment';
 
 export type TelegramThemeParams = Record<string, string | undefined>;
 
+export type TelegramInsets = {
+  top?: number;
+  bottom?: number;
+  left?: number;
+  right?: number;
+};
+
 export interface TelegramWebAppAdapter {
   initData: string;
   initDataUnsafe?: { start_param?: string };
   themeParams: TelegramThemeParams;
+  safeAreaInset?: TelegramInsets;
+  contentSafeAreaInset?: TelegramInsets;
+  viewportHeight?: number;
+  viewportStableHeight?: number;
   ready(): void;
   expand(): void;
   close(): void;
@@ -108,5 +119,16 @@ function applySafeArea(webApp: TelegramWebAppAdapter): void {
   const params = webApp.themeParams;
   for (const [key, value] of Object.entries(params)) {
     if (value) { root.style.setProperty(`--telegram-${key.replaceAll('_', '-')}`, value); }
+  }
+
+  const safeArea = webApp.safeAreaInset ?? {};
+  const contentSafeArea = webApp.contentSafeAreaInset ?? {};
+  for (const side of ['top', 'bottom', 'left', 'right'] as const) {
+    const inset = Math.max(safeArea[side] ?? 0, contentSafeArea[side] ?? 0);
+    root.style.setProperty(`--safe-area-inset-${side}`, `${inset}px`);
+  }
+  const viewportHeight = webApp.viewportHeight ?? webApp.viewportStableHeight;
+  if (viewportHeight && viewportHeight > 0) {
+    root.style.setProperty('--telegram-viewport-height', `${viewportHeight}px`);
   }
 }

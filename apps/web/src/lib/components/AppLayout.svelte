@@ -20,7 +20,7 @@
   );
 </script>
 
-<div class="relative min-h-screen overflow-x-clip bg-bg-primary text-foreground">
+<div class="relative min-h-[var(--telegram-viewport-height)] overflow-x-clip bg-bg-primary text-foreground">
   <div aria-hidden="true" class="pointer-events-none fixed inset-0 -z-10 hidden sm:block">
     <div class="absolute left-[-8rem] top-[-8rem] h-[24rem] w-[24rem] rounded-full bg-progress/10 blur-3xl"></div>
     <div class="absolute right-[-6rem] top-[12rem] h-[24rem] w-[24rem] rounded-full bg-accent-secondary/10 blur-3xl"></div>
