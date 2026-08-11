@@ -53,7 +53,7 @@ longer fail with HTTP 403 after the deep link is opened.
 
 ## P0-1: Repair CSRF-safe Telegram pairing after deep-link launch
 
-**Status:** ✅ Completed  
+**Status:** ✅ Completed
 **Priority:** P0  
 **Depends on:** -
 
@@ -382,7 +382,7 @@ git commit -m "test(account): Cover linking and detach flows"
 
 ## P2-2: Update rollout and API documentation
 
-**Status:** ⬜ Not started  
+**Status:** ✅ Completed  
 **Priority:** P2  
 **Depends on:** P2-1
 

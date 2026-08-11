@@ -24,6 +24,13 @@ development exposes it at `http://localhost:3000/openapi` (or the configured
   `POST /auth/link/telegram/confirm`. `GET /auth/link/telegram/status` reads a
   pending challenge, `GET /auth/link/telegram/connection` reports the durable
   Telegram identity, and `DELETE /auth/link/telegram` cancels a pending link.
+- `GET /auth/link/connections` returns `{ "connections": [{ "provider":
+  "GOOGLE"|"TELEGRAM", "connected": true|false, "displayName": string|null
+  }] }`. Telegram `displayName` is verified provider metadata (normally
+  `@username`), never a numeric Telegram ID or credential.
+- `DELETE /auth/link/connections/{provider}` detaches `google` or `telegram`.
+  The server rejects removal of the final connected sign-in method with HTTP
+  409 and leaves the identities unchanged.
 - Authentication and validation failures use the shared `ErrorResponse` shape.
 
 The examples below use placeholders only. Set the base URL and cookie values
@@ -102,3 +109,7 @@ Telegram session/link failures use the shared `ErrorResponse` shape. Expect
 HTTP 400 for malformed, expired, or incorrectly signed init data and for a
 challenge owned by another account. Challenge tokens are short-lived and are
 kept only in browser session storage while owner confirmation is pending.
+For a pairing 403, compare the non-HttpOnly `habbit_runner_csrf_token` cookie
+with the `X-CSRF-Token` request header and use the response `X-Trace-Id` when
+checking server logs; do not disable CSRF checks or paste cookie values into
+issues.

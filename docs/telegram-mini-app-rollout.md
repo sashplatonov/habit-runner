@@ -23,8 +23,9 @@ There are two supported flows. Do not ask users to paste pairing codes into
 the Mini App.
 
 1. **Website → Telegram:** an authenticated Google/email user starts a link
-   from Account connections. The `t.me` deep link opens the Mini App, which
-   verifies Telegram and waits for the website owner to confirm the merge.
+   from Account connections. **Link Telegram** opens the `t.me` deep link in a
+   new window, leaving Account open. The Mini App verifies Telegram and waits
+   for owner confirmation; return to the page and choose **Confirm Telegram account**.
 2. **Telegram → Google:** a Mini App user chooses **Sign in with Google**.
    Telegram authentication runs first, then Google OAuth merges the selected
    Google/email account into that Telegram account.
@@ -74,11 +75,17 @@ Collect these as separate evidence classes:
    test account, launch the webview, sign in with Telegram, link an email
    account; repeat from email to Telegram; close/reopen the webview; and verify
    the same habits/check-ins and unlink behavior. Confirm the deployed HTTPS
-   origin and browser cookies in the real webview.
+   origin and browser cookies in the real webview. Test unlinking each provider
+   while the other remains, then verify final-provider unlink is rejected.
 
 Do not claim local checks prove BotFather configuration, deployed ingress,
 Telegram signature verification against the real bot, or webview cookie
 behavior.
+
+If website-to-Telegram pairing returns 403, verify the current
+`habbit_runner_csrf_token` cookie was sent as `X-CSRF-Token` and correlate the
+response `X-Trace-Id` with API logs. A fresh remote deployment and manual
+Telegram-app test are required; local Playwright mocks are not a replacement.
 
 ## Rollback
 
@@ -101,3 +108,6 @@ and link records intact so a later recovery does not create duplicate accounts.
   separate bot environments, and explicit manual staging proof.
 - **Rollback:** disable the BotFather URL, revoke/remove the token, and restore
   the previous deployment as described above.
+- **Account-connections change:** the nullable `auth_identities.displayName`
+  migration is additive. Restore the previous image and UI/API compatibility
+  path if needed; do not reverse the Flyway migration or delete identities.
