@@ -90,7 +90,9 @@ public class AuthService {
     if (telegramUser == null || telegramUser.id() <= 0) {
       throw new BadRequestException("Invalid Telegram user");
     }
-    var user = collaborators.findOrCreateTelegramUser(Long.toString(telegramUser.id()));
+    var displayName = telegramUser.username() == null || telegramUser.username().isBlank()
+        ? null : "@" + telegramUser.username();
+    var user = collaborators.findOrCreateTelegramUser(Long.toString(telegramUser.id()), displayName);
     var session = collaborators.issueTokenPair(user, authConfig.accessTokenTtlSeconds(), authConfig.refreshTokenDays());
     if (authServiceSupport != null) {
       authServiceSupport.checkAccountRateLimit("auth:telegram:session", Long.toString(telegramUser.id()), 10, Duration.ofMinutes(10));

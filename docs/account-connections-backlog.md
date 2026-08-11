@@ -123,7 +123,7 @@ git commit -m "fix(telegram): Preserve CSRF during pairing"
 
 ## P1-1: Persist account identities and add safe provider detachment
 
-**Status:** ⬜ Not started  
+**Status:** ✅ Completed  
 **Priority:** P1  
 **Depends on:** P0-1
 

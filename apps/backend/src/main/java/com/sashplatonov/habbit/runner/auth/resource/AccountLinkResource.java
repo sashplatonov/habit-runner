@@ -1,6 +1,7 @@
 package com.sashplatonov.habbit.runner.auth.resource;
 
 import com.sashplatonov.habbit.runner.auth.identity.AccountLinkService;
+import com.sashplatonov.habbit.runner.auth.identity.AccountConnectionService;
 import com.sashplatonov.habbit.runner.auth.security.CurrentUserContext;
 import com.sashplatonov.habbit.runner.auth.security.RequireAuth;
 import com.sashplatonov.habbit.runner.auth.telegram.TelegramLinkRequest;
@@ -13,6 +14,7 @@ import jakarta.ws.rs.DELETE;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.MediaType;
@@ -25,6 +27,8 @@ public class AccountLinkResource {
   AccountLinkService accountLinkService;
   @Inject
   CurrentUserContext currentUserContext;
+  @Inject
+  AccountConnectionService accountConnectionService;
 
   @Inject
   AccountLinkResource(AccountLinkService accountLinkService, CurrentUserContext currentUserContext) {
@@ -73,6 +77,21 @@ public class AccountLinkResource {
   public Response telegramConnection() {
     return Response.ok(java.util.Map.of("connected", accountLinkService.isTelegramLinked(
         currentUserContext.requireUser().id()))).build();
+  }
+
+  @RequireAuth
+  @GET
+  @Path("/connections")
+  public com.sashplatonov.habbit.runner.auth.dto.AccountConnectionsResponse connections() {
+    return accountConnectionService.connections(currentUserContext.requireUser().id());
+  }
+
+  @RequireAuth
+  @DELETE
+  @Path("/connections/{provider}")
+  public Response detach(@PathParam("provider") String provider) {
+    accountConnectionService.detach(currentUserContext.requireUser().id(), provider);
+    return Response.noContent().build();
   }
 
   @RequireAuth

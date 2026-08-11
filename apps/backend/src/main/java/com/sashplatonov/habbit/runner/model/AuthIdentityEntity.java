@@ -26,4 +26,7 @@ public class AuthIdentityEntity extends UuidAuditedEntityBase {
 
   @Column
   private String email;
+
+  @Column(name = "displayName")
+  private String displayName;
 }

@@ -16,6 +16,10 @@ public class AuthIdentityRepository implements PanacheRepositoryBase<AuthIdentit
     return find("userId = ?1 and provider = ?2", userId, provider).firstResult();
   }
 
+  public void deleteByUserIdAndProvider(String userId, AuthProvider provider) {
+    delete("userId = ?1 and provider = ?2", userId, provider);
+  }
+
   @Transactional
   public void save(AuthIdentityEntity entity) {
     persist(entity);

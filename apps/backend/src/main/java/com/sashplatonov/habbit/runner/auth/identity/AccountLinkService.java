@@ -29,6 +29,7 @@ public class AccountLinkService {
   @jakarta.inject.Inject
   AccountMergeService mergeService;
 
+  @jakarta.inject.Inject
   AccountLinkService(AccountLinkChallengeRepository challengeRepository,
       AuthIdentityRepository identityRepository, TelegramInitDataVerifier telegramVerifier,
       AccountMergeService mergeService) {
@@ -37,6 +38,7 @@ public class AccountLinkService {
     this.telegramVerifier = telegramVerifier;
     this.mergeService = mergeService;
   }
+
 
   @Transactional
   public String startTelegramLink(String ownerUserId) {
@@ -63,6 +65,8 @@ public class AccountLinkService {
     challenge.setTelegramUserId(Long.toString(telegramUser.id()));
     challenge.setTelegramUsername(telegramUser.username());
     if (existing != null && challenge.getOwnerUserId().equals(existing.getUserId())) {
+      existing.setDisplayName(telegramUser.username() == null || telegramUser.username().isBlank()
+          ? null : "@" + telegramUser.username());
       challenge.setStatus("COMPLETED");
     } else {
       challenge.setStatus("AWAITING_OWNER_CONFIRMATION");
@@ -84,9 +88,13 @@ public class AccountLinkService {
       newIdentity.setProvider(AuthProvider.TELEGRAM);
       newIdentity.setProviderSubject(challenge.getTelegramUserId());
       newIdentity.setUserId(ownerUserId);
+      newIdentity.setDisplayName(challenge.getTelegramUsername() == null
+          ? null : "@" + challenge.getTelegramUsername());
       identityRepository.save(newIdentity);
     } else if (!ownerUserId.equals(identity.getUserId())) {
       mergeService.merge(ownerUserId, identity.getUserId());
+      identity.setDisplayName(challenge.getTelegramUsername() == null
+          ? identity.getDisplayName() : "@" + challenge.getTelegramUsername());
     }
     challenge.setStatus("COMPLETED");
   }

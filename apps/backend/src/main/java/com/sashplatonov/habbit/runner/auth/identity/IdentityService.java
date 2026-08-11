@@ -10,14 +10,10 @@ import jakarta.transaction.Transactional;
 
 @ApplicationScoped
 public class IdentityService {
-  private final AuthIdentityRepository identityRepository;
-  private final UserRepository userRepository;
-
   @Inject
-  public IdentityService(AuthIdentityRepository identityRepository, UserRepository userRepository) {
-    this.identityRepository = identityRepository;
-    this.userRepository = userRepository;
-  }
+  AuthIdentityRepository identityRepository;
+  @Inject
+  UserRepository userRepository;
 
   public AuthIdentityEntity find(AuthProvider provider, String providerSubject) {
     if (providerSubject == null || providerSubject.isBlank()) {
@@ -28,8 +24,16 @@ public class IdentityService {
 
   @Transactional
   public UserEntity findOrCreateTelegram(String providerSubject) {
+    return findOrCreateTelegram(providerSubject, null);
+  }
+
+  @Transactional
+  public UserEntity findOrCreateTelegram(String providerSubject, String displayName) {
     var existing = find(AuthProvider.TELEGRAM, providerSubject);
     if (existing != null) {
+      if (displayName != null && !displayName.isBlank()) {
+        existing.setDisplayName(displayName);
+      }
       return userRepository.findRequiredById(existing.getUserId());
     }
 
@@ -40,6 +44,7 @@ public class IdentityService {
     identity.setProvider(AuthProvider.TELEGRAM);
     identity.setProviderSubject(providerSubject);
     identity.setUserId(user.getId());
+    identity.setDisplayName(displayName);
     identityRepository.save(identity);
     return user;
   }

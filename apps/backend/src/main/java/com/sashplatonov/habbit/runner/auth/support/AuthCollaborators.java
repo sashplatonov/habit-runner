@@ -95,11 +95,11 @@ public class AuthCollaborators {
     return userService.findOrCreateUser(email);
   }
 
-  public UserEntity findOrCreateTelegramUser(String subject) {
+  public UserEntity findOrCreateTelegramUser(String subject, String displayName) {
     if (identityService == null) {
       throw new IllegalStateException("Telegram identity service is not configured");
     }
-    return identityService.findOrCreateTelegram(subject);
+    return identityService.findOrCreateTelegram(subject, displayName);
   }
 
   public String buildCallbackRedirect(String returnTo) {

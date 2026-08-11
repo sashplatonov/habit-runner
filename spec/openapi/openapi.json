@@ -92,6 +92,31 @@
       }
     },
     "schemas" : {
+      "AccountConnectionResponse" : {
+        "type" : "object",
+        "properties" : {
+          "provider" : {
+            "type" : "string"
+          },
+          "connected" : {
+            "type" : "boolean"
+          },
+          "displayName" : {
+            "type" : "string"
+          }
+        }
+      },
+      "AccountConnectionsResponse" : {
+        "type" : "object",
+        "properties" : {
+          "connections" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/AccountConnectionResponse"
+            }
+          }
+        }
+      },
       "AuthSessionResponse" : {
         "type" : "object",
         "properties" : {
@@ -770,6 +795,48 @@
             "description" : "OAuth redirect initiated"
           }
         }
+      }
+    },
+    "/auth/link/connections" : {
+      "get" : {
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/AccountConnectionsResponse"
+                }
+              }
+            }
+          }
+        },
+        "summary" : "Connections",
+        "tags" : [ "Account Link Resource" ]
+      }
+    },
+    "/auth/link/connections/{provider}" : {
+      "delete" : {
+        "parameters" : [ {
+          "name" : "provider",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : { }
+              }
+            }
+          }
+        },
+        "summary" : "Detach",
+        "tags" : [ "Account Link Resource" ]
       }
     },
     "/auth/link/telegram" : {
