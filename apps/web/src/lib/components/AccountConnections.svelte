@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
+  import { onMount, tick } from 'svelte';
   import { AccountLinkRequestError, cancelTelegramLink, confirmTelegramLink, detachAccountConnection, getAccountConnections, getTelegramLinkStatus, startTelegramLink, telegramMiniAppUrl, type AccountConnection, type AccountLinkStatus, type AccountProvider } from '@/lib/api/accountLinks';
   import { clearPendingTelegramLink, readPendingTelegramLink, savePendingTelegramLink } from '@/lib/telegram/pendingLink';
 
@@ -11,6 +11,7 @@
   let working = $state(false);
   let error = $state('');
   let confirmingProvider = $state<AccountProvider | null>(null);
+  let unlinkDialog = $state<HTMLDialogElement | null>(null);
 
   function isExpiredChallenge(cause: unknown): boolean {
     return cause instanceof AccountLinkRequestError
@@ -99,12 +100,21 @@
 
   async function unlink(provider: AccountProvider) {
     confirmingProvider = provider;
+    await tick();
+    if (unlinkDialog && !unlinkDialog.open) {
+      unlinkDialog.showModal();
+    }
+  }
+
+  function closeUnlinkDialog() {
+    confirmingProvider = null;
+    unlinkDialog?.close();
   }
 
   async function confirmUnlink() {
     const provider = confirmingProvider;
     if (!provider) return;
-    confirmingProvider = null;
+    closeUnlinkDialog();
     const label = provider === 'TELEGRAM' ? 'Telegram' : 'Google/email';
     working = true; error = '';
     try { await detachAccountConnection(provider); connections = (await getAccountConnections()).connections; }
@@ -147,13 +157,13 @@
       <div class="pending" role="status"><strong>{status === 'PENDING' ? 'Open Telegram to continue' : 'Telegram identity verified'}</strong><p>{status === 'PENDING' ? 'Open Telegram, then return here to confirm.' : 'Confirming will merge only after your explicit approval.'}</p>{#if linkUrl}<button class="button primary" type="button" onclick={() => window.open(linkUrl ?? '', '_blank', 'noopener,noreferrer')}>Open Telegram</button>{/if}{#if status === 'AWAITING_OWNER_CONFIRMATION'}<button class="button primary" type="button" disabled={working} onclick={() => void confirm()}>Confirm Telegram account</button>{/if}<button class="button" type="button" disabled={working} onclick={() => void cancel()}>Cancel link</button></div>
     {/if}
   {/if}
-  {#if confirmingProvider}
-    <div class="confirm" role="dialog" aria-modal="true" aria-labelledby="unlink-title">
+  <dialog bind:this={unlinkDialog} class="confirm" aria-labelledby="unlink-title" onclose={() => { confirmingProvider = null; }}>
+    {#if confirmingProvider}
       <strong id="unlink-title">Unlink {confirmingProvider === 'TELEGRAM' ? 'Telegram' : 'Google/email'}?</strong>
       <p>You will no longer be able to use this provider to sign in.</p>
-      <div class="card-actions"><button class="button" type="button" onclick={() => { confirmingProvider = null; }}>Cancel</button><button class="button primary" type="button" disabled={working} onclick={() => void confirmUnlink()}>Unlink</button></div>
-    </div>
-  {/if}
+      <div class="card-actions"><button class="button" type="button" onclick={closeUnlinkDialog}>Cancel</button><button class="button primary" type="button" disabled={working} onclick={() => void confirmUnlink()}>Unlink</button></div>
+    {/if}
+  </dialog>
 </section>
 
 <style>
@@ -166,7 +176,8 @@
   .card-actions { display: flex; align-items: center; gap: .75rem; }
   .badge { color: var(--color-progress, #15803d); font-size: .8rem; }
   .pending { display: grid; justify-content: stretch; }
-  .confirm { display: grid; gap: .75rem; margin-top: 1rem; padding: 1rem; border: 1px solid var(--color-border, #e2e8f0); border-radius: 1rem; }
+  .confirm { max-width: min(30rem, calc(100vw - 2rem)); display: grid; gap: .75rem; padding: 1rem; border: 1px solid var(--color-border, #e2e8f0); border-radius: 1rem; }
+  .confirm::backdrop { background: rgb(15 23 42 / .45); }
   .button { min-height: 44px; border: 1px solid var(--color-border, #cbd5e1); border-radius: .8rem; padding: 0 1rem; cursor: pointer; }
   .primary { background: var(--color-progress, #15803d); color: white; text-align: center; display: inline-flex; align-items: center; justify-content: center; text-decoration: none; }
   .error { color: #b91c1c; }

@@ -43,6 +43,12 @@ describe('AccountConnections', () => {
     open.mockReturnValue(popup);
     popup.close.mockReset();
     popup.location.replace.mockReset();
+    Object.defineProperty(HTMLDialogElement.prototype, 'showModal', {
+      configurable: true,
+      value: function showModal(this: HTMLDialogElement) {
+        this.setAttribute('open', '');
+      }
+    });
   });
 
   it('renders the linked Telegram identity state and starts linking in a new window', async () => {
@@ -57,5 +63,16 @@ describe('AccountConnections', () => {
       'https://t.me/HabbitRunnerBot?startapp=pairing-token',
     ));
     expect(popup.opener).toBeNull();
+  });
+
+  it('opens provider detachment in a native modal dialog', async () => {
+    const user = userEvent.setup();
+    render(AccountConnections);
+
+    await screen.findByText('person@example.com');
+    await user.click(screen.getAllByRole('button', { name: 'Unlink' })[0]);
+
+    expect(screen.getByRole('dialog').getAttribute('open')).not.toBeNull();
+    expect(screen.getByText('Unlink Google/email?')).toBeTruthy();
   });
 });
