@@ -72,6 +72,16 @@ test('Telegram launch shows a retry action when the SDK cannot load', async ({ p
     contentType: 'application/json',
     body: JSON.stringify({ userId: 'telegram-user', email: null })
   }));
+  await page.route('**/api/auth/link/telegram/complete', async (route) => {
+    expect(route.request().postDataJSON()).toEqual({
+      token: 'pairing-token',
+      initData: 'signed-telegram-init-data'
+    });
+    await route.fulfill({
+      contentType: 'application/json',
+      body: JSON.stringify({ userId: 'telegram-user', email: null })
+    });
+  });
 
   await page.goto('/?startapp=pairing-token');
   await expect(page.getByRole('heading', { name: 'Telegram connection needs a retry' })).toBeVisible();
