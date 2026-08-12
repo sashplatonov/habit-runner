@@ -8,7 +8,7 @@
 <p align="center">
   <a href="#product">Product</a> ·
   <a href="https://habit-runner.freeddns.org">Try the live showcase</a> ·
-  <a href="https://t.me/habbit_runner_bot?profile">Open in Telegram</a> ·
+  <a href="https://t.me/habit_runner_bot?profile">Open in Telegram</a> ·
   <a href="#engineering-highlights">Engineering</a> ·
   <a href="#showcase">Showcase</a> ·
   <a href="#run-locally">Run locally</a> ·
@@ -84,7 +84,7 @@ data is server-backed and is never mixed with the showcase fixture.
 
 ## ✈️ Telegram Mini App
 
-Open [Habit Runner in Telegram](https://t.me/habbit_runner_bot?profile) when a
+Open [Habit Runner in Telegram](https://t.me/habit_runner_bot?profile) when a
 quick daily check-in is enough. Link your account when you want to continue with
 the same habits in the web app for a larger view.
 

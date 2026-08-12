@@ -22,7 +22,7 @@ test.describe('public site', () => {
 
     await page.goto('/');
     const telegramLink = page.getByRole('link', { name: 'Open in Telegram' });
-    await expect(telegramLink).toHaveAttribute('href', 'https://t.me/habbit_runner_bot?profile');
+    await expect(telegramLink).toHaveAttribute('href', 'https://t.me/habit_runner_bot?profile');
     await expect(telegramLink).toHaveAttribute('target', '_blank');
     await expect(telegramLink).toHaveCSS('min-height', '44px');
     await expect(page.getByText('Can I use Habit Runner from Telegram?', { exact: true })).toBeVisible();

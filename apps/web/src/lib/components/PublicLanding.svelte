@@ -47,7 +47,7 @@
               <ArrowRight size={16} aria-hidden="true" />
             </a>
             <a
-              href="https://t.me/habbit_runner_bot?profile"
+              href="https://t.me/habit_runner_bot?profile"
               target="_blank"
               rel="noreferrer"
               class="inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-border bg-bg-card px-5 py-3 text-sm font-semibold text-foreground transition-[transform,border-color,color] hover:-translate-y-0.5 hover:border-progress/30 hover:text-progress focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-progress"

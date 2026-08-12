@@ -17,9 +17,9 @@ describe('account links', () => {
   });
 
   it('builds a Telegram deep link for the configured bot', () => {
-  vi.stubEnv('VITE_TELEGRAM_BOT_USERNAME', '@HabitRunnerBot');
+  vi.stubEnv('VITE_TELEGRAM_BOT_USERNAME', '@habit_runner_bot');
 
-  expect(telegramMiniAppUrl('pairing-token')).toBe('https://t.me/HabitRunnerBot?startapp=pairing-token');
+  expect(telegramMiniAppUrl('pairing-token')).toBe('https://t.me/habit_runner_bot?startapp=pairing-token');
   });
 
   it('requires a configured Telegram bot username instead of opening the website outside Telegram', () => {

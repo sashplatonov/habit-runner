@@ -25,7 +25,7 @@ describe('AccountConnections', () => {
       { provider: 'GOOGLE', connected: true, displayName: 'person@example.com' },
       { provider: 'TELEGRAM', connected: false, displayName: null }
     ] });
-    telegramMiniAppUrl.mockImplementation((token: string) => `https://t.me/HabitRunnerBot?startapp=${token}`);
+    telegramMiniAppUrl.mockImplementation((token: string) => `https://t.me/habit_runner_bot?startapp=${token}`);
     startTelegramLink.mockResolvedValue({ token: 'pairing-token' });
     open.mockReturnValue(popup);
     vi.stubGlobal('open', open);
@@ -52,7 +52,7 @@ describe('AccountConnections', () => {
 
     expect(open).toHaveBeenCalledWith('', '_blank');
     await waitFor(() => expect(popup.location.replace).toHaveBeenCalledWith(
-      'https://t.me/HabitRunnerBot?startapp=pairing-token',
+      'https://t.me/habit_runner_bot?startapp=pairing-token',
     ));
     expect(popup.opener).toBeNull();
   });
