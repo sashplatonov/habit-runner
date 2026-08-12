@@ -147,7 +147,7 @@ export default defineConfig({
         screenshots: [
           {
             src: 'screenshots/desktop.png',
-            sizes: '1280x720',
+            sizes: '1440x900',
             type: 'image/png',
             label: 'Habbit Runner — Habit Tracker Dashboard'
           },

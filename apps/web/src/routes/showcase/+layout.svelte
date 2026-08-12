@@ -23,7 +23,7 @@
       applyTheme(nextTheme, false);
     }}
   >
-    <div class="border-b border-progress/20 bg-progress/10 px-4 py-3 text-sm text-foreground sm:px-6">
+    <div data-showcase-notice class="border-b border-progress/20 bg-progress/10 px-4 py-3 text-sm text-foreground sm:px-6">
       <div class="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3">
         <p><strong>Try the sample freely.</strong> Reset it whenever you want to start over.</p>
         <button class="min-h-11 rounded-full border border-progress/30 px-4 py-2 text-xs font-semibold" type="button" onclick={() => showcaseStore.reset()}>Reset demo</button>

@@ -14,10 +14,6 @@
   <a href="#quality-evidence">Quality</a>
 </p>
 
-<p align="center">
-  <img src="docs/assets/screenshots/github-social-preview.png" alt="Habbit Runner showcase dashboard with fictional habits" width="960" />
-</p>
-
 <a id="top"></a>
 
 ## Table of contents
@@ -83,23 +79,23 @@ data is server-backed and is never mixed with the showcase fixture.
 
 [↑ Back to top](#top)
 
-## 🖼️ Product screens <a id="product-screens"></a>
+## 🖼️ Private product screens <a id="product-screens"></a>
 
-All captures below use the anonymous showcase fixture, never a visitor account.
-They show the product screens for habits, habit detail, progress, and compact
-mobile use.
+These are the private habit-management screens, rendered with a sealed fixture
+instead of a visitor account. The fixture reuses the same dashboard, habit
+detail, progress, and compact-webview components as the signed-in application.
 
-| Today | Habit detail |
+| Desktop: habits | Desktop: habit detail |
 | --- | --- |
-| ![Showcase dashboard with four fictional habits](apps/web/static/screenshots/desktop.png) | ![Habit detail for Morning pages](apps/web/static/screenshots/habit-detail.png) |
+| ![Private habits dashboard with fictional data](apps/web/static/screenshots/desktop.png) | ![Private habit detail with fictional data](apps/web/static/screenshots/habit-detail.png) |
 
-| Progress | Mobile |
+| Desktop: progress | Compact webview |
 | --- | --- |
-| ![Progress screen with fictional habit data](apps/web/static/screenshots/progress.png) | ![Compact showcase dashboard with fictional habits](apps/web/static/screenshots/mobile.png) |
+| ![Private progress screen with fictional data](apps/web/static/screenshots/progress.png) | ![Private habits dashboard in a compact webview](apps/web/static/screenshots/mobile.png) |
 
-`docs/assets/screenshots/github-social-preview.png` is the prepared 1280×640
-repository social-preview image. Upload that file in GitHub repository settings
-when publishing the repository.
+The separate [GitHub social-preview image](docs/assets/screenshots/github-social-preview.png)
+also shows the private habit dashboard with fixture data. Upload it in GitHub
+repository settings when publishing the repository.
 
 [↑ Back to top](#top)
 
