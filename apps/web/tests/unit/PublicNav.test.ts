@@ -77,4 +77,15 @@ describe('PublicNav', () => {
     expect(document.activeElement).toBe(menu);
     expect(screen.queryByRole('navigation', { name: 'Mobile navigation' })).toBeNull();
   });
+
+  it('does not steal focus when Escape is pressed outside the open menu', async () => {
+    const user = userEvent.setup();
+
+    render(PublicNav);
+    const getStarted = screen.getByRole('button', { name: 'Get Started' });
+    getStarted.focus();
+    await user.keyboard('{Escape}');
+
+    expect(document.activeElement).toBe(getStarted);
+  });
 });

@@ -29,7 +29,7 @@
   }
 
   function handleKeydown(event: KeyboardEvent) {
-    if (event.key === 'Escape') {
+    if (event.key === 'Escape' && mobileNavigationOpen) {
       closeMobileNavigationAndRestoreFocus();
     }
   }
