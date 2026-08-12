@@ -17,15 +17,15 @@
     </div>
 
     <nav class="flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted sm:justify-end" aria-label="Footer navigation">
-      <a href={resolve<'/'>('/', {})} class="inline-flex min-h-10 items-center transition-colors hover:text-foreground sm:min-h-9">Home</a>
-      <a href={resolve<'/features'>('/features', {})} class="inline-flex min-h-10 items-center transition-colors hover:text-foreground sm:min-h-9">Features</a>
-      <a href={resolve<'/blog'>('/blog', {})} class="inline-flex min-h-10 items-center transition-colors hover:text-foreground sm:min-h-9">Blog</a>
-      <a href={resolve<'/about'>('/about', {})} class="inline-flex min-h-10 items-center transition-colors hover:text-foreground sm:min-h-9">About</a>
-      <a href={resolve<'/habit-tracker'>('/habit-tracker', {})} class="inline-flex min-h-10 items-center transition-colors hover:text-foreground sm:min-h-9">Habit Tracker</a>
-      <a href={resolve<'/streak-tracker'>('/streak-tracker', {})} class="inline-flex min-h-10 items-center transition-colors hover:text-foreground sm:min-h-9">Streak Tracker</a>
-      <a href={resolve<'/daily-routine-planner'>('/daily-routine-planner', {})} class="inline-flex min-h-10 items-center transition-colors hover:text-foreground sm:min-h-9">Daily Routine Planner</a>
-      <a href={resolve<'/vs/[slug]'>('/vs/[slug]', { slug: 'habitica' })} class="inline-flex min-h-10 items-center transition-colors hover:text-foreground sm:min-h-9">vs Habitica</a>
-      <a href={resolve<'/privacy-policy'>('/privacy-policy', {})} class="inline-flex min-h-10 items-center transition-colors hover:text-foreground sm:min-h-9">Privacy</a>
+      <a href={resolve<'/'>('/', {})} class="inline-flex min-h-11 items-center transition-colors hover:text-foreground">Home</a>
+      <a href={resolve<'/features'>('/features', {})} class="inline-flex min-h-11 items-center transition-colors hover:text-foreground">Features</a>
+      <a href={resolve<'/blog'>('/blog', {})} class="inline-flex min-h-11 items-center transition-colors hover:text-foreground">Blog</a>
+      <a href={resolve<'/about'>('/about', {})} class="inline-flex min-h-11 items-center transition-colors hover:text-foreground">About</a>
+      <a href={resolve<'/habit-tracker'>('/habit-tracker', {})} class="inline-flex min-h-11 items-center transition-colors hover:text-foreground">Habit Tracker</a>
+      <a href={resolve<'/streak-tracker'>('/streak-tracker', {})} class="inline-flex min-h-11 items-center transition-colors hover:text-foreground">Streak Tracker</a>
+      <a href={resolve<'/daily-routine-planner'>('/daily-routine-planner', {})} class="inline-flex min-h-11 items-center transition-colors hover:text-foreground">Daily Routine Planner</a>
+      <a href={resolve<'/vs/[slug]'>('/vs/[slug]', { slug: 'habitica' })} class="inline-flex min-h-11 items-center transition-colors hover:text-foreground">vs Habitica</a>
+      <a href={resolve<'/privacy-policy'>('/privacy-policy', {})} class="inline-flex min-h-11 items-center transition-colors hover:text-foreground">Privacy</a>
     </nav>
   </div>
 </footer>

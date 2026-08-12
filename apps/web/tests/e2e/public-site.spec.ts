@@ -32,6 +32,19 @@ test.describe('public site', () => {
     await expectNoHorizontalOverflow(page);
   });
 
+  test('keeps compact footer links touch-friendly', async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name !== 'mobile', 'This assertion targets the narrow viewport.');
+
+    await page.goto('/');
+    const footerLinks = page.getByRole('navigation', { name: 'Footer navigation' }).getByRole('link');
+    const linkCount = await footerLinks.count();
+
+    for (let index = 0; index < linkCount; index += 1) {
+      await expect(footerLinks.nth(index)).toHaveCSS('min-height', '44px');
+    }
+    await expectNoHorizontalOverflow(page);
+  });
+
   test('fits a narrow phone and tablet public layout', async ({ page }, testInfo) => {
     test.skip(testInfo.project.name !== 'mobile', 'This test owns explicit viewport coverage.');
 
