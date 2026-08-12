@@ -14,6 +14,10 @@
   <a href="#quality-evidence">Quality</a>
 </p>
 
+<p align="center">
+  <img src="docs/assets/screenshots/github-social-preview.png" alt="Habbit Runner showcase dashboard with fictional habits" width="960" />
+</p>
+
 <a id="top"></a>
 
 ## Table of contents
@@ -21,6 +25,7 @@
 - [🎯 Product](#product)
 - [🧩 Engineering highlights](#engineering-highlights)
 - [🧭 Interactive showcase](#showcase)
+- [🖼️ Product screens](#product-screens)
 - [🏗️ Architecture](#architecture)
 - [🚀 Run locally](#run-locally)
 - [🧪 Quality evidence](#quality-evidence)
@@ -75,6 +80,26 @@ without OAuth, API requests, database writes, or browser persistence.
 
 The normal account flow remains available through Google OAuth; authenticated
 data is server-backed and is never mixed with the showcase fixture.
+
+[↑ Back to top](#top)
+
+## 🖼️ Product screens <a id="product-screens"></a>
+
+All captures below use the anonymous showcase fixture, never a visitor account.
+They show the product screens for habits, habit detail, progress, and compact
+mobile use.
+
+| Today | Habit detail |
+| --- | --- |
+| ![Showcase dashboard with four fictional habits](apps/web/static/screenshots/desktop.png) | ![Habit detail for Morning pages](apps/web/static/screenshots/habit-detail.png) |
+
+| Progress | Mobile |
+| --- | --- |
+| ![Progress screen with fictional habit data](apps/web/static/screenshots/progress.png) | ![Compact showcase dashboard with fictional habits](apps/web/static/screenshots/mobile.png) |
+
+`docs/assets/screenshots/github-social-preview.png` is the prepared 1280×640
+repository social-preview image. Upload that file in GitHub repository settings
+when publishing the repository.
 
 [↑ Back to top](#top)
 
@@ -211,7 +236,7 @@ docker-compose.yml         Portable JVM + PostgreSQL + nginx stack
 - Habit changes require a connection to the authenticated API.
 - GitHub Actions minute savings must be confirmed from fresh remote workflow runs;
   local `actionlint` and build checks cannot measure hosted-run cost.
-- The screenshots are product/marketing captures, not proof of a signed
+- The screenshots use fictional showcase data and are not proof of a signed
   production deployment.
 
 [↑ Back to top](#top)
