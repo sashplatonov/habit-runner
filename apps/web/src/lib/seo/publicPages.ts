@@ -15,7 +15,7 @@ export type PublicSeoConfig = {
   faq: FaqItem[];
 };
 
-export const PUBLIC_SITE_ORIGIN = 'https://habbit-runner.app';
+export const PUBLIC_SITE_ORIGIN = 'https://habit-runner.freeddns.org';
 export const PUBLIC_OG_IMAGE_URL = new URL('/og-image.svg', PUBLIC_SITE_ORIGIN).toString();
 
 export const PUBLIC_LANDING_SEO = {

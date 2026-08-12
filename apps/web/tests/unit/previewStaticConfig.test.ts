@@ -13,7 +13,7 @@ describe('resolvePreviewApiTarget', () => {
 
   it('does not force a proxy target for non-local hosts', () => {
     expect(resolvePreviewApiTarget('0.0.0.0', '')).toBe('');
-    expect(resolvePreviewApiTarget('habbit-runner.igo.mywire.org', '')).toBe('');
+    expect(resolvePreviewApiTarget('habit-runner.freeddns.org', '')).toBe('');
   });
 
   it('rewrites /api requests to backend-root paths', () => {

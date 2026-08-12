@@ -19,8 +19,8 @@
     '@context': 'https://schema.org',
     '@type': 'Organization',
     name: 'Habbit Runner',
-    url: 'https://habbit-runner.app',
-    logo: 'https://habbit-runner.app/og-image.svg',
+    url: 'https://habit-runner.freeddns.org',
+    logo: 'https://habit-runner.freeddns.org/og-image.svg',
     description:
       'Habbit Runner is a habit tracker built for daily consistency and useful progress signals.',
     sameAs: []

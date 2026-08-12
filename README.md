@@ -7,7 +7,7 @@
 
 <p align="center">
   <a href="#product">Product</a> ·
-  <a href="https://habbit-runner.igo.mywire.org">Try the live showcase</a> ·
+  <a href="https://habit-runner.freeddns.org">Try the live showcase</a> ·
   <a href="https://t.me/habbit_runner_bot?profile">Open in Telegram</a> ·
   <a href="#engineering-highlights">Engineering</a> ·
   <a href="#showcase">Showcase</a> ·
@@ -72,7 +72,7 @@ first-paint fallbacks.
 ## 🧭 Interactive showcase <a id="showcase"></a>
 
 Try the real application UI anonymously at
-[habbit-runner.igo.mywire.org](https://habbit-runner.igo.mywire.org). The public
+[habit-runner.freeddns.org](https://habit-runner.freeddns.org). The public
 showcase uses fictional in-memory data, so you can check in habits, open detail
 views, create or edit a habit, archive/delete, reorder, and inspect progress
 without OAuth, API requests, database writes, or browser persistence.

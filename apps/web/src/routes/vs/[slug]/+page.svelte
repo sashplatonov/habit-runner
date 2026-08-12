@@ -22,19 +22,19 @@
     '@type': 'Article',
     headline: competitor.tagline,
     description: competitor.description,
-    url: `https://habbit-runner.app/vs/${competitor.slug}`,
+    url: `https://habit-runner.freeddns.org/vs/${competitor.slug}`,
     datePublished: '2026-04-16',
     dateModified: '2026-04-16',
-    author: { '@type': 'Organization', name: 'Habbit Runner', url: 'https://habbit-runner.app' },
-    publisher: { '@type': 'Organization', name: 'Habbit Runner', url: 'https://habbit-runner.app' }
+    author: { '@type': 'Organization', name: 'Habbit Runner', url: 'https://habit-runner.freeddns.org' },
+    publisher: { '@type': 'Organization', name: 'Habbit Runner', url: 'https://habit-runner.freeddns.org' }
   }).replace(/</g, '\\u003c')}</script>
   <script type="application/ld+json">{JSON.stringify({
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
     itemListElement: [
-      { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://habbit-runner.app' },
-      { '@type': 'ListItem', position: 2, name: 'Comparisons', item: 'https://habbit-runner.app/vs' },
-      { '@type': 'ListItem', position: 3, name: `vs ${competitor.name}`, item: `https://habbit-runner.app/vs/${competitor.slug}` }
+      { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://habit-runner.freeddns.org' },
+      { '@type': 'ListItem', position: 2, name: 'Comparisons', item: 'https://habit-runner.freeddns.org/vs' },
+      { '@type': 'ListItem', position: 3, name: `vs ${competitor.name}`, item: `https://habit-runner.freeddns.org/vs/${competitor.slug}` }
     ]
   }).replace(/</g, '\\u003c')}</script>
 </svelte:head>

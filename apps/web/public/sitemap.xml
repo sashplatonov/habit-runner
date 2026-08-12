@@ -1,22 +1,22 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://habbit-runner.app/</loc>
+    <loc>https://habit-runner.freeddns.org/</loc>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://habbit-runner.app/habit-tracker</loc>
+    <loc>https://habit-runner.freeddns.org/habit-tracker</loc>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://habbit-runner.app/streak-tracker</loc>
+    <loc>https://habit-runner.freeddns.org/streak-tracker</loc>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://habbit-runner.app/daily-routine-planner</loc>
+    <loc>https://habit-runner.freeddns.org/daily-routine-planner</loc>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>

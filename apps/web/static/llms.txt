@@ -49,5 +49,5 @@ Free to use. Core habit tracking, streak monitoring, and dashboard analytics ava
 
 ## Contact
 
-Website: https://habbit-runner.app
-Privacy Policy: https://habbit-runner.app/privacy-policy
+Website: https://habit-runner.freeddns.org
+Privacy Policy: https://habit-runner.freeddns.org/privacy-policy

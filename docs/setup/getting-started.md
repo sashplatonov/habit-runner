@@ -247,7 +247,7 @@ Use matching origins:
 1. In [@BotFather](https://t.me/BotFather), create or select the production
    bot and use **Bot Settings → Mini Apps → Configure Mini App** to set the
    Main Mini App URL to the deployed HTTPS web origin (for example,
-   `https://habbit-runner.app`). Telegram must be able to reach this URL over
+   `https://habit-runner.freeddns.org`). Telegram must be able to reach this URL over
    HTTPS; localhost is for local browser testing only.
 2. Keep local, staging, and production bots/URLs separate. A test account must
    launch the staging Mini App, sign in with Telegram, link an email account in

@@ -33,7 +33,7 @@
         <h2 class="text-lg font-semibold text-slate-900">1. Introduction</h2>
         <p class="mt-2 text-slate-600">
           Habbit Runner ("we", "our", or "us") operates the Habbit Runner habit tracker application
-          available at <a href="https://habbit-runner.app" class="text-cyan-700 underline">habbit-runner.app</a>.
+          available at <a href="https://habit-runner.freeddns.org" class="text-cyan-700 underline">habit-runner.freeddns.org</a>.
           This Privacy Policy explains how we collect, use, and protect your information when you
           use our service.
         </p>

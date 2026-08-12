@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://habbit-runner.app/sitemap.xml
+Sitemap: https://habit-runner.freeddns.org/sitemap.xml
