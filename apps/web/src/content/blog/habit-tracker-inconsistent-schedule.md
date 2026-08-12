@@ -79,4 +79,4 @@ For shift workers and people with physically demanding work, sleep and rest are 
 
 ---
 
-*Habbit Runner supports flexible schedules when the backend connection is available. [Try it free →](/)*
+*Habbit Runner supports flexible schedules when the account connection is available. [Try it free →](/)*

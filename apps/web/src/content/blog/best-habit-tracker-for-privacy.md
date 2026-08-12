@@ -10,7 +10,7 @@ coverImage: /blog/best-habit-tracker-for-privacy.svg
 
 Habit tracking is personal. The habits you build — exercise, sleep, medication, mental health practices — reflect details about your life you might not want uploaded to a server by default.
 
-Most popular habit apps are cloud-first. Your data is synced automatically, often to support advertising, analytics, or features you may not use. A growing number of users are looking for alternatives that don't require this trade-off.
+Most popular habit apps are account-based. Your data is synced automatically, often to support advertising, analytics, or features you may not use. A growing number of users are looking for alternatives that don't require this trade-off.
 
 ## What Makes a Habit Tracker Private?
 
@@ -21,17 +21,17 @@ Privacy in a habit tracker comes down to four questions:
 3. **Is there advertising?** Ad-supported apps have incentives to analyze your behavior.
 4. **Can you export your data?** If you can't export, you can't leave.
 
-No app is perfectly private. But the gap between local-first, no-account apps and account-required cloud apps is significant.
+No app is perfectly private. But the gap between device-first, no-account apps and account-required cloud apps is significant.
 
 ## Best Privacy-Friendly Habit Tracker Apps
 
 ### Habbit Runner (PWA — Free)
 
-Habbit Runner stores signed-in habit data in the backend; the PWA shell is cached for repeat visits.
+Habbit Runner stores signed-in habit data in the account system; the PWA shell is cached for repeat visits.
 
 There is no advertising. Data is not sold or used for analytics outside the app itself. Because the app is a PWA, there's no App Store middleman analyzing install behavior.
 
-- Data stored: Server-backed for signed-in accounts
+- Data stored: Account-based for signed-in accounts
 - Account required: Yes, for habit data and streaks
 - Ads: None
 - Export: Available
@@ -62,9 +62,9 @@ Not a dedicated habit tracker, but the privacy model is excellent: your data is 
 
 ## Privacy and Offline Support Often Go Together
 
-There's a natural overlap between privacy-friendly apps and carefully scoped server-backed apps. Minimizing unnecessary data transmission reduces exposure by default.
+There's a natural overlap between privacy-friendly apps and carefully scoped account-based apps. Minimizing unnecessary data transmission reduces exposure by default.
 
-Habbit Runner was built with this in mind. Its server-backed product avoids advertising and data sales; habit changes require a signed-in network connection.
+Habbit Runner was built with this in mind. Its account-based product avoids advertising and data sales; habit changes require a signed-in network connection.
 
 ## Frequently Asked Questions
 
@@ -82,8 +82,8 @@ Generally, yes — because the code can be audited. Closed-source apps may make 
 
 ### Does Habbit Runner sell user data?
 
-No. Habbit Runner does not sell or share user data. Habit data for signed-in accounts is handled by the service backend.
+No. Habbit Runner does not sell or share user data. Habit data for signed-in accounts is handled by the service account system.
 
 ---
 
-*Track habits with a server-backed PWA. No ads and no data selling. [Try it free →](/)*
+*Track habits with a account-based PWA. No ads and no data selling. [Try it free →](/)*

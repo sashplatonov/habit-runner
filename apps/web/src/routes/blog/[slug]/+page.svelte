@@ -64,7 +64,7 @@
 <JsonLdHead payload={articleSchemaPayload} />
 <JsonLdHead payload={breadcrumbSchemaPayload} />
 
-<div class="min-h-screen bg-[linear-gradient(180deg,#f8fbff_0%,#eef4fb_52%,#f7fbff_100%)] text-slate-900">
+<div class="min-h-screen bg-[#f7f8f4] text-slate-900">
   <PublicNav maxWidth="max-w-5xl" />
 
   <main class="mx-auto w-full max-w-3xl px-4 py-12 sm:px-6">
@@ -93,7 +93,7 @@
     </header>
 
     {#if post.content}
-      <div class="prose prose-slate mt-10 max-w-none rounded-[1.75rem] border border-slate-200/80 bg-white/92 p-6 text-sm shadow-[0_18px_50px_rgba(15,23,42,0.08)] sm:p-8">
+      <div class="prose prose-slate mt-8 max-w-none rounded-[1.75rem] border border-slate-200/80 bg-white/92 p-6 text-base leading-7 shadow-[0_18px_50px_rgba(15,23,42,0.08)] sm:p-10">
         <!-- eslint-disable-next-line svelte/no-at-html-tags -- content is static, defined in posts.ts, not user input -->
         {@html post.content}
       </div>
@@ -103,10 +103,10 @@
       </div>
     {/if}
 
-    <div class="mt-10 rounded-[1.5rem] border border-slate-900 bg-slate-950 p-6 text-white shadow-[0_24px_60px_rgba(15,23,42,0.18)]">
-      <p class="text-sm text-slate-600">
-        Start building your habit routine today —
-        <a href={resolve<'/'>('/', {})} class="text-sky-300 underline">Try Habbit Runner free</a>
+    <div class="mt-8 rounded-[1.5rem] border border-slate-900 bg-slate-950 p-6 text-white shadow-[0_24px_60px_rgba(15,23,42,0.18)] sm:p-8">
+      <p class="text-base leading-7 text-slate-300">
+        Ready to try one small change?
+        <a href={resolve<'/'>('/', {})} class="ml-1 font-semibold text-emerald-300 underline underline-offset-4">Open Habbit Runner</a>
       </p>
     </div>
   </main>

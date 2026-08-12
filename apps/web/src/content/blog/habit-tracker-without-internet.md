@@ -80,7 +80,7 @@ For native apps, installation from the App Store or Google Play handles offline 
 
 ### Will my habit data still sync when I reconnect?
 
-Yes, if the app supports sync. In Habbit Runner, habit changes are saved through the backend while connected.
+Yes, if the app supports sync. In Habbit Runner, habit changes are saved through the account system while connected.
 
 ### Can I receive habit reminders without internet?
 
@@ -88,8 +88,8 @@ App-native reminders on iOS and Android work without internet. PWA web push noti
 
 ### What if I go offline for a week while traveling?
 
-Your local data is intact. When you reconnect, the sync catches up automatically. The only thing you might miss is push notifications during the offline period — your habit logs will be fine.
+Your local data is intact. When you reconnect, the your saved changes are available after you reconnect. The only thing you might miss is push notifications during the offline period — your your next connected session will show what was saved.
 
 ---
 
-*Habbit Runner is an installable PWA for signed-in, server-backed habit tracking. [Install it free →](/)*
+*Habbit Runner is an installable PWA for signed-in, account-based habit tracking. [Install it free →](/)*

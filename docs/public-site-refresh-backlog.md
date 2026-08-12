@@ -341,7 +341,7 @@ git commit -m "feat(public): clarify product information pages"
 
 ## P1-4: Refresh the blog as useful, current editorial content
 
-**Status:** ⬜ Not started
+**Status:** ✅ Completed
 
 **Priority:** P1
 

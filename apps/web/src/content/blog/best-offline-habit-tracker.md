@@ -26,7 +26,7 @@ Local-only habit trackers store all data on your device. Cloud-backed trackers r
 
 ### Habbit Runner (PWA — Free)
 
-Habbit Runner is built around a server-backed API. Habit data, check-ins, and analytics are loaded from your account.
+Habbit Runner is built around a account-based API. Habit data, check-ins, and analytics are loaded from your account.
 
 When you reconnect, a pull-push-pull sync cycle reconciles your local changes with the server using last-write-wins conflict resolution. Web push notifications work through the browser without a native app.
 

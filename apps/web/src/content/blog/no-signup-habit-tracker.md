@@ -24,7 +24,7 @@ For many users, a no-sign-up habit tracker is the right default. If you later de
 
 ### Habbit Runner
 
-Habbit Runner is an installable, server-backed PWA. Sign in with Google to create and track habits, view streaks, and use the same account across supported devices.
+Habbit Runner is an installable, account-based PWA. Sign in with Google to create and track habits, view streaks, and use the same account across supported devices.
 
 The PWA can be added to your home screen; habit data and mutations require an authenticated connection.
 
@@ -57,7 +57,7 @@ For a single-device user, the account limitation is often irrelevant. If you tra
 
 ## Choosing an Account Model
 
-The right account model depends on the product. Habbit Runner uses Google sign-in for the server-backed habit, check-in, and streak experience.
+The right account model depends on the product. Habbit Runner uses Google sign-in for the account-based habit, check-in, and streak experience.
 
 This is a meaningful distinction from apps that require registration to use even basic features. An optional account model respects that many users don't need sync and shouldn't be required to share personal information to get value from the app.
 

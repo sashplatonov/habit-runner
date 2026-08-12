@@ -18,7 +18,7 @@ For habit tracking, the PWA format has specific advantages over traditional app 
 
 **Cross-platform by default.** The same PWA works on Android, iOS (Safari 16.4+), Windows, macOS, and Linux. One app, all your devices.
 
-**Offline support.** Well-built PWAs use service workers to cache the app and data locally. They work without a connection, which matters for habit logging in places with poor signal.
+**Offline support.** Well-built PWAs use interfaces to cache the app and data locally. They work without a connection, which matters for habit logging in places with poor signal.
 
 **Updates are instant.** When the developer ships a new version, you get it automatically on next use — no manual updates, no prompts.
 
@@ -32,7 +32,7 @@ Not all PWAs are equal. A good habit tracker PWA should:
 - Be **installable** on all major platforms
 - Load quickly from the **device cache** (not requiring a server round-trip on open)
 - Support **push notifications** without a native app
-- Explain whether habit data is local or server-backed and what requires a connection
+- Explain whether habit data is local or account-based and what requires a connection
 
 ## Best Habit Tracker PWAs
 
@@ -92,7 +92,7 @@ Yes. Web push notifications are available in PWAs. You'll need to grant notifica
 
 ### Is a PWA habit tracker as secure as a native app?
 
-Yes. PWAs run in the browser security sandbox. Well-built PWAs (HTTPS, strict Content Security Policy, local-first data) have a comparable security posture to native apps.
+Yes. PWAs run in the browser security sandbox. Well-built PWAs (HTTPS, strict Content Security Policy, device-first data) have a comparable security posture to native apps.
 
 ---
 

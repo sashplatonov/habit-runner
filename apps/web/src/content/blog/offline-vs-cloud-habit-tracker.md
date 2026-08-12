@@ -3,7 +3,7 @@ title: "Offline Habit Tracker vs Cloud Habit Tracker: Which One Is Right for You
 description: "Offline and cloud habit trackers work very differently. Here's how to choose based on your privacy needs, devices, and daily routine."
 publishedAt: "2026-01-21"
 author: "Habbit Runner Team"
-keywords: "offline habit tracker, cloud habit tracker, habit tracker comparison, local-first habit app, habit tracker privacy"
+keywords: "offline habit tracker, cloud habit tracker, habit tracker comparison, device-first habit app, habit tracker privacy"
 readingTimeMinutes: 7
 coverImage: /blog/offline-vs-cloud-habit-tracker.svg
 ---
@@ -50,7 +50,7 @@ For anyone who commutes, travels frequently, or just wants reliability, local-on
 
 The main limitation of pure offline apps is that they don't move your data between devices. If you track habits on your phone in the morning and want to check stats on your laptop at lunch, a local-only app won't help.
 
-Some products combine local storage with synchronization; others, such as Habbit Runner, use a server-backed model.
+Some products combine local storage with synchronization; others, such as Habbit Runner, use a account-based model.
 
 Habbit Runner uses an account-based model. Account data is saved when connected, and refresh shows the latest progress. If two sessions change the same item, the app asks you to review it.
 
@@ -58,7 +58,7 @@ Habbit Runner uses an account-based model. Account data is saved when connected,
 
 Every time a cloud app syncs your data, it goes to a server. This is often necessary, but it's a data exposure surface. What habits you track, how often you succeed or fail, your daily routine patterns — this is more personal than most people realize.
 
-With a local-first app, this data may never leave your device unless you opt into sync. That can be a meaningful privacy difference for users who track sensitive routines.
+With a device-first app, this data may never leave your device unless you opt into sync. That can be a meaningful privacy difference for users who track sensitive routines.
 
 ## Which Model Fits Your Situation
 
