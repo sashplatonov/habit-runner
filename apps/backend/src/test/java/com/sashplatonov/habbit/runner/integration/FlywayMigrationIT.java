@@ -56,6 +56,7 @@ class FlywayMigrationIT {
     assertEquals(2, cursorIndexCount);
     assertEquals("text", dashboardPreferencesType);
     assertTrue(tableExists("habit_schedule_weekdays"));
+    assertTrue(constraintExists("habits_description_length"));
   }
 
   private boolean tableExists(String tableName) {
@@ -63,5 +64,11 @@ class FlywayMigrationIT {
         "SELECT COUNT(*) FROM information_schema.tables "
             + "WHERE table_schema = 'public' AND table_name = ?1"
     ).setParameter(1, tableName).getSingleResult()).intValue() == 1;
+  }
+
+  private boolean constraintExists(String constraintName) {
+    return ((Number) entityManager.createNativeQuery(
+        "SELECT COUNT(*) FROM pg_constraint WHERE conname = ?1"
+    ).setParameter(1, constraintName).getSingleResult()).intValue() == 1;
   }
 }

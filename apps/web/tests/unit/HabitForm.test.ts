@@ -71,6 +71,34 @@ describe('HabitForm', () => {
     expect(screen.getByText('0 remaining')).toBeTruthy();
   });
 
+  it('blocks legacy descriptions over the limit and explains how far over they are', async () => {
+    const user = userEvent.setup();
+    const onSubmit = vi.fn().mockResolvedValue(undefined);
+
+    render(HabitForm, {
+      props: {
+        mode: 'edit',
+        habit: createHabit({ description: 'x'.repeat(8001) }),
+        allHabits: [createHabit({ description: 'x'.repeat(8001) })],
+        onBack: vi.fn(),
+        onSubmit
+      }
+    });
+
+    const description = screen.getByLabelText(/Description/) as HTMLTextAreaElement;
+    expect(screen.getByText('8001 / 8000 characters')).toBeTruthy();
+    expect(screen.getByText('1 over limit')).toBeTruthy();
+
+    await user.click(screen.getAllByRole('button', { name: 'Save habit' })[0]);
+
+    expect(onSubmit).not.toHaveBeenCalled();
+    expect(description.getAttribute('aria-invalid')).toBe('true');
+    expect(screen.getAllByText('Max 8000 characters')).toHaveLength(2);
+    await waitFor(() => {
+      expect(document.activeElement).toBe(description);
+    });
+  });
+
   it('shows and dismisses the soft-limit warning for over-limit create flows', async () => {
     const user = userEvent.setup();
 

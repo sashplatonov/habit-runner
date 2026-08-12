@@ -134,6 +134,21 @@ test.describe.serial('critical habit journey', () => {
     await expect(page.getByRole('alert')).toContainText('Check the highlighted fields');
   });
 
+  test('keeps description feedback usable at compact mobile and desktop widths', async ({ page }) => {
+    for (const viewport of [{ width: 320, height: 740 }, { width: 390, height: 844 }, { width: 1440, height: 900 }]) {
+      await page.setViewportSize(viewport);
+      await page.goto('/app/habit/new');
+
+      const description = page.getByLabel(/Description/);
+      await description.fill('x'.repeat(8000));
+
+      await expect(page.getByText('8000 / 8000 characters')).toBeVisible();
+      await expect(page.getByText('0 remaining')).toBeVisible();
+      await expect(description).toHaveAttribute('maxlength', '8000');
+      expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+    }
+  });
+
   test('shows safe conflict state', async ({ page }) => {
     await page.goto('/app/dashboard');
     await page.getByRole('button', { name: /Read for ten minutes/ }).first().click();

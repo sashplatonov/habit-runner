@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { buildInitialValues, buildLegacyScheduleFields, calculateSoftLimitWarning, normalizeTags, validateHabitForm } from '$lib/habits/habitFormModel';
+import {
+  buildInitialValues,
+  buildLegacyScheduleFields,
+  calculateSoftLimitWarning,
+  MAX_HABIT_DESCRIPTION_LENGTH,
+  normalizeTags,
+  validateHabitForm
+} from '$lib/habits/habitFormModel';
 import type { Habit } from '@/types/habit';
 
 describe('habitFormModel', () => {
@@ -43,11 +50,22 @@ describe('habitFormModel', () => {
   it('returns validation errors for empty or incomplete forms', () => {
     const errors = validateHabitForm({
       name: '',
+      description: '',
       schedule: { type: 'weekly_days', weekdays: [] }
     });
 
     expect(errors.name).toBe('Name is required');
     expect(errors.schedule).toBe('Select at least one weekday');
+  });
+
+  it('rejects descriptions that exceed the supported limit', () => {
+    const errors = validateHabitForm({
+      name: 'Read',
+      description: 'x'.repeat(MAX_HABIT_DESCRIPTION_LENGTH + 1),
+      schedule: { type: 'daily' }
+    });
+
+    expect(errors.description).toBe('Max 8000 characters');
   });
 
   it('does not count archived habits toward the active habit soft limit', () => {

@@ -172,6 +172,8 @@
       const selector =
         nextErrors.name
           ? '#habit-name'
+          : nextErrors.description
+            ? '#habit-description'
           : nextErrors.schedule || nextErrors.scheduleWeeks || nextErrors.scheduleWeekdays
             ? '[aria-label*="schedule" i]'
             : nextErrors.reminderTime
@@ -186,7 +188,7 @@
   }
 
   async function handleSubmit() {
-    const nextErrors = validateHabitForm({ name, schedule });
+    const nextErrors = validateHabitForm({ name, description, schedule });
     errors = nextErrors;
     if (Object.keys(nextErrors).length > 0) {
       focusFirstInvalidField(nextErrors);

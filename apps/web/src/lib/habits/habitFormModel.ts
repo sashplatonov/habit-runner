@@ -144,13 +144,17 @@ export function buildLegacyScheduleFields(current: HabitSchedule): LegacySchedul
   };
 }
 
-export function validateHabitForm(values: Pick<HabitFormValues, 'name' | 'schedule'>): Record<string, string> {
+export function validateHabitForm(values: Pick<HabitFormValues, 'name' | 'description' | 'schedule'>): Record<string, string> {
   const nextErrors: Record<string, string> = {};
 
   if (!values.name.trim()) {
     nextErrors.name = 'Name is required';
   } else if (values.name.trim().length > 40) {
     nextErrors.name = 'Max 40 characters';
+  }
+
+  if (values.description.length > MAX_HABIT_DESCRIPTION_LENGTH) {
+    nextErrors.description = `Max ${MAX_HABIT_DESCRIPTION_LENGTH} characters`;
   }
 
   if (values.schedule.type === 'weekly_days' && values.schedule.weekdays.length === 0) {
