@@ -34,7 +34,7 @@ export const PUBLIC_LANDING_SEO = {
     {
       question: 'Can I use Habbit Runner from Telegram?',
       answer:
-        'Yes. Open the Mini App in Telegram for a quick check-in, then continue in the web app whenever you want a larger view.'
+        'Yes. Open the Mini App in Telegram for a quick check-in. Link your account when you want to continue with the same habits in the web app.'
     },
     {
       question: 'Does it support streak tracking and long-term progress?',

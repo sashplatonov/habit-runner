@@ -85,8 +85,8 @@ data is server-backed and is never mixed with the showcase fixture.
 ## ✈️ Telegram Mini App
 
 Open [Habbit Runner in Telegram](https://t.me/habbit_runner_bot?profile) when a
-quick daily check-in is enough. The same habits remain available when you return
-to the web app for a larger view.
+quick daily check-in is enough. Link your account when you want to continue with
+the same habits in the web app for a larger view.
 
 [↑ Back to top](#top)
 

@@ -28,7 +28,8 @@ test.describe('public site', () => {
     await expect(page.getByText('Can I use Habbit Runner from Telegram?', { exact: true })).toBeVisible();
 
     await page.goto('/features');
-    await expect(page.getByRole('heading', { name: 'Use it inside Telegram' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Ready where you are' })).toBeVisible();
+    await expect(page.getByText(/web app on a phone, tablet, or computer.*Telegram Mini App/i)).toBeVisible();
   });
 
   test('keeps the public shell usable on compact screens', async ({ page }, testInfo) => {
