@@ -32,7 +32,18 @@ test.describe('public site', () => {
     await expectNoHorizontalOverflow(page);
   });
 
-  for (const route of ['/features', '/about', '/habit-tracker', '/streak-tracker', '/daily-routine-planner', '/vs/habitica', '/blog/best-habit-tracker-pwa']) {
+  test('fits a narrow phone and tablet public layout', async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name !== 'mobile', 'This test owns explicit viewport coverage.');
+
+    for (const viewport of [{ width: 320, height: 740 }, { width: 768, height: 900 }]) {
+      await page.setViewportSize(viewport);
+      await page.goto('/');
+      await expect(page.getByRole('heading', { name: 'Keep the next good habit close.' })).toBeVisible();
+      await expectNoHorizontalOverflow(page);
+    }
+  });
+
+  for (const route of ['/features', '/about', '/habit-tracker', '/streak-tracker', '/daily-routine-planner', '/vs/habitica', '/vs/streaks-app', '/vs/beeminder', '/blog', '/blog/best-habit-tracker-pwa']) {
     test(`renders ${route} without public-page overflow`, async ({ page }) => {
       await page.goto(route);
       await expect(page.locator('main')).toBeVisible();

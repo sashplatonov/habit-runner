@@ -65,4 +65,16 @@ describe('PublicNav', () => {
     await user.click(screen.getByRole('button', { name: 'Close navigation menu' }));
     expect(screen.queryByRole('navigation', { name: 'Mobile navigation' })).toBeNull();
   });
+
+  it('restores focus to the menu trigger after Escape', async () => {
+    const user = userEvent.setup();
+
+    render(PublicNav);
+    const menu = screen.getByRole('button', { name: 'Open navigation menu' });
+    await user.click(menu);
+    await user.keyboard('{Escape}');
+
+    expect(document.activeElement).toBe(menu);
+    expect(screen.queryByRole('navigation', { name: 'Mobile navigation' })).toBeNull();
+  });
 });

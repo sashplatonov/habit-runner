@@ -54,7 +54,16 @@ Local evidence for this change:
 cd apps/web && npm run check:public-content
 cd apps/web && npm run lint
 cd apps/web && npm run check:types
+cd apps/web && npm run test
+cd apps/web && npm run check
+cd apps/web && npm run test:e2e -- --project=desktop --project=compact-mobile --project=mobile --project=telegram-webview public-site.spec.ts telegram-mini-app.spec.ts
 ```
+
+Latest local run on 2026-08-12: the content guard, lint, type checks, full unit
+suite (51 files, 218 tests), full check gate (web build and backend package),
+and public Playwright coverage (47 passed, 5 expected project skips) completed
+successfully. This is checkout evidence only; it does not prove a deployed URL,
+remote CI commit, or behavior in the official Telegram client.
 
 These commands validate the checkout only. They do not prove a deployed public
 URL, current search-engine metadata, official Telegram-client behavior, or

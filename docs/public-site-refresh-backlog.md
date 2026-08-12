@@ -517,7 +517,7 @@ git commit -m "feat(public): refresh editorial graphics"
 
 ## P2-2: Add public-surface browser coverage and complete release checks
 
-**Status:** ⬜ Not started
+**Status:** ✅ Completed
 
 **Priority:** P2
 
@@ -542,6 +542,7 @@ for root-entry authentication behavior.
 
 - Create `apps/web/tests/e2e/public-site.spec.ts`.
 - Modify `apps/web/tests/unit/PublicNav.test.ts`.
+- Create `apps/web/tests/unit/publicContent.test.ts`.
 - Modify `apps/web/tests/unit/previewStaticConfig.test.ts` only if static asset
   assertions have an existing home there.
 - Modify `apps/web/playwright.config.ts` only if no current project can express
