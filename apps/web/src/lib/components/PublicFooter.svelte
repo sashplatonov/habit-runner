@@ -8,45 +8,24 @@
   let { maxWidth = 'max-w-6xl' }: Props = $props();
 </script>
 
-<footer data-theme="cloud" class="border-t border-border/70 bg-[linear-gradient(180deg,rgba(255,255,255,0.18),rgba(244,246,241,0.95))] px-4 py-10 sm:px-6">
-  <div class="mx-auto grid w-full {maxWidth} gap-6 lg:grid-cols-[1.1fr,1.4fr]">
-    <section class="rounded-[1.75rem] border border-border bg-bg-card p-5 shadow-[0_18px_50px_rgba(15,23,42,0.08)]">
-      <p class="text-[10px] uppercase tracking-[0.26em] text-muted">Clear daily execution</p>
-      <h2 class="mt-3 text-xl font-semibold tracking-tight text-foreground">Habbit Runner keeps habits tangible.</h2>
-      <p class="mt-3 max-w-md text-sm leading-6 text-muted">
-        Built for reliable tracking, streak integrity, and practical review without the noise
-        of gamified clutter.
-      </p>
-      <p class="mt-5 text-xs text-muted">&copy; {new Date().getFullYear()} Habbit Runner</p>
-    </section>
+<footer data-theme="cloud" class="border-t border-border/70 bg-[linear-gradient(180deg,rgba(255,255,255,0.18),rgba(244,246,241,0.95))] px-4 py-5 sm:px-6">
+  <div class="mx-auto flex w-full {maxWidth} flex-col gap-3 rounded-2xl border border-border bg-bg-card px-4 py-3 shadow-[0_12px_30px_rgba(15,23,42,0.06)] sm:flex-row sm:items-center sm:justify-between sm:px-5">
+    <div class="flex items-center gap-3 text-xs text-muted">
+      <span class="font-semibold tracking-tight text-foreground">Habbit Runner</span>
+      <span aria-hidden="true" class="text-border-hover">•</span>
+      <span>&copy; {new Date().getFullYear()}</span>
+    </div>
 
-    <section class="rounded-[1.75rem] border border-border bg-bg-card p-5 shadow-[0_18px_50px_rgba(15,23,42,0.08)]">
-      <nav class="grid gap-5 text-xs text-muted sm:grid-cols-3" aria-label="Footer navigation">
-        <div>
-          <p class="mb-3 text-[10px] uppercase tracking-[0.24em] text-muted">Product</p>
-          <div class="flex flex-col gap-1">
-            <a href={resolve<'/'>('/', {})} class="inline-flex min-h-11 items-center transition-colors hover:text-foreground">Home</a>
-            <a href={resolve<'/features'>('/features', {})} class="inline-flex min-h-11 items-center transition-colors hover:text-foreground">Features</a>
-            <a href={resolve<'/blog'>('/blog', {})} class="inline-flex min-h-11 items-center transition-colors hover:text-foreground">Blog</a>
-            <a href={resolve<'/about'>('/about', {})} class="inline-flex min-h-11 items-center transition-colors hover:text-foreground">About</a>
-          </div>
-        </div>
-        <div>
-          <p class="mb-3 text-[10px] uppercase tracking-[0.24em] text-muted">Guides</p>
-          <div class="flex flex-col gap-1">
-            <a href={resolve<'/habit-tracker'>('/habit-tracker', {})} class="inline-flex min-h-11 items-center transition-colors hover:text-foreground">Habit Tracker</a>
-            <a href={resolve<'/streak-tracker'>('/streak-tracker', {})} class="inline-flex min-h-11 items-center transition-colors hover:text-foreground">Streak Tracker</a>
-            <a href={resolve<'/daily-routine-planner'>('/daily-routine-planner', {})} class="inline-flex min-h-11 items-center transition-colors hover:text-foreground">Daily Routine Planner</a>
-            <a href={resolve<'/vs/[slug]'>('/vs/[slug]', { slug: 'habitica' })} class="inline-flex min-h-11 items-center transition-colors hover:text-foreground">vs Habitica</a>
-          </div>
-        </div>
-        <div>
-          <p class="mb-3 text-[10px] uppercase tracking-[0.24em] text-muted">Legal</p>
-          <div class="flex flex-col gap-2.5">
-            <a href={resolve<'/privacy-policy'>('/privacy-policy', {})} class="inline-flex min-h-11 items-center transition-colors hover:text-foreground">Privacy</a>
-          </div>
-        </div>
-      </nav>
-    </section>
+    <nav class="flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted sm:justify-end" aria-label="Footer navigation">
+      <a href={resolve<'/'>('/', {})} class="inline-flex min-h-10 items-center transition-colors hover:text-foreground sm:min-h-9">Home</a>
+      <a href={resolve<'/features'>('/features', {})} class="inline-flex min-h-10 items-center transition-colors hover:text-foreground sm:min-h-9">Features</a>
+      <a href={resolve<'/blog'>('/blog', {})} class="inline-flex min-h-10 items-center transition-colors hover:text-foreground sm:min-h-9">Blog</a>
+      <a href={resolve<'/about'>('/about', {})} class="inline-flex min-h-10 items-center transition-colors hover:text-foreground sm:min-h-9">About</a>
+      <a href={resolve<'/habit-tracker'>('/habit-tracker', {})} class="inline-flex min-h-10 items-center transition-colors hover:text-foreground sm:min-h-9">Habit Tracker</a>
+      <a href={resolve<'/streak-tracker'>('/streak-tracker', {})} class="inline-flex min-h-10 items-center transition-colors hover:text-foreground sm:min-h-9">Streak Tracker</a>
+      <a href={resolve<'/daily-routine-planner'>('/daily-routine-planner', {})} class="inline-flex min-h-10 items-center transition-colors hover:text-foreground sm:min-h-9">Daily Routine Planner</a>
+      <a href={resolve<'/vs/[slug]'>('/vs/[slug]', { slug: 'habitica' })} class="inline-flex min-h-10 items-center transition-colors hover:text-foreground sm:min-h-9">vs Habitica</a>
+      <a href={resolve<'/privacy-policy'>('/privacy-policy', {})} class="inline-flex min-h-10 items-center transition-colors hover:text-foreground sm:min-h-9">Privacy</a>
+    </nav>
   </div>
 </footer>
