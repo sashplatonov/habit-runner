@@ -58,9 +58,9 @@ seven scheduled non-frozen days since its latest successful completion. Frozen,
 negative, archived, and not-yet-due habits do not receive ice. This policy is
 shared by dashboard cards and compact rows.
 
-The path matrix above and the backlog document are the source of truth for CI
-lane selection. Local runs prove build and behavior only; GitHub Actions minute
-savings require fresh pushed workflow runs and their URLs/durations.
+The path matrix above is the source of truth for CI lane selection. Local runs
+prove build and behavior only; GitHub Actions minute savings require fresh
+pushed workflow runs and their URLs/durations.
 
 [↑ Back to top](#top)
 

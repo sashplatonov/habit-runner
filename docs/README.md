@@ -9,7 +9,6 @@ brand intentionally uses the spelling `Habbit Runner`.
 
 - [🚦 Start here](#start-here)
 - [⚙️ Operations](#operations)
-- [🗂️ Project records](#project-records)
 
 ## 🚦 Start here <a id="start-here"></a>
 
@@ -26,11 +25,6 @@ brand intentionally uses the spelling `Habbit Runner`.
 - [GitHub automation](operations/github-automation.md)
 - [Monitoring contract](monitoring/newrelic.md)
 - [Web Push setup](setup/web-push-setup.md)
-
-[↑ Back to top](#top)
-
-## 🗂️ Project records <a id="project-records"></a>
-
 
 [↑ Back to top](#top)
 
