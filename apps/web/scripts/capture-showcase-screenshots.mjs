@@ -12,8 +12,8 @@ const documentationAssetDirectory = path.join(repositoryRoot, 'docs', 'assets', 
 
 const captures = [
   { path: '/showcase', output: path.join(webScreenshotDirectory, 'desktop.png'), viewport: { width: 1440, height: 900 } },
-  { path: '/showcase/habit/morning-pages', output: path.join(webScreenshotDirectory, 'habit-detail.png'), viewport: { width: 1440, height: 900 } },
-  { path: '/showcase/stats', output: path.join(webScreenshotDirectory, 'progress.png'), viewport: { width: 1440, height: 900 } },
+  { path: '/showcase/habit/morning-pages', output: path.join(documentationAssetDirectory, 'habit-detail.png'), viewport: { width: 1440, height: 900 } },
+  { path: '/showcase/stats', output: path.join(documentationAssetDirectory, 'progress.png'), viewport: { width: 1440, height: 900 } },
   {
     path: '/showcase',
     output: path.join(webScreenshotDirectory, 'mobile.png'),
@@ -24,6 +24,7 @@ const captures = [
       userAgent: 'Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 Chrome/126.0 Mobile Safari/537.36 TelegramWebview'
     }
   },
+  { path: '/', output: path.join(documentationAssetDirectory, 'landing-desktop.png'), viewport: { width: 1280, height: 720 } },
   { path: '/showcase', output: path.join(documentationAssetDirectory, 'github-social-preview.png'), viewport: { width: 1280, height: 640 } }
 ];
 

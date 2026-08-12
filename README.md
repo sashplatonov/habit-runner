@@ -87,11 +87,11 @@ detail, progress, and compact-webview components as the signed-in application.
 
 | Desktop: habits | Desktop: habit detail |
 | --- | --- |
-| ![Private habits dashboard with fictional data](apps/web/static/screenshots/desktop.png) | ![Private habit detail with fictional data](apps/web/static/screenshots/habit-detail.png) |
+| ![Private habits dashboard with fictional data](apps/web/static/screenshots/desktop.png) | ![Private habit detail with fictional data](docs/assets/screenshots/habit-detail.png) |
 
 | Desktop: progress | Compact webview |
 | --- | --- |
-| ![Private progress screen with fictional data](apps/web/static/screenshots/progress.png) | ![Private habits dashboard in a compact webview](apps/web/static/screenshots/mobile.png) |
+| ![Private progress screen with fictional data](docs/assets/screenshots/progress.png) | ![Private habits dashboard in a compact webview](apps/web/static/screenshots/mobile.png) |
 
 The separate [GitHub social-preview image](docs/assets/screenshots/github-social-preview.png)
 also shows the private habit dashboard with fixture data. Upload it in GitHub
