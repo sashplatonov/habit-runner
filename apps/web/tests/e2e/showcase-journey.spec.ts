@@ -43,7 +43,7 @@ test.describe('real anonymous showcase journey', () => {
     });
 
     await page.goto('/');
-    await page.getByRole('link', { name: /Try the interactive demo/i }).click();
+    await page.getByRole('link', { name: 'Open the interactive demo' }).click();
     await expect(page).toHaveURL(/\/showcase$/);
     apiRequests.length = 0;
     authRequests.length = 0;
