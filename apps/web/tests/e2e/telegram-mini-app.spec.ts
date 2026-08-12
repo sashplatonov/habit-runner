@@ -3,7 +3,7 @@ import { expect, test } from '@playwright/test';
 test('website root keeps the public landing available while Telegram SDK is absent', async ({ page }, testInfo) => {
   test.skip(testInfo.project.name === 'telegram-webview', 'Telegram user agents intentionally enter the Mini App flow.');
   await page.goto('/');
-  await expect(page.getByRole('heading', { name: 'Habit tracking that keeps the next step obvious.' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Keep the next good habit close.' })).toBeVisible();
 });
 
 test('website root has no horizontal overflow at 320px', async ({ page }) => {
