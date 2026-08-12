@@ -407,7 +407,7 @@ function renderDeviceMotif(palette) {
     <rect x="174" y="68" width="92" height="10" rx="5" fill="${hexToRgba('#ffffff', 0.18)}" />
     <rect x="146" y="96" width="76" height="28" rx="14" fill="${hexToRgba(palette.accent, 0.18)}" stroke="${hexToRgba(palette.accent, 0.42)}" />
     <circle cx="164" cy="110" r="5" fill="${palette.accent}" />
-    <text x="178" y="115" fill="#dbeafe" font-family="${SANS_STACK}" font-size="12" font-weight="700">offline</text>
+    <text x="178" y="115" fill="#dbeafe" font-family="${SANS_STACK}" font-size="12" font-weight="700">today</text>
     <rect x="146" y="146" width="148" height="44" rx="18" fill="${hexToRgba(palette.accent, 0.22)}" />
     <rect x="162" y="160" width="78" height="8" rx="4" fill="#eff6ff" opacity="0.9" />
     <rect x="162" y="174" width="102" height="6" rx="3" fill="#dbeafe" opacity="0.65" />
@@ -438,7 +438,7 @@ function renderSignalMotif(palette) {
     <path d="M332 350 a26 26 0 0 1 36 0" fill="none" stroke="${hexToRgba('#ffffff', 0.4)}" stroke-width="8" stroke-linecap="round" />
     <line x1="312" y1="284" x2="390" y2="366" stroke="${hexToRgba(palette.tertiary, 0.8)}" stroke-width="8" stroke-linecap="round" />
     <rect x="80" y="84" width="108" height="64" rx="20" fill="${hexToRgba('#ffffff', 0.08)}" stroke="${hexToRgba('#ffffff', 0.18)}" />
-    <text x="104" y="118" fill="#eff6ff" font-family="${SANS_STACK}" font-size="14" font-weight="700">local cache</text>
+    <text x="104" y="118" fill="#eff6ff" font-family="${SANS_STACK}" font-size="14" font-weight="700">signal</text>
   `;
 }
 
@@ -724,14 +724,6 @@ function renderCover(post, preset) {
 
   return `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-label="${escapeXml(post.title)}">
   <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="${palette.bgFrom}" />
-      <stop offset="100%" stop-color="${palette.bgTo}" />
-    </linearGradient>
-    <linearGradient id="panel" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="${palette.panelFrom}" />
-      <stop offset="100%" stop-color="${palette.panelTo}" />
-    </linearGradient>
     <pattern id="grid" width="48" height="48" patternUnits="userSpaceOnUse">
       <path d="M48 0H0V48" fill="none" stroke="${hexToRgba(palette.ink, 0.07)}" stroke-width="1" />
     </pattern>
@@ -746,12 +738,9 @@ function renderCover(post, preset) {
     </clipPath>
   </defs>
 
-  <rect width="1200" height="630" fill="url(#bg)" />
-  <rect width="1200" height="630" fill="url(#grid)" opacity="0.6" />
-  <circle cx="160" cy="104" r="210" fill="${hexToRgba(palette.orb1, 0.14)}" />
-  <circle cx="1040" cy="500" r="250" fill="${hexToRgba(palette.orb2, 0.12)}" />
-  <ellipse cx="924" cy="88" rx="200" ry="126" fill="${hexToRgba(palette.orb3, 0.12)}" />
-  <path d="M-40 492 C146 390 284 566 512 520 C736 476 870 314 1240 436" fill="none" stroke="${hexToRgba(palette.accent, 0.12)}" stroke-width="42" stroke-linecap="round" />
+  <rect width="1200" height="630" fill="${palette.bgFrom}" />
+  <path d="M0 500 H1200" stroke="${hexToRgba(palette.ink, 0.1)}" stroke-width="2" />
+  <path d="M620 0 V630" stroke="${hexToRgba(palette.ink, 0.08)}" stroke-width="2" />
 
   <rect x="56" y="56" width="560" height="518" rx="40" fill="${hexToRgba('#ffffff', 0.74)}" stroke="${hexToRgba(palette.ink, 0.08)}" filter="url(#shadowSoft)" />
 
@@ -769,7 +758,7 @@ function renderCover(post, preset) {
   <text x="88" y="${footerY}" fill="${hexToRgba(palette.ink, 0.4)}" font-family="${SANS_STACK}" font-size="14" font-weight="700" letter-spacing="0.08em">EDITORIAL COVER / ${escapeXml(post.slug.toUpperCase())}</text>
 
   <g filter="url(#shadowBoard)">
-    <rect x="664" y="74" width="476" height="482" rx="42" fill="url(#panel)" stroke="${hexToRgba('#ffffff', 0.18)}" />
+    <rect x="664" y="74" width="476" height="482" rx="42" fill="${palette.panelFrom}" stroke="${hexToRgba('#ffffff', 0.22)}" />
   </g>
   <rect x="694" y="104" width="132" height="34" rx="17" fill="${hexToRgba('#ffffff', 0.08)}" stroke="${hexToRgba('#ffffff', 0.14)}" />
   <text x="720" y="126" fill="#f8fafc" font-family="${SANS_STACK}" font-size="13" font-weight="700" letter-spacing="0.1em">${escapeXml(preset.eyebrow)}</text>

@@ -1,13 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-label="How to Track Habits Without Becoming Obsessed with the App">
   <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="#edf8f0" />
-      <stop offset="100%" stop-color="#eefcf9" />
-    </linearGradient>
-    <linearGradient id="panel" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="#0d1f1b" />
-      <stop offset="100%" stop-color="#1b3b34" />
-    </linearGradient>
     <pattern id="grid" width="48" height="48" patternUnits="userSpaceOnUse">
       <path d="M48 0H0V48" fill="none" stroke="rgba(15, 23, 42, 0.07)" stroke-width="1" />
     </pattern>
@@ -22,12 +14,9 @@
     </clipPath>
   </defs>
 
-  <rect width="1200" height="630" fill="url(#bg)" />
-  <rect width="1200" height="630" fill="url(#grid)" opacity="0.6" />
-  <circle cx="160" cy="104" r="210" fill="rgba(34, 197, 94, 0.14)" />
-  <circle cx="1040" cy="500" r="250" fill="rgba(20, 184, 166, 0.12)" />
-  <ellipse cx="924" cy="88" rx="200" ry="126" fill="rgba(132, 204, 22, 0.12)" />
-  <path d="M-40 492 C146 390 284 566 512 520 C736 476 870 314 1240 436" fill="none" stroke="rgba(34, 197, 94, 0.12)" stroke-width="42" stroke-linecap="round" />
+  <rect width="1200" height="630" fill="#edf8f0" />
+  <path d="M0 500 H1200" stroke="rgba(15, 23, 42, 0.1)" stroke-width="2" />
+  <path d="M620 0 V630" stroke="rgba(15, 23, 42, 0.08)" stroke-width="2" />
 
   <rect x="56" y="56" width="560" height="518" rx="40" fill="rgba(255, 255, 255, 0.74)" stroke="rgba(15, 23, 42, 0.08)" filter="url(#shadowSoft)" />
 
@@ -55,7 +44,7 @@
   <text x="88" y="572" fill="rgba(15, 23, 42, 0.4)" font-family="'Avenir Next', 'Segoe UI', 'Trebuchet MS', sans-serif" font-size="14" font-weight="700" letter-spacing="0.08em">EDITORIAL COVER / HOW-TO-TRACK-HABITS-WITHOUT-OBSESSING</text>
 
   <g filter="url(#shadowBoard)">
-    <rect x="664" y="74" width="476" height="482" rx="42" fill="url(#panel)" stroke="rgba(255, 255, 255, 0.18)" />
+    <rect x="664" y="74" width="476" height="482" rx="42" fill="#0d1f1b" stroke="rgba(255, 255, 255, 0.22)" />
   </g>
   <rect x="694" y="104" width="132" height="34" rx="17" fill="rgba(255, 255, 255, 0.08)" stroke="rgba(255, 255, 255, 0.14)" />
   <text x="720" y="126" fill="#f8fafc" font-family="'Avenir Next', 'Segoe UI', 'Trebuchet MS', sans-serif" font-size="13" font-weight="700" letter-spacing="0.1em">healthy tracking</text>

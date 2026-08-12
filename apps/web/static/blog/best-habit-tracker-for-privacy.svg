@@ -1,13 +1,5 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-label="Best Habit Tracker Apps for Privacy in 2025">
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-label="Best Habit Tracker Apps for Privacy">
   <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="#f4f7fb" />
-      <stop offset="100%" stop-color="#eef4ff" />
-    </linearGradient>
-    <linearGradient id="panel" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="#0f172a" />
-      <stop offset="100%" stop-color="#1e293b" />
-    </linearGradient>
     <pattern id="grid" width="48" height="48" patternUnits="userSpaceOnUse">
       <path d="M48 0H0V48" fill="none" stroke="rgba(15, 23, 42, 0.07)" stroke-width="1" />
     </pattern>
@@ -22,12 +14,9 @@
     </clipPath>
   </defs>
 
-  <rect width="1200" height="630" fill="url(#bg)" />
-  <rect width="1200" height="630" fill="url(#grid)" opacity="0.6" />
-  <circle cx="160" cy="104" r="210" fill="rgba(148, 163, 184, 0.14)" />
-  <circle cx="1040" cy="500" r="250" fill="rgba(56, 189, 248, 0.12)" />
-  <ellipse cx="924" cy="88" rx="200" ry="126" fill="rgba(192, 132, 252, 0.12)" />
-  <path d="M-40 492 C146 390 284 566 512 520 C736 476 870 314 1240 436" fill="none" stroke="rgba(56, 189, 248, 0.12)" stroke-width="42" stroke-linecap="round" />
+  <rect width="1200" height="630" fill="#f4f7fb" />
+  <path d="M0 500 H1200" stroke="rgba(15, 23, 42, 0.1)" stroke-width="2" />
+  <path d="M620 0 V630" stroke="rgba(15, 23, 42, 0.08)" stroke-width="2" />
 
   <rect x="56" y="56" width="560" height="518" rx="40" fill="rgba(255, 255, 255, 0.74)" stroke="rgba(15, 23, 42, 0.08)" filter="url(#shadowSoft)" />
 
@@ -51,11 +40,11 @@
         <text x="30" y="22" fill="#0f172a" font-family="'Avenir Next', 'Segoe UI', 'Trebuchet MS', sans-serif" font-size="14" font-weight="600">no trackers</text>
       </g>
 
-  <text x="88" y="498" fill="rgba(15, 23, 42, 0.72)" font-family="'Avenir Next', 'Segoe UI', 'Trebuchet MS', sans-serif" font-size="20" font-weight="600"><tspan x="88" dy="0">Best Habit Tracker Apps for</tspan><tspan x="88" dy="26">Privacy in 2025</tspan></text>
+  <text x="88" y="498" fill="rgba(15, 23, 42, 0.72)" font-family="'Avenir Next', 'Segoe UI', 'Trebuchet MS', sans-serif" font-size="20" font-weight="600"><tspan x="88" dy="0">Best Habit Tracker Apps for</tspan><tspan x="88" dy="26">Privacy</tspan></text>
   <text x="88" y="572" fill="rgba(15, 23, 42, 0.4)" font-family="'Avenir Next', 'Segoe UI', 'Trebuchet MS', sans-serif" font-size="14" font-weight="700" letter-spacing="0.08em">EDITORIAL COVER / BEST-HABIT-TRACKER-FOR-PRIVACY</text>
 
   <g filter="url(#shadowBoard)">
-    <rect x="664" y="74" width="476" height="482" rx="42" fill="url(#panel)" stroke="rgba(255, 255, 255, 0.18)" />
+    <rect x="664" y="74" width="476" height="482" rx="42" fill="#0f172a" stroke="rgba(255, 255, 255, 0.22)" />
   </g>
   <rect x="694" y="104" width="132" height="34" rx="17" fill="rgba(255, 255, 255, 0.08)" stroke="rgba(255, 255, 255, 0.14)" />
   <text x="720" y="126" fill="#f8fafc" font-family="'Avenir Next', 'Segoe UI', 'Trebuchet MS', sans-serif" font-size="13" font-weight="700" letter-spacing="0.1em">privacy systems</text>

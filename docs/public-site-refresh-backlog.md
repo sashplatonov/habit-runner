@@ -433,7 +433,7 @@ git commit -m "docs(blog): refresh public editorial content"
 
 ## P2-1: Replace generated-looking public graphics with a purposeful editorial system
 
-**Status:** ⬜ Not started
+**Status:** ✅ Completed
 
 **Priority:** P2
 
