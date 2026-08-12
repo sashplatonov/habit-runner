@@ -10,6 +10,7 @@ import jakarta.ws.rs.ext.Provider;
 import org.slf4j.MDC;
 
 import java.util.UUID;
+import java.util.regex.Pattern;
 
 @Provider
 @Priority(Priorities.AUTHENTICATION - 100)
@@ -18,6 +19,9 @@ import java.util.UUID;
 public class RequestTraceFilter implements ContainerRequestFilter, ContainerResponseFilter {
   public static final String TRACE_ID_HEADER = "x-trace-id";
   private static final String TRACE_ID_PROPERTY = RequestTraceFilter.class.getName() + ".traceId";
+  private static final Pattern TRACE_ID_PATTERN = Pattern.compile(
+      "(?:[0-9a-fA-F]{32}|[0-9a-fA-F]{8}-(?:[0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12})"
+  );
 
   @Override
   public void filter(ContainerRequestContext requestContext) {
@@ -59,12 +63,15 @@ public class RequestTraceFilter implements ContainerRequestFilter, ContainerResp
       return null;
     }
     var normalized = traceId.trim();
-    return normalized.isEmpty() ? null : normalized;
+    return TRACE_ID_PATTERN.matcher(normalized).matches() ? normalized : null;
   }
 
   private static String parseTraceParent(String traceParent) {
-    var normalized = normalize(traceParent);
-    if (normalized == null) {
+    if (traceParent == null) {
+      return null;
+    }
+    var normalized = traceParent.trim();
+    if (normalized.isEmpty()) {
       return null;
     }
     var segments = normalized.split("-");

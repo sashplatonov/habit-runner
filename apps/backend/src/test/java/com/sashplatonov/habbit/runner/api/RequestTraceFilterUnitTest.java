@@ -12,29 +12,35 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class RequestTraceFilterUnitTest {
 
   @Test
   void shouldGenerateAndExposeTraceIdWhenRequestHasNoHeader() {
     var properties = new HashMap<String, Object>();
-    var requestContext = requestContext(properties, null);
+    var requestContext = requestContext(properties, Map.of());
     var filter = new RequestTraceFilter();
 
     filter.filter(requestContext);
 
     var traceId = RequestTraceFilter.traceId(requestContext);
     assertNotNull(traceId);
+    assertTrue(traceId.matches("[0-9a-f-]{36}"));
     assertEquals(traceId, MDC.get("traceId"));
     assertEquals(traceId, MDC.get("trace_id"));
+    filter.filter(requestContext, responseContext(new MultivaluedHashMap<>()));
   }
 
   @Test
   void shouldPropagateTraceIdToResponseHeadersAndClearMdc() {
     var properties = new HashMap<String, Object>();
-    var requestContext = requestContext(properties, "client-trace");
+    var forwardedTraceId = "6f2cbe84-68b5-46f0-a69a-e35e857be124";
+    var requestContext = requestContext(properties, Map.of(RequestTraceFilter.TRACE_ID_HEADER, forwardedTraceId));
     MultivaluedMap<String, Object> responseHeaders = new MultivaluedHashMap<>();
     var responseContext = responseContext(responseHeaders);
     var filter = new RequestTraceFilter();
@@ -49,20 +55,40 @@ class RequestTraceFilterUnitTest {
   }
 
   @Test
-  void shouldFallbackToHeaderTraceIdWhenRequestPropertyIsMissing() {
-    var requestContext = requestContext(new HashMap<>(), "client-trace-id");
+  void shouldAcceptValidTraceParentWhenRequestPropertyIsMissing() {
+    var traceId = "4bf92f3577b34da6a3ce929d0e0e4736";
+    var requestContext = requestContext(new HashMap<>(), Map.of(
+        "traceparent", "00-" + traceId + "-00f067aa0ba902b7-01"
+    ));
 
-    var traceId = RequestTraceFilter.traceId(requestContext);
+    var filter = new RequestTraceFilter();
+    filter.filter(requestContext);
 
-    assertEquals("client-trace-id", traceId);
+    assertEquals(traceId, RequestTraceFilter.traceId(requestContext));
+    filter.filter(requestContext, responseContext(new MultivaluedHashMap<>()));
   }
 
-  private ContainerRequestContext requestContext(Map<String, Object> properties, String headerValue) {
+  @Test
+  void shouldReplaceInvalidForwardedTraceId() {
+    var untrustedTraceId = "client-trace-id";
+    var requestContext = requestContext(new HashMap<>(), Map.of(RequestTraceFilter.TRACE_ID_HEADER, untrustedTraceId));
+    var filter = new RequestTraceFilter();
+
+    filter.filter(requestContext);
+
+    var traceId = RequestTraceFilter.traceId(requestContext);
+    assertNotNull(traceId);
+    assertFalse(traceId.isBlank());
+    assertNotEquals(untrustedTraceId, traceId);
+    filter.filter(requestContext, responseContext(new MultivaluedHashMap<>()));
+  }
+
+  private ContainerRequestContext requestContext(Map<String, Object> properties, Map<String, String> headers) {
     return (ContainerRequestContext) Proxy.newProxyInstance(
         ContainerRequestContext.class.getClassLoader(),
         new Class<?>[]{ContainerRequestContext.class},
         (instance, method, args) -> switch (method.getName()) {
-          case "getHeaderString" -> RequestTraceFilter.TRACE_ID_HEADER.equals(args[0]) ? headerValue : null;
+          case "getHeaderString" -> headers.get(args[0]);
           case "setProperty" -> {
             properties.put((String) args[0], args[1]);
             yield null;
