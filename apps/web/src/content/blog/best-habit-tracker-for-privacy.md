@@ -1,5 +1,5 @@
 ---
-title: "Best Habit Tracker Apps for Privacy in 2025"
+title: "Best Habit Tracker Apps for Privacy"
 description: "Not all habit trackers treat your data the same way. Here are the best privacy-friendly habit tracker apps that keep your data local."
 publishedAt: "2026-04-03"
 author: "Habbit Runner Team"
@@ -41,7 +41,7 @@ There is no advertising. Data is not sold or used for analytics outside the app 
 
 Loop is a fully open-source Android app. All data stays on the device — there is no server, no account, no sync. The source code is publicly auditable. If privacy is your primary concern and you're on Android, Loop is hard to beat.
 
-- Data stored: On-device only (SQLite)
+- Data stored: On-device only
 - Account required: No
 - Ads: None
 - Sync: None (intentional)

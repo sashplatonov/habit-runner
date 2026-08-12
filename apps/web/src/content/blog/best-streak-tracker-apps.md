@@ -1,5 +1,5 @@
 ---
-title: "Best Streak Tracker Apps in 2025"
+title: "Best Streak Tracker Apps"
 description: "A practical comparison of the best streak tracker apps — from habit apps with streak counters to dedicated streak tools. Find what fits your routine."
 publishedAt: "2026-01-01"
 author: "Habbit Runner Team"

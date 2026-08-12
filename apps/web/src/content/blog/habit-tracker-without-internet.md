@@ -30,7 +30,7 @@ For reliable habit tracking, choose an app whose connection requirements match y
 
 ## How Offline Habit Tracking Works Technically
 
-Local-only apps use device storage to write data immediately. On mobile web apps and PWAs, this is typically IndexedDB. Native apps use SQLite or similar.
+Local-only apps use device storage to write data immediately. Mobile web apps and native apps can both support this model.
 
 The write happens instantly, on-device, without any network call. The app doesn't know or care whether you're connected.
 
@@ -56,7 +56,7 @@ In all of these cases, an offline-capable tracker lets you log immediately rathe
 
 ### Habbit Runner (PWA)
 
-The service worker caches the app shell for repeat visits. Habit data and changes are handled through the signed-in API, so this product is not suitable for offline habit logging. [Read the full comparison of offline habit trackers →](/blog/best-offline-habit-tracker)
+The interface can reopen for repeat visits, but signed-in habit changes need a connection, so this product is not suitable for offline habit logging. [Read the full comparison of offline habit trackers →](/blog/best-offline-habit-tracker)
 
 ### Loop Habit Tracker (Android)
 
@@ -71,7 +71,7 @@ Local storage with optional iCloud sync. Works without a network connection.
 For a PWA that explicitly supports offline data:
 1. Open the app in your browser (Chrome or Safari)
 2. Add to home screen via the browser's share/install menu
-3. The service worker will cache the app for offline use
+3. The app will keep its interface ready for offline use
 4. From that point on, the app opens and works without a connection
 
 For native apps, installation from the App Store or Google Play handles offline setup automatically.

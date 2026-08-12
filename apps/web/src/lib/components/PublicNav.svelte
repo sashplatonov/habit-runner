@@ -38,7 +38,7 @@
         <img src="/app-icon.svg" alt="Habbit Runner" width="32" height="32" class="h-8 w-8 flex-shrink-0 rounded-xl object-contain" />
       </span>
       <span class="hidden sm:block">
-        <span class="block text-[10px] uppercase tracking-[0.26em] text-muted">Server-backed</span>
+        <span class="block text-[10px] uppercase tracking-[0.26em] text-muted">Daily practice</span>
         <span class="block text-sm font-semibold tracking-tight text-foreground">Habbit Runner</span>
       </span>
     </a>

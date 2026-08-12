@@ -23,8 +23,8 @@ export const COMPETITORS: Record<string, CompetitorData> = {
     name: 'Habitica',
     tagline: 'Habbit Runner vs Habitica — Productivity Over Gamification',
     description:
-      'Comparing Habbit Runner and Habitica for habit tracking. Habbit Runner focuses on server-backed data and streak analytics; Habitica adds RPG gamification on top of a cloud-only model.',
-    habbitRunnerAngle: 'server-backed analytics without gamification noise',
+      'Comparing Habbit Runner and Habitica for habit tracking. Habbit Runner focuses on clear progress signals; Habitica adds RPG gamification on top of a cloud model.',
+    habbitRunnerAngle: 'useful progress signals without gamification noise',
     keywords:
       'habitica vs habbit runner, habitica alternative offline, habitica alternative pwa, habit tracker no gamification',
     features: [
@@ -36,7 +36,7 @@ export const COMPETITORS: Record<string, CompetitorData> = {
       { name: 'Gamification (RPG)', habbitRunner: false, competitor: 'Yes — core feature' },
       { name: 'Multiplayer / social', habbitRunner: false, competitor: 'Yes — guilds, parties' },
       { name: 'Price', habbitRunner: 'Free', competitor: 'Free + subscription ($4.99/mo)' },
-      { name: 'Cross-device refresh', habbitRunner: 'Yes — via API', competitor: 'Cloud-sync always on' }
+      { name: 'Cross-device refresh', habbitRunner: 'Yes — when signed in', competitor: 'Cloud-sync always on' }
     ],
     competitorStrengths: [
       'Strong social motivation through guilds and party challenges',
@@ -45,7 +45,7 @@ export const COMPETITORS: Record<string, CompetitorData> = {
       'Wide native app support (iOS, Android)'
     ],
     habbitRunnerStrengths: [
-      'Reliable server-backed tracking with a focused daily workflow',
+      'Reliable tracking with a focused daily workflow',
       'Clean analytics focused on data, not fiction',
       'No subscription required for core features',
       'Installable PWA — no App Store download',
@@ -59,7 +59,7 @@ export const COMPETITORS: Record<string, CompetitorData> = {
     name: 'Streaks',
     tagline: 'Habbit Runner vs Streaks App — Cross-Platform vs iOS-Only',
     description:
-      'Comparing Habbit Runner and Streaks for habit tracking. Streaks is a polished iOS native app; Habbit Runner is a cross-platform PWA with server-backed data.',
+      'Comparing Habbit Runner and Streaks for habit tracking. Streaks is a polished iOS native app; Habbit Runner is a cross-platform web app with progress review.',
     habbitRunnerAngle: 'cross-platform access without iOS lock-in',
     keywords:
       'streaks app alternative, streaks ios alternative android, streaks app offline alternative, habit tracker cross platform',
@@ -70,7 +70,7 @@ export const COMPETITORS: Record<string, CompetitorData> = {
       { name: 'HealthKit integration', habbitRunner: false, competitor: 'Yes — deep integration' },
       { name: 'Push notifications', habbitRunner: 'Yes — web push', competitor: 'Yes — native iOS' },
       { name: 'Streak tracking', habbitRunner: 'Yes — current + longest', competitor: 'Yes — core feature' },
-      { name: 'Cross-device sync', habbitRunner: 'Yes — via API', competitor: 'iCloud (Apple only)' },
+      { name: 'Cross-device sync', habbitRunner: 'Yes — when signed in', competitor: 'iCloud (Apple only)' },
       { name: 'Price', habbitRunner: 'Free', competitor: 'Paid (~$4.99 one-time)' },
       { name: 'Open source', habbitRunner: false, competitor: false }
     ],
@@ -84,7 +84,7 @@ export const COMPETITORS: Record<string, CompetitorData> = {
       'Works on Android, iOS, Windows, Mac, Linux — any device with a browser',
       'No App Store required — install directly from browser',
       'Free with no purchase required',
-      'Cross-platform PWA with server-backed data',
+      'Cross-platform web app with account access',
       'Analytics visible across all devices'
     ],
     verdict:
@@ -108,7 +108,7 @@ export const COMPETITORS: Record<string, CompetitorData> = {
       { name: 'Analytics dashboard', habbitRunner: 'Yes — completion rates, trends', competitor: 'Yes — Yellow Brick Road graphs' },
       { name: 'IFTTT / Zapier integration', habbitRunner: false, competitor: 'Yes' },
       { name: 'Price', habbitRunner: 'Free', competitor: 'Free tier + $0 pledges possible' },
-      { name: 'Cross-device refresh', habbitRunner: 'Yes — via API', competitor: 'Yes — cloud only' }
+      { name: 'Cross-device refresh', habbitRunner: 'Yes — when signed in', competitor: 'Yes — cloud only' }
     ],
     competitorStrengths: [
       'Financial accountability is uniquely effective for deadline-driven people',
@@ -118,7 +118,7 @@ export const COMPETITORS: Record<string, CompetitorData> = {
     ],
     habbitRunnerStrengths: [
       'No financial stress — track habits without pledge anxiety',
-      'Reliable server-backed tracking',
+      'Reliable habit tracking',
       'Faster daily logging with a clean dashboard',
       'Free with no hidden pledge mechanics',
       'Privacy-first: no third-party integrations required'

@@ -23,6 +23,7 @@
     "build:web": "npm run build",
     "build:server": "cd ../backend && (./mvnw package -DskipTests || mvn -DskipTests package)",
     "check:runtime-undefined": "npm run sync:svelte && node ./scripts/check-runtime-undefined.cjs",
+    "check:public-content": "node ./scripts/check-public-content.mjs",
     "check:svelte-keys": "node ./scripts/check-svelte-keys.cjs",
     "check:types": "npm run sync:svelte && svelte-check --tsconfig ./tsconfig.json",
     "check:shared": "npm run lint -w @habbit-runner/shared && npm run build -w @habbit-runner/shared",

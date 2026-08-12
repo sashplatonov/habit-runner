@@ -61,7 +61,7 @@ These are real trade-offs. For multi-device users, a server-backed account model
 
 Even if you eventually want sync, starting without an account is often better. You can evaluate whether the app fits your needs before giving it any personal information. If it doesn't, nothing was shared.
 
-Habbit Runner uses a server-backed architecture: sign in before creating habits, then access your account data through the API.
+Habbit Runner asks you to sign in before creating habits, then keeps your account progress available across supported devices.
 
 ## Frequently Asked Questions
 

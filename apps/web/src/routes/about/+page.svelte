@@ -22,7 +22,7 @@
     url: 'https://habbit-runner.app',
     logo: 'https://habbit-runner.app/og-image.svg',
     description:
-      'Habbit Runner is a server-backed habit tracker PWA built for daily consistency and streak analytics.',
+      'Habbit Runner is a habit tracker built for daily consistency and useful progress signals.',
     sameAs: []
   }).replace(/</g, '\u003c')}</script>
 </svelte:head>
@@ -37,8 +37,7 @@
         About Habbit Runner
       </h1>
       <p class="mt-4 max-w-2xl text-base leading-7 text-slate-600">
-        Habbit Runner is a server-backed habit tracker Progressive Web App built for people who
-        want clear progress data without noise.
+        Habbit Runner is a habit tracker for people who want clear progress without noise.
       </p>
     </section>
 
@@ -58,13 +57,12 @@
       </section>
 
       <section class="mt-10">
-        <h2 class="text-xl font-semibold text-slate-900">Technology</h2>
+        <h2 class="text-xl font-semibold text-slate-900">What guides the product</h2>
         <div class="mt-4 grid gap-3 sm:grid-cols-2">
           <div class="rounded-[1.5rem] border border-slate-200/80 bg-white/92 p-5 shadow-[0_14px_38px_rgba(15,23,42,0.06)]">
-            <p class="text-sm font-semibold text-slate-900">Backend-First Architecture</p>
+            <p class="text-sm font-semibold text-slate-900">A clear daily view</p>
             <p class="mt-2 text-xs text-slate-600">
-              Habits and check-ins are persisted by the authenticated Quarkus API, with the PWA
-              shell cached for fast repeat visits.
+              The day starts with the habits that matter now, so progress stays easy to see and act on.
             </p>
           </div>
           <div class="rounded-[1.5rem] border border-slate-200/80 bg-white/92 p-5 shadow-[0_14px_38px_rgba(15,23,42,0.06)]">
@@ -75,16 +73,15 @@
             </p>
           </div>
           <div class="rounded-[1.5rem] border border-slate-200/80 bg-white/92 p-5 shadow-[0_14px_38px_rgba(15,23,42,0.06)]">
-            <p class="text-sm font-semibold text-slate-900">Secure REST Backend</p>
+            <p class="text-sm font-semibold text-slate-900">Private by default</p>
             <p class="mt-2 text-xs text-slate-600">
-              Signed-in sessions use JWT-protected HTTPS requests to save and load habits and
-              check-ins directly from the backend API.
+              Your account is designed for personal routines, with privacy commitments explained in our policy.
             </p>
           </div>
           <div class="rounded-[1.5rem] border border-slate-200/80 bg-white/92 p-5 shadow-[0_14px_38px_rgba(15,23,42,0.06)]">
-            <p class="text-sm font-semibold text-slate-900">Built With</p>
+            <p class="text-sm font-semibold text-slate-900">Made for real schedules</p>
             <p class="mt-2 text-xs text-slate-600">
-              SvelteKit 5, TypeScript, Tailwind CSS, Quarkus (Java), PostgreSQL, Flyway.
+              Flexible targets and reminders help the routine adapt when the week does not go to plan.
             </p>
           </div>
         </div>

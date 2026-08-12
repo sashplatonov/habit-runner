@@ -23,8 +23,8 @@
     url: 'https://habbit-runner.app',
     description: PUBLIC_FEATURES_SEO.description,
     featureList: [
-      'Backend-backed habit tracking with a responsive PWA shell',
-      'Direct habit and check-in saves over a secure REST API',
+      'Clear habit tracking with a focused daily view',
+      'Progress that stays easy to review',
       'Streak tracking: current streak and longest streak',
       'Push notifications for habit reminders',
       'Google OAuth sign-in',
@@ -72,18 +72,17 @@
     </section>
 
     <div class="mt-10 space-y-12">
-      <!-- Backend-backed tracking -->
+      <!-- Daily tracking -->
       <section class="rounded-[1.75rem] border border-slate-200/80 bg-white/92 p-6 shadow-[0_18px_50px_rgba(15,23,42,0.08)]">
-        <h2 class="text-xl font-semibold text-slate-900">Reliable Server Storage</h2>
+        <h2 class="text-xl font-semibold text-slate-900">A reliable daily view</h2>
         <p class="mt-3 text-sm text-slate-600">
-          Habit data and check-ins are stored by the authenticated backend and loaded through the
-          API. The installed PWA keeps its application shell available between sessions, while
-          habit changes require a connection.
+          Keep today’s habits, targets, and check-ins in one calm place. The experience makes the
+          next useful action easy to find and the wider pattern easy to review.
         </p>
         <ul class="mt-4 space-y-2 text-sm text-slate-600">
-          <li class="flex gap-2"><span class="mt-0.5 text-emerald-600">✓</span> Authenticated API writes</li>
-          <li class="flex gap-2"><span class="mt-0.5 text-emerald-600">✓</span> Latest server state on refresh</li>
-          <li class="flex gap-2"><span class="mt-0.5 text-emerald-600">✓</span> Clear degraded state when disconnected</li>
+          <li class="flex gap-2"><span class="mt-0.5 text-emerald-600">✓</span> Quick check-ins for today</li>
+          <li class="flex gap-2"><span class="mt-0.5 text-emerald-600">✓</span> Progress you can review at a glance</li>
+          <li class="flex gap-2"><span class="mt-0.5 text-emerald-600">✓</span> Honest feedback when a connection is needed</li>
         </ul>
         <div class="mt-4">
           <a href={resolve<'/habit-tracker'>('/habit-tracker', {})} class="text-xs text-cyan-700 underline">See habit tracker details →</a>
@@ -94,13 +93,12 @@
       <section class="rounded-[1.75rem] border border-slate-200/80 bg-white/92 p-6 shadow-[0_18px_50px_rgba(15,23,42,0.08)]">
         <h2 class="text-xl font-semibold text-slate-900">Secure Account Sync</h2>
         <p class="mt-3 text-sm text-slate-600">
-          When you sign in, habit and check-in changes are saved directly through the backend REST
-          API and then refreshed across your devices. The server is the canonical source for every
-          signed-in session.
+          Sign in to keep your routines available wherever you pick up the week. Your latest
+          progress is ready to review after you return.
         </p>
         <ul class="mt-4 space-y-2 text-sm text-slate-600">
-          <li class="flex gap-2"><span class="mt-0.5 text-emerald-600">✓</span> Direct saves to secure backend endpoints</li>
-          <li class="flex gap-2"><span class="mt-0.5 text-emerald-600">✓</span> Application shell cached by the PWA</li>
+          <li class="flex gap-2"><span class="mt-0.5 text-emerald-600">✓</span> One account for your routines</li>
+          <li class="flex gap-2"><span class="mt-0.5 text-emerald-600">✓</span> A web app you can install on your device</li>
           <li class="flex gap-2"><span class="mt-0.5 text-emerald-600">✓</span> Pull-to-refresh to reload the latest server state</li>
         </ul>
       </section>
@@ -126,7 +124,7 @@
       <section class="rounded-[1.75rem] border border-slate-200/80 bg-white/92 p-6 shadow-[0_18px_50px_rgba(15,23,42,0.08)]">
         <h2 class="text-xl font-semibold text-slate-900">Push Notifications</h2>
         <p class="mt-3 text-sm text-slate-600">
-          Enable reminders per habit through your browser's web push API. No native app required.
+          Add reminders to the habits where a gentle nudge makes the difference. No native app required.
           Notifications work on Android Chrome, desktop Chrome/Edge, and Safari 16.4+ on iOS.
         </p>
         <ul class="mt-4 space-y-2 text-sm text-slate-600">
@@ -163,7 +161,7 @@
         <ul class="mt-4 space-y-2 text-sm text-slate-600">
           <li class="flex gap-2"><span class="mt-0.5 text-emerald-600">✓</span> Installable on Android, iOS, and desktop</li>
           <li class="flex gap-2"><span class="mt-0.5 text-emerald-600">✓</span> Standalone display mode</li>
-          <li class="flex gap-2"><span class="mt-0.5 text-emerald-600">✓</span> Automatic updates via service worker</li>
+          <li class="flex gap-2"><span class="mt-0.5 text-emerald-600">✓</span> A smooth installable web experience</li>
         </ul>
       </section>
 
@@ -172,7 +170,7 @@
         <h2 class="text-xl font-semibold text-slate-900">Privacy-First Design</h2>
         <p class="mt-3 text-sm text-slate-600">
           No advertising. No data selling. Habit tracking requires sign-in via Google OAuth and
-          stores account data through the API.
+          keeps your routines tied to your signed-in account.
         </p>
       </section>
     </div>

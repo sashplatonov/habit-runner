@@ -44,12 +44,12 @@ export const PUBLIC_LANDING_SEO = {
     {
       question: 'What happens when my connection is unavailable?',
       answer:
-        'The installed PWA can open its cached application shell, but authenticated habit data and mutations require a network connection.'
+        'The app can open when you are away from a connection, but saving authenticated habit changes needs you to reconnect.'
     },
     {
       question: 'Is my habit data private?',
       answer:
-        'Your signed-in data is stored on our backend and protected by JWT tokens over HTTPS. No habit data is shared with third parties or used for advertising.'
+        'Your signed-in habit data is kept for your account. We do not sell it, share it for advertising, or use it to build an advertising profile.'
     },
     {
       question: 'Do I need to download an app from an app store?',
@@ -64,7 +64,7 @@ export const PUBLIC_LANDING_SEO = {
     {
       question: 'How does cross-device refresh work?',
       answer:
-        'Signed-in sessions save habit and check-in changes directly through the REST API, and refresh reloads the latest server state.'
+        'When you return to the app, refresh to see the latest progress saved to your account.'
     }
   ] satisfies FaqItem[]
 };
@@ -211,9 +211,9 @@ export function buildSoftwareSchema(description: string, pathname: string) {
 }
 
 export const PUBLIC_ABOUT_SEO = {
-  title: 'About Habbit Runner — Server-Backed Habit Tracker PWA',
+  title: 'About Habbit Runner — A Clear Habit Tracker',
   description:
-    'Learn about Habbit Runner: a server-backed habit tracker Progressive Web App built for daily consistency, streak analytics, and privacy-first design.',
+    'Learn about Habbit Runner, a habit tracker built for daily consistency, useful progress signals, and privacy-minded design.',
   keywords:
     'about habbit runner, habit tracker pwa, habit tracking team, habit tracking app',
   pathname: '/about'
@@ -239,7 +239,7 @@ export const PUBLIC_PRIVACY_SEO = {
 export const PUBLIC_FEATURES_SEO = {
   title: 'Features — Habbit Runner Habit Tracker',
   description:
-    'Explore all Habbit Runner features: server-backed storage, streak tracking, push notifications, Google sign-in, daily routine planning, and more.',
+    'Explore Habbit Runner features: streak tracking, reminders, Google sign-in, daily routine planning, and more.',
   keywords:
     'habit tracker features, streak tracker features, pwa habit tracker, habit push notifications',
   pathname: '/features'

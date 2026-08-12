@@ -52,7 +52,7 @@ The main limitation of pure offline apps is that they don't move your data betwe
 
 Some products combine local storage with synchronization; others, such as Habbit Runner, use a server-backed model.
 
-Habbit Runner uses a backend-first model. Account data is written through the API, and refresh pulls the latest remote state. Conflict handling is enforced by the server's version checks.
+Habbit Runner uses an account-based model. Account data is saved when connected, and refresh shows the latest progress. If two sessions change the same item, the app asks you to review it.
 
 ## Privacy: Where the Real Difference Lies
 
@@ -81,7 +81,7 @@ With a local-first app, this data may never leave your device unless you opt int
 
 ### Can an offline habit tracker sync to multiple devices?
 
-Yes, if the app is built with a backend sync contract. Habbit Runner refreshes account data through its API when you're connected. [Read more about habit tracking →](/blog/best-offline-habit-tracker)
+Yes, if the app supports account sync. Habbit Runner refreshes account data when you're connected. [Read more about habit tracking →](/blog/best-offline-habit-tracker)
 
 ### Is offline storage safer than cloud storage?
 
@@ -97,4 +97,4 @@ Not always. Apps like Loop Habit Tracker require no account. Habbit Runner requi
 
 ---
 
-*Habbit Runner stores signed-in habit data through its API and provides an installable PWA interface. [Try it free →](/)*
+*Habbit Runner keeps signed-in habit data available across supported devices and provides an installable web experience. [Try it free →](/)*

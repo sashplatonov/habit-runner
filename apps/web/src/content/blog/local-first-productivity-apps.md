@@ -51,7 +51,7 @@ Obsidian stores all notes as plain markdown files on your device. No server requ
 
 ### Habbit Runner (Habit Tracking — PWA)
 
-Habbit Runner is a server-backed PWA: signed-in habit data and check-ins are loaded and changed through its API. Its cached application shell supports repeat visits, but habit mutations require a connection.
+Habbit Runner is an account-based web app: signed-in habit data and check-ins are available across supported devices, while changes require a connection.
 
 ### Bear (Notes — iOS/macOS)
 

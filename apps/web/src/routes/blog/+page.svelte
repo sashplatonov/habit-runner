@@ -24,8 +24,8 @@
 
 <PublicSeoHead
   title="Blog — Habbit Runner"
-  description="Guides, comparisons, and technical articles about habit tracking, PWAs, and productivity."
-  keywords="habit tracker blog, habit tracking guide, pwa habit tracking, sveltekit blog"
+  description="Practical guides, comparisons, and notes about habit tracking and everyday routines."
+  keywords="habit tracker blog, habit tracking guide, routine planning, consistency"
   pathname="/blog"
 />
 
@@ -45,7 +45,7 @@
       <p class="text-[10px] uppercase tracking-[0.28em] text-slate-400">Editorial notes</p>
       <h1 class="mt-4 text-4xl font-semibold tracking-tight text-slate-950 sm:text-5xl">Blog</h1>
       <p class="mt-4 max-w-2xl text-base leading-7 text-slate-600">
-        Guides, technical articles, and comparisons about habit tracking and server-backed apps.
+        Practical guides and comparisons for building routines that fit real life.
       </p>
     </section>
 
