@@ -201,7 +201,7 @@ components:
           maxLength: 200
         description:
           type: string
-          maxLength: 2000
+          maxLength: 8000
         color:
           $ref: "#/components/schemas/HabitColor"
         icon:
@@ -367,7 +367,7 @@ components:
           maxLength: 200
         description:
           type: string
-          maxLength: 2000
+          maxLength: 8000
         color:
           $ref: "#/components/schemas/HabitColor"
         icon:
