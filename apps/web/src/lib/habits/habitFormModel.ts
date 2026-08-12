@@ -7,6 +7,7 @@ export const DEFAULT_WEEKDAYS = [1, 2, 3, 4, 5];
 export const WEEKEND_DAYS = [0, 6];
 export const WEEKDAY_ORDER = [1, 2, 3, 4, 5, 6, 0];
 export const DEFAULT_TARGET_STREAK = 21;
+export const MAX_HABIT_DESCRIPTION_LENGTH = 8000;
 
 export type HabitFormValues = {
   name: string;

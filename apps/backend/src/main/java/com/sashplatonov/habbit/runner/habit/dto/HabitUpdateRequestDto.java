@@ -12,7 +12,7 @@ import java.util.List;
 @Builder
 public record HabitUpdateRequestDto(
     @Size(max = 200) String name,
-    @Size(max = 2000) String description,
+    @Size(max = 8000) String description,
     HabitColor color,
     @Size(max = 100) String icon,
     HabitFrequency frequency,

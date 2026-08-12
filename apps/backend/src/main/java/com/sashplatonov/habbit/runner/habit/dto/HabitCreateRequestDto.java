@@ -15,7 +15,7 @@ import java.util.List;
 public record HabitCreateRequestDto(
     @NotBlank @Size(max = 100) String id,
     @NotBlank @Size(max = 200) String name,
-    @Size(max = 2000) String description,
+    @Size(max = 8000) String description,
     @NotNull HabitColor color,
     @NotBlank @Size(max = 100) String icon,
     @NotNull HabitFrequency frequency,

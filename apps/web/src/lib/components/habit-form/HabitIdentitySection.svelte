@@ -1,6 +1,7 @@
 <script lang="ts">
   import type { Habit } from '@/types/habit';
   import { COLORS, ICONS } from '$lib/habits/constants';
+  import { MAX_HABIT_DESCRIPTION_LENGTH } from '$lib/habits/habitFormModel';
   import FormSection from './FormSection.svelte';
   import FieldMessage from './FieldMessage.svelte';
 
@@ -24,6 +25,8 @@
     const value = (event.currentTarget as HTMLInputElement).value;
     icon = value;
   }
+
+  const descriptionRemaining = $derived(MAX_HABIT_DESCRIPTION_LENGTH - description.length);
 </script>
 
 <FormSection title="Identity" description="Set the name, description, icon, and base color." class="space-y-5">
@@ -87,11 +90,16 @@
         name="habit-description"
         autocomplete="off"
         bind:value={description}
-        maxlength="10000"
+        maxlength={MAX_HABIT_DESCRIPTION_LENGTH}
         rows="6"
+        aria-describedby="habit-description-count"
         placeholder="Brief description… Supports **bold**, *italic*, and lists."
         class="w-full resize-none overflow-y-auto rounded-lg border border-border bg-bg-secondary px-3 py-2.5 text-sm text-foreground placeholder-border-hover transition-[border-color,box-shadow] focus:border-accent/50 focus:shadow-[0_0_12px_var(--glow)]"
       ></textarea>
+      <p id="habit-description-count" class="mt-1 flex justify-between gap-3 text-xs leading-5 text-muted" aria-live="polite">
+        <span>{description.length} / {MAX_HABIT_DESCRIPTION_LENGTH} characters</span>
+        <span>{descriptionRemaining} remaining</span>
+      </p>
     </div>
   </div>
   </div>
