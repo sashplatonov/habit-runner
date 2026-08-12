@@ -252,7 +252,7 @@ git commit -m "feat(public): simplify landing experience"
 
 ## P1-3: Rebuild public information pages around benefits and honest choices
 
-**Status:** ⬜ Not started
+**Status:** ✅ Completed
 
 **Priority:** P1
 
@@ -277,6 +277,7 @@ create route-local SEO schemas that drift from visible copy.
 - Modify `apps/web/src/routes/about/+page.svelte`.
 - Modify `apps/web/src/lib/components/PublicSeoPage.svelte`.
 - Modify `apps/web/src/routes/vs/[slug]/+page.svelte`.
+- Modify `apps/web/src/routes/features/+page.svelte`.
 - Modify `apps/web/src/lib/seo/publicPages.ts`.
 - Modify `apps/web/src/lib/seo/competitors.ts`.
 - Modify `apps/web/src/routes/privacy-policy/+page.svelte` only where a

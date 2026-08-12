@@ -59,7 +59,7 @@
     <!-- Feature comparison table -->
     <section class="mb-16">
       <h2 class="mb-6 text-2xl font-semibold text-slate-950">Feature Comparison</h2>
-      <div class="overflow-x-auto rounded-[1.75rem] border border-slate-200/80 bg-white/92 shadow-[0_20px_54px_rgba(15,23,42,0.08)]">
+      <div class="hidden overflow-x-auto rounded-[1.75rem] border border-slate-200/80 bg-white/92 shadow-[0_20px_54px_rgba(15,23,42,0.08)] sm:block">
         <table class="w-full text-sm">
           <thead>
             <tr class="bg-slate-50 text-left">
@@ -115,6 +115,17 @@
           </tbody>
         </table>
       </div>
+      <div class="space-y-3 sm:hidden">
+        {#each competitor.features as feature (`mobile-${feature.name}`)}
+          <article class="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm">
+            <h3 class="font-semibold text-slate-900">{feature.name}</h3>
+            <dl class="mt-3 grid gap-2 text-sm">
+              <div class="flex items-start justify-between gap-4"><dt class="text-slate-500">Habbit Runner</dt><dd class="text-right font-medium text-slate-800">{feature.habbitRunner === true ? 'Yes' : feature.habbitRunner === false ? 'No' : feature.habbitRunner}</dd></div>
+              <div class="flex items-start justify-between gap-4"><dt class="text-slate-500">{competitor.name}</dt><dd class="text-right font-medium text-slate-800">{feature.competitor === true ? 'Yes' : feature.competitor === false ? 'No' : feature.competitor}</dd></div>
+            </dl>
+          </article>
+        {/each}
+      </div>
     </section>
 
     <!-- Strengths -->
@@ -160,7 +171,7 @@
       <p class="mb-6 text-slate-300">No App Store. No subscription. A clear place to keep your daily practice moving.</p>
       <a
             href={resolve('/', {})}
-            class="inline-block rounded-full bg-white px-8 py-3 font-semibold text-slate-950 transition-[transform,background-color] hover:-translate-y-0.5 hover:bg-sky-50"
+            class="inline-flex min-h-11 items-center justify-center rounded-full bg-white px-8 py-3 font-semibold text-slate-950 transition-[transform,background-color] hover:-translate-y-0.5 hover:bg-sky-50"
           >
             Get Started
           </a>
@@ -168,9 +179,9 @@
 
     <!-- Internal links -->
     <nav class="mt-10 flex flex-wrap justify-center gap-4 text-sm text-sky-700" aria-label="Related pages">
-      <a href={resolve('/features', {})} class="hover:underline">All Features</a>
-      <a href={resolve('/about', {})} class="hover:underline">About Habbit Runner</a>
-      <a href={resolve('/blog', {})} class="hover:underline">Blog</a>
+      <a href={resolve('/features', {})} class="inline-flex min-h-11 items-center hover:underline">All Features</a>
+      <a href={resolve('/about', {})} class="inline-flex min-h-11 items-center hover:underline">About Habbit Runner</a>
+      <a href={resolve('/blog', {})} class="inline-flex min-h-11 items-center hover:underline">Blog</a>
     </nav>
   </div>
   </main>

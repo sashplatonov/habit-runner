@@ -45,19 +45,19 @@
           <p class="mt-4 max-w-2xl text-base leading-7 text-slate-600">{content.description}</p>
 
           <div class="mt-6 flex flex-wrap gap-2">
-            <a href={resolve<'/'>('/', {})} class="rounded-full border border-slate-300 bg-white px-3 py-1.5 text-xs text-slate-700 shadow-sm">Home</a>
-            <a href={resolve<'/habit-tracker'>('/habit-tracker', {})} class="rounded-full border border-slate-300 bg-white px-3 py-1.5 text-xs text-slate-700 shadow-sm">Habit Tracker</a>
-            <a href={resolve<'/streak-tracker'>('/streak-tracker', {})} class="rounded-full border border-slate-300 bg-white px-3 py-1.5 text-xs text-slate-700 shadow-sm">Streak Tracker</a>
-            <a href={resolve<'/daily-routine-planner'>('/daily-routine-planner', {})} class="rounded-full border border-slate-300 bg-white px-3 py-1.5 text-xs text-slate-700 shadow-sm">Daily Routine Planner</a>
-            <a href={resolve<'/features'>('/features', {})} class="rounded-full border border-slate-300 bg-white px-3 py-1.5 text-xs text-slate-700 shadow-sm">Features</a>
-            <a href={resolve<'/blog'>('/blog', {})} class="rounded-full border border-slate-300 bg-white px-3 py-1.5 text-xs text-slate-700 shadow-sm">Blog</a>
+            <a href={resolve<'/'>('/', {})} class="inline-flex min-h-11 items-center rounded-full border border-slate-300 bg-white px-3 py-2 text-xs text-slate-700 shadow-sm">Home</a>
+            <a href={resolve<'/habit-tracker'>('/habit-tracker', {})} class="inline-flex min-h-11 items-center rounded-full border border-slate-300 bg-white px-3 py-2 text-xs text-slate-700 shadow-sm">Habit Tracker</a>
+            <a href={resolve<'/streak-tracker'>('/streak-tracker', {})} class="inline-flex min-h-11 items-center rounded-full border border-slate-300 bg-white px-3 py-2 text-xs text-slate-700 shadow-sm">Streak Tracker</a>
+            <a href={resolve<'/daily-routine-planner'>('/daily-routine-planner', {})} class="inline-flex min-h-11 items-center rounded-full border border-slate-300 bg-white px-3 py-2 text-xs text-slate-700 shadow-sm">Daily Routine Planner</a>
+            <a href={resolve<'/features'>('/features', {})} class="inline-flex min-h-11 items-center rounded-full border border-slate-300 bg-white px-3 py-2 text-xs text-slate-700 shadow-sm">Features</a>
+            <a href={resolve<'/blog'>('/blog', {})} class="inline-flex min-h-11 items-center rounded-full border border-slate-300 bg-white px-3 py-2 text-xs text-slate-700 shadow-sm">Blog</a>
           </div>
         </div>
 
         <div class="rounded-[1.5rem] border border-sky-100 bg-[linear-gradient(135deg,rgba(49,105,255,0.08),rgba(16,179,154,0.08))] p-5">
           <p class="text-[10px] uppercase tracking-[0.24em] text-slate-400">Why it matters</p>
-          <p class="mt-3 text-xl font-semibold tracking-tight text-slate-950">The same product language used in the app should hold on public pages too.</p>
-          <p class="mt-3 text-sm leading-6 text-slate-600">These pages now act as clear editorial entry points instead of feeling like placeholder documentation.</p>
+          <p class="mt-3 text-xl font-semibold tracking-tight text-slate-950">A good routine should survive an ordinary week.</p>
+          <p class="mt-3 text-sm leading-6 text-slate-600">Use this guide to choose a starting point, then keep only the detail that helps you continue.</p>
         </div>
       </div>
 
@@ -73,11 +73,10 @@
 
     <div class="mt-8 grid gap-6 lg:grid-cols-[0.95fr,1.05fr]">
       <section class="rounded-[1.75rem] border border-slate-200/80 bg-white/90 p-6 shadow-[0_20px_54px_rgba(15,23,42,0.08)]">
-        <h2 class="text-xl font-semibold text-slate-950">About The Product Team</h2>
+        <h2 class="text-xl font-semibold text-slate-950">A practical starting point</h2>
         <p class="mt-3 text-sm leading-6 text-slate-600">
-          Habbit Runner is built by engineers focused on reliability, clear metrics, and practical
-          habit workflows. Product updates prioritize stability, measurable progress, and simple
-          daily execution.
+          Habbit Runner is for the part after the plan: showing up, checking in, and learning what
+          makes the next attempt easier. Start with one routine and let the useful patterns emerge.
         </p>
       </section>
 
@@ -108,7 +107,7 @@
           onclick={() => {
             startOAuthLogin();
           }}
-          class="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white px-5 py-2.5 text-sm font-semibold text-slate-950 transition-[transform,background-color] hover:-translate-y-0.5 hover:bg-sky-50"
+          class="inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-white/20 bg-white px-5 py-2.5 text-sm font-semibold text-slate-950 transition-[transform,background-color] hover:-translate-y-0.5 hover:bg-sky-50"
         >
           Start Using Habbit Runner
           <ArrowRight size={15} />
