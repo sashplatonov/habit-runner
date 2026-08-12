@@ -28,6 +28,7 @@ class RequestTraceFilterUnitTest {
     var traceId = RequestTraceFilter.traceId(requestContext);
     assertNotNull(traceId);
     assertEquals(traceId, MDC.get("traceId"));
+    assertEquals(traceId, MDC.get("trace_id"));
   }
 
   @Test
@@ -44,6 +45,7 @@ class RequestTraceFilterUnitTest {
 
     assertEquals(traceId, responseHeaders.getFirst(RequestTraceFilter.TRACE_ID_HEADER));
     assertNull(MDC.get("traceId"));
+    assertNull(MDC.get("trace_id"));
   }
 
   @Test

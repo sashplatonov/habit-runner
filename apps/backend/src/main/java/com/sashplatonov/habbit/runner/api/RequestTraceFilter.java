@@ -24,6 +24,7 @@ public class RequestTraceFilter implements ContainerRequestFilter, ContainerResp
     var traceId = resolveTraceId(requestContext);
     requestContext.setProperty(TRACE_ID_PROPERTY, traceId);
     MDC.put("traceId", traceId);
+    MDC.put("trace_id", traceId);
   }
 
   @Override
@@ -33,6 +34,7 @@ public class RequestTraceFilter implements ContainerRequestFilter, ContainerResp
       new ResponseHeaders(responseContext).putIfMissing(TRACE_ID_HEADER, traceId);
     }
     MDC.remove("traceId");
+    MDC.remove("trace_id");
   }
 
   private String resolveTraceId(ContainerRequestContext requestContext) {
