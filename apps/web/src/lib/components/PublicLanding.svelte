@@ -1,6 +1,6 @@
 <script lang="ts">
   import { resolve } from '$app/paths';
-  import { ArrowRight, Check, Circle } from 'lucide-svelte';
+  import { ArrowRight, ArrowUpRight, Check, Circle } from 'lucide-svelte';
   import { startOAuthLogin } from '$lib/auth/oauth';
   import PublicNav from '$lib/components/PublicNav.svelte';
   import PublicFooter from '$lib/components/PublicFooter.svelte';
@@ -46,9 +46,18 @@
               Open the interactive demo
               <ArrowRight size={16} aria-hidden="true" />
             </a>
+            <a
+              href="https://t.me/habbit_runner_bot?profile"
+              target="_blank"
+              rel="noreferrer"
+              class="inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-border bg-bg-card px-5 py-3 text-sm font-semibold text-foreground transition-[transform,border-color,color] hover:-translate-y-0.5 hover:border-progress/30 hover:text-progress focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-progress"
+            >
+              Open in Telegram
+              <ArrowUpRight size={16} aria-hidden="true" />
+            </a>
             <PublicCta onclick={startOAuthLogin} variant="secondary">Sign in with Google</PublicCta>
           </div>
-          <p class="mt-4 text-sm text-muted">No account is needed to look around the sample.</p>
+          <p class="mt-4 text-sm text-muted">No account is needed to look around the sample. Also available in Telegram Mini App.</p>
         </div>
 
         <figure class="relative overflow-hidden rounded-[2rem] border border-border bg-bg-card p-4 shadow-[0_28px_80px_rgba(15,23,42,0.14)] sm:p-6">

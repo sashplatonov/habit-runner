@@ -32,6 +32,11 @@ export const PUBLIC_LANDING_SEO = {
         'Yes. You can start with core habit tracking, streak monitoring, and dashboard analytics at no cost.'
     },
     {
+      question: 'Can I use Habbit Runner from Telegram?',
+      answer:
+        'Yes. Open the Mini App in Telegram for a quick check-in, then continue in the web app whenever you want a larger view.'
+    },
+    {
       question: 'Does it support streak tracking and long-term progress?',
       answer:
         'Yes. Each habit includes current streak, longest streak, completion rate, and trend views.'

@@ -8,6 +8,7 @@
 <p align="center">
   <a href="#product">Product</a> ·
   <a href="https://habbit-runner.app/showcase">Try the live showcase</a> ·
+  <a href="https://t.me/habbit_runner_bot?profile">Open in Telegram</a> ·
   <a href="#engineering-highlights">Engineering</a> ·
   <a href="#showcase">Showcase</a> ·
   <a href="#run-locally">Run locally</a> ·
@@ -21,6 +22,7 @@
 - [🎯 Product](#product)
 - [🧩 Engineering highlights](#engineering-highlights)
 - [🧭 Interactive showcase](#showcase)
+- [✈️ Telegram Mini App](#telegram-mini-app)
 - [🖼️ Product screens](#product-screens)
 - [🏗️ Architecture](#architecture)
 - [🚀 Run locally](#run-locally)
@@ -42,6 +44,7 @@ small production-shaped web system:
 - durable account preferences restored after re-login;
 - schedule-aware streak, flame, and inactivity/ice signals;
 - responsive cards and compact rows for desktop and mobile;
+- a Telegram Mini App entry point for a quick daily check-in;
 - a backend-first API contract with migration-safe persistence;
 - reproducible local Docker smoke checks and path-aware CI.
 
@@ -76,6 +79,14 @@ without OAuth, API requests, database writes, or browser persistence.
 
 The normal account flow remains available through Google OAuth; authenticated
 data is server-backed and is never mixed with the showcase fixture.
+
+[↑ Back to top](#top)
+
+## ✈️ Telegram Mini App
+
+Open [Habbit Runner in Telegram](https://t.me/habbit_runner_bot?profile) when a
+quick daily check-in is enough. The same habits remain available when you return
+to the web app for a larger view.
 
 [↑ Back to top](#top)
 

@@ -17,6 +17,20 @@ test.describe('public site', () => {
     await expect(page).toHaveURL(/\/showcase$/);
   });
 
+  test('makes the Telegram Mini App a clear secondary entry point', async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name === 'telegram-webview', 'Telegram launches use the Mini App entry flow.');
+
+    await page.goto('/');
+    const telegramLink = page.getByRole('link', { name: 'Open in Telegram' });
+    await expect(telegramLink).toHaveAttribute('href', 'https://t.me/habbit_runner_bot?profile');
+    await expect(telegramLink).toHaveAttribute('target', '_blank');
+    await expect(telegramLink).toHaveCSS('min-height', '44px');
+    await expect(page.getByText('Can I use Habbit Runner from Telegram?', { exact: true })).toBeVisible();
+
+    await page.goto('/features');
+    await expect(page.getByRole('heading', { name: 'Use it inside Telegram' })).toBeVisible();
+  });
+
   test('keeps the public shell usable on compact screens', async ({ page }, testInfo) => {
     test.skip(testInfo.project.name === 'desktop', 'This assertion targets compact layouts.');
 

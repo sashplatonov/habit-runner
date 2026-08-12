@@ -1,6 +1,6 @@
 <script lang="ts">
   import { resolve } from '$app/paths';
-  import { Bell, ChartNoAxesCombined, ListChecks, Smartphone } from 'lucide-svelte';
+  import { Bell, ChartNoAxesCombined, ListChecks, Send } from 'lucide-svelte';
   import PublicSeoHead from '$lib/components/PublicSeoHead.svelte';
   import PublicNav from '$lib/components/PublicNav.svelte';
   import PublicFooter from '$lib/components/PublicFooter.svelte';
@@ -10,7 +10,7 @@
     { title: 'A clear daily list', text: 'Keep today’s habits and targets close, with quick check-ins that do not ask for a ceremony.', icon: ListChecks },
     { title: 'Progress with context', text: 'See streaks, completion patterns, and longer-term movement when you want more than a yes or no.', icon: ChartNoAxesCombined },
     { title: 'Reminders that fit', text: 'Add a nudge to the habits where timing matters, then change it when your schedule changes.', icon: Bell },
-    { title: 'Ready on your devices', text: 'Use the web app on a phone, tablet, or computer, and install it when your browser offers that option.', icon: Smartphone }
+    { title: 'Use it inside Telegram', text: 'Launch Habbit Runner from Telegram when a quick daily check-in is all you need.', icon: Send }
   ];
 </script>
 
