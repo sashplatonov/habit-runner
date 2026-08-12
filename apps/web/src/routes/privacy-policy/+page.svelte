@@ -22,17 +22,13 @@
     <section class="overflow-hidden rounded-[2rem] border border-slate-200/80 bg-white/92 p-6 shadow-[0_24px_80px_rgba(15,23,42,0.1)] sm:p-8">
       <h1 class="text-3xl font-semibold leading-tight text-slate-900">Privacy Policy</h1>
       <p class="mt-2 text-xs text-slate-500">Last updated: {lastUpdated}</p>
-      <p class="mt-3 rounded-[1.25rem] border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-700">
-      [HUMAN REVIEW REQUIRED] This document is a template. Please review with a qualified legal
-      advisor before publishing to ensure GDPR and CCPA compliance for your jurisdiction.
-      </p>
     </section>
 
     <div class="prose prose-slate mt-8 max-w-none rounded-[1.75rem] border border-slate-200/80 bg-white/92 p-6 text-sm shadow-[0_18px_50px_rgba(15,23,42,0.08)] sm:p-8">
       <section class="mt-6">
         <h2 class="text-lg font-semibold text-slate-900">1. Introduction</h2>
         <p class="mt-2 text-slate-600">
-          Habbit Runner ("we", "our", or "us") operates the Habbit Runner habit tracker application
+          Habit Runner ("we", "our", or "us") operates the Habit Runner habit tracker application
           available at <a href="https://habit-runner.freeddns.org" class="text-cyan-700 underline">habit-runner.freeddns.org</a>.
           This Privacy Policy explains how we collect, use, and protect your information when you
           use our service.
@@ -61,7 +57,7 @@
         </p>
         <h3 class="mt-3 text-base font-semibold text-slate-800">2.4 Telegram Mini App</h3>
         <p class="mt-2 text-slate-600">
-          If you open Habbit Runner in Telegram, we receive the Telegram user identifier and the
+          If you open Habit Runner in Telegram, we receive the Telegram user identifier and the
           public profile fields Telegram includes in Mini App initialization data. The server
           verifies Telegram's signed data before creating a session. If you link Telegram and email
           sign-in, these identifiers are associated with the same account so your habits and
@@ -103,7 +99,7 @@
       <section class="mt-6">
         <h2 class="text-lg font-semibold text-slate-900">5. Cookies and Tokens</h2>
         <p class="mt-2 text-slate-600">
-          Habbit Runner uses browser <code>localStorage</code> to store authentication tokens (JWT
+          Habit Runner uses browser <code>localStorage</code> to store authentication tokens (JWT
           access token and refresh token). We do not use third-party tracking cookies or advertising
           cookies.
         </p>
@@ -122,8 +118,8 @@
           <li>Data portability.</li>
         </ul>
         <p class="mt-3 text-slate-600">
-          To exercise any of these rights, contact us at
-          <a href="mailto:privacy@habbit-runner.app" class="text-cyan-700 underline">privacy@habbit-runner.app</a>.
+          To exercise any of these rights, contact us through our
+          <a href="https://github.com/sashplatonov" class="text-cyan-700 underline">GitHub profile</a>.
         </p>
       </section>
 
@@ -146,8 +142,8 @@
       <section class="mt-6">
         <h2 class="text-lg font-semibold text-slate-900">9. Contact</h2>
         <p class="mt-2 text-slate-600">
-          For privacy-related questions or requests, contact us at:<br />
-          Email: <a href="mailto:privacy@habbit-runner.app" class="text-cyan-700 underline">privacy@habbit-runner.app</a>
+          For privacy-related questions or requests, contact us through our
+          <a href="https://github.com/sashplatonov" class="text-cyan-700 underline">GitHub profile</a>.
         </p>
       </section>
     </div>

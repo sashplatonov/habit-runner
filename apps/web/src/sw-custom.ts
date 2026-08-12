@@ -20,7 +20,7 @@ self.addEventListener('push', (event: PushEvent) => {
     notificationData = event.data.json();
   } catch {
     notificationData = {
-      title: 'Habbit Runner',
+      title: 'Habit Runner',
       body: event.data.text()
     };
   }

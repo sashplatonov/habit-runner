@@ -2,7 +2,7 @@
 title: "Why Habit Tracking Stops Working (And What to Do About It)"
 description: "Habit tracking helps until it doesn't. Here's why the benefits fade over time — and how to get them back without starting over."
 publishedAt: "2026-04-11"
-author: "Habbit Runner Team"
+author: "Habit Runner Team"
 keywords: "habit tracking stops working, habit tracker motivation, why habit apps fail, habit tracking plateau, habit system refresh"
 readingTimeMinutes: 6
 coverImage: /blog/why-habit-tracking-stops-working.svg
@@ -68,4 +68,4 @@ Start with two or three habits that genuinely matter. Log them for two weeks. Se
 
 ---
 
-*Habbit Runner is designed to stay simple — no forced complexity, no upsells, no social pressure. Just the habits you care about. [Try it free →](/)*
+*Habit Runner is designed to stay simple — no forced complexity, no upsells, no social pressure. Just the habits you care about. [Try it free →](/)*

@@ -2,7 +2,7 @@
 title: "Why Your Morning Routine Keeps Falling Apart"
 description: "You've tried morning routines before. They work for a week, then they don't. Here's what's actually causing the breakdown — and what to fix."
 publishedAt: "2026-02-26"
-author: "Habbit Runner Team"
+author: "Habit Runner Team"
 keywords: "morning routine fails, why morning routine doesn't work, fix morning routine, consistent morning habits, morning routine problems"
 readingTimeMinutes: 7
 coverImage: /blog/why-morning-routine-falls-apart.svg
@@ -84,4 +84,4 @@ Most habits take four to eight weeks to begin feeling automatic, but this varies
 
 ---
 
-*Habbit Runner tracks your morning habits with no friction — open it, tap your completions, close it. [Try it free →](/)*
+*Habit Runner tracks your morning habits with no friction — open it, tap your completions, close it. [Try it free →](/)*

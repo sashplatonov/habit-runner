@@ -2,7 +2,7 @@
 title: "How to Build a Consistent Morning Routine That Actually Sticks"
 description: "Most morning routines fail because they're too ambitious. Learn how to design a minimal, resilient routine using the three-habit rule."
 publishedAt: "2026-01-09"
-author: "Habbit Runner Team"
+author: "Habit Runner Team"
 keywords: "morning routine, habit building, consistent routine, morning habits, daily routine tips"
 readingTimeMinutes: 6
 coverImage: /blog/how-to-build-consistent-morning-routine.svg
@@ -58,7 +58,7 @@ Rigid streaks create brittle routines. If you know missing one day breaks a 60-d
 
 A better model: allow planned freeze days. One or two per week where a miss doesn't count against your streak.
 
-Habbit Runner has a built-in freeze feature — tap the snowflake icon to freeze a habit for a day. The streak stays intact. The habit stays on your radar without punishing you for being human.
+Habit Runner has a built-in freeze feature — tap the snowflake icon to freeze a habit for a day. The streak stays intact. The habit stays on your radar without punishing you for being human.
 
 ## Review Weekly, Not Daily
 
@@ -81,4 +81,4 @@ Three habits completed daily for a year will move the needle on your life more t
 
 ---
 
-*Habbit Runner tracks your habits, shows your streaks, and lets you freeze days when life gets in the way. [Try it free →](/)*
+*Habit Runner tracks your habits, shows your streaks, and lets you freeze days when life gets in the way. [Try it free →](/)*

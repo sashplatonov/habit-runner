@@ -75,7 +75,7 @@
       <section class="rounded-[1.75rem] border border-slate-200/80 bg-white/90 p-6 shadow-[0_20px_54px_rgba(15,23,42,0.08)]">
         <h2 class="text-xl font-semibold text-slate-950">A practical starting point</h2>
         <p class="mt-3 text-sm leading-6 text-slate-600">
-          Habbit Runner is for the part after the plan: showing up, checking in, and learning what
+          Habit Runner is for the part after the plan: showing up, checking in, and learning what
           makes the next attempt easier. Start with one routine and let the useful patterns emerge.
         </p>
       </section>
@@ -109,7 +109,7 @@
           }}
           class="inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-white/20 bg-white px-5 py-2.5 text-sm font-semibold text-slate-950 transition-[transform,background-color] hover:-translate-y-0.5 hover:bg-sky-50"
         >
-          Start Using Habbit Runner
+          Start Using Habit Runner
           <ArrowRight size={15} />
         </button>
       </div>

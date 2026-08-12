@@ -18,11 +18,11 @@
   <script type="application/ld+json">{JSON.stringify({
     '@context': 'https://schema.org',
     '@type': 'Organization',
-    name: 'Habbit Runner',
+    name: 'Habit Runner',
     url: 'https://habit-runner.freeddns.org',
     logo: 'https://habit-runner.freeddns.org/og-image.svg',
     description:
-      'Habbit Runner is a habit tracker built for daily consistency and useful progress signals.',
+      'Habit Runner is a habit tracker built for daily consistency and useful progress signals.',
     sameAs: []
   }).replace(/</g, '\u003c')}</script>
 </svelte:head>
@@ -34,10 +34,10 @@
     <section class="max-w-4xl overflow-hidden rounded-[2rem] border border-slate-200/80 bg-white/92 p-6 shadow-[0_24px_80px_rgba(15,23,42,0.1)] sm:p-8">
       <p class="text-[10px] uppercase tracking-[0.28em] text-slate-400">About the product</p>
       <h1 class="mt-4 text-4xl font-semibold leading-[1.05] tracking-tight text-slate-950 sm:text-5xl">
-        About Habbit Runner
+        About Habit Runner
       </h1>
       <p class="mt-4 max-w-2xl text-base leading-7 text-slate-600">
-        Habbit Runner is a habit tracker for people who want clear progress without noise.
+        Habit Runner is a habit tracker for people who want clear progress without noise.
       </p>
     </section>
 
@@ -46,7 +46,7 @@
       <section class="mt-10">
         <h2 class="text-xl font-semibold text-slate-900">Mission</h2>
         <p class="mt-3 text-sm text-slate-600">
-          Building habits requires consistency over motivation. Habbit Runner is designed to make
+          Building habits requires consistency over motivation. Habit Runner is designed to make
           daily execution visible, streak progress measurable, and the entire product accessible
           whenever your connection is available.
         </p>
@@ -101,8 +101,8 @@
       <section class="mt-10">
         <h2 class="text-xl font-semibold text-slate-900">Contact</h2>
         <p class="mt-3 text-sm text-slate-600">
-          For questions, feedback, or support, reach us at
-          <a href="mailto:hello@habbit-runner.app" class="text-cyan-700 underline">hello@habbit-runner.app</a>.
+          For questions, feedback, or support, reach us through our
+          <a href="https://github.com/sashplatonov" class="text-cyan-700 underline">GitHub profile</a>.
         </p>
       </section>
     </div>

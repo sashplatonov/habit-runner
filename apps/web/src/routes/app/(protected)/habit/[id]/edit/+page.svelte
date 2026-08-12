@@ -34,7 +34,7 @@
 </script>
 
 <svelte:head>
-  <title>Edit Habit - Habbit Runner</title>
+  <title>Edit Habit - Habit Runner</title>
 </svelte:head>
 
 {#if !habit && isResolvingHabit}

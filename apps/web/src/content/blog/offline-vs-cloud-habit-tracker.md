@@ -2,7 +2,7 @@
 title: "Offline Habit Tracker vs Cloud Habit Tracker: Which One Is Right for You?"
 description: "Offline and cloud habit trackers work very differently. Here's how to choose based on your privacy needs, devices, and daily routine."
 publishedAt: "2026-01-21"
-author: "Habbit Runner Team"
+author: "Habit Runner Team"
 keywords: "offline habit tracker, cloud habit tracker, habit tracker comparison, device-first habit app, habit tracker privacy"
 readingTimeMinutes: 7
 coverImage: /blog/offline-vs-cloud-habit-tracker.svg
@@ -50,9 +50,9 @@ For anyone who commutes, travels frequently, or just wants reliability, local-on
 
 The main limitation of pure offline apps is that they don't move your data between devices. If you track habits on your phone in the morning and want to check stats on your laptop at lunch, a local-only app won't help.
 
-Some products keep changes on one device; others, such as Habbit Runner, keep progress with an account.
+Some products keep changes on one device; others, such as Habit Runner, keep progress with an account.
 
-Habbit Runner uses an account-based model. Account data is saved when connected, and refresh shows the latest progress. If two sessions change the same item, the app asks you to review it.
+Habit Runner uses an account-based model. Account data is saved when connected, and refresh shows the latest progress. If two sessions change the same item, the app asks you to review it.
 
 ## Privacy: Where the Real Difference Lies
 
@@ -81,7 +81,7 @@ With a device-first app, this data may never leave your device unless you opt in
 
 ### Can an offline habit tracker sync to multiple devices?
 
-Yes, if the app supports account sync. Habbit Runner refreshes account data when you're connected. [Read more about habit tracking →](/blog/best-offline-habit-tracker)
+Yes, if the app supports account sync. Habit Runner refreshes account data when you're connected. [Read more about habit tracking →](/blog/best-offline-habit-tracker)
 
 ### Is offline storage safer than cloud storage?
 
@@ -93,8 +93,8 @@ If you uninstall an app that uses local storage, the data is typically removed w
 
 ### Do I need to create an account to use an offline habit tracker?
 
-Not always. Apps like Loop Habit Tracker require no account. Habbit Runner requires sign-in for habit data and streaks.
+Not always. Apps like Loop Habit Tracker require no account. Habit Runner requires sign-in for habit data and streaks.
 
 ---
 
-*Habbit Runner keeps signed-in habit data available across supported devices and provides an installable web experience. [Try it free →](/)*
+*Habit Runner keeps signed-in habit data available across supported devices and provides an installable web experience. [Try it free →](/)*

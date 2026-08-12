@@ -10,7 +10,7 @@
 </script>
 
 <svelte:head>
-  <title>{props.status} - Habbit Runner</title>
+  <title>{props.status} - Habit Runner</title>
 </svelte:head>
 
 <div class="flex min-h-screen items-center justify-center bg-bg-primary px-4 text-foreground">

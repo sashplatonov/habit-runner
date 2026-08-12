@@ -109,7 +109,7 @@
 {:else if mode === 'loading'}
   <main class="entry" aria-live="polite"><div class="card"><p role="status">Connecting to Telegram…</p></div></main>
 {:else if mode === 'choice'}
-  <main class="entry"><div class="card"><p class="eyebrow">Habbit Runner</p><h1>Continue in Telegram</h1><p class="muted">Use Telegram, or sign in with Google to link both accounts and share the same habits.</p><button class="primary" type="button" disabled={working} onclick={() => void connect()}>Continue with Telegram</button><button class="secondary" type="button" disabled={working} onclick={() => void connectGoogleAccount()}>Sign in with Google</button></div></main>
+  <main class="entry"><div class="card"><p class="eyebrow">Habit Runner</p><h1>Continue in Telegram</h1><p class="muted">Use Telegram, or sign in with Google to link both accounts and share the same habits.</p><button class="primary" type="button" disabled={working} onclick={() => void connect()}>Continue with Telegram</button><button class="secondary" type="button" disabled={working} onclick={() => void connectGoogleAccount()}>Sign in with Google</button></div></main>
 {:else}
   <main class="entry"><div class="card"><h1>Telegram connection needs a retry</h1><p class="error" role="alert">{errorMessage}</p><button class="primary" type="button" onclick={() => void retry()}>Try again</button></div></main>
 {/if}

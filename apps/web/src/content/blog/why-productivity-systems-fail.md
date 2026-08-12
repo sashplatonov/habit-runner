@@ -2,7 +2,7 @@
 title: "Why Most Productivity Systems Fail (And What to Use Instead)"
 description: "Complex productivity systems collapse under their own weight. Here's why simple, minimal systems outperform elaborate ones — and what actually works long-term."
 publishedAt: "2026-03-26"
-author: "Habbit Runner Team"
+author: "Habit Runner Team"
 keywords: "productivity system fails, simple productivity system, minimalist productivity, why productivity systems don't work, habit-based productivity"
 readingTimeMinutes: 7
 coverImage: /blog/why-productivity-systems-fail.svg
@@ -89,4 +89,4 @@ Yes — different tools serve different functions. Habits are great for recurrin
 
 ---
 
-*Habbit Runner handles the behavior layer simply: define what matters, track daily, review weekly. Nothing more than that. [Try it free →](/)*
+*Habit Runner handles the behavior layer simply: define what matters, track daily, review weekly. Nothing more than that. [Try it free →](/)*

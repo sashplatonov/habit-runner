@@ -2,7 +2,7 @@
 title: "Best Habit Tracker PWA Apps"
 description: "Progressive Web Apps bring habit tracking to any device without an app store. Here are the best habit tracker PWAs — and why the format matters."
 publishedAt: "2026-01-29"
-author: "Habbit Runner Team"
+author: "Habit Runner Team"
 keywords: "habit tracker PWA, progressive web app habit tracker, best habit tracker PWA, installable habit app, cross-platform habit tracker"
 readingTimeMinutes: 6
 coverImage: /blog/best-habit-tracker-pwa.svg
@@ -36,9 +36,9 @@ Not all PWAs are equal. A good habit tracker PWA should:
 
 ## Best Habit Tracker PWAs
 
-### Habbit Runner
+### Habit Runner
 
-Habbit Runner is an installable web app. It keeps the everyday interface quick to reopen, while signed-in account data is available when you are connected.
+Habit Runner is an installable web app. It keeps the everyday interface quick to reopen, while signed-in account data is available when you are connected.
 
 Installable on Android (Chrome), iOS (Safari 16.4+), and desktop (Chrome/Edge). Once installed, it behaves as a standalone app — no browser chrome, no address bar.
 
@@ -96,4 +96,4 @@ Yes. PWAs run in the browser security sandbox. Well-built PWAs (HTTPS, strict Co
 
 ---
 
-*Habbit Runner gives you a clear place to keep daily habits and review progress. [Try it now →](/)*
+*Habit Runner gives you a clear place to keep daily habits and review progress. [Try it now →](/)*

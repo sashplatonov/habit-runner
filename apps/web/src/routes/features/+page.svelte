@@ -33,7 +33,7 @@
       <p class="max-w-xl text-base leading-7 text-muted sm:text-lg">A calm daily view, enough context to learn from your patterns, and reminders that support the routine you actually have.</p>
     </section>
 
-    <section class="mt-8 grid gap-3 sm:grid-cols-2" aria-label="Habbit Runner features">
+    <section class="mt-8 grid gap-3 sm:grid-cols-2" aria-label="Habit Runner features">
       {#each features as feature, i (feature.title + '-' + i)}
         <article class="rounded-[1.5rem] border border-border bg-bg-card p-5 shadow-sm sm:p-6">
           <svelte:component this={feature.icon} size={22} class="text-progress" aria-hidden="true" />

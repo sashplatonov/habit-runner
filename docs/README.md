@@ -1,7 +1,7 @@
-# Habbit Runner Documentation
+# Habit Runner Documentation
 
 This hub links the current engineering and operations contracts. The product
-brand intentionally uses the spelling `Habbit Runner`.
+brand intentionally uses the spelling `Habit Runner`.
 
 <a id="top"></a>
 

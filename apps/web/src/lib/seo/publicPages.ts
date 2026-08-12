@@ -19,20 +19,20 @@ export const PUBLIC_SITE_ORIGIN = 'https://habit-runner.freeddns.org';
 export const PUBLIC_OG_IMAGE_URL = new URL('/og-image.svg', PUBLIC_SITE_ORIGIN).toString();
 
 export const PUBLIC_LANDING_SEO = {
-  title: 'Habbit Runner - Habit Tracker App With Streak Analytics',
+  title: 'Habit Runner - Habit Tracker App With Streak Analytics',
   description:
-    'Habbit Runner is a habit tracker app for daily routines, streak tracking, and productivity analytics with a clean dashboard.',
+    'Habit Runner is a habit tracker app for daily routines, streak tracking, and productivity analytics with a clean dashboard.',
   keywords:
     'habit tracker app, streak tracker app, daily routine planner, goal tracker app, productivity habit app',
   pathname: '/',
   faq: [
     {
-      question: 'Is Habbit Runner a free habit tracker app?',
+      question: 'Is Habit Runner a free habit tracker app?',
       answer:
         'Yes. You can start with core habit tracking, streak monitoring, and dashboard analytics at no cost.'
     },
     {
-      question: 'Can I use Habbit Runner from Telegram?',
+      question: 'Can I use Habit Runner from Telegram?',
       answer:
         'Yes. Open the Mini App in Telegram for a quick check-in. Link your account when you want to continue with the same habits in the web app.'
     },
@@ -59,7 +59,7 @@ export const PUBLIC_LANDING_SEO = {
     {
       question: 'Do I need to download an app from an app store?',
       answer:
-        'No. You can add Habbit Runner to your home screen when your device offers that option.'
+        'No. You can add Habit Runner to your home screen when your device offers that option.'
     },
     {
       question: 'Can I get reminders for a habit?',
@@ -76,10 +76,10 @@ export const PUBLIC_LANDING_SEO = {
 
 export const PUBLIC_SEO_PAGES: Record<PublicSeoIntent, PublicSeoConfig> = {
   'habit-tracker': {
-    title: 'Habit Tracker App - Habbit Runner',
+    title: 'Habit Tracker App - Habit Runner',
     h1: 'Habit Tracker App For Real Daily Consistency',
     description:
-      'Habbit Runner is a habit tracker app with daily targets, clean progress dashboard, and performance analytics.',
+      'Habit Runner is a habit tracker app with daily targets, clean progress dashboard, and performance analytics.',
     keywords:
       'habit tracker app, best habit tracker, habit builder app, habit tracking dashboard, goal tracker',
     pathname: '/habit-tracker',
@@ -102,10 +102,10 @@ export const PUBLIC_SEO_PAGES: Record<PublicSeoIntent, PublicSeoConfig> = {
     ]
   },
   'streak-tracker': {
-    title: 'Streak Tracker App - Habbit Runner',
+    title: 'Streak Tracker App - Habit Runner',
     h1: 'Streak Tracker App With Clear Performance Signals',
     description:
-      'Use Habbit Runner as a streak tracker app to monitor current streak, longest streak, and completion rate trends.',
+      'Use Habit Runner as a streak tracker app to monitor current streak, longest streak, and completion rate trends.',
     keywords:
       'streak tracker app, habit streak tracker, streak counter app, productivity streak app, consistency tracker',
     pathname: '/streak-tracker',
@@ -128,10 +128,10 @@ export const PUBLIC_SEO_PAGES: Record<PublicSeoIntent, PublicSeoConfig> = {
     ]
   },
   'daily-routine-planner': {
-    title: 'Daily Routine Planner App - Habbit Runner',
+    title: 'Daily Routine Planner App - Habit Runner',
     h1: 'Daily Routine Planner App For Work, Health, And Focus',
     description:
-      'Plan your daily routine with habits, reminders, and measurable targets using Habbit Runner productivity workflows.',
+      'Plan your daily routine with habits, reminders, and measurable targets using Habit Runner productivity workflows.',
     keywords:
       'daily routine planner app, routine planner, daily planner for habits, productivity routine app, schedule habits',
     pathname: '/daily-routine-planner',
@@ -178,7 +178,7 @@ export function buildOrganizationSchema() {
   return {
     '@context': 'https://schema.org',
     '@type': 'Organization',
-    name: 'Habbit Runner',
+    name: 'Habit Runner',
     url: PUBLIC_SITE_ORIGIN,
     logo: PUBLIC_OG_IMAGE_URL
   };
@@ -188,7 +188,7 @@ export function buildWebsiteSchema() {
   return {
     '@context': 'https://schema.org',
     '@type': 'WebSite',
-    name: 'Habbit Runner',
+    name: 'Habit Runner',
     url: PUBLIC_SITE_ORIGIN,
     potentialAction: {
       '@type': 'SearchAction',
@@ -202,7 +202,7 @@ export function buildSoftwareSchema(description: string, pathname: string) {
   return {
     '@context': 'https://schema.org',
     '@type': 'SoftwareApplication',
-    name: 'Habbit Runner',
+    name: 'Habit Runner',
     applicationCategory: 'ProductivityApplication',
     operatingSystem: 'Web',
     url: buildCanonicalUrl(pathname),
@@ -216,35 +216,35 @@ export function buildSoftwareSchema(description: string, pathname: string) {
 }
 
 export const PUBLIC_ABOUT_SEO = {
-  title: 'About Habbit Runner — A Clear Habit Tracker',
+  title: 'About Habit Runner — A Clear Habit Tracker',
   description:
-    'Learn about Habbit Runner, a habit tracker built for daily consistency, useful progress signals, and privacy-minded design.',
+    'Learn about Habit Runner, a habit tracker built for daily consistency, useful progress signals, and privacy-minded design.',
   keywords:
-    'about habbit runner, habit tracking team, habit tracking app, daily consistency',
+    'about habit runner, habit tracking team, habit tracking app, daily consistency',
   pathname: '/about'
 };
 
 export const PUBLIC_SHOWCASE_SEO = {
-  title: 'Habbit Runner Showcase — Try the Real UI Without Sign-In',
+  title: 'Habit Runner Showcase — Try the Real UI Without Sign-In',
   description:
-    'Try the Habbit Runner dashboard, habit details, editing, check-ins, and progress screens in a temporary sample with no sign-in required.',
+    'Try the Habit Runner dashboard, habit details, editing, check-ins, and progress screens in a temporary sample with no sign-in required.',
   keywords:
     'habit tracker showcase, interactive habit dashboard demo, no sign-in habit tracker, streak analytics demo',
   pathname: '/showcase'
 };
 
 export const PUBLIC_PRIVACY_SEO = {
-  title: 'Privacy Policy — Habbit Runner',
+  title: 'Privacy Policy — Habit Runner',
   description:
-    'Habbit Runner privacy policy: how we handle account data, advertising, sharing, and reminders.',
-  keywords: 'habbit runner privacy policy, habit tracker data privacy, gdpr habit tracker',
+    'Habit Runner privacy policy: how we handle account data, advertising, sharing, and reminders.',
+  keywords: 'habit runner privacy policy, habit tracker data privacy, gdpr habit tracker',
   pathname: '/privacy-policy'
 };
 
 export const PUBLIC_FEATURES_SEO = {
-  title: 'Features — Habbit Runner Habit Tracker',
+  title: 'Features — Habit Runner Habit Tracker',
   description:
-    'Explore Habbit Runner features: streak tracking, reminders, Google sign-in, daily routine planning, and more.',
+    'Explore Habit Runner features: streak tracking, reminders, Google sign-in, daily routine planning, and more.',
   keywords:
     'habit tracker features, streak tracker features, habit reminders, daily routine planning',
   pathname: '/features'

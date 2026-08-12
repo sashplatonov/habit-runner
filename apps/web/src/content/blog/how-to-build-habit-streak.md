@@ -2,7 +2,7 @@
 title: "How to Build a Habit Streak That Actually Lasts"
 description: "Long streaks don't come from perfect discipline. They come from designing habits that are easy to continue and resilient when life gets in the way."
 publishedAt: "2026-01-17"
-author: "Habbit Runner Team"
+author: "Habit Runner Team"
 keywords: "habit streak, build habit streak, maintain streak, long-term habit streak, streak tips"
 readingTimeMinutes: 6
 coverImage: /blog/how-to-build-habit-streak.svg
@@ -42,7 +42,7 @@ There's a difference between adjusting the minimum and not doing the habit at al
 
 Some habit tracking apps include a **freeze day** mechanism. You flag a day as frozen and the streak continues without requiring a completion. This is designed for genuine exceptions — illness, a day of travel with no realistic opportunity, a scheduled rest day for an exercise habit.
 
-Habbit Runner has a freeze feature built in. You tap the snowflake icon on a habit, and that day doesn't count against your streak. Used sparingly, it prevents a single exceptional day from erasing weeks of real work.
+Habit Runner has a freeze feature built in. You tap the snowflake icon on a habit, and that day doesn't count against your streak. Used sparingly, it prevents a single exceptional day from erasing weeks of real work.
 
 The key word is sparingly. Freeze days should be rare. If you're using one every week, the habit schedule needs to be revised, not protected.
 
@@ -84,4 +84,4 @@ Either drop the minimum completion level before your trip (so something small st
 
 ---
 
-*Habbit Runner tracks your streaks and gives you freeze days for the times life makes it genuinely impossible to complete a habit. [Start tracking →](/)*
+*Habit Runner tracks your streaks and gives you freeze days for the times life makes it genuinely impossible to complete a habit. [Start tracking →](/)*

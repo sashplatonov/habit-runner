@@ -30,7 +30,7 @@
 </script>
 
 <svelte:head>
-  <title>New Habit - Habbit Runner</title>
+  <title>New Habit - Habit Runner</title>
 </svelte:head>
 
 <HabitForm mode="create" allHabits={allHabits} onBack={handleBack} onSubmit={handleSubmit} />

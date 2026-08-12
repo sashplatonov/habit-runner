@@ -23,7 +23,7 @@
     },
     publisher: {
       '@type': 'Organization',
-      name: 'Habbit Runner',
+      name: 'Habit Runner',
       url: PUBLIC_SITE_ORIGIN,
       logo: { '@type': 'ImageObject', url: `${PUBLIC_SITE_ORIGIN}/og-image.svg` }
     },
@@ -49,7 +49,7 @@
 </script>
 
 <PublicSeoHead
-  title={post.title + ' — Habbit Runner Blog'}
+  title={post.title + ' — Habit Runner Blog'}
   description={post.description}
   keywords={post.keywords}
   pathname={'/blog/' + post.slug}
@@ -106,7 +106,7 @@
     <div class="mt-8 rounded-[1.5rem] border border-slate-900 bg-slate-950 p-6 text-white shadow-[0_24px_60px_rgba(15,23,42,0.18)] sm:p-8">
       <p class="text-base leading-7 text-slate-300">
         Ready to try one small change?
-        <a href={resolve<'/'>('/', {})} class="ml-1 font-semibold text-emerald-300 underline underline-offset-4">Open Habbit Runner</a>
+        <a href={resolve<'/'>('/', {})} class="ml-1 font-semibold text-emerald-300 underline underline-offset-4">Open Habit Runner</a>
       </p>
     </div>
   </main>

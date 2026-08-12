@@ -2,7 +2,7 @@
 title: "Best Habit Tracker Apps With No Sign-Up Required"
 description: "Tired of creating accounts just to track habits? These habit apps let you start immediately — no email, no sign-up, no friction."
 publishedAt: "2026-03-22"
-author: "Habbit Runner Team"
+author: "Habit Runner Team"
 keywords: "no signup habit tracker, habit tracker no registration, habit app no email, anonymous habit tracking, start habit tracker immediately"
 readingTimeMinutes: 5
 coverImage: /blog/no-signup-habit-tracker.svg
@@ -22,11 +22,11 @@ For many users, a no-sign-up habit tracker is the right default. If you later de
 
 ## Habit Trackers That Require No Registration
 
-### Habbit Runner
+### Habit Runner
 
-Habbit Runner asks you to sign in with Google before you create habits, then keeps your progress ready when you return.
+Habit Runner asks you to sign in with Google before you create habits, then keeps your progress ready when you return.
 
-You can keep Habbit Runner close on your device; saving habit changes requires a connection.
+You can keep Habit Runner close on your device; saving habit changes requires a connection.
 
 ### Loop Habit Tracker (Android)
 
@@ -57,13 +57,13 @@ For a single-device user, the account limitation is often irrelevant. If you tra
 
 ## Choosing an Account Model
 
-The right account model depends on the product. Habbit Runner uses Google sign-in for the account-based habit, check-in, and streak experience.
+The right account model depends on the product. Habit Runner uses Google sign-in for the account-based habit, check-in, and streak experience.
 
 This is a meaningful distinction from apps that require registration to use even basic features. An optional account model respects that many users don't need sync and shouldn't be required to share personal information to get value from the app.
 
-## Getting Started With Habbit Runner
+## Getting Started With Habit Runner
 
-With Habbit Runner:
+With Habit Runner:
 1. Open [habbit.run](/) in your browser
 2. Sign in with Google
 3. Add your first habit and start tracking
@@ -82,8 +82,8 @@ No — different risks, not higher risks. Without an account, the main risk is d
 
 ### Can I add an account later without losing my existing data?
 
-Habbit Runner does not provide anonymous local habit data to merge. Sign in before creating habits so the service can retain your account data.
+Habit Runner does not provide anonymous local habit data to merge. Sign in before creating habits so the service can retain your account data.
 
 ---
 
-*Habbit Runner: sign in, add your first habit, and start tracking. [Try it now →](/)*
+*Habit Runner: sign in, add your first habit, and start tracking. [Try it now →](/)*

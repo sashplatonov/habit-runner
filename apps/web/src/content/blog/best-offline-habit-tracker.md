@@ -2,7 +2,7 @@
 title: "Best Offline Habit Tracker Apps"
 description: "Compare habit tracker apps by storage model, privacy, and PWA support."
 publishedAt: "2026-03-14"
-author: "Habbit Runner Team"
+author: "Habit Runner Team"
 keywords: "offline habit tracker, habit tracker without internet, habit tracker comparison, pwa habit tracker"
 readingTimeMinutes: 8
 coverImage: /blog/best-offline-habit-tracker.svg
@@ -24,9 +24,9 @@ Local-only habit trackers store all data on your device. Cloud-backed trackers r
 
 ## Top Offline Habit Tracker Options
 
-### Habbit Runner (Free)
+### Habit Runner (Free)
 
-Habbit Runner keeps habits, check-ins, and progress review with your signed-in account.
+Habit Runner keeps habits, check-ins, and progress review with your signed-in account.
 
 When you reconnect, a pull-push-pull sync cycle reconciles your local changes with the server using last-write-wins conflict resolution. Web push notifications work through the browser without a native app.
 
@@ -62,15 +62,15 @@ Best for: Android users who want maximum privacy with no cloud sync at all.
 
 ## How to Choose an Offline Habit Tracker
 
-If you use multiple devices or want cross-device access, choose an app with a supported account-backed data model. Habbit Runner provides that when you are signed in; Loop is a local-only option for one device.
+If you use multiple devices or want cross-device access, choose an app with a supported account-backed data model. Habit Runner provides that when you are signed in; Loop is a local-only option for one device.
 
-If you want a free habit tracker that stays available across the devices you use, Habbit Runner is a practical choice.
+If you want a free habit tracker that stays available across the devices you use, Habit Runner is a practical choice.
 
 ## Frequently Asked Questions
 
 ### Can I use a habit tracker without creating an account?
 
-Some apps like Loop require no account at all. Habbit Runner requires an account and connection for multi-device data.
+Some apps like Loop require no account at all. Habit Runner requires an account and connection for multi-device data.
 
 ### Does offline mode mean my data is safe if the app shuts down?
 

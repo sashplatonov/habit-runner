@@ -2,7 +2,7 @@
 title: "Why You Keep Abandoning Habits (And How to Stop)"
 description: "Most habit failures aren't a motivation problem — they're a design problem. Here's how to identify what's actually causing your habits to fall apart and fix it."
 publishedAt: "2026-03-10"
-author: "Habbit Runner Team"
+author: "Habit Runner Team"
 keywords: "why habits fail, stop abandoning habits, habit failure reasons, how to stick to habits, habit design tips"
 readingTimeMinutes: 7
 coverImage: /blog/how-to-stop-abandoning-habits.svg
@@ -78,4 +78,4 @@ Drop it. A habit you've lost interest in isn't a failure — circumstances and p
 
 ---
 
-*Habbit Runner tracks your habits with minimal friction — sign in, log, and review progress in one flow. [Try it free →](/)*
+*Habit Runner tracks your habits with minimal friction — sign in, log, and review progress in one flow. [Try it free →](/)*

@@ -2,7 +2,7 @@
 title: "Best Streak Tracker Apps"
 description: "A practical comparison of the best streak tracker apps — from habit apps with streak counters to dedicated streak tools. Find what fits your routine."
 publishedAt: "2026-01-01"
-author: "Habbit Runner Team"
+author: "Habit Runner Team"
 keywords: "streak tracker app, best streak tracker, habit streak app, streak counter, daily streak habits"
 readingTimeMinutes: 7
 coverImage: /blog/best-streak-tracker-apps.svg
@@ -24,9 +24,9 @@ Not every app with a streak counter is a good streak tracker. The key features t
 
 ## Top Streak Tracker Apps
 
-### Habbit Runner (Free)
+### Habit Runner (Free)
 
-Habbit Runner is built around streaks as a first-class feature. Each habit card shows the current streak count prominently, and the analytics view shows streak history over time. You can see your longest streak alongside your current one.
+Habit Runner is built around streaks as a first-class feature. Each habit card shows the current streak count prominently, and the analytics view shows streak history over time. You can see your longest streak alongside your current one.
 
 The standout feature is **freeze days** — a built-in mechanism to pause a streak for a day without breaking it. This makes streaks resilient rather than brittle. If you travel, get sick, or have an exceptional week, you don't lose months of progress.
 
@@ -72,7 +72,7 @@ Apps that offer some form of streak protection — freeze days, streak shields, 
 
 **For privacy-first users**: compare each product's published account and data-handling model before choosing.
 
-**For cross-device access**: Habbit Runner keeps your streaks available wherever you return to your account.
+**For cross-device access**: Habit Runner keeps your streaks available wherever you return to your account.
 
 **For accountability without gamification**: Loop Habit Tracker keeps it minimal — just the number, no streaks shields or social features.
 
@@ -80,7 +80,7 @@ Apps that offer some form of streak protection — freeze days, streak shields, 
 
 ### What happens to my streak if I miss a day?
 
-It depends on the app. Most apps reset the streak to zero. Apps with freeze days (like Habbit Runner) let you protect the streak from one miss. Apps with streak shields (like some gamified trackers) work similarly.
+It depends on the app. Most apps reset the streak to zero. Apps with freeze days (like Habit Runner) let you protect the streak from one miss. Apps with streak shields (like some gamified trackers) work similarly.
 
 ### Can streak trackers handle weekly habits?
 
@@ -92,4 +92,4 @@ They can be. The research on "don't break the chain" suggests that visible conti
 
 ---
 
-*Habbit Runner tracks your streaks, shows your history, and gives you freeze days for the times life gets in the way. [Try it free →](/)*
+*Habit Runner tracks your streaks, shows your history, and gives you freeze days for the times life gets in the way. [Try it free →](/)*

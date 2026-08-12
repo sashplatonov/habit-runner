@@ -25,8 +25,8 @@
     url: `https://habit-runner.freeddns.org/vs/${competitor.slug}`,
     datePublished: '2026-04-16',
     dateModified: '2026-04-16',
-    author: { '@type': 'Organization', name: 'Habbit Runner', url: 'https://habit-runner.freeddns.org' },
-    publisher: { '@type': 'Organization', name: 'Habbit Runner', url: 'https://habit-runner.freeddns.org' }
+    author: { '@type': 'Organization', name: 'Habit Runner', url: 'https://habit-runner.freeddns.org' },
+    publisher: { '@type': 'Organization', name: 'Habit Runner', url: 'https://habit-runner.freeddns.org' }
   }).replace(/</g, '\\u003c')}</script>
   <script type="application/ld+json">{JSON.stringify({
     '@context': 'https://schema.org',
@@ -49,7 +49,7 @@
         Comparison
       </p>
       <h1 class="mb-4 text-4xl font-semibold tracking-tight text-slate-950 sm:text-5xl">
-        Habbit Runner vs {competitor.name}
+        Habit Runner vs {competitor.name}
       </h1>
       <p class="mx-auto max-w-2xl text-lg leading-8 text-slate-600">{competitor.description}</p>
     </div>
@@ -64,7 +64,7 @@
           <thead>
             <tr class="bg-slate-50 text-left">
               <th class="px-6 py-4 font-semibold text-slate-700">Feature</th>
-              <th class="px-6 py-4 font-semibold text-sky-700">Habbit Runner</th>
+              <th class="px-6 py-4 font-semibold text-sky-700">Habit Runner</th>
               <th class="px-6 py-4 font-semibold text-slate-700">{competitor.name}</th>
             </tr>
           </thead>
@@ -120,7 +120,7 @@
           <article class="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm">
             <h3 class="font-semibold text-slate-900">{feature.name}</h3>
             <dl class="mt-3 grid gap-2 text-sm">
-              <div class="flex items-start justify-between gap-4"><dt class="text-slate-500">Habbit Runner</dt><dd class="text-right font-medium text-slate-800">{feature.habbitRunner === true ? 'Yes' : feature.habbitRunner === false ? 'No' : feature.habbitRunner}</dd></div>
+              <div class="flex items-start justify-between gap-4"><dt class="text-slate-500">Habit Runner</dt><dd class="text-right font-medium text-slate-800">{feature.habbitRunner === true ? 'Yes' : feature.habbitRunner === false ? 'No' : feature.habbitRunner}</dd></div>
               <div class="flex items-start justify-between gap-4"><dt class="text-slate-500">{competitor.name}</dt><dd class="text-right font-medium text-slate-800">{feature.competitor === true ? 'Yes' : feature.competitor === false ? 'No' : feature.competitor}</dd></div>
             </dl>
           </article>
@@ -131,7 +131,7 @@
     <!-- Strengths -->
     <section class="mb-16 grid gap-8 sm:grid-cols-2">
       <div class="rounded-[1.75rem] border border-sky-100 bg-[linear-gradient(135deg,rgba(49,105,255,0.08),rgba(16,179,154,0.08))] p-8 shadow-[0_18px_50px_rgba(15,23,42,0.08)]">
-        <h2 class="mb-4 text-xl font-semibold text-slate-950">Why choose Habbit Runner?</h2>
+        <h2 class="mb-4 text-xl font-semibold text-slate-950">Why choose Habit Runner?</h2>
         <ul class="space-y-3">
           {#each competitor.habbitRunnerStrengths as strength (`${strength}`)}
             <li class="flex items-start gap-2 text-slate-700">
@@ -167,7 +167,7 @@
 
     <!-- CTA -->
     <section class="rounded-[1.75rem] bg-slate-950 px-8 py-10 text-center text-white shadow-[0_24px_60px_rgba(15,23,42,0.2)]">
-      <h2 class="mb-2 text-2xl font-semibold">Try Habbit Runner — Free</h2>
+      <h2 class="mb-2 text-2xl font-semibold">Try Habit Runner — Free</h2>
       <p class="mb-6 text-slate-300">No App Store. No subscription. A clear place to keep your daily practice moving.</p>
       <a
             href={resolve('/', {})}
@@ -180,7 +180,7 @@
     <!-- Internal links -->
     <nav class="mt-10 flex flex-wrap justify-center gap-4 text-sm text-sky-700" aria-label="Related pages">
       <a href={resolve('/features', {})} class="inline-flex min-h-11 items-center hover:underline">All Features</a>
-      <a href={resolve('/about', {})} class="inline-flex min-h-11 items-center hover:underline">About Habbit Runner</a>
+      <a href={resolve('/about', {})} class="inline-flex min-h-11 items-center hover:underline">About Habit Runner</a>
       <a href={resolve('/blog', {})} class="inline-flex min-h-11 items-center hover:underline">Blog</a>
     </nav>
   </div>

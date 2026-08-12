@@ -103,7 +103,7 @@ function registerVersion8Schema(database: Dexie) {
     });
 }
 
-export class HabbitRunnerDb extends Dexie {
+export class HabitRunnerDb extends Dexie {
   habits!: Table<HabitEntity>;
   checkins!: Table<CheckinEntity>;
   pending_reminders!: Table<PendingReminder>;
@@ -237,7 +237,7 @@ export class HabbitRunnerDb extends Dexie {
   }
 }
 
-export const db = new HabbitRunnerDb();
+export const db = new HabitRunnerDb();
 
 export async function addPendingReminder(
   habitId: string,

@@ -1,6 +1,6 @@
 # Backend-first data path
 
-This document replaces the retired offline-sync design notes. Habbit Runner's
+This document replaces the retired offline-sync design notes. Habit Runner's
 current product contract is intentionally simpler: authenticated habit and
 check-in state is owned by the Quarkus API and persisted in PostgreSQL.
 

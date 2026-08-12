@@ -2,7 +2,7 @@
 title: "How to Stay Consistent with Habits When Life Gets Busy"
 description: "Consistency doesn't require perfect conditions. Here's a practical framework for keeping your habits going through busy weeks, travel, and unpredictable schedules."
 publishedAt: "2026-03-02"
-author: "Habbit Runner Team"
+author: "Habit Runner Team"
 keywords: "stay consistent with habits, habit consistency tips, maintain habits when busy, habit routine busy schedule, keep habits during travel"
 readingTimeMinutes: 7
 coverImage: /blog/how-to-stay-consistent-with-habits.svg
@@ -88,4 +88,4 @@ That's normal. Don't treat it as evidence that you've failed. Identify what chan
 
 ---
 
-*Habbit Runner keeps your streaks visible without making the day feel crowded. [Try it free →](/)*
+*Habit Runner keeps your streaks visible without making the day feel crowded. [Try it free →](/)*

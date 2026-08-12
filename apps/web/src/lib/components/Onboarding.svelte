@@ -16,7 +16,7 @@
   <div class="w-full max-w-4xl space-y-8">
     <div class="space-y-3 text-center">
       <Sparkles class="mx-auto text-accent" size={32} aria-hidden="true" />
-      <h1 class="text-3xl font-semibold text-foreground">Habbit Runner is ready</h1>
+      <h1 class="text-3xl font-semibold text-foreground">Habit Runner is ready</h1>
       <p class="text-sm text-muted">
         Research shows starting with <span class="font-bold text-accent">3 habits</span> is optimal for success.
         Choose templates that fit your routine.

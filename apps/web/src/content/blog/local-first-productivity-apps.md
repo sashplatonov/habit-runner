@@ -2,7 +2,7 @@
 title: "Device-First Apps: Why Your Data Belongs on Your Device"
 description: "Device-first software stores your data on your device by default. Here's why that matters, how it works, and which apps use this approach for productivity and habit tracking."
 publishedAt: "2026-03-30"
-author: "Habbit Runner Team"
+author: "Habit Runner Team"
 keywords: "device-first apps, device-first software, device-first productivity, local data storage apps, productivity apps"
 readingTimeMinutes: 7
 coverImage: /blog/local-first-productivity-apps.svg
@@ -49,9 +49,9 @@ Some device-first apps offer optional sync, which moves data to a server by choi
 
 Obsidian stores all notes as plain markdown files on your device. No server required. Sync is available as an optional paid add-on. Your notes are readable files that don't require Obsidian to open — just a text editor.
 
-### Habbit Runner (Habit Tracking)
+### Habit Runner (Habit Tracking)
 
-Habbit Runner is an account-based web app: signed-in habit data and check-ins are available across supported devices, while changes require a connection.
+Habit Runner is an account-based web app: signed-in habit data and check-ins are available across supported devices, while changes require a connection.
 
 ### Bear (Notes — iOS/macOS)
 
@@ -97,4 +97,4 @@ Device-first apps require local backups or optional cloud sync for recovery from
 
 ---
 
-*Habbit Runner is an account-based habit tracker for tracking habits and reviewing progress. [Try it free →](/)*
+*Habit Runner is an account-based habit tracker for tracking habits and reviewing progress. [Try it free →](/)*

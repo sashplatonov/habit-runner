@@ -2,7 +2,7 @@
 title: "Habit Tracker Without Internet: Your Complete Guide"
 description: "Need a habit tracker that works without internet? Here's how offline habit tracking works, what to look for, and the best options available."
 publishedAt: "2026-02-22"
-author: "Habbit Runner Team"
+author: "Habit Runner Team"
 keywords: "habit tracker without internet, offline habit tracking, habit app no wifi, habit tracker airplane mode, no internet habit app"
 readingTimeMinutes: 6
 coverImage: /blog/habit-tracker-without-internet.svg
@@ -54,7 +54,7 @@ In all of these cases, an offline-capable tracker lets you log immediately rathe
 
 ## Offline Habit Trackers Worth Considering
 
-### Habbit Runner
+### Habit Runner
 
 The interface can reopen for repeat visits, but signed-in habit changes need a connection, so this product is not suitable for offline habit logging. [Read the full comparison of offline habit trackers →](/blog/best-offline-habit-tracker)
 
@@ -80,7 +80,7 @@ For native apps, installation from the App Store or Google Play handles offline 
 
 ### Will my habit data still sync when I reconnect?
 
-Yes, if the app supports sync. In Habbit Runner, habit changes are saved through the account system while connected.
+Yes, if the app supports sync. In Habit Runner, habit changes are saved through the account system while connected.
 
 ### Can I receive habit reminders without internet?
 
@@ -92,4 +92,4 @@ For products that save changes while you are away, reconnecting can make those c
 
 ---
 
-*Habbit Runner is a clear place for signed-in habit tracking and progress review. [Try it free →](/)*
+*Habit Runner is a clear place for signed-in habit tracking and progress review. [Try it free →](/)*

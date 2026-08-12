@@ -2,7 +2,7 @@
 title: "How to Recover After Breaking a Habit Streak"
 description: "A broken streak doesn't mean you've failed. Here's a calm, practical approach to getting back on track after missing a habit — without losing momentum."
 publishedAt: "2026-04-15"
-author: "Habbit Runner Team"
+author: "Habit Runner Team"
 keywords: "recover after breaking streak, habit streak recovery, restart habit streak, missed habit day, broken habit chain"
 readingTimeMinutes: 5
 coverImage: /blog/how-to-recover-after-breaking-streak.svg
@@ -47,7 +47,7 @@ Restarting the same habit with the same design and expecting different results i
 
 If your habit tracker supports freeze days, use them proactively rather than reactively. If you know a stretch of days is going to be difficult — a trip, a big deadline, a family event — freeze the habit before the miss happens.
 
-In Habbit Runner, you can tap the snowflake icon on any habit to freeze it for that day. The streak continues without requiring a completion. Freeze days are designed for genuine exceptions, not regular use, but they're a practical tool for preserving streaks when circumstances are outside your control.
+In Habit Runner, you can tap the snowflake icon on any habit to freeze it for that day. The streak continues without requiring a completion. Freeze days are designed for genuine exceptions, not regular use, but they're a practical tool for preserving streaks when circumstances are outside your control.
 
 ## Reframe the Restart
 
@@ -69,7 +69,7 @@ The less ceremony around the restart, the easier it is.
 
 ### Should I reset my streak counter or keep the old history?
 
-Keep the history if your app supports it. A reset to zero is accurate for the streak count, but your completion history still shows the work. In Habbit Runner, the analytics view shows your full completion history, not just the current streak.
+Keep the history if your app supports it. A reset to zero is accurate for the streak count, but your completion history still shows the work. In Habit Runner, the analytics view shows your full completion history, not just the current streak.
 
 ### Is it worth tracking a habit again after a long break?
 
@@ -81,4 +81,4 @@ No firm rule, but if you're using freeze days more than once a week, it's usuall
 
 ---
 
-*Habbit Runner shows your full streak history and gives you freeze days for genuine exceptions — so a single miss never has to mean starting over. [Try it free →](/)*
+*Habit Runner shows your full streak history and gives you freeze days for genuine exceptions — so a single miss never has to mean starting over. [Try it free →](/)*

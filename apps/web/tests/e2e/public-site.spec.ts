@@ -25,7 +25,7 @@ test.describe('public site', () => {
     await expect(telegramLink).toHaveAttribute('href', 'https://t.me/habbit_runner_bot?profile');
     await expect(telegramLink).toHaveAttribute('target', '_blank');
     await expect(telegramLink).toHaveCSS('min-height', '44px');
-    await expect(page.getByText('Can I use Habbit Runner from Telegram?', { exact: true })).toBeVisible();
+    await expect(page.getByText('Can I use Habit Runner from Telegram?', { exact: true })).toBeVisible();
 
     await page.goto('/features');
     await expect(page.getByRole('heading', { name: 'Ready where you are' })).toBeVisible();

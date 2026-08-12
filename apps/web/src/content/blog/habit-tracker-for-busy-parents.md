@@ -2,7 +2,7 @@
 title: "Habit Tracker for Busy Parents: Keeping Routines Alive"
 description: "Parenting disrupts every routine. Here's a realistic approach to habit tracking for busy parents — built around the time and energy you actually have."
 publishedAt: "2026-02-02"
-author: "Habbit Runner Team"
+author: "Habit Runner Team"
 keywords: "habit tracker busy parents, habits for parents, parent daily routine, habit tracking with kids, parent self-care habits"
 readingTimeMinutes: 6
 coverImage: /blog/habit-tracker-for-busy-parents.svg
@@ -81,4 +81,4 @@ Don't restart everything at once. Pick the one habit that matters most to you, d
 
 ---
 
-*Habbit Runner is fast and simple enough to use one-handed while managing everything else. [Try it free →](/)*
+*Habit Runner is fast and simple enough to use one-handed while managing everything else. [Try it free →](/)*

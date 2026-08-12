@@ -2,7 +2,7 @@
 title: "Best Habit Tracker Apps for Privacy"
 description: "Not all habit trackers treat your data the same way. Here are the best privacy-friendly habit tracker apps that keep your data local."
 publishedAt: "2026-04-03"
-author: "Habbit Runner Team"
+author: "Habit Runner Team"
 keywords: "private habit tracker, habit tracker privacy, no data collection habit app, local habit tracker, offline habit app"
 readingTimeMinutes: 6
 coverImage: /blog/best-habit-tracker-for-privacy.svg
@@ -25,9 +25,9 @@ No app is perfectly private. But the gap between device-first, no-account apps a
 
 ## Best Privacy-Friendly Habit Tracker Apps
 
-### Habbit Runner (Free)
+### Habit Runner (Free)
 
-Habbit Runner keeps signed-in habit progress with your account.
+Habit Runner keeps signed-in habit progress with your account.
 
 There is no advertising. Data is not sold or used for analytics outside the app itself. Because the app is a PWA, there's no App Store middleman analyzing install behavior.
 
@@ -64,13 +64,13 @@ Not a dedicated habit tracker, but the privacy model is excellent: your data is 
 
 There's a natural overlap between privacy-friendly apps and carefully scoped account-based apps. Minimizing unnecessary data transmission reduces exposure by default.
 
-Habbit Runner was built with this in mind. Its account-based product avoids advertising and data sales; habit changes require a signed-in network connection.
+Habit Runner was built with this in mind. Its account-based product avoids advertising and data sales; habit changes require a signed-in network connection.
 
 ## Frequently Asked Questions
 
 ### Can I use a habit tracker without creating an account?
 
-Yes. Loop Habit Tracker requires no account at all. Habbit Runner requires sign-in for habit data and streaks.
+Yes. Loop Habit Tracker requires no account at all. Habit Runner requires sign-in for habit data and streaks.
 
 ### Do privacy-focused habit trackers still have notifications?
 
@@ -80,9 +80,9 @@ Yes, but there are differences. App-native notifications on Android/iOS work wit
 
 Generally, yes — because the code can be audited. Closed-source apps may make privacy claims that are harder to verify. Loop's open-source codebase, for example, means anyone can confirm there's no hidden data collection.
 
-### Does Habbit Runner sell user data?
+### Does Habit Runner sell user data?
 
-No. Habbit Runner does not sell or share user data. Your signed-in account keeps your habit progress together.
+No. Habit Runner does not sell or share user data. Your signed-in account keeps your habit progress together.
 
 ---
 

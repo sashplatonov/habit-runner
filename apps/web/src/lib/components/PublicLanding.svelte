@@ -36,7 +36,7 @@
             Keep the next good habit close.
           </h1>
           <p class="mt-5 max-w-xl text-base leading-7 text-muted sm:text-lg">
-            Habbit Runner gives your day a clear place to start, a simple way to check in, and enough context to notice what is changing.
+            Habit Runner gives your day a clear place to start, a simple way to check in, and enough context to notice what is changing.
           </p>
           <div class="mt-7 grid gap-3 sm:flex sm:flex-wrap sm:items-center">
             <a

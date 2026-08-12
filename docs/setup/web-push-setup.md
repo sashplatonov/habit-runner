@@ -15,7 +15,7 @@
 
 ## 🔔 What this covers <a name="what-this-covers"></a>
 
-Habbit Runner uses browser push subscriptions for reminder delivery. The current implementation exposes:
+Habit Runner uses browser push subscriptions for reminder delivery. The current implementation exposes:
 - `GET /notifications/vapid-public-key`
 - `POST /notifications/subscribe`
 - `DELETE /notifications/unsubscribe`

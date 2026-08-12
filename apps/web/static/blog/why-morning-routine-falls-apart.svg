@@ -22,7 +22,7 @@
 
   <rect x="88" y="84" width="190" height="38" rx="19" fill="rgba(255, 255, 255, 0.88)" stroke="rgba(31, 41, 55, 0.08)" />
   <circle cx="112" cy="103" r="8" fill="#fb923c" />
-  <text x="130" y="109" fill="#1f2937" font-family="'Avenir Next', 'Segoe UI', 'Trebuchet MS', sans-serif" font-size="13" font-weight="700" letter-spacing="0.18em">HABBIT RUNNER BLOG</text>
+  <text x="130" y="109" fill="#1f2937" font-family="'Avenir Next', 'Segoe UI', 'Trebuchet MS', sans-serif" font-size="13" font-weight="700" letter-spacing="0.18em">HABIT RUNNER BLOG</text>
 
   <text x="88" y="152" fill="rgba(31, 41, 55, 0.56)" font-family="'Avenir Next', 'Segoe UI', 'Trebuchet MS', sans-serif" font-size="14" font-weight="700" letter-spacing="0.24em">MORNING ROUTINES</text>
 

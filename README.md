@@ -1,4 +1,4 @@
-# Habbit Runner
+# Habit Runner
 
 <p align="center">
   <strong>A calmer, server-backed habit tracker for consistent daily follow-through.</strong><br />
@@ -33,7 +33,7 @@
 
 ## 🎯 Product <a id="product"></a>
 
-Habbit Runner is a focused PWA for people who want the next useful action to be
+Habit Runner is a focused PWA for people who want the next useful action to be
 obvious. It surfaces today’s habits, completion context, streak momentum, and
 longer-term progress without turning the product into a dashboard maze.
 
@@ -84,7 +84,7 @@ data is server-backed and is never mixed with the showcase fixture.
 
 ## ✈️ Telegram Mini App
 
-Open [Habbit Runner in Telegram](https://t.me/habbit_runner_bot?profile) when a
+Open [Habit Runner in Telegram](https://t.me/habbit_runner_bot?profile) when a
 quick daily check-in is enough. Link your account when you want to continue with
 the same habits in the web app for a larger view.
 

@@ -1,4 +1,4 @@
-# ProductHunt Launch — Habbit Runner
+# ProductHunt Launch — Habit Runner
 
 ## Tagline (< 60 chars)
 
@@ -12,12 +12,12 @@ A free Progressive Web App for building daily habits. Tracks streaks, completion
 
 Hi ProductHunt! 👋
 
-I built Habbit Runner because every habit app I tried either:
+I built Habit Runner because every habit app I tried either:
 - Made it hard to review progress across devices
 - Locked data behind a subscription
 - Needed a native app install from an app store
 
-Habbit Runner stores account data in a Quarkus backend and keeps the PWA shell installable for fast repeat visits. Habit changes require a connection and are refreshed from the server.
+Habit Runner stores account data in a Quarkus backend and keeps the PWA shell installable for fast repeat visits. Habit changes require a connection and are refreshed from the server.
 
 **What makes it different:**
 - ✅ Clear server-backed data model with predictable degraded behavior

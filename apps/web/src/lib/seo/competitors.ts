@@ -21,12 +21,12 @@ export const COMPETITORS: Record<string, CompetitorData> = {
   habitica: {
     slug: 'habitica',
     name: 'Habitica',
-    tagline: 'Habbit Runner vs Habitica — Productivity Over Gamification',
+    tagline: 'Habit Runner vs Habitica — Productivity Over Gamification',
     description:
-      'Comparing Habbit Runner and Habitica for habit tracking. Habbit Runner focuses on clear progress signals; Habitica adds role-playing game motivation.',
+      'Comparing Habit Runner and Habitica for habit tracking. Habit Runner focuses on clear progress signals; Habitica adds role-playing game motivation.',
     habbitRunnerAngle: 'useful progress signals without gamification noise',
     keywords:
-      'habitica vs habbit runner, habitica alternative, habit tracker no gamification',
+      'habitica vs habit runner, habitica alternative, habit tracker no gamification',
     features: [
       { name: 'Daily workflow', habbitRunner: 'Focused habit check-ins', competitor: 'Tasks, habits, and rewards' },
       { name: 'Reminders', habbitRunner: true, competitor: true },
@@ -51,14 +51,14 @@ export const COMPETITORS: Record<string, CompetitorData> = {
       'A private account experience without advertising'
     ],
     verdict:
-      'Choose Habitica if social gamification and RPG mechanics keep you engaged. Choose Habbit Runner if you want clean data analytics and no subscription pressure.'
+      'Choose Habitica if social gamification and RPG mechanics keep you engaged. Choose Habit Runner if you want clean data analytics and no subscription pressure.'
   },
   'streaks-app': {
     slug: 'streaks-app',
     name: 'Streaks',
-    tagline: 'Habbit Runner vs Streaks App — Cross-Platform vs iOS-Only',
+    tagline: 'Habit Runner vs Streaks App — Cross-Platform vs iOS-Only',
     description:
-      'Comparing Habbit Runner and Streaks for habit tracking. Streaks is built around Apple devices; Habbit Runner focuses on a shared habit view and progress review.',
+      'Comparing Habit Runner and Streaks for habit tracking. Streaks is built around Apple devices; Habit Runner focuses on a shared habit view and progress review.',
     habbitRunnerAngle: 'cross-platform access without iOS lock-in',
     keywords:
       'streaks app alternative, streaks apple alternative, habit tracker across devices',
@@ -85,14 +85,14 @@ export const COMPETITORS: Record<string, CompetitorData> = {
       'Analytics visible across all devices'
     ],
     verdict:
-      'Choose Streaks if you are in the Apple ecosystem and want health data connections. Choose Habbit Runner if you use multiple device types or prefer a free, focused option.'
+      'Choose Streaks if you are in the Apple ecosystem and want health data connections. Choose Habit Runner if you use multiple device types or prefer a free, focused option.'
   },
   beeminder: {
     slug: 'beeminder',
     name: 'Beeminder',
-    tagline: 'Habbit Runner vs Beeminder — Habit Tracking Without Commitment Contracts',
+    tagline: 'Habit Runner vs Beeminder — Habit Tracking Without Commitment Contracts',
     description:
-      'Comparing Habbit Runner and Beeminder for habit building. Beeminder uses financial accountability with pledges; Habbit Runner focuses on positive streak analytics without monetary pressure.',
+      'Comparing Habit Runner and Beeminder for habit building. Beeminder uses financial accountability with pledges; Habit Runner focuses on positive streak analytics without monetary pressure.',
     habbitRunnerAngle: 'positive reinforcement analytics without financial penalties',
     keywords:
       'beeminder alternative, beeminder without pledges, habit tracker no commitment contract, beeminder free alternative',
@@ -120,7 +120,7 @@ export const COMPETITORS: Record<string, CompetitorData> = {
       'Privacy-first: no third-party integrations required'
     ],
     verdict:
-      'Choose Beeminder if external financial accountability is what you need to stay on track. Choose Habbit Runner if you want positive, data-driven habit tracking without monetary pressure.'
+      'Choose Beeminder if external financial accountability is what you need to stay on track. Choose Habit Runner if you want positive, data-driven habit tracking without monetary pressure.'
   }
 };
 

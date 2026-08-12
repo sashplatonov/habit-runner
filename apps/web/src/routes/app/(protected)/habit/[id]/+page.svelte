@@ -304,7 +304,7 @@
 </script>
 
 <svelte:head>
-  <title>Habit Detail - Habbit Runner</title>
+  <title>Habit Detail - Habit Runner</title>
 </svelte:head>
 
 {#if isResolvingHabit}

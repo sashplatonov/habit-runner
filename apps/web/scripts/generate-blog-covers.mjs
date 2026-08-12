@@ -746,7 +746,7 @@ function renderCover(post, preset) {
 
   <rect x="88" y="84" width="190" height="38" rx="19" fill="${hexToRgba('#ffffff', 0.88)}" stroke="${hexToRgba(palette.ink, 0.08)}" />
   <circle cx="112" cy="103" r="8" fill="${palette.accent}" />
-  <text x="130" y="109" fill="${palette.ink}" font-family="${SANS_STACK}" font-size="13" font-weight="700" letter-spacing="0.18em">HABBIT RUNNER BLOG</text>
+  <text x="130" y="109" fill="${palette.ink}" font-family="${SANS_STACK}" font-size="13" font-weight="700" letter-spacing="0.18em">HABIT RUNNER BLOG</text>
 
   <text x="88" y="152" fill="${hexToRgba(palette.ink, 0.56)}" font-family="${SANS_STACK}" font-size="14" font-weight="700" letter-spacing="0.24em">${escapeXml(preset.eyebrow.toUpperCase())}</text>
 

@@ -2,7 +2,7 @@
 title: "Habit Tracker for Inconsistent Schedules: How to Build Routines Without a Fixed Schedule"
 description: "Shift workers, freelancers, and anyone with variable hours needs a different approach to habit tracking. Here's how to build lasting habits without a fixed daily schedule."
 publishedAt: "2026-01-25"
-author: "Habbit Runner Team"
+author: "Habit Runner Team"
 keywords: "habit tracker inconsistent schedule, habit tracking shift work, freelancer habits, variable schedule routine, flexible habit tracking"
 readingTimeMinutes: 6
 coverImage: /blog/habit-tracker-inconsistent-schedule.svg
@@ -79,4 +79,4 @@ For shift workers and people with physically demanding work, sleep and rest are 
 
 ---
 
-*Habbit Runner supports flexible schedules when the account connection is available. [Try it free →](/)*
+*Habit Runner supports flexible schedules when the account connection is available. [Try it free →](/)*

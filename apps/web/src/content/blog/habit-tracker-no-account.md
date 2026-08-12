@@ -2,7 +2,7 @@
 title: "Best Habit Tracker Apps That Don't Require an Account"
 description: "Want to track habits without signing up? These habit tracker apps work without an account — no email, no Google login, no setup friction."
 publishedAt: "2026-01-05"
-author: "Habbit Runner Team"
+author: "Habit Runner Team"
 keywords: "habit tracker no account, habit app without sign up, no login habit tracker, anonymous habit tracking, private habit tracker"
 readingTimeMinutes: 6
 coverImage: /blog/habit-tracker-no-account.svg
@@ -27,9 +27,9 @@ Apps that work without sign-in tend to:
 
 ## Habit Tracker Apps That Work Without an Account
 
-### Habbit Runner (Free)
+### Habit Runner (Free)
 
-Habbit Runner requires a signed-in connection for habit data and streaks. Google sign-in supports the account-based experience across supported devices.
+Habit Runner requires a signed-in connection for habit data and streaks. Google sign-in supports the account-based experience across supported devices.
 
 ### Loop Habit Tracker (Android — Free/Open Source)
 
@@ -61,13 +61,13 @@ These are real trade-offs. For multi-device users, an account can keep habit dat
 
 Even if you eventually want sync, starting without an account is often better. You can evaluate whether the app fits your needs before giving it any personal information. If it doesn't, nothing was shared.
 
-Habbit Runner asks you to sign in before creating habits, then keeps your account progress available across supported devices.
+Habit Runner asks you to sign in before creating habits, then keeps your account progress available across supported devices.
 
 ## Frequently Asked Questions
 
 ### Can I start tracking habits without creating an account?
 
-Yes. Apps like Loop Habit Tracker work without an account from first launch. Habbit Runner requires sign-in for habit logging, streaks, and analytics.
+Yes. Apps like Loop Habit Tracker work without an account from first launch. Habit Runner requires sign-in for habit logging, streaks, and analytics.
 
 ### What happens to my habits if I don't have an account?
 
@@ -75,7 +75,7 @@ Your data is stored locally on your device. It persists as long as you keep the 
 
 ### If I eventually want to sync, do I lose my existing data?
 
-Habbit Runner stores habit data for the signed-in account, rather than merging anonymous local habit data later.
+Habit Runner stores habit data for the signed-in account, rather than merging anonymous local habit data later.
 
 ### Is it less secure to use a habit tracker without an account?
 
@@ -83,4 +83,4 @@ No. In most cases it's more private, since your data never leaves your device. S
 
 ---
 
-*Habbit Runner keeps signed-in habit tracking simple and connected across your routine. [Try it free →](/)*
+*Habit Runner keeps signed-in habit tracking simple and connected across your routine. [Try it free →](/)*

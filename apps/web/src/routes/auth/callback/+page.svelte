@@ -45,7 +45,7 @@
 </script>
 
 <svelte:head>
-  <title>Finishing Login - Habbit Runner</title>
+  <title>Finishing Login - Habit Runner</title>
 </svelte:head>
 
 <div class="flex min-h-screen items-center justify-center bg-bg-primary px-4 text-foreground">

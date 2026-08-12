@@ -59,7 +59,7 @@
       return;
     }
     try {
-      new Notification('Habbit reminder', {
+      new Notification('Habit reminder', {
         body: `Time for: ${habit.name}`,
         tag: `habit-reminder-${habit.id}`
       });

@@ -2,7 +2,7 @@
 title: "Habit Tracker for ADHD: What Actually Works"
 description: "Standard habit trackers often don't work well for ADHD. Here's what to look for in a habit tracking approach that fits how ADHD brains actually work."
 publishedAt: "2026-04-07"
-author: "Habbit Runner Team"
+author: "Habit Runner Team"
 keywords: "habit tracker ADHD, ADHD habit tracking, ADHD routine app, habit app for ADHD, ADHD daily habits"
 readingTimeMinutes: 7
 coverImage: /blog/habit-tracker-for-adhd.svg
@@ -46,7 +46,7 @@ A notification that says "You usually do this after breakfast" is more reliable 
 
 Flexible streaks matter more for ADHD than for most habit tracking contexts. The all-or-nothing streak — where one miss means starting from zero — creates exactly the catastrophizing that makes recovery harder.
 
-Habbit Runner's freeze day feature is particularly useful here. When a day is frozen, the streak continues without requiring completion. This reduces the psychological cost of a single miss and makes it more likely you'll continue rather than quit.
+Habit Runner's freeze day feature is particularly useful here. When a day is frozen, the streak continues without requiring completion. This reduces the psychological cost of a single miss and makes it more likely you'll continue rather than quit.
 
 ### Short-term feedback
 
@@ -86,4 +86,4 @@ Start with one. Seriously. One habit tracked consistently for four weeks is more
 
 ---
 
-*Habbit Runner is simple by design — sign in, log a habit, and review your progress in one focused flow. [Try it free →](/)*
+*Habit Runner is simple by design — sign in, log a habit, and review your progress in one focused flow. [Try it free →](/)*

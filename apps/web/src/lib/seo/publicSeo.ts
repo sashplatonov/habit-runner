@@ -81,7 +81,7 @@ export function applyPublicSeo(config: PublicSeoConfig) {
   upsertPropertyMeta('og:title', config.title);
   upsertPropertyMeta('og:description', config.description);
   upsertPropertyMeta('og:type', 'website');
-  upsertPropertyMeta('og:site_name', 'Habbit Runner');
+  upsertPropertyMeta('og:site_name', 'Habit Runner');
   upsertPropertyMeta('og:url', canonicalUrl);
   upsertPropertyMeta('og:image', ogImageUrl);
 
@@ -95,7 +95,7 @@ export function applyPublicSeo(config: PublicSeoConfig) {
   upsertJsonLd('seo-software-application', {
     '@context': 'https://schema.org',
     '@type': 'SoftwareApplication',
-    name: 'Habbit Runner',
+    name: 'Habit Runner',
     applicationCategory: 'ProductivityApplication',
     operatingSystem: 'Web',
     url: canonicalUrl,
@@ -110,7 +110,7 @@ export function applyPublicSeo(config: PublicSeoConfig) {
   upsertJsonLd('seo-organization', {
     '@context': 'https://schema.org',
     '@type': 'Organization',
-    name: 'Habbit Runner',
+    name: 'Habit Runner',
     url: origin,
     logo: ogImageUrl
   });
@@ -118,7 +118,7 @@ export function applyPublicSeo(config: PublicSeoConfig) {
   upsertJsonLd('seo-website', {
     '@context': 'https://schema.org',
     '@type': 'WebSite',
-    name: 'Habbit Runner',
+    name: 'Habit Runner',
     url: origin,
     potentialAction: {
       '@type': 'SearchAction',

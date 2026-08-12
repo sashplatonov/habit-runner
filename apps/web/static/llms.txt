@@ -1,10 +1,10 @@
-# Habbit Runner
+# Habit Runner
 
-> Habbit Runner is a server-backed habit tracker Progressive Web App (PWA) with streak analytics and push notifications.
+> Habit Runner is a server-backed habit tracker Progressive Web App (PWA) with streak analytics and push notifications.
 
 ## Product Overview
 
-Habbit Runner helps users build and maintain daily habits through clear progress tracking and streak analytics. No app store download required — install directly from any modern browser.
+Habit Runner helps users build and maintain daily habits through clear progress tracking and streak analytics. No app store download required — install directly from any modern browser.
 
 ## Key Features
 
@@ -27,9 +27,9 @@ Habbit Runner helps users build and maintain daily habits through clear progress
 - `/about` — About the product and team
 - `/privacy-policy` — Privacy policy
 - `/blog` — Blog with guides and technical articles
-- `/vs/habitica` — Habbit Runner vs Habitica comparison
-- `/vs/streaks-app` — Habbit Runner vs Streaks App comparison
-- `/vs/beeminder` — Habbit Runner vs Beeminder comparison
+- `/vs/habitica` — Habit Runner vs Habitica comparison
+- `/vs/streaks-app` — Habit Runner vs Streaks App comparison
+- `/vs/beeminder` — Habit Runner vs Beeminder comparison
 
 ## Technology Stack
 
@@ -51,3 +51,4 @@ Free to use. Core habit tracking, streak monitoring, and dashboard analytics ava
 
 Website: https://habit-runner.freeddns.org
 Privacy Policy: https://habit-runner.freeddns.org/privacy-policy
+GitHub: https://github.com/sashplatonov

@@ -14,7 +14,7 @@
 
 ## ⚙️ What lives here <a name="what-lives-here"></a>
 
-This directory contains the active Habbit Runner backend:
+This directory contains the active Habit Runner backend:
 
 - Quarkus 3 application
 - Hibernate ORM with Panache

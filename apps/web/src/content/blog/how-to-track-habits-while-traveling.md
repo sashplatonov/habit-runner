@@ -2,7 +2,7 @@
 title: "How to Track Habits While Traveling"
 description: "Travel breaks routines. Here's how to keep your habits going on the road — with offline-friendly tools, minimal versions of habits, and realistic expectations."
 publishedAt: "2026-01-13"
-author: "Habbit Runner Team"
+author: "Habit Runner Team"
 keywords: "habit tracking while traveling, travel habits, maintain routine travel, offline habit tracker travel, habit routine on the road"
 readingTimeMinutes: 6
 coverImage: /blog/how-to-track-habits-while-traveling.svg
@@ -50,7 +50,7 @@ Trying to maintain home timezone habits while traveling in a +8 hour zone isn't 
 
 Airports, trains, transit hubs, and international roaming all have unreliable connectivity. A habit tracker that requires internet to log check-ins will fail you exactly when you need it most — in the middle of a journey with no signal.
 
-Habbit Runner stores all data locally. You can log habit completions on a plane, in a hotel with bad WiFi, or anywhere without connectivity. When you reconnect, the data syncs automatically.
+Habit Runner stores all data locally. You can log habit completions on a plane, in a hotel with bad WiFi, or anywhere without connectivity. When you reconnect, the data syncs automatically.
 
 This removes the "I'll log it when I get signal" delay, which often becomes "I'll log it when I get home," which often becomes "I'll just restart next week."
 
@@ -81,4 +81,4 @@ Don't try to return to everything at once. Pick two or three habits, do them for
 
 ---
 
-*Habbit Runner keeps the installed app shell available, but habit changes require a connection. [Install it before your next trip →](/)*
+*Habit Runner keeps the installed app shell available, but habit changes require a connection. [Install it before your next trip →](/)*

@@ -2,7 +2,7 @@
 title: "Why Streaks Break — And How to Prevent the Ones That Matter"
 description: "Streaks break for predictable reasons. Understanding why helps you design habits that stay intact through real-life interruptions."
 publishedAt: "2026-03-18"
-author: "Habbit Runner Team"
+author: "Habit Runner Team"
 keywords: "why streaks break, prevent streak breaks, protect habit streak, streak maintenance, habit streak tips"
 readingTimeMinutes: 6
 coverImage: /blog/why-streaks-break.svg
@@ -42,7 +42,7 @@ This is a design problem disguised as a discipline standard.
 
 Some days the habit simply can't be completed. Recovering from surgery, a day of severe illness, a travel itinerary with 18 hours of flying — in these cases, the streak will break unless the app supports some form of freeze or protection.
 
-**Prevention:** Use freeze days proactively. If you know tomorrow is going to be genuinely impossible, freeze the habit the night before. Habbit Runner's freeze feature was built specifically for this: tap the snowflake icon on any habit, and that day doesn't count against the streak.
+**Prevention:** Use freeze days proactively. If you know tomorrow is going to be genuinely impossible, freeze the habit the night before. Habit Runner's freeze feature was built specifically for this: tap the snowflake icon on any habit, and that day doesn't count against the streak.
 
 ### Loss of interest in the habit
 
@@ -79,4 +79,4 @@ No. The behavior you built during the streak is still there. Restart the same da
 
 ---
 
-*Habbit Runner gives you freeze days, streak history, and a clean view of what's consistent — so streaks are useful without being punishing. [Try it free →](/)*
+*Habit Runner gives you freeze days, streak history, and a clean view of what's consistent — so streaks are useful without being punishing. [Try it free →](/)*

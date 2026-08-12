@@ -2,7 +2,7 @@
 title: "What to Do When Motivation Disappears"
 description: "Motivation is unreliable. Here's how to keep your habits going on the days when you don't feel like doing anything — without forcing it."
 publishedAt: "2026-02-18"
-author: "Habbit Runner Team"
+author: "Habit Runner Team"
 keywords: "motivation disappears habits, habit without motivation, low motivation days, staying consistent without motivation, habit on bad days"
 readingTimeMinutes: 6
 coverImage: /blog/what-to-do-when-motivation-disappears.svg
@@ -83,4 +83,4 @@ Yes. A completed minimum on a bad day is as meaningful as a full completion on a
 
 ---
 
-*Habits done on bad days are often the most important. Habbit Runner tracks your completions without judgment — minimum version fully counts. [Try it free →](/)*
+*Habits done on bad days are often the most important. Habit Runner tracks your completions without judgment — minimum version fully counts. [Try it free →](/)*

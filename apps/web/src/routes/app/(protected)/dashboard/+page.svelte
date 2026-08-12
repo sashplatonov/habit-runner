@@ -717,7 +717,7 @@
 </script>
 
 <svelte:head>
-  <title>Dashboard - Habbit Runner</title>
+  <title>Dashboard - Habit Runner</title>
 </svelte:head>
 
 {#if isInitialHydration}

@@ -25,7 +25,7 @@
 </script>
 
 <PublicSeoHead
-  title="Blog — Habbit Runner"
+  title="Blog — Habit Runner"
   description="Practical guides, comparisons, and notes about habit tracking and everyday routines."
   keywords="habit tracker blog, habit tracking guide, routine planning, consistency"
   pathname="/blog"

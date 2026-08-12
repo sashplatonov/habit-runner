@@ -32,7 +32,7 @@ const forbiddenClaims = [
 ];
 
 const datedClaim = /\b2025\b/;
-const productImplementationClaim = /\b(?:Habbit Runner.{0,100}\b(?:api|backend|server|cache|storage|pwa|progressive web app|service worker)|(?:api|backend|server|cache|storage|pwa|progressive web app|service worker).{0,100}\bHabbit Runner)\b/i;
+const productImplementationClaim = /\b(?:Habit Runner.{0,100}\b(?:api|backend|server|cache|storage|pwa|progressive web app|service worker)|(?:api|backend|server|cache|storage|pwa|progressive web app|service worker).{0,100}\bHabit Runner)\b/i;
 const requiredFrontMatter = ['title', 'description', 'publishedAt', 'author', 'keywords', 'coverImage'];
 const errors = [];
 

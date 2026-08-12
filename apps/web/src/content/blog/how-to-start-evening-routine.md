@@ -2,7 +2,7 @@
 title: "How to Build an Evening Routine That Helps You Wind Down"
 description: "A good evening routine doesn't need to be long. Here's how to design a simple wind-down routine that helps you sleep better and prepare for the next day."
 publishedAt: "2026-02-06"
-author: "Habbit Runner Team"
+author: "Habit Runner Team"
 keywords: "evening routine, nighttime routine habits, wind down routine, evening habits for better sleep, bedtime routine tips"
 readingTimeMinutes: 7
 coverImage: /blog/how-to-start-evening-routine.svg
@@ -96,4 +96,4 @@ Yes. Tracking the routine components as habits is a practical way to stay consis
 
 ---
 
-*Habbit Runner makes it easy to check in on your habits at the end of the day — quick and out of the way. [Try it free →](/)*
+*Habit Runner makes it easy to check in on your habits at the end of the day — quick and out of the way. [Try it free →](/)*

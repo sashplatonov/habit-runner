@@ -2,7 +2,7 @@
 title: "Best Minimalist Habit Tracker Apps"
 description: "Most habit apps are overbuilt. These minimalist habit trackers cut the noise and help you focus on showing up every day."
 publishedAt: "2026-02-10"
-author: "Habbit Runner Team"
+author: "Habit Runner Team"
 keywords: "minimalist habit tracker, simple habit tracking app, clean habit tracker, habit tracker without clutter, minimal productivity app"
 readingTimeMinutes: 6
 coverImage: /blog/minimalist-habit-tracker.svg
@@ -26,9 +26,9 @@ That last point matters more than it seems. If an app takes three seconds to ope
 
 ## Best Minimalist Habit Tracker Apps
 
-### Habbit Runner (Free)
+### Habit Runner (Free)
 
-Habbit Runner opens directly to your habit list. The UI is clean — habits, streaks, and a checkbox or tap to complete. No tutorials, no onboarding wizard, no forced setup.
+Habit Runner opens directly to your habit list. The UI is clean — habits, streaks, and a checkbox or tap to complete. No tutorials, no onboarding wizard, no forced setup.
 
 The main view stays focused on today's habits, while progress details are there when you want them.
 
@@ -62,9 +62,9 @@ The test: if you stopped using the app tomorrow, would the habit survive? If the
 
 The right minimalist app depends on your platform and what you need beyond "log the habit":
 
-- **iOS**: Streaks for an Apple-focused experience, or Habbit Runner for a shared routine
-- **Android**: Loop for open-source no-frills, or Habbit Runner
-- **Desktop or tablet**: Habbit Runner for the same habit view across your routine
+- **iOS**: Streaks for an Apple-focused experience, or Habit Runner for a shared routine
+- **Android**: Loop for open-source no-frills, or Habit Runner
+- **Desktop or tablet**: Habit Runner for the same habit view across your routine
 - **No device preference**: Paper habit tracker if screen fatigue is a real issue
 
 If you track habits on multiple devices and want the same minimal experience everywhere, a cross-platform PWA is the clearest choice.
@@ -73,7 +73,7 @@ If you track habits on multiple devices and want the same minimal experience eve
 
 ### Can a simple habit tracker still show analytics?
 
-Yes. Minimalist doesn't mean data-free. Loop shows a history grid and charts. Habbit Runner includes streak history and completion analytics. The difference is that analytics are available without cluttering the main tracking view.
+Yes. Minimalist doesn't mean data-free. Loop shows a history grid and charts. Habit Runner includes streak history and completion analytics. The difference is that analytics are available without cluttering the main tracking view.
 
 ### How many habits should I track at once?
 
@@ -85,4 +85,4 @@ On modern devices, yes — especially for something as simple as logging a habit
 
 ---
 
-*Habbit Runner is designed to stay out of your way. Open it, check your habits, close it. [Try it free →](/)*
+*Habit Runner is designed to stay out of your way. Open it, check your habits, close it. [Try it free →](/)*

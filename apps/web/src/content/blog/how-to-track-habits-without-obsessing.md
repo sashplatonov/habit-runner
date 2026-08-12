@@ -2,7 +2,7 @@
 title: "How to Track Habits Without Becoming Obsessed with the App"
 description: "Habit tracking is a tool, not a goal. Here's how to use it productively without letting the app take over the behavior you're trying to build."
 publishedAt: "2026-02-14"
-author: "Habbit Runner Team"
+author: "Habit Runner Team"
 keywords: "habit tracking tips, avoid habit app obsession, healthy habit tracking, habit tracker balance, mindful habit tracking"
 readingTimeMinutes: 6
 coverImage: /blog/how-to-track-habits-without-obsessing.svg
@@ -82,4 +82,4 @@ Yes. A tracker full of habits you're not actively pursuing creates noise and gui
 
 ---
 
-*Habbit Runner is designed to be fast and minimal — open, tap, close. It doesn't need your attention beyond the habits themselves. [Try it free →](/)*
+*Habit Runner is designed to be fast and minimal — open, tap, close. It doesn't need your attention beyond the habits themselves. [Try it free →](/)*

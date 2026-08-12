@@ -8,7 +8,7 @@ export type TelegramAuthenticationSession = AuthSession & { existingAccount: boo
 export async function authenticateTelegramMiniApp(): Promise<TelegramAuthenticationSession> {
   const webApp = await loadTelegramWebApp();
   if (!webApp || !webApp.initData) {
-    throw new Error('Open this page from the Habbit Runner Telegram Mini App.');
+    throw new Error('Open this page from the Habit Runner Telegram Mini App.');
   }
   const response = await authenticatedFetch(`${API_BASE_URL}/auth/telegram/session`, {
     method: 'POST',

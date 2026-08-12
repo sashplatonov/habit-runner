@@ -106,7 +106,7 @@ export default defineConfig({
       registerType: 'autoUpdate',
       injectRegister: false,
       manifest: {
-        name: 'Habbit Runner',
+        name: 'Habit Runner',
         short_name: 'HabitRunner',
         description: 'Server-backed habit tracking with progress analytics',
         id: '/',
@@ -149,14 +149,14 @@ export default defineConfig({
             src: 'screenshots/desktop.png',
             sizes: '1440x900',
             type: 'image/png',
-            label: 'Habbit Runner — Habit Tracker Dashboard'
+            label: 'Habit Runner — Habit Tracker Dashboard'
           },
           {
             src: 'screenshots/mobile.png',
             sizes: '390x844',
             type: 'image/png',
             form_factor: 'narrow',
-            label: 'Habbit Runner — Mobile View'
+            label: 'Habit Runner — Mobile View'
           }
         ]
       }

@@ -2,7 +2,7 @@
 title: "Habit Tracker for Students: Building Routines That Work Around Class Schedules"
 description: "Class schedules, deadlines, and all-nighters make standard habit advice impractical. Here's how students can build consistent habits around an irregular schedule."
 publishedAt: "2026-03-06"
-author: "Habbit Runner Team"
+author: "Habit Runner Team"
 keywords: "habit tracker for students, student daily habits, study routine habits, college habit tracking, student productivity habits"
 readingTimeMinutes: 6
 coverImage: /blog/habit-tracker-for-students.svg
@@ -90,4 +90,4 @@ Use event-based triggers entirely. Anchor every habit to an event that happens i
 
 ---
 
-*Habbit Runner works on any device with a browser; sign in to access your account data. [Try it free →](/)*
+*Habit Runner works on any device with a browser; sign in to access your account data. [Try it free →](/)*

@@ -41,11 +41,11 @@
   <div class="mx-auto flex w-full {maxWidth} items-center gap-4 px-4 py-4 sm:px-6">
     <a href={resolve<'/'>('/', {})} class="group flex flex-shrink-0 items-center gap-3 text-sm font-semibold text-foreground">
       <span class="flex h-11 w-11 items-center justify-center rounded-2xl border border-border bg-bg-card shadow-[0_12px_30px_rgba(15,23,42,0.08)] transition-transform duration-200 group-hover:scale-[1.03]">
-        <img src="/app-icon.svg" alt="Habbit Runner" width="32" height="32" class="h-8 w-8 flex-shrink-0 rounded-xl object-contain" />
+        <img src="/app-icon.svg" alt="Habit Runner" width="32" height="32" class="h-8 w-8 flex-shrink-0 rounded-xl object-contain" />
       </span>
       <span class="hidden sm:block">
         <span class="block text-[10px] uppercase tracking-[0.26em] text-muted">Daily practice</span>
-        <span class="block text-sm font-semibold tracking-tight text-foreground">Habbit Runner</span>
+        <span class="block text-sm font-semibold tracking-tight text-foreground">Habit Runner</span>
       </span>
     </a>
 

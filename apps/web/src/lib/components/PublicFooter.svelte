@@ -11,7 +11,7 @@
 <footer data-theme="cloud" class="border-t border-border/70 bg-[linear-gradient(180deg,rgba(255,255,255,0.18),rgba(244,246,241,0.95))] px-4 py-5 sm:px-6">
   <div class="mx-auto flex w-full {maxWidth} flex-col gap-3 rounded-2xl border border-border bg-bg-card px-4 py-3 shadow-[0_12px_30px_rgba(15,23,42,0.06)] sm:flex-row sm:items-center sm:justify-between sm:px-5">
     <div class="flex items-center gap-3 text-xs text-muted">
-      <span class="font-semibold tracking-tight text-foreground">Habbit Runner</span>
+      <span class="font-semibold tracking-tight text-foreground">Habit Runner</span>
       <span aria-hidden="true" class="text-border-hover">•</span>
       <span>&copy; {new Date().getFullYear()}</span>
     </div>
