@@ -95,7 +95,7 @@
         bind:value={description}
         maxlength={MAX_HABIT_DESCRIPTION_LENGTH}
         rows="6"
-        aria-describedby="habit-description-count"
+        aria-describedby={errors.description ? 'habit-description-count habit-description-error' : 'habit-description-count'}
         aria-invalid={Boolean(errors.description)}
         placeholder="Brief description… Supports **bold**, *italic*, and lists."
         class="w-full resize-none overflow-y-auto rounded-lg border border-border bg-bg-secondary px-3 py-2.5 text-sm text-foreground placeholder-border-hover transition-[border-color,box-shadow] focus:border-accent/50 focus:shadow-[0_0_12px_var(--glow)]"
@@ -105,7 +105,7 @@
         <span>{description.length} / {MAX_HABIT_DESCRIPTION_LENGTH} characters</span>
         <span>{descriptionLimitMessage}</span>
       </p>
-      <FieldMessage message={errors.description} tone="error" class="mt-1" />
+      <FieldMessage id="habit-description-error" message={errors.description} tone="error" class="mt-1" />
     </div>
   </div>
   </div>

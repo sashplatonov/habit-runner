@@ -93,6 +93,7 @@ describe('HabitForm', () => {
 
     expect(onSubmit).not.toHaveBeenCalled();
     expect(description.getAttribute('aria-invalid')).toBe('true');
+    expect(description.getAttribute('aria-describedby')).toBe('habit-description-count habit-description-error');
     expect(screen.getAllByText('Max 8000 characters')).toHaveLength(2);
     await waitFor(() => {
       expect(document.activeElement).toBe(description);
