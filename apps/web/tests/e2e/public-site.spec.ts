@@ -1,0 +1,42 @@
+import { expect, test, type Page } from '@playwright/test';
+
+async function expectNoHorizontalOverflow(page: Page) {
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+}
+
+test.describe('public site', () => {
+  test('offers a clear demo path from the landing page', async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name === 'telegram-webview', 'Telegram launches use the Mini App entry flow.');
+
+    await page.goto('/');
+    await expect(page.getByRole('heading', { name: 'Keep the next good habit close.' })).toBeVisible();
+    const demoLink = page.getByRole('link', { name: 'Open the interactive demo' });
+    await expect(demoLink).toBeVisible();
+    await expect(demoLink).toHaveCSS('min-height', '44px');
+    await demoLink.click();
+    await expect(page).toHaveURL(/\/showcase$/);
+  });
+
+  test('keeps the public shell usable on compact screens', async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name === 'desktop', 'This assertion targets compact layouts.');
+
+    await page.goto('/blog');
+    await expect(page.getByRole('heading', { name: 'Blog' })).toBeVisible();
+    await expectNoHorizontalOverflow(page);
+
+    const menu = page.getByRole('button', { name: 'Open navigation menu' });
+    await menu.click();
+    await expect(page.getByRole('navigation', { name: 'Mobile navigation' })).toBeVisible();
+    await page.keyboard.press('Escape');
+    await expect(page.getByRole('button', { name: 'Open navigation menu' })).toBeFocused();
+    await expectNoHorizontalOverflow(page);
+  });
+
+  for (const route of ['/features', '/about', '/habit-tracker', '/streak-tracker', '/daily-routine-planner', '/vs/habitica', '/blog/best-habit-tracker-pwa']) {
+    test(`renders ${route} without public-page overflow`, async ({ page }) => {
+      await page.goto(route);
+      await expect(page.locator('main')).toBeVisible();
+      await expectNoHorizontalOverflow(page);
+    });
+  }
+});

@@ -158,7 +158,7 @@ git commit -m "chore(public): add public claims guard"
 
 ## P1-2: Redesign the landing and shared public shell for decisive, compact use
 
-**Status:** ⬜ Not started
+**Status:** ✅ Completed
 
 **Priority:** P1
 
@@ -191,6 +191,7 @@ launches.
 - Modify `apps/web/src/index.css` and/or `apps/web/src/lib/theme/theme.css`
   only for shared public visual tokens that cannot be expressed through the
   existing token system.
+- Create `apps/web/tests/e2e/public-site.spec.ts`.
 
 ### Work
 

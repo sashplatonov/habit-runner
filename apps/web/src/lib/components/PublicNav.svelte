@@ -12,6 +12,7 @@
 
   let { cta, maxWidth = 'max-w-6xl' }: Props = $props();
   let mobileNavigationOpen = $state(false);
+  let menuButton = $state<HTMLButtonElement>();
 
   const featuresHref = resolve<'/features'>('/features', {});
   const blogHref = resolve<'/blog'>('/blog', {});
@@ -22,9 +23,14 @@
     mobileNavigationOpen = false;
   }
 
+  function closeMobileNavigationAndRestoreFocus() {
+    closeMobileNavigation();
+    menuButton?.focus();
+  }
+
   function handleKeydown(event: KeyboardEvent) {
     if (event.key === 'Escape') {
-      closeMobileNavigation();
+      closeMobileNavigationAndRestoreFocus();
     }
   }
 </script>
@@ -68,6 +74,7 @@
 
     <div class="ml-auto flex items-center gap-2 sm:gap-3">
       <button
+        bind:this={menuButton}
         type="button"
         class="inline-flex min-h-11 min-w-11 items-center justify-center rounded-full border border-border text-foreground transition-colors hover:border-progress/30 hover:text-progress sm:hidden"
         aria-controls="public-mobile-navigation"
