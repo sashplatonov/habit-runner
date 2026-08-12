@@ -43,6 +43,21 @@ test.describe('public site', () => {
     }
   });
 
+  test('keeps each desktop blog card cover and copy aligned', async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name !== 'desktop', 'This assertion targets the two-column card layout.');
+
+    await page.goto('/blog');
+    const card = page.getByTestId('blog-post-card').first();
+    const cover = card.locator('img');
+    const copy = card.getByTestId('blog-post-card-copy');
+    const [coverBox, copyBox] = await Promise.all([cover.boundingBox(), copy.boundingBox()]);
+
+    expect(coverBox).not.toBeNull();
+    expect(copyBox).not.toBeNull();
+    expect(copyBox!.x).toBeGreaterThan(coverBox!.x);
+    expect(Math.abs(copyBox!.y - coverBox!.y)).toBeLessThan(2);
+  });
+
   for (const route of ['/features', '/about', '/habit-tracker', '/streak-tracker', '/daily-routine-planner', '/vs/habitica', '/vs/streaks-app', '/vs/beeminder', '/blog', '/blog/best-habit-tracker-pwa']) {
     test(`renders ${route} without public-page overflow`, async ({ page }) => {
       await page.goto(route);

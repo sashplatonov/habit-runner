@@ -76,20 +76,22 @@
 
     <div class="mt-8 grid gap-3 sm:grid-cols-2">
       {#each remainingPosts as post (post.id)}
-        <article class="grid gap-4 rounded-[1.5rem] border border-slate-200/80 bg-white/92 p-4 shadow-sm transition-[transform,border-color] hover:-translate-y-0.5 hover:border-slate-300 sm:grid-cols-[9rem_1fr] sm:items-start sm:p-5">
+        <article data-testid="blog-post-card" class="grid gap-4 rounded-[1.5rem] border border-slate-200/80 bg-white/92 p-4 shadow-sm transition-[transform,border-color] hover:-translate-y-0.5 hover:border-slate-300 sm:grid-cols-[9rem_1fr] sm:items-start sm:p-5">
           {#if post.coverImage}
-            <a href={resolve<'/blog/[slug]'>('/blog/[slug]', { slug: post.slug })} aria-label={`Read ${post.title}`}>
+            <a href={resolve<'/blog/[slug]'>('/blog/[slug]', { slug: post.slug })} aria-label={`Read ${post.title}`} class="sm:row-span-3">
               <img src={post.coverImage} alt="" class="aspect-[1200/630] w-full rounded-xl object-cover" loading="lazy" width="1200" height="630" />
             </a>
           {/if}
-          <a href={resolve<'/blog/[slug]'>('/blog/[slug]', { slug: post.slug })}>
-            <h2 class="text-lg font-semibold leading-tight text-slate-900 hover:text-emerald-700 transition-colors">
-              {post.title}
-            </h2>
-          </a>
-          <p class="mt-2 line-clamp-3 text-sm leading-6 text-slate-600">{post.description}</p>
-          <div class="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-400">
-            <span>{formatDate(post.publishedAt)}</span><span>{post.readingTimeMinutes} min read</span>
+          <div data-testid="blog-post-card-copy" class="min-w-0">
+            <a href={resolve<'/blog/[slug]'>('/blog/[slug]', { slug: post.slug })}>
+              <h2 class="text-lg font-semibold leading-tight text-slate-900 transition-colors hover:text-emerald-700">
+                {post.title}
+              </h2>
+            </a>
+            <p class="mt-2 line-clamp-3 text-sm leading-6 text-slate-600">{post.description}</p>
+            <div class="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-400">
+              <span>{formatDate(post.publishedAt)}</span><span>{post.readingTimeMinutes} min read</span>
+            </div>
           </div>
         </article>
       {/each}
