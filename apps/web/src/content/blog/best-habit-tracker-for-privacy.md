@@ -25,9 +25,9 @@ No app is perfectly private. But the gap between device-first, no-account apps a
 
 ## Best Privacy-Friendly Habit Tracker Apps
 
-### Habbit Runner (PWA — Free)
+### Habbit Runner (Free)
 
-Habbit Runner stores signed-in habit data in the account system; the PWA shell is cached for repeat visits.
+Habbit Runner keeps signed-in habit progress with your account.
 
 There is no advertising. Data is not sold or used for analytics outside the app itself. Because the app is a PWA, there's no App Store middleman analyzing install behavior.
 
@@ -82,8 +82,8 @@ Generally, yes — because the code can be audited. Closed-source apps may make 
 
 ### Does Habbit Runner sell user data?
 
-No. Habbit Runner does not sell or share user data. Habit data for signed-in accounts is handled by the service account system.
+No. Habbit Runner does not sell or share user data. Your signed-in account keeps your habit progress together.
 
 ---
 
-*Track habits with a account-based PWA. No ads and no data selling. [Try it free →](/)*
+*Track habits with a clear account experience. No ads and no data selling. [Try it free →](/)*

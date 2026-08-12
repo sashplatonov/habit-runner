@@ -66,10 +66,9 @@
             </p>
           </div>
           <div class="rounded-[1.5rem] border border-slate-200/80 bg-white/92 p-5 shadow-[0_14px_38px_rgba(15,23,42,0.06)]">
-            <p class="text-sm font-semibold text-slate-900">Progressive Web App</p>
+            <p class="text-sm font-semibold text-slate-900">Fits your routine</p>
             <p class="mt-2 text-xs text-slate-600">
-              Install directly from your browser. No App Store required. Works on Android, iOS
-              (Safari 16.4+), and desktop Chrome/Edge.
+              Keep it close on the devices you use, and add it to your home screen when that is useful.
             </p>
           </div>
           <div class="rounded-[1.5rem] border border-slate-200/80 bg-white/92 p-5 shadow-[0_14px_38px_rgba(15,23,42,0.06)]">

@@ -24,9 +24,9 @@ Local-only habit trackers store all data on your device. Cloud-backed trackers r
 
 ## Top Offline Habit Tracker Options
 
-### Habbit Runner (PWA — Free)
+### Habbit Runner (Free)
 
-Habbit Runner is built around a account-based API. Habit data, check-ins, and analytics are loaded from your account.
+Habbit Runner keeps habits, check-ins, and progress review with your signed-in account.
 
 When you reconnect, a pull-push-pull sync cycle reconciles your local changes with the server using last-write-wins conflict resolution. Web push notifications work through the browser without a native app.
 
@@ -64,7 +64,7 @@ Best for: Android users who want maximum privacy with no cloud sync at all.
 
 If you use multiple devices or want cross-device access, choose an app with a supported account-backed data model. Habbit Runner provides that when you are signed in; Loop is a local-only option for one device.
 
-If you're on a tight budget and want cross-platform access from any browser, a PWA like Habbit Runner is the clearest choice — no purchase, no App Store, works everywhere.
+If you want a free habit tracker that stays available across the devices you use, Habbit Runner is a practical choice.
 
 ## Frequently Asked Questions
 

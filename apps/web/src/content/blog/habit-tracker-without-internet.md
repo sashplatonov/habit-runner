@@ -54,7 +54,7 @@ In all of these cases, an offline-capable tracker lets you log immediately rathe
 
 ## Offline Habit Trackers Worth Considering
 
-### Habbit Runner (PWA)
+### Habbit Runner
 
 The interface can reopen for repeat visits, but signed-in habit changes need a connection, so this product is not suitable for offline habit logging. [Read the full comparison of offline habit trackers →](/blog/best-offline-habit-tracker)
 
@@ -88,8 +88,8 @@ App-native reminders on iOS and Android work without internet. PWA web push noti
 
 ### What if I go offline for a week while traveling?
 
-Your local data is intact. When you reconnect, the your saved changes are available after you reconnect. The only thing you might miss is push notifications during the offline period — your your next connected session will show what was saved.
+For products that save changes while you are away, reconnecting can make those changes available again. Notifications may pause while you are offline, so check the product's own guidance before relying on them.
 
 ---
 
-*Habbit Runner is an installable PWA for signed-in, account-based habit tracking. [Install it free →](/)*
+*Habbit Runner is a clear place for signed-in habit tracking and progress review. [Try it free →](/)*

@@ -29,7 +29,7 @@ The difference isn't technical obscurity. It affects whether you can use the app
 
 ## The Reliability Argument
 
-Cloud apps go down. Services have outages. Companies get acquired or shut down. In all of these cases, a account-based app fails to be available.
+Cloud apps go down. Services have outages. Companies get acquired or shut down. In all of these cases, an account-based app can become unavailable.
 
 Device-first apps have no such single point of failure. The data is on your device. The app functions whether or not the company's servers are online. This is a meaningful reliability difference for tools you use daily.
 
@@ -49,7 +49,7 @@ Some device-first apps offer optional sync, which moves data to a server by choi
 
 Obsidian stores all notes as plain markdown files on your device. No server required. Sync is available as an optional paid add-on. Your notes are readable files that don't require Obsidian to open — just a text editor.
 
-### Habbit Runner (Habit Tracking — PWA)
+### Habbit Runner (Habit Tracking)
 
 Habbit Runner is an account-based web app: signed-in habit data and check-ins are available across supported devices, while changes require a connection.
 
@@ -97,4 +97,4 @@ Device-first apps require local backups or optional cloud sync for recovery from
 
 ---
 
-*Habbit Runner is an installable, account-based PWA for tracking habits and reviewing progress. [Try it free →](/)*
+*Habbit Runner is an account-based habit tracker for tracking habits and reviewing progress. [Try it free →](/)*

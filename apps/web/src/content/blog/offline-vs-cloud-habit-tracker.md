@@ -50,7 +50,7 @@ For anyone who commutes, travels frequently, or just wants reliability, local-on
 
 The main limitation of pure offline apps is that they don't move your data between devices. If you track habits on your phone in the morning and want to check stats on your laptop at lunch, a local-only app won't help.
 
-Some products combine local storage with synchronization; others, such as Habbit Runner, use a account-based model.
+Some products keep changes on one device; others, such as Habbit Runner, keep progress with an account.
 
 Habbit Runner uses an account-based model. Account data is saved when connected, and refresh shows the latest progress. If two sessions change the same item, the app asks you to review it.
 

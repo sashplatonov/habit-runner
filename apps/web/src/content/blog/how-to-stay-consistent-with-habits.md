@@ -88,4 +88,4 @@ That's normal. Don't treat it as evidence that you've failed. Identify what chan
 
 ---
 
-*Habbit Runner tracks your streaks through the account system and keeps the workflow focused. [Try it free →](/)*
+*Habbit Runner keeps your streaks visible without making the day feel crowded. [Try it free →](/)*

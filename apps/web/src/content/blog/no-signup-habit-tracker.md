@@ -24,9 +24,9 @@ For many users, a no-sign-up habit tracker is the right default. If you later de
 
 ### Habbit Runner
 
-Habbit Runner is an installable, account-based PWA. Sign in with Google to create and track habits, view streaks, and use the same account across supported devices.
+Habbit Runner asks you to sign in with Google before you create habits, then keeps your progress ready when you return.
 
-The PWA can be added to your home screen; habit data and mutations require an authenticated connection.
+You can keep Habbit Runner close on your device; saving habit changes requires a connection.
 
 ### Loop Habit Tracker (Android)
 
@@ -68,7 +68,7 @@ With Habbit Runner:
 2. Sign in with Google
 3. Add your first habit and start tracking
 
-The PWA does not require an app-store installation. The service stores habits and streaks for your signed-in account.
+There is no extra download step. Your signed-in account keeps habits and streaks together.
 
 ## Frequently Asked Questions
 
@@ -86,4 +86,4 @@ Habbit Runner does not provide anonymous local habit data to merge. Sign in befo
 
 ---
 
-*Habbit Runner: sign in, add your first habit, and start tracking in an installable PWA. [Try it now →](/)*
+*Habbit Runner: sign in, add your first habit, and start tracking. [Try it now →](/)*

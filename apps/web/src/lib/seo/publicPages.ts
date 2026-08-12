@@ -54,12 +54,12 @@ export const PUBLIC_LANDING_SEO = {
     {
       question: 'Do I need to download an app from an app store?',
       answer:
-        'No. Habbit Runner is a Progressive Web App (PWA). You can install it directly from your browser on Android, iOS, and desktop — no App Store required.'
+        'No. You can add Habbit Runner to your home screen when your device offers that option.'
     },
     {
-      question: 'Does it send push notifications without a native app installed?',
+      question: 'Can I get reminders for a habit?',
       answer:
-        'Yes. Web push notifications work through your browser. You can enable reminders for individual habits from the habit settings screen.'
+        'Yes. Add a reminder time to the habits where a timely nudge would help.'
     },
     {
       question: 'How does cross-device refresh work?',
@@ -215,14 +215,14 @@ export const PUBLIC_ABOUT_SEO = {
   description:
     'Learn about Habbit Runner, a habit tracker built for daily consistency, useful progress signals, and privacy-minded design.',
   keywords:
-    'about habbit runner, habit tracker pwa, habit tracking team, habit tracking app',
+    'about habbit runner, habit tracking team, habit tracking app, daily consistency',
   pathname: '/about'
 };
 
 export const PUBLIC_SHOWCASE_SEO = {
   title: 'Habbit Runner Showcase — Try the Real UI Without Sign-In',
   description:
-    'Try the real Habbit Runner dashboard, habit details, editing, check-ins, and progress screens in a temporary in-memory demo with no sign-in required.',
+    'Try the Habbit Runner dashboard, habit details, editing, check-ins, and progress screens in a temporary sample with no sign-in required.',
   keywords:
     'habit tracker showcase, interactive habit dashboard demo, no sign-in habit tracker, streak analytics demo',
   pathname: '/showcase'
@@ -231,7 +231,7 @@ export const PUBLIC_SHOWCASE_SEO = {
 export const PUBLIC_PRIVACY_SEO = {
   title: 'Privacy Policy — Habbit Runner',
   description:
-    'Habbit Runner privacy policy: how we handle your data, Google OAuth, server storage, and push notifications.',
+    'Habbit Runner privacy policy: how we handle account data, advertising, sharing, and reminders.',
   keywords: 'habbit runner privacy policy, habit tracker data privacy, gdpr habit tracker',
   pathname: '/privacy-policy'
 };
@@ -241,6 +241,6 @@ export const PUBLIC_FEATURES_SEO = {
   description:
     'Explore Habbit Runner features: streak tracking, reminders, Google sign-in, daily routine planning, and more.',
   keywords:
-    'habit tracker features, streak tracker features, pwa habit tracker, habit push notifications',
+    'habit tracker features, streak tracker features, habit reminders, daily routine planning',
   pathname: '/features'
 };

@@ -23,20 +23,19 @@ export const COMPETITORS: Record<string, CompetitorData> = {
     name: 'Habitica',
     tagline: 'Habbit Runner vs Habitica — Productivity Over Gamification',
     description:
-      'Comparing Habbit Runner and Habitica for habit tracking. Habbit Runner focuses on clear progress signals; Habitica adds RPG gamification on top of a cloud model.',
+      'Comparing Habbit Runner and Habitica for habit tracking. Habbit Runner focuses on clear progress signals; Habitica adds role-playing game motivation.',
     habbitRunnerAngle: 'useful progress signals without gamification noise',
     keywords:
-      'habitica vs habbit runner, habitica alternative offline, habitica alternative pwa, habit tracker no gamification',
+      'habitica vs habbit runner, habitica alternative, habit tracker no gamification',
     features: [
-      { name: 'Offline support', habbitRunner: 'App shell only', competitor: 'No — requires internet' },
-      { name: 'PWA installable', habbitRunner: true, competitor: 'Limited' },
-      { name: 'Push notifications', habbitRunner: 'Yes — web push', competitor: 'Yes — native' },
+      { name: 'Daily workflow', habbitRunner: 'Focused habit check-ins', competitor: 'Tasks, habits, and rewards' },
+      { name: 'Reminders', habbitRunner: true, competitor: true },
       { name: 'Streak tracking', habbitRunner: 'Yes — current + longest', competitor: 'Yes — via XP streaks' },
       { name: 'Analytics dashboard', habbitRunner: 'Yes — completion rate, trends', competitor: 'Basic' },
       { name: 'Gamification (RPG)', habbitRunner: false, competitor: 'Yes — core feature' },
       { name: 'Multiplayer / social', habbitRunner: false, competitor: 'Yes — guilds, parties' },
-      { name: 'Price', habbitRunner: 'Free', competitor: 'Free + subscription ($4.99/mo)' },
-      { name: 'Cross-device refresh', habbitRunner: 'Yes — when signed in', competitor: 'Cloud-sync always on' }
+      { name: 'Core access', habbitRunner: 'Free', competitor: 'Free tier with optional membership' },
+      { name: 'Account progress', habbitRunner: 'Available when signed in', competitor: 'Available with an account' }
     ],
     competitorStrengths: [
       'Strong social motivation through guilds and party challenges',
@@ -48,8 +47,8 @@ export const COMPETITORS: Record<string, CompetitorData> = {
       'Reliable tracking with a focused daily workflow',
       'Clean analytics focused on data, not fiction',
       'No subscription required for core features',
-      'Installable PWA — no App Store download',
-      'Privacy-first: data stored locally first'
+      'Free core habit tracking',
+      'A private account experience without advertising'
     ],
     verdict:
       'Choose Habitica if social gamification and RPG mechanics keep you engaged. Choose Habbit Runner if you want clean data analytics and no subscription pressure.'
@@ -59,20 +58,18 @@ export const COMPETITORS: Record<string, CompetitorData> = {
     name: 'Streaks',
     tagline: 'Habbit Runner vs Streaks App — Cross-Platform vs iOS-Only',
     description:
-      'Comparing Habbit Runner and Streaks for habit tracking. Streaks is a polished iOS native app; Habbit Runner is a cross-platform web app with progress review.',
+      'Comparing Habbit Runner and Streaks for habit tracking. Streaks is built around Apple devices; Habbit Runner focuses on a shared habit view and progress review.',
     habbitRunnerAngle: 'cross-platform access without iOS lock-in',
     keywords:
-      'streaks app alternative, streaks ios alternative android, streaks app offline alternative, habit tracker cross platform',
+      'streaks app alternative, streaks apple alternative, habit tracker across devices',
     features: [
-      { name: 'Platform support', habbitRunner: 'Any browser — Android, iOS, desktop', competitor: 'iOS / macOS only' },
-      { name: 'Offline support', habbitRunner: 'App shell only', competitor: 'Full — local storage' },
-      { name: 'PWA installable', habbitRunner: true, competitor: 'No — App Store only' },
-      { name: 'HealthKit integration', habbitRunner: false, competitor: 'Yes — deep integration' },
-      { name: 'Push notifications', habbitRunner: 'Yes — web push', competitor: 'Yes — native iOS' },
+      { name: 'Device choice', habbitRunner: 'Use it on the devices in your routine', competitor: 'Apple devices' },
+      { name: 'Habit logging', habbitRunner: 'Focused daily check-ins', competitor: 'Apple-focused habit tracking' },
+      { name: 'Health data connection', habbitRunner: false, competitor: true },
+      { name: 'Reminders', habbitRunner: true, competitor: true },
       { name: 'Streak tracking', habbitRunner: 'Yes — current + longest', competitor: 'Yes — core feature' },
-      { name: 'Cross-device sync', habbitRunner: 'Yes — when signed in', competitor: 'iCloud (Apple only)' },
-      { name: 'Price', habbitRunner: 'Free', competitor: 'Paid (~$4.99 one-time)' },
-      { name: 'Open source', habbitRunner: false, competitor: false }
+      { name: 'Account progress', habbitRunner: 'Available when signed in', competitor: 'Available within the Apple ecosystem' },
+      { name: 'Core access', habbitRunner: 'Free', competitor: 'Paid' }
     ],
     competitorStrengths: [
       'Deep HealthKit integration for automatic health habit logging',
@@ -81,14 +78,14 @@ export const COMPETITORS: Record<string, CompetitorData> = {
       'Excellent widget support on iOS'
     ],
     habbitRunnerStrengths: [
-      'Works on Android, iOS, Windows, Mac, Linux — any device with a browser',
-      'No App Store required — install directly from browser',
+      'Use the same habit view across the devices in your routine',
+      'Keep daily tracking close without an extra purchase',
       'Free with no purchase required',
       'Cross-platform web app with account access',
       'Analytics visible across all devices'
     ],
     verdict:
-      'Choose Streaks if you are in the Apple ecosystem and want deep HealthKit integration. Choose Habbit Runner if you use multiple device types, want Android support, or prefer a free cross-platform option.'
+      'Choose Streaks if you are in the Apple ecosystem and want health data connections. Choose Habbit Runner if you use multiple device types or prefer a free, focused option.'
   },
   beeminder: {
     slug: 'beeminder',
@@ -100,15 +97,14 @@ export const COMPETITORS: Record<string, CompetitorData> = {
     keywords:
       'beeminder alternative, beeminder without pledges, habit tracker no commitment contract, beeminder free alternative',
     features: [
-      { name: 'Offline support', habbitRunner: 'App shell only', competitor: 'No — requires internet' },
-      { name: 'PWA installable', habbitRunner: true, competitor: 'Limited' },
+      { name: 'Daily workflow', habbitRunner: 'Focused habit check-ins', competitor: 'Goal graphs and commitments' },
       { name: 'Financial accountability', habbitRunner: false, competitor: 'Yes — core feature (pledges)' },
       { name: 'Streak tracking', habbitRunner: 'Yes — current + longest', competitor: 'Goal progress graphs' },
-      { name: 'Push notifications', habbitRunner: 'Yes — web push', competitor: 'Yes — derailment alerts' },
+      { name: 'Reminders', habbitRunner: true, competitor: 'Goal alerts' },
       { name: 'Analytics dashboard', habbitRunner: 'Yes — completion rates, trends', competitor: 'Yes — Yellow Brick Road graphs' },
-      { name: 'IFTTT / Zapier integration', habbitRunner: false, competitor: 'Yes' },
-      { name: 'Price', habbitRunner: 'Free', competitor: 'Free tier + $0 pledges possible' },
-      { name: 'Cross-device refresh', habbitRunner: 'Yes — when signed in', competitor: 'Yes — cloud only' }
+      { name: 'External connections', habbitRunner: false, competitor: true },
+      { name: 'Core access', habbitRunner: 'Free', competitor: 'Free goals; paid commitments and optional premium' },
+      { name: 'Account progress', habbitRunner: 'Available when signed in', competitor: 'Available with an account' }
     ],
     competitorStrengths: [
       'Financial accountability is uniquely effective for deadline-driven people',

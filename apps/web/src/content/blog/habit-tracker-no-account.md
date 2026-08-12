@@ -27,7 +27,7 @@ Apps that work without sign-in tend to:
 
 ## Habit Tracker Apps That Work Without an Account
 
-### Habbit Runner (PWA — Free)
+### Habbit Runner (Free)
 
 Habbit Runner requires a signed-in connection for habit data and streaks. Google sign-in supports the account-based experience across supported devices.
 
@@ -55,7 +55,7 @@ Being clear about trade-offs is useful:
 
 **No cross-device access.** You can't check your streaks on a laptop if the data is only on your phone.
 
-These are real trade-offs. For multi-device users, a account-based account model can keep habit data available across supported devices.
+These are real trade-offs. For multi-device users, an account can keep habit data available across the devices they use.
 
 ## Starting Without an Account Is a Good Default
 
@@ -83,4 +83,4 @@ No. In most cases it's more private, since your data never leaves your device. S
 
 ---
 
-*Habbit Runner is an installable, account-based PWA for signed-in habit tracking. [Try it free →](/)*
+*Habbit Runner keeps signed-in habit tracking simple and connected across your routine. [Try it free →](/)*

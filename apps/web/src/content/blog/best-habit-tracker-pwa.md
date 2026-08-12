@@ -96,4 +96,4 @@ Yes. PWAs run in the browser security sandbox. Well-built PWAs (HTTPS, strict Co
 
 ---
 
-*Habbit Runner is an installable PWA backed by a secure API — no app store required. [Install it now →](/)*
+*Habbit Runner gives you a clear place to keep daily habits and review progress. [Try it now →](/)*

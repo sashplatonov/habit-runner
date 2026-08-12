@@ -29,4 +29,10 @@ describe('public content contract', () => {
   it('passes the same public content guard used by the web check', () => {
     expect(() => execFileSync('node', ['scripts/check-public-content.mjs'], { cwd: process.cwd(), stdio: 'pipe' })).not.toThrow();
   });
+
+  it('runs the public content guard from the standard web check', () => {
+    const packageJson = JSON.parse(readFileSync(join(process.cwd(), 'package.json'), 'utf8')) as { scripts: Record<string, string> };
+
+    expect(packageJson.scripts['check:web']).toContain('npm run check:public-content');
+  });
 });

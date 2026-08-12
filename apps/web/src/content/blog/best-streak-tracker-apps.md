@@ -24,7 +24,7 @@ Not every app with a streak counter is a good streak tracker. The key features t
 
 ## Top Streak Tracker Apps
 
-### Habbit Runner (PWA — Free)
+### Habbit Runner (Free)
 
 Habbit Runner is built around streaks as a first-class feature. Each habit card shows the current streak count prominently, and the analytics view shows streak history over time. You can see your longest streak alongside your current one.
 
@@ -72,7 +72,7 @@ Apps that offer some form of streak protection — freeze days, streak shields, 
 
 **For privacy-first users**: compare each product's published account and data-handling model before choosing.
 
-**For cross-platform access**: Habbit Runner as a PWA — the same app works on your phone, tablet, and desktop with the same streak data.
+**For cross-device access**: Habbit Runner keeps your streaks available wherever you return to your account.
 
 **For accountability without gamification**: Loop Habit Tracker keeps it minimal — just the number, no streaks shields or social features.
 

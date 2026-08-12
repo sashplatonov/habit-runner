@@ -26,11 +26,11 @@ That last point matters more than it seems. If an app takes three seconds to ope
 
 ## Best Minimalist Habit Tracker Apps
 
-### Habbit Runner (PWA — Free)
+### Habbit Runner (Free)
 
 Habbit Runner opens directly to your habit list. The UI is clean — habits, streaks, and a checkbox or tap to complete. No tutorials, no onboarding wizard, no forced setup.
 
-Because it's a PWA, it loads quickly even on slow connections. The analytics section is available for when you want it, but the default view is your habits for today.
+The main view stays focused on today's habits, while progress details are there when you want them.
 
 The design philosophy is: get in, log your habit, get out.
 
@@ -62,9 +62,9 @@ The test: if you stopped using the app tomorrow, would the habit survive? If the
 
 The right minimalist app depends on your platform and what you need beyond "log the habit":
 
-- **iOS**: Streaks for native iOS feel, or Habbit Runner PWA for cross-platform access
-- **Android**: Loop for open-source no-frills, or Habbit Runner PWA
-- **Desktop or tablet**: Habbit Runner PWA works in any browser
+- **iOS**: Streaks for an Apple-focused experience, or Habbit Runner for a shared routine
+- **Android**: Loop for open-source no-frills, or Habbit Runner
+- **Desktop or tablet**: Habbit Runner for the same habit view across your routine
 - **No device preference**: Paper habit tracker if screen fatigue is a real issue
 
 If you track habits on multiple devices and want the same minimal experience everywhere, a cross-platform PWA is the clearest choice.

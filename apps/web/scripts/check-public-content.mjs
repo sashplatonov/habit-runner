@@ -10,7 +10,8 @@ const publicRoots = [
   path.join(webRoot, 'src', 'routes'),
   path.join(webRoot, 'src', 'lib', 'components'),
   path.join(webRoot, 'src', 'lib', 'seo'),
-  path.join(webRoot, 'src', 'content', 'blog')
+  path.join(webRoot, 'src', 'content', 'blog'),
+  path.join(webRoot, 'static', 'blog')
 ];
 
 const ignoredRouteFragments = [
@@ -31,6 +32,7 @@ const forbiddenClaims = [
 ];
 
 const datedClaim = /\b2025\b/;
+const productImplementationClaim = /\b(?:Habbit Runner.{0,100}\b(?:api|backend|server|cache|storage|pwa|progressive web app|service worker)|(?:api|backend|server|cache|storage|pwa|progressive web app|service worker).{0,100}\bHabbit Runner)\b/i;
 const requiredFrontMatter = ['title', 'description', 'publishedAt', 'author', 'keywords', 'coverImage'];
 const errors = [];
 
@@ -39,7 +41,7 @@ function collectFiles(root) {
   return entries.flatMap((entry) => {
     const absolute = path.join(root, entry.name);
     if (entry.isDirectory()) return collectFiles(absolute);
-    if (!/\.(?:svelte|ts|md)$/.test(entry.name)) return [];
+    if (!/\.(?:svelte|ts|md|svg)$/.test(entry.name)) return [];
     if (ignoredRouteFragments.some((fragment) => absolute.includes(fragment))) return [];
     return [absolute];
   });
@@ -49,6 +51,9 @@ function addLineErrors(absolute, content) {
   const relative = path.relative(repoRoot, absolute);
   content.split('\n').forEach((line, index) => {
     if (datedClaim.test(line)) errors.push(`${relative}:${index + 1}: expired year claim 2025`);
+    if (productImplementationClaim.test(line)) {
+      errors.push(`${relative}:${index + 1}: product implementation detail in public copy`);
+    }
     for (const pattern of forbiddenClaims) {
       if (pattern.test(line)) {
         errors.push(`${relative}:${index + 1}: implementation-facing public claim matches ${pattern}`);

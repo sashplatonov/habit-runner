@@ -27,7 +27,7 @@
     "check:svelte-keys": "node ./scripts/check-svelte-keys.cjs",
     "check:types": "npm run sync:svelte && svelte-check --tsconfig ./tsconfig.json",
     "check:shared": "npm run lint -w @habbit-runner/shared && npm run build -w @habbit-runner/shared",
-    "check:web": "npm run lint && npm run check:shared && npm run check:types && npm run build",
+    "check:web": "npm run check:public-content && npm run lint && npm run check:shared && npm run check:types && npm run build",
     "prebuild": "if [ \"$SKIP_LINT\" = \"1\" ]; then echo 'skip-lint'; else npm run lint && npm run check:runtime-undefined; fi && npm run build -w @habbit-runner/shared",
     "lint": "npm run check:svelte-keys && npm run check:runtime-undefined && eslint src tests --ext .js,.ts,.svelte --max-warnings 0",
     "lint:fix": "npm run check:runtime-undefined && eslint src tests --ext .js,.ts,.svelte --fix --max-warnings 0",
