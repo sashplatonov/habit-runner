@@ -52,6 +52,20 @@
     } finally { working = false; }
   }
 
+  function openConnectedTelegramMiniApp() {
+    const miniAppUrl = telegramMiniAppUrl();
+    if (!miniAppUrl) {
+      error = 'Telegram launch is not configured for this environment.';
+      return;
+    }
+    const popup = window.open(miniAppUrl, '_blank');
+    if (popup) {
+      popup.opener = null;
+    } else {
+      error = 'Your browser blocked the Telegram window. Use Open Mini App to retry.';
+    }
+  }
+
   async function unlink(provider: AccountProvider) {
     confirmingProvider = provider;
     await tick();
@@ -107,7 +121,7 @@
     <div class="card">
       <div class="card-main"><strong>Telegram</strong><span class="identity">{connection('TELEGRAM')?.connected ? (connection('TELEGRAM')?.displayName ?? 'Connected Telegram user') : 'Not connected'}</span></div>
       {#if connection('TELEGRAM')?.connected}
-        <div class="card-actions"><div class="status-group" aria-label={canDetach('TELEGRAM') ? 'Telegram connected' : 'Telegram connected and required while Google/email is unlinked'}><span class="status-chip connected"><span class="status-dot" aria-hidden="true"></span>Connected</span>{#if !canDetach('TELEGRAM')}<span class="status-chip required" title="Required while Google/email is unlinked">Required</span>{/if}</div>{#if telegramMiniAppUrl()}<a class="mini-app-link" href={telegramMiniAppUrl() ?? undefined} target="_blank" rel="noreferrer">Open Mini App</a>{/if}{#if canDetach('TELEGRAM')}<button class="button" type="button" disabled={working} onclick={() => void unlink('TELEGRAM')}>Unlink</button>{/if}</div>
+        <div class="card-actions"><div class="status-group" aria-label={canDetach('TELEGRAM') ? 'Telegram connected' : 'Telegram connected and required while Google/email is unlinked'}><span class="status-chip connected"><span class="status-dot" aria-hidden="true"></span>Connected</span>{#if !canDetach('TELEGRAM')}<span class="status-chip required" title="Required while Google/email is unlinked">Required</span>{/if}</div>{#if telegramMiniAppUrl()}<button class="mini-app-link" type="button" onclick={openConnectedTelegramMiniApp}>Open Mini App</button>{/if}{#if canDetach('TELEGRAM')}<button class="button" type="button" disabled={working} onclick={() => void unlink('TELEGRAM')}>Unlink</button>{/if}</div>
       {:else}<button class="button primary" type="button" disabled={working} onclick={() => void openTelegramMiniApp()}>Link Telegram</button>{/if}
     </div>
 
@@ -139,7 +153,7 @@
   .confirm::backdrop { background: rgb(15 23 42 / .45); }
   .button { min-height: 44px; border: 1px solid var(--color-border, #cbd5e1); border-radius: .8rem; padding: 0 1rem; cursor: pointer; }
   .primary { background: var(--color-progress, #15803d); color: white; text-align: center; display: inline-flex; align-items: center; justify-content: center; text-decoration: none; }
-  .mini-app-link { color: var(--color-progress, #15803d); font-size: .8rem; font-weight: 700; white-space: nowrap; }
+  .mini-app-link { border: 0; padding: 0; color: var(--color-progress, #15803d); background: transparent; font: inherit; font-size: .8rem; font-weight: 700; white-space: nowrap; cursor: pointer; }
   .error { margin: 0; color: #b91c1c; }
   .error-row { display: flex; align-items: center; justify-content: space-between; gap: .75rem; margin-top: 1rem; }
   .status { margin: .75rem 0 0; color: var(--color-muted, #64748b); font-size: .8rem; }

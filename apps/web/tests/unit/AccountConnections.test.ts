@@ -74,16 +74,17 @@ describe('AccountConnections', () => {
     expect(screen.getByText('Unlink Google/email?')).toBeTruthy();
   });
 
-  it('shows a small Mini App link for an already linked Telegram account', async () => {
+  it('shows a small Mini App button for an already linked Telegram account', async () => {
     getAccountConnections.mockResolvedValue({ connections: [
       { provider: 'GOOGLE', connected: true, displayName: 'person@example.com' },
       { provider: 'TELEGRAM', connected: true, displayName: '@person' }
     ] });
     render(AccountConnections);
 
-    const link = await screen.findByRole('link', { name: 'Open Mini App' });
-    expect(link.getAttribute('href')).toBe('https://t.me/habit_runner_bot?startapp');
-    expect(link.getAttribute('target')).toBe('_blank');
+    const button = await screen.findByRole('button', { name: 'Open Mini App' });
+    await userEvent.setup().click(button);
+    expect(open).toHaveBeenCalledWith('https://t.me/habit_runner_bot?startapp', '_blank');
+    expect(popup.opener).toBeNull();
   });
 
   it('does not offer unlink when Google/email is the only sign-in method', async () => {
