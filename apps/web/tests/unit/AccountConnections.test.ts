@@ -25,7 +25,9 @@ describe('AccountConnections', () => {
       { provider: 'GOOGLE', connected: true, displayName: 'person@example.com' },
       { provider: 'TELEGRAM', connected: false, displayName: null }
     ] });
-    telegramMiniAppUrl.mockImplementation((token: string) => `https://t.me/habit_runner_bot?startapp=${token}`);
+    telegramMiniAppUrl.mockImplementation((token?: string) => token
+      ? `https://t.me/habit_runner_bot?startapp=${token}`
+      : 'https://t.me/habit_runner_bot?startapp');
     startTelegramLink.mockResolvedValue({ token: 'pairing-token' });
     open.mockReturnValue(popup);
     vi.stubGlobal('open', open);
@@ -70,6 +72,18 @@ describe('AccountConnections', () => {
 
     expect(screen.getByRole('dialog').getAttribute('open')).not.toBeNull();
     expect(screen.getByText('Unlink Google/email?')).toBeTruthy();
+  });
+
+  it('shows a small Mini App link for an already linked Telegram account', async () => {
+    getAccountConnections.mockResolvedValue({ connections: [
+      { provider: 'GOOGLE', connected: true, displayName: 'person@example.com' },
+      { provider: 'TELEGRAM', connected: true, displayName: '@person' }
+    ] });
+    render(AccountConnections);
+
+    const link = await screen.findByRole('link', { name: 'Open Mini App' });
+    expect(link.getAttribute('href')).toBe('https://t.me/habit_runner_bot?startapp');
+    expect(link.getAttribute('target')).toBe('_blank');
   });
 
   it('does not offer unlink when Google/email is the only sign-in method', async () => {

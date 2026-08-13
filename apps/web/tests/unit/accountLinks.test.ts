@@ -20,6 +20,7 @@ describe('account links', () => {
   vi.stubEnv('VITE_TELEGRAM_BOT_USERNAME', '@habit_runner_bot');
 
   expect(telegramMiniAppUrl('pairing-token')).toBe('https://t.me/habit_runner_bot?startapp=pairing-token');
+  expect(telegramMiniAppUrl()).toBe('https://t.me/habit_runner_bot?startapp');
   });
 
   it('requires a configured Telegram bot username instead of opening the website outside Telegram', () => {
