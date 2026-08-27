@@ -78,6 +78,17 @@ async function seedSession(page: Page): Promise<void> {
   });
 }
 
+async function openHabitDetails(page: Page): Promise<void> {
+  if (await page.getByRole('button', { name: 'Edit habit' }).isVisible()) {
+    return;
+  }
+  await page
+    .getByRole('article', { name: /Read for ten minutes/ })
+    .getByRole('button')
+    .filter({ hasText: 'Read for ten minutes' })
+    .click();
+}
+
 test.describe.serial('critical habit journey', () => {
   test.beforeEach(async ({ page }) => {
     await seedSession(page);
@@ -93,14 +104,14 @@ test.describe.serial('critical habit journey', () => {
     await page.getByRole('button', { name: 'Create habit' }).last().click();
     await expect(page).toHaveURL(/\/app\/dashboard|\/app\/habit\//);
 
-    await page.getByRole('button', { name: /Read for ten minutes/ }).first().click();
+    await openHabitDetails(page);
     await expect(page.getByText(/Read for ten minutes/).first()).toBeVisible();
 
     await page.goto('/app/stats');
     await expect(page.getByRole('heading', { name: /Simple progress/ })).toBeVisible();
 
     await page.goto('/app/dashboard');
-    await page.getByRole('button', { name: /Read for ten minutes/ }).first().click();
+    await openHabitDetails(page);
     await page.getByRole('button', { name: 'Edit habit' }).click();
     await page.getByLabel('Name *').fill('Read for twenty minutes');
     await page.getByRole('button', { name: 'Save habit' }).last().click();
@@ -151,7 +162,7 @@ test.describe.serial('critical habit journey', () => {
 
   test('shows safe conflict state', async ({ page }) => {
     await page.goto('/app/dashboard');
-    await page.getByRole('button', { name: /Read for ten minutes/ }).first().click();
+    await openHabitDetails(page);
     await page.getByRole('button', { name: 'Edit habit' }).click();
     await page.route(/\/(?:api\/)?habits\//, async (route) => {
       if (route.request().method() === 'PUT') {

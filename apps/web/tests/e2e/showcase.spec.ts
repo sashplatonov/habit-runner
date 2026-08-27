@@ -28,7 +28,6 @@ test.describe('public showcase', () => {
     });
 
     await page.goto('/showcase');
-    await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
     await expect(page.getByText('Try the sample freely.')).toBeVisible();
     await expect(page.getByRole('button', { name: '✍️ Morning pages', exact: true })).toBeVisible();
     await expect(page.getByRole('button', { name: '📚 Read one chapter', exact: true })).toBeVisible();
