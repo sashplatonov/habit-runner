@@ -4,7 +4,7 @@ import type { DashboardPreferences, UserPreferences } from '@habbit-runner/share
 
 const { fetchUserPreferences, saveUserPreferences } = vi.hoisted(() => ({
   fetchUserPreferences: vi.fn<() => Promise<UserPreferences>>(),
-  saveUserPreferences: vi.fn<(preferences: { theme: string; timezone: string; dashboard?: DashboardPreferences }) => Promise<void>>()
+  saveUserPreferences: vi.fn<(preferences: { theme: string; timezone: string; dashboard?: DashboardPreferences }) => Promise<UserPreferences>>()
 }));
 
 vi.mock('$lib/api/theme', () => ({ fetchUserPreferences, saveUserPreferences }));
@@ -35,7 +35,11 @@ function storage(): Storage {
 beforeEach(() => {
   Object.defineProperty(globalThis, 'localStorage', { configurable: true, value: storage() });
   fetchUserPreferences.mockReset();
-  saveUserPreferences.mockReset().mockResolvedValue(undefined);
+  saveUserPreferences.mockReset().mockImplementation(async (preferences) => ({
+    theme: preferences.theme,
+    timezone: preferences.timezone,
+    dashboard: preferences.dashboard ?? defaultPreferences
+  }));
 });
 
 describe('themeStore dashboard preference persistence', () => {
@@ -55,5 +59,52 @@ describe('themeStore dashboard preference persistence', () => {
     expect(saveUserPreferences).toHaveBeenCalledWith(expect.objectContaining({
       dashboard: expect.objectContaining({ sort: 'smart', density: 'compact' })
     }));
+  });
+
+  it('restores server-confirmed list settings after a fresh login with no browser state', async () => {
+    let serverDashboard = defaultPreferences;
+    window.localStorage.setItem('habbitRunner.auth.session', JSON.stringify({ userId: 'user-1' }));
+    fetchUserPreferences.mockImplementation(async () => ({
+      theme: 'cloud', timezone: 'Europe/Belgrade', dashboard: serverDashboard
+    }));
+    saveUserPreferences.mockImplementation(async (preferences) => {
+      serverDashboard = preferences.dashboard ?? defaultPreferences;
+      return { theme: preferences.theme, timezone: preferences.timezone, dashboard: serverDashboard };
+    });
+
+    const firstLogin = createThemeStore();
+    await firstLogin.initialize(true);
+    await firstLogin.setDashboardPreferences({ ...defaultPreferences, sort: 'smart', density: 'compact' });
+
+    window.localStorage.clear();
+    window.localStorage.setItem('habbitRunner.auth.session', JSON.stringify({ userId: 'user-1' }));
+    const secondLogin = createThemeStore();
+    await secondLogin.initialize(true);
+
+    expect(get(secondLogin).dashboard).toMatchObject({ sort: 'smart', density: 'compact' });
+  });
+
+  it('replays an unconfirmed setting change after logging in again', async () => {
+    window.localStorage.setItem('habbitRunner.auth.session', JSON.stringify({ userId: 'user-1' }));
+    fetchUserPreferences.mockResolvedValue({ theme: 'cloud', timezone: 'Europe/Belgrade', dashboard: defaultPreferences });
+    saveUserPreferences.mockRejectedValueOnce(new Error('Temporary API failure'));
+
+    const firstLogin = createThemeStore();
+    await firstLogin.initialize(true);
+    await firstLogin.setDashboardPreferences({ ...defaultPreferences, sort: 'smart', density: 'compact' });
+    await firstLogin.setAuthenticated(false);
+
+    saveUserPreferences.mockImplementation(async (preferences) => ({
+      theme: preferences.theme,
+      timezone: preferences.timezone,
+      dashboard: preferences.dashboard ?? defaultPreferences
+    }));
+    const secondLogin = createThemeStore();
+    await secondLogin.initialize(true);
+
+    expect(saveUserPreferences).toHaveBeenLastCalledWith(expect.objectContaining({
+      dashboard: expect.objectContaining({ sort: 'smart', density: 'compact' })
+    }));
+    expect(get(secondLogin).dashboard).toMatchObject({ sort: 'smart', density: 'compact' });
   });
 });

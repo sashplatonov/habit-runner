@@ -27,7 +27,7 @@ export async function saveUserPreferences(preferences: {
   theme: ThemeId;
   timezone: string;
   dashboard?: DashboardPreferences;
-}): Promise<void> {
+}): Promise<UserPreferences> {
   const response = await authenticatedFetch(
     `${API_BASE_URL}/auth/preferences`,
     {
@@ -39,6 +39,13 @@ export async function saveUserPreferences(preferences: {
   if (!response.ok) {
     throw new Error(`Preferences save failed: ${response.status}`);
   }
+
+  const payload = (await response.json()) as UserPreferences;
+  return {
+    theme: payload.theme,
+    timezone: payload.timezone ?? null,
+    dashboard: normalizeDashboardPreferences(payload.dashboard)
+  };
 }
 
 export async function fetchUserTheme(): Promise<ThemeId | null> {

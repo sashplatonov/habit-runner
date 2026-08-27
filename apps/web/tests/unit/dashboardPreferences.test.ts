@@ -1,7 +1,10 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import {
   DEFAULT_DASHBOARD_PREFERENCES,
+  clearPendingDashboardPreferences,
   normalizeDashboardPreferences,
+  persistPendingDashboardPreferences,
+  readPendingDashboardPreferences,
   readLegacyDashboardPreferences
 } from '$lib/dashboard/preferences';
 import { createDashboardPreferencesStore } from '$lib/stores/dashboardPreferences';
@@ -49,5 +52,19 @@ describe('dashboard preferences', () => {
 
     store.update({ ...get(store), density: 'invalid' as 'comfortable' });
     expect(get(store).density).toBe('comfortable');
+  });
+
+  it('keeps a pending write isolated to its user account', () => {
+    persistPendingDashboardPreferences('user-1', {
+      ...DEFAULT_DASHBOARD_PREFERENCES,
+      sort: 'smart',
+      density: 'compact'
+    });
+
+    expect(readPendingDashboardPreferences('user-1')).toMatchObject({ sort: 'smart', density: 'compact' });
+    expect(readPendingDashboardPreferences('user-2')).toBeNull();
+
+    clearPendingDashboardPreferences('user-1');
+    expect(readPendingDashboardPreferences('user-1')).toBeNull();
   });
 });

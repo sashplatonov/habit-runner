@@ -16,6 +16,8 @@ const LEGACY_KEYS = {
   tags: 'hr_dashboard_tags_v1'
 } as const;
 
+const PENDING_PREFERENCES_PREFIX = 'hr_dashboard_pending_v1:';
+
 function isRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
 }
@@ -79,5 +81,38 @@ export function persistLegacyDashboardPreferences(value: DashboardPreferences): 
     window.localStorage.setItem(LEGACY_KEYS.tags, JSON.stringify(value.tags));
   } catch {
     // The account API remains the source of truth when browser storage is unavailable.
+  }
+}
+
+export function readPendingDashboardPreferences(userId: string | null): DashboardPreferences | null {
+  if (!userId || typeof window === 'undefined') {
+    return null;
+  }
+  const value = readJson(`${PENDING_PREFERENCES_PREFIX}${userId}`);
+  return value === undefined ? null : normalizeDashboardPreferences(value);
+}
+
+export function persistPendingDashboardPreferences(userId: string | null, value: DashboardPreferences): void {
+  if (!userId || typeof window === 'undefined') {
+    return;
+  }
+  try {
+    window.localStorage.setItem(
+      `${PENDING_PREFERENCES_PREFIX}${userId}`,
+      JSON.stringify(normalizeDashboardPreferences(value))
+    );
+  } catch {
+    // The active session still retries the write even when browser storage is unavailable.
+  }
+}
+
+export function clearPendingDashboardPreferences(userId: string | null): void {
+  if (!userId || typeof window === 'undefined') {
+    return;
+  }
+  try {
+    window.localStorage.removeItem(`${PENDING_PREFERENCES_PREFIX}${userId}`);
+  } catch {
+    // A stale outbox entry is harmless because preference updates are idempotent.
   }
 }
