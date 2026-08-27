@@ -104,8 +104,7 @@ export function createThemeStore(): ThemeStore {
     createSnapshot(resolveStoredTheme(), getCurrentUserTimeZone(), false, false, dashboardPreferencesStore.useLegacyFallback())
   );
   let initialized = false, hydrating = false;
-  let preferencePersistQueue = Promise.resolve();
-  let pendingDashboardPreferences: DashboardPreferences | null = null;
+  let preferencePersistQueue = Promise.resolve(), pendingDashboardPreferences: DashboardPreferences | null = null;
   function persistPreferences(): Promise<void> {
     const state = get(store);
     if (!state.isAuthenticated || !state.serverSyncReady) {
@@ -157,14 +156,15 @@ export function createThemeStore(): ThemeStore {
         ? dashboardPreferencesStore.update(pendingDashboardPreferences)
         : serverDashboard;
       store.set(createSnapshot(nextTheme, nextTimezone, true, true, nextDashboard));
-      if (pendingDashboardPreferences) {
-        await persistPreferences();
-      }
+      if (pendingDashboardPreferences) { await persistPreferences(); }
     } catch (error) {
       logClientError('theme.hydrate_failed', 'Failed to hydrate user theme preferences', {
         error: error instanceof Error ? error.message : String(error)
       });
       store.update((current) => createSnapshot(current.theme, current.timezone, true, current.isAuthenticated, current.dashboard));
+      if (pendingDashboardPreferences) {
+        await persistPreferences();
+      }
     } finally {
       hydrating = false;
     }
