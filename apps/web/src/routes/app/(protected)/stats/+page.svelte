@@ -61,41 +61,41 @@
     </EmptyState>
   </div>
 {:else}
-  <div class="px-4 py-5 sm:px-6 lg:px-8">
-    <div class="mx-auto flex max-w-7xl flex-col gap-4">
+  <div class="px-4 py-3 sm:px-6 sm:py-5 lg:px-8">
+    <div class="mx-auto flex max-w-7xl flex-col gap-3 sm:gap-4">
       <Surface
         as="section"
         padding="sm"
-        class="bg-bg-card"
+        class="bg-bg-card p-2.5 sm:p-3"
         style="background: linear-gradient(135deg, var(--bg-card), color-mix(in srgb, var(--bg-card) 84%, var(--progress) 16%));"
       >
-        <div class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+        <div class="flex flex-col gap-2.5 lg:flex-row lg:items-center lg:justify-between">
           <div class="min-w-0 flex-1">
             <div class="flex flex-wrap items-center gap-2">
               <StatusPill tone="progress">
                 <Sparkles size={12} />
                 Progress
               </StatusPill>
-              <h1 class="text-lg font-semibold tracking-tight text-foreground sm:text-xl">
+              <h1 class="line-clamp-1 text-base font-semibold tracking-tight text-foreground sm:text-xl sm:line-clamp-none">
                 Simple progress that pushes you forward.
               </h1>
             </div>
-            <p class="mt-1.5 max-w-3xl text-xs leading-5 text-muted sm:text-sm">
+            <p class="mt-1 max-w-3xl line-clamp-2 text-xs leading-5 text-muted sm:mt-1.5 sm:line-clamp-none sm:text-sm">
               One screen, one answer: how you are moving now, what changed versus the previous window, and where the next small win sits.
             </p>
           </div>
 
-          <div class="flex w-full flex-wrap items-center gap-2 lg:w-auto">
+          <div class="flex w-full items-center gap-2 lg:w-auto">
             <SegmentedControl
               options={windowOptions}
               value={windowId}
               ariaLabel="Statistics window"
-              class="w-full justify-between sm:w-auto"
+              class="min-w-0 flex-1 justify-between sm:w-auto sm:flex-none"
               onChange={(next) => { windowId = next as StatsWindowId; }}
             />
             <a
               href={resolve(appResolve('/app/(protected)/habit/new', {}), {})}
-              class="inline-flex min-h-11 items-center gap-2 rounded-full border border-border bg-bg-card px-3 py-2 text-sm font-medium text-foreground transition-colors hover:border-accent/40 hover:text-accent"
+              class="inline-flex min-h-11 shrink-0 items-center gap-2 rounded-full border border-border bg-bg-card px-3 py-2 text-sm font-medium text-foreground transition-colors hover:border-accent/40 hover:text-accent"
             >
               <Plus size={14} />
               Add habit
@@ -112,7 +112,7 @@
       </Surface>
 
       <section class="grid gap-4 xl:grid-cols-[1.45fr_0.95fr]">
-        <Surface as="article" padding="lg" class="min-w-0">
+        <Surface as="article" padding="lg" class="min-w-0 p-4 sm:p-7">
           <div class="flex items-start justify-between gap-4">
             <div>
               <p class="text-[10px] font-medium uppercase tracking-[0.28em] text-muted">Momentum</p>
@@ -135,8 +135,9 @@
             </StatusPill>
           </div>
 
-          <div class="mt-6 grid gap-4 md:grid-cols-3">
+          <div class="mt-4 grid grid-cols-2 gap-2.5 md:mt-6 md:grid-cols-3 md:gap-4">
             <MetricTile
+              class="p-3 sm:p-4"
               label="Momentum"
               value={snapshot.momentum === null ? '—' : `${snapshot.momentum}%`}
               detail={snapshot.momentum === null
@@ -146,6 +147,7 @@
               icon={Flame}
             />
             <MetricTile
+              class="p-3 sm:p-4"
               label="Weekly progress"
               value={snapshot.weeklyProgress === null ? '—' : `${snapshot.weeklyProgress}%`}
               detail={snapshot.weeklyProgress === null
@@ -155,6 +157,7 @@
               icon={CalendarDays}
             />
             <MetricTile
+              class="p-3 sm:p-4"
               label="Trend"
               value={snapshot.trendDelta === null
                 ? '—'
@@ -171,7 +174,7 @@
             />
           </div>
 
-          <div class="mt-5 grid gap-4 md:grid-cols-2">
+          <div class="mt-4 grid gap-3 md:mt-5 md:gap-4 md:grid-cols-2">
             <Surface as="div" padding="md" class="bg-bg-secondary">
               <div class="flex items-start justify-between gap-3">
                 <div>
@@ -292,7 +295,7 @@
         </div>
       </section>
 
-      <Surface as="section" padding="lg">
+      <Surface as="section" padding="lg" class="p-4 sm:p-7">
         <div class="flex items-start justify-between gap-4">
           <div>
             <p class="text-[10px] font-medium uppercase tracking-[0.28em] text-muted">History</p>
@@ -303,7 +306,7 @@
           </StatusPill>
         </div>
 
-        <div class="mt-6 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+        <div class="mt-4 grid gap-3 md:mt-6 md:grid-cols-2 xl:grid-cols-4">
           {#each snapshot.history as week, weekIndex (week.label + '-' + weekIndex)}
             <div class="rounded-[1.25rem] border border-border bg-bg-secondary p-4">
               <div class="flex items-start justify-between gap-3">

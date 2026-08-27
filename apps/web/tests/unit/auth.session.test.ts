@@ -28,6 +28,33 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
+describe('authenticatedFetch refresh status handling', () => {
+  it('refreshes an expired session when the API returns 401', async () => {
+    let protectedAttempts = 0;
+    let refreshAttempts = 0;
+
+    vi.stubGlobal('fetch', vi.fn(async (input: RequestInfo | URL) => {
+      const url = String(input);
+      if (url.endsWith('/auth/refresh')) {
+        refreshAttempts += 1;
+        return new Response(JSON.stringify({ userId: 'user-1' }), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' }
+        });
+      }
+
+      protectedAttempts += 1;
+      return new Response(null, { status: protectedAttempts === 1 ? 401 : 200 });
+    }));
+
+    const response = await authenticatedFetch('/api/habits');
+
+    expect(response.status).toBe(200);
+    expect(refreshAttempts).toBe(1);
+    expect(protectedAttempts).toBe(2);
+  });
+});
+
 describe('authenticatedFetch', () => {
   it('shares one refresh request across concurrent authentication failures', async () => {
     const protectedAttempts = new Map<string, number>();
@@ -166,6 +193,16 @@ describe('authenticatedFetch', () => {
     const response = await authenticatedFetch('/auth/logout?all=true', { method: 'POST' });
 
     expect(response.status).toBe(403);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not refresh the refresh endpoint after a 401 response', async () => {
+    const fetchMock = vi.fn(async () => new Response(null, { status: 401 }));
+    vi.stubGlobal('fetch', fetchMock);
+
+    const response = await authenticatedFetch('/api/auth/refresh', { method: 'POST' });
+
+    expect(response.status).toBe(401);
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 });

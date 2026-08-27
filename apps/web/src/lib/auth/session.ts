@@ -199,8 +199,9 @@ export async function authenticatedFetch(input: string, init: RequestInit = {}):
   };
 
   let response = await doFetch(headers);
-  if (response.status !== 403 || !shouldRetryWithRefresh(input)) {
-    if (response.status === 403) {
+  const requiresRefresh = response.status === 401 || response.status === 403;
+  if (!requiresRefresh || !shouldRetryWithRefresh(input)) {
+    if (requiresRefresh) {
       clearAuthSession();
     }
     return response;
@@ -216,7 +217,7 @@ export async function authenticatedFetch(input: string, init: RequestInit = {}):
   const retryHeaders = new Headers(init.headers);
   addAuthHeaders(retryHeaders, method, hasBody);
   response = await doFetch(retryHeaders);
-  if (response.status === 403) {
+  if (response.status === 401 || response.status === 403) {
     clearAuthSession();
   }
   return response;

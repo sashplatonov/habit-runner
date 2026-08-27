@@ -17,7 +17,7 @@
   <div class="flex items-start justify-between gap-3">
     <div class="min-w-0">
       <p class="text-[10px] font-medium uppercase tracking-[0.24em] text-muted">{label}</p>
-      <p class="mt-2 text-2xl font-semibold tracking-tight text-foreground">{value}</p>
+      <p class="mt-1 text-2xl font-semibold tracking-tight text-foreground sm:mt-2">{value}</p>
     </div>
     {#if icon}
       {@const Icon = icon}
@@ -27,6 +27,6 @@
     {/if}
   </div>
   {#if detail}
-    <p class="mt-3 text-sm leading-6 text-muted">{detail}</p>
+    <p class="mt-2 line-clamp-2 text-xs leading-5 text-muted sm:mt-3 sm:text-sm sm:leading-6">{detail}</p>
   {/if}
 </div>

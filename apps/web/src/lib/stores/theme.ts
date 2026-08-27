@@ -106,7 +106,7 @@ export function createThemeStore(): ThemeStore {
   let initialized = false;
   let hydrating = false;
   let preferencePersistQueue = Promise.resolve();
-
+  let pendingDashboardPreferences: DashboardPreferences | null = null;
   function persistPreferences(): Promise<void> {
     const state = get(store);
     if (!state.isAuthenticated || !state.serverSyncReady) {
@@ -123,6 +123,9 @@ export function createThemeStore(): ThemeStore {
       .then(async () => {
         try {
           await saveUserPreferences(preferences);
+          if (get(store).dashboard === preferences.dashboard) {
+            pendingDashboardPreferences = null;
+          }
         } catch (error) {
           logClientError('theme.persist_failed', 'Failed to persist user theme preferences', {
             error: error instanceof Error ? error.message : String(error)
@@ -131,7 +134,6 @@ export function createThemeStore(): ThemeStore {
       });
     return preferencePersistQueue;
   }
-
   async function hydrateFromServer() {
     const state = get(store);
     if (!state.isAuthenticated || hydrating) {
@@ -151,8 +153,14 @@ export function createThemeStore(): ThemeStore {
         : state.timezone;
 
       applyTheme(nextTheme);
-      const nextDashboard = dashboardPreferencesStore.hydrate(remotePreferences.dashboard);
+      const serverDashboard = dashboardPreferencesStore.hydrate(remotePreferences.dashboard);
+      const nextDashboard = pendingDashboardPreferences
+        ? dashboardPreferencesStore.update(pendingDashboardPreferences)
+        : serverDashboard;
       store.set(createSnapshot(nextTheme, nextTimezone, true, true, nextDashboard));
+      if (pendingDashboardPreferences) {
+        await persistPreferences();
+      }
     } catch (error) {
       logClientError('theme.hydrate_failed', 'Failed to hydrate user theme preferences', {
         error: error instanceof Error ? error.message : String(error)
@@ -162,7 +170,6 @@ export function createThemeStore(): ThemeStore {
       hydrating = false;
     }
   }
-
   return {
     subscribe: store.subscribe,
     async initialize(isAuthenticated = false) {
@@ -195,6 +202,7 @@ export function createThemeStore(): ThemeStore {
     async setDashboardPreferences(preferences) {
       const state = get(store);
       const dashboard = dashboardPreferencesStore.update(preferences);
+      pendingDashboardPreferences = dashboard;
       store.set(createSnapshot(state.theme, state.timezone, state.serverSyncReady, state.isAuthenticated, dashboard));
       await persistPreferences();
     },
@@ -214,6 +222,7 @@ export function createThemeStore(): ThemeStore {
       }
 
       if (!isAuthenticated) {
+        pendingDashboardPreferences = null;
         const browserTimeZone = getBrowserTimeZone();
         setCurrentUserTimeZone(browserTimeZone);
         store.set(createSnapshot(state.theme, browserTimeZone, false, false, dashboardPreferencesStore.reset()));
