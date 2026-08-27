@@ -22,7 +22,30 @@
 <Surface as="section" padding="sm" class="relative overflow-hidden p-2.5 sm:p-3" ariaLive="polite">
   <div aria-hidden="true" class="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-accent/10 via-accent/60 to-progress/20"></div>
 
-  <div class="relative space-y-2 sm:space-y-3">
+  {#if summary.state !== 'nothing-scheduled'}
+    <div class="relative flex items-center gap-3 sm:hidden">
+      <div class="min-w-0 flex-1">
+        <div class="flex items-center justify-between gap-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted">
+          <span>{summary.title}</span>
+          <span class="truncate text-right tracking-[0.12em]">{summary.progressLabel}</span>
+        </div>
+        <div class="mt-2 h-1.5 overflow-hidden rounded-full bg-border/70">
+          <div
+            class={`h-full rounded-full ${summary.progressTone === 'progress' ? 'bg-progress' : summary.progressTone === 'attention' ? 'bg-attention' : 'bg-accent'}`}
+            style:width={`${summary.progressValue}%`}
+            role="progressbar"
+            aria-label={summary.progressLabel}
+            aria-valuemin="0"
+            aria-valuemax="100"
+            aria-valuenow={summary.progressValue}
+          ></div>
+        </div>
+      </div>
+      <span class="shrink-0 text-lg font-semibold tabular-nums tracking-tight text-foreground">{summary.progressValue}%</span>
+    </div>
+  {/if}
+
+  <div class="relative hidden space-y-3 sm:block">
     <div class="flex flex-wrap items-start justify-between gap-x-3 gap-y-1.5 sm:gap-x-4 sm:gap-y-2">
       <div class="min-w-0">
         <div class="flex flex-wrap items-center gap-x-2 gap-y-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-muted">
