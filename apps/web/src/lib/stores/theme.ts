@@ -103,8 +103,7 @@ export function createThemeStore(): ThemeStore {
   const store = writable(
     createSnapshot(resolveStoredTheme(), getCurrentUserTimeZone(), false, false, dashboardPreferencesStore.useLegacyFallback())
   );
-  let initialized = false;
-  let hydrating = false;
+  let initialized = false, hydrating = false;
   let preferencePersistQueue = Promise.resolve();
   let pendingDashboardPreferences: DashboardPreferences | null = null;
   function persistPreferences(): Promise<void> {
