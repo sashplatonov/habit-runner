@@ -196,6 +196,9 @@ describe('authenticatedFetch', () => {
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
+});
+
+describe('authenticatedFetch endpoint exclusions', () => {
   it('does not refresh the refresh endpoint after a 401 response', async () => {
     const fetchMock = vi.fn(async () => new Response(null, { status: 401 }));
     vi.stubGlobal('fetch', fetchMock);

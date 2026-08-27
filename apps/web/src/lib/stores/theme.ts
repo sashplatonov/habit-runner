@@ -194,9 +194,7 @@ export function createThemeStore(): ThemeStore {
     async setTimezone(timezone) {
       const state = get(store);
       const normalizedTimezone = setCurrentUserTimeZone(timezone);
-      store.set(
-        createSnapshot(state.theme, normalizedTimezone, state.serverSyncReady, state.isAuthenticated, state.dashboard)
-      );
+      store.set(createSnapshot(state.theme, normalizedTimezone, state.serverSyncReady, state.isAuthenticated, state.dashboard));
       await persistPreferences();
     },
     async setDashboardPreferences(preferences) {
@@ -208,11 +206,7 @@ export function createThemeStore(): ThemeStore {
     },
     async recordThemeSelection(themeId) {
       const state = get(store);
-      const themeUsage = {
-        ...state.dashboard.themeUsage,
-        [themeId]: (state.dashboard.themeUsage[themeId] ?? 0) + 1
-      };
-      await this.setDashboardPreferences({ ...state.dashboard, themeUsage });
+      await this.setDashboardPreferences({ ...state.dashboard, themeUsage: { ...state.dashboard.themeUsage, [themeId]: (state.dashboard.themeUsage[themeId] ?? 0) + 1 } });
     },
     async setAuthenticated(isAuthenticated) {
       const state = get(store);
