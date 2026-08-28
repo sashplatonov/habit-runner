@@ -8,7 +8,7 @@ vi.mock('$lib/auth/session', () => ({
   authenticatedFetch: mockAuthenticatedFetch
 }));
 
-import { deleteCheckin, upsertCheckin } from '$lib/api/checkins';
+import { deleteCheckin, fetchAllCheckins, upsertCheckin } from '$lib/api/checkins';
 
 describe('checkins api', () => {
   beforeEach(() => {
@@ -47,5 +47,35 @@ describe('checkins api', () => {
       expect.stringContaining('/checkins/habits/habit-1/dates/2026-07-09'),
       expect.objectContaining({ method: 'DELETE' })
     );
+  });
+
+  it('loads all check-in pages in cursor order', async () => {
+    mockAuthenticatedFetch
+      .mockResolvedValueOnce(new Response(JSON.stringify({
+        items: [{ id: 'checkin-1' }],
+        nextCursor: 'cursor-1'
+      }), { status: 200 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify({
+        items: [{ id: 'checkin-2' }],
+        nextCursor: null
+      }), { status: 200 }));
+
+    await expect(fetchAllCheckins(1)).resolves.toEqual([
+      { id: 'checkin-1' },
+      { id: 'checkin-2' }
+    ]);
+    expect(mockAuthenticatedFetch).toHaveBeenNthCalledWith(
+      2,
+      expect.stringContaining('/checkins/page?limit=1&cursor=cursor-1'),
+      expect.anything()
+    );
+  });
+
+  it('rejects a repeated cursor instead of looping forever', async () => {
+    mockAuthenticatedFetch
+      .mockResolvedValueOnce(new Response(JSON.stringify({ items: [], nextCursor: 'cursor-1' }), { status: 200 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify({ items: [], nextCursor: 'cursor-1' }), { status: 200 }));
+
+    await expect(fetchAllCheckins()).rejects.toThrow('Invalid or repeated check-in cursor');
   });
 });

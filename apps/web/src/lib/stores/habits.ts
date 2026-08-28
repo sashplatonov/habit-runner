@@ -19,7 +19,7 @@ import {
 } from '$lib/api/habits';
 import {
   deleteCheckin as deleteCheckinApi,
-  fetchCheckins,
+  fetchAllCheckins,
   upsertCheckin as upsertCheckinApi
 } from '$lib/api/checkins';
 import { createHabitId } from '$lib/core/habit-id';
@@ -247,7 +247,7 @@ async function refreshRuntimeFromBackend(runtime: HabitsStoreRuntime): Promise<v
   try {
     const [habitResponses, checkinResponses] = await Promise.all([
       fetchHabits(),
-      fetchCheckins()
+      fetchAllCheckins()
     ]);
     replaceRuntimeUserState(runtime, habitResponses, checkinResponses);
   } finally {

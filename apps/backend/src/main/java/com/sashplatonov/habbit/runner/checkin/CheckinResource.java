@@ -46,7 +46,9 @@ public class CheckinResource extends AuthenticatedResourceSupport {
   }
 
   @GET
-  @Operation(summary = "List checkins", description = "Returns up to the default page of checkins for the authenticated user.")
+  @Operation(summary = "List checkins",
+      description = "Legacy compatibility endpoint that returns the complete check-in list for the authenticated user. "
+      + "New clients should use the cursor-based /checkins/page endpoint.")
   @APIResponses({
       @APIResponse(responseCode = "200", description = "Checkins loaded",
           content = @Content(schema = @Schema(implementation = CheckinResponseDto.class))),

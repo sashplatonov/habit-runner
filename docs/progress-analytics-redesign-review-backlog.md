@@ -142,7 +142,7 @@ git commit -m "fix(progress): preserve showcase habit links"
 
 ## PROG-AN-RVW-003: Hydrate web check-ins through the cursor API
 
-**Status:** TODO
+**Status:** DONE
 **Priority:** P2
 **Depends on:** -
 

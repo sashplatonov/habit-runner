@@ -3,7 +3,7 @@ import { get } from 'svelte/store';
 
 const {
   mockFetchHabits,
-  mockFetchCheckins,
+  mockFetchAllCheckins,
   mockCreateHabit,
   mockUpdateHabit,
   mockUpdateHabitStatus,
@@ -13,7 +13,7 @@ const {
   mockSetCurrentUserId
 } = vi.hoisted(() => ({
   mockFetchHabits: vi.fn(),
-  mockFetchCheckins: vi.fn(),
+  mockFetchAllCheckins: vi.fn(),
   mockCreateHabit: vi.fn(),
   mockUpdateHabit: vi.fn(),
   mockUpdateHabitStatus: vi.fn(),
@@ -37,7 +37,7 @@ vi.mock('$lib/api/habits', () => ({
 }));
 
 vi.mock('$lib/api/checkins', () => ({
-  fetchCheckins: mockFetchCheckins,
+  fetchAllCheckins: mockFetchAllCheckins,
   upsertCheckin: mockUpsertCheckin,
   deleteCheckin: mockDeleteCheckin
 }));
@@ -117,7 +117,7 @@ function buildCheckinResponse(overrides: Partial<{
 describe('habits store', () => {
   beforeEach(() => {
     mockFetchHabits.mockReset();
-    mockFetchCheckins.mockReset();
+    mockFetchAllCheckins.mockReset();
     mockCreateHabit.mockReset();
     mockUpdateHabit.mockReset();
     mockUpdateHabitStatus.mockReset();
@@ -131,7 +131,7 @@ describe('habits store', () => {
     mockFetchHabits.mockResolvedValue([
       buildHabitResponse()
     ]);
-    mockFetchCheckins.mockResolvedValue([
+    mockFetchAllCheckins.mockResolvedValue([
       buildCheckinResponse({ date: '2026-07-09' })
     ]);
 
@@ -152,7 +152,7 @@ describe('habits store', () => {
     mockFetchHabits.mockReturnValue(new Promise((resolve) => {
       resolveHabits = resolve;
     }));
-    mockFetchCheckins.mockReturnValue(new Promise((resolve) => {
+    mockFetchAllCheckins.mockReturnValue(new Promise((resolve) => {
       resolveCheckins = resolve;
     }));
 
@@ -172,6 +172,23 @@ describe('habits store', () => {
     expect(hydratedSnapshot.isHydrating).toBe(false);
     expect(hydratedSnapshot.hasHydrated).toBe(true);
     expect(hydratedSnapshot.allHabits).toHaveLength(1);
+  });
+
+  it('does not replace the last snapshot when check-in hydration fails', async () => {
+    mockFetchHabits.mockResolvedValue([buildHabitResponse()]);
+    mockFetchAllCheckins.mockResolvedValue([buildCheckinResponse()]);
+
+    const store = createHabitsStore('test-user');
+    await store.refresh();
+    const previousSnapshot = get(store);
+
+    mockFetchHabits.mockResolvedValue([buildHabitResponse({ name: 'Changed' })]);
+    mockFetchAllCheckins.mockRejectedValue(new Error('Invalid or repeated check-in cursor'));
+
+    await expect(store.refresh()).rejects.toThrow('Invalid or repeated check-in cursor');
+    expect(get(store).allHabits).toEqual(previousSnapshot.allHabits);
+    expect(get(store).allHabits[0].name).toBe('Read');
+    expect(get(store).allHabits[0].completions['2026-07-09T00:00:00Z']).toBe(1);
   });
 
   it('increments from the backend-backed in-memory count on repeated clicks', async () => {
@@ -199,7 +216,7 @@ describe('habits store', () => {
 
   it('updates a habit through the backend and keeps the refreshed habit in store state', async () => {
     mockFetchHabits.mockResolvedValue([buildHabitResponse()]);
-    mockFetchCheckins.mockResolvedValue([]);
+    mockFetchAllCheckins.mockResolvedValue([]);
     mockUpdateHabit.mockResolvedValue(buildHabitResponse({
       name: 'Deep Work',
       dailyTarget: 2,
@@ -219,7 +236,7 @@ describe('habits store', () => {
 
   it('preserves an explicit null when clearing a reminder time', async () => {
     mockFetchHabits.mockResolvedValue([buildHabitResponse({ reminderTime: '08:00' })]);
-    mockFetchCheckins.mockResolvedValue([]);
+    mockFetchAllCheckins.mockResolvedValue([]);
     mockUpdateHabit.mockResolvedValue(buildHabitResponse({ reminderTime: null, version: 2 }));
 
     const store = createHabitsStore('test-user');

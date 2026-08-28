@@ -41,6 +41,30 @@ export async function fetchCheckinsPage(limit = 50, cursor?: string): Promise<Cu
   return await request<CursorPageDto<CheckinResponseDto>>(`/checkins/page?${params.toString()}`, { method: 'GET' });
 }
 
+export async function fetchAllCheckins(limit = 50): Promise<CheckinResponseDto[]> {
+  const checkins: CheckinResponseDto[] = [];
+  const seenCursors = new Set<string>();
+  let cursor: string | undefined;
+
+  while (true) {
+    const page = await fetchCheckinsPage(limit, cursor);
+    if (!page || !Array.isArray(page.items)) {
+      throw new Error('Invalid check-in page response');
+    }
+
+    checkins.push(...page.items);
+    if (page.nextCursor === null) {
+      return checkins;
+    }
+    if (typeof page.nextCursor !== 'string' || page.nextCursor.length === 0 || seenCursors.has(page.nextCursor)) {
+      throw new Error('Invalid or repeated check-in cursor');
+    }
+
+    seenCursors.add(page.nextCursor);
+    cursor = page.nextCursor;
+  }
+}
+
 export async function upsertCheckin(
   habitId: string,
   date: string,
