@@ -162,7 +162,7 @@
   {/if}
 
   <div
-    class="habit-card-inner flex items-center rounded-[1.5rem] border bg-bg-card px-4 py-3 transition-[border-color,transform] duration-150 overflow-hidden shadow-[0_10px_24px_rgba(15,23,42,0.06)]
+    class="habit-card-inner flex flex-col items-stretch rounded-[1.5rem] border bg-bg-card px-4 py-3 transition-[border-color,transform] duration-150 overflow-hidden shadow-[0_10px_24px_rgba(15,23,42,0.06)]
       {isDragOver ? 'border-accent/50' : 'border-border hover:border-border-hover'}
       {isFrozen ? 'opacity-75' : ''}"
     style:transform={isSwipeRow ? `translateX(${swipeOffset}px)` : 'translateX(0px)'}
@@ -178,7 +178,7 @@
       style:background-color={indicatorColor}
     ></span>
 
-    <div class="relative z-10 flex w-full items-center gap-3">
+    <div class="relative z-10 flex w-full min-w-0 items-center gap-3">
       {#if isDragActive}
         <button
           type="button"
@@ -278,15 +278,20 @@
               ></div>
             {/each}
           </div>
-          <div class="hidden md:block">
-            <MiniHeatmap completions={habit.completions} dailyTarget={habit.dailyTarget} color={habit.color} />
-          </div>
         </div>
       </button>
 
       {#if habit.description}
         <span class="flex-shrink-0"><DescriptionTooltip description={habit.description} triggerClassName="h-11 w-11" /></span>
       {/if}
+    </div>
+
+    <div
+      class="relative z-10 flex w-full min-w-0 items-center pt-2"
+      role="img"
+      aria-label="Habit activity for the last 30 days, from 30 days ago through today"
+    >
+      <MiniHeatmap completions={habit.completions} dailyTarget={habit.dailyTarget} color={habit.color} />
     </div>
   </div>
 </li>
