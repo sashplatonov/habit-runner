@@ -1,11 +1,8 @@
 import { expect, test } from '@playwright/test';
 
 test.describe('real anonymous showcase journey', () => {
-  test.beforeEach(async ({}, testInfo) => {
-    test.skip(testInfo.project.name === 'telegram-webview', 'Telegram user agents intentionally enter the Mini App flow.');
-  });
-
-  test('keeps the full habit flow in memory and inside showcase routes', async ({ page }) => {
+  test('keeps the full habit flow in memory and inside showcase routes', async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name === 'telegram-webview', 'The full public landing flow is covered separately for Telegram.');
     const apiRequests: string[] = [];
     const authRequests: string[] = [];
     const persistenceWrites: string[] = [];
