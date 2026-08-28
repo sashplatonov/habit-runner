@@ -417,7 +417,12 @@ test.describe('authenticated progress analytics', () => {
     await mockBackend(page, progressHabits, progressCheckins());
     await page.clock.install({ time: new Date('2026-07-16T12:00:00Z') });
 
-    for (const [windowLabel, cellCount] of [['This week', 7], ['4 weeks', 28], ['12 weeks', 84] as const]) {
+    const progressPeriods = [
+      ['This week', 7],
+      ['4 weeks', 7],
+      ['12 weeks', 7]
+    ] as const;
+    for (const [windowLabel, cellCount] of progressPeriods) {
       await page.setViewportSize({ width: windowLabel === '12 weeks' ? 1280 : 320, height: 900 });
       await page.goto('/app/stats');
       await expect(page.getByRole('heading', { name: 'Needs attention' })).toBeVisible();

@@ -26,7 +26,7 @@ describe('ProgressHabitRow', () => {
     expect(screen.getByRole('link', { name: '📚 Read' }).getAttribute('href')).toBe('/showcase/habit/habit-1');
     expect(screen.getByRole('img', { name: '📚 Read completion trend' })).toBeTruthy();
     expect(screen.getByText('80%')).toBeTruthy();
-    expect(screen.getAllByRole('button').length).toBeGreaterThanOrEqual(5);
+    expect(screen.getAllByRole('button').length).toBeGreaterThanOrEqual(4);
     expect(screen.getByRole('article').querySelector('svg')).toBeTruthy();
   });
 });

@@ -65,16 +65,16 @@
 {:else}
   <div class="overflow-x-clip px-4 py-3 sm:px-6 sm:py-5 lg:px-8">
     <div class="mx-auto flex max-w-3xl flex-col gap-3 sm:gap-4">
-      <header class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <header class="flex flex-col gap-3">
         <div class="min-w-0">
-          <p class="text-[10px] font-medium uppercase tracking-[0.28em] text-muted">Progress</p>
-          <h1 class="mt-1 text-xl font-semibold tracking-tight text-foreground">Your scheduled progress</h1>
+          <p class="text-[10px] font-semibold uppercase tracking-[0.28em] text-muted">Progress</p>
+          <h1 class="mt-1 text-2xl font-semibold tracking-tight text-foreground">Your scheduled progress</h1>
         </div>
         <SegmentedControl
           options={windowOptions}
           value={windowId}
           ariaLabel="Progress period"
-          class="w-full justify-between sm:w-auto sm:flex-none"
+          class="w-full justify-between"
           onChange={(next) => { windowId = next as StatsWindowId; }}
         />
       </header>
@@ -82,50 +82,53 @@
       <Surface as="section" padding="md" class="p-4 sm:p-5">
         <div class="flex items-start justify-between gap-3">
           <div class="min-w-0">
-            <p class="text-[10px] font-medium uppercase tracking-[0.24em] text-muted">Summary</p>
-            <h2 id="progress-summary-title" class="mt-1 text-lg font-semibold text-foreground">{snapshot.windowLabel}</h2>
-          </div>
-          <ChartGuideTooltip
-            title="Completion rate"
-            summary="Completed scheduled opportunities divided by all scheduled opportunities in this period."
-            focusPoints={['Dates before a habit was created and freeze days are excluded.', 'A dash means there are no scheduled opportunities.']}
-            variant="bars"
-            triggerClassName="h-10 w-10"
-          />
-        </div>
-
-        <div class="mt-4 grid grid-cols-[1fr_auto] items-end gap-4">
-          <div>
-            <p class="tabular-nums text-4xl font-semibold tracking-tight text-foreground">{summaryRate === null ? '—' : `${summaryRate}%`}</p>
-            <div class="mt-2 flex flex-wrap items-center gap-2 text-xs text-muted">
-              <span>{snapshot.summary.completed}/{snapshot.summary.scheduled} completed</span>
-              <span aria-hidden="true">·</span>
+            <div class="flex items-center gap-1.5">
+              <p id="progress-summary-title" class="text-[10px] font-semibold uppercase tracking-[0.24em] text-muted">{snapshot.windowLabel}</p>
               <ChartGuideTooltip
-                title="Period delta"
-                summary="The difference between this period and the directly previous equivalent period, measured in percentage points."
-                focusPoints={['Unavailable means one comparison window had no scheduled opportunities.']}
-                variant="columns"
-                triggerClassName="h-8 w-8"
+                title="Completion rate"
+                summary="Completed scheduled opportunities divided by all scheduled opportunities in this period."
+                focusPoints={['Dates before a habit was created and freeze days are excluded.', 'A dash means there are no scheduled opportunities.']}
+                variant="bars"
+                triggerClassName="h-6 w-6"
               />
-              <span class={snapshot.summary.delta === null ? 'text-muted' : snapshot.summary.delta >= 0 ? 'text-accent' : 'text-danger'}>{deltaLabel}</span>
             </div>
           </div>
-          <div class="text-right text-[11px] text-muted">
-            <p>{activeHabits.length} habits</p>
-            <p>{snapshot.needsAttention.length} attention</p>
-            <p>{snapshot.strong.length > 0 ? `Best ${snapshot.strong[0].completionRate}%` : 'Best —'}</p>
+          <span class="rounded-full border border-accent/20 bg-accent/10 px-2.5 py-1 text-[11px] font-medium text-accent">
+            {snapshot.summary.delta !== null && snapshot.summary.delta > 0 ? '↗ Improving' : snapshot.summary.delta !== null && snapshot.summary.delta < 0 ? '↘ Slipping' : '→ Steady'}
+          </span>
+        </div>
+
+        <div class="mt-3 grid grid-cols-[1fr_auto] items-end gap-4">
+          <div>
+            <div class="flex items-baseline gap-2">
+              <p class="tabular-nums text-4xl font-semibold tracking-tight text-foreground">{summaryRate === null ? '—' : `${summaryRate}%`}</p>
+              <span class={snapshot.summary.delta === null ? 'text-muted' : snapshot.summary.delta >= 0 ? 'text-accent' : 'text-danger'}>{deltaLabel}</span>
+            </div>
+            <p class="mt-0.5 text-xs text-muted">vs previous {windowId === '1w' ? 'week' : 'period'}</p>
+          </div>
+          <div class="text-right text-xs text-muted">
+            <p class="tabular-nums text-lg font-semibold text-foreground">{snapshot.summary.completed}/{snapshot.summary.scheduled}</p>
+            <p>completed</p>
           </div>
         </div>
 
-        <div class="mt-4">
-          <ProgressBar value={summaryRate ?? 0} label="Completion progress" />
+        <div class="mt-4 border-t border-border/70 pt-3">
+          <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted">
+            <span><strong class="font-semibold text-foreground">{activeHabits.length}</strong> habits</span>
+            <ChartGuideTooltip title="Habits" summary="The number of active habits included in this period." focusPoints={['Archived habits are excluded.']} triggerClassName="h-6 w-6" />
+            <span><strong class="font-semibold text-foreground">{snapshot.needsAttention.length}</strong> attention</span>
+            <ChartGuideTooltip title="Attention" summary="Habits with low completion, a negative change, or a recent run of missed opportunities." focusPoints={['Lower completion is shown first.']} triggerClassName="h-6 w-6" />
+            <span><strong class="font-semibold text-foreground">{snapshot.strong.length > 0 ? `${snapshot.strong[0].completionRate}%` : '—'}</strong> best</span>
+            <ChartGuideTooltip title="Best" summary="The highest completion rate among the strong habits in this period." focusPoints={['Strong habits are ordered by completion rate.']} triggerClassName="h-6 w-6" />
+          </div>
+          <div class="mt-3"><ProgressBar value={summaryRate ?? 0} label="Completion progress" /></div>
         </div>
       </Surface>
 
       <Surface as="section" padding="md" class="p-3 sm:p-4">
         <div class="flex items-start justify-between gap-3 px-1">
           <div class="flex min-w-0 items-center gap-2">
-            <AlertCircle size={18} class="shrink-0 text-attention" aria-hidden="true" />
+            <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-attention/25 bg-attention/10 text-attention"><AlertCircle size={17} aria-hidden="true" /></span>
             <div class="min-w-0">
               <h2 id="needs-attention-title" class="text-base font-semibold text-foreground">Needs attention</h2>
               <p class="text-xs text-muted">{snapshot.needsAttention.length} habits · lowest completion first</p>
@@ -156,7 +159,7 @@
       <Surface as="section" padding="md" class="p-3 sm:p-4">
         <div class="flex items-start justify-between gap-3 px-1">
           <div class="flex min-w-0 items-center gap-2">
-            <CheckCircle2 size={18} class="shrink-0 text-accent" aria-hidden="true" />
+            <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-accent/25 bg-accent/10 text-accent"><CheckCircle2 size={17} aria-hidden="true" /></span>
             <div class="min-w-0">
               <h2 id="strong-title" class="text-base font-semibold text-foreground">Strong</h2>
               <p class="text-xs text-muted">{snapshot.strong.length} habits · highest completion first</p>
