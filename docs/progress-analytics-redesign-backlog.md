@@ -225,7 +225,7 @@ git commit -m "feat(progress): redesign compact analytics screen"
 
 ## PROG-AN-004: Регрессии математики и адаптивной аналитики Progress
 
-**Status:** TODO
+**Status:** DONE
 **Priority:** P2
 **Depends on:** PROG-AN-003
 

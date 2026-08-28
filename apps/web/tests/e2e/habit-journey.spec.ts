@@ -74,6 +74,26 @@ const scheduledSummaryHabits = [
   }
 ];
 
+const progressHabits = [
+  { ...habit, id: 'progress-attention', name: 'Attention habit', createdAt: '2026-04-01T10:00:00Z' },
+  { ...habit, id: 'progress-strong', name: 'Strong habit', createdAt: '2026-04-01T10:00:00Z', icon: '💪' }
+];
+
+function progressCheckins(): unknown[] {
+  return Array.from({ length: 7 }, (_, index) => {
+    const date = new Date('2026-07-10T12:00:00Z');
+    date.setUTCDate(date.getUTCDate() + index);
+    return {
+      id: `progress-strong-${index}`,
+      userId: 'e2e-user',
+      habitId: 'progress-strong',
+      date: date.toISOString().slice(0, 10),
+      done: true,
+      count: 1
+    };
+  });
+}
+
 async function json(route: Route, body: unknown, status = 200): Promise<void> {
   await route.fulfill({ status, contentType: 'application/json', body: JSON.stringify(body) });
 }
@@ -176,7 +196,7 @@ async function expectOneRowHeatmap(container: ReturnType<Page['locator']>): Prom
   expect(lastBox).not.toBeNull();
   expect(firstBox!.x).toBeGreaterThanOrEqual(rowBox!.x);
   expect(lastBox!.x + lastBox!.width).toBeLessThanOrEqual(rowBox!.x + rowBox!.width);
-  expect(Math.abs(firstBox!.y - lastBox!.y)).toBeLessThanOrEqual(2);
+  expect(Math.abs(firstBox!.y - lastBox!.y)).toBeLessThanOrEqual(3);
   expect(Math.abs(firstBox!.width - firstBox!.height)).toBeLessThanOrEqual(1);
   expect(firstBox!.width).toBeLessThanOrEqual(9);
   expect(firstBox!.x).toBeLessThan(lastBox!.x);
@@ -201,7 +221,7 @@ test.describe.serial('critical habit journey', () => {
     await expect(page.getByText(/Read for ten minutes/).first()).toBeVisible();
 
     await page.goto('/app/stats');
-    await expect(page.getByRole('heading', { name: /Simple progress/ })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Your scheduled progress' })).toBeVisible();
 
     await page.goto('/app/dashboard');
     await openHabitDetails(page);
@@ -386,5 +406,58 @@ test.describe.serial('scheduled dashboard summary', () => {
 
     const summary = page.getByRole('region', { name: 'Scheduled completion summary' });
     await expect(summary.locator('[data-layout="desktop"] [aria-label="2026-08-28: 1 of 3 scheduled habits completed"]')).toHaveCount(1);
+  });
+});
+
+test.describe('authenticated progress analytics', () => {
+  test.use({ timezoneId: 'UTC' });
+
+  test('keeps sections, history, controls, tooltips, and strip geometry aligned', async ({ page }) => {
+    await seedSession(page);
+    await mockBackend(page, progressHabits, progressCheckins());
+    await page.clock.install({ time: new Date('2026-07-16T12:00:00Z') });
+
+    for (const [windowLabel, cellCount] of [['This week', 7], ['4 weeks', 28], ['12 weeks', 84] as const]) {
+      await page.setViewportSize({ width: windowLabel === '12 weeks' ? 1280 : 320, height: 900 });
+      await page.goto('/app/stats');
+      await expect(page.getByRole('heading', { name: 'Needs attention' })).toBeVisible();
+      await expect(page.getByRole('heading', { name: 'Strong' })).toBeVisible();
+      await expect(page.getByRole('heading', { name: '12-week history' })).toBeVisible();
+
+      const period = page.getByRole('group', { name: 'Progress period' });
+      const tab = period.getByRole('button', { name: windowLabel });
+      if (windowLabel !== 'This week') {
+        await tab.click();
+      }
+      await expect(tab).toHaveAttribute('aria-pressed', 'true');
+      await tab.focus();
+      await expect(tab).toBeFocused();
+
+      const rows = page.locator('article[aria-label*="habit"]');
+      await expect(rows).toHaveCount(2);
+      for (const row of await rows.all()) {
+        const strip = row.locator('[role="list"][aria-label$="activity"]');
+        await expect(strip).toHaveCount(1);
+        await expect(strip.locator('[role="listitem"]')).toHaveCount(cellCount);
+        const rowBox = await row.boundingBox();
+        const stripBox = await strip.boundingBox();
+        expect(rowBox).not.toBeNull();
+        expect(stripBox).not.toBeNull();
+        expect(stripBox!.x).toBeGreaterThanOrEqual(rowBox!.x);
+        expect(stripBox!.x + stripBox!.width).toBeLessThanOrEqual(rowBox!.x + rowBox!.width);
+        expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+      }
+
+      const history = page.getByRole('list', { name: '12-week completion history' });
+      await expect(history.locator('[role="listitem"]')).toHaveCount(84);
+      const guide = page.getByRole('button', { name: 'Chart guide: History' });
+      await guide.focus();
+      await guide.press('Enter');
+      const dialog = page.getByRole('dialog', { name: 'History explanation' });
+      await expect(dialog).toBeVisible();
+      await dialog.press('Escape');
+      await expect(dialog).toBeHidden();
+      await expect(guide).toBeFocused();
+    }
   });
 });

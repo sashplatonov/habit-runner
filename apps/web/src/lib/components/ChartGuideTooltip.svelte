@@ -21,6 +21,7 @@
   let panelEl = $state<HTMLDivElement | null>(null);
   let position = $state({ left: 12, top: 12 });
   let hoverCloseTimer: ReturnType<typeof setTimeout> | null = null;
+  let skipNextFocusPreview = false;
 
   function clearHoverCloseTimer() {
     if (hoverCloseTimer !== null) {
@@ -47,11 +48,31 @@
   function closePanel() {
     clearHoverCloseTimer();
     pinned = false;
+    skipNextFocusPreview = true;
     open = false;
   }
 
+  function handleTriggerFocus() {
+    if (skipNextFocusPreview) {
+      skipNextFocusPreview = false;
+      return;
+    }
+    previewOpen();
+  }
+
   function handlePanelKeydown(event: KeyboardEvent) {
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      closePanel();
+    }
     event.stopPropagation();
+  }
+
+  function handleTriggerKeydown(event: KeyboardEvent) {
+    if (event.key === 'Escape' && open) {
+      event.preventDefault();
+      closePanel();
+    }
   }
 
   function updatePosition() {
@@ -125,8 +146,9 @@
   }}
   onmouseenter={previewOpen}
   onmouseleave={previewClose}
-  onfocus={previewOpen}
+  onfocus={handleTriggerFocus}
   onblur={previewClose}
+  onkeydown={handleTriggerKeydown}
   class="inline-flex h-8 w-8 items-center justify-center rounded-full border transition-colors
     {open ? 'border-accent/50 bg-accent/10 text-accent' : 'border-border bg-bg-card text-muted hover:border-border-hover hover:text-foreground'}
     {triggerClassName}"

@@ -188,22 +188,34 @@ describe('compact analytics contract', () => {
     expect(snapshot.currentWeek.length).toBeGreaterThanOrEqual(4);
   });
 
-  it('uses scheduled opportunities only and exposes pp delta without a sample threshold', () => {
+  it.each([
+    ['1w', 7],
+    ['4w', 28],
+    ['12w', 84]
+  ] as const)('uses scheduled opportunities only and exposes pp delta for %s', (window, length) => {
     const referenceDate = new Date('2026-07-16T12:00:00.000Z');
     const completions: Record<string, number> = {};
-    for (let offset = 0; offset < 14; offset += 1) {
-      const date = new Date('2026-07-03T12:00:00.000Z');
+    const currentStart = new Date(referenceDate);
+    currentStart.setUTCDate(currentStart.getUTCDate() - length + 1);
+    for (let offset = 0; offset < length; offset += 1) {
+      const date = new Date(currentStart);
       date.setUTCDate(date.getUTCDate() + offset);
-      if (offset >= 7) {
-        completions[calendarDateToCompletionKey(date.toISOString().slice(0, 10))] = 1;
-      }
+      completions[calendarDateToCompletionKey(date.toISOString().slice(0, 10))] = 1;
     }
-    const habit = createHabit({ completions });
-    const snapshot = buildModernStatsSnapshot([habit], '1w', referenceDate, 'UTC');
+    const snapshot = buildModernStatsSnapshot([createHabit({ completions })], window, referenceDate, 'UTC');
 
-    expect(snapshot.summary).toEqual({ completionRate: 100, completed: 7, scheduled: 7, delta: 100 });
+    expect(snapshot.summary).toEqual({ completionRate: 100, completed: length, scheduled: length, delta: 100 });
     expect(snapshot.strong[0]?.delta).toBe(100);
-    expect(snapshot.strong[0]?.completed).toBe(7);
+    expect(snapshot.strong[0]?.completed).toBe(length);
+  });
+
+  it.each(['1w', '4w', '12w'] as const)('returns an unavailable delta when the previous %s window has no opportunities', (window) => {
+    const referenceDate = new Date('2026-07-16T12:00:00.000Z');
+    const snapshot = buildModernStatsSnapshot([
+      createHabit({ createdAt: '2026-07-16T11:00:00.000Z' })
+    ], window, referenceDate, 'UTC');
+
+    expect(snapshot.summary.delta).toBeNull();
   });
 
   it('classifies deterministically with disjoint sections and neutral unscheduled cells', () => {

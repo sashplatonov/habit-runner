@@ -22,12 +22,12 @@
   const palette = $derived(HABIT_COLOR_THEMES[color]);
 </script>
 
-<div class="flex w-full items-center gap-[2px]" data-heatmap-row>
+<div class="grid w-full max-w-[268px] auto-rows-[7px] grid-cols-[repeat(30,minmax(0,1fr))] gap-[2px] sm:auto-rows-[8px]" data-heatmap-row>
   {#each days as dateKey, di (dateKey + '-' + di)}
     {@const lookupKey = calendarDateToCompletionKey(dateKey)}
     {@const isCompleted = (completions[lookupKey] ?? 0) >= dailyTarget}
     <div
-      class="h-[7px] w-[7px] flex-shrink-0 rounded-[2px] transition-[background-color,box-shadow,opacity] duration-300 sm:h-[8px] sm:w-[8px]"
+      class="aspect-square min-w-0 rounded-[2px] transition-[background-color,box-shadow,opacity] duration-300"
       data-date={dateKey}
       data-heatmap-cell
       data-lookup-key={lookupKey}
