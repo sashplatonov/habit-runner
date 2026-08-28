@@ -85,6 +85,10 @@ describe('ScheduledCompletionSummary', () => {
     expect(container.querySelector('#scheduled-completion-desktop-today-description')?.textContent).toBe('Scheduled habit 1: completed; Scheduled habit 2: incomplete');
     expect(container.querySelector('section[aria-live]')).toBeNull();
     expect(container.querySelector('[aria-live="polite"]')?.textContent).toBe('Today: 1 of 2 scheduled habits completed, 50%');
+    const mobileSummary = container.querySelector('[data-layout="mobile"]');
+    expect(mobileSummary?.textContent).toContain('Completion');
+    expect(mobileSummary?.textContent).not.toContain('Monday, Mar 30');
+    expect(mobileSummary?.textContent).not.toContain('scheduled only');
   });
 
   test('renders neutral days and a neutral no-schedule score', () => {

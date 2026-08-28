@@ -43,6 +43,16 @@ describe('dashboard controls', () => {
     expect(screen.getByRole('button', { name: 'View options' }).classList.contains('min-h-11')).toBe(true);
   });
 
+  it('keeps dashboard filters equal-width and centered beside add habit', () => {
+    renderToolbar();
+
+    const filterGroup = screen.getByRole('group', { name: 'Dashboard filter' });
+    expect(filterGroup.className).toContain('[&>button]:flex-1');
+    expect(filterGroup.className).toContain('[&>button]:justify-center');
+    expect(filterGroup.parentElement?.className).toContain('justify-center');
+    expect(filterGroup.parentElement?.querySelector('[aria-label="Add habit"]')).toBeTruthy();
+  });
+
   it('opens and closes view options from the same trigger', async () => {
     const user = userEvent.setup();
     renderToolbar();

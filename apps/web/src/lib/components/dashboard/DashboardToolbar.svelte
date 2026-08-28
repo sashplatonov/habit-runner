@@ -88,7 +88,7 @@
 <svelte:window onpointerdown={handleWindowClick} onkeydown={handleWindowKeydown} />
 
 <section class="space-y-3">
-  <div class="flex flex-wrap items-center gap-2">
+  <div class="flex flex-nowrap items-center justify-center gap-2">
     <DashboardSegmentedControl
       ariaLabel="Dashboard filter"
       options={filterOptions}
@@ -96,7 +96,7 @@
       onChange={(value) => {
         void onFilterChange(value as Filter);
       }}
-      class="flex-1"
+      class="min-w-0 flex-1 [&>button]:min-w-0 [&>button]:flex-1 [&>button]:justify-center"
     />
 
     <DashboardIconButton ariaLabel="Add habit" title="Add habit" onClick={onAddHabit}>

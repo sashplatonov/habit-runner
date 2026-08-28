@@ -126,9 +126,8 @@
   </div>
 
   <div data-layout="mobile" class="mobile-summary gap-1.5 p-2.5">
-    <div class="grid min-w-0 grid-cols-[70px_minmax(0,1fr)_42px] items-center gap-1.5">
+    <div class="grid min-w-0 grid-cols-[1fr_auto] items-center gap-1.5">
       <strong class="text-xs font-extrabold text-foreground">Completion</strong>
-      <span class="truncate text-[11px] text-muted">{dateLabel} · scheduled only</span>
       <strong class="text-right text-xs font-extrabold tabular-nums text-foreground">{scoreLabel(summary.today.percentage)}</strong>
     </div>
     <div class="grid min-w-0 grid-cols-[70px_minmax(0,1fr)_42px] items-center gap-1.5">
