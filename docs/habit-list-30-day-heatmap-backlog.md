@@ -86,7 +86,7 @@ git commit -m "feat(dashboard): Show 30-day habit heatmaps"
 
 ## HLR-HEATMAP-02: Добавить 30-дневный хитмап в desktop-плитку привычки
 
-**Status:** TODO  
+**Status:** DONE
 **Priority:** P1  
 **Depends on:** —
 
@@ -210,4 +210,3 @@ cd apps/web && npm run lint && npm run test -- MiniHeatmap HabitCompactRow Habit
 git add apps/web/tests/unit/MiniHeatmap.test.ts apps/web/tests/unit/HabitCompactRowHeatmap.test.ts apps/web/tests/unit/HabitTileHeatmap.test.ts apps/web/tests/e2e/habit-journey.spec.ts docs/habit-list-30-day-heatmap-backlog.md
 git commit -m "test(dashboard): Cover responsive habit heatmaps"
 ```
-

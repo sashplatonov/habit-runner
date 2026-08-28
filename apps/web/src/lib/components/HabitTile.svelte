@@ -3,7 +3,7 @@
   import CompletionRing from '$lib/components/CompletionRing.svelte';
   import HabitCompletionControl from '$lib/components/habits/HabitCompletionControl.svelte';
   import DescriptionTooltip from '$lib/components/DescriptionTooltip.svelte';
-  import HabitHeatmap from '$lib/components/HabitHeatmap.svelte';
+  import MiniHeatmap from '$lib/components/MiniHeatmap.svelte';
   import ChartGuideTooltip from '$lib/components/ChartGuideTooltip.svelte';
   import { HABIT_COLOR_THEMES } from '$lib/theme/habit-colors';
   import { computeTileHint } from '$lib/habits/tileHint';
@@ -154,7 +154,13 @@
 
     <!-- Bottom row: heatmap + toggle -->
     <div class="flex items-center justify-between mt-2 pt-1 border-t border-border/30">
-      <HabitHeatmap completions={habit.completions} dailyTarget={target} color={habit.color} compact />
+      <div
+        class="relative z-10 flex min-w-0 items-center"
+        role="img"
+        aria-label="Habit activity for the last 30 days, from 30 days ago through today"
+      >
+        <MiniHeatmap completions={habit.completions} dailyTarget={target} color={habit.color} />
+      </div>
 
       <!-- Toggle button with particles -->
       <div class="relative flex-shrink-0">
