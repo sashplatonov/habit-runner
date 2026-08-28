@@ -159,7 +159,7 @@ git commit -m "feat(stats): add compact analytics visualizations"
 
 ## PROG-AN-003: Собрать компактный экран Progress
 
-**Status:** TODO
+**Status:** DONE
 **Priority:** P1
 **Depends on:** PROG-AN-001, PROG-AN-002
 

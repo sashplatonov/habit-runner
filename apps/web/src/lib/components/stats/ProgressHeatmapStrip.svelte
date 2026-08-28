@@ -31,7 +31,7 @@
     role="list"
     aria-label={label}
   >
-    {#each cells as cell (cell.calendarDate)}
+    {#each cells as cell, index (cell.calendarDate + '-' + index)}
       {@const stateClass = cell.state === 'completed'
         ? 'bg-accent'
         : cell.state === 'missed'
