@@ -104,7 +104,7 @@ git commit -m "refactor(dashboard): Share scheduled today aggregate"
 
 ## SDSR-003: Expose complete summary semantics without noisy live updates
 
-**Status:** TODO
+**Status:** DONE
 **Priority:** P2
 **Depends on:** SDSR-002
 

@@ -80,6 +80,11 @@ describe('ScheduledCompletionSummary', () => {
     expect(container.querySelectorAll('[aria-label^="Scheduled habit "]')).toHaveLength(4);
     expect(screen.getAllByText(/1\/2/)).toHaveLength(2);
     expect(screen.getAllByText('50%')).toHaveLength(4);
+    expect(screen.getAllByRole('img', { name: '30-day scheduled completion heatmap' })[0].getAttribute('aria-describedby')).toBe('scheduled-completion-desktop-heatmap-description');
+    expect(container.querySelector('#scheduled-completion-desktop-heatmap-description')?.textContent).toContain('2026-03-01: 0 of 1 scheduled habits completed');
+    expect(container.querySelector('#scheduled-completion-desktop-today-description')?.textContent).toBe('Scheduled habit 1: completed; Scheduled habit 2: incomplete');
+    expect(container.querySelector('section[aria-live]')).toBeNull();
+    expect(container.querySelector('[aria-live="polite"]')?.textContent).toBe('Today: 1 of 2 scheduled habits completed, 50%');
   });
 
   test('renders neutral days and a neutral no-schedule score', () => {

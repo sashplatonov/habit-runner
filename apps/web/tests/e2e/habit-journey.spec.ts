@@ -322,7 +322,8 @@ test.describe.serial('scheduled dashboard summary', () => {
       await expect(summary.locator('[data-layout="desktop"] [aria-label^="2026-"]')).toHaveCount(30);
       await expect(summary.locator('[data-layout="desktop"] [aria-label^="Scheduled habit "]')).toHaveCount(3);
       await expect(summary.getByText('1/3')).toHaveCount(2);
-      await expect(summary.getByText('33%')).toHaveCount(4);
+      await expect(summary.locator('[data-layout="desktop"]').getByText('33%', { exact: true })).toHaveCount(2);
+      await expect(summary.locator('[data-layout="mobile"]').getByText('33%', { exact: true })).toHaveCount(2);
 
       if (viewport.width <= 560) {
         await expect(summary.locator('[data-layout="mobile"] > div')).toHaveCount(3);
