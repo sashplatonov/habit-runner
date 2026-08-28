@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { addDaysToCalendarDate, calendarDateToDate } from '@habbit-runner/shared';
+  import { addDaysToCalendarDate, getWeekdayFromCalendarDate } from '@habbit-runner/shared';
   import { completionKeyToCalendarDate, calendarDateToCompletionKey } from '@/lib/completionKey';
   import type { HabitColor } from '@/types/habit';
   import { formatDate } from '$lib/habits/habitStats';
@@ -19,7 +19,7 @@
     const todayKey = completionKeyToCalendarDate(formatDate(new Date()));
     return Array.from({ length: 30 }, (_, index) => addDaysToCalendarDate(todayKey, -(29 - index)));
   });
-  const startDay = $derived(days[0] ? calendarDateToDate(days[0]).getDay() : 0);
+  const startDay = $derived(days[0] ? getWeekdayFromCalendarDate(days[0]) : 0);
   const emptyCells = $derived(Array.from({ length: startDay }, (_, index) => index));
   const palette = $derived(HABIT_COLOR_THEMES[color]);
 </script>
