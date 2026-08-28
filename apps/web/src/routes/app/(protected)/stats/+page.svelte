@@ -1,6 +1,6 @@
 <script lang="ts">
   import { resolve } from '$app/paths';
-  import { AlertCircle, CheckCircle2, Info, Plus } from 'lucide-svelte';
+  import { AlertCircle, CheckCircle2, Info } from 'lucide-svelte';
   import EmptyState from '$lib/components/EmptyState.svelte';
   import ChartGuideTooltip from '$lib/components/ChartGuideTooltip.svelte';
   import ProgressBar from '$lib/components/ui/ProgressBar.svelte';
@@ -69,6 +69,7 @@
         <div class="min-w-0">
           <p class="text-[10px] font-semibold uppercase tracking-[0.28em] text-muted">Progress</p>
           <h1 class="mt-1 text-2xl font-semibold tracking-tight text-foreground">Your scheduled progress</h1>
+          <p class="mt-0.5 text-xs text-muted">See what is working and what is slipping.</p>
         </div>
         <SegmentedControl
           options={windowOptions}
@@ -112,7 +113,11 @@
           </div>
         </div>
 
-        <div class="mt-4 border-t border-border/70 pt-3">
+        <div class="mt-3">
+          <ProgressBar value={summaryRate ?? 0} />
+        </div>
+
+        <div class="mt-3 border-t border-border/70 pt-3">
           <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted">
             <span><strong class="font-semibold text-foreground">{activeHabits.length}</strong> habits</span>
             <ChartGuideTooltip title="Habits" summary="The number of active habits included in this period." focusPoints={['Archived habits are excluded.']} triggerClassName="h-6 w-6" />
@@ -121,28 +126,30 @@
             <span><strong class="font-semibold text-foreground">{snapshot.strong.length > 0 ? `${snapshot.strong[0].completionRate}%` : '—'}</strong> best</span>
             <ChartGuideTooltip title="Best" summary="The highest completion rate among the strong habits in this period." focusPoints={['Strong habits are ordered by completion rate.']} triggerClassName="h-6 w-6" />
           </div>
-          <div class="mt-3"><ProgressBar value={summaryRate ?? 0} label="Completion progress" /></div>
         </div>
       </Surface>
 
       <Surface as="section" padding="md" class="p-3 sm:p-4">
         <div class="flex items-start justify-between gap-3 px-1">
           <div class="flex min-w-0 items-center gap-2">
-            <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-attention/25 bg-attention/10 text-attention"><AlertCircle size={17} aria-hidden="true" /></span>
+            <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-attention/25 bg-attention/10 text-attention"><AlertCircle size={16} aria-hidden="true" /></span>
             <div class="min-w-0">
-              <h2 id="needs-attention-title" class="text-base font-semibold text-foreground">Needs attention</h2>
-              <p class="text-xs text-muted">{snapshot.needsAttention.length} habits · lowest completion first</p>
+              <div class="flex items-center gap-1.5">
+                <h2 id="needs-attention-title" class="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted">Needs attention</h2>
+                <ChartGuideTooltip
+                  title="Needs attention"
+                  summary="Habits with low completion, a negative change, or a recent run of missed scheduled opportunities."
+                  focusPoints={['Rows are ordered from lowest completion rate upward.']}
+                  triggerClassName="h-6 w-6"
+                />
+              </div>
+              <p class="text-xs text-muted">This week · one-line heatmap</p>
             </div>
           </div>
-          <ChartGuideTooltip
-            title="Needs attention"
-            summary="Habits with low completion, a negative change, or a recent run of missed scheduled opportunities."
-            focusPoints={['Rows are ordered from lowest completion rate upward.']}
-            triggerClassName="h-10 w-10"
-          />
+          <span class="pt-1 text-xs text-muted">risk ↓</span>
         </div>
         {#if snapshot.needsAttention.length > 0}
-          <div class="mt-3 grid gap-2">
+          <div class="mt-3 divide-y divide-border/60">
             {#each snapshot.needsAttention as model (model.id)}
               <ProgressHabitRow
                 model={model}
@@ -159,21 +166,24 @@
       <Surface as="section" padding="md" class="p-3 sm:p-4">
         <div class="flex items-start justify-between gap-3 px-1">
           <div class="flex min-w-0 items-center gap-2">
-            <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-accent/25 bg-accent/10 text-accent"><CheckCircle2 size={17} aria-hidden="true" /></span>
+            <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-accent/25 bg-accent/10 text-accent"><CheckCircle2 size={16} aria-hidden="true" /></span>
             <div class="min-w-0">
-              <h2 id="strong-title" class="text-base font-semibold text-foreground">Strong</h2>
-              <p class="text-xs text-muted">{snapshot.strong.length} habits · highest completion first</p>
+              <div class="flex items-center gap-1.5">
+                <h2 id="strong-title" class="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted">Strong</h2>
+                <ChartGuideTooltip
+                  title="Strong"
+                  summary="Habits with high completion, positive change, or evidence of recovery after missed opportunities."
+                  focusPoints={['Rows are ordered from highest completion rate downward.']}
+                  triggerClassName="h-6 w-6"
+                />
+              </div>
+              <p class="text-xs text-muted">This week · one-line heatmap</p>
             </div>
           </div>
-          <ChartGuideTooltip
-            title="Strong"
-            summary="Habits with high completion, positive change, or evidence of recovery after missed opportunities."
-            focusPoints={['Rows are ordered from highest completion rate downward.']}
-            triggerClassName="h-10 w-10"
-          />
+          <span class="pt-1 text-xs text-muted">best first</span>
         </div>
         {#if snapshot.strong.length > 0}
-          <div class="mt-3 grid gap-2">
+          <div class="mt-3 divide-y divide-border/60">
             {#each snapshot.strong as model (model.id)}
               <ProgressHabitRow
                 model={model}
@@ -192,14 +202,6 @@
         currentWeek={snapshot.currentWeek}
         currentWeekRate={currentWeekRate}
       />
-
-      <a
-        href={resolve(appResolve('/app/(protected)/habit/new', {}), {})}
-        class="inline-flex min-h-11 items-center justify-center gap-2 self-start rounded-full border border-border bg-bg-card px-4 py-2 text-sm font-medium text-foreground transition-colors hover:border-accent/40 hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring"
-      >
-        <Plus size={16} aria-hidden="true" />
-        Add habit
-      </a>
     </div>
   </div>
 {/if}

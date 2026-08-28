@@ -13,6 +13,10 @@
   function cellLabel(cell: HabitHeatmapCell): string {
     return `${cell.calendarDate}: ${cell.state}`;
   }
+
+  function displayOpacity(cell: HabitHeatmapCell): number {
+    return cell.state === 'not scheduled' ? Math.max(0.55, cell.intensity) : cell.intensity;
+  }
 </script>
 
 <div class="flex min-w-0 items-center gap-2" aria-label={label}>
@@ -38,8 +42,8 @@
           ? 'bg-danger'
           : 'bg-bg-secondary'}
       <span
-        class={`block aspect-square min-w-0 rounded-[3px] border border-border/40 ${stateClass}`}
-        style:opacity={cell.intensity}
+        class={`block h-2 min-w-0 rounded-[2px] ${stateClass}`}
+        style:opacity={displayOpacity(cell)}
         role="listitem"
         aria-label={cellLabel(cell)}
         title={cellLabel(cell)}
