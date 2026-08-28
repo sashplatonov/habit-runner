@@ -141,7 +141,11 @@
         {#if snapshot.needsAttention.length > 0}
           <div class="mt-3 grid gap-2">
             {#each snapshot.needsAttention as model (model.id)}
-              <ProgressHabitRow model={model} section="Needs attention" />
+              <ProgressHabitRow
+                model={model}
+                detailHref={appResolve('/app/(protected)/habit/[id]', { id: model.id })}
+                section="Needs attention"
+              />
             {/each}
           </div>
         {:else}
@@ -168,7 +172,11 @@
         {#if snapshot.strong.length > 0}
           <div class="mt-3 grid gap-2">
             {#each snapshot.strong as model (model.id)}
-              <ProgressHabitRow model={model} section="Strong" />
+              <ProgressHabitRow
+                model={model}
+                detailHref={appResolve('/app/(protected)/habit/[id]', { id: model.id })}
+                section="Strong"
+              />
             {/each}
           </div>
         {:else}

@@ -82,7 +82,7 @@ git commit -m "fix(tooltip): stabilize analytics keyboard overlay"
 
 ## PROG-AN-RVW-002: Resolve analytics habit links through the active runtime
 
-**Status:** TODO
+**Status:** DONE
 **Priority:** P1
 **Depends on:** -
 

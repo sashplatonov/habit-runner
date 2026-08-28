@@ -9,10 +9,11 @@
 
   type Props = {
     model: HabitAnalyticsModel;
+    detailHref: string;
     section?: string;
   };
 
-  const { model, section = 'Habit progress' }: Props = $props();
+  const { model, detailHref, section = 'Habit progress' }: Props = $props();
   const label = $derived(formatHabitLabel(model.habit));
   const percentage = $derived(model.completionRate === null ? '—' : `${model.completionRate}%`);
   const deltaLabel = $derived(model.delta === null ? 'Unavailable' : `${model.delta > 0 ? '+' : ''}${model.delta} pp`);
@@ -29,7 +30,7 @@
         <AlertCircle size={17} />
       {/if}
     </span>
-    <a href={resolve('/app/(protected)/habit/[id]', { id: model.id })} class="min-w-0 flex-1 truncate text-sm font-semibold text-foreground underline-offset-4 hover:text-accent hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-offset-2 focus-visible:ring-offset-bg-card">
+    <a href={resolve(detailHref, {})} class="min-w-0 flex-1 truncate text-sm font-semibold text-foreground underline-offset-4 hover:text-accent hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-offset-2 focus-visible:ring-offset-bg-card">
       {label}
     </a>
     <ChartGuideTooltip title="Section meaning" summary="This section groups habits by the strongest observable signal in the selected period." focusPoints={[section, model.reason]} variant="bars" triggerClassName="h-9 w-9" />

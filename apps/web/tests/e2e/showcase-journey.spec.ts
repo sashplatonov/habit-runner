@@ -98,4 +98,21 @@ test.describe('real anonymous showcase journey', () => {
     await page.getByRole('link', { name: 'Dashboard' }).click();
     await expect(page).toHaveURL(/\/showcase$/);
   });
+
+  test('keeps analytics habit links inside the anonymous showcase', async ({ page }) => {
+    const requests: string[] = [];
+    page.on('request', (request) => {
+      const pathname = new URL(request.url()).pathname;
+      if (pathname.startsWith('/api/') || pathname.startsWith('/auth/') || pathname.startsWith('/api/auth/')) {
+        requests.push(request.url());
+      }
+    });
+
+    await page.goto('/showcase/stats');
+    await expect(page.getByRole('heading', { name: 'Your scheduled progress' })).toBeVisible();
+
+    await page.getByRole('link', { name: '✍️ Morning pages' }).click();
+    await expect(page).toHaveURL(/\/showcase\/habit\/morning-pages$/);
+    expect(requests).toEqual([]);
+  });
 });

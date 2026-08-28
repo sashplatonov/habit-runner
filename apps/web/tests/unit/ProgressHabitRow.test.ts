@@ -21,9 +21,9 @@ const model = {
 
 describe('ProgressHabitRow', () => {
   it('renders the compact analytical signals without emoji icon slots', () => {
-    render(ProgressHabitRow, { props: { model } });
+    render(ProgressHabitRow, { props: { model, detailHref: '/showcase/habit/habit-1' } });
 
-    expect(screen.getByRole('link', { name: '📚 Read' })).toBeTruthy();
+    expect(screen.getByRole('link', { name: '📚 Read' }).getAttribute('href')).toBe('/showcase/habit/habit-1');
     expect(screen.getByRole('img', { name: '📚 Read completion trend' })).toBeTruthy();
     expect(screen.getByText('80%')).toBeTruthy();
     expect(screen.getAllByRole('button').length).toBeGreaterThanOrEqual(5);
