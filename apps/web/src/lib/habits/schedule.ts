@@ -339,7 +339,21 @@ export function isMandatoryToday(
   timeZone = getCurrentUserTimeZone()
 ): boolean {
   const schedule = resolveHabitSchedule(habit);
-  const today = toCalendarDate(date, timeZone);
+  return isMandatoryForCalendarDate(habit, toCalendarDate(date, timeZone), timeZone, schedule);
+}
+
+/**
+ * Resolves quota schedules against an explicit user calendar date.
+ * Keeping the date as a calendar value avoids converting it through UTC midnight
+ * before applying the user's timezone.
+ */
+export function isMandatoryForCalendarDate(
+  habit: Habit,
+  calendarDate: string,
+  timeZone = getCurrentUserTimeZone(),
+  schedule = resolveHabitSchedule(habit)
+): boolean {
+  const today = toCalendarDate(calendarDate, timeZone);
 
   if (!isScheduledForDate(schedule, today, timeZone)) {
     return false;

@@ -4,6 +4,7 @@ import {
   calculateScheduledCompletionRate,
   calculateScheduledStreak,
   countCompletedDaysInRange,
+  isMandatoryForCalendarDate,
   isMandatoryToday
 } from '../../src/lib/habits/schedule.js';
 import { formatDate } from '../../src/lib/habits/habitStats.js';
@@ -168,6 +169,15 @@ test('isMandatoryToday respects the user timezone around UTC day changes', () =>
 
   const result = isMandatoryToday(habit, new Date('2026-03-20T08:30:00Z'), timeZone);
   expect(result).toBe(false);
+});
+
+test('isMandatoryForCalendarDate evaluates quota against the explicit calendar date', () => {
+  const habit = createHabit({
+    schedule: { type: 'weekly_quota', timesPerWeek: 1, weekdays: [5] },
+    completions: { '2026-03-20T00:00:00Z': 1 }
+  });
+
+  expect(isMandatoryForCalendarDate(habit, '2026-03-20', 'America/Los_Angeles')).toBe(false);
 });
 
 // Reference dates (UTC):
