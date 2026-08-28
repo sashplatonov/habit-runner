@@ -177,6 +177,7 @@ async function expectOneRowHeatmap(container: ReturnType<Page['locator']>): Prom
   expect(firstBox!.x).toBeGreaterThanOrEqual(rowBox!.x);
   expect(lastBox!.x + lastBox!.width).toBeLessThanOrEqual(rowBox!.x + rowBox!.width);
   expect(Math.abs(firstBox!.y - lastBox!.y)).toBeLessThanOrEqual(2);
+  expect(Math.abs(firstBox!.width - firstBox!.height)).toBeLessThanOrEqual(1);
   expect(firstBox!.x).toBeLessThan(lastBox!.x);
 }
 

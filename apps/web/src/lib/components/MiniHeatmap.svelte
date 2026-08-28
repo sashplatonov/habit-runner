@@ -27,7 +27,7 @@
     {@const lookupKey = calendarDateToCompletionKey(dateKey)}
     {@const isCompleted = (completions[lookupKey] ?? 0) >= dailyTarget}
     <div
-      class="h-[6px] min-w-0 rounded-[1px] transition-[background-color,box-shadow,opacity] duration-300"
+      class="aspect-square w-full min-w-0 rounded-[1px] transition-[background-color,box-shadow,opacity] duration-300"
       data-date={dateKey}
       data-heatmap-cell
       data-lookup-key={lookupKey}
