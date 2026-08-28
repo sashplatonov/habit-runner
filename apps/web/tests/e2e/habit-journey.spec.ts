@@ -419,8 +419,8 @@ test.describe('authenticated progress analytics', () => {
 
     const progressPeriods = [
       ['This week', 7],
-      ['4 weeks', 7],
-      ['12 weeks', 7]
+      ['4 weeks', 28],
+      ['12 weeks', 84]
     ] as const;
     for (const [windowLabel, cellCount] of progressPeriods) {
       await page.setViewportSize({ width: windowLabel === '12 weeks' ? 1280 : 320, height: 900 });

@@ -275,4 +275,22 @@ describe('compact analytics contract', () => {
     expect(decliningTrend[0]).toBeGreaterThan(decliningTrend.at(-1) ?? 0);
     expect(improvingTrend[0] ?? 1).toBeLessThan(improvingTrend.at(-1) ?? 0);
   });
+
+  it('uses heatmap intensity to distinguish sustained signals from isolated ones', () => {
+    const referenceDate = new Date('2026-07-16T12:00:00.000Z');
+    const dates = Array.from({ length: 7 }, (_, index) => `2026-07-${String(10 + index).padStart(2, '0')}`);
+    const habit = createHabit({
+      completions: Object.fromEntries([dates[0], dates[2], dates[3], dates[6]].map((date) => [
+        calendarDateToCompletionKey(date),
+        1
+      ]))
+    });
+
+    const heatmap = buildModernStatsSnapshot([habit], '1w', referenceDate, 'UTC').habitModels[0]?.heatmap ?? [];
+    const completedIntensities = heatmap.filter((cell) => cell.state === 'completed').map((cell) => cell.intensity);
+    const missedIntensities = heatmap.filter((cell) => cell.state === 'missed').map((cell) => cell.intensity);
+
+    expect(new Set(completedIntensities).size).toBeGreaterThan(1);
+    expect(new Set(missedIntensities).size).toBeGreaterThan(1);
+  });
 });

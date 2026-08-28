@@ -44,6 +44,6 @@
   </div>
 
   <div class="mt-2 min-w-0">
-    <ProgressHeatmapStrip cells={model.heatmap.slice(-7)} label={`${label} activity`} />
+    <ProgressHeatmapStrip cells={model.heatmap} label={`${label} activity`} />
   </div>
 </article>

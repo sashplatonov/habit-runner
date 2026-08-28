@@ -330,6 +330,35 @@ function buildHabitTrend(
   });
 }
 
+function buildHabitHeatmap(
+  dates: string[],
+  opportunitiesByDate: Map<string, ScheduledOpportunity>
+): HabitHeatmapCell[] {
+  return dates.map((calendarDate, index) => {
+    const opportunity = opportunitiesByDate.get(calendarDate);
+    if (!opportunity) {
+      return { calendarDate, state: 'not scheduled', intensity: 0.15 };
+    }
+
+    const nearby = dates
+      .slice(Math.max(0, index - 3), Math.min(dates.length, index + 4))
+      .flatMap((date) => {
+        const point = opportunitiesByDate.get(date);
+        return point ? [point] : [];
+      });
+    const matchingSignals = nearby.filter((point) => point.completed === opportunity.completed).length;
+    const localStrength = nearby.length > 0 ? matchingSignals / nearby.length : 0;
+
+    return {
+      calendarDate,
+      state: opportunity.completed ? 'completed' : 'missed',
+      intensity: opportunity.completed
+        ? 0.5 + localStrength * 0.5
+        : 0.45 + localStrength * 0.45
+    };
+  });
+}
+
 function buildHabitAnalytics(
   habit: Habit,
   window: StatsWindowId,
@@ -351,14 +380,7 @@ function buildHabitAnalytics(
   const byDate = new Map(currentPoints.map((point) => [point.calendarDate, point]));
   const dates = current.days.map((day) => day.calendarDate);
   const trend = buildHabitTrend(dates, byDate);
-  const heatmap = dates.map((calendarDate) => {
-    const point = byDate.get(calendarDate);
-    return {
-      calendarDate,
-      state: point ? (point.completed ? 'completed' : 'missed') : 'not scheduled',
-      intensity: point ? (point.completed ? 1 : 0.8) : 0.15
-    } satisfies HabitHeatmapCell;
-  });
+  const heatmap = buildHabitHeatmap(dates, byDate);
   const trailingMisses = getTrailingMisses(currentPoints);
   const recovery = getRecovery(currentPoints);
   const signal = getHabitSignal({ scheduled, completionRate, previousRate, delta, trailingMisses, recovery });

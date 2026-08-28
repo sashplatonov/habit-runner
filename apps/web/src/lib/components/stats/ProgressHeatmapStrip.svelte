@@ -13,7 +13,7 @@
   }
 
   function displayOpacity(cell: HabitHeatmapCell): number {
-    return cell.state === 'not scheduled' ? Math.max(0.55, cell.intensity) : cell.intensity;
+    return cell.intensity;
   }
 </script>
 
