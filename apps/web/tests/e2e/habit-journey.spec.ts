@@ -23,6 +23,13 @@ const habit = {
   freezeDays: []
 };
 
+const secondHabit = {
+  ...habit,
+  id: 'e2e-second-habit',
+  name: 'Stretch for five minutes',
+  icon: '🧘'
+};
+
 async function json(route: Route, body: unknown, status = 200): Promise<void> {
   await route.fulfill({ status, contentType: 'application/json', body: JSON.stringify(body) });
 }
@@ -46,7 +53,7 @@ async function mockBackend(page: Page): Promise<void> {
     const request = route.request();
     const pathname = new URL(request.url()).pathname;
     if (pathname.endsWith('/habits') && request.method() === 'GET') {
-      await json(route, [habit]);
+      await json(route, [habit, secondHabit]);
     } else if (pathname.endsWith('/habits') && request.method() === 'POST') {
       const payload = JSON.parse(request.postData() ?? '{}') as Record<string, unknown>;
       await json(route, { ...habit, ...payload, id: 'e2e-created', name: payload['name'] ?? habit.name });
@@ -143,6 +150,36 @@ test.describe.serial('critical habit journey', () => {
     await page.getByLabel('Name *').fill('Conflict proof');
     await page.getByRole('button', { name: 'Create habit' }).last().click();
     await expect(page.getByRole('alert')).toContainText('Check the highlighted fields');
+  });
+
+  test('keeps dashboard heatmaps usable in compact and comfortable layouts', async ({ page }) => {
+    await page.setViewportSize({ width: 320, height: 740 });
+    await page.goto('/app/dashboard');
+
+    await page.getByRole('button', { name: 'View options' }).click();
+    await page.getByRole('region', { name: 'Dashboard view options' }).getByRole('button', { name: 'List' }).click();
+    await expect(page.locator('li[data-habit-id]')).toHaveCount(2);
+    await expect(page.locator('li[data-habit-id]').first().getByRole('img', { name: /last 30 days/ })).toBeVisible();
+    await expect(page.locator('li[data-habit-id]').first().getByRole('button', { name: '📚 Read for ten minutes', exact: true })).toBeVisible();
+    await expect(page.locator('li[data-habit-id]').first().getByRole('button', { name: /Complete/ })).toBeVisible();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await page.getByRole('region', { name: 'Dashboard view options' }).getByRole('button', { name: 'Cards' }).click();
+    const tiles = page.locator('article[aria-label*="completed"], article[aria-label*="not completed"]');
+    await expect(tiles).toHaveCount(2);
+    for (const tile of await tiles.all()) {
+      const heatmap = tile.getByRole('img', { name: /last 30 days/ });
+      await expect(heatmap).toBeVisible();
+      const tileBox = await tile.boundingBox();
+      const heatmapBox = await heatmap.boundingBox();
+      expect(tileBox).not.toBeNull();
+      expect(heatmapBox).not.toBeNull();
+      expect(heatmapBox!.x).toBeGreaterThanOrEqual(tileBox!.x);
+      expect(heatmapBox!.x + heatmapBox!.width).toBeLessThanOrEqual(tileBox!.x + tileBox!.width);
+      await expect(tile.getByRole('button', { name: /Complete/ })).toBeVisible();
+      await expect(tile.locator('button').filter({ hasText: /Read for ten minutes|Stretch for five minutes/ })).toBeVisible();
+    }
   });
 
   test('keeps description feedback usable at compact mobile and desktop widths', async ({ page }) => {

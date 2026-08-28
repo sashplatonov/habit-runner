@@ -21,7 +21,7 @@
 
 ## HLR-HEATMAP-01: Встроить 30-дневный хитмап в компактную строку привычки
 
-**Status:** DONE  
+**Status:** DONE
 **Priority:** P1  
 **Depends on:** —
 
@@ -149,7 +149,7 @@ git commit -m "feat(dashboard): Add desktop habit heatmaps"
 
 ## HLR-HEATMAP-03: Зафиксировать контракт данных и адаптивную геометрию хитмапа
 
-**Status:** TODO  
+**Status:** DONE
 **Priority:** P2  
 **Depends on:** HLR-HEATMAP-01, HLR-HEATMAP-02
 
