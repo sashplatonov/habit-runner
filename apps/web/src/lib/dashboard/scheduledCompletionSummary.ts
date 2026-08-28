@@ -44,6 +44,11 @@ export type ScheduledCompletionSummary = {
 
 const SUMMARY_DAYS = 30;
 
+type ScheduledCompletionDayAggregate = {
+  day: ScheduledCompletionDay;
+  requiredHabits: Habit[];
+};
+
 function getCalendarDates(end: string): string[] {
   const start = addDaysToCalendarDate(end, -(SUMMARY_DAYS - 1));
   return Array.from({ length: SUMMARY_DAYS }, (_, index) => addDaysToCalendarDate(start, index));
@@ -67,29 +72,32 @@ function isAvailableOnDate(habit: Habit, calendarDate: string, timeZone: string)
   return getScheduleStatusForDate(habit, calendarDate, timeZone) !== 'frozen';
 }
 
-function buildDay(habits: Habit[], calendarDate: string, timeZone: string): ScheduledCompletionDay {
-  const requiredHabits = habits.filter(
+function getRequiredHabits(habits: Habit[], calendarDate: string, timeZone: string): Habit[] {
+  return habits.filter(
     (habit) =>
       isAvailableOnDate(habit, calendarDate, timeZone)
       && isMandatoryForCalendarDate(habit, calendarDate, timeZone, resolveHabitSchedule(habit))
   );
+}
+
+function buildDay(habits: Habit[], calendarDate: string, timeZone: string): ScheduledCompletionDayAggregate {
+  const requiredHabits = getRequiredHabits(habits, calendarDate, timeZone);
   const completed = requiredHabits.filter((habit) =>
     getHabitCompletionState(habit, calendarDateToCompletionKey(calendarDate)).completed
   ).length;
   const required = requiredHabits.length;
 
   if (required === 0) {
-    return { calendarDate, state: 'neutral', completed: 0, required: 0, ratio: null, brightnessLevel: null };
+    return {
+      day: { calendarDate, state: 'neutral', completed: 0, required: 0, ratio: null, brightnessLevel: null },
+      requiredHabits
+    };
   }
 
   const ratio = completed / required;
   return {
-    calendarDate,
-    state: 'required',
-    completed,
-    required,
-    ratio,
-    brightnessLevel: getBrightnessLevel(completed, required)
+    day: { calendarDate, state: 'required', completed, required, ratio, brightnessLevel: getBrightnessLevel(completed, required) },
+    requiredHabits
   };
 }
 
@@ -99,14 +107,11 @@ export function buildScheduledCompletionSummary(
   timeZone = getCurrentUserTimeZone()
 ): ScheduledCompletionSummary {
   const todayDate = formatCalendarDateInTimeZone(referenceDate, timeZone);
-  const days = getCalendarDates(todayDate).map((calendarDate) => buildDay(habits, calendarDate, timeZone));
-  const today = days[days.length - 1];
-  const requiredToday = habits.filter(
-    (habit) =>
-      isAvailableOnDate(habit, todayDate, timeZone)
-      && isMandatoryForCalendarDate(habit, todayDate, timeZone, resolveHabitSchedule(habit))
-  );
-  const segments = requiredToday.map((habit) => ({
+  const dayAggregates = getCalendarDates(todayDate).map((calendarDate) => buildDay(habits, calendarDate, timeZone));
+  const days = dayAggregates.map(({ day }) => day);
+  const todayAggregate = dayAggregates[dayAggregates.length - 1];
+  const today = todayAggregate.day;
+  const segments = todayAggregate.requiredHabits.map((habit) => ({
     habitId: habit.id,
     completed: getHabitCompletionState(habit, calendarDateToCompletionKey(todayDate)).completed
   }));

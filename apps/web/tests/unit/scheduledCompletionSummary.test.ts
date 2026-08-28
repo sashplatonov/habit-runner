@@ -32,6 +32,7 @@ describe('buildScheduledCompletionSummary', () => {
     ], new Date('2026-03-20T12:00:00Z'), 'UTC');
     expect(summary.today).toMatchObject({ completed: 1, required: 3, percentage: 33 });
     expect(summary.today.segments).toEqual([{ habitId: 'targeted', completed: false }, { habitId: 'negative', completed: true }, { habitId: 'friday', completed: false }]);
+    expect(summary.today.segments).toHaveLength(summary.today.required);
     expect(summary.days.at(-1)).toMatchObject({ state: 'required', completed: 1, required: 3, brightnessLevel: 2 });
   });
 

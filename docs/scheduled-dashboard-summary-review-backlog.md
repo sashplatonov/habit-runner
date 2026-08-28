@@ -62,7 +62,7 @@ git commit -m "fix(dashboard): Respect saved timezone in summary"
 
 ## SDSR-002: Derive today segments from the history aggregate
 
-**Status:** TODO
+**Status:** DONE
 **Priority:** P2
 **Depends on:** SDSR-001
 
