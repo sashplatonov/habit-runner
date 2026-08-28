@@ -166,3 +166,79 @@ describe('buildModernStatsSnapshot', () => {
     expect(new Set(snapshot.focusHabits.map((habit) => habit.id)).size).toBe(3);
   });
 });
+
+describe('compact analytics contract', () => {
+  it.each([
+    ['1w', 7],
+    ['4w', 28],
+    ['12w', 84]
+  ] as const)('builds %s windows and fixed history', (window, length) => {
+    const referenceDate = new Date('2026-07-16T12:00:00.000Z');
+    const snapshot = buildModernStatsSnapshot([createHabit({
+      completions: Object.fromEntries(Array.from({ length: 84 }, (_, index) => {
+        const date = new Date('2026-04-24T12:00:00.000Z');
+        date.setUTCDate(date.getUTCDate() + index);
+        return [calendarDateToCompletionKey(date.toISOString().slice(0, 10)), 1];
+      }))
+    })], window, referenceDate, 'UTC');
+
+    expect(snapshot.strong[0]?.heatmap).toHaveLength(length);
+    expect(snapshot.habitModels[0]?.heatmap).toHaveLength(length);
+    expect(snapshot.historyDays).toHaveLength(84);
+    expect(snapshot.currentWeek.length).toBeGreaterThanOrEqual(4);
+  });
+
+  it('uses scheduled opportunities only and exposes pp delta without a sample threshold', () => {
+    const referenceDate = new Date('2026-07-16T12:00:00.000Z');
+    const completions: Record<string, number> = {};
+    for (let offset = 0; offset < 14; offset += 1) {
+      const date = new Date('2026-07-03T12:00:00.000Z');
+      date.setUTCDate(date.getUTCDate() + offset);
+      if (offset >= 7) {
+        completions[calendarDateToCompletionKey(date.toISOString().slice(0, 10))] = 1;
+      }
+    }
+    const habit = createHabit({ completions });
+    const snapshot = buildModernStatsSnapshot([habit], '1w', referenceDate, 'UTC');
+
+    expect(snapshot.summary).toEqual({ completionRate: 100, completed: 7, scheduled: 7, delta: 100 });
+    expect(snapshot.strong[0]?.delta).toBe(100);
+    expect(snapshot.strong[0]?.completed).toBe(7);
+  });
+
+  it('classifies deterministically with disjoint sections and neutral unscheduled cells', () => {
+    const referenceDate = new Date('2026-07-16T12:00:00.000Z');
+    const attention = createHabit({ id: 'attention', name: 'Alpha', completions: {} });
+    const strong = createHabit({
+      id: 'strong',
+      name: 'Zulu',
+      completions: Object.fromEntries(Array.from({ length: 7 }, (_, index) => [
+        calendarDateToCompletionKey(`2026-07-${String(10 + index).padStart(2, '0')}`), 1
+      ]))
+    });
+    const weekly = createHabit({
+      id: 'weekly',
+      name: 'Weekly',
+      frequency: 'custom',
+      schedule: { type: 'weekly_days', weekdays: [1] }
+    });
+    const snapshot = buildModernStatsSnapshot([attention, strong, weekly], '1w', referenceDate, 'UTC');
+
+    expect(snapshot.needsAttention.map((habit) => habit.id)).toEqual(['attention', 'weekly']);
+    expect(snapshot.strong.map((habit) => habit.id)).toEqual(['strong']);
+    expect(snapshot.needsAttention.some((habit) => snapshot.strong.some((item) => item.id === habit.id))).toBe(false);
+    expect(snapshot.habitModels.find((habit) => habit.id === 'weekly')?.heatmap.some((cell) => cell.state === 'not scheduled')).toBe(true);
+    expect(snapshot.strong[0]?.label).toBe('📚 Zulu');
+    expect(weekly).toBeDefined();
+  });
+
+  it('keeps 84-day history unchanged when the selected period changes', () => {
+    const referenceDate = new Date('2026-07-16T12:00:00.000Z');
+    const habit = createHabit({ completions: buildFridayDipCompletions(referenceDate) });
+    const oneWeek = buildModernStatsSnapshot([habit], '1w', referenceDate, 'UTC');
+    const twelveWeeks = buildModernStatsSnapshot([habit], '12w', referenceDate, 'UTC');
+
+    expect(oneWeek.historyDays).toEqual(twelveWeeks.historyDays);
+    expect(oneWeek.history).toEqual(twelveWeeks.history);
+  });
+});

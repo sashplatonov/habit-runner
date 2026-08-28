@@ -8,7 +8,7 @@ import type { Habit } from '@/types/habit';
 import { calendarDateToCompletionKey } from '@/lib/completionKey';
 import { isScheduledForDate, resolveHabitSchedule } from '$lib/habits/schedule';
 
-export type StatsWindowId = '4w' | '12w';
+export type StatsWindowId = '1w' | '4w' | '12w';
 export type MonthPhase = 'early' | 'mid' | 'late';
 
 export type ScheduledOpportunity = {
@@ -34,9 +34,14 @@ export type StatsWindow = {
 };
 
 const WINDOW_LENGTHS: Record<StatsWindowId, number> = {
+  '1w': 7,
   '4w': 28,
   '12w': 84
 };
+
+export function getStatsWindowLength(window: StatsWindowId): number {
+  return WINDOW_LENGTHS[window];
+}
 
 function getDaysInMonth(calendarDate: string): number {
   const date = calendarDateToDate(calendarDate);

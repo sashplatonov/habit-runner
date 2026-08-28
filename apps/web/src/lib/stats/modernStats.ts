@@ -3,6 +3,7 @@ import type { Habit } from '@/types/habit';
 import { formatAppDate } from '@/lib/i18n';
 import { calculateScheduledStreak } from '$lib/habits/schedule';
 import { getCurrentUserTimeZone } from '$lib/time/userTimezone';
+import { formatHabitLabel } from '$lib/habits/formatHabitLabel';
 import {
   buildStatsWindows,
   type AggregateDayPoint,
@@ -19,6 +20,34 @@ export type CompletionWindowPoint = {
   completionRate: number;
   completedDays: number;
   scheduledDays: number;
+};
+
+export type HabitHeatmapState = 'completed' | 'missed' | 'not scheduled';
+
+export type HabitHeatmapCell = {
+  calendarDate: string;
+  state: HabitHeatmapState;
+  intensity: number;
+};
+
+export type HabitAnalyticsModel = {
+  id: string;
+  habit: Habit;
+  label: string;
+  completionRate: number | null;
+  completed: number;
+  scheduled: number;
+  delta: number | null;
+  trend: number[];
+  heatmap: HabitHeatmapCell[];
+  insight: string;
+  reason: string;
+  currentStreak: number;
+  longestStreak: number;
+};
+
+export type HistoryDay = AggregateDayPoint & {
+  completionRate: number | null;
 };
 
 export type HabitFocusCard = {
@@ -46,6 +75,17 @@ export type ModernStatsSnapshot = {
   totalScheduled: number;
   totalCompleted: number;
   focusHabits: HabitFocusCard[];
+  summary: {
+    completionRate: number | null;
+    completed: number;
+    scheduled: number;
+    delta: number | null;
+  };
+  needsAttention: HabitAnalyticsModel[];
+  strong: HabitAnalyticsModel[];
+  habitModels: HabitAnalyticsModel[];
+  historyDays: HistoryDay[];
+  currentWeek: HistoryDay[];
   pattern: TemporalPatternSummary | null;
   history: CompletionWindowPoint[];
 };
@@ -59,8 +99,8 @@ function getRate(completed: number, scheduled: number): number | null {
   return scheduled > 0 ? Math.round((completed / scheduled) * 100) : null;
 }
 
-function rateFor(points: ScheduledOpportunity[]): number {
-  return getRate(points.filter((point) => point.completed).length, points.length) ?? 0;
+function rateFor(points: ScheduledOpportunity[]): number | null {
+  return getRate(points.filter((point) => point.completed).length, points.length);
 }
 
 function getMomentum(points: ScheduledOpportunity[]): number | null {
@@ -110,6 +150,13 @@ function buildHistory(points: AggregateDayPoint[]): CompletionWindowPoint[] {
   return buckets;
 }
 
+function buildHistoryDays(points: AggregateDayPoint[]): HistoryDay[] {
+  return points.map((point) => ({
+    ...point,
+    completionRate: getRate(point.completedDays, point.scheduledDays)
+  }));
+}
+
 function getWeeklyProgress(points: AggregateDayPoint[]): number | null {
   const latest = points[points.length - 1];
   if (!latest) {
@@ -132,7 +179,12 @@ function getTrend(
     return { trendDelta: null, trendLabel: 'insufficient-data', trendSample };
   }
 
-  const trendDelta = rateFor(current) - rateFor(previous);
+  const currentRate = rateFor(current);
+  const previousRate = rateFor(previous);
+  if (currentRate === null || previousRate === null) {
+    return { trendDelta: null, trendLabel: 'insufficient-data', trendSample };
+  }
+  const trendDelta = currentRate - previousRate;
   return {
     trendDelta,
     trendLabel: trendDelta >= 8 ? 'rising' : trendDelta <= -8 ? 'slipping' : 'steady',
@@ -148,20 +200,172 @@ function summarizeHabit(
 ): Omit<HabitFocusCard, 'focus' | 'label'> {
   const { current, previous } = buildStatsWindows([habit], window, referenceDate, timeZone);
   const completionRate = rateFor(current.opportunities);
-  const previousRate = previous.opportunities.length >= MIN_TREND_SAMPLE
-    ? rateFor(previous.opportunities)
-    : null;
+  const previousRate = rateFor(previous.opportunities);
   const streak = calculateScheduledStreak(habit, habit.completions, referenceDate, timeZone);
 
   return {
     id: habit.id,
     habit,
-    completionRate,
-    completionDelta: previousRate === null ? null : completionRate - previousRate,
+    completionRate: completionRate ?? 0,
+    completionDelta: completionRate === null || previousRate === null ? null : completionRate - previousRate,
     currentStreak: streak.current,
     longestStreak: streak.longest,
     milestone: MILESTONES.find((milestone) => milestone > streak.current) ?? null
   };
+}
+
+function getTrailingMisses(points: ScheduledOpportunity[]): number {
+  let misses = 0;
+  for (const point of [...points].sort((left, right) => right.calendarDate.localeCompare(left.calendarDate))) {
+    if (point.completed) {
+      break;
+    }
+    misses += 1;
+  }
+  return misses;
+}
+
+function getRecovery(points: ScheduledOpportunity[]): boolean {
+  let misses = 0;
+  return [...points]
+    .sort((left, right) => left.calendarDate.localeCompare(right.calendarDate))
+    .some((point) => {
+      if (!point.completed) {
+        misses += 1;
+        return false;
+      }
+      const recovered = misses >= 2;
+      misses = 0;
+      return recovered;
+    });
+}
+
+type HabitSignal = 'attention' | 'strong' | 'neutral';
+
+function hasAttentionSignal(completionRate: number | null, previousRate: number | null, delta: number | null, trailingMisses: number): boolean {
+  const lowRate = completionRate !== null && completionRate < 60;
+  const negativeDelta = delta !== null && delta < 0;
+  const weak = completionRate !== null && completionRate < 75 && previousRate !== null && previousRate < 75;
+  return lowRate || negativeDelta || trailingMisses >= 2 || weak;
+}
+
+function hasStrongSignal(completionRate: number | null, delta: number | null, recovery: boolean): boolean {
+  const highRate = completionRate !== null && completionRate >= 80;
+  const positiveDelta = delta !== null && delta > 0;
+  return highRate || positiveDelta || recovery;
+}
+
+function getHabitSignal({
+  scheduled,
+  completionRate,
+  previousRate,
+  delta,
+  trailingMisses,
+  recovery
+}: {
+  scheduled: number;
+  completionRate: number | null;
+  previousRate: number | null;
+  delta: number | null;
+  trailingMisses: number;
+  recovery: boolean;
+}): HabitSignal {
+  if (scheduled > 0 && hasAttentionSignal(completionRate, previousRate, delta, trailingMisses)) {
+    return 'attention';
+  }
+  if (scheduled > 0 && hasStrongSignal(completionRate, delta, recovery)) {
+    return 'strong';
+  }
+  return 'neutral';
+}
+
+function getSignalCopy(
+  signal: HabitSignal,
+  completionRate: number | null,
+  delta: number | null,
+  trailingMisses: number,
+  recovery: boolean
+): { insight: string; reason: string } {
+  const lowRate = completionRate !== null && completionRate < 60;
+  if (signal === 'attention') {
+    if (lowRate) { return { insight: 'Completion is running low', reason: 'Low completion rate' }; }
+    if (trailingMisses >= 2) { return { insight: 'A recent run of misses needs attention', reason: 'Consecutive missed opportunities' }; }
+    if (delta !== null && delta < 0) { return { insight: 'Completion is below the previous period', reason: 'Negative change from the previous period' }; }
+    return { insight: 'Completion is below the previous period', reason: 'Persisting low completion' };
+  }
+  if (signal === 'strong') {
+    if (recovery) { return { insight: 'Recovered after missed opportunities', reason: 'Recovery after a missed run' }; }
+    if (completionRate !== null && completionRate >= 80) { return { insight: 'A consistently strong rhythm', reason: 'High completion rate' }; }
+    return { insight: 'Improving against the previous period', reason: 'Positive change from the previous period' };
+  }
+  return { insight: 'No clear signal yet', reason: 'Not enough evidence for a section' };
+}
+
+function buildHabitAnalytics(
+  habit: Habit,
+  window: StatsWindowId,
+  referenceDate: Date,
+  timeZone: string
+): HabitAnalyticsModel {
+  const { current, previous } = buildStatsWindows([habit], window, referenceDate, timeZone);
+  const currentPoints = current.opportunities;
+  const previousPoints = previous.opportunities;
+  const completed = currentPoints.filter((point) => point.completed).length;
+  const scheduled = currentPoints.length;
+  const completionRate = getRate(completed, scheduled);
+  const previousRate = getRate(
+    previousPoints.filter((point) => point.completed).length,
+    previousPoints.length
+  );
+  const delta = completionRate === null || previousRate === null ? null : completionRate - previousRate;
+  const streak = calculateScheduledStreak(habit, habit.completions, referenceDate, timeZone);
+  const byDate = new Map(currentPoints.map((point) => [point.calendarDate, point]));
+  const dates = current.days.map((day) => day.calendarDate);
+  const trend = dates.map((date) => {
+    const point = byDate.get(date);
+    return point ? (point.completed ? 1 : 0) : 0;
+  });
+  const heatmap = dates.map((calendarDate) => {
+    const point = byDate.get(calendarDate);
+    return {
+      calendarDate,
+      state: point ? (point.completed ? 'completed' : 'missed') : 'not scheduled',
+      intensity: point ? (point.completed ? 1 : 0.8) : 0.15
+    } satisfies HabitHeatmapCell;
+  });
+  const trailingMisses = getTrailingMisses(currentPoints);
+  const recovery = getRecovery(currentPoints);
+  const signal = getHabitSignal({ scheduled, completionRate, previousRate, delta, trailingMisses, recovery });
+  const { insight, reason } = getSignalCopy(signal, completionRate, delta, trailingMisses, recovery);
+
+  return {
+    id: habit.id,
+    habit,
+    label: formatHabitLabel(habit),
+    completionRate,
+    completed,
+    scheduled,
+    delta,
+    trend,
+    heatmap,
+    insight,
+    reason,
+    currentStreak: streak.current,
+    longestStreak: streak.longest
+  };
+}
+
+function sortAnalytics(left: HabitAnalyticsModel, right: HabitAnalyticsModel, direction: 'asc' | 'desc'): number {
+  const rateDifference = (left.completionRate ?? -1) - (right.completionRate ?? -1);
+  if (rateDifference !== 0) {
+    return direction === 'asc' ? rateDifference : -rateDifference;
+  }
+  const deltaDifference = (left.delta ?? -Infinity) - (right.delta ?? -Infinity);
+  if (deltaDifference !== 0) {
+    return direction === 'asc' ? deltaDifference : -deltaDifference;
+  }
+  const nameDifference = left.label.localeCompare(right.label, undefined, { sensitivity: 'base' });
+  return nameDifference !== 0 ? nameDifference : left.id.localeCompare(right.id);
 }
 
 function selectFocusHabits(
@@ -182,7 +386,7 @@ function selectFocusHabits(
     }
   };
 
-  add([...summaries].sort((left, right) => right.completionRate - left.completionRate)[0], 'strong', 'Strong rhythm');
+  add([...summaries].sort((left, right) => (right.completionRate ?? -1) - (left.completionRate ?? -1))[0], 'strong', 'Strong rhythm');
   add(
     [...summaries].filter((habit) =>
       !selected.has(habit.id) && habit.completionDelta !== null && habit.completionDelta > 0
@@ -193,7 +397,7 @@ function selectFocusHabits(
   );
   add(
     [...summaries].filter((habit) => !selected.has(habit.id))
-      .sort((left, right) => left.completionRate - right.completionRate)[0],
+      .sort((left, right) => (left.completionRate ?? -1) - (right.completionRate ?? -1))[0],
     'support',
     'Needs support'
   );
@@ -237,15 +441,32 @@ export function buildModernStatsSnapshot(
 ): ModernStatsSnapshot {
   const activeHabits = habits.filter((habit) => !habit.archived);
   const { current, previous } = buildStatsWindows(activeHabits, window, referenceDate, timeZone);
-  const history = buildHistory(current.days);
+  const { current: historyWindow } = buildStatsWindows(activeHabits, '12w', referenceDate, timeZone);
+  const history = buildHistory(historyWindow.days);
+  const historyDays = buildHistoryDays(historyWindow.days);
+  const latestHistoryDay = historyDays.at(-1);
+  const weekStart = latestHistoryDay
+    ? addDaysToCalendarDate(latestHistoryDay.calendarDate, -((getWeekdayFromCalendarDate(latestHistoryDay.calendarDate) + 6) % 7))
+    : null;
+  const currentWeek = weekStart ? historyDays.filter((day) => day.calendarDate >= weekStart) : [];
   const totalScheduled = current.opportunities.length;
   const totalCompleted = current.opportunities.filter((point) => point.completed).length;
+  const completionRate = getRate(totalCompleted, totalScheduled);
+  const previousCompleted = previous.opportunities.filter((point) => point.completed).length;
+  const previousRate = getRate(previousCompleted, previous.opportunities.length);
+  const delta = completionRate === null || previousRate === null ? null : completionRate - previousRate;
+  const analytics = activeHabits.map((habit) => buildHabitAnalytics(habit, window, referenceDate, timeZone));
+  const needsAttention = analytics.filter((habit) => habit.reason !== 'Not enough evidence for a section' && (
+    habit.insight === 'Completion is running low' || habit.insight === 'A recent run of misses needs attention' || habit.insight === 'Completion is below the previous period'
+  )).sort((left, right) => sortAnalytics(left, right, 'asc'));
+  const strong = analytics.filter((habit) => !needsAttention.some((candidate) => candidate.id === habit.id) && habit.reason !== 'Not enough evidence for a section')
+    .sort((left, right) => sortAnalytics(left, right, 'desc'));
   const focusHabits = selectFocusHabits(activeHabits, window, referenceDate, timeZone);
   const strongestStreak = Math.max(0, ...focusHabits.map((habit) => habit.currentStreak));
 
   return {
     window,
-    windowLabel: window === '4w' ? 'Last 4 weeks' : 'Last 12 weeks',
+    windowLabel: window === '1w' ? 'This week' : window === '4w' ? 'Last 4 weeks' : 'Last 12 weeks',
     momentum: getMomentum(current.opportunities),
     weeklyProgress: getWeeklyProgress(current.days),
     ...getTrend(current.opportunities, previous.opportunities),
@@ -254,6 +475,12 @@ export function buildModernStatsSnapshot(
     totalScheduled,
     totalCompleted,
     focusHabits,
+    summary: { completionRate, completed: totalCompleted, scheduled: totalScheduled, delta },
+    needsAttention,
+    strong,
+    habitModels: analytics,
+    historyDays,
+    currentWeek,
     pattern: findTemporalPattern(current.opportunities),
     history
   };
