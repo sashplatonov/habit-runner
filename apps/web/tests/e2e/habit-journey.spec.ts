@@ -427,7 +427,7 @@ test.describe('authenticated progress analytics', () => {
       await page.goto('/app/stats');
       await expect(page.getByRole('heading', { name: 'Needs attention' })).toBeVisible();
       await expect(page.getByRole('heading', { name: 'Strong' })).toBeVisible();
-      await expect(page.getByRole('heading', { name: '12-week history' })).toBeVisible();
+      await expect(page.getByRole('heading', { name: 'History' })).toBeVisible();
 
       const period = page.getByRole('group', { name: 'Progress period' });
       const tab = period.getByRole('button', { name: windowLabel });
@@ -455,14 +455,13 @@ test.describe('authenticated progress analytics', () => {
 
       const history = page.getByRole('list', { name: '12-week completion history' });
       await expect(history.locator('[role="listitem"]')).toHaveCount(84);
-      const guide = page.getByRole('button', { name: 'Chart guide: History' });
+      const guide = page.getByRole('button', { name: 'More information: History' });
       await guide.focus();
-      await expect(page.getByRole('dialog', { name: 'History explanation' })).toHaveCount(0);
+      await expect(page.getByRole('tooltip')).toHaveCount(0);
       await guide.press('Enter');
-      const dialog = page.getByRole('dialog', { name: 'History explanation' });
-      await expect(dialog).toBeVisible();
-      await dialog.press('Escape');
-      await expect(dialog).toBeHidden();
+      await expect(page.getByRole('tooltip')).toBeVisible();
+      await guide.press('Escape');
+      await expect(page.getByRole('tooltip')).toHaveCount(0);
       await expect(guide).toBeFocused();
       await expect(guide).toHaveAttribute('aria-expanded', 'false');
     }

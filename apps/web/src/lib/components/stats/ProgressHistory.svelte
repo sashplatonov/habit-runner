@@ -1,6 +1,6 @@
 <script lang="ts">
   import { addDaysToCalendarDate } from '@habbit-runner/shared';
-  import ChartGuideTooltip from '$lib/components/ChartGuideTooltip.svelte';
+  import StatsInfoTooltip from '$lib/components/stats/StatsInfoTooltip.svelte';
   import type { HabitHeatmapCell, HistoryDay } from '$lib/stats/modernStats';
 
   type Props = {
@@ -40,17 +40,11 @@
   <div class="flex items-start justify-between gap-3">
     <div class="min-w-0">
       <div class="flex items-center gap-2">
-        <h2 id="progress-history-title" class="text-sm font-semibold text-foreground">12-week history</h2>
-        <ChartGuideTooltip title="History" summary="This history always covers the latest 84 calendar days, independent of the selected period." focusPoints={['The full grid is always 12 weeks.', 'Each column is one calendar week.']} variant="grid" triggerClassName="h-8 w-8" />
-      </div>
-      <div class="mt-1 text-[10px] font-mono uppercase tracking-[0.12em] text-muted">
-        Last 12 weeks · scheduled only
+        <h2 id="progress-history-title" class="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted">History</h2>
+        <StatsInfoTooltip label="History" content="The latest 12 weeks of scheduled opportunities. Brighter cells show stronger results; quiet cells were not scheduled." />
       </div>
     </div>
-    <div class="shrink-0 text-right">
-      <p class="text-[10px] font-mono uppercase tracking-[0.12em] text-muted">This week</p>
-      <p class="tabular-nums text-lg font-semibold text-foreground">{currentWeekRate === null ? '—' : `${currentWeekRate}%`}</p>
-    </div>
+    <p class="shrink-0 text-[11px] text-muted">Last 12 weeks · scheduled only</p>
   </div>
 
   <div class="mt-3" role="list" aria-label="12-week completion history">
@@ -87,7 +81,10 @@
     <span class="flex items-center gap-1"><i class="h-2.5 w-2.5 rounded-[3px] bg-bg-secondary opacity-55"></i>Not scheduled</span>
   </div>
   <div class="mt-3 border-t border-border/60 pt-3">
-    <p class="mb-2 text-[10px] font-mono uppercase tracking-[0.12em] text-muted">Current calendar week</p>
+    <div class="mb-2 flex items-center justify-between gap-3">
+      <p class="text-[10px] font-mono uppercase tracking-[0.12em] text-muted">Current week</p>
+      <p class="tabular-nums text-base font-semibold text-foreground">{currentWeekRate === null ? '—' : `${currentWeekRate}%`}</p>
+    </div>
     <div class="grid grid-flow-col grid-rows-1 gap-1.5" style={`grid-template-columns: repeat(${weekCells.length}, minmax(0, 1fr));`} role="list" aria-label="Current week activity">
       {#each weekCells as cell, index (cell.calendarDate + '-' + index)}
         {@const stateClass = cell.state === 'completed'

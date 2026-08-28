@@ -2,11 +2,13 @@
   type Props = {
     points: number[];
     label?: string;
+    compact?: boolean;
+    tone?: 'attention' | 'progress';
   };
 
-  const { points, label = 'Completion trend' }: Props = $props();
-  const width = 120;
-  const height = 32;
+  const { points, label = 'Completion trend', compact = false, tone = 'progress' }: Props = $props();
+  const width = $derived(compact ? 76 : 120);
+  const height = $derived(compact ? 24 : 32);
   const padding = 3;
   const validPoints = $derived(points.filter((point) => Number.isFinite(point)));
   const hasData = $derived(validPoints.length >= 2);
@@ -22,10 +24,10 @@
   });
 </script>
 
-<div class="flex h-8 w-[7.5rem] shrink-0 items-center" role="img" aria-label={label}>
+<div class={`flex shrink-0 items-center ${compact ? 'h-6 w-[4.75rem]' : 'h-8 w-[7.5rem]'}`} role="img" aria-label={label}>
   {#if hasData}
-    <svg viewBox="0 0 120 32" class="h-full w-full" aria-hidden="true">
-      <path d={path} fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+    <svg viewBox={`0 0 ${width} ${height}`} class="h-full w-full" aria-hidden="true">
+      <path d={path} fill="none" stroke={tone === 'attention' ? 'var(--danger)' : 'var(--accent)'} stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
     </svg>
   {:else}
     <span class="h-px w-full bg-border" aria-hidden="true"></span>

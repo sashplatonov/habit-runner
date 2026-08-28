@@ -2,10 +2,10 @@
   import { resolve } from '$app/paths';
   import { AlertCircle, CheckCircle2, Info } from 'lucide-svelte';
   import EmptyState from '$lib/components/EmptyState.svelte';
-  import ChartGuideTooltip from '$lib/components/ChartGuideTooltip.svelte';
   import ProgressBar from '$lib/components/ui/ProgressBar.svelte';
   import ProgressHistory from '$lib/components/stats/ProgressHistory.svelte';
   import ProgressHabitRow from '$lib/components/stats/ProgressHabitRow.svelte';
+  import StatsInfoTooltip from '$lib/components/stats/StatsInfoTooltip.svelte';
   import SegmentedControl from '$lib/components/ui/SegmentedControl.svelte';
   import Surface from '$lib/components/ui/Surface.svelte';
   import { getAppRuntime } from '$lib/app/runtime';
@@ -67,9 +67,8 @@
     <div class="mx-auto flex max-w-3xl flex-col gap-3 sm:gap-4">
       <header class="flex flex-col gap-3">
         <div class="min-w-0">
-          <p class="text-[10px] font-semibold uppercase tracking-[0.28em] text-muted">Progress</p>
-          <h1 class="mt-1 text-2xl font-semibold tracking-tight text-foreground">Your scheduled progress</h1>
-          <p class="mt-0.5 text-xs text-muted">See what is working and what is slipping.</p>
+          <h1 class="text-xl font-semibold tracking-tight text-foreground">Progress</h1>
+          <p class="mt-0.5 text-xs text-muted">See what is working and what is slipping</p>
         </div>
         <SegmentedControl
           options={windowOptions}
@@ -85,13 +84,7 @@
           <div class="min-w-0">
             <div class="flex items-center gap-1.5">
               <p id="progress-summary-title" class="text-[10px] font-semibold uppercase tracking-[0.24em] text-muted">{snapshot.windowLabel}</p>
-              <ChartGuideTooltip
-                title="Completion rate"
-                summary="Completed scheduled opportunities divided by all scheduled opportunities in this period."
-                focusPoints={['Dates before a habit was created and freeze days are excluded.', 'A dash means there are no scheduled opportunities.']}
-                variant="bars"
-                triggerClassName="h-6 w-6"
-              />
+              <StatsInfoTooltip label="This week" content="Habits ranked as weak, declining, or repeatedly missed inside this period." />
             </div>
           </div>
           <span class="rounded-full border border-accent/20 bg-accent/10 px-2.5 py-1 text-[11px] font-medium text-accent">
@@ -120,11 +113,11 @@
         <div class="mt-3 border-t border-border/70 pt-3">
           <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted">
             <span><strong class="font-semibold text-foreground">{activeHabits.length}</strong> habits</span>
-            <ChartGuideTooltip title="Habits" summary="The number of active habits included in this period." focusPoints={['Archived habits are excluded.']} triggerClassName="h-6 w-6" />
+            <StatsInfoTooltip label="Habits" content="Active habits included in the selected period." />
             <span><strong class="font-semibold text-foreground">{snapshot.needsAttention.length}</strong> attention</span>
-            <ChartGuideTooltip title="Attention" summary="Habits with low completion, a negative change, or a recent run of missed opportunities." focusPoints={['Lower completion is shown first.']} triggerClassName="h-6 w-6" />
+            <StatsInfoTooltip label="Attention" content="Habits with low completion, a negative change, or a recent run of missed opportunities." />
             <span><strong class="font-semibold text-foreground">{snapshot.strong.length > 0 ? `${snapshot.strong[0].completionRate}%` : '—'}</strong> best</span>
-            <ChartGuideTooltip title="Best" summary="The highest completion rate among the strong habits in this period." focusPoints={['Strong habits are ordered by completion rate.']} triggerClassName="h-6 w-6" />
+            <StatsInfoTooltip label="Best" content="The highest completion rate among the strong habits in this period." align="end" />
           </div>
         </div>
       </Surface>
@@ -136,12 +129,7 @@
             <div class="min-w-0">
               <div class="flex items-center gap-1.5">
                 <h2 id="needs-attention-title" class="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted">Needs attention</h2>
-                <ChartGuideTooltip
-                  title="Needs attention"
-                  summary="Habits with low completion, a negative change, or a recent run of missed scheduled opportunities."
-                  focusPoints={['Rows are ordered from lowest completion rate upward.']}
-                  triggerClassName="h-6 w-6"
-                />
+                <StatsInfoTooltip label="Needs attention" content="Habits with low completion, a negative change, or a recent run of missed scheduled opportunities." />
               </div>
               <p class="text-xs text-muted">This week · one-line heatmap</p>
             </div>
@@ -170,12 +158,7 @@
             <div class="min-w-0">
               <div class="flex items-center gap-1.5">
                 <h2 id="strong-title" class="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted">Strong</h2>
-                <ChartGuideTooltip
-                  title="Strong"
-                  summary="Habits with high completion, positive change, or evidence of recovery after missed opportunities."
-                  focusPoints={['Rows are ordered from highest completion rate downward.']}
-                  triggerClassName="h-6 w-6"
-                />
+                <StatsInfoTooltip label="Strong" content="Habits with high completion, positive change, or evidence of recovery after missed opportunities." />
               </div>
               <p class="text-xs text-muted">This week · one-line heatmap</p>
             </div>
