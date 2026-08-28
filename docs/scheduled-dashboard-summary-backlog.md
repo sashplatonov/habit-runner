@@ -89,7 +89,7 @@ git commit -m "feat(dashboard): Aggregate scheduled completion history"
 
 ## SDS-002: Render the responsive scheduled dashboard summary
 
-**Status:** TODO
+**Status:** DONE
 **Priority:** P1
 **Depends on:** SDS-001
 

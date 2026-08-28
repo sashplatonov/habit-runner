@@ -18,22 +18,23 @@
   import HabitTile from '$lib/components/HabitTile.svelte';
   import Onboarding from '$lib/components/Onboarding.svelte';
   import RemindersPanel from '$lib/components/RemindersPanel.svelte';
-  import TodaySummary from '$lib/components/dashboard/TodaySummary.svelte';
+  import ScheduledCompletionSummary from '$lib/components/dashboard/ScheduledCompletionSummary.svelte';
   import DashboardToolbar from '$lib/components/dashboard/DashboardToolbar.svelte';
   import HabitCompactRow from '$lib/components/dashboard/HabitCompactRow.svelte';
   import type { OnboardingTemplate } from '$lib/components/onboarding';
   import { readDashboardStateFromURL, updateDashboardURL } from '$lib/dashboard/urlState';
   import { readLegacyDashboardPreferences } from '$lib/dashboard/preferences';
-  import { buildTodaySummary } from '$lib/dashboard/todaySummary';
+  import { buildScheduledCompletionSummary } from '$lib/dashboard/scheduledCompletionSummary';
   import { normalizeDashboardFilter, shouldShowDashboardOnboarding, type DashboardFilter } from '$lib/dashboard/viewState';
   import { formatAppDate } from '@/lib/i18n';
+  import { getCurrentUserTimeZone } from '$lib/time/userTimezone';
   import {
     calculateScheduledStreak,
     getScheduleStatusForDate,
     isMandatoryToday
   } from '$lib/habits/schedule';
   import { buildCelebrationParticles, getCelebrationLabel, type CelebrationParticle } from '$lib/habits/completionCelebration';
-  import { formatDate, getDaysSinceLastCompletion } from '$lib/habits/habitStats';
+  import { formatDate } from '$lib/habits/habitStats';
   import { getAppRuntime } from '$lib/app/runtime';
   import { themeStore } from '$lib/stores/theme';
   import { HABIT_COLOR_THEMES } from '$lib/theme/habit-colors';
@@ -123,8 +124,9 @@
 
   // ─── Derived: dates ───────────────────────────────────────────────────────────
   const todayDate = $derived.by(() => { const n = new Date(); return new Date(n.getFullYear(), n.getMonth(), n.getDate()); });
+  const timeZone = getCurrentUserTimeZone();
   const todayKey  = $derived(formatDate(todayDate));
-  const dateStr   = $derived(formatAppDate(todayDate, { weekday: 'long', month: 'short', day: 'numeric' }));
+  const dateStr   = $derived(formatAppDate(new Date(), { weekday: 'long', month: 'short', day: 'numeric', timeZone }));
 
   function isHabitCompletedToday(habit: Habit, dateKey: string) {
     return getHabitCompletionState(habit, dateKey).completed;
@@ -139,35 +141,13 @@
 
   const scheduledToday = $derived(activeHabits.filter((h) => isMandatoryToday(h, todayDate)));
 
-  const completedTodayCount = $derived(
-    scheduledToday.filter((h) => isHabitCompletedToday(h, todayKey)).length
-  );
-
   const pendingCount = $derived(
     scheduledToday.filter((h) => !isHabitCompletedToday(h, todayKey)).length
   );
 
-  const overallStreak = $derived.by(() => {
-    if (activeHabits.length === 0) { return 0; }
-    return Math.max(...activeHabits.map((h) => calculateScheduledStreak(h, h.completions).current));
-  });
-
   // ─── More derived ────────────────────────────────────────────────────────────
-  const daysSinceLast       = $derived(getDaysSinceLastCompletion(activeHabits));
-  const nextPendingHabit = $derived(
-    [...scheduledToday].sort((a, b) => sortHabits(a, b, sortMode, todayDate))
-      .find((habit) => !isHabitCompletedToday(habit, todayKey)) ?? null
-  );
-  const todaySummary = $derived(
-    buildTodaySummary({
-      isHydrating: isInitialHydration,
-      scheduledCount: scheduledToday.length,
-      completedCount: completedTodayCount,
-      bestStreak: overallStreak,
-      daysSinceLastCompletion: daysSinceLast,
-      nextHabitName: nextPendingHabit ? formatHabitLabel(nextPendingHabit) : null,
-      nextHabitId: nextPendingHabit?.id ?? null
-    })
+  const scheduledCompletionSummary = $derived(
+    buildScheduledCompletionSummary(activeHabits, todayDate, timeZone)
   );
 
   const allTags = $derived.by(() => {
@@ -427,12 +407,6 @@
 
   function navigateToNewHabit() {
     void goto(resolve(appResolve('/app/(protected)/habit/new', {}), {}));
-  }
-
-  function navigateToNextHabit() {
-    if (todaySummary.nextHabitId) {
-      navigateToDetail(todaySummary.nextHabitId);
-    }
   }
 
   // ─── Drag-and-drop ────────────────────────────────────────────────────────────
@@ -733,10 +707,9 @@
 {:else}
   <div class="min-h-screen bg-transparent px-4 pt-4 sm:px-6">
     <div class="mx-auto flex max-w-6xl flex-col gap-4">
-      <TodaySummary
-        summary={todaySummary}
+      <ScheduledCompletionSummary
+        summary={scheduledCompletionSummary}
         dateLabel={dateStr}
-        onPrimaryAction={todaySummary.nextHabitId ? navigateToNextHabit : undefined}
       />
 
       <div
