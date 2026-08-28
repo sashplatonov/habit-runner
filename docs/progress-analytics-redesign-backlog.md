@@ -91,7 +91,7 @@ git commit -m "feat(stats): model compact progress analytics"
 
 ## PROG-AN-002: Доступные компактные визуализации аналитики
 
-**Status:** TODO
+**Status:** DONE
 **Priority:** P1
 **Depends on:** PROG-AN-001
 
