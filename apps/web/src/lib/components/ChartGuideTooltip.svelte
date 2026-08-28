@@ -15,13 +15,14 @@
 
   const { title, summary, focusPoints, variant = 'bars', triggerClassName = '' }: Props = $props();
 
-  let open = $state(false);
-  let pinned = $state(false);
+  let previewVisible = $state(false);
+  let dialogOpen = $state(false);
   let triggerEl = $state<HTMLButtonElement | null>(null);
   let panelEl = $state<HTMLDivElement | null>(null);
   let position = $state({ left: 12, top: 12 });
   let hoverCloseTimer: ReturnType<typeof setTimeout> | null = null;
   let skipNextFocusPreview = false;
+  const visible = $derived(previewVisible || dialogOpen);
 
   function clearHoverCloseTimer() {
     if (hoverCloseTimer !== null) {
@@ -31,25 +32,31 @@
   }
 
   function previewOpen() {
-    if (pinned) return;
+    if (dialogOpen) return;
     clearHoverCloseTimer();
-    open = true;
+    previewVisible = true;
   }
 
   function previewClose() {
-    if (pinned) return;
+    if (dialogOpen) return;
     clearHoverCloseTimer();
     hoverCloseTimer = setTimeout(() => {
-      if (!pinned) open = false;
+      if (!dialogOpen) previewVisible = false;
       hoverCloseTimer = null;
     }, 90);
   }
 
-  function closePanel() {
+  function openDialog() {
     clearHoverCloseTimer();
-    pinned = false;
+    dialogOpen = true;
+    previewVisible = true;
+  }
+
+  function closeDialog() {
+    clearHoverCloseTimer();
+    dialogOpen = false;
+    previewVisible = false;
     skipNextFocusPreview = true;
-    open = false;
   }
 
   function handleTriggerFocus() {
@@ -63,15 +70,15 @@
   function handlePanelKeydown(event: KeyboardEvent) {
     if (event.key === 'Escape') {
       event.preventDefault();
-      closePanel();
+      closeDialog();
     }
     event.stopPropagation();
   }
 
   function handleTriggerKeydown(event: KeyboardEvent) {
-    if (event.key === 'Escape' && open) {
+    if (event.key === 'Escape' && (dialogOpen || previewVisible)) {
       event.preventDefault();
-      closePanel();
+      closeDialog();
     }
   }
 
@@ -98,23 +105,23 @@
   // Use unified overlay contract for accessibility
   // Note: overlayManager handles outside-click and Escape automatically
   $effect(() => {
-    if (open && panelEl) {
+    if (dialogOpen && panelEl) {
       openOverlay({
         triggerEl,
         panelEl,
         open: true,
-        onClose: closePanel,
+        onClose: closeDialog,
         closeOnEscape: true,
         closeOnOutsideClick: true,
         trapFocus: true,
         restoreFocus: true,
         lockScroll: false,
       });
-    } else if (!open) {
+    } else if (!dialogOpen) {
       closeActiveOverlay();
     }
 
-    if (!open) return;
+    if (!visible) return;
 
     // Delay to let panel render
     const raf = requestAnimationFrame(updatePosition);
@@ -137,11 +144,10 @@
   onclick={(e) => {
     e.stopPropagation();
     clearHoverCloseTimer();
-    if (pinned) {
-      closePanel();
+    if (dialogOpen) {
+      closeDialog();
     } else {
-      pinned = true;
-      open = true;
+      openDialog();
     }
   }}
   onmouseenter={previewOpen}
@@ -150,25 +156,24 @@
   onblur={previewClose}
   onkeydown={handleTriggerKeydown}
   class="inline-flex h-8 w-8 items-center justify-center rounded-full border transition-colors
-    {open ? 'border-accent/50 bg-accent/10 text-accent' : 'border-border bg-bg-card text-muted hover:border-border-hover hover:text-foreground'}
+    {visible ? 'border-accent/50 bg-accent/10 text-accent' : 'border-border bg-bg-card text-muted hover:border-border-hover hover:text-foreground'}
     {triggerClassName}"
-  aria-expanded={open}
+  aria-expanded={dialogOpen}
   aria-label="Chart guide: {title}"
 >
   <CircleHelp size={14} stroke-width={2.1} />
 </button>
 
-{#if open}
+{#if visible}
   <div
     use:portal
     bind:this={panelEl}
     class="fixed z-[240] w-72 max-w-[calc(100vw-1.5rem)] rounded-3xl border border-border bg-bg-card p-3 text-left shadow-[0_18px_60px_rgba(0,0,0,0.32)]"
     style:left="{position.left}px"
     style:top="{position.top}px"
-    role="dialog"
-    aria-modal="true"
+    role={dialogOpen ? 'dialog' : 'tooltip'}
+    aria-modal={dialogOpen ? 'true' : undefined}
     aria-label="{title} explanation"
-    tabindex="-1"
     onclick={(e) => { e.stopPropagation(); }}
     onkeydown={handlePanelKeydown}
     onmouseenter={previewOpen}
@@ -193,7 +198,7 @@
       </div>
       <button
         type="button"
-        onclick={(e) => { e.stopPropagation(); closePanel(); }}
+        onclick={(e) => { e.stopPropagation(); closeDialog(); }}
         class="inline-flex h-8 w-8 flex-none items-center justify-center rounded-full border border-border bg-bg-primary/70 text-muted transition-colors hover:border-border-hover hover:text-foreground"
         aria-label="Close {title} explanation"
       >

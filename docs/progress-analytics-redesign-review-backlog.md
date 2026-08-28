@@ -21,7 +21,7 @@ Close the confirmed regressions found while reviewing `PROG-AN-001` through `PRO
 
 ## PROG-AN-RVW-001: Separate tooltip preview from modal explanation state
 
-**Status:** TODO
+**Status:** DONE
 **Priority:** P0
 **Depends on:** -
 

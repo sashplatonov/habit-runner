@@ -452,12 +452,14 @@ test.describe('authenticated progress analytics', () => {
       await expect(history.locator('[role="listitem"]')).toHaveCount(84);
       const guide = page.getByRole('button', { name: 'Chart guide: History' });
       await guide.focus();
+      await expect(page.getByRole('dialog', { name: 'History explanation' })).toHaveCount(0);
       await guide.press('Enter');
       const dialog = page.getByRole('dialog', { name: 'History explanation' });
       await expect(dialog).toBeVisible();
       await dialog.press('Escape');
       await expect(dialog).toBeHidden();
       await expect(guide).toBeFocused();
+      await expect(guide).toHaveAttribute('aria-expanded', 'false');
     }
   });
 });
