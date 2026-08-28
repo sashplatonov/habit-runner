@@ -253,4 +253,26 @@ describe('compact analytics contract', () => {
     expect(oneWeek.historyDays).toEqual(twelveWeeks.historyDays);
     expect(oneWeek.history).toEqual(twelveWeeks.history);
   });
+
+  it('builds smooth directional lines instead of a day-by-day completion waveform', () => {
+    const referenceDate = new Date('2026-07-16T12:00:00.000Z');
+    const dates = Array.from({ length: 7 }, (_, index) => `2026-07-${String(10 + index).padStart(2, '0')}`);
+    const declining = createHabit({
+      id: 'declining',
+      completions: Object.fromEntries(dates.slice(0, 4).map((date) => [calendarDateToCompletionKey(date), 1]))
+    });
+    const improving = createHabit({
+      id: 'improving',
+      completions: Object.fromEntries(dates.slice(3).map((date) => [calendarDateToCompletionKey(date), 1]))
+    });
+
+    const snapshot = buildModernStatsSnapshot([declining, improving], '1w', referenceDate, 'UTC');
+    const decliningTrend = snapshot.habitModels.find((habit) => habit.id === 'declining')?.trend ?? [];
+    const improvingTrend = snapshot.habitModels.find((habit) => habit.id === 'improving')?.trend ?? [];
+
+    expect(decliningTrend).toHaveLength(5);
+    expect(improvingTrend).toHaveLength(5);
+    expect(decliningTrend[0]).toBeGreaterThan(decliningTrend.at(-1) ?? 0);
+    expect(improvingTrend[0] ?? 1).toBeLessThan(improvingTrend.at(-1) ?? 0);
+  });
 });

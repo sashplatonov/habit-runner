@@ -301,6 +301,35 @@ function getSignalCopy(
   return { insight: 'No clear signal yet', reason: 'Not enough evidence for a section' };
 }
 
+function buildHabitTrend(
+  dates: string[],
+  opportunitiesByDate: Map<string, ScheduledOpportunity>
+): number[] {
+  const observations = dates.flatMap((calendarDate, index) => {
+    const opportunity = opportunitiesByDate.get(calendarDate);
+    return opportunity ? [{ x: index, y: opportunity.completed ? 1 : 0 }] : [];
+  });
+  if (observations.length < 2 || dates.length < 2) {
+    return [];
+  }
+
+  const meanX = observations.reduce((sum, observation) => sum + observation.x, 0) / observations.length;
+  const meanY = observations.reduce((sum, observation) => sum + observation.y, 0) / observations.length;
+  const variance = observations.reduce((sum, observation) => sum + (observation.x - meanX) ** 2, 0);
+  const covariance = observations.reduce(
+    (sum, observation) => sum + (observation.x - meanX) * (observation.y - meanY),
+    0
+  );
+  const slope = variance === 0 ? 0 : covariance / variance;
+  const intercept = meanY - slope * meanX;
+  const sampleCount = Math.min(5, dates.length);
+
+  return Array.from({ length: sampleCount }, (_, index) => {
+    const x = (dates.length - 1) * (index / Math.max(1, sampleCount - 1));
+    return Math.max(0, Math.min(1, intercept + slope * x));
+  });
+}
+
 function buildHabitAnalytics(
   habit: Habit,
   window: StatsWindowId,
@@ -321,10 +350,7 @@ function buildHabitAnalytics(
   const streak = calculateScheduledStreak(habit, habit.completions, referenceDate, timeZone);
   const byDate = new Map(currentPoints.map((point) => [point.calendarDate, point]));
   const dates = current.days.map((day) => day.calendarDate);
-  const trend = dates.map((date) => {
-    const point = byDate.get(date);
-    return point ? (point.completed ? 1 : 0) : 0;
-  });
+  const trend = buildHabitTrend(dates, byDate);
   const heatmap = dates.map((calendarDate) => {
     const point = byDate.get(calendarDate);
     return {
