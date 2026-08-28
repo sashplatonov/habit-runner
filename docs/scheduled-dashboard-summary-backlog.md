@@ -155,7 +155,7 @@ git commit -m "feat(dashboard): Show scheduled completion summary"
 
 ## SDS-003: Prove scheduled-summary behavior and responsive geometry in the browser
 
-**Status:** TODO
+**Status:** DONE
 **Priority:** P2
 **Depends on:** SDS-002
 

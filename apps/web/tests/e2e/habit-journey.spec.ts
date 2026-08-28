@@ -30,11 +30,61 @@ const secondHabit = {
   icon: '🧘'
 };
 
+const scheduledSummaryHabits = [
+  {
+    ...habit,
+    id: 'summary-daily',
+    name: 'Daily reading',
+    createdAt: '2026-08-01T10:00:00Z',
+    updatedAt: '2026-08-01T10:00:00Z'
+  },
+  {
+    ...habit,
+    id: 'summary-weekday',
+    name: 'Friday stretch',
+    icon: '🧘',
+    schedule: { type: 'weekly_days', weekdays: [5] },
+    frequency: 'CUSTOM',
+    customDays: [5],
+    createdAt: '2026-08-01T10:00:00Z',
+    updatedAt: '2026-08-01T10:00:00Z',
+    sortOrder: 2
+  },
+  {
+    ...habit,
+    id: 'summary-quota',
+    name: 'Weekly quota',
+    schedule: { type: 'weekly_quota', timesPerWeek: 2, weekdays: [1, 3, 5] },
+    frequency: 'CUSTOM',
+    customDays: [1, 3, 5],
+    createdAt: '2026-08-01T10:00:00Z',
+    updatedAt: '2026-08-01T10:00:00Z',
+    sortOrder: 3
+  },
+  {
+    ...habit,
+    id: 'summary-unscheduled',
+    name: 'Thursday only',
+    schedule: { type: 'weekly_days', weekdays: [4] },
+    frequency: 'CUSTOM',
+    customDays: [4],
+    createdAt: '2026-08-01T10:00:00Z',
+    updatedAt: '2026-08-01T10:00:00Z',
+    sortOrder: 4
+  }
+];
+
 async function json(route: Route, body: unknown, status = 200): Promise<void> {
   await route.fulfill({ status, contentType: 'application/json', body: JSON.stringify(body) });
 }
 
-async function mockBackend(page: Page): Promise<void> {
+async function mockBackend(page: Page, habits: readonly Record<string, unknown>[] = [habit, secondHabit], initialCheckins: unknown[] = []): Promise<void> {
+  const checkins = new Map(
+    initialCheckins.map((checkin) => {
+      const value = checkin as { habitId: string; date: string };
+      return [`${value.habitId}:${value.date}`, checkin];
+    })
+  );
   await page.route(/\/(?:api\/)?auth\//, async (route) => {
     const pathname = new URL(route.request().url()).pathname;
     if (pathname.includes('/auth/session') || pathname.includes('/auth/preferences')) {
@@ -53,7 +103,7 @@ async function mockBackend(page: Page): Promise<void> {
     const request = route.request();
     const pathname = new URL(request.url()).pathname;
     if (pathname.endsWith('/habits') && request.method() === 'GET') {
-      await json(route, [habit, secondHabit]);
+      await json(route, habits);
     } else if (pathname.endsWith('/habits') && request.method() === 'POST') {
       const payload = JSON.parse(request.postData() ?? '{}') as Record<string, unknown>;
       await json(route, { ...habit, ...payload, id: 'e2e-created', name: payload['name'] ?? habit.name });
@@ -67,11 +117,27 @@ async function mockBackend(page: Page): Promise<void> {
   });
   await page.route(/\/(?:api\/)?checkins(?:\/|$)/, async (route) => {
     if (route.request().method() === 'GET') {
-      await json(route, []);
+      await json(route, [...checkins.values()]);
     } else if (route.request().method() === 'PUT') {
+      const url = new URL(route.request().url());
+      const match = url.pathname.match(/\/habits\/([^/]+)\/dates\/([^/]+)$/);
+      const payload = JSON.parse(route.request().postData() ?? '{}') as { done?: boolean; count?: number };
+      const habitId = decodeURIComponent(match?.[1] ?? '');
+      const date = decodeURIComponent(match?.[2] ?? '');
+      const checkin = {
+        id: `e2e-checkin-${habitId}-${date}`,
+        userId: 'e2e-user',
+        habitId,
+        date,
+        done: payload.done ?? false,
+        count: payload.count ?? 0,
+        createdAt: '2026-08-28T10:00:00Z',
+        updatedAt: '2026-08-28T10:00:00Z',
+        version: 1
+      };
+      checkins.set(`${habitId}:${date}`, checkin);
       await json(route, {
-        id: 'e2e-checkin', habitId: 'e2e-created', date: '2026-08-08', done: true,
-        count: 1, createdAt: '2026-08-08T10:00:00Z', updatedAt: '2026-08-08T10:00:00Z', version: 1
+        ...checkin
       });
     } else {
       await route.fulfill({ status: 204 });
@@ -221,5 +287,64 @@ test.describe.serial('critical habit journey', () => {
     await page.getByLabel('Name *').fill('Conflict proof updated');
     await page.getByRole('button', { name: 'Save habit' }).last().click();
     await expect(page.getByRole('alert')).toContainText('changed elsewhere');
+  });
+});
+
+test.describe.serial('scheduled dashboard summary', () => {
+  test.beforeEach(async ({ page }) => {
+    await seedSession(page);
+    await mockBackend(page, scheduledSummaryHabits, [
+      { id: 'summary-daily-aug-28', habitId: 'summary-daily', date: '2026-08-28', done: true, count: 1 },
+      { id: 'summary-daily-aug-27', habitId: 'summary-daily', date: '2026-08-27', done: true, count: 1 },
+      { id: 'summary-quota-aug-24', habitId: 'summary-quota', date: '2026-08-24', done: true, count: 1 }
+    ]);
+  });
+
+  test('proves scheduled summary behavior and responsive geometry', async ({ page }) => {
+    await page.clock.install({ time: new Date('2026-08-28T12:00:00Z') });
+
+    for (const viewport of [{ width: 320, height: 740 }, { width: 390, height: 844 }, { width: 1280, height: 900 }]) {
+      await page.setViewportSize(viewport);
+      await page.goto('/app/dashboard');
+
+      const summary = page.getByRole('region', { name: 'Scheduled completion summary' });
+      await expect(summary).toBeVisible();
+      if (viewport.width > 560) {
+        await expect(summary.locator('[data-layout="desktop"]')).toBeVisible();
+        await expect(summary.locator('[data-layout="mobile"]')).toBeHidden();
+      } else {
+        await expect(summary.locator('[data-layout="desktop"]')).toBeHidden();
+        await expect(summary.locator('[data-layout="mobile"]')).toBeVisible();
+      }
+      await expect(summary.locator('[data-layout="desktop"] [role="img"][aria-label="30-day scheduled completion heatmap"]')).toHaveCount(1);
+      await expect(summary.locator('[data-layout="desktop"] [aria-label^="2026-"]')).toHaveCount(30);
+      await expect(summary.locator('[data-layout="desktop"] [aria-label^="Scheduled habit "]')).toHaveCount(3);
+      await expect(summary.getByText('1/3')).toHaveCount(2);
+      await expect(summary.getByText('33%')).toHaveCount(4);
+
+      if (viewport.width <= 560) {
+        await expect(summary.locator('[data-layout="mobile"] > div')).toHaveCount(3);
+        await expect(summary.getByLabel('Heatmap brightness legend')).toBeHidden();
+        await expect(summary.locator('[data-layout="mobile"] [aria-label^="2026-"]')).toHaveCount(30);
+        expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+        await expect(page.getByRole('button', { name: 'View options' })).toBeVisible();
+      } else {
+        await expect(summary.getByLabel('Heatmap brightness legend')).toBeVisible();
+        const summaryBox = await summary.boundingBox();
+        const toolbarButton = page.getByRole('button', { name: 'View options' });
+        const toolbarBox = await toolbarButton.boundingBox();
+        expect(summaryBox).not.toBeNull();
+        expect(toolbarBox).not.toBeNull();
+        expect(summaryBox!.y + summaryBox!.height).toBeLessThanOrEqual(toolbarBox!.y);
+        expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+      }
+    }
+
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await page.goto('/app/dashboard');
+    await page.getByRole('button', { name: /Complete.*Friday stretch/ }).click();
+    await expect(page.getByRole('img', { name: /Today: 2 of 3 scheduled habits completed, 67%/ })).toBeVisible();
+    await expect(page.locator('[data-layout="desktop"] [aria-label="Scheduled habit 2: completed"]')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Add habit' }).first()).toBeVisible();
   });
 });
