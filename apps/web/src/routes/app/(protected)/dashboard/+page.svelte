@@ -123,9 +123,9 @@
   });
 
   // ─── Derived: dates ───────────────────────────────────────────────────────────
-  const todayDate = $derived.by(() => { const n = new Date(); return new Date(n.getFullYear(), n.getMonth(), n.getDate()); });
+  const todayDate = $derived(new Date());
   const timeZone = getCurrentUserTimeZone();
-  const todayKey  = $derived(formatDate(todayDate));
+  const todayKey  = $derived(formatDate(todayDate, timeZone));
   const dateStr   = $derived(formatAppDate(new Date(), { weekday: 'long', month: 'short', day: 'numeric', timeZone }));
 
   function isHabitCompletedToday(habit: Habit, dateKey: string) {

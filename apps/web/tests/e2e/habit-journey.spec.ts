@@ -291,6 +291,8 @@ test.describe.serial('critical habit journey', () => {
 });
 
 test.describe.serial('scheduled dashboard summary', () => {
+  test.use({ timezoneId: 'UTC' });
+
   test.beforeEach(async ({ page }) => {
     await seedSession(page);
     await mockBackend(page, scheduledSummaryHabits, [
@@ -346,5 +348,17 @@ test.describe.serial('scheduled dashboard summary', () => {
     await expect(page.getByRole('img', { name: /Today: 2 of 3 scheduled habits completed, 67%/ })).toBeVisible();
     await expect(page.locator('[data-layout="desktop"] [aria-label="Scheduled habit 2: completed"]')).toBeVisible();
     await expect(page.getByRole('button', { name: 'Add habit' }).first()).toBeVisible();
+  });
+
+  test('uses the saved user timezone for today\'s summary date', async ({ page }) => {
+    await page.addInitScript(() => {
+      localStorage.setItem('habit-user-timezone', 'America/Los_Angeles');
+    });
+    await page.clock.install({ time: new Date('2026-08-28T12:00:00Z') });
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await page.goto('/app/dashboard');
+
+    const summary = page.getByRole('region', { name: 'Scheduled completion summary' });
+    await expect(summary.locator('[data-layout="desktop"] [aria-label="2026-08-28: 1 of 3 scheduled habits completed"]')).toHaveCount(1);
   });
 });
