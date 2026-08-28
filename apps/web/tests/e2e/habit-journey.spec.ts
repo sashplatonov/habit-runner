@@ -162,6 +162,24 @@ async function openHabitDetails(page: Page): Promise<void> {
     .click();
 }
 
+async function expectOneRowHeatmap(container: ReturnType<Page['locator']>): Promise<void> {
+  const row = container.locator('[data-heatmap-row]');
+  await expect(row).toBeVisible();
+  const cells = row.locator('[data-heatmap-cell]');
+  await expect(cells).toHaveCount(30);
+
+  const rowBox = await row.boundingBox();
+  const firstBox = await cells.first().boundingBox();
+  const lastBox = await cells.last().boundingBox();
+  expect(rowBox).not.toBeNull();
+  expect(firstBox).not.toBeNull();
+  expect(lastBox).not.toBeNull();
+  expect(firstBox!.x).toBeGreaterThanOrEqual(rowBox!.x);
+  expect(lastBox!.x + lastBox!.width).toBeLessThanOrEqual(rowBox!.x + rowBox!.width);
+  expect(Math.abs(firstBox!.y - lastBox!.y)).toBeLessThanOrEqual(2);
+  expect(firstBox!.x).toBeLessThan(lastBox!.x);
+}
+
 test.describe.serial('critical habit journey', () => {
   test.beforeEach(async ({ page }) => {
     await seedSession(page);
@@ -224,10 +242,14 @@ test.describe.serial('critical habit journey', () => {
 
     await page.getByRole('button', { name: 'View options' }).click();
     await page.getByRole('region', { name: 'Dashboard view options' }).getByRole('button', { name: 'List' }).click();
-    await expect(page.locator('li[data-habit-id]')).toHaveCount(2);
-    await expect(page.locator('li[data-habit-id]').first().getByRole('img', { name: /last 30 days/ })).toBeVisible();
-    await expect(page.locator('li[data-habit-id]').first().getByRole('button', { name: '📚 Read for ten minutes', exact: true })).toBeVisible();
-    await expect(page.locator('li[data-habit-id]').first().getByRole('button', { name: /Complete/ })).toBeVisible();
+    const rows = page.locator('li[data-habit-id]');
+    await expect(rows).toHaveCount(2);
+    for (const row of await rows.all()) {
+      await expectOneRowHeatmap(row);
+      await expect(row.getByRole('img', { name: /last 30 days/ })).toBeVisible();
+      await expect(row.getByRole('button', { name: /Complete/ })).toBeVisible();
+    }
+    await expect(rows.first().getByRole('button', { name: '📚 Read for ten minutes', exact: true })).toBeVisible();
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
 
     await page.setViewportSize({ width: 1280, height: 900 });
@@ -237,6 +259,7 @@ test.describe.serial('critical habit journey', () => {
     for (const tile of await tiles.all()) {
       const heatmap = tile.getByRole('img', { name: /last 30 days/ });
       await expect(heatmap).toBeVisible();
+      await expectOneRowHeatmap(tile);
       const tileBox = await tile.boundingBox();
       const heatmapBox = await heatmap.boundingBox();
       expect(tileBox).not.toBeNull();

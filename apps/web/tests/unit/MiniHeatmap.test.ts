@@ -21,12 +21,14 @@ describe('MiniHeatmap', () => {
     });
 
     const cells = [...container.querySelectorAll<HTMLElement>('[data-date]')];
+    const row = container.querySelector<HTMLElement>('[data-heatmap-row]');
     expect(cells).toHaveLength(30);
+    expect(row).not.toBeNull();
+    expect(row?.children).toHaveLength(30);
     expect(new Set(cells.map((cell) => cell.dataset.date)).size).toBe(30);
     expect(cells[0]?.dataset.date).toBe('2026-07-30');
     expect(cells.at(-1)?.dataset.date).toBe('2026-08-28');
-    expect(cells[0]?.parentElement?.children).toHaveLength(34);
-    expect([...cells[0]?.parentElement?.children ?? []].slice(0, 4).every((cell) => !cell.hasAttribute('data-date'))).toBe(true);
+    expect(cells.every((cell) => cell.hasAttribute('data-heatmap-cell'))).toBe(true);
     expect(cells.every((cell) => cell.dataset.lookupKey === `${cell.dataset.date}T00:00:00Z`)).toBe(true);
     expect(container.querySelector('[data-date="2026-08-27"]')?.getAttribute('data-completed')).toBe('false');
     expect(container.querySelector('[data-date="2026-08-28"]')?.getAttribute('data-completed')).toBe('true');

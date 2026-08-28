@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { addDaysToCalendarDate, getWeekdayFromCalendarDate } from '@habbit-runner/shared';
+  import { addDaysToCalendarDate } from '@habbit-runner/shared';
   import { completionKeyToCalendarDate, calendarDateToCompletionKey } from '@/lib/completionKey';
   import type { HabitColor } from '@/types/habit';
   import { formatDate } from '$lib/habits/habitStats';
@@ -19,22 +19,17 @@
     const todayKey = completionKeyToCalendarDate(formatDate(new Date()));
     return Array.from({ length: 30 }, (_, index) => addDaysToCalendarDate(todayKey, -(29 - index)));
   });
-  const startDay = $derived(days[0] ? getWeekdayFromCalendarDate(days[0]) : 0);
-  const emptyCells = $derived(Array.from({ length: startDay }, (_, index) => index));
   const palette = $derived(HABIT_COLOR_THEMES[color]);
 </script>
 
-<div class="grid grid-flow-col grid-rows-7 gap-[2px]">
-  {#each emptyCells as index (`empty-${index}`)}
-    <div class="h-[4px] w-[4px] rounded-[1px] bg-transparent"></div>
-  {/each}
-
+<div class="grid w-full grid-cols-[repeat(30,minmax(0,1fr))] gap-[2px]" data-heatmap-row>
   {#each days as dateKey, di (dateKey + '-' + di)}
     {@const lookupKey = calendarDateToCompletionKey(dateKey)}
     {@const isCompleted = (completions[lookupKey] ?? 0) >= dailyTarget}
     <div
-      class="h-[4px] w-[4px] rounded-[1px] transition-[background-color,box-shadow,opacity] duration-300"
+      class="h-[6px] min-w-0 rounded-[1px] transition-[background-color,box-shadow,opacity] duration-300"
       data-date={dateKey}
+      data-heatmap-cell
       data-lookup-key={lookupKey}
       data-completed={isCompleted}
       style:background-color={isCompleted ? palette.hex : 'var(--border)'}

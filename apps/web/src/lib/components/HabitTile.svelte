@@ -155,7 +155,7 @@
     <!-- Bottom row: heatmap + toggle -->
     <div class="flex items-center justify-between mt-2 pt-1 border-t border-border/30">
       <div
-        class="relative z-10 flex min-w-0 items-center"
+        class="relative z-10 flex min-w-0 flex-1 items-center pr-3"
         role="img"
         aria-label="Habit activity for the last 30 days, from 30 days ago through today"
       >
