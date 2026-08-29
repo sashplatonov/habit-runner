@@ -44,6 +44,25 @@ describe('HabitForm', () => {
   // Disable fake timers for simplicity; the component does not heavily depend on real timing in these tests.
   // If needed, individual tests can set up fake timers locally.
 
+  it('starts on the dashboard and keeps dashboard Back connected to the route callback', async () => {
+    const user = userEvent.setup();
+    const onBack = vi.fn();
+
+    render(HabitForm, {
+      props: {
+        mode: 'create',
+        allHabits: [],
+        onBack,
+        onSubmit: vi.fn().mockResolvedValue(undefined)
+      }
+    });
+
+    expect(document.querySelector('form')?.getAttribute('data-editor-panel')).toBe('dashboard');
+    await user.click(screen.getByRole('button', { name: 'Back' }));
+
+    expect(onBack).toHaveBeenCalledTimes(1);
+  });
+
   it('allows descriptions up to 8000 characters and shows the live count', async () => {
     const user = userEvent.setup();
 

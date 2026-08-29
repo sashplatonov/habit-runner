@@ -1,3 +1,14 @@
+<script module lang="ts">
+  export type HabitEditorPanel =
+    | 'dashboard'
+    | 'identity'
+    | 'habit-type'
+    | 'schedule'
+    | 'goal'
+    | 'reminder'
+    | 'organization';
+</script>
+
 <script lang="ts">
   import { beforeNavigate, goto } from '$app/navigation';
   import { resolve } from '$app/paths';
@@ -60,6 +71,7 @@
   let pendingNavigationUrl = $state<string | null>(null);
   let pendingNavigationReplace = false;
   let allowNavigation = false;
+  let activePanel = $state<HabitEditorPanel>('dashboard');
 
   const selectedColor = $derived(COLORS.find((option) => option.value === color) ?? COLORS[0]);
   const currentValues = $derived({
@@ -113,8 +125,22 @@
 
     hydratedKey = nextKey;
     hasAcknowledgedSoftLimit = false;
+    activePanel = 'dashboard';
     hydrateForm(buildInitialValues(habit, DEFAULT_TARGET_STREAK));
   });
+
+  function returnToDashboard() {
+    activePanel = 'dashboard';
+  }
+
+  function handleEditorBack() {
+    if (activePanel !== 'dashboard') {
+      returnToDashboard();
+      return;
+    }
+
+    onBack();
+  }
 
   beforeNavigate(({ cancel, to, type: navigationType }) => {
     if (!allowNavigation && isDirty && !isSaving) {
@@ -307,6 +333,7 @@
 
 <form
   bind:this={formEl}
+  data-editor-panel={activePanel}
   onsubmit={(event) => {
     event.preventDefault();
     void handleSubmit();
@@ -322,8 +349,9 @@
         <button
           type="button"
           class="inline-flex h-11 w-11 items-center justify-center rounded-[1rem] border border-border text-muted transition-colors hover:border-border-hover hover:text-foreground"
-          onclick={onBack}
           aria-label="Back"
+          data-editor-back="dashboard"
+          onclick={handleEditorBack}
         >
           <ArrowLeft size={16} aria-hidden="true" />
         </button>
@@ -446,7 +474,7 @@
     <button
       type="button"
       class="rounded-full border border-border bg-bg-primary px-4 py-2 text-xs font-semibold uppercase tracking-[0.22em] text-muted transition hover:text-foreground"
-      onclick={onBack}
+      onclick={handleEditorBack}
     >
       Cancel
     </button>
