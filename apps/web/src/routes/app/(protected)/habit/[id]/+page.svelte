@@ -242,35 +242,6 @@
     }
   }
 
-  async function handleDecrementCompletion() {
-    if (!habit || mutationPending) {
-      return;
-    }
-
-    const previousCount = habit.completions[todayKey] ?? 0;
-    if (previousCount <= 0) {
-      return;
-    }
-
-    mutationPending = true;
-    mutationError = null;
-    try {
-      const nextCount = previousCount - 1;
-      await habitsStore.setCompletionCount(habit.id, todayKey, nextCount);
-      undoStore.push({
-        message: nextCount > 0 ? `Completed ${nextCount}x today: ${formatHabitLabel(habit)}` : `Reset for today: ${formatHabitLabel(habit)}`,
-        actionLabel: 'Undo',
-        onUndo: async () => {
-          await habitsStore.setCompletionCount(habit.id, todayKey, previousCount);
-        }
-      });
-    } catch (err) {
-      mutationError = err instanceof Error ? err.message : 'Failed to update completion';
-    } finally {
-      mutationPending = false;
-    }
-  }
-
   async function handleSetRhythmStatus(dateKey: string, status: EditableDayStatus) {
     if (!habit || mutationPending) return;
     mutationPending = true;
@@ -373,7 +344,6 @@
         particles={detailParticles}
         celebrationLabel={detailCelebrationLabel}
         onIncrement={handleIncrementCompletion}
-        onDecrement={handleDecrementCompletion}
         onToggleFreeze={toggleFreezeToday}
       />
 

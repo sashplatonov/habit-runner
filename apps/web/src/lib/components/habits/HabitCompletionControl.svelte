@@ -40,7 +40,7 @@
 <div class={`inline-flex min-h-11 min-w-11 items-center justify-center ${className}`.trim()}>
   <button
     type="button"
-    class={`relative flex min-h-11 min-w-11 items-center justify-center overflow-hidden rounded-[1rem] border px-3 text-sm font-semibold text-muted transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 focus-visible:ring-offset-2 focus-visible:ring-offset-bg-primary ${frozen ? 'cursor-not-allowed opacity-60' : 'hover:border-border-hover'} ${error ? 'border-danger/40 bg-danger/10 text-danger' : completed ? 'border-progress/30 bg-progress/10 text-foreground' : frozen ? 'border-border bg-bg-secondary' : scheduled ? 'border-border bg-bg-card' : 'border-dashed border-border bg-bg-secondary'}`}
+    class={`relative flex min-h-11 min-w-11 w-full items-center justify-center overflow-hidden rounded-[1rem] border px-3 text-sm font-semibold text-muted transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 focus-visible:ring-offset-2 focus-visible:ring-offset-bg-primary ${frozen ? 'cursor-not-allowed opacity-60' : 'hover:border-border-hover'} ${error ? 'border-danger/40 bg-danger/10 text-danger' : completed ? 'border-progress/30 bg-progress/10 text-foreground' : frozen ? 'border-border bg-bg-secondary' : scheduled ? 'border-border bg-bg-card' : 'border-dashed border-border bg-bg-secondary'}`}
     aria-label={label}
     aria-disabled={frozen || pending}
     aria-busy={pending}

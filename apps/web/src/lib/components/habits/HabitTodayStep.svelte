@@ -25,7 +25,6 @@
     particles?: CelebrationParticle[];
     celebrationLabel?: string;
     onIncrement: () => void | Promise<void>;
-    onDecrement: () => void | Promise<void>;
     onToggleFreeze: () => void | Promise<void>;
   };
 
@@ -48,11 +47,9 @@
     particles = [],
     celebrationLabel = '',
     onIncrement,
-    onDecrement,
     onToggleFreeze
   }: Props = $props();
 
-  const canDecrement = $derived(count > 0);
   const mainLabel = $derived(habit.type === 'negative' ? 'Record slip' : completed ? `Undo ${label}` : 'Mark done');
 </script>
 
@@ -67,8 +64,8 @@
 
   <div class="mt-1 space-y-3">
     <p class="max-w-sm text-xs leading-5 text-muted">{recoveryCopy}</p>
-    <div class="flex flex-wrap items-center gap-2">
-      <div class="relative">
+    <div class="grid grid-cols-[minmax(0,1.35fr)_minmax(0,.78fr)_minmax(0,1fr)] gap-2" role="group" aria-label="Today actions">
+      <div class="relative min-w-0">
         {#if animating}
           {#each particles as particle (particle.id)}
             <span
@@ -90,20 +87,23 @@
           error={error}
           disabled={!scheduled}
           showLabel={true}
-          class="!min-h-11 !rounded-xl !border-accent/40 !bg-accent/15 !px-4 !text-accent"
+          class="!min-h-11 !w-full !rounded-xl !border-accent/40 !bg-accent/15 !px-2 !text-accent"
           onToggle={onIncrement}
         />
       </div>
       <IconButton
-        ariaLabel={habit.type === 'negative' ? 'Remove one slip' : 'Remove one completion'}
-        title={habit.type === 'negative' ? 'Remove one slip' : 'Remove one completion'}
-        disabled={!canDecrement || frozen || pending}
-        onClick={onDecrement}
+        ariaLabel={frozen ? 'Resume habit for today' : 'Skip today'}
+        title={frozen ? 'Resume habit for today' : 'Skip today'}
+        active={frozen}
+        toggle={true}
+        class="!min-h-11 !min-w-0 !w-full !rounded-xl !px-1"
+        disabled={!scheduled || habit.archived || pending}
+        onClick={onToggleFreeze}
       >
         <Minus size={16} aria-hidden="true" />
         <span class="ml-1 text-sm font-semibold">Skip</span>
       </IconButton>
-      <IconButton ariaLabel={frozen ? 'Unfreeze today' : 'Freeze today'} title={frozen ? 'Unfreeze today' : 'Freeze today'} active={frozen} toggle={true} class="!rounded-xl !px-3" disabled={habit.archived || pending} onClick={onToggleFreeze}>
+      <IconButton ariaLabel="Snooze today's habit" title="Snooze today's habit" class="!min-h-11 !min-w-0 !w-full !rounded-xl !px-1" disabled={!scheduled || habit.archived || pending} onClick={onToggleFreeze}>
         <Clock3 size={15} aria-hidden="true" />
         <span class="ml-1 text-sm font-semibold">Snooze</span>
       </IconButton>
