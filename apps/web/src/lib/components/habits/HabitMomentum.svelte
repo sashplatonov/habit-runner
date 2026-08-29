@@ -45,7 +45,7 @@
   style="background: linear-gradient(135deg, var(--bg-card), color-mix(in srgb, var(--bg-card) 84%, var(--progress) 16%));"
 >
   <div class="grid gap-5 lg:grid-cols-[0.8fr_1.2fr] lg:items-stretch">
-    <div class="relative overflow-hidden rounded-[1.5rem] border border-progress/25 bg-bg-card/80 p-5">
+    <div class="relative overflow-hidden rounded-[1.5rem] border border-progress/25 bg-bg-card/80 p-5 sm:p-6">
       <div class="absolute -right-8 -top-10 size-32 rounded-full bg-progress/10 blur-2xl" aria-hidden="true"></div>
       <div class="relative">
         <StatusPill tone={currentStreak > 0 ? 'progress' : 'neutral'}>
@@ -53,7 +53,7 @@
           Current run
         </StatusPill>
 
-        <p class="mt-5 text-4xl font-semibold tracking-[-0.05em] text-foreground sm:text-5xl">{streakLabel}</p>
+        <p class="mt-5 text-4xl font-semibold tracking-[-0.055em] text-foreground sm:text-5xl">{streakLabel}</p>
         <p class="mt-2 max-w-xs text-sm leading-6 text-muted">
           {currentStreak > 0
             ? 'A truthful count of consecutive scheduled opportunities completed.'
@@ -75,11 +75,11 @@
       </div>
     </div>
 
-    <div class="flex flex-col justify-between rounded-[1.5rem] border border-border bg-bg-secondary/80 p-5">
+    <div class="flex flex-col justify-between rounded-[1.5rem] border border-border bg-bg-secondary/80 p-5 sm:p-6">
       <div class="flex items-start justify-between gap-4">
         <div>
           <p class="text-[10px] font-mono uppercase tracking-[0.24em] text-muted">Next checkpoint</p>
-          <h2 class="mt-2 text-xl font-semibold tracking-tight text-foreground">{nextMilestoneLabel}</h2>
+          <h2 class="mt-2 text-lg font-semibold tracking-[-0.025em] text-foreground">{nextMilestoneLabel}</h2>
         </div>
         <span class="inline-flex size-10 shrink-0 items-center justify-center rounded-full border border-progress/25 bg-progress/10 text-progress" aria-hidden="true">
           {#if nextMilestoneDays === null}

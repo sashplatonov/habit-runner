@@ -56,18 +56,18 @@
   const mainLabel = $derived(habit.type === 'negative' ? `Record slip for ${label}` : completed ? `Undo ${label}` : `Complete ${label}`);
 </script>
 
-<Surface as="section" padding="lg" class="space-y-4">
+<Surface as="section" padding="lg" class="space-y-5">
   <div class="flex flex-wrap items-start justify-between gap-3">
     <div class="min-w-0">
       <p class="text-[10px] font-mono uppercase tracking-[0.24em] text-muted">Today&apos;s step</p>
-      <h2 class="mt-1 text-base font-semibold text-foreground">{summary}</h2>
+      <h2 class="mt-1 text-[1.05rem] font-semibold tracking-[-0.025em] text-foreground">{summary}</h2>
     </div>
     <p class="text-sm font-medium text-muted">{progressLabel} {#if remainingLabel}· {remainingLabel}{/if}</p>
   </div>
 
-  <div class="space-y-3">
-    <p class="text-sm leading-6 text-muted">{recoveryCopy}</p>
-    <div class="flex flex-wrap items-center gap-2">
+  <div class="space-y-4">
+    <p class="max-w-sm text-sm leading-6 text-muted">{recoveryCopy}</p>
+    <div class="flex flex-wrap items-center gap-2.5">
       <div class="relative">
         {#if animating}
           {#each particles as particle (particle.id)}
@@ -89,6 +89,7 @@
           pending={pending}
           error={error}
           disabled={!scheduled}
+          class="!min-h-11 !min-w-11 !rounded-[1rem] !px-0"
           onToggle={onIncrement}
         />
       </div>

@@ -152,7 +152,7 @@
   }
 </script>
 
-<div class="rounded-[1.5rem] border border-border bg-bg-secondary/75 p-2 sm:p-4">
+<div class="rounded-[1.5rem] border border-border bg-bg-secondary/75 p-3 sm:p-4">
   <div class="flex flex-wrap items-center justify-between gap-2 px-1">
     <p class="text-xs leading-5 text-muted">Select any day to view or change its status.</p>
     <div class="flex flex-wrap gap-2">

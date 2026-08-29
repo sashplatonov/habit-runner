@@ -20,17 +20,17 @@
   const habitLabel = $derived(formatHabitLabel(habit));
 </script>
 
-<header class="rounded-[1.75rem] border border-border bg-bg-card/94 px-4 py-4 shadow-[0_24px_60px_rgba(15,23,42,0.1)] backdrop-blur-xl">
+<header class="rounded-[1.9rem] border border-border bg-bg-card/94 px-4 py-4 shadow-surface backdrop-blur-xl sm:px-5">
   <div class="flex items-start gap-3">
     <IconButton ariaLabel="Back to dashboard" title="Back to dashboard" class="shrink-0" onClick={onBack}>
       <ArrowLeft size={16} aria-hidden="true" />
     </IconButton>
 
-    <div class="flex min-w-0 flex-1 flex-col gap-2">
+    <div class="flex min-w-0 flex-1 flex-col gap-2.5">
       <div class="flex min-w-0 flex-wrap items-center gap-2">
         <div class="min-w-0">
-          <h1 class="truncate text-lg font-semibold text-foreground">{habitLabel}</h1>
-          <p class="text-xs text-muted">{todayLabel}</p>
+          <h1 class="truncate text-[1.05rem] font-semibold tracking-[-0.025em] text-foreground">{habitLabel}</h1>
+          <p class="mt-0.5 text-xs text-muted">{todayLabel}</p>
         </div>
         {#if habit.description}
           <DescriptionTooltip description={habit.description} triggerClassName="h-11 w-11" triggerLabel={descriptionLabel} />

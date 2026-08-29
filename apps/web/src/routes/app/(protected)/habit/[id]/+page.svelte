@@ -329,7 +329,7 @@
   </div>
 {:else}
   <div class="min-h-screen bg-transparent">
-    <div class="mx-auto max-w-5xl space-y-4 px-4 py-4 sm:px-6">
+    <div class="mx-auto max-w-md space-y-5 px-5 py-5 sm:max-w-3xl sm:px-8 sm:py-8">
       <HabitDetailHeader
         {habit}
         todayLabel={detailModel.todayLabel}
