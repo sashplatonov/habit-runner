@@ -1,5 +1,5 @@
 /* eslint-disable max-lines-per-function */
-import { render, screen, waitFor } from '@testing-library/svelte';
+import { render, screen, waitFor, within } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import HabitForm from '../../src/lib/components/HabitForm.svelte';
@@ -158,6 +158,48 @@ describe('HabitForm', () => {
     });
     expect(screen.getAllByText('Name is required').length).toBeGreaterThan(0);
     expect(onSubmit).not.toHaveBeenCalled();
+  });
+
+  it('keeps the habit-type draft when returning to the dashboard and submits it on save', async () => {
+    const user = userEvent.setup();
+    const onSubmit = vi.fn().mockResolvedValue(undefined);
+
+    render(HabitForm, {
+      props: {
+        mode: 'create',
+        allHabits: [],
+        onBack: vi.fn(),
+        onSubmit
+      }
+    });
+
+    await user.click(screen.getByRole('button', { name: 'Edit Habit type' }));
+    expect(screen.getByRole('button', { name: 'Avoid habit' }).getAttribute('aria-pressed')).toBe('false');
+    expect(screen.getByText('Complete 1 scheduled repetition to mark the day done.')).toBeTruthy();
+
+    await user.click(screen.getByRole('button', { name: 'Avoid habit' }));
+
+    expect(screen.getByRole('button', { name: 'Avoid habit' }).getAttribute('aria-pressed')).toBe('true');
+    expect(screen.getByRole('button', { name: 'Build habit' }).getAttribute('aria-pressed')).toBe('false');
+    expect(screen.getByText('Mark the day done when the count is still zero: success means one fewer slip.')).toBeTruthy();
+
+    await user.click(screen.getByRole('button', { name: 'Back to habit editor dashboard' }));
+    expect(within(screen.getByRole('button', { name: 'Edit Habit type' })).getByText('Avoid habit')).toBeTruthy();
+
+    await user.click(screen.getByRole('button', { name: 'Edit Habit type' }));
+    expect(screen.getByRole('button', { name: 'Avoid habit' }).getAttribute('aria-pressed')).toBe('true');
+
+    await user.click(screen.getByRole('button', { name: 'Back to habit editor dashboard' }));
+    await user.click(screen.getByRole('button', { name: 'Edit Identity' }));
+    await user.type(screen.getByLabelText('Name *'), 'No late scrolling');
+    await user.click(screen.getAllByRole('button', { name: 'Create habit' }).at(-1)!);
+
+    await waitFor(() => {
+      expect(onSubmit).toHaveBeenCalledTimes(1);
+    });
+    expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({
+      type: 'negative'
+    }));
   });
 
   it('preserves advanced monthly-week schedules on submit', async () => {

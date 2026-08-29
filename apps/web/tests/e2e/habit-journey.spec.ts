@@ -22,16 +22,10 @@ const habit = {
   type: 'positive',
   freezeDays: []
 };
-
 const secondHabit = {
-  ...habit,
-  id: 'e2e-second-habit',
-  name: 'Stretch for five minutes',
-  icon: '🧘'
+  ...habit, id: 'e2e-second-habit', name: 'Stretch for five minutes', icon: '🧘'
 };
-
-const scheduledSummaryHabits = [
-  {
+const scheduledSummaryHabits = [  {
     ...habit,
     id: 'summary-daily',
     name: 'Daily reading',
@@ -40,9 +34,7 @@ const scheduledSummaryHabits = [
   },
   {
     ...habit,
-    id: 'summary-weekday',
-    name: 'Friday stretch',
-    icon: '🧘',
+    id: 'summary-weekday', name: 'Friday stretch', icon: '🧘',
     schedule: { type: 'weekly_days', weekdays: [5] },
     frequency: 'CUSTOM',
     customDays: [5],
@@ -73,7 +65,6 @@ const scheduledSummaryHabits = [
     sortOrder: 4
   }
 ];
-
 const progressHabits = [
   { ...habit, id: 'progress-attention', name: 'Attention habit', createdAt: '2026-04-01T10:00:00Z' },
   { ...habit, id: 'progress-strong', name: 'Strong habit', createdAt: '2026-04-01T10:00:00Z', icon: '💪' }
@@ -93,11 +84,9 @@ function progressCheckins(): unknown[] {
     };
   });
 }
-
 async function json(route: Route, body: unknown, status = 200): Promise<void> {
   await route.fulfill({ status, contentType: 'application/json', body: JSON.stringify(body) });
 }
-
 async function mockBackend(page: Page, habits: readonly Record<string, unknown>[] = [habit, secondHabit], initialCheckins: unknown[] = []): Promise<void> {
   const checkins = new Map(
     initialCheckins.map((checkin) => {
@@ -169,13 +158,11 @@ async function mockBackend(page: Page, habits: readonly Record<string, unknown>[
     }
   });
 }
-
 async function seedSession(page: Page): Promise<void> {
   await page.addInitScript(() => {
     localStorage.setItem('habbitRunner.auth.session', JSON.stringify({ userId: 'e2e-user', email: 'e2e@example.test' }));
   });
 }
-
 async function openHabitDetails(page: Page): Promise<void> {
   if (await page.getByRole('button', { name: 'Edit habit' }).isVisible()) {
     return;
@@ -186,11 +173,9 @@ async function openHabitDetails(page: Page): Promise<void> {
     .filter({ hasText: 'Read for ten minutes' })
     .click();
 }
-
 async function openHabitIdentity(page: Page): Promise<void> {
   await page.getByRole('button', { name: 'Edit Identity' }).click();
 }
-
 function trackHabitMutations(page: Page, mutations: string[]): void {
   page.on('request', (request) => {
     if (request.method() !== 'GET' && new URL(request.url()).pathname.includes('/habits')) {
@@ -229,7 +214,6 @@ test.describe.serial('critical habit journey', () => {
   test('creates, checks in, edits, reviews progress, and deletes a habit', async ({ page }) => {
     await page.goto('/app/dashboard');
     await expect(page.getByRole('button', { name: 'Add habit' }).first()).toBeVisible();
-
     await page.getByRole('button', { name: 'Add habit' }).first().click();
     await openHabitIdentity(page);
     await page.getByLabel('Name *').fill('Read for ten minutes');
@@ -287,35 +271,42 @@ test.describe.serial('critical habit journey', () => {
     expect(mutations).toEqual([]);
   });
 
-  test('edits identity on the focused panel without saving before Save', async ({ page }) => {
+  test('edits habit type on the focused panel without saving before Save', async ({ page }) => {
     const mutations: string[] = [];
     trackHabitMutations(page, mutations);
+    const openHabitTypePanel = async () => {
+      await page.goto('/app/habit/new');
+      await page.locator('[data-editor-tile="habit-type"]').click();
+      await expect(page.locator('[data-editor-habit-type]')).toBeVisible();
+    };
 
-    await page.goto('/app/habit/new');
-    await page.locator('[data-editor-tile="identity"]').click();
-    await expect(page.locator('form')).toHaveAttribute('data-editor-panel', 'identity');
-    await expect(page.locator('[data-editor-identity]')).toBeVisible();
-    await expect(page.locator('[data-editor-emoji-grid] button')).toHaveCount(15);
+    await page.setViewportSize({ width: 390, height: 844 });
+    await openHabitTypePanel();
+    await expect(page.locator('form')).toHaveAttribute('data-editor-panel', 'habit-type');
 
-    // Preset selection overrides the custom placeholder and updates the live preview.
-    await page.getByRole('button', { name: 'Use 🧘 as habit icon' }).click();
-    await page.getByLabel('Name *').fill('Breath 4-7-8');
-    await page.getByRole('button', { name: 'Select Cyan color' }).click();
-    await expect(page.locator('[data-editor-identity-name]')).toHaveText('🧘 Breath 4-7-8');
-    expect(await page.locator('[data-editor-emoji-grid] button').first().evaluate((el) => (el as HTMLElement).offsetHeight)).toBeGreaterThanOrEqual(44);
+    await expect(page.getByRole('button', { name: 'Build habit' })).toHaveAttribute('aria-pressed', 'true');
+    await expect(page.locator('[data-editor-habit-type-rule]')).toHaveText('Build habit');
+    await expect(page.getByText('Complete 1 scheduled repetition to mark the day done.')).toBeVisible();
 
-    // Back to the dashboard retains the draft and refreshes the identity summary.
+    await page.getByRole('button', { name: 'Avoid habit' }).click();
+    await expect(page.getByRole('button', { name: 'Avoid habit' })).toHaveAttribute('aria-pressed', 'true');
+    await expect(page.getByRole('button', { name: 'Build habit' })).toHaveAttribute('aria-pressed', 'false');
+    await expect(page.locator('[data-editor-habit-type-rule]')).toHaveText('Avoid habit');
+    await expect(page.getByText('Mark the day done when the count is still zero: success means one fewer slip.')).toBeVisible();
+
     await page.getByRole('button', { name: 'Back to habit editor dashboard' }).click();
     await expect(page.locator('[data-editor-dashboard]')).toBeVisible();
-    await expect(page.getByText('🧘 Breath 4-7-8 · Cyan')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Edit Habit type' })).toContainText('Avoid habit');
     expect(mutations).toEqual([]);
+
+    // Draft persists and both segment buttons keep 44px touch targets.
+    await page.locator('[data-editor-tile="habit-type"]').click();
+    const optionHeights = await page.locator('[data-habit-type-option]').evaluateAll((options) => options.map((option) => (option as HTMLElement).offsetHeight));
+    expect(Math.min(...optionHeights)).toBeGreaterThanOrEqual(44);
 
     for (const viewport of [{ width: 320, height: 740 }, { width: 390, height: 844 }, { width: 1280, height: 900 }]) {
       await page.setViewportSize(viewport);
-      await page.goto('/app/habit/new');
-      await expect(page.locator('[data-editor-dashboard]')).toBeVisible();
-      await page.locator('[data-editor-tile="identity"]').click();
-      await expect(page.locator('[data-editor-identity]')).toBeVisible();
+      await openHabitTypePanel();
       expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
     }
   });

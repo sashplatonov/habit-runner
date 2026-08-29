@@ -29,6 +29,7 @@
   } from '$lib/habits/habitFormModel';
   import { formatHabitLabel } from '$lib/habits/formatHabitLabel';
   import HabitIdentitySection from './habit-form/HabitIdentitySection.svelte';
+  import HabitTypeSection from './habit-form/HabitTypeSection.svelte';
   import HabitScheduleSection from './habit-form/HabitScheduleSection.svelte';
   import HabitTargetSection from './habit-form/HabitTargetSection.svelte';
   import HabitTagsSection from './habit-form/HabitTagsSection.svelte';
@@ -408,35 +409,10 @@
     {:else}
       <div class="space-y-5">
 
-    {#if activePanel === 'habit-type'}
-    <div class="rounded-[1.5rem] border border-border bg-bg-card/92 p-5 shadow-[0_20px_54px_rgba(15,23,42,0.08)]">
-      <p class="mb-2 block text-[10px] font-mono uppercase tracking-wider text-muted">Habit type</p>
-      <div class="flex flex-col gap-2 rounded-xl border border-border bg-bg-secondary p-1 sm:flex-row">
-        <button
-          type="button"
-          class={`flex-1 rounded-lg py-2.5 text-xs font-semibold transition-[background-color,color,box-shadow] duration-200 ${type === 'positive' ? 'bg-bg-primary text-foreground shadow-sm' : 'text-muted hover:text-foreground'}`}
-          style={type === 'positive' ? `border-left: 2px solid ${selectedColor.hex};` : ''}
-          aria-pressed={type === 'positive'}
-          onclick={() => {
-            type = 'positive';
-          }}
-        >
-          Build habit
-        </button>
-        <button
-          type="button"
-          class={`flex-1 rounded-lg py-2.5 text-xs font-semibold transition-[background-color,color,box-shadow] duration-200 ${type === 'negative' ? 'bg-bg-primary text-foreground shadow-sm' : 'text-muted hover:text-foreground'}`}
-          style={type === 'negative' ? `border-left: 2px solid ${selectedColor.hex};` : ''}
-          aria-pressed={type === 'negative'}
-          onclick={() => {
-            type = 'negative';
-          }}
-        >
-          Avoid habit
-        </button>
-      </div>
-    </div>
-    {/if}
+    {#if activePanel === 'habit-type'}<HabitTypeSection
+      bind:habitType={type}
+      dailyTarget={Math.max(1, Math.trunc(dailyTarget))}
+    />{/if}
 
     {#if Object.keys(errors).length > 0}
       <div class="rounded-[1.5rem] border border-accent-secondary/30 bg-accent-secondary/10 px-4 py-3 text-sm text-accent-secondary">

@@ -234,7 +234,7 @@ git commit -m "feat(habits): add identity editor screen"
 
 ## CDE-004: Implement the Habit type screen
 
-**Status:** TODO  
+**Status:** DONE
 **Priority:** P1  
 **Depends on:** CDE-001
 
