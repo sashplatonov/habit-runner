@@ -127,8 +127,8 @@
 
   <div data-layout="mobile" class="mobile-summary gap-1.5 p-2.5">
     <div class="grid min-w-0 grid-cols-[1fr_auto] items-center gap-1.5">
-      <strong class="text-xs font-extrabold text-foreground">Completion</strong>
-      <strong class="text-right text-xs font-extrabold tabular-nums text-foreground">{scoreLabel(summary.today.percentage)}</strong>
+      <strong class="text-xs font-extrabold text-foreground">30-day completion</strong>
+      <strong class="text-right text-xs font-extrabold tabular-nums text-foreground">{scoreLabel(summary.periodPercentage)}</strong>
     </div>
     <div class="grid min-w-0 grid-cols-[70px_minmax(0,1fr)_42px] items-center gap-1.5">
       <span class="text-[11px] text-muted">30 days</span>
@@ -137,7 +137,10 @@
           <span class={`h-1.5 min-w-0 rounded-[2px] ${cellClass(day)}`} aria-label={dayLabel(day)}></span>
         {/each}
       </div>
-      <span class="text-right text-xs font-extrabold tabular-nums text-foreground">{summary.perfectDays}✓</span>
+      <span
+        class="text-right text-xs font-extrabold tabular-nums text-foreground"
+        aria-label={`Perfect days: ${summary.perfectDays} of 30`}
+      >{summary.perfectDays}/30 ✓</span>
     </div>
     <div class="grid min-w-0 grid-cols-[70px_minmax(0,1fr)_42px] items-center gap-1.5">
       <span class="text-[11px] text-muted">Today {summary.today.completed}/{summary.today.required}</span>

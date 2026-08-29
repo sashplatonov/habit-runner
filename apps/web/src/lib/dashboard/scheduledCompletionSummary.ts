@@ -39,6 +39,7 @@ export type ScheduledTodaySummary = {
 export type ScheduledCompletionSummary = {
   days: ScheduledCompletionDay[];
   perfectDays: number;
+  periodPercentage: number | null;
   today: ScheduledTodaySummary;
 };
 
@@ -115,10 +116,13 @@ export function buildScheduledCompletionSummary(
     habitId: habit.id,
     completed: getHabitCompletionState(habit, calendarDateToCompletionKey(todayDate)).completed
   }));
+  const periodRequired = days.reduce((total, day) => total + day.required, 0);
+  const periodCompleted = days.reduce((total, day) => total + day.completed, 0);
 
   return {
     days,
     perfectDays: days.filter((day) => day.state === 'required' && day.completed === day.required).length,
+    periodPercentage: periodRequired === 0 ? null : Math.round((periodCompleted / periodRequired) * 100),
     today: {
       calendarDate: todayDate,
       completed: today.completed,

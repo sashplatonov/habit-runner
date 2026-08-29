@@ -22,6 +22,7 @@ describe('buildScheduledCompletionSummary', () => {
     expect(summary.days.at(-1)?.calendarDate).toBe('2026-03-20');
     expect(summary.days.find((day) => day.calendarDate === '2026-02-19')).toMatchObject({ state: 'neutral', required: 0, ratio: null, brightnessLevel: null });
     expect(summary.perfectDays).toBe(1);
+    expect(summary.periodPercentage).toBe(5);
   });
 
   test('uses schedule and completion semantics for partial targets, negatives, and today segments', () => {
@@ -67,6 +68,7 @@ function createSummary(): SummaryModel {
   return {
     days: Array.from({ length: 30 }, (_, index) => ({ calendarDate: `2026-03-${String(index + 1).padStart(2, '0')}`, state: 'required' as const, completed: index === 29 ? 1 : 0, required: 1, ratio: index === 29 ? 1 : 0, brightnessLevel: index === 29 ? 4 as const : 1 as const })),
     perfectDays: 1,
+    periodPercentage: 3,
     today: { calendarDate: '2026-03-30', completed: 1, required: 2, percentage: 50, segments: [{ habitId: 'done', completed: true }, { habitId: 'pending', completed: false }] }
   };
 }
@@ -79,14 +81,17 @@ describe('ScheduledCompletionSummary', () => {
     expect(container.querySelectorAll('[data-layout="mobile"] [aria-label^="2026-"]')).toHaveLength(30);
     expect(container.querySelectorAll('[aria-label^="Scheduled habit "]')).toHaveLength(4);
     expect(screen.getAllByText(/1\/2/)).toHaveLength(2);
-    expect(screen.getAllByText('50%')).toHaveLength(4);
+    expect(screen.getByLabelText('Perfect days: 1 of 30')).toBeTruthy();
+    expect(screen.getAllByText('50%')).toHaveLength(3);
+    expect(screen.getByText('30-day completion')).toBeTruthy();
+    expect(screen.getByText('3%')).toBeTruthy();
     expect(screen.getAllByRole('img', { name: '30-day scheduled completion heatmap' })[0].getAttribute('aria-describedby')).toBe('scheduled-completion-desktop-heatmap-description');
     expect(container.querySelector('#scheduled-completion-desktop-heatmap-description')?.textContent).toContain('2026-03-01: 0 of 1 scheduled habits completed');
     expect(container.querySelector('#scheduled-completion-desktop-today-description')?.textContent).toBe('Scheduled habit 1: completed; Scheduled habit 2: incomplete');
     expect(container.querySelector('section[aria-live]')).toBeNull();
     expect(container.querySelector('[aria-live="polite"]')?.textContent).toBe('Today: 1 of 2 scheduled habits completed, 50%');
     const mobileSummary = container.querySelector('[data-layout="mobile"]');
-    expect(mobileSummary?.textContent).toContain('Completion');
+    expect(mobileSummary?.textContent).toContain('30-day completion');
     expect(mobileSummary?.textContent).not.toContain('Monday, Mar 30');
     expect(mobileSummary?.textContent).not.toContain('scheduled only');
   });
@@ -95,6 +100,7 @@ describe('ScheduledCompletionSummary', () => {
     const summary = createSummary();
     summary.days = summary.days.map((day) => ({ ...day, state: 'neutral' as const, completed: 0, required: 0, ratio: null, brightnessLevel: null }));
     summary.perfectDays = 0;
+    summary.periodPercentage = null;
     summary.today = { calendarDate: '2026-03-30', completed: 0, required: 0, percentage: null, segments: [] };
     const { container } = render(ScheduledCompletionSummary, { summary, dateLabel: 'Monday, Mar 30' });
     expect(screen.getAllByText('—')).toHaveLength(4);
