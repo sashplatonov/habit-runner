@@ -1,5 +1,5 @@
 /* eslint-disable max-lines-per-function */
-import { fireEvent, render, screen, waitFor } from '@testing-library/svelte';
+import { render, screen, waitFor } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import HabitForm from '../../src/lib/components/HabitForm.svelte';
@@ -40,114 +40,9 @@ function createHabit(overrides: Partial<Habit> = {}): Habit {
   };
 }
 
-async function openPanel(user: ReturnType<typeof userEvent.setup>, panel: string): Promise<void> {
-  if (panel !== 'identity') {
-    await user.click(screen.getByRole('button', { name: 'Back to habit editor dashboard' }));
-  }
-  const title = panel === 'habit-type' ? 'Habit type' : `${panel[0].toUpperCase()}${panel.slice(1)}`;
-  await user.click(screen.getByRole('button', { name: `Edit ${title}` }));
-}
-
 describe('HabitForm', () => {
   // Disable fake timers for simplicity; the component does not heavily depend on real timing in these tests.
   // If needed, individual tests can set up fake timers locally.
-
-  it('starts on the dashboard and keeps dashboard Back connected to the route callback', async () => {
-    const user = userEvent.setup();
-    const onBack = vi.fn();
-
-    render(HabitForm, {
-      props: {
-        mode: 'create',
-        allHabits: [],
-        onBack,
-        onSubmit: vi.fn().mockResolvedValue(undefined)
-      }
-    });
-
-    expect(document.querySelector('form')?.getAttribute('data-editor-panel')).toBe('dashboard');
-    await user.click(screen.getByRole('button', { name: 'Back' }));
-
-    expect(onBack).toHaveBeenCalledTimes(1);
-  });
-
-  it('renders six ordered quick-setting tiles and opens each local panel', async () => {
-    const user = userEvent.setup();
-
-    render(HabitForm, {
-      props: {
-        mode: 'edit',
-        habit: createHabit({ tags: ['health'] }),
-        onBack: vi.fn(),
-        onSubmit: vi.fn().mockResolvedValue(undefined)
-      }
-    });
-
-    expect([...document.querySelectorAll('[data-editor-tile]')].map((tile) => tile.getAttribute('data-editor-tile'))).toEqual([
-      'identity', 'habit-type', 'schedule', 'goal', 'reminder', 'organization'
-    ]);
-    await user.click(screen.getByRole('button', { name: 'Edit Goal' }));
-    expect(document.querySelector('form')?.getAttribute('data-editor-panel')).toBe('goal');
-    expect(screen.getByRole('button', { name: 'Back to habit editor dashboard' })).toBeTruthy();
-  });
-
-  it('allows descriptions up to 8000 characters and shows the live count', async () => {
-    const user = userEvent.setup();
-
-    render(HabitForm, {
-      props: {
-        mode: 'create',
-        allHabits: [],
-        onBack: vi.fn(),
-        onSubmit: vi.fn().mockResolvedValue(undefined)
-      }
-    });
-
-    await openPanel(user, 'identity');
-    const description = screen.getByLabelText(/Description/) as HTMLTextAreaElement;
-    expect(description.maxLength).toBe(8000);
-    expect(screen.getByText('0 / 8000 characters')).toBeTruthy();
-    expect(screen.getByText('8000 remaining')).toBeTruthy();
-
-    await user.type(description, 'A longer habit note.');
-    expect(screen.getByText('20 / 8000 characters')).toBeTruthy();
-    expect(screen.getByText('7980 remaining')).toBeTruthy();
-
-    fireEvent.input(description, { target: { value: 'x'.repeat(8000) } });
-    expect(description.value).toHaveLength(8000);
-    expect(screen.getByText('8000 / 8000 characters')).toBeTruthy();
-    expect(screen.getByText('0 remaining')).toBeTruthy();
-  });
-
-  it('blocks legacy descriptions over the limit and explains how far over they are', async () => {
-    const user = userEvent.setup();
-    const onSubmit = vi.fn().mockResolvedValue(undefined);
-
-    render(HabitForm, {
-      props: {
-        mode: 'edit',
-        habit: createHabit({ description: 'x'.repeat(8001) }),
-        allHabits: [createHabit({ description: 'x'.repeat(8001) })],
-        onBack: vi.fn(),
-        onSubmit
-      }
-    });
-
-    await openPanel(user, 'identity');
-    const description = screen.getByLabelText(/Description/) as HTMLTextAreaElement;
-    expect(screen.getByText('8001 / 8000 characters')).toBeTruthy();
-    expect(screen.getByText('1 over limit')).toBeTruthy();
-
-    await user.click(screen.getAllByRole('button', { name: 'Save habit' })[0]);
-
-    expect(onSubmit).not.toHaveBeenCalled();
-    expect(description.getAttribute('aria-invalid')).toBe('true');
-    expect(description.getAttribute('aria-describedby')).toBe('habit-description-count habit-description-error');
-    expect(screen.getAllByText('Max 8000 characters')).toHaveLength(2);
-    await waitFor(() => {
-      expect(document.activeElement).toBe(description);
-    });
-  });
 
   it('shows and dismisses the soft-limit warning for over-limit create flows', async () => {
     const user = userEvent.setup();
@@ -163,7 +58,7 @@ describe('HabitForm', () => {
 
     expect(screen.getByText('Focus is key')).toBeTruthy();
 
-    await user.click(screen.getByRole('button', { name: 'Add anyway' }));
+    await user.click(screen.getByRole('button', { name: 'I understand, add anyway' }));
 
     expect(screen.queryByText('Focus is key')).toBeNull();
   });
@@ -181,14 +76,12 @@ describe('HabitForm', () => {
       }
     });
 
-    await openPanel(user, 'identity');
-    const customIconInput = screen.getByLabelText('Custom habit icon') as HTMLInputElement;
+    const customIconInput = screen.getByPlaceholderText('Own...') as HTMLInputElement;
     await user.type(customIconInput, '🛰');
 
     // Check that the input is not empty (emoji handling may normalize)
     expect(customIconInput.value.length).toBeGreaterThan(0);
 
-    await openPanel(user, 'organization');
     await user.click(screen.getByRole('button', { name: '+health' }));
 
     expect(screen.getByText('#health')).toBeTruthy();
@@ -214,7 +107,7 @@ describe('HabitForm', () => {
       }
     });
 
-    await user.click(screen.getAllByRole('button', { name: 'Save habit' })[0]);
+    await user.click(screen.getByRole('button', { name: 'Save' }));
 
     await waitFor(() => {
       expect(onSubmit).toHaveBeenCalledTimes(1);
@@ -243,12 +136,11 @@ describe('HabitForm', () => {
         }
       });
 
-      await openPanel(user, 'identity');
-      const customIconInput = screen.getByLabelText('Custom habit icon') as HTMLInputElement;
+      const customIconInput = screen.getByPlaceholderText('Own...') as HTMLInputElement;
       await user.type(customIconInput, '🎯');
 
       await user.type(screen.getByLabelText('Name *'), 'Test Habit');
-      await user.click(screen.getAllByRole('button', { name: 'Create habit' })[0]);
+      await user.click(screen.getByRole('button', { name: 'Create' }));
 
       await waitFor(() => {
         expect(onSubmit).toHaveBeenCalledTimes(1);
@@ -273,13 +165,12 @@ describe('HabitForm', () => {
         }
       });
 
-      await openPanel(user, 'identity');
-      const customIconInput = screen.getByLabelText('Custom habit icon') as HTMLInputElement;
+      const customIconInput = screen.getByPlaceholderText('Own...') as HTMLInputElement;
       // Use a simple emoji that doesn't have variation selectors
       await user.type(customIconInput, '📝');
 
       await user.type(screen.getByLabelText('Name *'), 'Writing Habit');
-      await user.click(screen.getAllByRole('button', { name: 'Create habit' })[0]);
+      await user.click(screen.getByRole('button', { name: 'Create' }));
 
       await waitFor(() => {
         expect(onSubmit).toHaveBeenCalledTimes(1);
@@ -304,15 +195,14 @@ describe('HabitForm', () => {
         }
       });
 
-      await openPanel(user, 'identity');
-      const customIconInput = screen.getByLabelText('Custom habit icon') as HTMLInputElement;
+      const customIconInput = screen.getByPlaceholderText('Own...') as HTMLInputElement;
       // 🇺🇸 is U+1F1FA (regional indicator U) + U+1F1F8 (regional indicator S)
       await user.type(customIconInput, '🇺🇸');
 
       expect(customIconInput.value).toBe('🇺🇸');
 
       await user.type(screen.getByLabelText('Name *'), 'USA Habit');
-      await user.click(screen.getAllByRole('button', { name: 'Create habit' })[0]);
+      await user.click(screen.getByRole('button', { name: 'Create' }));
 
       await waitFor(() => {
         expect(onSubmit).toHaveBeenCalledTimes(1);
@@ -336,8 +226,7 @@ describe('HabitForm', () => {
         }
       });
 
-      await openPanel(user, 'identity');
-      const customIconInput = screen.getByLabelText('Custom habit icon') as HTMLInputElement;
+      const customIconInput = screen.getByPlaceholderText('Own...') as HTMLInputElement;
       await user.type(customIconInput, '🎯');
 
       // Click on the first preset icon (⚡)
@@ -346,7 +235,7 @@ describe('HabitForm', () => {
       // After clicking preset, the icon should change (preset icon should be used)
       // We can't easily check the input value, but we can verify the form submits with the preset icon
       await user.type(screen.getByLabelText('Name *'), 'Test Habit');
-      await user.click(screen.getAllByRole('button', { name: 'Create habit' })[0]);
+      await user.click(screen.getByRole('button', { name: 'Create' }));
 
       await waitFor(() => {
         expect(onSubmit).toHaveBeenCalledTimes(1);

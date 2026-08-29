@@ -2,21 +2,16 @@
   import { createEventDispatcher } from 'svelte';
   import type { Habit } from '@/types/habit';
   import { HABIT_COLOR_THEMES } from '$lib/theme/habit-colors';
-  import { getDashboardMomentumStatus } from '$lib/habits/dashboardMomentumStatus';
+  import { getHabitPhase } from '$lib/habits/phases';
   import { computeTileHint } from '$lib/habits/tileHint';
   import { calculateScheduledStreak, calculateScheduledCompletionRate } from '$lib/habits/schedule';
   import { getScheduleStatusForDate, isMandatoryToday } from '$lib/habits/schedule';
-  import { formatAppDate } from '$lib/i18n';
+  import { formatDate } from '$lib/i18n';
+  import { buildCelebrationParticles, getCelebrationLabel } from '$lib/habits/completionCelebration';
   import CompletionRing from '$lib/components/CompletionRing.svelte';
-  import HabitCompletionControl from '$lib/components/habits/HabitCompletionControl.svelte';
   import MiniHeatmap from '$lib/components/MiniHeatmap.svelte';
   import DescriptionTooltip from '$lib/components/DescriptionTooltip.svelte';
   import type { CelebrationParticle } from '$lib/habits/completionCelebration';
-  import {
-    getHabitCompletionActionLabel,
-    getHabitCompletionState
-  } from '$lib/habits/completionState';
-  import { formatHabitLabel } from '$lib/habits/formatHabitLabel';
 
   type DropHint = { habitId: string; position: 'above' | 'below' } | null;
 
@@ -27,7 +22,6 @@
     dragover: DragEvent;
     dragleave: DragEvent;
     drop: DragEvent;
-    dragend: DragEvent;
     touchstart: TouchEvent;
     touchmove: TouchEvent;
     touchend: TouchEvent;
@@ -41,6 +35,7 @@
   export let appearanceIndex: number;
   export let isDragActive: boolean;
   export let dragId: string | null;
+  export let dragOverId: string | null;
   export let dropHint: DropHint;
   export let animatingHabitId: string | null;
   export let animParticles: CelebrationParticle[];
@@ -50,30 +45,22 @@
   export let swipeDirection: 'left' | 'right' | null;
   export let isSwipingGesture: boolean;
   export let isDragOver: boolean;
-  export let pending: boolean;
-  export let error: boolean;
 
   $: accent = HABIT_COLOR_THEMES[habit.color] ?? HABIT_COLOR_THEMES.blue;
-  $: completionState = getHabitCompletionState(habit, todayKey);
-  $: habitLabel = formatHabitLabel(habit);
-  $: tgt = completionState.target;
-  $: todayCount = completionState.count;
-  $: completed = completionState.completed;
-  $: completionLabel = getHabitCompletionActionLabel(habitLabel, completionState);
+  $: tgt = Math.max(1, habit.dailyTarget ?? 1);
+  $: todayCount = habit.completions[todayKey] ?? 0;
+  $: completed = todayCount >= tgt;
   $: status = getScheduleStatusForDate(habit, todayDate);
   $: isFrozen = status === 'frozen';
   $: isScheduled = isMandatoryToday(habit, todayDate);
   $: streak = calculateScheduledStreak(habit, habit.completions).current;
   $: completionRate = calculateScheduledCompletionRate(habit, habit.completions);
   $: last7 = Array.from({ length: 7 }, (_, i) => {
-    const key = formatAppDate(new Date(todayDate.getTime() + (i - 6) * 86_400_000), {
-      month: 'short',
-      day: 'numeric'
-    });
+    const key = formatDate(new Date(todayDate.getTime() + (i - 6) * 86_400_000));
     return (habit.completions[key] ?? 0) >= tgt;
   });
   $: hint = computeTileHint(habit, completionRate, streak);
-  $: momentum = getDashboardMomentumStatus(habit, todayDate);
+  $: phase = getHabitPhase(streak);
   $: isAnimating = animatingHabitId === habit.id;
   $: dropHintPosition = dropHint?.habitId === habit.id ? dropHint.position : null;
   $: showDropAbove = dropHintPosition === 'above';
@@ -85,13 +72,23 @@
   $: inlineTags = habit.tags.slice(0, 3);
   $: extraTagCount = Math.max(0, habit.tags.length - inlineTags.length);
 
-  function handleToggle(e?: MouseEvent | TouchEvent) {
-    e?.stopPropagation();
+  function handleToggle(e: MouseEvent | TouchEvent) {
+    e.stopPropagation();
     dispatch('toggle');
   }
 
   function handleDetail() {
     dispatch('detail');
+  }
+
+  function handleKeydown(e: KeyboardEvent) {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleDetail();
+    } else if (e.key === ' ') {
+      e.preventDefault();
+      dispatch('toggle');
+    }
   }
 
   function handleDragStart(e: DragEvent) {
@@ -110,8 +107,8 @@
     dispatch('drop', e);
   }
 
-  function handleDragEnd(e: DragEvent) {
-    dispatch('dragend', e);
+  function handleDragEnd() {
+    dispatch('dragend');
   }
 
   function handleTouchStart(e: TouchEvent) {
@@ -122,12 +119,12 @@
     dispatch('touchmove', e);
   }
 
-  function handleTouchEnd(e: TouchEvent) {
-    dispatch('touchend', e);
+  function handleTouchEnd() {
+    dispatch('touchend');
   }
 
-  function handleTouchCancel(e: TouchEvent) {
-    dispatch('touchcancel', e);
+  function handleTouchCancel() {
+    dispatch('touchcancel');
   }
 
   function handleGripTouchStart(e: TouchEvent) {
@@ -138,7 +135,7 @@
 <li
   data-habit-id={habit.id}
   role="listitem"
-  class="group relative transition-[opacity,transform] duration-200 animate-fade-slide-up
+  class="group relative transition-all duration-200 animate-fade-slide-up
     {dragId && dragId !== habit.id ? 'opacity-50 scale-[0.97]' : ''}
     {dragId === habit.id ? 'ring-2 ring-accent/40 rounded-2xl' : ''}
     {dropTransformClass}"
@@ -162,14 +159,19 @@
   {/if}
 
   <div
-    class="habit-card-inner flex flex-col items-stretch rounded-[1.5rem] border bg-bg-card px-4 py-3 transition-[border-color,transform] duration-150 overflow-hidden shadow-[0_10px_24px_rgba(15,23,42,0.06)]
+    class="habit-card-inner flex items-center rounded-2xl border bg-bg-card px-4 py-3 transition-all duration-150 cursor-pointer overflow-hidden
       {isDragOver ? 'border-accent/50' : 'border-border hover:border-border-hover'}
       {isFrozen ? 'opacity-75' : ''}"
+    role="button"
+    tabindex="0"
+    aria-label="{habit.name}, {completed ? 'completed' : 'not completed'}"
     style:transform={isSwipeRow ? `translateX(${swipeOffset}px)` : 'translateX(0px)'}
     style:transition={isSwipeRow && isSwipingGesture ? 'none' : 'transform 0.2s ease-out'}
     style:touch-action="pan-y"
     style:will-change="transform"
     style:width="100%"
+    onclick={handleDetail}
+    onkeydown={handleKeydown}
   >
     <span class="absolute inset-y-0 left-0 w-1 rounded-l-2xl pointer-events-none" style:background={accent.hex}></span>
     <span
@@ -178,12 +180,12 @@
       style:background-color={indicatorColor}
     ></span>
 
-    <div class="relative z-10 flex w-full min-w-0 items-center gap-3">
+    <div class="relative z-10 flex w-full items-center gap-3">
       {#if isDragActive}
         <button
           type="button"
-          class="flex h-11 w-11 flex-shrink-0 cursor-grab items-center justify-center rounded-xl text-border/60 transition-colors hover:text-muted active:cursor-grabbing touch-none"
-          aria-label="Reorder {habitLabel}"
+          class="flex-shrink-0 cursor-grab active:cursor-grabbing text-border/60 hover:text-muted transition-colors touch-none"
+          aria-label="Reorder {habit.name}"
           onclick={(e) => { e.stopPropagation(); }}
           ontouchstart={handleGripTouchStart}
         >
@@ -202,31 +204,51 @@
           {/each}
           <span class="completion-status-pop" style="color: {accent.hex}">{animLabel}</span>
         {/if}
-        <HabitCompletionControl
-          label={isFrozen ? `${habitLabel} is frozen today` : completionLabel}
-          completed={completed}
-          target={tgt}
-          count={todayCount}
-          accent={accent.hex}
-          scheduled={isScheduled}
-          frozen={isFrozen}
-          {pending}
-          {error}
-          onToggle={handleToggle}
-        />
+        <button
+          type="button"
+          aria-label="{completed ? 'Undo' : 'Complete'} {habit.name}"
+          onclick={handleToggle}
+          disabled={isFrozen}
+          class="relative flex h-8 w-8 items-center justify-center rounded-xl border-[1.5px] transition-all duration-200 overflow-hidden
+            {completed ? `${accent.bgClass} ${accent.borderClass}` : isScheduled ? 'border-border-hover hover:border-muted' : isFrozen ? 'border-border bg-bg-secondary text-muted cursor-not-allowed opacity-60' : 'border border-dashed border-border text-muted hover:border-muted'}
+            {isAnimating ? 'animate-check-pulse animate-glow-burst' : ''}"
+          style={completed && !isFrozen ? `box-shadow: 0 0 12px ${accent.glow}` : ''}
+        >
+          {#if isAnimating}
+            <span class="completion-sheen" style="--sheen-color: {accent.hex}"></span>
+          {/if}
+          {#if tgt > 1}
+            {@const prog = Math.min(Math.max(todayCount, 0), tgt) / tgt}
+            <span class="absolute inset-[2px] rounded-full pointer-events-none overflow-hidden" aria-hidden="true">
+              <span
+                class="absolute inset-y-0 left-0 rounded-full transition-all duration-300"
+                style="width: {prog * 100}%; background: linear-gradient(90deg, {accent.hex}55, {accent.hex});"
+              ></span>
+            </span>
+          {/if}
+          {#if isFrozen}
+            <SnowflakeIcon size={13} class="text-muted z-10 relative" />
+          {:else if tgt > 1}
+            <span class="text-[10px] font-mono z-10 relative" style="color: {accent.hex}">{todayCount}/{tgt}</span>
+          {:else if completed}
+            <svg viewBox="0 0 12 12" class="h-4 w-4 z-10 relative {accent.textClass}">
+              <path d="M2 6l3 3 5-5" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          {/if}
+        </button>
       </div>
 
       <!-- Habit info (clickable) -->
-      <button
-        type="button"
-        class="flex min-h-11 min-w-0 flex-1 items-center gap-3 text-left"
-        onclick={handleDetail}
-      >
+      <div class="flex flex-1 items-center gap-3 text-left min-w-0">
+        <span class="flex-shrink-0 text-xl leading-none">{habit.icon}</span>
         <div class="min-w-0 flex-1">
           <div class="flex items-center gap-1 overflow-hidden">
-            <p class="min-w-0 truncate text-sm font-semibold text-foreground {completed ? 'opacity-60 line-through' : ''}">{habitLabel}</p>
+            <p class="min-w-0 truncate text-sm font-semibold text-foreground {completed ? 'opacity-60 line-through' : ''}">{habit.name}</p>
             {#if tgt > 1}
               <span class="flex-shrink-0 rounded bg-accent/10 px-1 py-0.5 text-[10px] font-mono text-accent-secondary">×{tgt}</span>
+            {/if}
+            {#if habit.description}
+              <span class="flex-shrink-0"><DescriptionTooltip description={habit.description} /></span>
             {/if}
             {#if inlineTags.length > 0}
               <div class="hidden sm:flex items-center gap-1 flex-shrink-0">
@@ -258,44 +280,40 @@
 
         <!-- Right metrics -->
         <div class="flex flex-shrink-0 items-center gap-2">
-          {#if momentum.kind === 'flame'}
-            <span class="flex items-center gap-0.5 text-[10px] font-mono text-accent-secondary">
-              <Flame size={10} aria-hidden="true" />
-              <span aria-label={momentum.label}>{momentum.streak}</span>
-            </span>
-          {:else if momentum.kind === 'ice'}
-            <span class="flex items-center gap-0.5 text-[10px] font-mono text-sky-500" aria-label={momentum.label}>
-              <SnowflakeIcon size={10} aria-hidden="true" />
-              {momentum.inactiveScheduledDays}d
+          {#if streak > 0}
+            <span class="hidden sm:flex items-center gap-0.5 text-[10px] font-mono text-accent-secondary">
+              {#if habit.type === 'negative'}
+                <Trophy size={10} />
+              {:else if phase.id === 1}
+                <Shield size={10} />
+              {:else if phase.id === 2}
+                <Zap size={10} />
+              {:else if phase.id === 3}
+                <Activity size={10} />
+              {:else}
+                <Star size={10} />
+              {/if}
+              {streak}
             </span>
           {/if}
           <CompletionRing percentage={completionRate} size={26} strokeWidth={2.5} color={habit.color} showText={false} />
           <div class="hidden sm:flex items-end gap-[2px] h-4">
             {#each last7 as done, lj ('' + lj)}
               <div
-                class="w-[3px] rounded-sm transition-[height,background-color,opacity]"
+                class="w-[3px] rounded-sm transition-all"
                 style="height: {done ? '100%' : '30%'}; background-color: {done ? accent.hex : 'var(--border)'}; opacity: {0.4 + lj * 0.09}"
               ></div>
             {/each}
           </div>
+          <div class="hidden md:block">
+            <MiniHeatmap completions={habit.completions} dailyTarget={habit.dailyTarget} color={habit.color} />
+          </div>
         </div>
-      </button>
-
-      {#if habit.description}
-        <span class="flex-shrink-0"><DescriptionTooltip description={habit.description} triggerClassName="h-11 w-11" /></span>
-      {/if}
-    </div>
-
-    <div
-      class="relative z-10 flex w-full min-w-0 items-center pt-2"
-      role="img"
-      aria-label="Habit activity for the last 30 days, from 30 days ago through today"
-    >
-      <MiniHeatmap completions={habit.completions} dailyTarget={habit.dailyTarget} color={habit.color} />
+      </div>
     </div>
   </div>
 </li>
 
 <script context="module">
-  import { Flame, GripVertical, SnowflakeIcon, Moon } from 'lucide-svelte';
+  import { GripVertical, SnowflakeIcon, Shield, Zap, Activity, Star, Trophy, Moon } from 'lucide-svelte';
 </script>
