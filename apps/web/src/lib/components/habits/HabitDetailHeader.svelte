@@ -26,27 +26,9 @@
       <ArrowLeft size={16} aria-hidden="true" />
     </IconButton>
 
-    <div class="flex min-w-0 flex-1 flex-col gap-2.5">
-      <div class="flex min-w-0 flex-wrap items-center gap-2">
-        <div class="min-w-0">
-          <h1 class="truncate text-[1.05rem] font-semibold tracking-[-0.025em] text-foreground">{habitLabel}</h1>
-          <p class="mt-0.5 text-xs text-muted">{todayLabel}</p>
-        </div>
-        {#if habit.description}
-          <DescriptionTooltip description={habit.description} triggerClassName="h-11 w-11" triggerLabel={descriptionLabel} />
-        {/if}
-      </div>
-
-      <div class="flex flex-wrap items-center gap-2">
-        <StatusPill tone={habit.archived ? 'attention' : 'progress'}>
-          {habit.archived ? 'Archived' : 'Active'}
-        </StatusPill>
-        {#if habit.type === 'negative'}
-          <StatusPill tone="neutral">Avoid habit</StatusPill>
-        {:else}
-          <StatusPill tone="neutral">Build habit</StatusPill>
-        {/if}
-      </div>
+    <div class="min-w-0 flex-1 pt-0.5">
+      <h1 class="truncate text-[1.05rem] font-semibold tracking-[-0.025em] text-foreground">{habitLabel}</h1>
+      <p class="mt-0.5 text-xs text-muted">{todayLabel}</p>
     </div>
 
     <div class="flex flex-none items-center gap-2">
@@ -60,6 +42,23 @@
       <IconButton ariaLabel="Edit habit" title="Edit habit" onClick={onEdit} disabled={pending}>
         <Pencil size={16} aria-hidden="true" />
       </IconButton>
+    </div>
+  </div>
+
+  <div class="ml-14 mt-2 flex flex-col items-start gap-2">
+    {#if habit.description}
+      <DescriptionTooltip description={habit.description} triggerClassName="h-11 w-11" triggerLabel={descriptionLabel} />
+    {/if}
+
+    <div class="flex flex-wrap items-center gap-2">
+      <StatusPill tone={habit.archived ? 'attention' : 'progress'}>
+        {habit.archived ? 'Archived' : 'Active'}
+      </StatusPill>
+      {#if habit.type === 'negative'}
+        <StatusPill tone="neutral">Avoid habit</StatusPill>
+      {:else}
+        <StatusPill tone="neutral">Build habit</StatusPill>
+      {/if}
     </div>
   </div>
 </header>

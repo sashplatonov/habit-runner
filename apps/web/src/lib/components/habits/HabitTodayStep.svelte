@@ -56,7 +56,7 @@
   const mainLabel = $derived(habit.type === 'negative' ? `Record slip for ${label}` : completed ? `Undo ${label}` : `Complete ${label}`);
 </script>
 
-<Surface as="section" padding="lg" class="space-y-5">
+<Surface as="section" padding="lg" class="space-y-4">
   <div class="flex flex-wrap items-start justify-between gap-3">
     <div class="min-w-0">
       <p class="text-[10px] font-mono uppercase tracking-[0.24em] text-muted">Today&apos;s step</p>
@@ -65,7 +65,7 @@
     <p class="text-sm font-medium text-muted">{progressLabel} {#if remainingLabel}· {remainingLabel}{/if}</p>
   </div>
 
-  <div class="space-y-4">
+  <div class="space-y-3">
     <p class="max-w-sm text-sm leading-6 text-muted">{recoveryCopy}</p>
     <div class="flex flex-wrap items-center gap-2.5">
       <div class="relative">
