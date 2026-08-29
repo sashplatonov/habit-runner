@@ -356,7 +356,7 @@ git commit -m "feat(habits): add schedule chooser screen"
 
 ## CDE-006: Implement the Daily schedule screen
 
-**Status:** TODO  
+**Status:** DONE  
 **Priority:** P1  
 **Depends on:** CDE-005
 

@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { HabitSchedule, WeekOfMonth } from '@habbit-runner/shared';
-  import { Calendar, CalendarDays, CalendarRange, ChartColumnIncreasing, type Icon } from 'lucide-svelte';
+  import { Calendar, CalendarDays, CalendarRange, ChartColumnIncreasing, Check, type Icon } from 'lucide-svelte';
   import { SCHEDULE_TYPE_OPTIONS } from '$lib/habits/constants';
 
   const WEEKDAY_ORDER = [1, 2, 3, 4, 5, 6, 0];
@@ -224,6 +224,34 @@
   </div>
 
   <div class="mt-3 space-y-3">
+    {#if openSlot === 'daily'}
+      <div class="space-y-3" data-editor-schedule-daily data-testid="daily-summary">
+        <div class="flex items-center gap-2.5 rounded-2xl border border-border bg-bg-primary p-3" data-editor-schedule-daily-summary>
+          <span class="flex h-[30px] w-[30px] shrink-0 items-center justify-center rounded-[9px] bg-emerald-50 text-emerald-600">
+            <Check size={16} strokeWidth={2} aria-hidden="true" />
+          </span>
+          <span class="min-w-0">
+            <span class="block text-[13px] font-semibold text-foreground">Every day</span>
+            <span class="block text-[11px] leading-4 text-muted">Monday through Sunday</span>
+          </span>
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <div class="rounded-2xl border border-border bg-bg-primary p-2.5">
+            <p class="text-[13px] font-bold text-foreground">7</p>
+            <p class="mt-0.5 text-[10px] leading-[14px] text-muted">scheduled days / week</p>
+          </div>
+          <div class="rounded-2xl border border-border bg-bg-primary p-2.5">
+            <p class="text-[13px] font-bold text-foreground">1/day</p>
+            <p class="mt-0.5 text-[10px] leading-[14px] text-muted">opportunity frequency</p>
+          </div>
+        </div>
+        <div class="rounded-2xl border border-border bg-bg-primary p-3" data-editor-schedule-daily-rule>
+          <p class="text-[12px] font-semibold leading-5 text-foreground">A scheduled opportunity is created every calendar day.</p>
+          <p class="mt-0.5 text-[11px] leading-4 text-muted">Existing history remains unchanged.</p>
+        </div>
+      </div>
+    {/if}
+
     {#if openSlot === 'weekly_days'}
       <div class="space-y-2">
         <div class="flex gap-1">

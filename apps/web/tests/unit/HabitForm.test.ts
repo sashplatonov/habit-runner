@@ -255,6 +255,43 @@ describe('HabitForm', () => {
     }));
   });
 
+  it('shows the daily summary with metrics and rule but no editable schedule controls', async () => {
+    const user = userEvent.setup();
+    const onSubmit = vi.fn().mockResolvedValue(undefined);
+
+    render(HabitForm, {
+      props: {
+        mode: 'create',
+        allHabits: [],
+        onBack: vi.fn(),
+        onSubmit
+      }
+    });
+
+    await user.click(screen.getByRole('button', { name: 'Edit Schedule' }));
+    await user.click(screen.getByRole('button', { name: 'Daily Every day' }));
+    expect(screen.getByRole('button', { name: 'Daily Every day' }).getAttribute('aria-pressed')).toBe('true');
+    const dailySummary = screen.getByTestId('daily-summary');
+    expect(within(dailySummary).getByText('Every day')).toBeTruthy();
+    expect(within(dailySummary).getByText('Monday through Sunday')).toBeTruthy();
+    expect(within(dailySummary).getByText('scheduled days / week')).toBeTruthy();
+    expect(within(dailySummary).getByText('opportunity frequency')).toBeTruthy();
+    expect(within(dailySummary).getByText('A scheduled opportunity is created every calendar day.')).toBeTruthy();
+    expect(within(dailySummary).getByText('Existing history remains unchanged.')).toBeTruthy();
+
+    // No editable weekday or quota control is rendered for the daily rule.
+    expect(screen.queryByLabelText(/Toggle .* for the schedule/)).toBeNull();
+    expect(screen.queryByLabelText('Times per week')).toBeNull();
+    expect(screen.queryByLabelText('Times per month')).toBeNull();
+
+    // Back from the daily slot keeps the draft and returns to the chooser.
+    await user.click(screen.getByRole('button', { name: 'Days of week Pick weekdays' }));
+    expect(screen.getByLabelText('Toggle Mon for the schedule')).toBeTruthy();
+    await user.click(screen.getByRole('button', { name: 'Daily Every day' }));
+    expect(screen.getByTestId('daily-summary')).toBeTruthy();
+    expect(onSubmit).not.toHaveBeenCalled();
+  });
+
   it('preserves advanced monthly-week schedules on submit', async () => {
     const user = userEvent.setup();
     const onSubmit = vi.fn().mockResolvedValue(undefined);
