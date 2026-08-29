@@ -151,20 +151,19 @@
     <button type="button" onclick={showNextWindow} disabled={windowOffset === 0}>Show next 28 days</button>
   </div>
   <div class="flex items-center justify-between gap-3"><p class="text-xs leading-4 text-muted">{scheduleLabel}</p><span class="rounded-full border border-border bg-bg-secondary px-2.5 py-1 text-[11px] text-muted">28 days · Daily</span></div>
-  <ul class="mt-3 flex flex-wrap gap-x-3 gap-y-1.5 text-[11px] text-muted" aria-label="Day status legend">
+  <ul class="mt-2 flex flex-wrap gap-x-2.5 gap-y-1 text-[11px] text-muted" aria-label="Day status legend">
     <li class="inline-flex items-center gap-1.5"><Check size={12} class="text-progress" aria-hidden="true" />Done</li>
     <li class="inline-flex items-center gap-1.5"><X size={12} class="text-danger" aria-hidden="true" />Missed</li>
     <li class="inline-flex items-center gap-1.5"><Clock3 size={12} aria-hidden="true" />Upcoming</li>
-    <li class="inline-flex items-center gap-1.5"><Snowflake size={12} class="text-accent-secondary" aria-hidden="true" />Frozen</li>
     <li class="inline-flex items-center gap-1.5"><Minus size={12} aria-hidden="true" />Rest day</li>
   </ul>
 
-  <div class="mt-3 grid grid-cols-7 gap-1.5" role="group" aria-label="Habit rhythm by day">
+  <div class="mt-2 grid grid-cols-7 gap-1.5" role="group" aria-label="Habit rhythm by day">
     {#each days as day, dayIndex (`${day.dateKey}-${dayIndex}`)}
       <button
         type="button"
         onclick={(event) => openStatusMenu(day, event)}
-        class={`relative flex min-h-10 min-w-0 items-center justify-center rounded-lg border p-1 text-center transition-[border-color,background-color,box-shadow] focus-visible:z-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 ${statusClass[day.status]} ${day.isToday ? 'ring-2 ring-foreground/70 ring-offset-2 ring-offset-bg-card' : ''}`}
+        class={`relative flex min-h-9 min-w-0 items-center justify-center rounded-lg border p-1 text-center transition-[border-color,background-color,box-shadow] focus-visible:z-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 ${statusClass[day.status]} ${day.isToday ? 'ring-2 ring-foreground/70 ring-offset-2 ring-offset-bg-card' : ''}`}
         style={day.status === 'completed' ? `box-shadow: 0 8px 20px ${accent.glow};` : undefined}
         aria-label={`${day.label}: ${statusLabel[day.status]}${day.isToday ? ', today' : ''}. Open status menu`}
         aria-haspopup="dialog"

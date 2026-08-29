@@ -17,12 +17,12 @@
   const { habit, accent, referenceDate, timeZone, pending = false, onSetStatus }: Props = $props();
 </script>
 
-<Surface as="section" padding="lg" class="habit-detail-surface !p-4 sm:!p-5">
+<Surface as="section" padding="lg" class="habit-detail-surface !p-3 sm:!p-4">
   <div class="min-w-0">
     <p class="detail-eyebrow">Rhythm &amp; history</p>
     <h2 class="mt-1 text-xl font-bold tracking-[-0.04em] text-foreground">Your 28-day rhythm</h2>
     <p class="mt-1 max-w-xl text-xs leading-4 text-muted">One calendar for your recent pattern, upcoming days, and history corrections.</p>
   </div>
 
-  <div class="mt-3"><HabitRhythmCalendar {habit} {accent} {referenceDate} {timeZone} {pending} {onSetStatus} /></div>
+  <div class="mt-2"><HabitRhythmCalendar {habit} {accent} {referenceDate} {timeZone} {pending} {onSetStatus} /></div>
 </Surface>
