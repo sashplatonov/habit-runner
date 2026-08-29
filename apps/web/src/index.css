@@ -69,14 +69,14 @@ body {
 }
 
 .habit-detail-surface {
-  border-color: #263752;
-  background: #101b2b;
+  border-color: var(--border);
+  background: var(--bg-card);
   box-shadow: none;
 }
 
 .habit-danger-surface {
-  border-color: color-mix(in srgb, var(--danger) 34%, #263752);
-  background: color-mix(in srgb, #101b2b 93%, var(--danger) 7%);
+  border-color: color-mix(in srgb, var(--danger) 34%, var(--border));
+  background: color-mix(in srgb, var(--danger) 7%, var(--bg-card));
   box-shadow: none;
 }
 
@@ -87,21 +87,21 @@ body {
   flex: 0 0 auto;
   align-items: center;
   justify-content: center;
-  border: 1px solid #31425d;
+  border: 1px solid var(--border);
   border-radius: 0.65rem;
-  background: #16243a;
-  color: #8fa5c5;
+  background: var(--bg-secondary);
+  color: var(--icon-muted);
 }
 
 .journey-node-done {
-  border-color: color-mix(in srgb, var(--progress) 42%, #31425d);
-  background: color-mix(in srgb, var(--progress) 12%, #16243a);
+  border-color: color-mix(in srgb, var(--progress) 42%, var(--border));
+  background: color-mix(in srgb, var(--progress) 12%, var(--bg-secondary));
   color: var(--progress);
 }
 
 .journey-node-current {
   border: 2px solid var(--accent);
-  background: color-mix(in srgb, var(--accent) 11%, #16243a);
+  background: color-mix(in srgb, var(--accent) 11%, var(--bg-secondary));
   color: var(--accent);
 }
 /* Monospace elements */

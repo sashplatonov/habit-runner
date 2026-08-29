@@ -53,7 +53,7 @@
   }: Props = $props();
 
   const canDecrement = $derived(count > 0);
-  const mainLabel = $derived(habit.type === 'negative' ? `Record slip for ${label}` : completed ? `Undo ${label}` : `Complete ${label}`);
+  const mainLabel = $derived(habit.type === 'negative' ? 'Record slip' : completed ? `Undo ${label}` : 'Mark done');
 </script>
 
 <Surface as="section" padding="lg" class="habit-detail-surface !p-4 sm:!p-5">
@@ -89,6 +89,7 @@
           pending={pending}
           error={error}
           disabled={!scheduled}
+          showLabel={true}
           class="!min-h-11 !rounded-xl !border-accent/40 !bg-accent/15 !px-4 !text-accent"
           onToggle={onIncrement}
         />

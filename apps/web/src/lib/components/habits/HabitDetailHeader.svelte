@@ -17,7 +17,7 @@
 </script>
 
 <header class="flex min-w-0 items-center gap-2 py-0.5">
-  <IconButton ariaLabel="Back to dashboard" title="Back to dashboard" class="!size-10 !min-h-10 !min-w-10 !rounded-xl !border-[#263752] !bg-[#101b2b] !text-[#aab9d0]" onClick={onBack}>
+  <IconButton ariaLabel="Back to dashboard" title="Back to dashboard" class="!size-10 !min-h-10 !min-w-10 !rounded-xl !border-border !bg-bg-secondary !text-muted" onClick={onBack}>
     <ArrowLeft size={18} aria-hidden="true" />
   </IconButton>
 
@@ -27,9 +27,9 @@
   </div>
 
   <div class="flex shrink-0 items-center gap-2">
-    <IconButton ariaLabel="Edit habit" title="Edit habit" class="!size-10 !min-h-10 !min-w-10 !rounded-xl !border-[#263752] !bg-[#101b2b] !text-[#c7d6ed]" disabled={pending} onClick={onEdit}>
+    <IconButton ariaLabel="Edit habit" title="Edit habit" class="!size-10 !min-h-10 !min-w-10 !rounded-xl !border-border !bg-bg-secondary !text-foreground" disabled={pending} onClick={onEdit}>
       <Pencil size={16} aria-hidden="true" />
     </IconButton>
-    <span class="inline-flex size-10 items-center justify-center rounded-xl border border-[#263752] bg-[#101b2b] text-[#aab9d0]" aria-hidden="true"><Ellipsis size={18} /></span>
+    <span class="inline-flex size-10 items-center justify-center rounded-xl border border-border bg-bg-secondary text-muted" aria-hidden="true"><Ellipsis size={18} /></span>
   </div>
 </header>

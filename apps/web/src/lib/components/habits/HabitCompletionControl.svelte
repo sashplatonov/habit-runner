@@ -12,6 +12,7 @@
     pending?: boolean;
     error?: boolean;
     disabled?: boolean;
+    showLabel?: boolean;
     onToggle: () => void | Promise<void>;
     class?: string;
   };
@@ -27,6 +28,7 @@
     pending = false,
     error = false,
     disabled = false,
+    showLabel = false,
     onToggle,
     class: className = ''
   }: Props = $props();
@@ -75,6 +77,8 @@
         <span class="font-mono text-[11px] tabular-nums" style:color={completed ? accent : 'currentColor'}>
           {Math.max(0, Math.min(count, target))}/{target}
         </span>
+      {:else if showLabel}
+        <span>{label}</span>
       {/if}
     </span>
   </button>

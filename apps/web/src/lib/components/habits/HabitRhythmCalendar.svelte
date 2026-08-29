@@ -150,7 +150,7 @@
     <button type="button" onclick={showPreviousWindow}>Show previous 28 days</button>
     <button type="button" onclick={showNextWindow} disabled={windowOffset === 0}>Show next 28 days</button>
   </div>
-  <div class="flex items-center justify-between gap-3"><p class="text-xs leading-4 text-muted">{scheduleLabel}</p><span class="rounded-full border border-[#31425d] bg-[#16243a] px-2.5 py-1 text-[11px] text-muted">28 days · Daily</span></div>
+  <div class="flex items-center justify-between gap-3"><p class="text-xs leading-4 text-muted">{scheduleLabel}</p><span class="rounded-full border border-border bg-bg-secondary px-2.5 py-1 text-[11px] text-muted">28 days · Daily</span></div>
   <ul class="mt-3 flex flex-wrap gap-x-3 gap-y-1.5 text-[11px] text-muted" aria-label="Day status legend">
     <li class="inline-flex items-center gap-1.5"><Check size={12} class="text-progress" aria-hidden="true" />Done</li>
     <li class="inline-flex items-center gap-1.5"><X size={12} class="text-danger" aria-hidden="true" />Missed</li>
