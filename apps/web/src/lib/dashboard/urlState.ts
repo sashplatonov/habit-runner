@@ -2,6 +2,7 @@
 import { browser } from '$app/environment';
 import { goto } from '$app/navigation';
 import { resolve } from '$app/paths';
+import type { PathnameWithSearchOrHash } from '$app/types';
 
 type DashboardUrlState = {
   filter?: string;
@@ -84,9 +85,10 @@ export function updateDashboardURL(state: Partial<DashboardUrlState>) {
   }
 
   // Update URL without full reload
-  const newUrl = url.pathname + (params.toString() ? '?' + params.toString() : '') + url.hash;
+  const queryString = params.toString();
+  const newUrl = url.pathname + (queryString ? '?' + queryString : '') + url.hash;
   if (newUrl !== window.location.pathname + window.location.search + window.location.hash) {
-    void goto(resolve(newUrl), { replaceState: true, keepFocus: true, noScroll: true });
+    void goto(resolve(newUrl as PathnameWithSearchOrHash, {} as never), { replaceState: true, keepFocus: true, noScroll: true });
   }
 }
 

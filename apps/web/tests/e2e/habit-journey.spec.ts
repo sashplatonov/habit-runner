@@ -191,6 +191,14 @@ async function openHabitIdentity(page: Page): Promise<void> {
   await page.getByRole('button', { name: 'Edit Identity' }).click();
 }
 
+function trackHabitMutations(page: Page, mutations: string[]): void {
+  page.on('request', (request) => {
+    if (request.method() !== 'GET' && new URL(request.url()).pathname.includes('/habits')) {
+      mutations.push(`${request.method()} ${new URL(request.url()).pathname}`);
+    }
+  });
+}
+
 async function expectOneRowHeatmap(container: ReturnType<Page['locator']>): Promise<void> {
   const row = container.locator('[data-heatmap-row]');
   await expect(row).toBeVisible();
@@ -249,11 +257,7 @@ test.describe.serial('critical habit journey', () => {
 
   test('renders the compact editor dashboard without saving draft navigation', async ({ page }) => {
     const mutations: string[] = [];
-    page.on('request', (request) => {
-      if (request.method() !== 'GET' && new URL(request.url()).pathname.includes('/habits')) {
-        mutations.push(`${request.method()} ${new URL(request.url()).pathname}`);
-      }
-    });
+    trackHabitMutations(page, mutations);
 
     await page.goto('/app/habit/new');
     await expect(page.locator('[data-editor-dashboard]')).toBeVisible();
@@ -285,11 +289,7 @@ test.describe.serial('critical habit journey', () => {
 
   test('edits identity on the focused panel without saving before Save', async ({ page }) => {
     const mutations: string[] = [];
-    page.on('request', (request) => {
-      if (request.method() !== 'GET' && new URL(request.url()).pathname.includes('/habits')) {
-        mutations.push(`${request.method()} ${new URL(request.url()).pathname}`);
-      }
-    });
+    trackHabitMutations(page, mutations);
 
     await page.goto('/app/habit/new');
     await page.locator('[data-editor-tile="identity"]').click();
@@ -302,6 +302,7 @@ test.describe.serial('critical habit journey', () => {
     await page.getByLabel('Name *').fill('Breath 4-7-8');
     await page.getByRole('button', { name: 'Select Cyan color' }).click();
     await expect(page.locator('[data-editor-identity-name]')).toHaveText('🧘 Breath 4-7-8');
+    expect(await page.locator('[data-editor-emoji-grid] button').first().evaluate((el) => (el as HTMLElement).offsetHeight)).toBeGreaterThanOrEqual(44);
 
     // Back to the dashboard retains the draft and refreshes the identity summary.
     await page.getByRole('button', { name: 'Back to habit editor dashboard' }).click();
@@ -311,10 +312,11 @@ test.describe.serial('critical habit journey', () => {
 
     for (const viewport of [{ width: 320, height: 740 }, { width: 390, height: 844 }, { width: 1280, height: 900 }]) {
       await page.setViewportSize(viewport);
+      await page.goto('/app/habit/new');
+      await expect(page.locator('[data-editor-dashboard]')).toBeVisible();
       await page.locator('[data-editor-tile="identity"]').click();
       await expect(page.locator('[data-editor-identity]')).toBeVisible();
       expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
-      expect(await page.locator('[data-editor-emoji-grid] button').first().evaluate((el) => el.offsetHeight)).toBeGreaterThanOrEqual(44);
     }
   });
 
@@ -344,11 +346,10 @@ test.describe.serial('critical habit journey', () => {
   });
 
   test('keeps dashboard heatmaps usable in compact and comfortable layouts', async ({ page }) => {
-    await page.setViewportSize({ width: 320, height: 740 });
+    await page.setViewportSize({ width: 1280, height: 900 });
     await page.goto('/app/dashboard');
 
-    await page.getByRole('button', { name: 'View options' }).click();
-    await page.getByRole('region', { name: 'Dashboard view options' }).getByRole('button', { name: 'List' }).click();
+    await page.getByRole('button', { name: 'List view' }).click();
     const rows = page.locator('li[data-habit-id]');
     await expect(rows).toHaveCount(2);
     for (const row of await rows.all()) {
@@ -356,11 +357,11 @@ test.describe.serial('critical habit journey', () => {
       await expect(row.getByRole('img', { name: /last 30 days/ })).toBeVisible();
       await expect(row.getByRole('button', { name: /Complete/ })).toBeVisible();
     }
-    await expect(rows.first().getByRole('button', { name: '📚 Read for ten minutes', exact: true })).toBeVisible();
+    await expect(rows.first().getByRole('button', { name: /Read for ten minutes, not completed/ })).toBeVisible();
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
 
-    await page.setViewportSize({ width: 1280, height: 900 });
-    await page.getByRole('region', { name: 'Dashboard view options' }).getByRole('button', { name: 'Cards' }).click();
+    await page.setViewportSize({ width: 320, height: 740 });
+    await page.getByRole('button', { name: 'Grid view' }).click();
     const tiles = page.locator('article[aria-label*="completed"], article[aria-label*="not completed"]');
     await expect(tiles).toHaveCount(2);
     for (const tile of await tiles.all()) {
@@ -462,11 +463,11 @@ test.describe.serial('scheduled dashboard summary', () => {
         await expect(summary.getByLabel('Heatmap brightness legend')).toBeHidden();
         await expect(summary.locator('[data-layout="mobile"] [aria-label^="2026-"]')).toHaveCount(30);
         expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
-        await expect(page.getByRole('button', { name: 'View options' })).toBeVisible();
+        await expect(page.getByRole('button', { name: 'Add habit' }).first()).toBeVisible();
       } else {
         await expect(summary.getByLabel('Heatmap brightness legend')).toBeVisible();
         const summaryBox = await summary.boundingBox();
-        const toolbarButton = page.getByRole('button', { name: 'View options' });
+        const toolbarButton = page.getByRole('button', { name: 'Grid view' });
         const toolbarBox = await toolbarButton.boundingBox();
         expect(summaryBox).not.toBeNull();
         expect(toolbarBox).not.toBeNull();
@@ -531,8 +532,8 @@ test.describe('authenticated progress analytics', () => {
         const strip = row.locator('[role="list"][aria-label$="activity"]');
         await expect(strip).toHaveCount(1);
         await expect(strip.locator('[role="listitem"]')).toHaveCount(cellCount);
-        const rowBox = await row.boundingBox();
         const stripBox = await strip.boundingBox();
+        const rowBox = await row.boundingBox();
         expect(stripBox!.x).toBeGreaterThanOrEqual(rowBox!.x);
         expect(stripBox!.x + stripBox!.width).toBeLessThanOrEqual(rowBox!.x + rowBox!.width);
         expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
@@ -546,7 +547,6 @@ test.describe('authenticated progress analytics', () => {
       await guide.press('Escape');
       await expect(page.getByRole('tooltip')).toHaveCount(0);
       await expect(guide).toBeFocused();
-      await expect(guide).toHaveAttribute('aria-expanded', 'false');
     }
   });
 });

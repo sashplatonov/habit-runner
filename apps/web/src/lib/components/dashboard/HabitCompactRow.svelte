@@ -6,8 +6,7 @@
   import { computeTileHint } from '$lib/habits/tileHint';
   import { calculateScheduledStreak, calculateScheduledCompletionRate } from '$lib/habits/schedule';
   import { getScheduleStatusForDate, isMandatoryToday } from '$lib/habits/schedule';
-  import { formatDate } from '$lib/i18n';
-  import { buildCelebrationParticles, getCelebrationLabel } from '$lib/habits/completionCelebration';
+  import { toCompletionKey } from '@/lib/completionKey';
   import CompletionRing from '$lib/components/CompletionRing.svelte';
   import MiniHeatmap from '$lib/components/MiniHeatmap.svelte';
   import DescriptionTooltip from '$lib/components/DescriptionTooltip.svelte';
@@ -22,6 +21,7 @@
     dragover: DragEvent;
     dragleave: DragEvent;
     drop: DragEvent;
+    dragend: void;
     touchstart: TouchEvent;
     touchmove: TouchEvent;
     touchend: TouchEvent;
@@ -56,7 +56,7 @@
   $: streak = calculateScheduledStreak(habit, habit.completions).current;
   $: completionRate = calculateScheduledCompletionRate(habit, habit.completions);
   $: last7 = Array.from({ length: 7 }, (_, i) => {
-    const key = formatDate(new Date(todayDate.getTime() + (i - 6) * 86_400_000));
+    const key = toCompletionKey(new Date(todayDate.getTime() + (i - 6) * 86_400_000));
     return (habit.completions[key] ?? 0) >= tgt;
   });
   $: hint = computeTileHint(habit, completionRate, streak);
@@ -119,12 +119,12 @@
     dispatch('touchmove', e);
   }
 
-  function handleTouchEnd() {
-    dispatch('touchend');
+  function handleTouchEnd(e: TouchEvent) {
+    dispatch('touchend', e);
   }
 
-  function handleTouchCancel() {
-    dispatch('touchcancel');
+  function handleTouchCancel(e: TouchEvent) {
+    dispatch('touchcancel', e);
   }
 
   function handleGripTouchStart(e: TouchEvent) {
@@ -305,7 +305,7 @@
               ></div>
             {/each}
           </div>
-          <div class="hidden md:block">
+          <div class="hidden md:flex justify-center" role="img" aria-label="Habit activity for the last 30 days, from 30 days ago through today">
             <MiniHeatmap completions={habit.completions} dailyTarget={habit.dailyTarget} color={habit.color} />
           </div>
         </div>
