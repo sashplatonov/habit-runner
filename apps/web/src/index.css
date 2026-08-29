@@ -57,6 +57,53 @@ body {
   /* P2.2: smooth theme transitions */
   transition: background-color 0.25s ease, color 0.15s ease;
 }
+
+.detail-eyebrow {
+  color: var(--text-muted);
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  font-size: 0.625rem;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+
+.habit-detail-surface {
+  border-color: #263752;
+  background: #101b2b;
+  box-shadow: none;
+}
+
+.habit-danger-surface {
+  border-color: color-mix(in srgb, var(--danger) 34%, #263752);
+  background: color-mix(in srgb, #101b2b 93%, var(--danger) 7%);
+  box-shadow: none;
+}
+
+.journey-node {
+  display: inline-flex;
+  width: 1.9rem;
+  height: 1.9rem;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #31425d;
+  border-radius: 0.65rem;
+  background: #16243a;
+  color: #8fa5c5;
+}
+
+.journey-node-done {
+  border-color: color-mix(in srgb, var(--progress) 42%, #31425d);
+  background: color-mix(in srgb, var(--progress) 12%, #16243a);
+  color: var(--progress);
+}
+
+.journey-node-current {
+  border: 2px solid var(--accent);
+  background: color-mix(in srgb, var(--accent) 11%, #16243a);
+  color: var(--accent);
+}
 /* Monospace elements */
 .font-mono,
 code,

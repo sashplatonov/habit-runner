@@ -1,7 +1,6 @@
 <script lang="ts">
-  import { Flag, Flame, ShieldCheck, Sparkles, Trophy } from 'lucide-svelte';
+  import { Check, Flag, Flame } from 'lucide-svelte';
   import ProgressBar from '$lib/components/ui/ProgressBar.svelte';
-  import StatusPill from '$lib/components/ui/StatusPill.svelte';
   import Surface from '$lib/components/ui/Surface.svelte';
 
   type Props = {
@@ -29,71 +28,26 @@
   const milestoneProgress = $derived(
     nextMilestoneTarget === null ? 100 : Math.round((currentStreak / Math.max(1, nextMilestoneTarget)) * 100)
   );
-  const questCopy = $derived(
-    nextMilestoneDays === null
-      ? 'You reached every consistency checkpoint. Keep the routine comfortable.'
-      : nextMilestoneDays === 1
-        ? 'One scheduled completion unlocks this checkpoint.'
-        : `${nextMilestoneDays} scheduled completions unlock this checkpoint.`
-  );
+  const questCopy = $derived(nextMilestoneDays === null ? 'You reached every consistency checkpoint. Keep the routine comfortable.' : nextMilestoneDays === 1 ? 'One scheduled completion unlocks this checkpoint.' : `${nextMilestoneDays} scheduled completions unlock this checkpoint.`);
 </script>
 
-<Surface
-  as="section"
-  padding="lg"
-  class="overflow-hidden"
-  style="background: linear-gradient(135deg, var(--bg-card), color-mix(in srgb, var(--bg-card) 84%, var(--progress) 16%));"
->
-  <div class="grid gap-5 lg:grid-cols-[0.8fr_1.2fr] lg:items-stretch">
-    <div class="relative overflow-hidden rounded-[1.5rem] border border-progress/25 bg-bg-card/80 p-5 sm:p-6">
-      <div class="absolute -right-8 -top-10 size-32 rounded-full bg-progress/10 blur-2xl" aria-hidden="true"></div>
-      <div class="relative">
-        <StatusPill tone={currentStreak > 0 ? 'progress' : 'neutral'}>
-          <Flame size={12} aria-hidden="true" />
-          Current run
-        </StatusPill>
+<Surface as="section" padding="lg" class="habit-detail-surface overflow-hidden !p-4 sm:!p-5">
+  <p class="detail-eyebrow">Habit journey</p>
+  <div class="mt-3 flex items-center gap-2" aria-label="Habit journey progress">
+    <span class="journey-node journey-node-done"><Check size={15} aria-hidden="true" /></span><span class="h-0.5 min-w-0 flex-1 bg-progress/60" aria-hidden="true"></span><span class="journey-node journey-node-current"><Flame size={15} aria-hidden="true" /></span><span class="h-0.5 min-w-0 flex-1 bg-[#31425d]" aria-hidden="true"></span><span class="journey-node"><Flag size={15} aria-hidden="true" /></span>
+  </div>
+  <div class="mt-3 grid overflow-hidden rounded-2xl border border-[#17263a] bg-[#0c1726] sm:grid-cols-3">
+    <div class="border-b border-[#22324a] px-3 py-3 sm:border-b-0 sm:border-r"><p class="text-xs text-muted">Current run</p><p class="mt-0.5 text-lg font-bold tracking-[-0.035em] text-foreground">{streakLabel}</p></div>
+    <div class="border-b border-[#22324a] px-3 py-3 sm:border-b-0 sm:border-r"><p class="text-xs text-muted">Best run</p><p class="mt-0.5 text-lg font-bold tracking-[-0.035em] text-foreground">{hasCompletionHistory ? bestLabel : '—'}</p></div>
+    <div class="px-3 py-3"><p class="text-xs text-muted">Next</p><p class="mt-0.5 text-lg font-bold tracking-[-0.035em] text-foreground">{nextMilestoneDays === null ? 'Complete' : `${nextMilestoneDays} done`}</p></div>
+  </div>
+  <p class="mt-3 text-xs leading-4 text-muted">{currentStreak > 0 ? `Keep your ${completionRateLabel.toLowerCase()} going toward the next checkpoint.` : 'Restart the run today, then build toward the next checkpoint.'}{#if hasCompletionHistory}<span class="sr-only">{completionRateLabel}</span>{/if}</p>
+</Surface>
 
-        <p class="mt-5 text-4xl font-semibold tracking-[-0.055em] text-foreground sm:text-5xl">{streakLabel}</p>
-        <p class="mt-2 max-w-xs text-sm leading-6 text-muted">
-          {currentStreak > 0
-            ? 'A truthful count of consecutive scheduled opportunities completed.'
-            : 'Complete the next scheduled step to start a new run.'}
-        </p>
-
-        {#if hasCompletionHistory}
-          <div class="mt-5 flex flex-wrap gap-2">
-            <span class="inline-flex items-center gap-1.5 rounded-full border border-border bg-bg-secondary px-3 py-1.5 text-xs text-muted">
-              <Trophy size={12} aria-hidden="true" />
-              {bestLabel}
-            </span>
-            <span class="inline-flex items-center gap-1.5 rounded-full border border-border bg-bg-secondary px-3 py-1.5 text-xs text-muted">
-              <ShieldCheck size={12} aria-hidden="true" />
-              {completionRateLabel}
-            </span>
-          </div>
-        {/if}
-      </div>
-    </div>
-
-    <div class="flex flex-col justify-between rounded-[1.5rem] border border-border bg-bg-secondary/80 p-5 sm:p-6">
-      <div class="flex items-start justify-between gap-4">
-        <div>
-          <p class="text-[10px] font-mono uppercase tracking-[0.24em] text-muted">Next checkpoint</p>
-          <h2 class="mt-2 text-lg font-semibold tracking-[-0.025em] text-foreground">{nextMilestoneLabel}</h2>
-        </div>
-        <span class="inline-flex size-10 shrink-0 items-center justify-center rounded-full border border-progress/25 bg-progress/10 text-progress" aria-hidden="true">
-          {#if nextMilestoneDays === null}
-            <Sparkles size={18} />
-          {:else}
-            <Flag size={18} />
-          {/if}
-        </span>
-      </div>
-
-      <div class="mt-7">
-        <ProgressBar value={milestoneProgress} label="Checkpoint progress" />
-        <p class="mt-3 text-sm leading-6 text-muted">{questCopy}</p>
-      </div>
-    </div>
+<Surface as="section" padding="lg" class="habit-detail-surface !p-4 sm:!p-5">
+  <div class="rounded-2xl border border-[#22324a] bg-[#0c1726] p-3">
+    <div class="flex items-start justify-between gap-3"><div><p class="detail-eyebrow">Next checkpoint</p><h2 class="mt-1 text-lg font-bold tracking-[-0.035em] text-foreground">{nextMilestoneLabel}</h2></div><span class="inline-flex size-8 shrink-0 items-center justify-center rounded-lg border border-accent/30 bg-accent/10 text-accent" aria-hidden="true"><Flag size={15} /></span></div>
+    <div class="mt-3"><div class="mb-1 flex justify-between text-xs text-muted"><span>Checkpoint progress</span><strong class="text-foreground">{milestoneProgress}%</strong></div><ProgressBar value={milestoneProgress} label="Checkpoint progress" /></div>
+    <p class="mt-3 text-xs leading-4 text-muted">{questCopy}</p>
   </div>
 </Surface>

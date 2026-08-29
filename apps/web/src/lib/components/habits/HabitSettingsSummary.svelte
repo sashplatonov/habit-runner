@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { Bell, CalendarDays } from 'lucide-svelte';
   import Surface from '$lib/components/ui/Surface.svelte';
 
   type Props = {
@@ -10,25 +11,10 @@
   const { scheduleSummary, reminderSummary, onEditSettings }: Props = $props();
 </script>
 
-<Surface as="section" padding="lg" class="space-y-5">
-  <div class="flex items-center justify-between gap-3">
-    <div>
-      <p class="text-[10px] font-mono uppercase tracking-[0.24em] text-muted">Settings</p>
-      <h2 class="mt-1 text-[1.05rem] font-semibold tracking-[-0.025em] text-foreground">Schedule and reminders</h2>
-    </div>
-    <button type="button" class="min-h-11 rounded-full border border-border px-4 py-2 text-xs font-medium text-muted transition hover:border-border-hover hover:text-foreground" onclick={onEditSettings}>
-      Edit settings
-    </button>
-  </div>
-
-  <div class="grid gap-3 sm:grid-cols-2">
-    <div class="rounded-[1.25rem] border border-border bg-bg-secondary px-4 py-4">
-      <p class="text-[10px] font-mono uppercase tracking-[0.2em] text-muted">Schedule</p>
-      <p class="mt-1 text-sm text-foreground">{scheduleSummary}</p>
-    </div>
-    <div class="rounded-[1.25rem] border border-border bg-bg-secondary px-4 py-4">
-      <p class="text-[10px] font-mono uppercase tracking-[0.2em] text-muted">Reminder</p>
-      <p class="mt-1 text-sm text-foreground">{reminderSummary}</p>
-    </div>
-  </div>
+<Surface as="section" padding="lg" class="habit-detail-surface !p-4 sm:!p-5">
+  <p class="detail-eyebrow">Settings summary</p>
+  <button type="button" class="mt-3 grid w-full gap-3 text-left sm:grid-cols-2" onclick={onEditSettings} aria-label="Edit schedule and reminder settings">
+    <span class="flex min-h-15 items-center gap-3 rounded-2xl border border-[#22324a] bg-[#0c1726] px-3 py-2.5 transition-colors hover:border-border-hover"><span class="inline-flex size-8 shrink-0 items-center justify-center rounded-lg border border-accent/25 bg-accent/10 text-accent"><CalendarDays size={15} aria-hidden="true" /></span><span><span class="block text-xs text-muted">Schedule</span><strong class="block text-lg leading-5 tracking-[-0.03em] text-foreground">{scheduleSummary}</strong></span></span>
+    <span class="flex min-h-15 items-center gap-3 rounded-2xl border border-[#22324a] bg-[#0c1726] px-3 py-2.5 transition-colors hover:border-border-hover"><span class="inline-flex size-8 shrink-0 items-center justify-center rounded-lg border border-accent/25 bg-accent/10 text-accent"><Bell size={15} aria-hidden="true" /></span><span><span class="block text-xs text-muted">Reminder</span><strong class="block text-lg leading-5 tracking-[-0.03em] text-foreground">{reminderSummary}</strong></span></span>
+  </button>
 </Surface>

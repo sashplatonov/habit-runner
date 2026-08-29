@@ -1,64 +1,35 @@
 <script lang="ts">
-  import { Archive, ArchiveRestore, ArrowLeft, Pencil } from 'lucide-svelte';
-  import DescriptionTooltip from '$lib/components/DescriptionTooltip.svelte';
+  import { ArrowLeft, Ellipsis, Pencil } from 'lucide-svelte';
   import IconButton from '$lib/components/ui/IconButton.svelte';
-  import StatusPill from '$lib/components/ui/StatusPill.svelte';
   import type { Habit } from '@/types/habit';
   import { formatHabitLabel } from '$lib/habits/formatHabitLabel';
 
   type Props = {
     habit: Habit;
-    todayLabel: string;
-    descriptionLabel: string;
     pending?: boolean;
     onBack: () => void;
     onEdit: () => void;
-    onToggleArchive: () => void;
   };
 
-  const { habit, todayLabel, descriptionLabel, pending = false, onBack, onEdit, onToggleArchive }: Props = $props();
+  const { habit, pending = false, onBack, onEdit }: Props = $props();
   const habitLabel = $derived(formatHabitLabel(habit));
+  const stateLabel = $derived(habit.archived ? 'Archived' : 'Active');
 </script>
 
-<header class="rounded-[1.9rem] border border-border bg-bg-card/94 px-4 py-4 shadow-surface backdrop-blur-xl sm:px-5">
-  <div class="flex items-start gap-3">
-    <IconButton ariaLabel="Back to dashboard" title="Back to dashboard" class="shrink-0" onClick={onBack}>
-      <ArrowLeft size={16} aria-hidden="true" />
-    </IconButton>
+<header class="flex min-w-0 items-center gap-2 py-0.5">
+  <IconButton ariaLabel="Back to dashboard" title="Back to dashboard" class="!size-10 !min-h-10 !min-w-10 !rounded-xl !border-[#263752] !bg-[#101b2b] !text-[#aab9d0]" onClick={onBack}>
+    <ArrowLeft size={18} aria-hidden="true" />
+  </IconButton>
 
-    <div class="min-w-0 flex-1 pt-0.5">
-      <h1 class="truncate text-[1.05rem] font-semibold tracking-[-0.025em] text-foreground">{habitLabel}</h1>
-      <p class="mt-0.5 text-xs text-muted">{todayLabel}</p>
-    </div>
-
-    <div class="flex flex-none items-center gap-2">
-      <IconButton ariaLabel={habit.archived ? 'Restore habit' : 'Archive habit'} title={habit.archived ? 'Restore habit' : 'Archive habit'} onClick={onToggleArchive} active={habit.archived} toggle={true} loading={pending}>
-        {#if habit.archived}
-          <ArchiveRestore size={16} aria-hidden="true" />
-        {:else}
-          <Archive size={16} aria-hidden="true" />
-        {/if}
-      </IconButton>
-      <IconButton ariaLabel="Edit habit" title="Edit habit" onClick={onEdit} disabled={pending}>
-        <Pencil size={16} aria-hidden="true" />
-      </IconButton>
-    </div>
+  <div class="min-w-0 flex-1">
+    <h1 class="truncate text-[1.08rem] font-bold leading-5 tracking-[-0.035em] text-foreground">{habitLabel}</h1>
+    <p class="mt-0.5 text-xs text-muted">Daily habit · {stateLabel}</p>
   </div>
 
-  <div class="ml-14 mt-2 flex flex-col items-start gap-2">
-    {#if habit.description}
-      <DescriptionTooltip description={habit.description} triggerClassName="h-11 w-11" triggerLabel={descriptionLabel} />
-    {/if}
-
-    <div class="flex flex-wrap items-center gap-2">
-      <StatusPill tone={habit.archived ? 'attention' : 'progress'}>
-        {habit.archived ? 'Archived' : 'Active'}
-      </StatusPill>
-      {#if habit.type === 'negative'}
-        <StatusPill tone="neutral">Avoid habit</StatusPill>
-      {:else}
-        <StatusPill tone="neutral">Build habit</StatusPill>
-      {/if}
-    </div>
+  <div class="flex shrink-0 items-center gap-2">
+    <IconButton ariaLabel="Edit habit" title="Edit habit" class="!size-10 !min-h-10 !min-w-10 !rounded-xl !border-[#263752] !bg-[#101b2b] !text-[#c7d6ed]" disabled={pending} onClick={onEdit}>
+      <Pencil size={16} aria-hidden="true" />
+    </IconButton>
+    <span class="inline-flex size-10 items-center justify-center rounded-xl border border-[#263752] bg-[#101b2b] text-[#aab9d0]" aria-hidden="true"><Ellipsis size={18} /></span>
   </div>
 </header>

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Snowflake } from 'lucide-svelte';
+  import { Clock3, Minus } from 'lucide-svelte';
   import Surface from '$lib/components/ui/Surface.svelte';
   import IconButton from '$lib/components/ui/IconButton.svelte';
   import HabitCompletionControl from '$lib/components/habits/HabitCompletionControl.svelte';
@@ -56,18 +56,18 @@
   const mainLabel = $derived(habit.type === 'negative' ? `Record slip for ${label}` : completed ? `Undo ${label}` : `Complete ${label}`);
 </script>
 
-<Surface as="section" padding="lg" class="space-y-4">
+<Surface as="section" padding="lg" class="habit-detail-surface !p-4 sm:!p-5">
   <div class="flex flex-wrap items-start justify-between gap-3">
     <div class="min-w-0">
-      <p class="text-[10px] font-mono uppercase tracking-[0.24em] text-muted">Today&apos;s step</p>
-      <h2 class="mt-1 text-[1.05rem] font-semibold tracking-[-0.025em] text-foreground">{summary}</h2>
+      <p class="detail-eyebrow">Today&apos;s step</p>
+      <h2 class="mt-1 text-xl font-bold tracking-[-0.04em] text-foreground">{summary}</h2>
     </div>
     <p class="text-sm font-medium text-muted">{progressLabel} {#if remainingLabel}· {remainingLabel}{/if}</p>
   </div>
 
-  <div class="space-y-3">
-    <p class="max-w-sm text-sm leading-6 text-muted">{recoveryCopy}</p>
-    <div class="flex flex-wrap items-center gap-2.5">
+  <div class="mt-1 space-y-3">
+    <p class="max-w-sm text-xs leading-5 text-muted">{recoveryCopy}</p>
+    <div class="flex flex-wrap items-center gap-2">
       <div class="relative">
         {#if animating}
           {#each particles as particle (particle.id)}
@@ -89,7 +89,7 @@
           pending={pending}
           error={error}
           disabled={!scheduled}
-          class="!min-h-11 !min-w-11 !rounded-[1rem] !px-0"
+          class="!min-h-11 !rounded-xl !border-accent/40 !bg-accent/15 !px-4 !text-accent"
           onToggle={onIncrement}
         />
       </div>
@@ -99,10 +99,12 @@
         disabled={!canDecrement || frozen || pending}
         onClick={onDecrement}
       >
-        <span class="text-lg leading-none">-</span>
+        <Minus size={16} aria-hidden="true" />
+        <span class="ml-1 text-sm font-semibold">Skip</span>
       </IconButton>
-      <IconButton ariaLabel={frozen ? 'Unfreeze today' : 'Freeze today'} title={frozen ? 'Unfreeze today' : 'Freeze today'} active={frozen} toggle={true} disabled={habit.archived || pending} onClick={onToggleFreeze}>
-        <Snowflake size={16} aria-hidden="true" />
+      <IconButton ariaLabel={frozen ? 'Unfreeze today' : 'Freeze today'} title={frozen ? 'Unfreeze today' : 'Freeze today'} active={frozen} toggle={true} class="!rounded-xl !px-3" disabled={habit.archived || pending} onClick={onToggleFreeze}>
+        <Clock3 size={15} aria-hidden="true" />
+        <span class="ml-1 text-sm font-semibold">Snooze</span>
       </IconButton>
     </div>
   </div>

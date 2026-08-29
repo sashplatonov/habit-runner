@@ -329,14 +329,11 @@
   </div>
 {:else}
   <div class="min-h-screen bg-transparent">
-    <div class="mx-auto max-w-md space-y-5 px-5 py-5 sm:max-w-3xl sm:px-8 sm:py-8">
+    <div class="mx-auto max-w-md space-y-3 px-2.5 py-2.5 sm:max-w-3xl sm:space-y-5 sm:px-8 sm:py-8">
       <HabitDetailHeader
         {habit}
-        todayLabel={detailModel.todayLabel}
-        descriptionLabel={detailModel.descriptionLabel}
         onBack={handleBack}
         onEdit={handleEdit}
-        onToggleArchive={handleToggleArchive}
         pending={mutationPending}
       />
 
@@ -345,6 +342,17 @@
           {mutationError}
         </p>
       {/if}
+
+      <HabitMomentum
+        currentStreak={detailModel.currentStreak}
+        hasCompletionHistory={detailModel.hasCompletionHistory}
+        streakLabel={detailModel.streakLabel}
+        bestLabel={detailModel.bestLabel}
+        completionRateLabel={detailModel.completionRateLabel}
+        nextMilestoneLabel={detailModel.nextMilestoneLabel}
+        nextMilestoneDays={detailModel.nextMilestoneDays}
+        nextMilestoneTarget={detailModel.nextMilestoneTarget}
+      />
 
       <HabitTodayStep
         {habit}
@@ -367,17 +375,6 @@
         onIncrement={handleIncrementCompletion}
         onDecrement={handleDecrementCompletion}
         onToggleFreeze={toggleFreezeToday}
-      />
-
-      <HabitMomentum
-        currentStreak={detailModel.currentStreak}
-        hasCompletionHistory={detailModel.hasCompletionHistory}
-        streakLabel={detailModel.streakLabel}
-        bestLabel={detailModel.bestLabel}
-        completionRateLabel={detailModel.completionRateLabel}
-        nextMilestoneLabel={detailModel.nextMilestoneLabel}
-        nextMilestoneDays={detailModel.nextMilestoneDays}
-        nextMilestoneTarget={detailModel.nextMilestoneTarget}
       />
 
       <HabitRecentRhythm

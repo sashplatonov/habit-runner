@@ -5,11 +5,9 @@
     describeSchedule,
     formatCalendarDateInTimeZone
   } from '@habbit-runner/shared';
-  import { CalendarDays, Check, ChevronLeft, ChevronRight, Clock3, Minus, Snowflake, X } from 'lucide-svelte';
+  import { Check, Clock3, Minus, Snowflake, X } from 'lucide-svelte';
   import type { Habit } from '@/types/habit';
   import DayStatusMenu from '$lib/components/overlays/DayStatusMenu.svelte';
-  import IconButton from '$lib/components/ui/IconButton.svelte';
-  import StatusPill from '$lib/components/ui/StatusPill.svelte';
   import { getScheduleStatusForDate, resolveHabitSchedule } from '$lib/habits/schedule';
   import type { DayStatus, EditableDayStatus } from '$lib/habits/habitRhythmStatus';
   import type { HabitColorTheme } from '$lib/theme/habit-colors';
@@ -50,7 +48,6 @@
   const target = $derived(Math.max(1, habit.dailyTarget ?? 1));
   const windowStart = $derived(addDaysToCalendarDate(anchorDateKey, -13));
   const windowEnd = $derived(addDaysToCalendarDate(windowStart, 27));
-  const isCurrentWindow = $derived(windowOffset === 0);
 
   function formatLabel(dateKey: string, includeYear = false) {
     return new Intl.DateTimeFormat('en-US', {
@@ -118,11 +115,6 @@
     selectedDay = null;
   }
 
-  function showCurrentWindow() {
-    windowOffset = 0;
-    selectedDay = null;
-  }
-
   function openStatusMenu(day: RhythmDay, event: MouseEvent) {
     const triggerEl = event.currentTarget as HTMLButtonElement;
     const rect = triggerEl.getBoundingClientRect();
@@ -152,37 +144,14 @@
   }
 </script>
 
-<div class="rounded-[1.5rem] border border-border bg-bg-secondary/75 p-3 sm:p-4">
-  <div class="flex flex-wrap items-center justify-between gap-2 px-1">
-    <p class="text-xs leading-5 text-muted">Select any day to view or change its status.</p>
-    <div class="flex flex-wrap gap-2">
-      <StatusPill tone="neutral"><CalendarDays size={12} aria-hidden="true" />28 days</StatusPill>
-      <StatusPill tone="neutral">{scheduleLabel}</StatusPill>
-    </div>
+<div>
+  <div class="sr-only" aria-live="polite">
+    <span>{windowLabel}</span>
+    <button type="button" onclick={showPreviousWindow}>Show previous 28 days</button>
+    <button type="button" onclick={showNextWindow} disabled={windowOffset === 0}>Show next 28 days</button>
   </div>
-
-  <div class="mt-4 flex items-center justify-between gap-3">
-    <IconButton ariaLabel="Show previous 28 days" title="Show previous 28 days" onClick={showPreviousWindow}>
-      <ChevronLeft size={18} aria-hidden="true" />
-    </IconButton>
-
-    <button
-      type="button"
-      onclick={showCurrentWindow}
-      class={`min-h-11 min-w-0 flex-1 rounded-[1rem] border px-3 py-2 text-center transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 focus-visible:ring-offset-2 focus-visible:ring-offset-bg-card ${isCurrentWindow ? 'border-progress/25 bg-progress/10 text-foreground' : 'border-border bg-bg-card text-muted hover:border-border-hover hover:text-foreground'}`}
-      aria-label={isCurrentWindow ? `${windowLabel}, current rhythm window` : `${windowLabel}, return to current rhythm window`}
-      aria-current={isCurrentWindow ? 'date' : undefined}
-    >
-      <span class="block text-[9px] font-mono uppercase tracking-[0.2em] text-muted">Rhythm window</span>
-      <span class="mt-0.5 block truncate text-sm font-semibold">{windowLabel}</span>
-    </button>
-
-    <IconButton ariaLabel="Show next 28 days" title="Show next 28 days" disabled={isCurrentWindow} onClick={showNextWindow}>
-      <ChevronRight size={18} aria-hidden="true" />
-    </IconButton>
-  </div>
-
-  <ul class="mt-4 flex flex-wrap gap-x-4 gap-y-2 px-1 text-[11px] text-muted" aria-label="Day status legend">
+  <div class="flex items-center justify-between gap-3"><p class="text-xs leading-4 text-muted">{scheduleLabel}</p><span class="rounded-full border border-[#31425d] bg-[#16243a] px-2.5 py-1 text-[11px] text-muted">28 days · Daily</span></div>
+  <ul class="mt-3 flex flex-wrap gap-x-3 gap-y-1.5 text-[11px] text-muted" aria-label="Day status legend">
     <li class="inline-flex items-center gap-1.5"><Check size={12} class="text-progress" aria-hidden="true" />Done</li>
     <li class="inline-flex items-center gap-1.5"><X size={12} class="text-danger" aria-hidden="true" />Missed</li>
     <li class="inline-flex items-center gap-1.5"><Clock3 size={12} aria-hidden="true" />Upcoming</li>
@@ -190,31 +159,30 @@
     <li class="inline-flex items-center gap-1.5"><Minus size={12} aria-hidden="true" />Rest day</li>
   </ul>
 
-  <div class="mt-4 grid grid-cols-7 gap-1.5 sm:gap-2" role="group" aria-label="Habit rhythm by day">
+  <div class="mt-3 grid grid-cols-7 gap-1.5" role="group" aria-label="Habit rhythm by day">
     {#each days as day, dayIndex (`${day.dateKey}-${dayIndex}`)}
       <button
         type="button"
         onclick={(event) => openStatusMenu(day, event)}
-        class={`relative flex min-h-14 min-w-0 flex-col items-center justify-between rounded-[0.85rem] border p-1.5 text-center transition-[border-color,background-color,box-shadow] focus-visible:z-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 sm:min-h-20 sm:rounded-[1rem] sm:p-2 ${statusClass[day.status]} ${day.isToday ? 'ring-2 ring-foreground/70 ring-offset-2 ring-offset-bg-card' : ''}`}
+        class={`relative flex min-h-10 min-w-0 items-center justify-center rounded-lg border p-1 text-center transition-[border-color,background-color,box-shadow] focus-visible:z-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 ${statusClass[day.status]} ${day.isToday ? 'ring-2 ring-foreground/70 ring-offset-2 ring-offset-bg-card' : ''}`}
         style={day.status === 'completed' ? `box-shadow: 0 8px 20px ${accent.glow};` : undefined}
         aria-label={`${day.label}: ${statusLabel[day.status]}${day.isToday ? ', today' : ''}. Open status menu`}
         aria-haspopup="dialog"
         aria-expanded={selectedDay?.dateKey === day.dateKey}
       >
-        <span class="font-mono text-[10px] font-semibold tabular-nums sm:text-[9px] sm:uppercase sm:tracking-[0.12em]">{day.shortLabel}</span>
-        <span class="my-1 inline-flex size-5 items-center justify-center rounded-full bg-current/10 sm:size-6" aria-hidden="true">
+        <span class="absolute left-1 top-1 font-mono text-[8px] font-semibold tabular-nums">{day.shortLabel}</span>
+        <span class="inline-flex size-5 items-center justify-center rounded-full bg-current/10" aria-hidden="true">
           {#if day.status === 'completed'}<Check size={14} strokeWidth={2.75} />
           {:else if day.status === 'missed'}<X size={14} strokeWidth={2.75} />
           {:else if day.status === 'future'}<Clock3 size={13} />
           {:else if day.status === 'frozen'}<Snowflake size={13} />
           {:else}<Minus size={13} />{/if}
         </span>
-        <span class="hidden truncate text-[10px] font-semibold sm:block">{statusLabel[day.status]}</span>
         {#if day.count > 0 && target > 1 && day.status !== 'frozen'}
-          <span class="absolute right-1 top-1 text-[8px] font-semibold text-current/70">{day.count}/{target}</span>
+          <span class="absolute bottom-0.5 right-1 text-[7px] font-semibold text-current/70">{day.count}/{target}</span>
         {/if}
         {#if day.isToday}
-          <span class="absolute -bottom-2 rounded-full bg-foreground px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-wide text-bg-card">Today</span>
+          <span class="absolute -bottom-1.5 rounded-full bg-foreground px-1 py-0.5 text-[7px] font-bold uppercase tracking-wide text-bg-card">Today</span>
         {/if}
       </button>
     {/each}
