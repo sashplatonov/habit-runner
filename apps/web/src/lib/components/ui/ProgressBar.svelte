@@ -3,13 +3,14 @@
     value: number;
     tone?: 'progress' | 'attention' | 'neutral';
     label?: string;
+    showLabel?: boolean;
   };
 
-  let { value, tone = 'progress', label }: Props = $props();
+  let { value, tone = 'progress', label, showLabel = true }: Props = $props();
 </script>
 
 <div>
-  {#if label}
+  {#if label && showLabel}
     <div class="mb-2 flex items-center justify-between gap-3">
       <span class="text-[10px] font-medium uppercase tracking-[0.24em] text-muted">{label}</span>
       <span class="text-xs font-medium text-foreground">{Math.round(value)}%</span>
