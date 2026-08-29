@@ -7,6 +7,8 @@
   };
 
   const { cells, label = 'Activity heatmap' }: Props = $props();
+  const matrixLayout = $derived(cells.length > 28);
+  const columnCount = $derived(matrixLayout ? Math.ceil(cells.length / 7) : cells.length);
 
   function cellLabel(cell: HabitHeatmapCell): string {
     return `${cell.calendarDate}: ${cell.state}`;
@@ -19,8 +21,8 @@
 
 <div class="flex min-w-0 items-center gap-2" aria-label={label}>
   <div
-    class="grid min-w-0 flex-1 grid-flow-col grid-rows-1 gap-1 overflow-hidden whitespace-nowrap sm:gap-1.5"
-    style={`grid-template-columns: repeat(${cells.length}, minmax(0, 1fr));`}
+    class={`grid min-w-0 flex-1 grid-flow-col overflow-hidden ${matrixLayout ? 'grid-rows-7 gap-px' : 'grid-rows-1 gap-1 whitespace-nowrap sm:gap-1.5'}`}
+    style={`grid-template-columns: repeat(${columnCount}, minmax(0, 1fr));`}
     role="list"
     aria-label={label}
   >
@@ -31,7 +33,7 @@
           ? 'bg-danger'
           : 'bg-bg-secondary'}
       <span
-        class={`block h-2 min-w-0 rounded-[2px] ${stateClass}`}
+        class={`block min-w-0 ${matrixLayout ? 'h-1 rounded-px' : 'h-2 rounded-[2px]'} ${stateClass}`}
         style:opacity={displayOpacity(cell)}
         role="listitem"
         aria-label={cellLabel(cell)}

@@ -19,4 +19,21 @@ describe('ProgressHeatmapStrip', () => {
     expect(screen.getByLabelText('2026-07-01: completed')).toBeTruthy();
     expect(screen.getByLabelText('2026-07-03: not scheduled')).toBeTruthy();
   });
+
+  it('uses a seven-row matrix for a 12-week period', () => {
+    render(ProgressHeatmapStrip, {
+      props: {
+        cells: Array.from({ length: 84 }, (_, index): HabitHeatmapCell => ({
+          calendarDate: `2026-07-${String((index % 28) + 1).padStart(2, '0')}`,
+          state: 'completed',
+          intensity: 1
+        }))
+      }
+    });
+
+    const heatmap = screen.getByRole('list');
+    expect(heatmap.className).toContain('grid-rows-7');
+    expect(heatmap.getAttribute('style')).toContain('repeat(12, minmax(0, 1fr))');
+    expect(heatmap.querySelectorAll('[role="listitem"]')).toHaveLength(84);
+  });
 });
