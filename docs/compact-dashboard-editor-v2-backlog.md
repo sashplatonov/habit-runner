@@ -295,7 +295,7 @@ git commit -m "feat(habits): add habit type editor screen"
 
 ## CDE-005: Implement the Schedule chooser
 
-**Status:** TODO  
+**Status:** DONE  
 **Priority:** P1  
 **Depends on:** CDE-001
 

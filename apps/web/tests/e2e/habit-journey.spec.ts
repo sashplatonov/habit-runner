@@ -138,25 +138,23 @@ async function mockBackend(page: Page, habits: readonly Record<string, unknown>[
       const payload = JSON.parse(route.request().postData() ?? '{}') as { done?: boolean; count?: number };
       const habitId = decodeURIComponent(match?.[1] ?? '');
       const date = decodeURIComponent(match?.[2] ?? '');
-      const checkin = {
-        id: `e2e-checkin-${habitId}-${date}`,
-        userId: 'e2e-user',
-        habitId,
-        date,
-        done: payload.done ?? false,
-        count: payload.count ?? 0,
-        createdAt: '2026-08-28T10:00:00Z',
-        updatedAt: '2026-08-28T10:00:00Z',
-        version: 1
-      };
+      const checkin = { id: `e2e-checkin-${habitId}-${date}`, userId: 'e2e-user', habitId, date, done: payload.done ?? false, count: payload.count ?? 0, createdAt: '2026-08-28T10:00:00Z', updatedAt: '2026-08-28T10:00:00Z', version: 1 };
       checkins.set(`${habitId}:${date}`, checkin);
-      await json(route, {
-        ...checkin
-      });
+      await json(route, { ...checkin });
     } else {
       await route.fulfill({ status: 204 });
     }
   });
+}
+
+const EDITOR_VIEWPORTS = [{ width: 320, height: 740 }, { width: 390, height: 844 }, { width: 1280, height: 900 }] as const;
+
+async function expectViewportsClean(page: Page, open: () => Promise<void>): Promise<void> {
+  for (const viewport of EDITOR_VIEWPORTS) {
+    await page.setViewportSize(viewport);
+    await open();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+  }
 }
 async function seedSession(page: Page): Promise<void> {
   await page.addInitScript(() => {
@@ -167,11 +165,7 @@ async function openHabitDetails(page: Page): Promise<void> {
   if (await page.getByRole('button', { name: 'Edit habit' }).isVisible()) {
     return;
   }
-  await page
-    .getByRole('article', { name: /Read for ten minutes/ })
-    .getByRole('button')
-    .filter({ hasText: 'Read for ten minutes' })
-    .click();
+  await page.getByRole('article', { name: /Read for ten minutes/ }).getByRole('button').filter({ hasText: 'Read for ten minutes' }).click();
 }
 async function openHabitIdentity(page: Page): Promise<void> {
   await page.getByRole('button', { name: 'Edit Identity' }).click();
@@ -253,7 +247,7 @@ test.describe.serial('critical habit journey', () => {
     await expect(page.locator('form')).toHaveAttribute('data-editor-panel', 'goal');
     await page.getByRole('button', { name: 'Back to habit editor dashboard' }).click();
     await expect(page.locator('[data-editor-dashboard]')).toBeVisible();
-    for (const viewport of [{ width: 320, height: 740 }, { width: 390, height: 844 }, { width: 1280, height: 900 }]) {
+    for (const viewport of EDITOR_VIEWPORTS) {
       await page.setViewportSize(viewport);
       await page.goto('/app/habit/new');
       await expect(page.locator('[data-editor-dashboard]')).toBeVisible();
@@ -261,8 +255,7 @@ test.describe.serial('critical habit journey', () => {
       if (viewport.width < 640) {
         const footer = page.locator('[class~="fixed"]').last();
         await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
-        const lastContent = page.getByText('Notification behavior');
-        const [footerBox, contentBox] = await Promise.all([footer.boundingBox(), lastContent.boundingBox()]);
+        const [footerBox, contentBox] = await Promise.all([footer.boundingBox(), page.getByText('Notification behavior').boundingBox()]);
         expect(footerBox).not.toBeNull();
         expect(contentBox).not.toBeNull();
         expect(contentBox!.y + contentBox!.height).toBeLessThanOrEqual(footerBox!.y);
@@ -301,30 +294,52 @@ test.describe.serial('critical habit journey', () => {
 
     // Draft persists and both segment buttons keep 44px touch targets.
     await page.locator('[data-editor-tile="habit-type"]').click();
-    const optionHeights = await page.locator('[data-habit-type-option]').evaluateAll((options) => options.map((option) => (option as HTMLElement).offsetHeight));
+    const optionHeights = await page.locator('[data-habit-type-option]').evaluateAll((options) => options.map((o) => (o as HTMLElement).offsetHeight));
     expect(Math.min(...optionHeights)).toBeGreaterThanOrEqual(44);
 
-    for (const viewport of [{ width: 320, height: 740 }, { width: 390, height: 844 }, { width: 1280, height: 900 }]) {
-      await page.setViewportSize(viewport);
-      await openHabitTypePanel();
-      expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
-    }
+    await expectViewportsClean(page, openHabitTypePanel);
+  });
+  test('shows the schedule chooser with reference order and preserves the draft across panels', async ({ page }) => {
+    const mutations: string[] = [];
+    trackHabitMutations(page, mutations);
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto('/app/habit/new');
+    await page.locator('[data-editor-tile="schedule"]').click();
+    await expect(page.locator('form')).toHaveAttribute('data-editor-panel', 'schedule');
+
+    const chooser = page.getByRole('group', { name: 'Schedule type' });
+    await expect(chooser.getByRole('button')).toHaveCount(5);
+    expect(await chooser.getByRole('button').evaluateAll((b) => b.map((x) => x.getAttribute('data-editor-schedule-option')))).toEqual(['daily', 'weekly_days', 'weekly_quota', 'monthly_quota', 'monthly_weeks']);
+    await expect(chooser.getByRole('button', { name: 'Daily Every day' })).toHaveAttribute('aria-pressed', 'true');
+    await expect(page.locator('[data-editor-schedule-effect-title]')).toHaveText(/Daily/);
+    await expect(page.locator('[data-editor-schedule-effect-summary]')).toContainText('every calendar day');
+    await expect(page.getByText('Changing the schedule affects future opportunities only. Existing history stays unchanged.')).toBeVisible();
+
+    const optionHeights = await chooser.getByRole('button').evaluateAll((buttons) => buttons.map((b) => (b as HTMLElement).offsetHeight));
+    expect(Math.min(...optionHeights)).toBeGreaterThanOrEqual(44);
+
+    // Choosing a type keeps the single form draft: transition to weekly_days, return, then reopen.
+    await chooser.getByRole('button', { name: 'Days of week Pick weekdays' }).click();
+    await expect(chooser.getByRole('button', { name: 'Days of week Pick weekdays' })).toHaveAttribute('aria-pressed', 'true');
+    await expect(chooser.getByRole('button', { name: 'Daily Every day' })).toHaveAttribute('aria-pressed', 'false');
+    await page.locator('[data-editor-schedule-effect-title]').filter({ hasText: 'Days of week' }).waitFor();
+    await page.getByRole('button', { name: 'Back to habit editor dashboard' }).click();
+    await expect(page.getByRole('button', { name: 'Edit Schedule' })).toContainText('Every Mon, Tue, Wed, Thu, Fri');
+    await page.locator('[data-editor-tile="schedule"]').click();
+    await expect(chooser.getByRole('button', { name: 'Days of week Pick weekdays' })).toHaveAttribute('aria-pressed', 'true');
+
+    await expectViewportsClean(page, async () => {
+      await page.goto('/app/habit/new');
+      await page.locator('[data-editor-tile="schedule"]').click();
+    });
+    expect(mutations).toEqual([]);
   });
 
   test('shows safe validation state', async ({ page }) => {
     await page.route(/\/(?:api\/)?habits$/, async (route) => {
       if (route.request().method() === 'POST') {
-        await route.fulfill({
-          status: 400,
-          contentType: 'application/json',
-          body: JSON.stringify({
-            type: 'https://habbit-runner.dev/errors/validation',
-            title: 'Constraint Violation',
-            status: 400,
-            detail: 'create.name must not be blank',
-            errorCode: 'VALIDATION_FAILED'
-          })
-        });
+        const body = JSON.stringify({ type: 'https://habbit-runner.dev/errors/validation', title: 'Constraint Violation', status: 400, detail: 'create.name must not be blank', errorCode: 'VALIDATION_FAILED' });
+        await route.fulfill({ status: 400, contentType: 'application/json', body });
         return;
       }
       await route.continue();
@@ -393,17 +408,8 @@ test.describe.serial('critical habit journey', () => {
     await openHabitIdentity(page);
     await page.route(/\/(?:api\/)?habits\//, async (route) => {
       if (route.request().method() === 'PUT') {
-        await route.fulfill({
-          status: 409,
-          contentType: 'application/json',
-          body: JSON.stringify({
-            type: 'https://habbit-runner.dev/errors/conflict',
-            title: 'Conflict',
-            status: 409,
-            detail: 'stale version',
-            errorCode: 'RESOURCE_VERSION_CONFLICT'
-          })
-        });
+        const body = JSON.stringify({ type: 'https://habbit-runner.dev/errors/conflict', title: 'Conflict', status: 409, detail: 'stale version', errorCode: 'RESOURCE_VERSION_CONFLICT' });
+        await route.fulfill({ status: 409, contentType: 'application/json', body });
         return;
       }
       await route.continue();

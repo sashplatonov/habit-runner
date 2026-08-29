@@ -202,6 +202,59 @@ describe('HabitForm', () => {
     }));
   });
 
+  it('keeps the schedule chooser order, active state, and draft transitions without saving', async () => {
+    const user = userEvent.setup();
+    const onSubmit = vi.fn().mockResolvedValue(undefined);
+
+    render(HabitForm, {
+      props: {
+        mode: 'create',
+        allHabits: [],
+        onBack: vi.fn(),
+        onSubmit
+      }
+    });
+
+    await user.click(screen.getByRole('button', { name: 'Edit Schedule' }));
+    const chooser = screen.getByRole('group', { name: 'Schedule type' });
+    expect(within(chooser).getAllByRole('button').map((button) => (button.textContent ?? '').replace(/\s+/g, ' ').trim()))
+      .toEqual([
+        'Daily Every day',
+        'Days of week Pick weekdays',
+        'Weekly quota Target completions per week',
+        'Monthly quota Target completions per month',
+        'Monthly weeks Choose weeks of month'
+      ]);
+
+    expect(screen.getByRole('button', { name: 'Daily Every day' }).getAttribute('aria-pressed')).toBe('true');
+    expect(screen.getByText('A scheduled opportunity is created every calendar day.')).toBeTruthy();
+    expect(screen.getByText('Changing the schedule affects future opportunities only. Existing history stays unchanged.')).toBeTruthy();
+
+    await user.click(screen.getByRole('button', { name: 'Days of week Pick weekdays' }));
+    expect(screen.getByRole('button', { name: 'Days of week Pick weekdays' }).getAttribute('aria-pressed')).toBe('true');
+    expect(screen.getByRole('button', { name: 'Daily Every day' }).getAttribute('aria-pressed')).toBe('false');
+    expect(screen.getByLabelText('Toggle Mon for the schedule').getAttribute('aria-pressed')).toBe('true');
+
+    await user.click(screen.getByRole('button', { name: 'Back to habit editor dashboard' }));
+    expect(within(screen.getByRole('button', { name: 'Edit Schedule' })).getByText('Every Mon, Tue, Wed, Thu, Fri')).toBeTruthy();
+    expect(onSubmit).not.toHaveBeenCalled();
+
+    // Draft keeps the transitioned schedule and active state after reopening the panel.
+    await user.click(screen.getByRole('button', { name: 'Edit Schedule' }));
+    expect(screen.getByRole('button', { name: 'Days of week Pick weekdays' }).getAttribute('aria-pressed')).toBe('true');
+
+    await user.click(screen.getByRole('button', { name: 'Back to habit editor dashboard' }));
+    await user.click(screen.getByRole('button', { name: 'Edit Identity' }));
+    await user.type(screen.getByLabelText('Name *'), 'Weekday reading');
+    await user.click(screen.getAllByRole('button', { name: 'Create habit' }).at(-1)!);
+    await waitFor(() => {
+      expect(onSubmit).toHaveBeenCalledTimes(1);
+    });
+    expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({
+      schedule: { type: 'weekly_days', weekdays: [1, 2, 3, 4, 5] }
+    }));
+  });
+
   it('preserves advanced monthly-week schedules on submit', async () => {
     const user = userEvent.setup();
     const onSubmit = vi.fn().mockResolvedValue(undefined);

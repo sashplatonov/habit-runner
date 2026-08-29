@@ -31,9 +31,9 @@ export const SCHEDULE_TYPE_OPTIONS: {
 }[] = [
   { value: 'daily', label: 'Daily', desc: 'Every day' },
   { value: 'weekly_days', label: 'Days of week', desc: 'Pick weekdays' },
-  { value: 'weekly_quota', label: 'Weekly quota', desc: 'Set weekly target' },
-  { value: 'monthly_quota', label: 'Monthly quota', desc: 'Set monthly target' },
-  { value: 'monthly_weeks', label: 'Monthly weeks', desc: 'Pick weeks of month' }
+  { value: 'weekly_quota', label: 'Weekly quota', desc: 'Target completions per week' },
+  { value: 'monthly_quota', label: 'Monthly quota', desc: 'Target completions per month' },
+  { value: 'monthly_weeks', label: 'Monthly weeks', desc: 'Choose weeks of month' }
 ];
 
 export const ICONS = [

@@ -73,6 +73,7 @@
   let pendingNavigationReplace = false;
   let allowNavigation = false;
   let activePanel = $state<HabitEditorPanel>('dashboard');
+  let openScheduleSlot = $state<HabitSchedule['type'] | null>(null);
 
   const selectedColor = $derived(COLORS.find((option) => option.value === color) ?? COLORS[0]);
   const currentValues = $derived({
@@ -131,6 +132,7 @@
     hydratedKey = nextKey;
     hasAcknowledgedSoftLimit = false;
     activePanel = 'dashboard';
+    openScheduleSlot = null;
     hydrateForm(buildInitialValues(habit, DEFAULT_TARGET_STREAK));
   });
 
@@ -438,6 +440,7 @@
 
     {#if activePanel === 'schedule'}<HabitScheduleSection
       bind:schedule
+      bind:openSlot={openScheduleSlot}
       {errors}
     />{/if}
 
