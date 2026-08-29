@@ -33,8 +33,8 @@
   import HabitTargetSection from './habit-form/HabitTargetSection.svelte';
   import HabitTagsSection from './habit-form/HabitTagsSection.svelte';
   import HabitReminderSection from './habit-form/HabitReminderSection.svelte';
-  import HabitPreview from './habits/HabitPreview.svelte';
   import FormActionBar from './habit-form/FormActionBar.svelte';
+  import HabitEditorDashboard from './habit-form/HabitEditorDashboard.svelte';
   import Overlay from './overlays/Overlay.svelte';
   import { isApiError } from '$lib/api/ApiError';
 
@@ -99,6 +99,10 @@
   );
   const targetLabel = $derived(`Target ${dailyTarget}x/day, streak ${targetStreak} days`);
   const typeLabel = $derived(type === 'negative' ? 'Avoid habit' : 'Build habit');
+  const tagsSummary = $derived(tags.length > 0 ? `${tags.map((tag) => `#${tag}`).join(' · ')} · ${tags.length}/5 tags` : 'No tags · 0/5 tags');
+  const panelTitle = $derived(activePanel === 'dashboard' ? (mode === 'edit' ? 'Edit habit' : 'New habit') : {
+    identity: 'Identity', 'habit-type': 'Habit type', schedule: 'Schedule', goal: 'Goal', reminder: 'Reminder', organization: 'Organization'
+  }[activePanel]);
 
   function hydrateForm(values: HabitFormValues) {
     name = values.name;
@@ -349,15 +353,15 @@
         <button
           type="button"
           class="inline-flex h-11 w-11 items-center justify-center rounded-[1rem] border border-border text-muted transition-colors hover:border-border-hover hover:text-foreground"
-          aria-label="Back"
+          aria-label={activePanel === 'dashboard' ? 'Back' : 'Back to habit editor dashboard'}
           data-editor-back="dashboard"
           onclick={handleEditorBack}
         >
           <ArrowLeft size={16} aria-hidden="true" />
         </button>
         <div>
-          <h1 class="text-base font-semibold text-foreground">{mode === 'edit' ? 'Edit habit' : 'New habit'}</h1>
-          <p class="text-xs text-muted">Keep the geometry and save state consistent across mobile and desktop.</p>
+          <h1 class="text-base font-semibold text-foreground">{panelTitle}</h1>
+          <p class="text-xs text-muted">{activePanel === 'dashboard' ? `${habitLabel} · ${scheduleSummary} · Active` : 'Edit this part of your habit.'}</p>
         </div>
       </div>
 
@@ -389,16 +393,22 @@
   {/if}
 
   <div class="mx-auto max-w-3xl space-y-5 px-4 pb-28 pt-6 sm:px-6 sm:pb-6">
-    <HabitPreview
-      habitLabel={habitLabel}
-      colorHex={selectedColor.hex}
-      colorLabel={selectedColor.label}
-      typeLabel={typeLabel}
-      scheduleSummary={scheduleSummary}
-      reminderSummary={reminderSummary}
-      targetLabel={targetLabel}
-    />
+    {#if activePanel === 'dashboard'}
+      <HabitEditorDashboard
+        {habitLabel}
+        colorHex={selectedColor.hex}
+        colorLabel={selectedColor.label}
+        {typeLabel}
+        {scheduleSummary}
+        {reminderSummary}
+        {targetLabel}
+        {tagsSummary}
+        onSelect={(panel) => (activePanel = panel)}
+      />
+    {:else}
+      <div class="space-y-5">
 
+    {#if activePanel === 'habit-type'}
     <div class="rounded-[1.5rem] border border-border bg-bg-card/92 p-5 shadow-[0_20px_54px_rgba(15,23,42,0.08)]">
       <p class="mb-2 block text-[10px] font-mono uppercase tracking-wider text-muted">Habit type</p>
       <div class="flex flex-col gap-2 rounded-xl border border-border bg-bg-secondary p-1 sm:flex-row">
@@ -426,6 +436,7 @@
         </button>
       </div>
     </div>
+    {/if}
 
     {#if Object.keys(errors).length > 0}
       <div class="rounded-[1.5rem] border border-accent-secondary/30 bg-accent-secondary/10 px-4 py-3 text-sm text-accent-secondary">
@@ -438,36 +449,38 @@
       </div>
     {/if}
 
-    <HabitIdentitySection
+    {#if activePanel === 'identity'}<HabitIdentitySection
       bind:name
       bind:description
       bind:color
       bind:icon
       {errors}
       {selectedColor}
-    />
+    />{/if}
 
-    <HabitScheduleSection
+    {#if activePanel === 'schedule'}<HabitScheduleSection
       bind:schedule
       {errors}
-    />
+    />{/if}
 
-    <HabitTargetSection
+    {#if activePanel === 'goal'}<HabitTargetSection
       bind:targetStreak
       bind:dailyTarget
       {selectedColor}
-    />
+    />{/if}
 
-    <HabitReminderSection
+    {#if activePanel === 'reminder'}<HabitReminderSection
       bind:reminderTime
       bind:reminderEnabled
-    />
+    />{/if}
 
-    <HabitTagsSection
+    {#if activePanel === 'organization'}<HabitTagsSection
       bind:tags
       bind:tagInput
       {selectedColor}
-    />
+    />{/if}
+      </div>
+    {/if}
   </div>
 
   <FormActionBar sticky={false} class="fixed inset-x-4 bottom-0 z-30 sm:hidden">

@@ -137,6 +137,11 @@ async function mockBackend(page: Page, habits: readonly Record<string, unknown>[
   });
   await page.route(/\/(?:api\/)?checkins(?:\/|$)/, async (route) => {
     if (route.request().method() === 'GET') {
+      const pathname = new URL(route.request().url()).pathname;
+      if (pathname.endsWith('/checkins/page')) {
+        await json(route, { items: [...checkins.values()], nextCursor: null });
+        return;
+      }
       await json(route, [...checkins.values()]);
     } else if (route.request().method() === 'PUT') {
       const url = new URL(route.request().url());
@@ -182,6 +187,10 @@ async function openHabitDetails(page: Page): Promise<void> {
     .click();
 }
 
+async function openHabitIdentity(page: Page): Promise<void> {
+  await page.getByRole('button', { name: 'Edit Identity' }).click();
+}
+
 async function expectOneRowHeatmap(container: ReturnType<Page['locator']>): Promise<void> {
   const row = container.locator('[data-heatmap-row]');
   await expect(row).toBeVisible();
@@ -202,6 +211,7 @@ async function expectOneRowHeatmap(container: ReturnType<Page['locator']>): Prom
   expect(firstBox!.x).toBeLessThan(lastBox!.x);
 }
 
+// eslint-disable-next-line max-lines-per-function
 test.describe.serial('critical habit journey', () => {
   test.beforeEach(async ({ page }) => {
     await seedSession(page);
@@ -213,6 +223,7 @@ test.describe.serial('critical habit journey', () => {
     await expect(page.getByRole('button', { name: 'Add habit' }).first()).toBeVisible();
 
     await page.getByRole('button', { name: 'Add habit' }).first().click();
+    await openHabitIdentity(page);
     await page.getByLabel('Name *').fill('Read for ten minutes');
     await page.getByRole('button', { name: 'Create habit' }).last().click();
     await expect(page).toHaveURL(/\/app\/dashboard|\/app\/habit\//);
@@ -221,17 +232,55 @@ test.describe.serial('critical habit journey', () => {
     await expect(page.getByText(/Read for ten minutes/).first()).toBeVisible();
 
     await page.goto('/app/stats');
-    await expect(page.getByRole('heading', { name: 'Your scheduled progress' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Progress' })).toBeVisible();
 
     await page.goto('/app/dashboard');
     await openHabitDetails(page);
     await page.getByRole('button', { name: 'Edit habit' }).click();
+    await openHabitIdentity(page);
     await page.getByLabel('Name *').fill('Read for twenty minutes');
     await page.getByRole('button', { name: 'Save habit' }).last().click();
-    await expect(page.getByRole('button', { name: 'Delete habit' })).toBeVisible();
+    const deleteHabitButton = page.getByRole('button', { name: /^Delete/ });
+    await expect(deleteHabitButton).toBeVisible();
 
-    await page.getByRole('button', { name: 'Delete habit' }).click();
+    await deleteHabitButton.click();
     await page.getByRole('button', { name: 'Delete', exact: true }).click();
+  });
+
+  test('renders the compact editor dashboard without saving draft navigation', async ({ page }) => {
+    const mutations: string[] = [];
+    page.on('request', (request) => {
+      if (request.method() !== 'GET' && new URL(request.url()).pathname.includes('/habits')) {
+        mutations.push(`${request.method()} ${new URL(request.url()).pathname}`);
+      }
+    });
+
+    await page.goto('/app/habit/new');
+    await expect(page.locator('[data-editor-dashboard]')).toBeVisible();
+    await expect(page.locator('[data-editor-tile]')).toHaveCount(6);
+    expect(await page.locator('[data-editor-tile]').evaluateAll((tiles) =>
+      tiles.map((tile) => tile.getAttribute('data-editor-tile'))
+    )).toEqual(['identity', 'habit-type', 'schedule', 'goal', 'reminder', 'organization']);
+    await page.getByRole('button', { name: 'Edit Goal' }).click();
+    await expect(page.locator('form')).toHaveAttribute('data-editor-panel', 'goal');
+    await page.getByRole('button', { name: 'Back to habit editor dashboard' }).click();
+    await expect(page.locator('[data-editor-dashboard]')).toBeVisible();
+    for (const viewport of [{ width: 320, height: 740 }, { width: 390, height: 844 }, { width: 1280, height: 900 }]) {
+      await page.setViewportSize(viewport);
+      await page.goto('/app/habit/new');
+      await expect(page.locator('[data-editor-dashboard]')).toBeVisible();
+      expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+      if (viewport.width < 640) {
+        const footer = page.locator('[class~="fixed"]').last();
+        await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
+        const lastContent = page.getByText('Notification behavior');
+        const [footerBox, contentBox] = await Promise.all([footer.boundingBox(), lastContent.boundingBox()]);
+        expect(footerBox).not.toBeNull();
+        expect(contentBox).not.toBeNull();
+        expect(contentBox!.y + contentBox!.height).toBeLessThanOrEqual(footerBox!.y);
+      }
+    }
+    expect(mutations).toEqual([]);
   });
 
   test('shows safe validation state', async ({ page }) => {
@@ -253,6 +302,7 @@ test.describe.serial('critical habit journey', () => {
       await route.continue();
     });
     await page.goto('/app/habit/new');
+    await openHabitIdentity(page);
     await page.getByLabel('Name *').fill('Conflict proof');
     await page.getByRole('button', { name: 'Create habit' }).last().click();
     await expect(page.getByRole('alert')).toContainText('Check the highlighted fields');
@@ -298,6 +348,7 @@ test.describe.serial('critical habit journey', () => {
       await page.setViewportSize(viewport);
       await page.goto('/app/habit/new');
 
+      await openHabitIdentity(page);
       const description = page.getByLabel(/Description/);
       await description.fill('x'.repeat(8000));
 
@@ -312,6 +363,7 @@ test.describe.serial('critical habit journey', () => {
     await page.goto('/app/dashboard');
     await openHabitDetails(page);
     await page.getByRole('button', { name: 'Edit habit' }).click();
+    await openHabitIdentity(page);
     await page.route(/\/(?:api\/)?habits\//, async (route) => {
       if (route.request().method() === 'PUT') {
         await route.fulfill({
@@ -368,7 +420,7 @@ test.describe.serial('scheduled dashboard summary', () => {
       await expect(summary.locator('[data-layout="desktop"] [aria-label^="Scheduled habit "]')).toHaveCount(3);
       await expect(summary.getByText('1/3')).toHaveCount(2);
       await expect(summary.locator('[data-layout="desktop"]').getByText('33%', { exact: true })).toHaveCount(2);
-      await expect(summary.locator('[data-layout="mobile"]').getByText('33%', { exact: true })).toHaveCount(2);
+      await expect(summary.locator('[data-layout="mobile"]').getByText('33%', { exact: true })).toHaveCount(1);
 
       if (viewport.width <= 560) {
         await expect(summary.locator('[data-layout="mobile"] > div')).toHaveCount(3);

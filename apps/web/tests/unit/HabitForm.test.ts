@@ -40,6 +40,14 @@ function createHabit(overrides: Partial<Habit> = {}): Habit {
   };
 }
 
+async function openPanel(user: ReturnType<typeof userEvent.setup>, panel: string): Promise<void> {
+  if (panel !== 'identity') {
+    await user.click(screen.getByRole('button', { name: 'Back to habit editor dashboard' }));
+  }
+  const title = panel === 'habit-type' ? 'Habit type' : `${panel[0].toUpperCase()}${panel.slice(1)}`;
+  await user.click(screen.getByRole('button', { name: `Edit ${title}` }));
+}
+
 describe('HabitForm', () => {
   // Disable fake timers for simplicity; the component does not heavily depend on real timing in these tests.
   // If needed, individual tests can set up fake timers locally.
@@ -63,6 +71,26 @@ describe('HabitForm', () => {
     expect(onBack).toHaveBeenCalledTimes(1);
   });
 
+  it('renders six ordered quick-setting tiles and opens each local panel', async () => {
+    const user = userEvent.setup();
+
+    render(HabitForm, {
+      props: {
+        mode: 'edit',
+        habit: createHabit({ tags: ['health'] }),
+        onBack: vi.fn(),
+        onSubmit: vi.fn().mockResolvedValue(undefined)
+      }
+    });
+
+    expect([...document.querySelectorAll('[data-editor-tile]')].map((tile) => tile.getAttribute('data-editor-tile'))).toEqual([
+      'identity', 'habit-type', 'schedule', 'goal', 'reminder', 'organization'
+    ]);
+    await user.click(screen.getByRole('button', { name: 'Edit Goal' }));
+    expect(document.querySelector('form')?.getAttribute('data-editor-panel')).toBe('goal');
+    expect(screen.getByRole('button', { name: 'Back to habit editor dashboard' })).toBeTruthy();
+  });
+
   it('allows descriptions up to 8000 characters and shows the live count', async () => {
     const user = userEvent.setup();
 
@@ -75,6 +103,7 @@ describe('HabitForm', () => {
       }
     });
 
+    await openPanel(user, 'identity');
     const description = screen.getByLabelText(/Description/) as HTMLTextAreaElement;
     expect(description.maxLength).toBe(8000);
     expect(screen.getByText('0 / 8000 characters')).toBeTruthy();
@@ -104,6 +133,7 @@ describe('HabitForm', () => {
       }
     });
 
+    await openPanel(user, 'identity');
     const description = screen.getByLabelText(/Description/) as HTMLTextAreaElement;
     expect(screen.getByText('8001 / 8000 characters')).toBeTruthy();
     expect(screen.getByText('1 over limit')).toBeTruthy();
@@ -151,12 +181,14 @@ describe('HabitForm', () => {
       }
     });
 
+    await openPanel(user, 'identity');
     const customIconInput = screen.getByLabelText('Custom habit icon') as HTMLInputElement;
     await user.type(customIconInput, '🛰');
 
     // Check that the input is not empty (emoji handling may normalize)
     expect(customIconInput.value.length).toBeGreaterThan(0);
 
+    await openPanel(user, 'organization');
     await user.click(screen.getByRole('button', { name: '+health' }));
 
     expect(screen.getByText('#health')).toBeTruthy();
@@ -211,6 +243,7 @@ describe('HabitForm', () => {
         }
       });
 
+      await openPanel(user, 'identity');
       const customIconInput = screen.getByLabelText('Custom habit icon') as HTMLInputElement;
       await user.type(customIconInput, '🎯');
 
@@ -240,6 +273,7 @@ describe('HabitForm', () => {
         }
       });
 
+      await openPanel(user, 'identity');
       const customIconInput = screen.getByLabelText('Custom habit icon') as HTMLInputElement;
       // Use a simple emoji that doesn't have variation selectors
       await user.type(customIconInput, '📝');
@@ -270,6 +304,7 @@ describe('HabitForm', () => {
         }
       });
 
+      await openPanel(user, 'identity');
       const customIconInput = screen.getByLabelText('Custom habit icon') as HTMLInputElement;
       // 🇺🇸 is U+1F1FA (regional indicator U) + U+1F1F8 (regional indicator S)
       await user.type(customIconInput, '🇺🇸');
@@ -301,6 +336,7 @@ describe('HabitForm', () => {
         }
       });
 
+      await openPanel(user, 'identity');
       const customIconInput = screen.getByLabelText('Custom habit icon') as HTMLInputElement;
       await user.type(customIconInput, '🎯');
 

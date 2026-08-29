@@ -101,7 +101,7 @@ git commit -m "refactor(habits): add editor screen state"
 
 ## CDE-002: Implement the compact editor dashboard
 
-**Status:** TODO  
+**Status:** DONE
 **Priority:** P1  
 **Depends on:** CDE-001
 
