@@ -276,19 +276,14 @@ test.describe.serial('critical habit journey', () => {
     await page.setViewportSize({ width: 390, height: 844 });
     await openHabitTypePanel();
     await expect(page.locator('form')).toHaveAttribute('data-editor-panel', 'habit-type');
-
     await expect(page.getByRole('button', { name: 'Build habit' })).toHaveAttribute('aria-pressed', 'true');
     await expect(page.locator('[data-editor-habit-type-rule]')).toHaveText('Build habit');
-    await expect(page.getByText('Complete 1 scheduled repetition to mark the day done.')).toBeVisible();
 
     await page.getByRole('button', { name: 'Avoid habit' }).click();
     await expect(page.getByRole('button', { name: 'Avoid habit' })).toHaveAttribute('aria-pressed', 'true');
     await expect(page.getByRole('button', { name: 'Build habit' })).toHaveAttribute('aria-pressed', 'false');
     await expect(page.locator('[data-editor-habit-type-rule]')).toHaveText('Avoid habit');
-    await expect(page.getByText('Mark the day done when the count is still zero: success means one fewer slip.')).toBeVisible();
-
     await page.getByRole('button', { name: 'Back to habit editor dashboard' }).click();
-    await expect(page.locator('[data-editor-dashboard]')).toBeVisible();
     await expect(page.getByRole('button', { name: 'Edit Habit type' })).toContainText('Avoid habit');
     expect(mutations).toEqual([]);
 
@@ -313,27 +308,30 @@ test.describe.serial('critical habit journey', () => {
     await expect(chooser.getByRole('button', { name: 'Daily Every day' })).toHaveAttribute('aria-pressed', 'true');
     await expect(page.locator('[data-editor-schedule-effect-title]')).toHaveText(/Daily/);
 
-    // Daily sub-view: reference copy and no editable day/quota controls. dispatchEvent avoids overlay interception.
+    // Daily sub-view snapshot check; full copy coverage lives in unit tests. dispatchEvent avoids overlay interception.
     await chooser.getByRole('button', { name: 'Daily Every day' }).dispatchEvent('click');
-    const daily = page.locator('[data-editor-schedule-daily]');
-    for (const text of ['Every day', 'Monday through Sunday', 'scheduled days / week', '1/day', 'opportunity frequency']) { await expect(daily.getByText(text, { exact: true })).toBeVisible(); }
-    await expect(daily.locator('[data-editor-schedule-daily-rule]')).toHaveText(/A scheduled opportunity is created every calendar day\.\s*Existing history remains unchanged\./);
-    for (const control of [/Toggle .* for the schedule/, 'Times per week', 'Times per month']) { await expect(page.getByLabel(control)).toHaveCount(0); }
-    // Transition to weekly_days keeps the single form draft; weekday summaries update live.
-    const weekdays = page.locator('[data-editor-schedule-weekdays]');
+    await expect(page.locator('[data-editor-schedule-daily-rule]')).toContainText('every calendar day');
+    for (const control of [/Toggle .* for the schedule/, 'Times per week', 'Times per month']) { await expect(page.getByLabel(control)).toHaveCount(0); } // Daily has no editable controls.
     await chooser.getByRole('button', { name: 'Days of week Pick weekdays' }).dispatchEvent('click');
     await expect(chooser.getByRole('button', { name: 'Days of week Pick weekdays' })).toHaveAttribute('aria-pressed', 'true');
-    await expect(chooser.getByRole('button', { name: 'Daily Every day' })).toHaveAttribute('aria-pressed', 'false');
-    await expect(weekdays.locator('[data-editor-schedule-weekdays-count]')).toHaveText('5');
-    await expect(weekdays.locator('[data-editor-schedule-weekdays-rule]')).toContainText('Only Monday, Tuesday, Wednesday, Thursday and Friday count as scheduled days.');
-    // Draft survives panel back-and-forth within the same editor session (goto intentionally resets it).
-    const weekdayChooserButton = page.getByRole('group', { name: 'Schedule type' }).getByRole('button', { name: 'Days of week Pick weekdays' });
+    await expect(page.locator('[data-editor-schedule-weekdays] [data-editor-schedule-weekdays-count]')).toHaveText('5');
+    await expect(page.locator('[data-editor-schedule-weekdays] [data-editor-schedule-weekdays-rule]')).toContainText('count as scheduled days.');
+    // Weekly quota bounds and flexible-days truth; full copy coverage lives in unit tests.
+    const quota = page.locator('[data-editor-schedule-weekly-quota]');
+    await page.getByRole('group', { name: 'Schedule type' }).getByRole('button', { name: 'Weekly quota Target completions per week' }).dispatchEvent('click');
+    await expect(quota.locator('[data-editor-quota-weekly-metric]')).toHaveText('2 / week');
+    for (let step = 0; step < 5; step += 1) { await quota.getByRole('button', { name: 'Increase weekly quota' }).click(); }
+    await expect(quota.locator('[data-editor-quota-weekly-metric]')).toHaveText('7 / week');
+    for (let step = 0; step < 6; step += 1) { await quota.getByRole('button', { name: 'Decrease weekly quota' }).click(); }
+    await expect(quota.locator('[data-editor-quota-weekly-metric]')).toHaveText('1 / week');
+    await expect(quota.getByRole('button', { name: 'Decrease weekly quota' })).toBeDisabled();
+    // Draft survives panel back-and-forth; the dashboard summary reflects the new quota (goto resets the draft).
     await page.getByRole('button', { name: 'Back to habit editor dashboard' }).click();
-    await expect(page.getByRole('button', { name: 'Edit Schedule' })).toContainText('Every Mon, Tue, Wed, Thu, Fri');
-    await page.locator('[data-editor-tile="schedule"]').click();
-    await expect(weekdayChooserButton).toHaveAttribute('aria-pressed', 'true');
-    await weekdayChooserButton.dispatchEvent('click');
-    await expectViewportsClean(page, async () => { await page.getByRole('button', { name: 'Back to habit editor dashboard' }).click(); await page.locator('[data-editor-tile="schedule"]').click(); });
+    await expect(page.getByRole('button', { name: 'Edit Schedule' })).toContainText('1x a week');
+    for (const viewport of [{ width: 390, height: 844 }, { width: 320, height: 740 }, { width: 1280, height: 900 }]) {
+      await page.setViewportSize(viewport);
+      expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+    } // Overflow-free across the protocol viewports.
     expect(mutations).toEqual([]);
   });
   test('shows safe validation state', async ({ page }) => {

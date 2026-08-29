@@ -340,6 +340,63 @@ describe('HabitForm', () => {
     }));
   });
 
+  it('bounds the weekly quota counter and reflects target and flexible-timing summaries before save', async () => {
+    const user = userEvent.setup();
+    const onSubmit = vi.fn().mockResolvedValue(undefined);
+
+    render(HabitForm, {
+      props: {
+        mode: 'create',
+        allHabits: [],
+        onBack: vi.fn(),
+        onSubmit
+      }
+    });
+
+    await user.click(screen.getByRole('button', { name: 'Edit Schedule' }));
+    await user.click(screen.getByRole('button', { name: 'Weekly quota Target completions per week' }));
+    const view = screen.getByTestId('weekly-quota-view');
+
+    // Default transition seeds 2; metrics, rule, and truthful flexible copy update live.
+    expect(within(view).getByText('2 / week')).toBeTruthy();
+    expect(within(view).getByText('Flexible days')).toBeTruthy();
+    expect(within(view).getByText('The week is on target after 2 completions.')).toBeTruthy();
+    expect(within(view).getByText('No individual weekday is automatically considered missed.')).toBeTruthy();
+
+    // Increment three times: 2 -> 5. Decrease twice: 5 -> 3.
+    await user.click(screen.getByRole('button', { name: 'Increase weekly quota' }));
+    await user.click(screen.getByRole('button', { name: 'Increase weekly quota' }));
+    await user.click(screen.getByRole('button', { name: 'Increase weekly quota' }));
+    await user.click(screen.getByRole('button', { name: 'Decrease weekly quota' }));
+    await user.click(screen.getByRole('button', { name: 'Decrease weekly quota' }));
+    expect(within(view).getByText('3 / week')).toBeTruthy();
+    expect(within(view).getByText('The week is on target after 3 completions.')).toBeTruthy();
+
+    // Bounds: cannot go below 1.
+    await user.click(screen.getByRole('button', { name: 'Decrease weekly quota' }));
+    await user.click(screen.getByRole('button', { name: 'Decrease weekly quota' }));
+    expect(within(view).getByText('1 / week')).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Decrease weekly quota' }).hasAttribute('disabled')).toBe(true);
+
+    // Panel back-and-forth retains the draft and weekly_days weekday choices.
+    await user.click(screen.getByRole('button', { name: 'Back to habit editor dashboard' }));
+    expect(within(screen.getByRole('button', { name: 'Edit Schedule' })).getByText('1x a week')).toBeTruthy();
+    await user.click(screen.getByRole('button', { name: 'Edit Schedule' }));
+    await user.click(screen.getByRole('button', { name: 'Weekly quota Target completions per week' }));
+    expect(screen.getByLabelText('Weekly quota: 1 completions per week')).toBeTruthy();
+
+    await user.click(screen.getByRole('button', { name: 'Back to habit editor dashboard' }));
+    await user.click(screen.getByRole('button', { name: 'Edit Identity' }));
+    await user.type(screen.getByLabelText('Name *'), 'Weekly quota habit');
+    await user.click(screen.getAllByRole('button', { name: 'Create habit' }).at(-1)!);
+    await waitFor(() => {
+      expect(onSubmit).toHaveBeenCalledTimes(1);
+    });
+    expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({
+      schedule: { type: 'weekly_quota', timesPerWeek: 1 }
+    }));
+  });
+
   it('preserves advanced monthly-week schedules on submit', async () => {
     const user = userEvent.setup();
     const onSubmit = vi.fn().mockResolvedValue(undefined);

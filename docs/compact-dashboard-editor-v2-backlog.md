@@ -475,7 +475,7 @@ git commit -m "feat(habits): add weekday schedule screen"
 
 ## CDE-008: Implement the Weekly quota screen
 
-**Status:** TODO  
+**Status:** DONE  
 **Priority:** P1  
 **Depends on:** CDE-005
 
