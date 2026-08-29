@@ -9,6 +9,7 @@
   import HabitDetailHeader from '$lib/components/habits/HabitDetailHeader.svelte';
   import HabitTodayStep from '$lib/components/habits/HabitTodayStep.svelte';
   import HabitMomentum from '$lib/components/habits/HabitMomentum.svelte';
+  import HabitCheckpoint from '$lib/components/habits/HabitCheckpoint.svelte';
   import HabitRecentRhythm from '$lib/components/habits/HabitRecentRhythm.svelte';
   import HabitSettingsSummary from '$lib/components/habits/HabitSettingsSummary.svelte';
   import HabitDangerZone from '$lib/components/habits/HabitDangerZone.svelte';
@@ -323,6 +324,7 @@
         nextMilestoneLabel={detailModel.nextMilestoneLabel}
         nextMilestoneDays={detailModel.nextMilestoneDays}
         nextMilestoneTarget={detailModel.nextMilestoneTarget}
+        showCheckpoint={false}
       />
 
       <HabitTodayStep
@@ -345,6 +347,13 @@
         celebrationLabel={detailCelebrationLabel}
         onIncrement={handleIncrementCompletion}
         onToggleFreeze={toggleFreezeToday}
+      />
+
+      <HabitCheckpoint
+        currentStreak={detailModel.currentStreak}
+        nextMilestoneLabel={detailModel.nextMilestoneLabel}
+        nextMilestoneDays={detailModel.nextMilestoneDays}
+        nextMilestoneTarget={detailModel.nextMilestoneTarget}
       />
 
       <HabitRecentRhythm
