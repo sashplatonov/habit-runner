@@ -233,7 +233,7 @@ describe('HabitForm', () => {
     await user.click(screen.getByRole('button', { name: 'Days of week Pick weekdays' }));
     expect(screen.getByRole('button', { name: 'Days of week Pick weekdays' }).getAttribute('aria-pressed')).toBe('true');
     expect(screen.getByRole('button', { name: 'Daily Every day' }).getAttribute('aria-pressed')).toBe('false');
-    expect(screen.getByLabelText('Toggle Mon for the schedule').getAttribute('aria-pressed')).toBe('true');
+    expect(screen.getByLabelText('Toggle Monday for the schedule').getAttribute('aria-pressed')).toBe('true');
 
     await user.click(screen.getByRole('button', { name: 'Back to habit editor dashboard' }));
     expect(within(screen.getByRole('button', { name: 'Edit Schedule' })).getByText('Every Mon, Tue, Wed, Thu, Fri')).toBeTruthy();
@@ -286,10 +286,58 @@ describe('HabitForm', () => {
 
     // Back from the daily slot keeps the draft and returns to the chooser.
     await user.click(screen.getByRole('button', { name: 'Days of week Pick weekdays' }));
-    expect(screen.getByLabelText('Toggle Mon for the schedule')).toBeTruthy();
+    expect(screen.getByLabelText('Toggle Monday for the schedule')).toBeTruthy();
     await user.click(screen.getByRole('button', { name: 'Daily Every day' }));
     expect(screen.getByTestId('daily-summary')).toBeTruthy();
     expect(onSubmit).not.toHaveBeenCalled();
+  });
+
+  it('selects weekdays with count, pattern, and rule summaries while preserving validation', async () => {
+    const user = userEvent.setup();
+    const onSubmit = vi.fn().mockResolvedValue(undefined);
+
+    render(HabitForm, {
+      props: {
+        mode: 'create',
+        allHabits: [],
+        onBack: vi.fn(),
+        onSubmit
+      }
+    });
+
+    await user.click(screen.getByRole('button', { name: 'Edit Schedule' }));
+    await user.click(screen.getByRole('button', { name: 'Days of week Pick weekdays' }));
+    const weekdays = screen.getByTestId('schedule-weekdays-view');
+
+    // Default transition seeds Mon-Fri; metrics reflect it immediately.
+    expect(within(weekdays).getByText(/^(5)$/)).toBeTruthy();
+    expect(within(weekdays).getByText('Mon · Tue · Wed · Thu · Fri')).toBeTruthy();
+    expect(within(weekdays).getByText('Only Monday, Tuesday, Wednesday, Thursday and Friday count as scheduled days.')).toBeTruthy();
+    expect(within(weekdays).getByText('Other weekdays are not treated as missed opportunities.')).toBeTruthy();
+    const buttons = [1, 2, 3, 4, 5, 6, 0].map((day) => screen.getByLabelText(`Toggle ${['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][day]} for the schedule`));
+    expect(buttons.filter((button) => button.getAttribute('aria-pressed') === 'true')).toHaveLength(5);
+
+    // Deselecting updates count, pattern, and rule; deselecting all surfaces validation, then Save still submits the cleared state.
+    await user.click(screen.getByLabelText('Toggle Tuesday for the schedule'));
+    await user.click(screen.getByLabelText('Toggle Thursday for the schedule'));
+    await user.click(screen.getByLabelText('Toggle Friday for the schedule'));
+    expect(within(weekdays).getByText('2')).toBeTruthy();
+    expect(within(weekdays).getByText('Mon · Wed')).toBeTruthy();
+    expect(within(weekdays).getByText('Only Monday and Wednesday count as scheduled days.')).toBeTruthy();
+
+    await user.click(screen.getByRole('button', { name: 'Back to habit editor dashboard' }));
+    expect(within(screen.getByRole('button', { name: 'Edit Schedule' })).getByText('Every Mon, Wed')).toBeTruthy();
+    await user.click(screen.getByRole('button', { name: 'Edit Identity' }));
+    await user.type(screen.getByLabelText('Name *'), 'Mon Wednesday');
+    await user.click(screen.getAllByRole('button', { name: 'Create habit' }).at(-1)!);
+    await waitFor(() => {
+      expect(onSubmit).toHaveBeenCalledTimes(1);
+    });
+    expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({
+      schedule: { type: 'weekly_days', weekdays: [1, 3] },
+      frequency: 'custom',
+      customDays: [1, 3]
+    }));
   });
 
   it('preserves advanced monthly-week schedules on submit', async () => {

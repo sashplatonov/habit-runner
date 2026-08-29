@@ -6,6 +6,26 @@
   const WEEKDAY_ORDER = [1, 2, 3, 4, 5, 6, 0];
   const WEEK_OF_MONTH_OPTIONS: WeekOfMonth[] = [1, 2, 3, 4, 'last'];
   const DAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  const DAY_FULL_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
+  const selectedWeekdays = $derived(
+    schedule.type === 'weekly_days' || schedule.type === 'monthly_weeks'
+      ? WEEKDAY_ORDER.filter((day) => schedule.weekdays.includes(day))
+      : []
+  );
+  const weekdayPattern = $derived(
+    selectedWeekdays.length > 0 ? selectedWeekdays.map((day) => DAY_LABELS[day]).join(' · ') : 'None selected'
+  );
+  const weekdaysRule = $derived.by(() => {
+    const names = selectedWeekdays.map((day) => DAY_FULL_NAMES[day]);
+    if (names.length === 0) {
+      return 'Select at least one weekday to schedule opportunities.';
+    }
+    if (names.length === 1) {
+      return `Only ${names[0]} counts as a scheduled day.`;
+    }
+    return `Only ${names.slice(0, -1).join(', ')} and ${names[names.length - 1]} count as scheduled days.`;
+  });
 
   const CHOICE_ICONS: Record<HabitSchedule['type'], typeof Icon> = {
     daily: Calendar,
@@ -253,25 +273,43 @@
     {/if}
 
     {#if openSlot === 'weekly_days'}
-      <div class="space-y-2">
-        <div class="flex gap-1">
-          {#each DAY_LABELS as day, index (`${day}-${index}`)}
-            <button
-              type="button"
-              class={`flex min-h-11 flex-1 items-center justify-center rounded-lg border px-2 py-1 text-xs font-mono transition ${schedule.weekdays.includes(index) ? 'border-accent bg-accent/10 text-accent' : 'border-border text-muted hover:border-border-hover'}`}
-              aria-label={`Toggle ${day} for the schedule`}
-              aria-pressed={schedule.weekdays.includes(index)}
-              onclick={() => {
-                toggleWeekday(index);
-              }}
-            >
-              {day[0]}
-            </button>
-          {/each}
+      <div class="space-y-3" data-editor-schedule-weekdays data-testid="schedule-weekdays-view">
+        <div class="space-y-2">
+          <p class="text-[10px] font-mono uppercase tracking-[0.18em] text-muted">Weekdays</p>
+          <div class="grid grid-cols-7 gap-1.5">
+            {#each WEEKDAY_ORDER as day (`${day}`)}
+              <button
+                type="button"
+                class={`flex min-h-11 items-center justify-center rounded-xl border px-1 py-1 text-[11px] font-bold transition ${schedule.weekdays.includes(day) ? 'border-accent bg-accent/10 text-accent' : 'border-border bg-bg-primary text-muted hover:border-border-hover'}`}
+                aria-label={`Toggle ${DAY_FULL_NAMES[day]} for the schedule`}
+                aria-pressed={schedule.weekdays.includes(day)}
+                data-editor-schedule-weekday={day}
+                onclick={() => {
+                  toggleWeekday(day);
+                }}
+              >
+                {DAY_LABELS[day]}
+              </button>
+            {/each}
+          </div>
+          {#if errors.schedule}
+            <p class="text-[10px] font-mono text-accent-secondary" role="alert">{errors.schedule}</p>
+          {/if}
         </div>
-        {#if errors.schedule}
-          <p class="text-[10px] font-mono text-accent-secondary">{errors.schedule}</p>
-        {/if}
+        <div class="grid grid-cols-2 gap-2">
+          <div class="rounded-2xl border border-border bg-bg-primary p-2.5">
+            <p class="text-[13px] font-bold text-foreground" data-editor-schedule-weekdays-count>{schedule.weekdays.length}</p>
+            <p class="mt-0.5 text-[10px] leading-[14px] text-muted">days selected</p>
+          </div>
+          <div class="rounded-2xl border border-border bg-bg-primary p-2.5">
+            <p class="text-[11px] font-bold leading-4 text-foreground" data-editor-schedule-weekdays-pattern>{weekdayPattern}</p>
+            <p class="mt-0.5 text-[10px] leading-[14px] text-muted">current pattern</p>
+          </div>
+        </div>
+        <div class="rounded-2xl border border-border bg-bg-primary p-3" data-editor-schedule-weekdays-rule>
+          <p class="text-[12px] font-semibold leading-5 text-foreground">{weekdaysRule}</p>
+          <p class="mt-0.5 text-[11px] leading-4 text-muted">Other weekdays are not treated as missed opportunities.</p>
+        </div>
       </div>
     {/if}
 

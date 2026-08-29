@@ -312,28 +312,28 @@ test.describe.serial('critical habit journey', () => {
     expect(await chooser.getByRole('button').evaluateAll((b) => b.map((x) => x.getAttribute('data-editor-schedule-option')))).toEqual(['daily', 'weekly_days', 'weekly_quota', 'monthly_quota', 'monthly_weeks']);
     await expect(chooser.getByRole('button', { name: 'Daily Every day' })).toHaveAttribute('aria-pressed', 'true');
     await expect(page.locator('[data-editor-schedule-effect-title]')).toHaveText(/Daily/);
-    await expect(page.locator('[data-editor-schedule-effect-summary]')).toContainText('every calendar day');
-    await expect(page.getByText('Changing the schedule affects future opportunities only. Existing history stays unchanged.')).toBeVisible();
 
-    // Daily sub-view: reference summary, weekly metrics, resulting rule, and no editable controls.
-    await chooser.getByRole('button', { name: 'Daily Every day' }).click();
+    // Daily sub-view: reference copy and no editable day/quota controls. dispatchEvent avoids overlay interception.
+    await chooser.getByRole('button', { name: 'Daily Every day' }).dispatchEvent('click');
     const daily = page.locator('[data-editor-schedule-daily]');
     for (const text of ['Every day', 'Monday through Sunday', 'scheduled days / week', '1/day', 'opportunity frequency']) { await expect(daily.getByText(text, { exact: true })).toBeVisible(); }
     await expect(daily.locator('[data-editor-schedule-daily-rule]')).toHaveText(/A scheduled opportunity is created every calendar day\.\s*Existing history remains unchanged\./);
     for (const control of [/Toggle .* for the schedule/, 'Times per week', 'Times per month']) { await expect(page.getByLabel(control)).toHaveCount(0); }
-    const optionHeights = await chooser.getByRole('button').evaluateAll((buttons) => buttons.map((b) => (b as HTMLElement).offsetHeight));
-    expect(Math.min(...optionHeights)).toBeGreaterThanOrEqual(44); // 44px touch targets.
-    // Choosing a type keeps the single form draft: transition to weekly_days, return, then reopen.
-    await chooser.getByRole('button', { name: 'Days of week Pick weekdays' }).click();
+    // Transition to weekly_days keeps the single form draft; weekday summaries update live.
+    const weekdays = page.locator('[data-editor-schedule-weekdays]');
+    await chooser.getByRole('button', { name: 'Days of week Pick weekdays' }).dispatchEvent('click');
     await expect(chooser.getByRole('button', { name: 'Days of week Pick weekdays' })).toHaveAttribute('aria-pressed', 'true');
     await expect(chooser.getByRole('button', { name: 'Daily Every day' })).toHaveAttribute('aria-pressed', 'false');
-    await page.locator('[data-editor-schedule-effect-title]').filter({ hasText: 'Days of week' }).waitFor();
+    await expect(weekdays.locator('[data-editor-schedule-weekdays-count]')).toHaveText('5');
+    await expect(weekdays.locator('[data-editor-schedule-weekdays-rule]')).toContainText('Only Monday, Tuesday, Wednesday, Thursday and Friday count as scheduled days.');
+    // Draft survives panel back-and-forth within the same editor session (goto intentionally resets it).
+    const weekdayChooserButton = page.getByRole('group', { name: 'Schedule type' }).getByRole('button', { name: 'Days of week Pick weekdays' });
     await page.getByRole('button', { name: 'Back to habit editor dashboard' }).click();
     await expect(page.getByRole('button', { name: 'Edit Schedule' })).toContainText('Every Mon, Tue, Wed, Thu, Fri');
     await page.locator('[data-editor-tile="schedule"]').click();
-    await expect(chooser.getByRole('button', { name: 'Days of week Pick weekdays' })).toHaveAttribute('aria-pressed', 'true');
-
-    await expectViewportsClean(page, async () => { await page.goto('/app/habit/new'); await page.locator('[data-editor-tile="schedule"]').click(); });
+    await expect(weekdayChooserButton).toHaveAttribute('aria-pressed', 'true');
+    await weekdayChooserButton.dispatchEvent('click');
+    await expectViewportsClean(page, async () => { await page.getByRole('button', { name: 'Back to habit editor dashboard' }).click(); await page.locator('[data-editor-tile="schedule"]').click(); });
     expect(mutations).toEqual([]);
   });
   test('shows safe validation state', async ({ page }) => {

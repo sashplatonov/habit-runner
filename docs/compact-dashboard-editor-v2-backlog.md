@@ -414,7 +414,7 @@ git commit -m "feat(habits): add daily schedule screen"
 
 ## CDE-007: Implement the Days of week screen
 
-**Status:** TODO  
+**Status:** DONE  
 **Priority:** P1  
 **Depends on:** CDE-005
 
