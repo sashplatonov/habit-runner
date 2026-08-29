@@ -172,7 +172,7 @@
   );
 
   const scheduledCompletionSummary = $derived(
-    buildScheduledCompletionSummary(activeHabits, todayDate, timeZone)
+    buildScheduledCompletionSummary(activeHabits, new Date(), timeZone)
   );
 
   const overallStreak = $derived.by(() => {
