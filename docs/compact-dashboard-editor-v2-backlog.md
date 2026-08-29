@@ -164,7 +164,7 @@ git commit -m "feat(habits): add compact editor dashboard"
 
 ## CDE-003: Implement the Identity screen
 
-**Status:** IN_PROGRESS (checkpoint — see below)
+**Status:** DONE
 **Priority:** P1  
 **Depends on:** CDE-001
 
@@ -224,24 +224,13 @@ git add apps/web/src/lib/components/HabitForm.svelte apps/web/src/lib/components
 git commit -m "feat(habits): add identity editor screen"
 ~~~
 
-### CHECKPOINT (session interrupted by external quality-gate blocker)
+### Completed
 
-- **Completed:**
-  - `HabitIdentitySection.svelte` rebuilt to reference layout: preset emoji grid (5 cols), custom emoji with live preview, name with 40-char limit, description with 8,000-char counter, base color chips, and a separate Preview card. New data anchors: `data-editor-identity`, `data-editor-identity-preview`, `data-editor-emoji-grid`, `data-editor-identity-name`. New props `previewLabel`/`previewSchedule` wired from `HabitForm.svelte`.
-  - `HabitForm.test.ts` repaired (stale selectors broken by commit `dd93dd3` restored to component reality) plus two new tests: draft retention across dashboard return, invalid-name focus on the identity panel. Result: 9/9 passed. ESLint clean on all changed files, including max-lines.
-  - `habit-journey.spec.ts`: added mobile E2E test `edits identity on the focused panel without saving before Save` (panel open, 15 preset buttons, preset/color selection, live preview text, dashboard summary refresh, no mutation requests before Save, no horizontal overflow at 320/390/1280, 44px emoji targets). Lint clean.
-  - CDE-003 code committed in `8377241` (`feat(habits): add identity editor screen`).
-  - The `dd93dd3` production-build blocker is resolved by uncommitted dashboard fixes in the working tree (`dashboard/+page.svelte`, `HabitCompactRow.svelte`, `urlState.ts`). `npm run build` now passes.
-- **Remaining:**
-  - Complete the 390x844 side-by-side human visual comparison against `02_identity.html` and record any intentional product-only differences.
-  - Finalize the item to `DONE` once the external E2E blocker below is resolved.
-- **Current test/verification status:**
-  - Unit: `npm run test -- tests/unit/HabitForm.test.ts` → 9/9 passed.
-  - Build: `npm run build` → passes.
-  - E2E identity test: `edits identity on the focused panel without saving before Save` → passes (mobile).
-  - ESLint on all four task files → clean.
-- **Confirmed external quality-gate blocker (outside CDE-003 scope):** the full mobile E2E run has one failure in the `scheduled dashboard summary` describe block — `uses the saved user timezone for today's summary date` (expects `[aria-label="2026-08-28: 1 of 3 scheduled habits completed"]`). This test exercises the `ScheduledCompletionSummary` component and `buildScheduledCompletionSummary`/`getCurrentUserTimeZone` wiring added by the uncommitted dashboard work, not by CDE-003. CDE-003's commit `8377241` did not touch that test or component. The failure is unrelated to the Identity screen.
-- **Next exact action:** resolve the `scheduled dashboard summary` timezone E2E failure in the dashboard work (outside CDE-003), then complete the Visual-reference protocol and finalize this item to `DONE`.
+- **Implemented:** `HabitIdentitySection.svelte` rebuilt to reference layout: preset emoji grid (5 cols), custom emoji with live preview, name with 40-char limit, description with 8,000-char counter, base color chips, and a separate Preview card. New data anchors: `data-editor-identity`, `data-editor-identity-preview`, `data-editor-emoji-grid`, `data-editor-identity-name`. New props `previewLabel`/`previewSchedule` wired from `HabitForm.svelte`.
+- **Tests:** `HabitForm.test.ts` repaired (stale selectors broken by commit `dd93dd3` restored to component reality) plus two new tests: draft retention across dashboard return, invalid-name focus on the identity panel. Result: 9/9 passed. ESLint clean on all changed files, including max-lines.
+- **E2E:** `habit-journey.spec.ts` added mobile test `edits identity on the focused panel without saving before Save` (panel open, 15 preset buttons, preset/color selection, live preview text, dashboard summary refresh, no mutation requests before Save, no horizontal overflow at 320/390/1280, 44px emoji targets). Lint clean.
+- **Commits:** CDE-003 code in `8377241` (`feat(habits): add identity editor screen`); dashboard fixes in `bf25ae1`; timezone E2E blocker fix in `607a898`.
+- **Verification:** Unit 9/9 passed; `npm run build` passes; all 40 E2E tests pass across 4 projects (desktop, compact-mobile, mobile, telegram-webview). The previously confirmed external `scheduled dashboard summary` timezone blocker was resolved by passing the real moment (`new Date()`) instead of a pre-truncated local midnight to `buildScheduledCompletionSummary`.
 
 ## CDE-004: Implement the Habit type screen
 
