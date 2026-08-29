@@ -164,7 +164,7 @@ git commit -m "feat(habits): add compact editor dashboard"
 
 ## CDE-003: Implement the Identity screen
 
-**Status:** TODO  
+**Status:** IN_PROGRESS (checkpoint — see below)
 **Priority:** P1  
 **Depends on:** CDE-001
 
@@ -223,6 +223,23 @@ cd apps/web && npm run test:e2e -- tests/e2e/habit-journey.spec.ts --project=mob
 git add apps/web/src/lib/components/HabitForm.svelte apps/web/src/lib/components/habit-form/HabitIdentitySection.svelte apps/web/tests/unit/HabitForm.test.ts apps/web/tests/e2e/habit-journey.spec.ts
 git commit -m "feat(habits): add identity editor screen"
 ~~~
+
+### CHECKPOINT (session interrupted by external blocker)
+
+- **Completed:**
+  - `HabitIdentitySection.svelte` rebuilt to reference layout: preset emoji grid (5 cols), custom emoji with live preview, name with 40-char limit, description with 8,000-char counter, base color chips, and a separate Preview card. New data anchors: `data-editor-identity`, `data-editor-identity-preview`, `data-editor-emoji-grid`, `data-editor-identity-name`. New props `previewLabel`/`previewSchedule` wired from `HabitForm.svelte`.
+  - `HabitForm.test.ts` repaired (stale selectors broken by commit `dd93dd3` restored to component reality) plus two new tests: draft retention across dashboard return, invalid-name focus on the identity panel. Result: 9/9 passed. ESLint clean on all changed files, including max-lines.
+  - `habit-journey.spec.ts`: added mobile E2E test `edits identity on the focused panel without saving before Save` (panel open, 15 preset buttons, preset/color selection, live preview text, dashboard summary refresh, no mutation requests before Save, no horizontal overflow at 320/390/1280, 44px emoji targets). Lint clean.
+- **Remaining:**
+  - Run `npm run test:e2e -- tests/e2e/habit-journey.spec.ts --project=mobile` for browser evidence and the Visual-reference protocol for `02_identity.html`.
+  - Complete the 390x844 side-by-side human visual comparison and record any intentional product-only differences.
+- **Changed files:** `apps/web/src/lib/components/habit-form/HabitIdentitySection.svelte`, `apps/web/src/lib/components/HabitForm.svelte`, `apps/web/tests/unit/HabitForm.test.ts`, `apps/web/tests/e2e/habit-journey.spec.ts` (unstaged; see working tree).
+- **Current test/verification status:**
+  - Unit: `npm run test -- tests/unit/HabitForm.test.ts` → 9/9 passed.
+  - ESLint on all four task files → clean.
+  - `npx vitest run` svelte-check on task files → no new errors (9 pre-existing errors belong to dashboard files from commit `dd93dd3`).
+- **Confirmed blocker:** `npm run build` / `npm run check` fail because commit `dd93dd3` introduced imports of deleted modules (`$lib/components/SyncStatus.svelte`, `$lib/stores/syncEngine`) and unused references in `apps/web/src/routes/app/(protected)/dashboard/+page.svelte` and `apps/web/src/lib/components/dashboard/HabitCompactRow.svelte`. Playwright E2E requires a production build (`webServer` runs `npm run build && npm run preview`), so E2E cannot start; stale `dist/` from April does not contain editor markers.
+- **Next exact action:** restore/repair dashboard imports from `d3bf402` (where `SyncStatus.svelte` and `syncEngine` still existed) or remove the broken imports in a dedicated fix commit; then run the pending mobile E2E journey, finish the Visual-reference protocol, and finalize this item with the commit in the section above.
 
 ## CDE-004: Implement the Habit type screen
 

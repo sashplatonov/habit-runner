@@ -456,6 +456,8 @@
       bind:icon
       {errors}
       {selectedColor}
+      previewLabel={habitLabel}
+      previewSchedule={scheduleSummary}
     />{/if}
 
     {#if activePanel === 'schedule'}<HabitScheduleSection

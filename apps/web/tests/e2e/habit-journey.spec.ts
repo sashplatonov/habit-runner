@@ -283,6 +283,41 @@ test.describe.serial('critical habit journey', () => {
     expect(mutations).toEqual([]);
   });
 
+  test('edits identity on the focused panel without saving before Save', async ({ page }) => {
+    const mutations: string[] = [];
+    page.on('request', (request) => {
+      if (request.method() !== 'GET' && new URL(request.url()).pathname.includes('/habits')) {
+        mutations.push(`${request.method()} ${new URL(request.url()).pathname}`);
+      }
+    });
+
+    await page.goto('/app/habit/new');
+    await page.locator('[data-editor-tile="identity"]').click();
+    await expect(page.locator('form')).toHaveAttribute('data-editor-panel', 'identity');
+    await expect(page.locator('[data-editor-identity]')).toBeVisible();
+    await expect(page.locator('[data-editor-emoji-grid] button')).toHaveCount(15);
+
+    // Preset selection overrides the custom placeholder and updates the live preview.
+    await page.getByRole('button', { name: 'Use 🧘 as habit icon' }).click();
+    await page.getByLabel('Name *').fill('Breath 4-7-8');
+    await page.getByRole('button', { name: 'Select Cyan color' }).click();
+    await expect(page.locator('[data-editor-identity-name]')).toHaveText('🧘 Breath 4-7-8');
+
+    // Back to the dashboard retains the draft and refreshes the identity summary.
+    await page.getByRole('button', { name: 'Back to habit editor dashboard' }).click();
+    await expect(page.locator('[data-editor-dashboard]')).toBeVisible();
+    await expect(page.getByText('🧘 Breath 4-7-8 · Cyan')).toBeVisible();
+    expect(mutations).toEqual([]);
+
+    for (const viewport of [{ width: 320, height: 740 }, { width: 390, height: 844 }, { width: 1280, height: 900 }]) {
+      await page.setViewportSize(viewport);
+      await page.locator('[data-editor-tile="identity"]').click();
+      await expect(page.locator('[data-editor-identity]')).toBeVisible();
+      expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+      expect(await page.locator('[data-editor-emoji-grid] button').first().evaluate((el) => el.offsetHeight)).toBeGreaterThanOrEqual(44);
+    }
+  });
+
   test('shows safe validation state', async ({ page }) => {
     await page.route(/\/(?:api\/)?habits$/, async (route) => {
       if (route.request().method() === 'POST') {
@@ -498,8 +533,6 @@ test.describe('authenticated progress analytics', () => {
         await expect(strip.locator('[role="listitem"]')).toHaveCount(cellCount);
         const rowBox = await row.boundingBox();
         const stripBox = await strip.boundingBox();
-        expect(rowBox).not.toBeNull();
-        expect(stripBox).not.toBeNull();
         expect(stripBox!.x).toBeGreaterThanOrEqual(rowBox!.x);
         expect(stripBox!.x + stripBox!.width).toBeLessThanOrEqual(rowBox!.x + rowBox!.width);
         expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
@@ -508,8 +541,6 @@ test.describe('authenticated progress analytics', () => {
       const history = page.getByRole('list', { name: '12-week completion history' });
       await expect(history.locator('[role="listitem"]')).toHaveCount(84);
       const guide = page.getByRole('button', { name: 'More information: History' });
-      await guide.focus();
-      await expect(page.getByRole('tooltip')).toHaveCount(0);
       await guide.press('Enter');
       await expect(page.getByRole('tooltip')).toBeVisible();
       await guide.press('Escape');

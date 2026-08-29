@@ -2,7 +2,7 @@
   import type { Habit } from '@/types/habit';
   import { COLORS, ICONS } from '$lib/habits/constants';
   import { MAX_HABIT_DESCRIPTION_LENGTH } from '$lib/habits/habitFormModel';
-  import FormSection from './FormSection.svelte';
+  import { UserRound } from 'lucide-svelte';
   import FieldMessage from './FieldMessage.svelte';
 
   let {
@@ -11,7 +11,9 @@
     color = $bindable<Habit['color']>('blue'),
     icon = $bindable('⚡'),
     errors = {},
-    selectedColor = COLORS[0]
+    selectedColor = COLORS[0],
+    previewLabel = '',
+    previewSchedule = ''
   }: {
     name: string;
     description: string;
@@ -19,6 +21,8 @@
     icon: string;
     errors: Record<string, string>;
     selectedColor: (typeof COLORS)[number];
+    previewLabel: string;
+    previewSchedule: string;
   } = $props();
 
   function handleCustomIconInput(event: Event) {
@@ -32,45 +36,72 @@
   );
 </script>
 
-<FormSection title="Identity" description="Set the name, description, icon, and base color." class="space-y-5">
-<div class="grid gap-5 lg:grid-cols-[0.72fr,1.28fr]">
-  <div class="flex-shrink-0">
-    <p class="mb-2 block text-[10px] font-mono uppercase tracking-wider text-muted">Icon</p>
-    <div class="grid grid-cols-5 gap-1 rounded-lg border border-border bg-bg-secondary p-2">
-      {#each ICONS as option, iconIndex (`${option}-${iconIndex}`)}
-        <button
-          type="button"
-          class={`flex h-11 w-11 items-center justify-center rounded-xl text-base transition-[background-color,box-shadow] ${icon === option ? 'bg-border ring-1' : 'hover:bg-border'}`}
-          style={icon === option ? `box-shadow: 0 0 0 1px ${selectedColor.hex};` : ''}
-          aria-label={`Use ${option} as habit icon`}
-          aria-pressed={icon === option}
-          title={`Use ${option} as habit icon`}
-          onclick={() => {
-            icon = option;
-          }}
-        >
-          {option}
-        </button>
-      {/each}
+<section
+  class="rounded-[1.5rem] border border-border bg-bg-card/92 p-4 shadow-[0_20px_54px_rgba(15,23,42,0.08)] sm:p-5"
+  aria-labelledby="habit-identity-title"
+  data-editor-identity
+>
+  <div class="mb-1 flex items-start justify-between gap-3">
+    <div class="min-w-0">
+      <h2 id="habit-identity-title" class="text-[10px] font-mono uppercase tracking-[0.18em] text-muted">Identity</h2>
+      <p class="mt-1 text-[13px] leading-5 text-muted">Name, description, icon and color.</p>
     </div>
-    <div class="mt-2">
-      <input
-        type="text"
-        name="habit-icon"
-        aria-label="Custom habit icon"
-        autocomplete="off"
-        value={ICONS.includes(icon) ? '' : icon}
-        placeholder="Own icon…"
-        class="w-full rounded-lg border border-border bg-bg-secondary px-2 py-2.5 text-center text-xs font-mono placeholder:text-[10px] focus:border-accent/50"
-        style={!ICONS.includes(icon) && icon ? `border-color: ${selectedColor.hex}; box-shadow: 0 0 8px ${selectedColor.hex}40;` : ''}
-        oninput={handleCustomIconInput}
-      />
-    </div>
+    <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-accent/10 text-accent">
+      <UserRound size={18} strokeWidth={1.8} aria-hidden="true" />
+    </span>
   </div>
 
-  <div class="flex-1 space-y-3">
+  <div class="mt-4 space-y-4">
     <div>
-      <label class="mb-2 block text-[10px] font-mono uppercase tracking-wider text-muted" for="habit-name">Name *</label>
+      <p class="mb-2 text-[10px] uppercase tracking-[0.12em] text-muted">Preset emoji</p>
+      <div class="grid grid-cols-5 gap-2" data-editor-emoji-grid>
+        {#each ICONS as option, iconIndex (`${option}-${iconIndex}`)}
+          <button
+            type="button"
+            class={`flex h-11 w-full items-center justify-center rounded-xl border text-[19px] transition-[background-color,border-color,box-shadow] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${icon === option ? 'border-accent bg-accent/10' : 'border-border bg-bg-primary hover:border-border-hover'}`}
+            style={icon === option ? `outline: 2px solid ${selectedColor.hex}; outline-offset: -2px;` : ''}
+            aria-label={`Use ${option} as habit icon`}
+            aria-pressed={icon === option}
+            onclick={() => {
+              icon = option;
+            }}
+          >
+            {option}
+          </button>
+        {/each}
+      </div>
+    </div>
+
+    <div>
+      <p class="mb-2 text-[10px] uppercase tracking-[0.12em] text-muted">Custom emoji</p>
+      <div class="grid grid-cols-[54px,1fr] items-center gap-2.5">
+        <span
+          class="flex h-[52px] items-center justify-center rounded-xl border text-[24px]"
+          style={`background-color: ${selectedColor.hex}18; border-color: ${selectedColor.hex}66;`}
+          aria-hidden="true"
+        >
+          {icon || '—'}
+        </span>
+        <div>
+          <input
+            type="text"
+            name="habit-icon"
+            aria-label="Custom habit icon"
+            autocomplete="off"
+            maxlength="8"
+            value={ICONS.includes(icon) ? '' : icon}
+            placeholder="Own icon…"
+            class="w-full rounded-xl border border-border bg-bg-primary px-3 py-2.5 text-center text-sm text-foreground placeholder:text-[10px] focus:border-accent/50"
+            style={!ICONS.includes(icon) && icon ? `border-color: ${selectedColor.hex};` : ''}
+            oninput={handleCustomIconInput}
+          />
+          <p class="mt-1.5 text-[11px] text-muted">Custom emoji overrides a preset.</p>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <label class="mb-2 block text-[10px] uppercase tracking-[0.12em] text-muted" for="habit-name">Name *</label>
       <input
         id="habit-name"
         type="text"
@@ -79,7 +110,7 @@
         bind:value={name}
         maxlength="40"
         placeholder="e.g. Deep Work…"
-        class="w-full rounded-lg border border-border bg-bg-secondary px-3 py-2.5 text-sm font-medium text-foreground placeholder-border-hover transition-[border-color,box-shadow] focus:border-accent/50 focus:shadow-[0_0_12px_var(--glow)]"
+        class="w-full rounded-xl border border-border bg-bg-primary px-3 py-2.5 text-sm font-medium text-foreground placeholder-border-hover transition-[border-color,box-shadow] focus:border-accent/50 focus:shadow-[0_0_12px_var(--glow)]"
         style={errors.name ? 'border-color: var(--accent-secondary);' : ''}
         aria-invalid={Boolean(errors.name)}
       />
@@ -87,47 +118,71 @@
     </div>
 
     <div>
-      <label class="mb-2 block text-[10px] font-mono uppercase tracking-wider text-muted" for="habit-description">Description <span class="text-border-hover">(supports Markdown)</span></label>
+      <label class="mb-2 block text-[10px] uppercase tracking-[0.12em] text-muted" for="habit-description">Description</label>
       <textarea
         id="habit-description"
         name="habit-description"
         autocomplete="off"
         bind:value={description}
         maxlength={MAX_HABIT_DESCRIPTION_LENGTH}
-        rows="6"
+        rows="4"
         aria-describedby={errors.description ? 'habit-description-count habit-description-error' : 'habit-description-count'}
         aria-invalid={Boolean(errors.description)}
-        placeholder="Brief description… Supports **bold**, *italic*, and lists."
-        class="w-full resize-none overflow-y-auto rounded-lg border border-border bg-bg-secondary px-3 py-2.5 text-sm text-foreground placeholder-border-hover transition-[border-color,box-shadow] focus:border-accent/50 focus:shadow-[0_0_12px_var(--glow)]"
+        placeholder="Brief description. Markdown supported."
+        class="w-full resize-none overflow-y-auto rounded-xl border border-border bg-bg-primary px-3 py-2.5 text-sm text-foreground placeholder-border-hover transition-[border-color,box-shadow] focus:border-accent/50 focus:shadow-[0_0_12px_var(--glow)]"
         style={errors.description ? 'border-color: var(--accent-secondary);' : ''}
       ></textarea>
-      <p id="habit-description-count" class="mt-1 flex justify-between gap-3 text-xs leading-5 text-muted">
+      <p id="habit-description-count" class="mt-1 flex justify-between gap-3 text-[11px] leading-5 text-muted">
         <span>{description.length} / {MAX_HABIT_DESCRIPTION_LENGTH} characters</span>
         <span>{descriptionLimitMessage}</span>
       </p>
       <FieldMessage id="habit-description-error" message={errors.description} tone="error" class="mt-1" />
     </div>
-  </div>
-  </div>
 
-<div class="rounded-[1.75rem] border border-border bg-bg-card/92 p-5 shadow-[0_20px_54px_rgba(15,23,42,0.08)]">
-  <p class="mb-2 block text-[10px] font-mono uppercase tracking-wider text-muted">Color</p>
-  <div class="flex gap-2">
-    {#each COLORS as option, colorIndex (`${option.value}-${colorIndex}`)}
-      <button
-        type="button"
-        class="flex h-11 w-11 items-center justify-center rounded-full border-2 transition-[border-color,box-shadow] duration-200"
-        style={`background-color: ${option.hex}20; border-color: ${color === option.value ? option.hex : 'transparent'}; box-shadow: ${color === option.value ? `0 0 12px ${option.hex}60` : 'none'};`}
-        title={option.label}
-        aria-label={`Select ${option.label} color`}
-        aria-pressed={color === option.value}
-        onclick={() => {
-          color = option.value;
-        }}
-      >
-        <div class="h-3 w-3 rounded-full" style={`background-color: ${option.hex};`}></div>
-      </button>
-    {/each}
+    <div>
+      <p class="mb-2 text-[10px] uppercase tracking-[0.12em] text-muted">Base color</p>
+      <div class="flex flex-wrap gap-2" data-editor-color-list>
+        {#each COLORS as option, colorIndex (`${option.value}-${colorIndex}`)}
+          <button
+            type="button"
+            class={`flex min-h-11 items-center gap-1.5 rounded-lg border px-2.5 py-2 text-[11px] transition-[border-color,box-shadow] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${color === option.value ? '' : 'border-border bg-bg-primary text-muted'}`}
+            style={color === option.value
+              ? `background-color: ${option.hex}18; border-color: ${option.hex}; box-shadow: 0 0 10px ${option.hex}40;`
+              : ''}
+            aria-label={`Select ${option.label} color`}
+            aria-pressed={color === option.value}
+            title={option.label}
+            onclick={() => {
+              color = option.value;
+            }}
+          >
+            <span class="h-2 w-2 flex-none rounded-full" style={`background-color: ${option.hex};`}></span>
+            {option.label}
+          </button>
+        {/each}
+      </div>
+    </div>
   </div>
+</section>
+
+<section
+  class="rounded-[1.5rem] border border-border bg-bg-card/92 p-4 shadow-[0_20px_54px_rgba(15,23,42,0.08)] sm:p-5"
+  aria-labelledby="identity-preview-title"
+  data-editor-identity-preview
+>
+  <h2 id="identity-preview-title" class="text-[10px] font-mono uppercase tracking-[0.18em] text-muted">Preview</h2>
+  <div class="mt-2.5 flex items-center gap-2.5 rounded-2xl border border-border bg-bg-primary p-2.5">
+    <span
+      class="flex h-[50px] w-[50px] flex-none items-center justify-center rounded-2xl border text-[23px]"
+      style={`background-color: ${selectedColor.hex}18; border-color: ${selectedColor.hex}55;`}
+      aria-hidden="true"
+    >
+      {icon || '⚡'}
+    </span>
+    <div class="min-w-0">
+      <p class="truncate text-sm font-bold text-foreground" data-editor-identity-name>{previewLabel}</p>
+      <p class="mt-0.5 truncate text-[11px] text-muted">{previewSchedule}</p>
+      <p class="mt-0.5 truncate text-[11px] text-muted">Color · {selectedColor.label}</p>
+    </div>
   </div>
-</FormSection>
+</section>
