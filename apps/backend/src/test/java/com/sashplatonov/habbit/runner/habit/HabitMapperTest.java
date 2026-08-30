@@ -1,7 +1,6 @@
 package com.sashplatonov.habbit.runner.habit;
 
 import com.sashplatonov.habbit.runner.habit.dto.HabitCreateRequestDto;
-import com.sashplatonov.habbit.runner.habit.dto.HabitResponseDto;
 import com.sashplatonov.habbit.runner.habit.dto.HabitScheduleDto;
 import com.sashplatonov.habbit.runner.habit.dto.HabitUpdateRequestDto;
 import com.sashplatonov.habbit.runner.model.HabitColor;
@@ -26,6 +25,40 @@ class HabitMapperTest {
 
   @Test
   void shouldApplyCreateAndMapResponseWithSchedule() {
+    var entity = applyCreateWithSchedule();
+
+    assertEquals("Read", entity.getName());
+    assertEquals(HabitScheduleType.WEEKLY_DAYS, entity.getScheduleType());
+    assertEquals(List.of(1, 3, 5), entity.getScheduleWeekdays());
+    assertEquals(3, entity.getScheduleTimesPerWeek());
+  }
+
+  @Test
+  void shouldMapResponseWithSchedule() {
+    var entity = applyCreateWithSchedule();
+
+    var response = habitMapper.toResponse(entity);
+    assertEquals("habit-1", response.id());
+    assertEquals("Read", response.name());
+    assertEquals("Daily reading", response.description());
+    assertEquals(HabitScheduleType.WEEKLY_DAYS, response.schedule().type());
+    assertEquals(List.of(1, 3, 5), response.schedule().weekdays());
+    assertEquals(List.of("2026-04-10"), response.freezeDays());
+
+    entity.getCustomDays().add(7);
+    entity.getTags().add("health");
+    entity.getFreezeDays().add("2026-04-11");
+    entity.getScheduleWeekdays().add(6);
+    entity.getScheduleWeeksOfMonth().add(WeekOfMonthValue.LAST);
+
+    assertEquals(List.of(1, 3, 5), response.customDays());
+    assertEquals(List.of("focus"), response.tags());
+    assertEquals(List.of("2026-04-10"), response.freezeDays());
+    assertEquals(List.of(1, 3, 5), response.schedule().weekdays());
+    assertEquals(List.of(WeekOfMonthValue.FIRST), response.schedule().weeksOfMonth());
+  }
+
+  private HabitEntity applyCreateWithSchedule() {
     var entity = new HabitEntity();
     var customDays = new ArrayList<>(List.of(1, 3, 5));
     var tags = new ArrayList<>(List.of("focus"));
@@ -71,31 +104,7 @@ class HabitMapperTest {
     entity.setFreezeDays(new ArrayList<>(entity.getFreezeDays()));
     entity.setScheduleWeekdays(new ArrayList<>(entity.getScheduleWeekdays()));
     entity.setScheduleWeeksOfMonth(new ArrayList<>(entity.getScheduleWeeksOfMonth()));
-
-    assertEquals("Read", entity.getName());
-    assertEquals(HabitScheduleType.WEEKLY_DAYS, entity.getScheduleType());
-    assertEquals(List.of(1, 3, 5), entity.getScheduleWeekdays());
-    assertEquals(3, entity.getScheduleTimesPerWeek());
-
-    var response = habitMapper.toResponse(entity);
-    assertEquals("habit-1", response.id());
-    assertEquals("Read", response.name());
-    assertEquals("Daily reading", response.description());
-    assertEquals(HabitScheduleType.WEEKLY_DAYS, response.schedule().type());
-    assertEquals(List.of(1, 3, 5), response.schedule().weekdays());
-    assertEquals(List.of("2026-04-10"), response.freezeDays());
-
-    entity.getCustomDays().add(7);
-    entity.getTags().add("health");
-    entity.getFreezeDays().add("2026-04-11");
-    entity.getScheduleWeekdays().add(6);
-    entity.getScheduleWeeksOfMonth().add(WeekOfMonthValue.LAST);
-
-    assertEquals(List.of(1, 3, 5), response.customDays());
-    assertEquals(List.of("focus"), response.tags());
-    assertEquals(List.of("2026-04-10"), response.freezeDays());
-    assertEquals(List.of(1, 3, 5), response.schedule().weekdays());
-    assertEquals(List.of(WeekOfMonthValue.FIRST), response.schedule().weeksOfMonth());
+    return entity;
   }
 
   @Test
@@ -131,6 +140,31 @@ class HabitMapperTest {
 
   @Test
   void shouldApplyUpdateWithScheduleAndReplaceCollections() {
+    var entity = applyUpdateWithSchedule();
+
+    assertEquals("Read more", entity.getName());
+    assertEquals("Updated reading plan", entity.getDescription());
+    assertEquals(HabitColor.GREEN, entity.getColor());
+    assertEquals("book-open", entity.getIcon());
+    assertEquals(HabitFrequency.WEEKDAYS, entity.getFrequency());
+    assertEquals(List.of(2, 4), entity.getCustomDays());
+    assertEquals(HabitScheduleType.WEEKLY_DAYS, entity.getScheduleType());
+    assertEquals(List.of(1, 3, 5), entity.getScheduleWeekdays());
+    assertEquals(3, entity.getScheduleTimesPerWeek());
+    assertEquals(12, entity.getScheduleTimesPerMonth());
+    assertEquals(List.of(WeekOfMonthValue.FIRST, WeekOfMonthValue.THIRD), entity.getScheduleWeeksOfMonth());
+    assertEquals(9, entity.getTargetStreak());
+    assertEquals(4, entity.getDailyTarget());
+    assertEquals(List.of("focus", "health"), entity.getTags());
+    assertEquals(true, entity.isArchived());
+    assertEquals(BigInteger.valueOf(21), entity.getSortOrder());
+    assertEquals("08:15", entity.getReminderTime());
+    assertEquals(false, entity.isReminderEnabled());
+    assertEquals(HabitType.NEGATIVE, entity.getType());
+    assertEquals(List.of("2026-04-11"), entity.getFreezeDays());
+  }
+
+  private HabitEntity applyUpdateWithSchedule() {
     var entity = new HabitEntity();
     entity.setScheduleType(HabitScheduleType.DAILY);
     entity.setScheduleWeekdays(new ArrayList<>(List.of(1)));
@@ -178,27 +212,7 @@ class HabitMapperTest {
         .build();
 
     habitMapper.applyUpdate(request, entity);
-
-    assertEquals("Read more", entity.getName());
-    assertEquals("Updated reading plan", entity.getDescription());
-    assertEquals(HabitColor.GREEN, entity.getColor());
-    assertEquals("book-open", entity.getIcon());
-    assertEquals(HabitFrequency.WEEKDAYS, entity.getFrequency());
-    assertEquals(List.of(2, 4), entity.getCustomDays());
-    assertEquals(HabitScheduleType.WEEKLY_DAYS, entity.getScheduleType());
-    assertEquals(List.of(1, 3, 5), entity.getScheduleWeekdays());
-    assertEquals(3, entity.getScheduleTimesPerWeek());
-    assertEquals(12, entity.getScheduleTimesPerMonth());
-    assertEquals(List.of(WeekOfMonthValue.FIRST, WeekOfMonthValue.THIRD), entity.getScheduleWeeksOfMonth());
-    assertEquals(9, entity.getTargetStreak());
-    assertEquals(4, entity.getDailyTarget());
-    assertEquals(List.of("focus", "health"), entity.getTags());
-    assertEquals(true, entity.isArchived());
-    assertEquals(BigInteger.valueOf(21), entity.getSortOrder());
-    assertEquals("08:15", entity.getReminderTime());
-    assertEquals(false, entity.isReminderEnabled());
-    assertEquals(HabitType.NEGATIVE, entity.getType());
-    assertEquals(List.of("2026-04-11"), entity.getFreezeDays());
+    return entity;
   }
 
   @Test

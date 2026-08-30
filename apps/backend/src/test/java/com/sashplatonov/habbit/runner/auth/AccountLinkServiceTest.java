@@ -1,10 +1,7 @@
 package com.sashplatonov.habbit.runner.auth.identity;
 
-import com.sashplatonov.habbit.runner.auth.identity.AccountLinkService;
-import com.sashplatonov.habbit.runner.auth.identity.AccountMergeService;
 import com.sashplatonov.habbit.runner.auth.telegram.TelegramInitDataVerifier;
 import com.sashplatonov.habbit.runner.auth.telegram.TelegramWebAppUser;
-import com.sashplatonov.habbit.runner.auth.identity.AuthProvider;
 import com.sashplatonov.habbit.runner.model.AccountLinkChallengeEntity;
 import com.sashplatonov.habbit.runner.model.AuthIdentityEntity;
 import com.sashplatonov.habbit.runner.repository.AccountLinkChallengeRepository;

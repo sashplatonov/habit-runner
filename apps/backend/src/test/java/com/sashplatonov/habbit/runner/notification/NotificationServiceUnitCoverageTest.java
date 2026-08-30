@@ -8,7 +8,6 @@ import com.sashplatonov.habbit.runner.notification.dto.PushSubscriptionKeys;
 import com.sashplatonov.habbit.runner.notification.dto.PushSubscriptionRequest;
 import com.sashplatonov.habbit.runner.notification.dto.SubscriptionStatusResponse;
 import com.sashplatonov.habbit.runner.notification.dto.VapidPublicKeyResponse;
-import com.sashplatonov.habbit.runner.repository.PushSubscriptionRepository;
 import org.junit.jupiter.api.Test;
 
 import java.util.Optional;

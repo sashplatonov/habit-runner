@@ -2,10 +2,6 @@ package com.sashplatonov.habbit.runner.checkin;
 
 import com.sashplatonov.habbit.runner.api.OperationFailure;
 import com.sashplatonov.habbit.runner.api.OperationSuccess;
-import com.sashplatonov.habbit.runner.checkin.CheckinMapper;
-import com.sashplatonov.habbit.runner.checkin.CheckinMutationHandler;
-import com.sashplatonov.habbit.runner.checkin.CheckinQueryHandler;
-import com.sashplatonov.habbit.runner.checkin.CheckinServiceImpl;
 import com.sashplatonov.habbit.runner.checkin.dto.CheckinUpsertRequestDto;
 import com.sashplatonov.habbit.runner.checkin.support.CheckinMutationCoordinator;
 import com.sashplatonov.habbit.runner.model.CheckinEntity;
@@ -189,7 +185,8 @@ class CheckinServiceImplTest {
     var deleteResult = service.delete("user-1", "habit-1", "2026-04-10");
 
     assertEquals(404, assertInstanceOf(OperationFailure.class, deleteResult).toErrorResponse().status());
-    verify(checkinRepository, never()).deleteByHabitIdUserIdAndDate(ArgumentMatchers.anyString(), ArgumentMatchers.anyString(), ArgumentMatchers.any());
+    verify(checkinRepository, never())
+        .deleteByHabitIdUserIdAndDate(ArgumentMatchers.anyString(), ArgumentMatchers.anyString(), ArgumentMatchers.any());
   }
 
   private HabitEntity habit() {

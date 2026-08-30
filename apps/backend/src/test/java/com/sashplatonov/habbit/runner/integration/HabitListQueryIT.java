@@ -12,7 +12,6 @@ import io.quarkus.test.TestTransaction;
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.junit.TestProfile;
 import org.hibernate.Session;
-import org.hibernate.stat.Statistics;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigInteger;

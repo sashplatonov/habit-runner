@@ -40,7 +40,7 @@ Priorities: no `P0` tasks exist — the build and all quality gates currently pa
 
 ## TASK-001: Enable Checkstyle for test sources
 
-**Status:** TODO
+**Status:** DONE
 **Priority:** P2
 **Depends on:** -
 

@@ -364,7 +364,7 @@
                     <configLocation>checkstyle/checkstyle.xml</configLocation>
                     <failsOnError>true</failsOnError>
                     <consoleOutput>true</consoleOutput>
-                    <includeTestSourceDirectory>false</includeTestSourceDirectory>
+                    <includeTestSourceDirectory>true</includeTestSourceDirectory>
                 </configuration>
                 <executions>
                     <execution>

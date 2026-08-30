@@ -1,7 +1,5 @@
 package com.sashplatonov.habbit.runner.auth.identity;
 
-import com.sashplatonov.habbit.runner.auth.identity.AuthProvider;
-import com.sashplatonov.habbit.runner.auth.identity.IdentityService;
 import com.sashplatonov.habbit.runner.model.AuthIdentityEntity;
 import com.sashplatonov.habbit.runner.model.UserEntity;
 import com.sashplatonov.habbit.runner.repository.AuthIdentityRepository;
