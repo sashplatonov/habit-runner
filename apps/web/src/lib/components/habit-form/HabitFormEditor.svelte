@@ -91,7 +91,7 @@
   </div>
 {/if}
 
-<div class="mx-auto max-w-3xl space-y-5 px-4 pb-28 pt-6 sm:px-6 sm:pb-6">
+<div class="mx-auto max-w-3xl space-y-4 px-4 pb-28 pt-4 sm:px-6 sm:pb-6">
   {#if activePanel === 'dashboard'}
     <HabitEditorDashboard
       {habitLabel}
@@ -107,7 +107,7 @@
       onSelect={onSelectPanel}
     />
   {:else}
-    <div class="space-y-5">
+    <div class="space-y-4">
       {#if activePanel === 'habit-type'}
         <HabitTypeSection bind:habitType dailyTarget={Math.max(1, Math.trunc(dailyTarget))} />
       {/if}
