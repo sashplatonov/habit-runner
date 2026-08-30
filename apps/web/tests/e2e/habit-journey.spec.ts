@@ -322,6 +322,7 @@ test.describe.serial('critical habit journey', () => {
     }
     expect(mutations).toEqual([]);
   });
+  test('keeps reminder controls in reference order and reachable', async ({ page }) => { for (const viewport of [{ width: 320, height: 740 }, { width: 390, height: 844 }, { width: 1280, height: 900 }] as const) { await page.setViewportSize(viewport); await page.goto('/app/habit/new'); await page.locator('[data-editor-tile="reminder"]').click(); const summary = page.getByTestId('habit-reminder-summary'); const notice = page.getByTestId('habit-reminder-notice'); await expect(summary).toBeVisible(); await expect(notice).toBeVisible(); expect(await summary.evaluate((element, next) => Boolean(element.compareDocumentPosition(next as Node) & Node.DOCUMENT_POSITION_FOLLOWING), await notice.elementHandle())).toBe(true); await expect(page.getByRole('button', { name: 'Reminders enabled' })).toHaveAttribute('aria-pressed', 'true'); await page.getByRole('button', { name: 'Reminders enabled' }).click(); await expect(page.getByRole('button', { name: 'Reminders disabled' })).toHaveAttribute('aria-pressed', 'false'); await page.getByLabel('Reminder time').fill(''); await expect(summary).toContainText('No reminder time configured'); await notice.scrollIntoViewIfNeeded(); expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true); if (viewport.width < 640) { const [noticeBox, footerBox] = await Promise.all([notice.boundingBox(), page.locator('[class~="fixed"]').last().boundingBox()]); expect(noticeBox).not.toBeNull(); expect(footerBox).not.toBeNull(); expect(noticeBox!.y + noticeBox!.height).toBeLessThanOrEqual(footerBox!.y); } } });
   test('shows safe validation state', async ({ page }) => {
     await page.route(/\/(?:api\/)?habits$/, async (route) => {
       if (route.request().method() === 'POST') {
@@ -351,7 +352,6 @@ test.describe.serial('critical habit journey', () => {
     }
     await expect(rows.first().getByRole('button', { name: /Read for ten minutes, not completed/ })).toBeVisible();
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
-
     await page.setViewportSize({ width: 320, height: 740 });
     await page.getByRole('button', { name: 'Grid view' }).click();
     const tiles = page.locator('article[aria-label*="completed"], article[aria-label*="not completed"]');
@@ -360,8 +360,7 @@ test.describe.serial('critical habit journey', () => {
       const heatmap = tile.getByRole('img', { name: /last 30 days/ });
       await expect(heatmap).toBeVisible();
       await expectOneRowHeatmap(tile);
-      const tileBox = await tile.boundingBox();
-      const heatmapBox = await heatmap.boundingBox();
+      const tileBox = await tile.boundingBox(); const heatmapBox = await heatmap.boundingBox();
       expect(tileBox).not.toBeNull();
       expect(heatmapBox).not.toBeNull();
       expect(heatmapBox!.x).toBeGreaterThanOrEqual(tileBox!.x);

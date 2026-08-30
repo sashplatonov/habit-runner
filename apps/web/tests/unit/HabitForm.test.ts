@@ -406,16 +406,14 @@ describe('HabitForm', () => {
     render(HabitForm, { props: { mode: 'edit', habit: createHabit({ id: 'habit-7', reminderTime: '08:30', reminderEnabled: true }), allHabits: [createHabit({ id: 'habit-7' })], onBack: vi.fn(), onSubmit } });
 
     await user.click(screen.getByRole('button', { name: 'Edit Reminder' }));
-    const panel = screen.getByTestId('habit-reminder-panel');
-    expect(within(panel).getByText('Daily at 08:30')).toBeTruthy();
+    const panel = screen.getByTestId('habit-reminder-panel'); expect(within(panel).getByText('Daily at 08:30')).toBeTruthy();
     expect(within(panel).getByText('Reminder currently enabled')).toBeTruthy();
     expect(within(panel).getByText(/Enable notifications in app or system settings/)).toBeTruthy();
-
+    const summary = within(panel).getByTestId('habit-reminder-summary'); const notice = within(panel).getByTestId('habit-reminder-notice'); expect(summary.compareDocumentPosition(notice) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy(); expect(within(summary).getByRole('button', { name: 'Reminders enabled' }).getAttribute('aria-pressed')).toBe('true');
     // Toggle off: state summary flips truthfully.
     await user.click(screen.getByRole('button', { name: 'Reminders enabled' }));
-    expect(within(panel).getByText('Reminder currently disabled')).toBeTruthy();
-    expect(within(panel).getByText(/Notifications are disabled/)).toBeTruthy();
-
+    expect(within(panel).getByText('Reminder currently disabled')).toBeTruthy(); expect(within(panel).getByText(/Notifications are disabled/)).toBeTruthy();
+    expect(within(summary).getByRole('button', { name: 'Reminders disabled' }).getAttribute('aria-pressed')).toBe('false');
     // Clear the time: null submission per the existing contract.
     const timeInput = screen.getByLabelText('Reminder time') as HTMLInputElement;
     await user.clear(timeInput);

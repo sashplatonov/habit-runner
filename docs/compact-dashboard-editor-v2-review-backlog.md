@@ -330,7 +330,7 @@ git commit -m "fix(habits): match editor header context"
 
 ## CDE-RVW-006: Restore Reminder reference grouping with an accessible enabled state
 
-**Status:** TODO
+**Status:** DONE
 **Priority:** P2
 **Depends on:** CDE-RVW-005
 

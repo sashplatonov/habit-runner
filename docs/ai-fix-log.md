@@ -17,3 +17,9 @@
 - Change: Replaced the generic focused-panel subtitle with reference-specific context for Identity, Behavior, Schedule, Goal, Reminder, and Tags while preserving schedule-detail labels.
 - Risk: Header copy and test coverage changed; panel navigation, draft state, and save behavior remain unchanged.
 - Rollback: Revert the CDE-RVW-005 commit.
+
+## CDE-RVW-006
+
+- Change: Restored Reminder reference grouping by placing the enabled-state control inside the time summary before the notification notice.
+- Risk: Reminder presentation and control layout changed; bindings, clear-to-null behavior, truthful delivery copy, and save payload remain unchanged.
+- Rollback: Revert the CDE-RVW-006 commit.

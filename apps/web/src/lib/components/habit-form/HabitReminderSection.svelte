@@ -52,22 +52,24 @@
   </div>
 
   <div class="mt-3 space-y-2">
-    <button
-      type="button"
-      class={`min-h-11 w-full rounded-lg border px-3 py-2 text-[10px] font-mono uppercase tracking-wider transition ${reminderEnabled ? 'border-accent/40 bg-accent/10 text-accent' : 'border-border bg-bg-secondary text-muted hover:border-border-hover'}`}
-      aria-pressed={reminderEnabled}
-      data-editor-reminder-toggle
-      onclick={() => {
-        reminderEnabled = !reminderEnabled;
-      }}
-    >
-      {reminderEnabled ? 'Reminders enabled' : 'Reminders disabled'}
-    </button>
-    <p class="rounded-lg border border-border bg-bg-secondary px-3 py-2 text-[11px] leading-4 text-muted" data-editor-reminder-summary>
-      <span class="block font-semibold text-foreground">{timeSummary}</span>
-      <span class="mt-0.5 block">{stateSummary}</span>
-    </p>
-    <p class="rounded-lg border border-border bg-bg-secondary px-3 py-2 text-[11px] leading-4 text-muted" data-editor-reminder-notice>
+    <div class="flex items-center gap-2 rounded-lg border border-border bg-bg-secondary px-3 py-2 text-[11px] leading-4 text-muted" data-editor-reminder-summary data-testid="habit-reminder-summary">
+      <div class="min-w-0 flex-1">
+        <span class="block font-semibold text-foreground">{timeSummary}</span>
+        <span class="mt-0.5 block">{stateSummary}</span>
+      </div>
+      <button
+        type="button"
+        class={`min-h-11 shrink-0 rounded-lg border px-2 text-[10px] font-mono uppercase tracking-wider transition ${reminderEnabled ? 'border-accent/40 bg-accent/10 text-accent' : 'border-border bg-bg-primary text-muted hover:border-border-hover'}`}
+        aria-pressed={reminderEnabled}
+        data-editor-reminder-toggle
+        onclick={() => {
+          reminderEnabled = !reminderEnabled;
+        }}
+      >
+        {reminderEnabled ? 'Reminders enabled' : 'Reminders disabled'}
+      </button>
+    </div>
+    <p class="rounded-lg border border-border bg-bg-secondary px-3 py-2 text-[11px] leading-4 text-muted" data-editor-reminder-notice data-testid="habit-reminder-notice">
       {notice}
     </p>
   </div>
