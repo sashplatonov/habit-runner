@@ -745,7 +745,7 @@ git commit -m "docs(api): pin auth error status contract"
 
 ## TASK-012: Document backend maintainability rules
 
-**Status:** TODO
+**Status:** DONE
 **Priority:** P2
 **Depends on:** TASK-001, TASK-002, TASK-003, TASK-004, TASK-005, TASK-006, TASK-007, TASK-008, TASK-009, TASK-010
 

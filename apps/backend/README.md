@@ -9,6 +9,7 @@
 - [Build and test](#build-and-test)
 - [Environment contract](#environment-contract)
 - [Key endpoints](#key-endpoints)
+- [Maintainability rules](#maintainability-rules)
 
 ---
 
@@ -151,6 +152,23 @@ Production datasource tuning is also explicit in `apps/backend/src/main/resource
 - `quarkus.datasource.jdbc.background-validation-interval=1M`
 
 Adjust these values only after observing real concurrency and connection wait behavior under production-like load.
+
+[↑ Back to top](#top)
+
+---
+
+## 🧱 Maintainability rules <a name="maintainability-rules"></a>
+
+These structural conventions are enforced by the quality gates (Checkstyle, PMD, SpotBugs, JaCoCo) and by review. Each rule is phrased as an observable convention with its rationale.
+
+- **Single-constructor DI.** Production beans expose exactly one `@Inject` constructor whose parameters are required, non-nullable collaborators. The only allowed extra constructor is a package-private test seam that injects a *transport* (for example `HttpClient`) with real values — never `null`.
+- **No null-seam test constructors.** Runtime `if (collaborator != null)` guards and null-defaulting constructor overloads exist only to let tests pass `null`; they are removed. Tests construct real collaborators (`SimpleMeterRegistry`-backed metrics) or Mockito mocks instead.
+- **Constructor injection only.** No field-level `@Inject`; all collaborators are passed through the constructor.
+- **No middle-man re-delegation.** A class that only re-delegates work a caller could do directly against an existing collaborator is dissolved, not redesigned.
+- **Repository-only persistence.** Services call repositories; repositories call the database. No production code path may bypass the repository layer (for example via static Panache active-record calls).
+- **Domain-owned error factories.** Each domain owns its `ErrorResponse` payloads in a dedicated factory (for example `HabitResponses`, `CheckinResponses`); literals are not duplicated across classes.
+- **No nested Java types.** Every new type is a top-level file in the most specific package (see root `AGENTS.md`).
+- **No lint suppressions.** Do not add `@SuppressWarnings`, PMD/SpotBugs/Checkstyle exclusions, or `failOnError=false` switches as a workaround; fix the root cause.
 
 [↑ Back to top](#top)
 
