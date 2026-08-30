@@ -16,17 +16,15 @@
   import { goto } from '$app/navigation';
   import { resolve } from '$app/paths';
   import {
-    Flame, Plus, Search, Zap, TrendingUp, GripVertical,
-    ChevronDown, ChevronUp, MoreHorizontal, X,
-    Shield, Activity, Star, Trophy, SnowflakeIcon, Moon,
-    LayoutGrid, List, SlidersHorizontal, AlignLeft
+    Zap, GripVertical,
+    Shield, Activity, Star, Trophy, SnowflakeIcon, Moon
   } from 'lucide-svelte';
+  import DashboardToolbar from '$lib/components/dashboard/DashboardToolbar.svelte';
   import CompletionRing from '$lib/components/CompletionRing.svelte';
   import MiniHeatmap from '$lib/components/MiniHeatmap.svelte';
   import HabitTile from '$lib/components/HabitTile.svelte';
   import Onboarding from '$lib/components/Onboarding.svelte';
   import RemindersPanel from '$lib/components/RemindersPanel.svelte';
-  import ChartGuideTooltip from '$lib/components/ChartGuideTooltip.svelte';
   import DescriptionTooltip from '$lib/components/DescriptionTooltip.svelte';
   import type { OnboardingTemplate } from '$lib/components/onboarding';
   import { readDashboardStateFromURL, updateDashboardURL } from '$lib/dashboard/urlState';
@@ -38,8 +36,9 @@
     isMandatoryToday
   } from '$lib/habits/schedule';
   import { buildCelebrationParticles, getCelebrationLabel, type CelebrationParticle } from '$lib/habits/completionCelebration';
-  import { formatDate, getDaysSinceLastCompletion } from '$lib/habits/habitStats';
-  import { habitsStore } from '$lib/stores/habits';
+  import { formatDate } from '$lib/habits/habitStats';
+  import { getAppRuntime } from '$lib/app/runtime';
+  import type { HabitsStore } from '$lib/stores/habits';
   import { getCurrentUserTimeZone } from '$lib/time/userTimezone';
   import { buildScheduledCompletionSummary } from '$lib/dashboard/scheduledCompletionSummary';
   import ScheduledCompletionSummary from '$lib/components/dashboard/ScheduledCompletionSummary.svelte';
@@ -59,7 +58,6 @@
   // ─── LocalStorage helpers ─────────────────────────────────────────────────────
   const LS_FILTER    = 'hr_dashboard_filter_v1';
   const LS_DENSITY   = 'hr_dashboard_density_v1';
-  const LS_COLLAPSED = 'hr_dashboard_hero_collapsed_v1';
   const LS_SORT      = 'hr_dashboard_sort_mode_v1';
   const LS_TAGS      = 'hr_dashboard_tags_v1';
 
@@ -77,6 +75,9 @@
   }
 
   // ─── State ────────────────────────────────────────────────────────────────────
+  const runtime = getAppRuntime();
+  const habitsStore = runtime.habitsStore as unknown as HabitsStore;
+
   let addingTemplate   = $state<string | null>(null);
   // Initialize from URL first, then localStorage as fallback
   const urlState = readDashboardStateFromURL();
@@ -84,18 +85,7 @@
   let searchQuery      = $state(urlState.search ?? '');
   let sortMode         = $state<SortMode>((urlState.sort as SortMode) ?? lsGet<SortMode>(LS_SORT, 'custom'));
   let viewDensity      = $state<ViewDensity>((urlState.density as ViewDensity) ?? lsGet<ViewDensity>(LS_DENSITY, 'comfortable'));
-  let heroCollapsed    = $state<boolean>(urlState.collapsed === 'true' ? true : urlState.collapsed === 'false' ? false : lsGet<boolean>(LS_COLLAPSED, false));
   let selectedTags     = $state<string[]>(urlState.tags ? urlState.tags.split(',').map(t => t.trim()).filter(Boolean) : lsGet<string[]>(LS_TAGS, []));
-  let menuOpen         = $state(false);
-  let menuElement      = $state<HTMLDivElement | null>(null);
-
-  function handleMenuWindowClick(event: MouseEvent) {
-    if (!menuOpen) return;
-    const target = event.target;
-    if (menuElement && target instanceof Node && !menuElement.contains(target)) {
-      menuOpen = false;
-    }
-  }
 
   let animatingHabitId = $state<string | null>(null);
   let animParticles    = $state<CelebrationParticle[]>([]);
@@ -123,7 +113,6 @@
   $effect(() => { lsSet(LS_FILTER, filter); });
   $effect(() => { lsSet(LS_SORT, sortMode); });
   $effect(() => { lsSet(LS_DENSITY, viewDensity); });
-  $effect(() => { lsSet(LS_COLLAPSED, heroCollapsed); });
   $effect(() => { lsSet(LS_TAGS, selectedTags); });
 
   // ─── Sync to URL ────────────────────────────────────────────────────
@@ -133,8 +122,7 @@
       search: searchQuery || undefined,
       tags: selectedTags.length > 0 ? selectedTags.join(',') : undefined,
       sort: sortMode === 'custom' ? undefined : sortMode,
-      density: viewDensity === 'comfortable' ? undefined : viewDensity,
-      collapsed: heroCollapsed ? 'true' : undefined
+      density: viewDensity === 'comfortable' ? undefined : viewDensity
     });
   });
 
@@ -157,46 +145,13 @@
 
   const scheduledToday = $derived(activeHabits.filter((h) => isMandatoryToday(h, todayDate)));
 
-  const completedTodayCount = $derived(
-    scheduledToday.filter((h) => isHabitCompletedToday(h, todayKey)).length
-  );
-
   const pendingCount = $derived(
     scheduledToday.filter((h) => !isHabitCompletedToday(h, todayKey)).length
-  );
-
-  const todayRate = $derived(
-    scheduledToday.length > 0
-      ? Math.round((completedTodayCount / scheduledToday.length) * 100)
-      : 0
   );
 
   const scheduledCompletionSummary = $derived(
     buildScheduledCompletionSummary(activeHabits, new Date(), timeZone)
   );
-
-  const overallStreak = $derived.by(() => {
-    if (activeHabits.length === 0) { return 0; }
-    return Math.max(...activeHabits.map((h) => calculateScheduledStreak(h, h.completions).current));
-  });
-
-  // ─── More derived ────────────────────────────────────────────────────────────
-  const daysSinceLast       = $derived(getDaysSinceLastCompletion(activeHabits));
-  const showComebackBanner  = $derived(daysSinceLast >= 2 && todayRate < 100);
-
-  const motivationText = $derived.by(() => {
-    const remaining = scheduledToday.length - completedTodayCount;
-    if (todayRate >= 100) {
-      return null;
-    }
-    if (todayRate >= 50) {
-      return `Almost there - ${remaining} left!`;
-    }
-    if (todayRate > 0) {
-      return `Keep going - ${remaining} to go`;
-    }
-    return 'Start your streak';
-  });
 
   const allTags = $derived.by(() => {
     const seen: string[] = [];
@@ -294,28 +249,6 @@
       touchDragGhost.remove();
       touchDragGhost = null;
     }
-  }
-
-  function exportCSV() {
-    menuOpen = false;
-    if (typeof document === 'undefined' || activeHabits.length === 0) { return; }
-    const escape = (v: string) => `"${v.replace(/"/g, '""')}"`;
-    const rows: string[] = [];
-    activeHabits.forEach((habit) => {
-      Object.entries(habit.completions).forEach(([date, count]) => {
-        if (count > 0) { rows.push([date, escape(habit.name), '1'].join(',')); }
-      });
-    });
-    const csv = ['Date,Habit Name,Completed', ...rows].join('\n');
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `habits-export-${new Date().toISOString().split('T')[0]}.csv`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
   }
 
   // ─── Increment with animation + confetti ──────────────────────────────────────
@@ -678,8 +611,6 @@
   }
 </script>
 
-<svelte:window on:mousedown={handleMenuWindowClick} on:pointerdown={handleMenuWindowClick} />
-
 <svelte:head>
   <title>Dashboard - Habbit Runner</title>
 </svelte:head>
@@ -689,307 +620,47 @@
 {:else}
   <div class="min-h-screen bg-transparent">
 
-    <!-- ═══════════ HERO ═══════════════════════════════════════════════════════ -->
-    <section class="bg-transparent px-4 pt-4 sm:px-6">
-      <div class="mx-auto max-w-6xl rounded-[2rem] border border-border bg-bg-secondary/88 shadow-[0_26px_70px_rgba(15,23,42,0.1)] backdrop-blur-xl">
-      <div class="px-4 py-3 sm:px-6" style="padding-top: calc(var(--safe-area-inset-top, 0px) + 1rem);">
-        <div class="mx-auto flex max-w-none items-center justify-between">
-          <div class="min-w-0 flex-1">
-            <div class="mb-1 flex items-center gap-2">
-              <p class="text-[11px] font-mono uppercase tracking-widest text-muted">{dateStr}</p>
-              <ChartGuideTooltip
-                title="Your dashboard"
-                summary="A bird's eye view of today's progress. The ring shows how many scheduled habits you've completed so far."
-                focusPoints={[
-                  "Completion ring: percentage of today's mandatory habits done.",
-                  'Streak: your longest active habit streak.',
-                  'Progress bar below shows daily momentum.'
-                ]}
-                variant="bars"
-                triggerClassName="h-7 w-7"
-              />
-            </div>
-
-            <div class="flex items-center gap-3">
-              <CompletionRing percentage={todayRate} size={28} strokeWidth={3.5} />
-              <div class="text-[12px] font-semibold text-foreground">{completedTodayCount}/{scheduledToday.length || 0}</div>
-              {#if overallStreak > 0}
-                <div class="flex items-center gap-1 text-[12px] font-mono text-accent-secondary">
-                  <Flame size={14} />
-                  <span>{overallStreak}d</span>
-                </div>
-              {/if}
-            </div>
-          </div>
-
-          <div class="flex items-center gap-2">
-            <div class="relative" bind:this={menuElement}>
-              <button
-                type="button"
-                onclick={() => { menuOpen = !menuOpen; }}
-                class="flex h-9 w-9 items-center justify-center rounded-xl border border-border bg-bg-secondary transition hover:border-accent"
-                aria-label="Dashboard options"
-                aria-expanded={menuOpen}
-              >
-                <MoreHorizontal size={18} />
-              </button>
-              {#if menuOpen}
-                <div
-                  class="absolute right-0 top-full z-[9999] mt-2 min-w-[220px] rounded-2xl border border-border bg-bg-card shadow-xl overflow-hidden"
-                >
-                  <div class="px-3 pt-3 pb-1">
-                    <div class="text-xs font-mono uppercase tracking-widest text-muted">Menu</div>
-                  </div>
-                  <div class="h-px bg-border"></div>
-                  <button
-                    type="button"
-                    onclick={exportCSV}
-                    class="w-full px-3 py-2.5 text-left text-xs font-semibold uppercase tracking-widest text-foreground transition hover:bg-bg-secondary"
-                  >
-                    Export CSV
-                  </button>
-                </div>
-              {/if}
-            </div>
-
-            <button
-              type="button"
-              onclick={() => { heroCollapsed = !heroCollapsed; }}
-              class="flex h-9 w-9 items-center justify-center rounded-xl border border-border bg-bg-secondary transition hover:border-accent"
-              aria-label={heroCollapsed ? 'Expand hero' : 'Collapse hero'}
-              aria-expanded={!heroCollapsed}
-            >
-              {#if heroCollapsed}<ChevronDown size={16} />{:else}<ChevronUp size={16} />{/if}
-            </button>
-          </div>
-        </div>
-      </div>
-
-        <div class="overflow-hidden transition-all duration-300" style:max-height={heroCollapsed ? '0px' : '1200px'} aria-hidden={heroCollapsed}>
-        <div class="px-4 pb-5 sm:px-6">
-          <div class="mx-auto max-w-none">
-            <div class="mb-4 flex flex-col gap-4 sm:flex-row sm:items-center sm:gap-5">
-              <div class="mx-auto sm:mx-0">
-                <CompletionRing percentage={todayRate} size={88} strokeWidth={7} />
-              </div>
-              <div class="flex flex-1 flex-col gap-2">
-                {#if motivationText}
-                  <p class={`text-xs font-mono tracking-wide ${todayRate >= 50 ? 'text-accent-secondary' : 'text-muted'}`}>
-                    {motivationText}
-                  </p>
-                {/if}
-
-                <div class="grid grid-cols-3 gap-2">
-                  <div class="rounded-xl border border-border bg-bg-card px-3 py-2">
-                    <div class="mb-1 flex items-center gap-1.5">
-                      <Zap size={10} class="text-accent" />
-                      <span class="text-[10px] font-mono uppercase tracking-wider text-muted">Active</span>
-                    </div>
-                    <span class="text-lg font-mono font-bold text-foreground">{activeHabits.length}</span>
-                  </div>
-                  <div class="rounded-xl border border-border bg-bg-card px-3 py-2">
-                    <div class="mb-1 flex items-center gap-1.5">
-                      <Flame size={10} class="text-accent-secondary" />
-                      <span class="text-[10px] font-mono uppercase tracking-wider text-muted">Streak</span>
-                    </div>
-                    <span class="text-lg font-mono font-bold text-accent-secondary">{overallStreak}d</span>
-                  </div>
-                  <div class="rounded-xl border border-border bg-bg-card px-3 py-2">
-                    <div class="mb-1 flex items-center gap-1.5">
-                      <TrendingUp size={10} class="text-accent-secondary" />
-                      <span class="text-[10px] font-mono uppercase tracking-wider text-muted">Done</span>
-                    </div>
-                    <span class="text-lg font-mono font-bold text-accent-secondary">{completedTodayCount}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div class="mb-3 h-[3px] overflow-hidden rounded-full bg-border">
-              <div
-                class={`h-full rounded-full transition-all duration-700 ${todayRate >= 100 ? 'animate-progress-glow' : ''}`}
-                style:width={`${Math.min(todayRate, 100)}%`}
-                style:background={todayRate >= 100
-                  ? 'linear-gradient(90deg, var(--accent-secondary), var(--accent))'
-                  : 'linear-gradient(90deg, var(--accent), var(--accent-secondary))'}
-                style:box-shadow="0 0 8px var(--glow)"
-              ></div>
-            </div>
-
-            {#if showComebackBanner}
-              <div class="animate-comeback-slide mb-3 flex items-center gap-3 rounded-xl border border-accent/30 bg-accent/5 px-4 py-2.5">
-                <span class="text-lg" role="img" aria-label="welcome back">👋</span>
-                <div>
-                  <p class="text-sm font-semibold text-foreground">Welcome back!</p>
-                  <p class="text-[11px] font-mono text-muted">You've been away for {daysSinceLast} days. Let's start fresh today!</p>
-                </div>
-              </div>
-            {/if}
-
-            {#if todayRate >= 100}
-              <div class="animate-slide-down-fade mb-3 flex items-center gap-3 rounded-xl border border-accent-secondary/30 bg-accent-secondary/5 px-4 py-2.5">
-                <span class="text-lg" role="img" aria-label="celebration">🎉</span>
-                <div>
-                  <p class="text-sm font-semibold text-foreground">Perfect day!</p>
-                  <p class="text-[11px] font-mono text-muted">All habits completed. Keep the streak alive!</p>
-                </div>
-              </div>
-            {/if}
-          </div>
-        </div>
-      </div>
-      </div>
-    </section>
-
     <ScheduledCompletionSummary
       summary={scheduledCompletionSummary}
       dateLabel={dateStr}
     />
 
     <!-- ═══════════ CONTROLS BAR (sticky) ════════════════════════════════════ -->
-    <div class="sticky top-0 z-[70] bg-transparent px-4 pb-3 pt-2 sm:px-6">
-      <div class="mx-auto max-w-6xl rounded-[1.75rem] border border-border bg-bg-secondary/88 px-4 shadow-[0_22px_56px_rgba(15,23,42,0.1)] backdrop-blur-xl sm:px-6">
-
-        <div class="flex items-center gap-2 pt-3">
-          <span class="text-[10px] font-mono uppercase tracking-wider text-muted">Dashboard filters</span>
-          <ChartGuideTooltip
-            title="Dashboard filters"
-            summary="Use this control bar to narrow the dashboard to the habits that need attention, then switch sort and layout to review them faster."
-            focusPoints={[
-              'Tabs: split today into pending, done, all, and archived views.',
-              'Search and tags: isolate one habit or one context quickly.',
-              'Sort and density: change scan order and switch between list and card views.'
-            ]}
-            variant="columns"
-            triggerClassName="h-7 w-7"
-          />
-        </div>
-
-        <!-- Filter tabs -->
-        <div class="flex items-center gap-2 pt-2">
-          <div class="flex flex-1 overflow-x-auto pb-1">
-            {#each (['pending', 'all', 'done', 'archived'] as const) as f ('tab-' + f)}
-              <button
-                type="button"
-                onclick={() => { filter = f; }}
-                class="relative flex min-h-11 flex-shrink-0 items-center px-3 py-2.5 text-[11px] font-mono uppercase tracking-wider transition-colors border-b-[2px] whitespace-nowrap
-                  {filter === f ? 'border-accent text-accent font-bold' : 'border-transparent text-muted hover:text-foreground'}"
-              >
-                {f}
-                {#if f === 'pending' && pendingCount > 0}
-                  <span class="ml-1 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-accent/15 px-1 text-[9px] font-bold text-accent">
-                    {pendingCount}
-                  </span>
-                {/if}
-              </button>
-            {/each}
-          </div>
-          <button
-            type="button"
-            class="ml-auto flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-[1rem] bg-accent text-bg-primary transition hover:opacity-90"
-            aria-label="Add habit"
-            onclick={navigateToNewHabit}
-          >
-            <Plus size={16} />
-          </button>
-        </div>
-
-        <!-- Search + sort + density -->
-        <div class="flex flex-col gap-2 py-3 sm:flex-row sm:items-center">
-          <div class="relative flex-1">
-            <Search size={13} class="absolute left-3 top-1/2 -translate-y-1/2 text-muted pointer-events-none" />
-            <input
-              type="search"
-              placeholder="Search habits..."
-              bind:value={searchQuery}
-              class="w-full rounded-xl border border-border bg-bg-secondary py-2.5 pl-8 pr-8 text-sm text-foreground placeholder:text-muted focus:border-accent focus:outline-none"
-            />
-            {#if searchQuery}
-              <button
-                type="button"
-                onclick={() => { searchQuery = ''; }}
-                class="absolute right-2.5 top-1/2 -translate-y-1/2 flex h-5 w-5 items-center justify-center rounded-full text-muted hover:text-foreground transition"
-                aria-label="Clear search"
-              ><X size={11} /></button>
-            {/if}
-          </div>
-          <!-- Sort toggle -->
-          <div class="flex items-center justify-between gap-2 sm:flex-shrink-0">
-            <div class="flex min-w-0 items-center gap-1">
-              <div class="flex overflow-hidden rounded-xl border border-border bg-bg-secondary text-[11px] font-mono">
-                <button
-                  type="button"
-                  onclick={() => { sortMode = 'custom'; }}
-                  class="flex min-h-10 items-center gap-1 px-3 py-2 transition {sortMode === 'custom' ? 'bg-accent/15 text-accent' : 'text-muted hover:text-foreground'}"
-                  title="Custom order — drag to reorder"
-                >
-                  <AlignLeft size={11} />
-                  <span class="hidden sm:inline">Custom</span>
-                </button>
-                <button
-                  type="button"
-                  onclick={() => { sortMode = 'smart'; }}
-                  class="flex min-h-10 items-center gap-1 px-3 py-2 transition {sortMode === 'smart' ? 'bg-accent/15 text-accent' : 'text-muted hover:text-foreground'}"
-                  title="Smart sort — prioritises habits needing attention (behavioral science: Lally, Dai, Baumeister)"
-                >
-                  <SlidersHorizontal size={11} />
-                  <span class="hidden sm:inline">Smart</span>
-                </button>
-              </div>
-              <ChartGuideTooltip
-                title="Smart Sort"
-                summary="Habits are ranked by how much attention they need right now, based on behavioural science research. The most fragile habits always appear first."
-                focusPoints={[
-                  'Young habits (<21 days): maximally fragile - Lally et al., 2010.',
-                  'Low 30-day completion rate signals a habit losing traction.',
-                  'Recent miss (1-3 days ago) is the highest abandonment risk signal.',
-                  'Evening reminders rank higher due to ego depletion - Baumeister.',
-                  "Negative habits (DON'T do X) are inherently harder than positive ones."
-                ]}
-                variant="columns"
-                triggerClassName="h-10 w-10"
-              />
-            </div>
-
-            <div class="flex flex-shrink-0 overflow-hidden rounded-xl border border-border bg-bg-secondary">
-              <button
-                type="button"
-                onclick={() => { viewDensity = 'compact'; }}
-                class="flex h-10 w-10 items-center justify-center transition {viewDensity === 'compact' ? 'bg-accent/15 text-accent' : 'text-muted hover:text-foreground'}"
-                aria-label="List view"
-              ><List size={13} /></button>
-              <button
-                type="button"
-                onclick={() => { viewDensity = 'comfortable'; }}
-                class="flex h-10 w-10 items-center justify-center transition {viewDensity === 'comfortable' ? 'bg-accent/15 text-accent' : 'text-muted hover:text-foreground'}"
-                aria-label="Grid view"
-              ><LayoutGrid size={13} /></button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Tag filter chips -->
-        {#if allTags.length > 0}
-          <div class="flex items-center gap-1.5 pb-2 overflow-x-auto">
-            {#each allTags as tag ('tag-' + tag)}
-              <button
-                type="button"
-                onclick={() => toggleTag(tag)}
-                class="flex-shrink-0 rounded-full px-3 py-1.5 text-[10px] font-mono transition
-                  {selectedTags.includes(tag) ? 'bg-accent/15 text-accent border border-accent/40' : 'border border-border text-muted hover:text-foreground hover:border-border-hover'}"
-              >#{tag}</button>
-            {/each}
-            {#if selectedTags.length > 0}
-              <button
-                type="button"
-                onclick={() => { selectedTags = []; }}
-                class="flex-shrink-0 flex items-center gap-1 rounded-full border border-border px-3 py-1.5 text-[10px] font-mono text-muted hover:text-foreground transition"
-              ><X size={9} />Clear</button>
-            {/if}
-          </div>
-        {/if}
-
-      </div>
+    <div class="sticky top-0 z-[70]">
+      <DashboardToolbar
+        {filter}
+        {searchQuery}
+        {sortMode}
+        {viewDensity}
+        {pendingCount}
+        activeTags={selectedTags}
+        availableTags={allTags}
+        onFilterChange={(nextFilter) => {
+          filter = nextFilter;
+        }}
+        onSearchChange={(nextQuery) => {
+          searchQuery = nextQuery;
+        }}
+        onClearSearch={() => {
+          searchQuery = '';
+        }}
+        onSortChange={(nextSortMode) => {
+          sortMode = nextSortMode;
+        }}
+        onDensityChange={(nextDensity) => {
+          viewDensity = nextDensity;
+        }}
+        onToggleTag={(tag) => {
+          toggleTag(tag);
+        }}
+        onClearTags={() => {
+          selectedTags = [];
+        }}
+        onAddHabit={navigateToNewHabit}
+        onExportCsv={() => {
+          /* Export CSV lives in the full-screen stats view now. */
+        }}
+      />
     </div>
 
     <!-- Reminders panel -->
