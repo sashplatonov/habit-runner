@@ -7,12 +7,19 @@ import jakarta.ws.rs.core.Request;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.UriInfo;
 import java.util.regex.Pattern;
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
 
+@Slf4j
 final class ExceptionResponseSupport {
   private static final Pattern HTTP_STATUS_MESSAGE = Pattern.compile("^HTTP\\s+(\\d{3})\\b");
+  private static final String ERR_BASE = "https://habbit-runner.dev/errors/";
 
   private ExceptionResponseSupport() {
+  }
+
+  static RequestContext context(Request request, UriInfo uriInfo, HttpHeaders headers) {
+    return new RequestContext(request, uriInfo, headers);
   }
 
   static Response response(ErrorResponse error) {
@@ -20,6 +27,33 @@ final class ExceptionResponseSupport {
         .type(MediaType.APPLICATION_JSON)
         .entity(error)
         .build();
+  }
+
+  static ErrorResponse error(ErrorSpec spec) {
+    return new ErrorResponse(ERR_BASE + spec.typePath(), spec.title(), spec.status(), spec.detail(), spec.code());
+  }
+
+  static Response rejected(RequestContext ctx, boolean warn, ErrorResponse error) {
+    if (warn) {
+      log.warn(
+          "event=request_rejected method={} path={} clientIp={} traceId={} status={} detail={}",
+          requestMethod(ctx.request()), requestPath(ctx.uriInfo()), clientIp(ctx.headers()), traceId(),
+          error.status(), error.detail());
+    } else {
+      log.debug(
+          "event=request_rejected method={} path={} clientIp={} traceId={} status={} detail={}",
+          requestMethod(ctx.request()), requestPath(ctx.uriInfo()), clientIp(ctx.headers()), traceId(),
+          error.status(), error.detail());
+    }
+    return response(error);
+  }
+
+  static Response failed(RequestContext ctx, ErrorResponse error, Throwable cause) {
+    log.error(
+        "event=request_failed method={} path={} clientIp={} traceId={} status={} detail={}",
+        requestMethod(ctx.request()), requestPath(ctx.uriInfo()), clientIp(ctx.headers()), traceId(),
+        error.status(), error.detail(), cause);
+    return response(error);
   }
 
   static String messageOrDefault(Exception exception, String fallback) {

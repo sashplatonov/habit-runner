@@ -2,8 +2,6 @@ package com.sashplatonov.habbit.runner.habit;
 
 import com.sashplatonov.habbit.runner.api.ErrorResponse;
 import com.sashplatonov.habbit.runner.api.AuthenticatedResourceSupport;
-import com.sashplatonov.habbit.runner.api.OperationFailure;
-import com.sashplatonov.habbit.runner.api.OperationSuccess;
 import com.sashplatonov.habbit.runner.auth.security.CurrentUserContext;
 import com.sashplatonov.habbit.runner.auth.security.RequireAuth;
 import com.sashplatonov.habbit.runner.habit.dto.HabitCreateRequestDto;
@@ -109,11 +107,6 @@ public class HabitResource extends AuthenticatedResourceSupport {
           content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
   })
   public Response delete(@PathParam("habitId") String habitId) {
-    var result = habitService.delete(currentUserId(), habitId);
-    if (result instanceof OperationSuccess<Void>) {
-      return Response.noContent().build();
-    }
-    var failure = (OperationFailure<Void>) result;
-    return Response.status(failure.toErrorResponse().status()).entity(failure.toErrorResponse()).build();
+    return toResponse(habitService.delete(currentUserId(), habitId));
   }
 }

@@ -610,7 +610,7 @@ git commit -m "refactor(auth): move session assembly and csrf policy out of reso
 
 ## TASK-010: Deduplicate API-layer response and exception assembly
 
-**Status:** TODO
+**Status:** BLOCKED
 **Priority:** P2
 **Depends on:** -
 
@@ -672,6 +672,15 @@ cd apps/backend && ./mvnw verify
 git add apps/backend/src/main/java/com/sashplatonov/habbit/runner/api apps/backend/src/main/java/com/sashplatonov/habbit/runner/habit/HabitResource.java
 git commit -m "refactor(api): deduplicate error and result response assembly"
 ```
+
+### CHECKPOINT (blocked by pre-existing PMD gate)
+
+- **completed:** `GlobalExceptionMapper` deduplicated via `ExceptionResponseSupport.error/rejected/failed`; `AuthenticatedResourceSupport.toResponse` rewritten as a switch over the sealed `OperationResult` with a `204 No Content` void-success overload; `HabitResource.delete` now reuses the shared helper (no manual `instanceof` casts). New top-level records `RequestContext` and `ErrorSpec` added (no nested types).
+- **remaining:** none within TASK-010 scope — the code change is complete and all 209 tests pass; coverage checks met.
+- **changed files:** `api/GlobalExceptionMapper.java`, `api/ExceptionResponseSupport.java`, `api/AuthenticatedResourceSupport.java`, `api/RequestContext.java` (new), `api/ErrorSpec.java` (new), `habit/HabitResource.java`.
+- **current verification status:** `./mvnw test` → 209 run, 0 failures. `./mvnw verify` fails ONLY on pre-existing `AuthService` PMD violations (`CouplingBetweenObjects` 17, `ExcessiveParameterList` 10) that fail identically at HEAD before this task. No new PMD/Checkstyle/SpotBugs/JaCoCo violations introduced.
+- **confirmed blockers:** `AuthService` PMD `CouplingBetweenObjects` (17 > 10) and `ExcessiveParameterList` (10 > 5) — pre-existing, outside TASK-010 scope. Fixing them is TASK-005/006/007 territory (already DONE) or a separate follow-up; not part of this task.
+- **next exact action:** resolve the pre-existing `AuthService` PMD violations (or get maintainer approval to treat them as a separate backlog item), then re-run `./mvnw verify` and mark TASK-010 DONE.
 
 ---
 

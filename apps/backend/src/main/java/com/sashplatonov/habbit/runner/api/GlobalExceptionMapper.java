@@ -15,13 +15,9 @@ import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.UriInfo;
 import jakarta.ws.rs.ext.ExceptionMapper;
 import jakarta.ws.rs.ext.Provider;
-import lombok.extern.slf4j.Slf4j;
 
 @Provider
-@Slf4j
 public class GlobalExceptionMapper implements ExceptionMapper<Exception> {
-  private static final String ERR_BASE = "https://habbit-runner.dev/errors/";
-
   @Context
   UriInfo uriInfo;
 
@@ -47,178 +43,75 @@ public class GlobalExceptionMapper implements ExceptionMapper<Exception> {
   }
 
   private Response validationResponse(ValidationException exception) {
-    var error = new ErrorResponse(
-        ERR_BASE + "validation",
-        "Validation Error",
+    var ctx = ExceptionResponseSupport.context(request, uriInfo, headers);
+    var error = ExceptionResponseSupport.error(new ErrorSpec("validation", "Validation Error",
         Response.Status.BAD_REQUEST.getStatusCode(),
         ExceptionResponseSupport.messageOrDefault(exception, "Validation failed"),
-        "VALIDATION_FAILED"
-    );
-    log.debug(
-        "event=request_rejected method={} path={} clientIp={} traceId={} status={} detail={}",
-        ExceptionResponseSupport.requestMethod(request),
-        ExceptionResponseSupport.requestPath(uriInfo),
-        ExceptionResponseSupport.clientIp(headers),
-        ExceptionResponseSupport.traceId(),
-        error.status(),
-        error.detail()
-    );
-    return ExceptionResponseSupport.response(error);
+        "VALIDATION_FAILED"));
+    return ExceptionResponseSupport.rejected(ctx, false, error);
   }
 
   private Response conflictResponse(String detail, String code) {
-    var error = new ErrorResponse(
-        ERR_BASE + "conflict",
-        "Conflict",
-        Response.Status.CONFLICT.getStatusCode(),
-        detail,
-        code
-    );
-    log.debug(
-        "event=request_rejected method={} path={} clientIp={} traceId={} status={} detail={}",
-        ExceptionResponseSupport.requestMethod(request),
-        ExceptionResponseSupport.requestPath(uriInfo),
-        ExceptionResponseSupport.clientIp(headers),
-        ExceptionResponseSupport.traceId(),
-        error.status(),
-        error.detail()
-    );
-    return ExceptionResponseSupport.response(error);
+    var ctx = ExceptionResponseSupport.context(request, uriInfo, headers);
+    var error = ExceptionResponseSupport.error(new ErrorSpec("conflict", "Conflict",
+        Response.Status.CONFLICT.getStatusCode(), detail, code));
+    return ExceptionResponseSupport.rejected(ctx, false, error);
   }
 
   private Response notAuthorizedResponse(NotAuthorizedException exception) {
-    var error = new ErrorResponse(
-        ERR_BASE + "forbidden",
-        "Forbidden",
+    var ctx = ExceptionResponseSupport.context(request, uriInfo, headers);
+    var error = ExceptionResponseSupport.error(new ErrorSpec("forbidden", "Forbidden",
         Response.Status.FORBIDDEN.getStatusCode(),
         ExceptionResponseSupport.messageOrDefault(exception, "Authentication required"),
-        "AUTH_REQUIRED"
-    );
-    log.debug(
-        "event=request_rejected method={} path={} clientIp={} traceId={} status={} detail={}",
-        ExceptionResponseSupport.requestMethod(request),
-        ExceptionResponseSupport.requestPath(uriInfo),
-        ExceptionResponseSupport.clientIp(headers),
-        ExceptionResponseSupport.traceId(),
-        error.status(),
-        error.detail()
-    );
-    return ExceptionResponseSupport.response(error);
+        "AUTH_REQUIRED"));
+    return ExceptionResponseSupport.rejected(ctx, false, error);
   }
 
   private Response forbiddenResponse(ForbiddenException exception) {
-    var error = new ErrorResponse(
-        ERR_BASE + "forbidden",
-        "Forbidden",
+    var ctx = ExceptionResponseSupport.context(request, uriInfo, headers);
+    var error = ExceptionResponseSupport.error(new ErrorSpec("forbidden", "Forbidden",
         Response.Status.FORBIDDEN.getStatusCode(),
         ExceptionResponseSupport.messageOrDefault(exception, "Request forbidden"),
-        "REQUEST_REJECTED"
-    );
-    log.warn(
-        "event=request_rejected method={} path={} clientIp={} traceId={} status={} detail={}",
-        ExceptionResponseSupport.requestMethod(request),
-        ExceptionResponseSupport.requestPath(uriInfo),
-        ExceptionResponseSupport.clientIp(headers),
-        ExceptionResponseSupport.traceId(),
-        error.status(),
-        error.detail()
-    );
-    return ExceptionResponseSupport.response(error);
+        "REQUEST_REJECTED"));
+    return ExceptionResponseSupport.rejected(ctx, true, error);
   }
 
   private Response notFoundResponse(NotFoundException exception) {
-    var error = new ErrorResponse(
-        ERR_BASE + "not-found",
-        "Not Found",
+    var ctx = ExceptionResponseSupport.context(request, uriInfo, headers);
+    var error = ExceptionResponseSupport.error(new ErrorSpec("not-found", "Not Found",
         Response.Status.NOT_FOUND.getStatusCode(),
         ExceptionResponseSupport.messageOrDefault(exception, "Resource not found"),
-        "RESOURCE_NOT_FOUND"
-    );
-    log.debug(
-        "event=request_rejected method={} path={} clientIp={} traceId={} status={} detail={}",
-        ExceptionResponseSupport.requestMethod(request),
-        ExceptionResponseSupport.requestPath(uriInfo),
-        ExceptionResponseSupport.clientIp(headers),
-        ExceptionResponseSupport.traceId(),
-        error.status(),
-        error.detail()
-    );
-    return ExceptionResponseSupport.response(error);
+        "RESOURCE_NOT_FOUND"));
+    return ExceptionResponseSupport.rejected(ctx, false, error);
   }
 
   private Response badRequestResponse(BadRequestException exception) {
-    var error = new ErrorResponse(
-        ERR_BASE + "bad-request",
-        "Bad Request",
+    var ctx = ExceptionResponseSupport.context(request, uriInfo, headers);
+    var error = ExceptionResponseSupport.error(new ErrorSpec("bad-request", "Bad Request",
         Response.Status.BAD_REQUEST.getStatusCode(),
         ExceptionResponseSupport.messageOrDefault(exception, "Bad request"),
-        "BAD_REQUEST"
-    );
-    log.debug(
-        "event=request_rejected method={} path={} clientIp={} traceId={} status={} detail={}",
-        ExceptionResponseSupport.requestMethod(request),
-        ExceptionResponseSupport.requestPath(uriInfo),
-        ExceptionResponseSupport.clientIp(headers),
-        ExceptionResponseSupport.traceId(),
-        error.status(),
-        error.detail()
-    );
-    return ExceptionResponseSupport.response(error);
+        "BAD_REQUEST"));
+    return ExceptionResponseSupport.rejected(ctx, false, error);
   }
 
   private Response webApplicationResponse(WebApplicationException exception) {
+    var ctx = ExceptionResponseSupport.context(request, uriInfo, headers);
     var status = ExceptionResponseSupport.normalizedStatus(exception);
     var title = ExceptionResponseSupport.title(status);
-    var error = new ErrorResponse(
-        ERR_BASE + "request-failed",
-        title,
-        status.getStatusCode(),
-        ExceptionResponseSupport.messageOrDefault(exception, title),
-        status.getStatusCode() >= 500 ? "REQUEST_FAILED" : "REQUEST_REJECTED"
-    );
+    var code = status.getStatusCode() >= 500 ? "REQUEST_FAILED" : "REQUEST_REJECTED";
+    var error = ExceptionResponseSupport.error(new ErrorSpec("request-failed", title, status.getStatusCode(),
+        ExceptionResponseSupport.messageOrDefault(exception, title), code));
     if (ExceptionResponseSupport.isServerFailure(status)) {
-      log.error(
-          "event=request_failed method={} path={} clientIp={} traceId={} status={} detail={}",
-          ExceptionResponseSupport.requestMethod(request),
-          ExceptionResponseSupport.requestPath(uriInfo),
-          ExceptionResponseSupport.clientIp(headers),
-          ExceptionResponseSupport.traceId(),
-          error.status(),
-          error.detail(),
-          exception
-      );
-    } else {
-      log.debug(
-          "event=request_rejected method={} path={} clientIp={} traceId={} status={} detail={}",
-          ExceptionResponseSupport.requestMethod(request),
-          ExceptionResponseSupport.requestPath(uriInfo),
-          ExceptionResponseSupport.clientIp(headers),
-          ExceptionResponseSupport.traceId(),
-          error.status(),
-          error.detail()
-      );
+      return ExceptionResponseSupport.failed(ctx, error, exception);
     }
-    return ExceptionResponseSupport.response(error);
+    return ExceptionResponseSupport.rejected(ctx, false, error);
   }
 
   private Response internalServerErrorResponse(Exception exception) {
-    var error = new ErrorResponse(
-        ERR_BASE + "internal-server-error",
-        "Internal Server Error",
-        Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(),
-        "Internal server error",
-        "INTERNAL_SERVER_ERROR"
-    );
-    log.error(
-        "event=request_failed method={} path={} clientIp={} traceId={} status={} detail={}",
-        ExceptionResponseSupport.requestMethod(request),
-        ExceptionResponseSupport.requestPath(uriInfo),
-        ExceptionResponseSupport.clientIp(headers),
-        ExceptionResponseSupport.traceId(),
-        error.status(),
-        error.detail(),
-        exception
-    );
-    return ExceptionResponseSupport.response(error);
+    var ctx = ExceptionResponseSupport.context(request, uriInfo, headers);
+    var error = ExceptionResponseSupport.error(new ErrorSpec("internal-server-error", "Internal Server Error",
+        Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), "Internal server error",
+        "INTERNAL_SERVER_ERROR"));
+    return ExceptionResponseSupport.failed(ctx, error, exception);
   }
 }
