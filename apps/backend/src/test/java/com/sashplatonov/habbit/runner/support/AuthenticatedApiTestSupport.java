@@ -2,6 +2,7 @@ package com.sashplatonov.habbit.runner.support;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
+import com.sashplatonov.habbit.runner.auth.config.AuthConfig;
 import com.sashplatonov.habbit.runner.model.UserEntity;
 import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
@@ -20,14 +21,14 @@ import java.util.UUID;
 
 public abstract class AuthenticatedApiTestSupport {
 
-  protected static final String TEST_SECRET = "test-secret-for-unit-tests-1234567890";
-  protected static final String TEST_ISSUER = "habittracker-test";
-
   @Inject
   protected UserTransaction ut;
 
   @Inject
   protected EntityManager entityManager;
+
+  @Inject
+  protected AuthConfig authConfig;
 
   @AfterEach
   void cleanDatabase() throws Exception {
@@ -71,10 +72,10 @@ public abstract class AuthenticatedApiTestSupport {
     return JWT.create()
         .withSubject(userId)
         .withClaim("email", email)
-        .withIssuer(TEST_ISSUER)
+        .withIssuer(authConfig.issuer())
         .withIssuedAt(Date.from(now))
         .withExpiresAt(Date.from(now.plus(3600, ChronoUnit.SECONDS)))
-        .sign(Algorithm.HMAC256(TEST_SECRET));
+        .sign(Algorithm.HMAC256(authConfig.secret()));
   }
 
   protected void inTransaction(TransactionalRunnable runnable) throws Exception {
