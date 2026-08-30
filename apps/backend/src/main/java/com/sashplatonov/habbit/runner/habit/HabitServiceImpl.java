@@ -83,9 +83,7 @@ public class HabitServiceImpl implements HabitService {
       habitMapper.applyUpdate(request, habit);
       HabitMutationSupport.normalize(habit);
       HabitMutationSupport.touch(habit);
-      if (serviceMetricsInstrumentation != null) {
-        serviceMetricsInstrumentation.record(ServiceMetric.HABIT_UPDATED);
-      }
+      serviceMetricsInstrumentation.record(ServiceMetric.HABIT_UPDATED);
       return OperationResult.success(habitMapper.toResponse(habit));
     });
   }
@@ -123,9 +121,7 @@ public class HabitServiceImpl implements HabitService {
       if (deleted == 0) {
         return HabitResponses.notFound();
       }
-      if (serviceMetricsInstrumentation != null) {
-        serviceMetricsInstrumentation.record(ServiceMetric.HABIT_DELETED);
-      }
+      serviceMetricsInstrumentation.record(ServiceMetric.HABIT_DELETED);
       return OperationResult.success(null);
     });
   }

@@ -3,9 +3,13 @@ package com.sashplatonov.habbit.runner.checkin;
 import com.sashplatonov.habbit.runner.api.OperationResult;
 import com.sashplatonov.habbit.runner.checkin.dto.CheckinResponseDto;
 import com.sashplatonov.habbit.runner.checkin.dto.CheckinUpsertRequestDto;
-import com.sashplatonov.habbit.runner.checkin.support.CheckinMutationCoordinator;
+import com.sashplatonov.habbit.runner.checkin.support.CheckinDateSupport;
+import com.sashplatonov.habbit.runner.checkin.support.CheckinMutationSupport;
 import com.sashplatonov.habbit.runner.checkin.support.CheckinResponses;
+import com.sashplatonov.habbit.runner.habit.support.HabitMutationSupport;
 import com.sashplatonov.habbit.runner.habit.support.HabitResponses;
+import com.sashplatonov.habbit.runner.metrics.instrumentation.ServiceMetric;
+import com.sashplatonov.habbit.runner.metrics.instrumentation.ServiceMetricsInstrumentation;
 import com.sashplatonov.habbit.runner.model.CheckinEntity;
 import com.sashplatonov.habbit.runner.model.HabitEntity;
 import com.sashplatonov.habbit.runner.repository.CheckinRepository;
@@ -15,26 +19,25 @@ import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 
 import java.time.LocalDate;
-import java.time.format.DateTimeParseException;
 
 @ApplicationScoped
 public class CheckinMutationHandler {
   private final CheckinRepository checkinRepository;
   private final HabitRepository habitRepository;
   private final CheckinMapper checkinMapper;
-  private final CheckinMutationCoordinator checkinMutationCoordinator;
+  private final ServiceMetricsInstrumentation serviceMetricsInstrumentation;
 
   @Inject
   CheckinMutationHandler(
       CheckinRepository checkinRepository,
       HabitRepository habitRepository,
       CheckinMapper checkinMapper,
-      CheckinMutationCoordinator checkinMutationCoordinator
+      ServiceMetricsInstrumentation serviceMetricsInstrumentation
   ) {
     this.checkinRepository = checkinRepository;
     this.habitRepository = habitRepository;
     this.checkinMapper = checkinMapper;
-    this.checkinMutationCoordinator = checkinMutationCoordinator;
+    this.serviceMetricsInstrumentation = serviceMetricsInstrumentation;
   }
 
   @Transactional
@@ -44,12 +47,12 @@ public class CheckinMutationHandler {
       String date,
       CheckinUpsertRequestDto request
   ) {
-    return checkinMutationCoordinator.measureMutation(() -> upsertInternal(userId, habitId, date, request));
+    return serviceMetricsInstrumentation.measureMutation(() -> upsertInternal(userId, habitId, date, request));
   }
 
   @Transactional
   public OperationResult<Void> delete(String userId, String habitId, String date) {
-    return checkinMutationCoordinator.measureMutation(() -> deleteInternal(userId, habitId, date));
+    return serviceMetricsInstrumentation.measureMutation(() -> deleteInternal(userId, habitId, date));
   }
 
   private OperationResult<CheckinResponseDto> upsertInternal(
@@ -62,7 +65,7 @@ public class CheckinMutationHandler {
     if (habit == null) {
       return HabitResponses.notFound();
     }
-    var parsedDate = parseDate(date);
+    var parsedDate = CheckinDateSupport.parseDate(date);
     if (parsedDate == null) {
       return CheckinResponses.invalidDate();
     }
@@ -87,28 +90,11 @@ public class CheckinMutationHandler {
       checkin.setUserId(habit.getUserId());
       checkin.setDate(date);
     }
-    return saveDoneCheckin(checkin, request, habit, existing == null);
+    return saveCheckin(checkin, request, habit, existing == null);
   }
 
   private boolean hasVersionConflict(CheckinEntity existing, CheckinUpsertRequestDto request) {
     return existing != null && request.version() != null && request.version() != existing.getVersion();
-  }
-
-  private LocalDate parseDate(String value) {
-    try {
-      return LocalDate.parse(value);
-    } catch (DateTimeParseException exception) {
-      return null;
-    }
-  }
-
-  private OperationResult<CheckinResponseDto> saveDoneCheckin(
-      CheckinEntity checkin,
-      CheckinUpsertRequestDto request,
-      HabitEntity habit,
-      boolean newCheckin
-  ) {
-    return saveCheckin(checkin, request, habit, newCheckin);
   }
 
   private OperationResult<CheckinResponseDto> deleteCheckin(
@@ -121,8 +107,8 @@ public class CheckinMutationHandler {
     if (deleted == 0) {
       return CheckinResponses.notFound("Checkin not found", "CHECKIN_NOT_FOUND");
     }
-    checkinMutationCoordinator.recordCheckinDeleted();
-    checkinMutationCoordinator.touch(habit);
+    serviceMetricsInstrumentation.record(ServiceMetric.CHECKIN_DELETED);
+    HabitMutationSupport.touch(habit);
     return OperationResult.success(null);
   }
 
@@ -134,14 +120,14 @@ public class CheckinMutationHandler {
   ) {
     checkin.setDone(true);
     checkin.setCount(Math.max(1, request.count() != null ? request.count() : 1));
-    checkinMutationCoordinator.normalize(checkin);
+    CheckinMutationSupport.normalize(checkin);
     if (newCheckin) {
       checkinRepository.save(checkin);
     } else {
-      checkinMutationCoordinator.touch(checkin);
+      CheckinMutationSupport.touch(checkin);
     }
-    checkinMutationCoordinator.touch(habit);
-    checkinMutationCoordinator.recordCheckinUpserted();
+    HabitMutationSupport.touch(habit);
+    serviceMetricsInstrumentation.record(ServiceMetric.CHECKIN_UPSERTED);
     return OperationResult.success(checkinMapper.toResponse(checkin));
   }
 
@@ -150,7 +136,7 @@ public class CheckinMutationHandler {
     if (habit == null) {
       return HabitResponses.notFound();
     }
-    var parsedDate = parseDate(date);
+    var parsedDate = CheckinDateSupport.parseDate(date);
     if (parsedDate == null) {
       return CheckinResponses.invalidDateVoid();
     }
@@ -158,8 +144,8 @@ public class CheckinMutationHandler {
     if (deleted == 0) {
       return CheckinResponses.notFound("Checkin not found", "CHECKIN_NOT_FOUND");
     }
-    checkinMutationCoordinator.touch(habit);
-    checkinMutationCoordinator.recordCheckinDeleted();
+    HabitMutationSupport.touch(habit);
+    serviceMetricsInstrumentation.record(ServiceMetric.CHECKIN_DELETED);
     return OperationResult.success(null);
   }
 }

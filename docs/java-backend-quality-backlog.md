@@ -223,7 +223,7 @@ git commit -m "refactor(habit): centralize habit error payloads in HabitResponse
 
 ## TASK-004: Remove metrics null-seams and the CheckinMutationCoordinator middle-man
 
-**Status:** TODO
+**Status:** DONE
 **Priority:** P1
 **Depends on:** TASK-003
 

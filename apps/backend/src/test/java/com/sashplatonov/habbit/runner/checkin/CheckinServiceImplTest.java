@@ -3,7 +3,7 @@ package com.sashplatonov.habbit.runner.checkin;
 import com.sashplatonov.habbit.runner.api.OperationFailure;
 import com.sashplatonov.habbit.runner.api.OperationSuccess;
 import com.sashplatonov.habbit.runner.checkin.dto.CheckinUpsertRequestDto;
-import com.sashplatonov.habbit.runner.checkin.support.CheckinMutationCoordinator;
+import com.sashplatonov.habbit.runner.metrics.instrumentation.ServiceMetricsInstrumentation;
 import com.sashplatonov.habbit.runner.model.CheckinEntity;
 import com.sashplatonov.habbit.runner.model.HabitColor;
 import com.sashplatonov.habbit.runner.model.HabitEntity;
@@ -11,6 +11,7 @@ import com.sashplatonov.habbit.runner.model.HabitFrequency;
 import com.sashplatonov.habbit.runner.model.HabitType;
 import com.sashplatonov.habbit.runner.repository.CheckinRepository;
 import com.sashplatonov.habbit.runner.repository.HabitRepository;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mapstruct.factory.Mappers;
 import org.mockito.ArgumentMatchers;
@@ -19,10 +20,12 @@ import java.math.BigInteger;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.function.Supplier;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -33,15 +36,21 @@ class CheckinServiceImplTest {
   private final CheckinRepository checkinRepository = mock(CheckinRepository.class);
   private final HabitRepository habitRepository = mock(HabitRepository.class);
   private final CheckinMapper checkinMapper = Mappers.getMapper(CheckinMapper.class);
-  private final CheckinMutationCoordinator coordinator = new CheckinMutationCoordinator();
+  private final ServiceMetricsInstrumentation metrics = mock(ServiceMetricsInstrumentation.class);
   private final CheckinQueryHandler queryHandler = new CheckinQueryHandler(checkinRepository, checkinMapper);
   private final CheckinMutationHandler mutationHandler = new CheckinMutationHandler(
       checkinRepository,
       habitRepository,
       checkinMapper,
-      coordinator
+      metrics
   );
   private final CheckinServiceImpl service = new CheckinServiceImpl(queryHandler, mutationHandler);
+
+  @BeforeEach
+  void stubMetricsToRunAction() {
+    when(metrics.measureMutation(any(Supplier.class)))
+        .thenAnswer(invocation -> ((Supplier<?>) invocation.getArgument(0)).get());
+  }
 
   @Test
   void shouldUpsertCheckinAndDeleteWhenMarkedFalse() {
