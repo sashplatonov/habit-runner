@@ -44,28 +44,28 @@
 </script>
 
 <section
-  class="rounded-[1.5rem] border border-border bg-bg-card/92 p-4 shadow-[0_20px_54px_rgba(15,23,42,0.08)] sm:p-5"
+  class="rounded-surface border border-border bg-bg-card shadow-surface p-3.5 sm:p-4"
   aria-labelledby="habit-identity-title"
   data-editor-identity
 >
   <div class="mb-1 flex items-start justify-between gap-3">
     <div class="min-w-0">
       <h2 id="habit-identity-title" class="text-[10px] font-mono uppercase tracking-[0.18em] text-muted">Identity</h2>
-      <p class="mt-1 text-[13px] leading-5 text-muted">Name, description, icon and color.</p>
+      <p class="mt-0.5 text-[13px] leading-5 text-muted">Name, description, icon and color.</p>
     </div>
-    <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-accent/10 text-accent">
-      <UserRound size={18} strokeWidth={1.8} aria-hidden="true" />
+    <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-[11px] bg-accent/10 text-accent">
+      <UserRound size={17} strokeWidth={1.8} aria-hidden="true" />
     </span>
   </div>
 
-  <div class="mt-4 space-y-4">
+  <div class="mt-3 space-y-3">
     <div>
-      <p class="mb-2 text-[10px] uppercase tracking-[0.12em] text-muted">Preset emoji</p>
-      <div class="grid grid-cols-5 gap-2" data-editor-emoji-grid>
+      <p class="mb-1.5 text-[10px] uppercase tracking-[0.12em] text-muted">Preset emoji</p>
+      <div class="grid grid-cols-5 gap-1.5" data-editor-emoji-grid>
         {#each ICONS as option, iconIndex (`${option}-${iconIndex}`)}
           <button
             type="button"
-            class={`flex h-11 w-full items-center justify-center rounded-xl border text-[19px] transition-[background-color,border-color,box-shadow] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${icon === option ? 'border-accent bg-accent/10' : 'border-border bg-bg-primary hover:border-border-hover'}`}
+            class={`flex h-10 w-full items-center justify-center rounded-[11px] border text-[18px] transition-[background-color,border-color,box-shadow] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${icon === option ? 'border-accent bg-accent/10' : 'border-border bg-bg-primary hover:border-border-hover'}`}
             style={icon === option ? `outline: 2px solid ${selectedColor.hex}; outline-offset: -2px;` : ''}
             aria-label={`Use ${option} as habit icon`}
             aria-pressed={icon === option}
@@ -80,10 +80,10 @@
     </div>
 
     <div>
-      <p class="mb-2 text-[10px] uppercase tracking-[0.12em] text-muted">Custom emoji</p>
-      <div class="grid grid-cols-[54px,1fr] items-center gap-2.5">
+      <p class="mb-1.5 text-[10px] uppercase tracking-[0.12em] text-muted">Custom emoji</p>
+      <div class="grid grid-cols-[54px_1fr] items-center gap-2.5">
         <span
-          class="flex h-[52px] items-center justify-center rounded-xl border text-[24px]"
+          class="flex h-[46px] items-center justify-center rounded-[11px] border text-[22px]"
           style={`background-color: ${selectedColor.hex}18; border-color: ${selectedColor.hex}66;`}
           aria-hidden="true"
         >
@@ -98,17 +98,17 @@
             maxlength="8"
             value={ICONS.includes(icon) ? '' : icon}
             placeholder="Own icon…"
-            class="w-full rounded-xl border border-border bg-bg-primary px-3 py-2.5 text-center text-sm text-foreground placeholder:text-[10px] focus:border-accent/50"
+            class="w-full rounded-lg border border-border bg-bg-primary px-3 py-2 text-center text-sm text-foreground placeholder:text-[10px] focus:border-accent/50"
             style={!ICONS.includes(icon) && icon ? `border-color: ${selectedColor.hex};` : ''}
             oninput={handleCustomIconInput}
           />
-          <p class="mt-1.5 text-[11px] text-muted">Custom emoji overrides a preset.</p>
+          <p class="mt-1 text-[11px] text-muted">Custom emoji overrides a preset.</p>
         </div>
       </div>
     </div>
 
     <div>
-      <label class="mb-2 block text-[10px] uppercase tracking-[0.12em] text-muted" for="habit-name">Name *</label>
+      <label class="mb-1.5 block text-[10px] uppercase tracking-[0.12em] text-muted" for="habit-name">Name *</label>
       <input
         id="habit-name"
         type="text"
@@ -117,7 +117,7 @@
         bind:value={name}
         maxlength="40"
         placeholder="e.g. Deep Work…"
-        class="w-full rounded-xl border border-border bg-bg-primary px-3 py-2.5 text-sm font-medium text-foreground placeholder-border-hover transition-[border-color,box-shadow] focus:border-accent/50 focus:shadow-[0_0_12px_var(--glow)]"
+        class="w-full rounded-lg border border-border bg-bg-primary px-3 py-2 text-sm font-medium text-foreground placeholder-border-hover transition-[border-color,box-shadow] focus:border-accent/50 focus:shadow-[0_0_12px_var(--glow)]"
         style={errors.name ? 'border-color: var(--accent-secondary);' : ''}
         aria-invalid={Boolean(errors.name)}
       />
@@ -132,11 +132,11 @@
         autocomplete="off"
         bind:value={description}
         maxlength={MAX_HABIT_DESCRIPTION_LENGTH}
-        rows="4"
+        rows="3"
         aria-describedby={errors.description ? 'habit-description-count habit-description-error' : 'habit-description-count'}
         aria-invalid={Boolean(errors.description)}
         placeholder="Brief description. Markdown supported."
-        class="w-full resize-none overflow-y-auto rounded-xl border border-border bg-bg-primary px-3 py-2.5 text-sm text-foreground placeholder-border-hover transition-[border-color,box-shadow] focus:border-accent/50 focus:shadow-[0_0_12px_var(--glow)]"
+        class="w-full resize-none overflow-y-auto rounded-lg border border-border bg-bg-primary px-3 py-2 text-sm text-foreground placeholder-border-hover transition-[border-color,box-shadow] focus:border-accent/50 focus:shadow-[0_0_12px_var(--glow)]"
         style={errors.description ? 'border-color: var(--accent-secondary);' : ''}
       ></textarea>
       <p id="habit-description-count" class="mt-1 flex justify-between gap-3 text-[11px] leading-5 text-muted">
@@ -147,8 +147,8 @@
     </div>
 
     <div>
-      <p class="mb-2 text-[10px] uppercase tracking-[0.12em] text-muted">Base color</p>
-      <div class="flex flex-wrap gap-2" data-editor-color-list>
+      <p class="mb-1.5 text-[10px] uppercase tracking-[0.12em] text-muted">Base color</p>
+      <div class="flex flex-wrap gap-1.5" data-editor-color-list>
         {#each COLORS as option, colorIndex (`${option.value}-${colorIndex}`)}
           <button
             type="button"

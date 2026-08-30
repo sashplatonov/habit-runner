@@ -222,24 +222,24 @@
 
 {#if openSlot === null}
   <div
-    class="rounded-[1.75rem] border border-border bg-bg-card/92 p-5 shadow-[0_20px_54px_rgba(15,23,42,0.08)]"
+    class="rounded-surface border border-border bg-bg-card shadow-surface p-3.5 sm:p-4"
     data-editor-schedule
   >
   <div class="mb-2 flex items-start justify-between gap-3">
     <div>
       <p class="block text-[10px] font-mono uppercase tracking-wider text-muted">Schedule</p>
-      <p class="mt-1 text-[13px] leading-5 text-muted">Choose when scheduled opportunities are created.</p>
+      <p class="mt-0.5 text-[13px] leading-5 text-muted">Choose when scheduled opportunities are created.</p>
     </div>
-    <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-indigo-50 text-indigo-500">
-      <CalendarDays size={18} strokeWidth={1.8} aria-hidden="true" />
+    <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-[11px] bg-indigo-50 text-indigo-500">
+      <CalendarDays size={17} strokeWidth={1.8} aria-hidden="true" />
     </span>
   </div>
-    <div class="mt-2 grid gap-2" role="group" aria-label="Schedule type">
+    <div class="mt-2 grid gap-1.5" role="group" aria-label="Schedule type">
     {#each SCHEDULE_TYPE_OPTIONS as option (`${option.value}`)}
       {@const ChoiceIcon = CHOICE_ICONS[option.value]}
       <button
         type="button"
-        class={`flex min-h-[64px] w-full items-center gap-3 rounded-2xl border px-3.5 py-2.5 text-left transition-[background-color,border-color] ${schedule.type === option.value ? 'border-accent bg-accent/10' : 'border-border bg-bg-primary hover:border-border-hover'}`}
+        class={`flex min-h-[56px] w-full items-center gap-3 rounded-2xl border px-3.5 py-2 text-left transition-[background-color,border-color] ${schedule.type === option.value ? 'border-accent bg-accent/10' : 'border-border bg-bg-primary hover:border-border-hover'}`}
         aria-pressed={schedule.type === option.value}
         data-editor-schedule-option={option.value}
         onclick={() => {
@@ -260,14 +260,14 @@
     </div>
   </div>
 {:else}
-  <div class="rounded-[1.75rem] border border-border bg-bg-card/92 p-5 shadow-[0_20px_54px_rgba(15,23,42,0.08)]" data-editor-schedule-detail>
-    <div class="mb-3 flex items-start justify-between gap-3">
+  <div class="rounded-surface border border-border bg-bg-card shadow-surface p-3.5 sm:p-4" data-editor-schedule-detail>
+    <div class="mb-2 flex items-start justify-between gap-3">
       <div>
         <p class="block text-[10px] font-mono uppercase tracking-wider text-muted">{typeLabel(schedule.type)}</p>
-        <p class="mt-1 text-[13px] leading-5 text-muted">{effectSummary(schedule.type)}</p>
+        <p class="mt-0.5 text-[13px] leading-5 text-muted">{effectSummary(schedule.type)}</p>
       </div>
-      <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-indigo-50 text-indigo-500">
-        <CalendarDays size={18} strokeWidth={1.8} aria-hidden="true" />
+      <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-[11px] bg-indigo-50 text-indigo-500">
+        <CalendarDays size={17} strokeWidth={1.8} aria-hidden="true" />
       </span>
     </div>
 
@@ -565,11 +565,11 @@
 
 {#if openSlot === null}
   <div
-  class="rounded-[1.75rem] border border-border bg-bg-card/92 p-5 shadow-[0_20px_54px_rgba(15,23,42,0.08)]"
+  class="rounded-surface border border-border bg-bg-card shadow-surface p-3.5 sm:p-4"
   data-editor-schedule-effect
 >
   <p class="block text-[10px] font-mono uppercase tracking-wider text-muted">Effect</p>
-  <div class="mt-2 rounded-2xl border border-border bg-bg-primary p-3">
+  <div class="mt-2 rounded-2xl border border-border bg-bg-primary p-2.5">
     <p class="text-[13px] font-bold text-foreground" data-editor-schedule-effect-title>
       {typeLabel(schedule.type)}
     </p>
@@ -577,7 +577,7 @@
       {effectSummary(schedule.type)}
     </p>
   </div>
-  <p class="mt-2.5 rounded-xl border border-border bg-bg-secondary px-3 py-2.5 text-[11px] leading-4 text-muted">
+  <p class="mt-2 rounded-xl border border-border bg-bg-secondary px-3 py-2 text-[11px] leading-4 text-muted">
     Changing the schedule affects future opportunities only. Existing history stays unchanged.
   </p>
   </div>
