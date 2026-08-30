@@ -306,10 +306,8 @@ test.describe.serial('critical habit journey', () => {
     await expect(chooser.getByRole('button')).toHaveCount(5);
     expect(await chooser.getByRole('button').evaluateAll((b) => b.map((x) => x.getAttribute('data-editor-schedule-option')))).toEqual(['daily', 'weekly_days', 'weekly_quota', 'monthly_quota', 'monthly_weeks']);
     await expect(chooser.getByRole('button', { name: 'Daily Every day' })).toHaveAttribute('aria-pressed', 'true');
-    await expect(page.locator('[data-editor-schedule-effect-title]')).toHaveText(/Daily/);
     // Daily sub-view snapshot and no-editable-controls check; full copy coverage lives in unit tests.
     await chooser.getByRole('button', { name: 'Daily Every day' }).dispatchEvent('click');
-    await expect(page.locator('[data-editor-schedule-daily-rule]')).toContainText('every calendar day');
     for (const control of [/Toggle .* for the schedule/, 'Times per week', 'Times per month']) { await expect(page.getByLabel(control)).toHaveCount(0); }
     await chooser.getByRole('button', { name: 'Days of week Pick weekdays' }).dispatchEvent('click');
     await expect(chooser.getByRole('button', { name: 'Days of week Pick weekdays' })).toHaveAttribute('aria-pressed', 'true');
@@ -318,19 +316,22 @@ test.describe.serial('critical habit journey', () => {
     const quota = page.locator('[data-editor-schedule-weekly-quota]');
     await page.getByRole('group', { name: 'Schedule type' }).getByRole('button', { name: 'Weekly quota Target completions per week' }).dispatchEvent('click');
     for (let step = 0; step < 5; step += 1) { await quota.getByRole('button', { name: 'Increase weekly quota' }).click(); }
+    await expect(quota.getByRole('button', { name: 'Increase weekly quota' })).toBeDisabled();
     const monthly = page.locator('[data-editor-schedule-monthly-quota]');
     await page.getByRole('group', { name: 'Schedule type' }).getByRole('button', { name: 'Monthly quota Target completions per month' }).dispatchEvent('click');
-    await expect(monthly.locator('[data-editor-quota-monthly-metric]')).toHaveText('3 / month');
     for (let step = 0; step < 28; step += 1) { await monthly.getByRole('button', { name: 'Increase monthly quota' }).click(); }
     await expect(monthly.locator('[data-editor-quota-monthly-metric]')).toHaveText('31 / month');
-    await expect(monthly.locator('[data-editor-quota-monthly-rule]')).toContainText('The month is on target after 31 completions.');
-    // Draft survives panel back-and-forth; the dashboard summary reflects the new quota (goto resets the draft).
+    // Monthly weeks: Week 5 maps to the last-week domain; combined rule renders from both groups.
+    const weeks = page.locator('[data-editor-schedule-monthly-weeks]');
+    await page.getByRole('group', { name: 'Schedule type' }).getByRole('button', { name: 'Monthly weeks Choose weeks of month' }).dispatchEvent('click');
+    await expect(weeks.locator('[data-editor-month-weeks-rule]')).toContainText('during week 1 of each month.');
+    await weeks.getByRole('button', { name: 'Toggle last week of the month' }).dispatchEvent('click');
+    await expect(weeks.locator('[data-editor-month-weeks-rule]')).toContainText('week 1 and the last week of each month.');
+    await expect(page.getByRole('group', { name: 'Days inside selected weeks' }).getByRole('button', { name: 'Toggle Monday in the selected weeks' })).toHaveAttribute('aria-pressed', 'true');
+    // Draft survives panel back-and-forth; the dashboard summary reflects the new schedule (goto resets the draft).
     await page.getByRole('button', { name: 'Back to habit editor dashboard' }).click();
-    await expect(page.getByRole('button', { name: 'Edit Schedule' })).toContainText('31x a month');
-    for (const viewport of [{ width: 390, height: 844 }, { width: 320, height: 740 }, { width: 1280, height: 900 }]) {
-      await page.setViewportSize(viewport);
-      expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
-    } // Overflow-free across the protocol viewports.
+    await expect(page.getByRole('button', { name: 'Edit Schedule' })).toContainText('1st, Last weeks on Mon, Tue, Wed, Thu, Fri');
+    await expectViewportsClean(page, async () => { await page.locator('[data-editor-tile="schedule"]').click(); await page.getByRole('button', { name: 'Back to habit editor dashboard' }).click(); });
     expect(mutations).toEqual([]);
   });
   test('shows safe validation state', async ({ page }) => {

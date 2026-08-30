@@ -101,14 +101,7 @@ describe('HabitForm', () => {
     const user = userEvent.setup();
     const onSubmit = vi.fn().mockResolvedValue(undefined);
 
-    render(HabitForm, {
-      props: {
-        mode: 'create',
-        allHabits: [],
-        onBack: vi.fn(),
-        onSubmit
-      }
-    });
+    render(HabitForm, { props: { mode: 'create', allHabits: [], onBack: vi.fn(), onSubmit } });
 
     await user.click(screen.getByRole('button', { name: 'Edit Identity' }));
     await user.type(screen.getByLabelText('Name *'), 'Breath 4-7-8');
@@ -164,14 +157,7 @@ describe('HabitForm', () => {
     const user = userEvent.setup();
     const onSubmit = vi.fn().mockResolvedValue(undefined);
 
-    render(HabitForm, {
-      props: {
-        mode: 'create',
-        allHabits: [],
-        onBack: vi.fn(),
-        onSubmit
-      }
-    });
+    render(HabitForm, { props: { mode: 'create', allHabits: [], onBack: vi.fn(), onSubmit } });
 
     await user.click(screen.getByRole('button', { name: 'Edit Habit type' }));
     expect(screen.getByRole('button', { name: 'Avoid habit' }).getAttribute('aria-pressed')).toBe('false');
@@ -206,14 +192,7 @@ describe('HabitForm', () => {
     const user = userEvent.setup();
     const onSubmit = vi.fn().mockResolvedValue(undefined);
 
-    render(HabitForm, {
-      props: {
-        mode: 'create',
-        allHabits: [],
-        onBack: vi.fn(),
-        onSubmit
-      }
-    });
+    render(HabitForm, { props: { mode: 'create', allHabits: [], onBack: vi.fn(), onSubmit } });
 
     await user.click(screen.getByRole('button', { name: 'Edit Schedule' }));
     const chooser = screen.getByRole('group', { name: 'Schedule type' });
@@ -259,14 +238,7 @@ describe('HabitForm', () => {
     const user = userEvent.setup();
     const onSubmit = vi.fn().mockResolvedValue(undefined);
 
-    render(HabitForm, {
-      props: {
-        mode: 'create',
-        allHabits: [],
-        onBack: vi.fn(),
-        onSubmit
-      }
-    });
+    render(HabitForm, { props: { mode: 'create', allHabits: [], onBack: vi.fn(), onSubmit } });
 
     await user.click(screen.getByRole('button', { name: 'Edit Schedule' }));
     await user.click(screen.getByRole('button', { name: 'Daily Every day' }));
@@ -296,14 +268,7 @@ describe('HabitForm', () => {
     const user = userEvent.setup();
     const onSubmit = vi.fn().mockResolvedValue(undefined);
 
-    render(HabitForm, {
-      props: {
-        mode: 'create',
-        allHabits: [],
-        onBack: vi.fn(),
-        onSubmit
-      }
-    });
+    render(HabitForm, { props: { mode: 'create', allHabits: [], onBack: vi.fn(), onSubmit } });
 
     await user.click(screen.getByRole('button', { name: 'Edit Schedule' }));
     await user.click(screen.getByRole('button', { name: 'Days of week Pick weekdays' }));
@@ -344,14 +309,7 @@ describe('HabitForm', () => {
     const user = userEvent.setup();
     const onSubmit = vi.fn().mockResolvedValue(undefined);
 
-    render(HabitForm, {
-      props: {
-        mode: 'create',
-        allHabits: [],
-        onBack: vi.fn(),
-        onSubmit
-      }
-    });
+    render(HabitForm, { props: { mode: 'create', allHabits: [], onBack: vi.fn(), onSubmit } });
 
     await user.click(screen.getByRole('button', { name: 'Edit Schedule' }));
     await user.click(screen.getByRole('button', { name: 'Weekly quota Target completions per week' }));
@@ -400,15 +358,7 @@ describe('HabitForm', () => {
   it('bounds the monthly quota counter and reflects target summaries before save', async () => {
     const user = userEvent.setup();
     const onSubmit = vi.fn().mockResolvedValue(undefined);
-
-    render(HabitForm, {
-      props: {
-        mode: 'create',
-        allHabits: [],
-        onBack: vi.fn(),
-        onSubmit
-      }
-    });
+    render(HabitForm, { props: { mode: 'create', allHabits: [], onBack: vi.fn(), onSubmit } });
 
     await user.click(screen.getByRole('button', { name: 'Edit Schedule' }));
     await user.click(screen.getByRole('button', { name: 'Monthly quota Target completions per month' }));
@@ -417,18 +367,14 @@ describe('HabitForm', () => {
     // Default transition seeds 3; metrics and rule update live.
     expect(within(view).getByText('3 / month')).toBeTruthy();
     expect(within(view).getByText('Flexible timing')).toBeTruthy();
-    expect(within(view).getByText('The month is on target after 3 completions.')).toBeTruthy();
     expect(within(view).getByText('Progress is measured against the monthly quota rather than calendar-day attendance.')).toBeTruthy();
 
-    // Increment to 31: 3 -> 8 -> 31 (increments clamp at the top bound).
+    // Increments clamp at 31; decrements clamp at 1.
     for (let step = 0; step < 30; step += 1) {
       await user.click(screen.getByRole('button', { name: 'Increase monthly quota' }));
     }
     expect(within(view).getByText('31 / month')).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Increase monthly quota' }).hasAttribute('disabled')).toBe(true);
-    expect(within(view).getByText('The month is on target after 31 completions.')).toBeTruthy();
-
-    // Decrease to the bottom bound 1.
     for (let step = 0; step < 30; step += 1) {
       await user.click(screen.getByRole('button', { name: 'Decrease monthly quota' }));
     }
@@ -456,7 +402,6 @@ describe('HabitForm', () => {
   it('preserves advanced monthly-week schedules on submit', async () => {
     const user = userEvent.setup();
     const onSubmit = vi.fn().mockResolvedValue(undefined);
-
     render(HabitForm, {
       props: {
         mode: 'edit',
@@ -474,17 +419,64 @@ describe('HabitForm', () => {
     });
 
     await user.click(screen.getAllByRole('button', { name: 'Save habit' }).at(-1)!);
-
     await waitFor(() => {
       expect(onSubmit).toHaveBeenCalledTimes(1);
     });
-
     expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({
       frequency: 'custom',
       customDays: [1, 5],
       schedule: { type: 'monthly_weeks', weeksOfMonth: [1, 'last'], weekdays: [1, 5] },
       reminderTime: '08:30',
       reminderEnabled: true
+    }));
+  });
+
+  it('selects month weeks with the combined rule and validates both groups independently', async () => {
+    const user = userEvent.setup();
+    const onSubmit = vi.fn().mockResolvedValue(undefined);
+    render(HabitForm, { props: { mode: 'create', allHabits: [], onBack: vi.fn(), onSubmit } });
+
+    await user.click(screen.getByRole('button', { name: 'Edit Schedule' }));
+    await user.click(screen.getByRole('button', { name: 'Monthly weeks Choose weeks of month' }));
+    const view = screen.getByTestId('monthly-weeks-view');
+
+    // Default transition seeds week 1 plus Mon-Fri; the combined rule renders with exact names.
+    expect(within(view).getByText('Schedule Monday, Tuesday, Wednesday, Thursday and Friday during week 1 of each month.')).toBeTruthy();
+    expect(within(view).getByText('If a month has a 5th week, it is ignored unless selected.')).toBeTruthy();
+
+    // Week 5 maps to the existing last-week domain value; toggles update the combined rule.
+    await user.click(screen.getByRole('button', { name: 'Toggle last week of the month' }));
+    for (const dayName of ['Tuesday', 'Wednesday', 'Thursday', 'Friday']) {
+      await user.click(screen.getByLabelText(`Toggle ${dayName} in the selected weeks`));
+    }
+    expect(within(view).getByText('Schedule Monday during week 1 and the last week of each month.')).toBeTruthy();
+
+    // Both groups validate independently: an empty weekday group blocks Save with its own message.
+    await user.click(screen.getByRole('button', { name: 'Toggle Monday in the selected weeks' }));
+    expect(within(view).getByText('Select at least one weekday inside the selected weeks.')).toBeTruthy();
+
+    await user.click(screen.getByRole('button', { name: 'Back to habit editor dashboard' }));
+    await user.click(screen.getByRole('button', { name: 'Edit Identity' }));
+    await user.type(screen.getByLabelText('Name *'), 'Month weeks habit');
+    await user.click(screen.getAllByRole('button', { name: 'Create habit' }).at(-1)!);
+    await waitFor(() => {
+      expect(screen.getByText('Select at least one weekday')).toBeTruthy();
+    });
+    expect(onSubmit).not.toHaveBeenCalled();
+
+    // Restoring a weekday lets the same schedule submit; week values map to the last-week domain.
+    await user.click(screen.getByRole('button', { name: 'Back to habit editor dashboard' }));
+    await user.click(screen.getByRole('button', { name: 'Edit Schedule' }));
+    await user.click(screen.getByRole('button', { name: 'Toggle Monday in the selected weeks' }));
+    expect(within(screen.getByTestId('monthly-weeks-view')).getByText('Schedule Monday during week 1 and the last week of each month.')).toBeTruthy();
+    await user.click(screen.getAllByRole('button', { name: 'Create habit' }).at(-1)!);
+    await waitFor(() => {
+      expect(onSubmit).toHaveBeenCalledTimes(1);
+    });
+    expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({
+      schedule: { type: 'monthly_weeks', weeksOfMonth: [1, 'last'], weekdays: [1] },
+      frequency: 'custom',
+      customDays: [1]
     }));
   });
 

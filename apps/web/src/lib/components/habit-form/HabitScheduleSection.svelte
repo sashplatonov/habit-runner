@@ -27,6 +27,25 @@
     return `Only ${names.slice(0, -1).join(', ')} and ${names[names.length - 1]} count as scheduled days.`;
   });
 
+  const selectedWeeks = $derived(
+    schedule.type === 'monthly_weeks' ? WEEK_OF_MONTH_OPTIONS.filter((week) => schedule.weeksOfMonth.includes(week)) : []
+  );
+  const monthWeeksRule = $derived.by(() => {
+    const dayNames = selectedWeekdays.map((day) => DAY_FULL_NAMES[day]);
+    const weekLabels = selectedWeekdays.length === 0 ? [] : selectedWeeks.map((week) => (week === 'last' ? 'the last week' : `week ${week}`));
+    if (dayNames.length === 0) {
+      return 'Select at least one weekday inside the selected weeks.';
+    }
+    if (weekLabels.length === 0) {
+      return 'Select at least one week of the month.';
+    }
+    const dayList = dayNames.length === 1 ? dayNames[0] : `${dayNames.slice(0, -1).join(', ')} and ${dayNames[dayNames.length - 1]}`;
+    if (weekLabels.length === 1) {
+      return `Schedule ${dayList} during ${weekLabels[0]} of each month.`;
+    }
+    return `Schedule ${dayList} during ${weekLabels.slice(0, -1).join(', ')} and ${weekLabels[weekLabels.length - 1]} of each month.`;
+  });
+
   const CHOICE_ICONS: Record<HabitSchedule['type'], typeof Icon> = {
     daily: Calendar,
     weekly_days: CalendarDays,
@@ -394,48 +413,56 @@
     {/if}
 
     {#if openSlot === 'monthly_weeks'}
-      <div class="space-y-3">
+      <div class="space-y-3" data-testid="monthly-weeks-view" data-editor-schedule-monthly-weeks>
         <div class="space-y-2">
-          <p class="text-[11px] font-mono uppercase tracking-[0.3em] text-muted">Weeks</p>
-          <div class="flex flex-wrap gap-1">
-            {#each WEEK_OF_MONTH_OPTIONS as week, weekIndex (`${week}-${weekIndex}`)}
+          <p class="text-[10px] font-mono uppercase tracking-[0.18em] text-muted">Weeks of month</p>
+          <div class="grid grid-cols-5 gap-1.5" role="group" aria-label="Weeks of month">
+            {#each WEEK_OF_MONTH_OPTIONS as week (`${week}`)}
               <button
                 type="button"
-                class={`rounded-full border px-3 py-2 text-[10px] font-mono transition ${schedule.weeksOfMonth.includes(week) ? 'border-accent bg-accent/10 text-accent' : 'border-border text-muted hover:border-border-hover'}`}
+                class={`flex min-h-11 items-center justify-center rounded-xl border px-1 py-1 text-[11px] font-bold transition ${schedule.weeksOfMonth.includes(week) ? 'border-accent bg-accent/10 text-accent' : 'border-border bg-bg-primary text-muted hover:border-border-hover'}`}
                 aria-pressed={schedule.weeksOfMonth.includes(week)}
+                aria-label={`Toggle ${week === 'last' ? 'last week' : `week ${week}`} of the month`}
+                data-editor-month-week={week}
                 onclick={() => {
                   toggleWeekOfMonth(week);
                 }}
               >
-                {week === 'last' ? 'Last' : `${week}th`}
+                {week === 'last' ? 'Week 5' : `Week ${week}`}
               </button>
             {/each}
           </div>
           {#if errors.scheduleWeeks}
-            <p class="text-[10px] font-mono text-accent-secondary">{errors.scheduleWeeks}</p>
+            <p class="text-[10px] font-mono text-accent-secondary" role="alert">{errors.scheduleWeeks}</p>
           {/if}
         </div>
 
         <div class="space-y-2">
-          <p class="text-[11px] font-mono uppercase tracking-[0.3em] text-muted">Weekdays</p>
-          <div class="flex gap-1">
-            {#each DAY_LABELS as day, index (`${day}-${index}`)}
+          <p class="text-[10px] font-mono uppercase tracking-[0.18em] text-muted">Days inside selected weeks</p>
+          <div class="grid grid-cols-7 gap-1.5" role="group" aria-label="Days inside selected weeks">
+            {#each WEEKDAY_ORDER as day (`${day}`)}
               <button
                 type="button"
-                class={`flex min-h-11 flex-1 items-center justify-center rounded-lg border px-2 py-1 text-xs font-mono transition ${schedule.weekdays.includes(index) ? 'border-accent bg-accent/10 text-accent' : 'border-border text-muted hover:border-border-hover'}`}
-                aria-label={`Toggle ${day} for the monthly week schedule`}
-                aria-pressed={schedule.weekdays.includes(index)}
+                class={`flex min-h-11 items-center justify-center rounded-xl border px-1 py-1 text-[11px] font-bold transition ${schedule.weekdays.includes(day) ? 'border-accent bg-accent/10 text-accent' : 'border-border bg-bg-primary text-muted hover:border-border-hover'}`}
+                aria-label={`Toggle ${DAY_FULL_NAMES[day]} in the selected weeks`}
+                aria-pressed={schedule.weekdays.includes(day)}
+                data-editor-schedule-weekday={day}
                 onclick={() => {
-                  toggleWeekday(index);
+                  toggleWeekday(day);
                 }}
               >
-                {day[0]}
+                {DAY_LABELS[day]}
               </button>
             {/each}
           </div>
           {#if errors.scheduleWeekdays}
-            <p class="text-[10px] font-mono text-accent-secondary">{errors.scheduleWeekdays}</p>
+            <p class="text-[10px] font-mono text-accent-secondary" role="alert">{errors.scheduleWeekdays}</p>
           {/if}
+        </div>
+
+        <div class="rounded-2xl border border-border bg-bg-primary p-3" data-editor-month-weeks-rule>
+          <p class="text-[12px] font-semibold leading-5 text-foreground">{monthWeeksRule}</p>
+          <p class="mt-0.5 text-[11px] leading-4 text-muted">If a month has a 5th week, it is ignored unless selected.</p>
         </div>
       </div>
     {/if}

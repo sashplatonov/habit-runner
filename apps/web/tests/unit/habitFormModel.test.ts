@@ -58,6 +58,24 @@ describe('habitFormModel', () => {
     expect(errors.schedule).toBe('Select at least one weekday');
   });
 
+  it('validates monthly weeks groups independently', () => {
+    const emptyWeeks = validateHabitForm({
+      name: 'Read',
+      description: '',
+      schedule: { type: 'monthly_weeks', weeksOfMonth: [], weekdays: [1, 5] }
+    });
+    expect(emptyWeeks.scheduleWeeks).toBe('Select at least one week');
+    expect(emptyWeeks.scheduleWeekdays).toBeUndefined();
+
+    const emptyWeekdays = validateHabitForm({
+      name: 'Read',
+      description: '',
+      schedule: { type: 'monthly_weeks', weeksOfMonth: [1, 'last'], weekdays: [] }
+    });
+    expect(emptyWeekdays.scheduleWeeks).toBeUndefined();
+    expect(emptyWeekdays.scheduleWeekdays).toBe('Select at least one weekday');
+  });
+
   it('rejects descriptions that exceed the supported limit', () => {
     const errors = validateHabitForm({
       name: 'Read',
