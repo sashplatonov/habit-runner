@@ -125,7 +125,7 @@
     </div>
 
     <div>
-      <label class="mb-2 block text-[10px] uppercase tracking-[0.12em] text-muted" for="habit-description">Description</label>
+      <label class="mb-1.5 block text-[10px] uppercase tracking-[0.12em] text-muted" for="habit-description">Description</label>
       <textarea
         id="habit-description"
         name="habit-description"
@@ -139,9 +139,9 @@
         class="w-full resize-none overflow-y-auto rounded-lg border border-border bg-bg-primary px-3 py-2 text-sm text-foreground placeholder-border-hover transition-[border-color,box-shadow] focus:border-accent/50 focus:shadow-[0_0_12px_var(--glow)]"
         style={errors.description ? 'border-color: var(--accent-secondary);' : ''}
       ></textarea>
-      <p id="habit-description-count" class="mt-1 flex justify-between gap-3 text-[11px] leading-5 text-muted">
+      <p id="habit-description-count" class="mt-0.5 flex gap-3 text-[10px] leading-4 text-muted">
         <span>{description.length} / {MAX_HABIT_DESCRIPTION_LENGTH} characters</span>
-        <span>{descriptionLimitMessage}</span>
+        <span class="ml-auto">{descriptionLimitMessage}</span>
       </p>
       <FieldMessage id="habit-description-error" message={errors.description} tone="error" class="mt-1" />
     </div>
@@ -152,7 +152,7 @@
         {#each COLORS as option, colorIndex (`${option.value}-${colorIndex}`)}
           <button
             type="button"
-            class={`flex min-h-11 items-center gap-1.5 rounded-lg border px-2.5 py-2 text-[11px] transition-[border-color,box-shadow] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${color === option.value ? '' : 'border-border bg-bg-primary text-muted'}`}
+            class={`flex h-8 items-center gap-1.5 rounded-lg border px-2 py-1 text-[11px] transition-[border-color,box-shadow] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${color === option.value ? '' : 'border-border bg-bg-primary text-muted'}`}
             style={color === option.value
               ? `background-color: ${option.hex}18; border-color: ${option.hex}; box-shadow: 0 0 10px ${option.hex}40;`
               : ''}

@@ -1,4 +1,4 @@
-export const HABIT_COLORS = ['blue', 'green', 'purple', 'orange', 'red', 'cyan'] as const;
+export const HABIT_COLORS = ['blue', 'green', 'purple', 'orange', 'red', 'cyan', 'pink', 'mint'] as const;
 export type HabitColor = (typeof HABIT_COLORS)[number];
 
 export const HABIT_FREQUENCIES = ['daily', 'weekdays', 'weekends', 'custom'] as const;

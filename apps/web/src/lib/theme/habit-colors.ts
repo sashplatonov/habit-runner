@@ -71,6 +71,26 @@ export const HABIT_COLOR_THEMES: Record<HabitColor, HabitColorTheme> = {
     borderClass: 'border-cyan-400/30',
     shadowClass: 'shadow-[0_0_12px_rgba(34,211,238,0.2)]',
     heatmapLevels: ['#0d1117', '#0d2a2d', '#0a3d4a', '#0a6b7a', '#22d3ee']
+  },
+  pink: {
+    hex: '#ec4899',
+    glow: 'rgba(236,72,153,0.5)',
+    dim: 'rgba(236,72,153,0.1)',
+    textClass: 'text-pink-400',
+    bgClass: 'bg-pink-400/10',
+    borderClass: 'border-pink-400/30',
+    shadowClass: 'shadow-[0_0_12px_rgba(236,72,153,0.2)]',
+    heatmapLevels: ['#0d1117', '#2d0d1a', '#4a0a2a', '#8f1a4a', '#ec4899']
+  },
+  mint: {
+    hex: '#5eead4',
+    glow: 'rgba(94,234,212,0.5)',
+    dim: 'rgba(94,234,212,0.1)',
+    textClass: 'text-teal-300',
+    bgClass: 'bg-teal-300/10',
+    borderClass: 'border-teal-300/30',
+    shadowClass: 'shadow-[0_0_12px_rgba(94,234,212,0.2)]',
+    heatmapLevels: ['#0d1117', '#0d2d24', '#0a4a38', '#0a7a5c', '#5eead4']
   }
 };
 

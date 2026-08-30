@@ -10,7 +10,9 @@ export const COLORS: {
   { value: 'purple', label: 'Purple', hex: '#a855f7' },
   { value: 'orange', label: 'Orange', hex: '#f97316' },
   { value: 'red', label: 'Red', hex: '#ef4444' },
-  { value: 'cyan', label: 'Cyan', hex: '#22d3ee' }
+  { value: 'cyan', label: 'Cyan', hex: '#22d3ee' },
+  { value: 'pink', label: 'Pink', hex: '#ec4899' },
+  { value: 'mint', label: 'Mint', hex: '#5eead4' }
 ];
 
 export const FREQUENCIES: {
