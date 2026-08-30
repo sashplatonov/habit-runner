@@ -772,7 +772,7 @@ git commit -m "feat(habits): add reminder editor screen"
 
 ## CDE-013: Implement the Organization screen
 
-**Status:** TODO  
+**Status:** DONE  
 **Priority:** P1  
 **Depends on:** CDE-001
 

@@ -241,7 +241,7 @@ test.describe.serial('critical habit journey', () => {
     await expect(page.locator('[data-editor-dashboard]')).toBeVisible();
     await expect(page.locator('[data-editor-tile]')).toHaveCount(6);
     expect(await page.locator('[data-editor-tile]').evaluateAll((tiles) => tiles.map((tile) => tile.getAttribute('data-editor-tile')))).toEqual(['identity', 'habit-type', 'schedule', 'goal', 'reminder', 'organization']);
-    for (const [tile, panel] of [['Edit Goal', 'habit-goal-panel'], ['Edit Reminder', 'habit-reminder-panel']] as const) {
+    for (const [tile, panel] of [['Edit Goal', 'habit-goal-panel'], ['Edit Reminder', 'habit-reminder-panel'], ['Edit Organization', 'habit-organization-panel']] as const) {
       await page.getByRole('button', { name: tile }).click();
       await expect(page.locator(`[data-testid="${panel}"]`)).toBeVisible();
       await page.getByRole('button', { name: 'Back to habit editor dashboard' }).click();

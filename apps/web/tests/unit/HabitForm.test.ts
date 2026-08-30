@@ -82,6 +82,54 @@ describe('HabitForm', () => {
     expect(screen.getByText('#health')).toBeTruthy();
   });
 
+  it('adds, removes, and limits tags with a live dashboard summary and payload', async () => {
+    const user = userEvent.setup();
+    const onSubmit = vi.fn().mockResolvedValue(undefined);
+    render(HabitForm, { props: { mode: 'create', allHabits: [], onBack: vi.fn(), onSubmit } });
+
+    await user.click(screen.getByRole('button', { name: 'Edit Organization' }));
+    const panel = screen.getByTestId('habit-organization-panel');
+    expect(within(panel).getByText('Tags · 0/5')).toBeTruthy();
+
+    // Enter adds a sanitized lowercase tag; comma add works; removal and duplicate prevention hold.
+    const tagInput = screen.getByPlaceholderText('Add tag…') as HTMLInputElement;
+    await user.type(tagInput, 'Health!');
+    await user.keyboard('{Enter}');
+    expect(within(panel).getByText('#health')).toBeTruthy();
+    await user.type(screen.getByPlaceholderText('Add tag…'), 'focus,');
+    expect(within(panel).getByText('#focus')).toBeTruthy();
+    await user.click(screen.getByRole('button', { name: 'Remove focus' }));
+    expect(within(panel).queryByText('#focus')).toBeNull();
+    await user.type(screen.getByPlaceholderText('Add tag…'), 'focus');
+    await user.keyboard('{Enter}');
+    expect(within(panel).getAllByText('#focus').length).toBe(1);
+    expect((tagInput as HTMLInputElement).value).toBe('');
+
+    // Fill to the five-tag limit: running(3), sleep(4), reading(5) and the add controls disable.
+    for (const tag of ['running', 'sleep', 'reading']) {
+      await user.type(screen.getByPlaceholderText('Add tag…'), tag);
+      await user.keyboard('{Enter}');
+    }
+    expect(within(panel).getByText('Tags · 5/5')).toBeTruthy();
+    expect((screen.getByPlaceholderText('Add tag…') as HTMLInputElement).disabled).toBe(true);
+    expect(screen.getByRole('button', { name: 'Add tag' }).hasAttribute('disabled')).toBe(true);
+    expect(within(panel).getAllByRole('button', { name: /\+fitness|\+productivity|\+learning/ }).every((button) => button.hasAttribute('disabled'))).toBe(true);
+
+    await user.click(screen.getByRole('button', { name: 'Back to habit editor dashboard' }));
+    expect(within(screen.getByRole('button', { name: 'Edit Organization' })).getByText('#health · #focus · #running · #sleep · #reading · 5/5 tags')).toBeTruthy();
+
+    // A named draft submits the accumulated tags through the single save action.
+    await user.click(screen.getByRole('button', { name: 'Edit Identity' }));
+    await user.type(screen.getByLabelText('Name *'), 'Tagged habit');
+    await user.click(screen.getAllByRole('button', { name: 'Create habit' }).at(-1)!);
+    await waitFor(() => {
+      expect(onSubmit).toHaveBeenCalledTimes(1);
+    });
+    expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({
+      tags: ['health', 'focus', 'running', 'sleep', 'reading']
+    }));
+  });
+
   it('keeps the identity draft when returning to the dashboard and submits it on save', async () => {
     const user = userEvent.setup();
     const onSubmit = vi.fn().mockResolvedValue(undefined);
@@ -509,14 +557,7 @@ describe('HabitForm', () => {
       const user = userEvent.setup();
       const onSubmit = vi.fn().mockResolvedValue(undefined);
 
-      render(HabitForm, {
-        props: {
-          mode: 'create',
-          allHabits: [],
-          onBack: vi.fn(),
-          onSubmit
-        }
-      });
+      render(HabitForm, { props: { mode: 'create', allHabits: [], onBack: vi.fn(), onSubmit } });
 
       await user.click(screen.getByRole('button', { name: 'Edit Identity' }));
       const customIconInput = screen.getByLabelText('Custom habit icon') as HTMLInputElement;
@@ -525,9 +566,7 @@ describe('HabitForm', () => {
       await user.type(screen.getByLabelText('Name *'), 'Test Habit');
       await user.click(screen.getAllByRole('button', { name: 'Create habit' }).at(-1)!);
 
-      await waitFor(() => {
-        expect(onSubmit).toHaveBeenCalledTimes(1);
-      });
+      await waitFor(() => { expect(onSubmit).toHaveBeenCalledTimes(1); });
 
       // Check that the submitted icon is not empty (exact emoji may be normalized)
       const submittedIcon = onSubmit.mock.calls[0][0].icon;
@@ -539,14 +578,7 @@ describe('HabitForm', () => {
       const user = userEvent.setup();
       const onSubmit = vi.fn().mockResolvedValue(undefined);
 
-      render(HabitForm, {
-        props: {
-          mode: 'create',
-          allHabits: [],
-          onBack: vi.fn(),
-          onSubmit
-        }
-      });
+      render(HabitForm, { props: { mode: 'create', allHabits: [], onBack: vi.fn(), onSubmit } });
 
       await user.click(screen.getByRole('button', { name: 'Edit Identity' }));
       const customIconInput = screen.getByLabelText('Custom habit icon') as HTMLInputElement;
@@ -556,9 +588,7 @@ describe('HabitForm', () => {
       await user.type(screen.getByLabelText('Name *'), 'Writing Habit');
       await user.click(screen.getAllByRole('button', { name: 'Create habit' }).at(-1)!);
 
-      await waitFor(() => {
-        expect(onSubmit).toHaveBeenCalledTimes(1);
-      });
+      await waitFor(() => { expect(onSubmit).toHaveBeenCalledTimes(1); });
 
       // Check that the submitted icon is not empty (exact emoji may be normalized)
       const submittedIcon = onSubmit.mock.calls[0][0].icon;
@@ -570,14 +600,7 @@ describe('HabitForm', () => {
       const user = userEvent.setup();
       const onSubmit = vi.fn().mockResolvedValue(undefined);
 
-      render(HabitForm, {
-        props: {
-          mode: 'create',
-          allHabits: [],
-          onBack: vi.fn(),
-          onSubmit
-        }
-      });
+      render(HabitForm, { props: { mode: 'create', allHabits: [], onBack: vi.fn(), onSubmit } });
 
       await user.click(screen.getByRole('button', { name: 'Edit Identity' }));
       const customIconInput = screen.getByLabelText('Custom habit icon') as HTMLInputElement;
@@ -589,9 +612,7 @@ describe('HabitForm', () => {
       await user.type(screen.getByLabelText('Name *'), 'USA Habit');
       await user.click(screen.getAllByRole('button', { name: 'Create habit' }).at(-1)!);
 
-      await waitFor(() => {
-        expect(onSubmit).toHaveBeenCalledTimes(1);
-      });
+      await waitFor(() => { expect(onSubmit).toHaveBeenCalledTimes(1); });
 
       expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({
         icon: '🇺🇸'
@@ -602,14 +623,7 @@ describe('HabitForm', () => {
       const user = userEvent.setup();
       const onSubmit = vi.fn().mockResolvedValue(undefined);
 
-      render(HabitForm, {
-        props: {
-          mode: 'create',
-          allHabits: [],
-          onBack: vi.fn(),
-          onSubmit
-        }
-      });
+      render(HabitForm, { props: { mode: 'create', allHabits: [], onBack: vi.fn(), onSubmit } });
 
       await user.click(screen.getByRole('button', { name: 'Edit Identity' }));
       const customIconInput = screen.getByLabelText('Custom habit icon') as HTMLInputElement;
@@ -624,9 +638,7 @@ describe('HabitForm', () => {
       await user.type(screen.getByLabelText('Name *'), 'Test Habit');
       await user.click(screen.getAllByRole('button', { name: 'Create habit' }).at(-1)!);
 
-      await waitFor(() => {
-        expect(onSubmit).toHaveBeenCalledTimes(1);
-      });
+      await waitFor(() => { expect(onSubmit).toHaveBeenCalledTimes(1); });
 
       // Should use the preset icon (⚡) after clicking it
       expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({
