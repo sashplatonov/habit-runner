@@ -21,7 +21,7 @@
   import HabitFormHeader from './habit-form/HabitFormHeader.svelte';
   import SoftLimitWarningDialog from './habit-form/SoftLimitWarningDialog.svelte';
   import DiscardChangesDialog from './habit-form/DiscardChangesDialog.svelte';
-  import type { HabitEditorPanel } from './habit-form/types';
+  import type { HabitEditorDetailPanel, HabitEditorPanel } from './habit-form/types';
   import { isApiError } from '$lib/api/ApiError';
 
   type Props = {
@@ -89,6 +89,14 @@
   const typeLabel = $derived(type === 'negative' ? 'Avoid habit' : 'Build habit');
   const tagsSummary = $derived(tags.length > 0 ? `${tags.map((tag) => `#${tag}`).join(' · ')} · ${tags.length}/5 tags` : 'No tags · 0/5 tags');
   const previewTagsSummary = $derived(tags.length > 0 ? tags.map((tag) => `#${tag}`).join(' · ') : 'No tags');
+  const focusedPanelLabels: Record<HabitEditorDetailPanel, { title: string; subtitle: string }> = {
+    identity: { title: 'Identity', subtitle: 'Edit habit · Identity' },
+    'habit-type': { title: 'Habit type', subtitle: 'Edit habit · Behavior' },
+    schedule: { title: 'Schedule', subtitle: 'Edit habit · Schedule' },
+    goal: { title: 'Goal', subtitle: 'Edit habit · Goal' },
+    reminder: { title: 'Reminder', subtitle: 'Edit habit · Reminder' },
+    organization: { title: 'Organization', subtitle: 'Edit habit · Tags' }
+  };
   const scheduleDetailLabels: Record<Exclude<HabitSchedule['type'], never>, { title: string; subtitle: string }> = {
     daily: { title: 'Daily schedule', subtitle: 'Schedule · Daily' },
     weekly_days: { title: 'Days of week', subtitle: 'Schedule · Pick weekdays' },
@@ -98,14 +106,12 @@
   };
   const panelTitle = $derived(activePanel === 'dashboard' ? (mode === 'edit' ? 'Edit habit' : 'New habit') : activePanel === 'schedule' && openScheduleSlot
     ? scheduleDetailLabels[openScheduleSlot].title
-    : {
-      identity: 'Identity', 'habit-type': 'Habit type', schedule: 'Schedule', goal: 'Goal', reminder: 'Reminder', organization: 'Organization'
-    }[activePanel]);
+    : focusedPanelLabels[activePanel].title);
   const panelSubtitle = $derived(activePanel === 'dashboard'
     ? `${habitLabel} · ${scheduleSummary} · Active`
     : activePanel === 'schedule' && openScheduleSlot
       ? scheduleDetailLabels[openScheduleSlot].subtitle
-      : 'Edit this part of your habit.');
+      : focusedPanelLabels[activePanel].subtitle);
 
   function hydrateForm(values: HabitFormValues) {
     name = values.name;

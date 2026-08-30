@@ -1,5 +1,4 @@
 import { expect, test, type Page, type Route } from '@playwright/test';
-
 const habit = {
   id: 'e2e-habit',
   name: 'Read for ten minutes',
@@ -68,8 +67,7 @@ const scheduledSummaryHabits = [  {
 const progressHabits = [
   { ...habit, id: 'progress-attention', name: 'Attention habit', createdAt: '2026-04-01T10:00:00Z' },
   { ...habit, id: 'progress-strong', name: 'Strong habit', createdAt: '2026-04-01T10:00:00Z', icon: '💪' }
-];
-
+  ];
 function progressCheckins(): unknown[] {
   return Array.from({ length: 7 }, (_, index) => {
     const date = new Date('2026-07-10T12:00:00Z');
@@ -270,7 +268,6 @@ test.describe.serial('critical habit journey', () => {
       await page.locator('[data-editor-tile="habit-type"]').click();
       await expect(page.locator('[data-editor-habit-type]')).toBeVisible();
     };
-
     await page.setViewportSize({ width: 390, height: 844 });
     await openHabitTypePanel();
     await expect(page.locator('form')).toHaveAttribute('data-editor-panel', 'habit-type');
@@ -284,14 +281,16 @@ test.describe.serial('critical habit journey', () => {
     await page.getByRole('button', { name: 'Back to habit editor dashboard' }).click();
     await expect(page.getByRole('button', { name: 'Edit Habit type' })).toContainText('Avoid habit');
     expect(mutations).toEqual([]);
-
     await page.locator('[data-editor-tile="habit-type"]').click();
     const optionHeights = await page.locator('[data-habit-type-option]').evaluateAll((options) => options.map((o) => (o as HTMLElement).offsetHeight));
     expect(Math.min(...optionHeights)).toBeGreaterThanOrEqual(44);
 
     await expectViewportsClean(page, openHabitTypePanel);
   });
-  test('opens each schedule variant as a focused screen and preserves the draft across Back levels', async ({ page }) => {
+  test('shows reference-specific context on every focused editor panel', async ({ page }) => {
+    const panels = [['identity', 'Edit Identity', 'Identity', 'Edit habit · Identity'], ['habit-type', 'Edit Habit type', 'Habit type', 'Edit habit · Behavior'], ['schedule', 'Edit Schedule', 'Schedule', 'Edit habit · Schedule'], ['goal', 'Edit Goal', 'Goal', 'Edit habit · Goal'], ['reminder', 'Edit Reminder', 'Reminder', 'Edit habit · Reminder'], ['organization', 'Edit Organization', 'Organization', 'Edit habit · Tags']] as const;
+    for (const [tile, action, title, subtitle] of panels) { await page.setViewportSize({ width: 390, height: 844 }); await page.goto('/app/habit/new'); await page.locator(`[data-editor-tile="${tile}"]`).click(); await expect(page.locator('form')).toHaveAttribute('data-editor-panel', tile); await expect(page.locator('h1')).toHaveText(title); await expect(page.getByText(subtitle, { exact: true })).toBeVisible(); await page.getByRole('button', { name: 'Back to habit editor dashboard' }).click(); await expect(page.getByRole('button', { name: action })).toBeVisible(); }
+  }); test('opens each schedule variant as a focused screen and preserves the draft across Back levels', async ({ page }) => {
     const mutations: string[] = [];
     trackHabitMutations(page, mutations);
     const variants = [
@@ -301,7 +300,6 @@ test.describe.serial('critical habit journey', () => {
       ['Monthly quota Target completions per month', 'Monthly quota', 'Schedule · Flexible monthly target', 'monthly-quota-view'],
       ['Monthly weeks Choose weeks of month', 'Monthly weeks', 'Schedule · Weeks of month', 'monthly-weeks-view']
     ] as const;
-
     for (const viewport of [{ width: 320, height: 740 }, { width: 390, height: 844 }, { width: 1280, height: 900 }] as const) {
       await page.setViewportSize(viewport);
       await page.goto('/app/habit/new');
@@ -339,7 +337,6 @@ test.describe.serial('critical habit journey', () => {
     await page.getByRole('button', { name: 'Create habit' }).last().click();
     await expect(page.getByText('Check the highlighted fields and try again.')).toBeVisible();
   });
-
   test('keeps dashboard heatmaps usable in compact and comfortable layouts', async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 900 });
     await page.goto('/app/dashboard');

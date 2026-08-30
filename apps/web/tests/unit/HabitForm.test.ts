@@ -25,7 +25,6 @@ const BASE_HABIT: Habit = {
   type: 'positive',
   reminderEnabled: true
 };
-
 function createHabit(overrides: Partial<Habit> = {}): Habit {
   return {
     ...BASE_HABIT,
@@ -38,7 +37,6 @@ function createHabit(overrides: Partial<Habit> = {}): Habit {
     ...(overrides.reminderTime ? { reminderTime: overrides.reminderTime } : {})
   };
 }
-
 async function openPanel(user: ReturnType<typeof userEvent.setup>, panel: string): Promise<void> {
   if (panel !== 'identity') {
     await user.click(screen.getByRole('button', { name: 'Back to habit editor dashboard' }));
@@ -46,47 +44,34 @@ async function openPanel(user: ReturnType<typeof userEvent.setup>, panel: string
   const title = panel === 'habit-type' ? 'Habit type' : `${panel[0].toUpperCase()}${panel.slice(1)}`;
   await user.click(screen.getByRole('button', { name: `Edit ${title}` }));
 }
-
 describe('HabitForm', () => {
-
   it('shows and dismisses the soft-limit warning for over-limit create flows', async () => {
     const user = userEvent.setup();
-
     render(HabitForm, { props: { mode: 'create', allHabits: [createHabit({ id: '1' }), createHabit({ id: '2' }), createHabit({ id: '3' })], onBack: vi.fn(), onSubmit: vi.fn().mockResolvedValue(undefined) } });
-
     expect(screen.getByText('Focus is key')).toBeTruthy();
-
     await user.click(screen.getByRole('button', { name: 'Add anyway' }));
-
     expect(screen.queryByText('Focus is key')).toBeNull();
   });
-
   it('restores legacy tag and custom icon controls on edit', async () => {
     const user = userEvent.setup();
-
     render(HabitForm, { props: { mode: 'edit', habit: createHabit(), allHabits: [createHabit()], onBack: vi.fn(), onSubmit: vi.fn().mockResolvedValue(undefined) } });
-
     await openPanel(user, 'identity');
     const customIconInput = screen.getByLabelText('Custom habit icon') as HTMLInputElement;
     await user.type(customIconInput, '🛰');
-
     expect(customIconInput.value.length).toBeGreaterThan(0);
-
     await openPanel(user, 'organization');
     await user.click(screen.getByRole('button', { name: '+health' }));
 
     expect(screen.getByText('#health')).toBeTruthy();
   });
 
-  it('adds, removes, and limits tags with a live dashboard summary and payload', async () => {
+  it('shows the reference-specific focused-panel context', async () => { const user = userEvent.setup(); render(HabitForm, { props: { mode: 'create', allHabits: [], onBack: vi.fn(), onSubmit: vi.fn().mockResolvedValue(undefined) } }); await user.click(screen.getByRole('button', { name: 'Edit Identity' })); expect(screen.getByRole('heading', { level: 1, name: 'Identity' })).toBeTruthy(); expect(screen.getByText('Edit habit · Identity', { exact: true })).toBeTruthy(); }); it('adds, removes, and limits tags with a live dashboard summary and payload', async () => {
     const user = userEvent.setup();
     const onSubmit = vi.fn().mockResolvedValue(undefined);
     render(HabitForm, { props: { mode: 'create', allHabits: [], onBack: vi.fn(), onSubmit } });
-
     await user.click(screen.getByRole('button', { name: 'Edit Organization' }));
     const panel = screen.getByTestId('habit-organization-panel');
     expect(within(panel).getByText('Tags · 0/5')).toBeTruthy();
-
     const tagInput = screen.getByPlaceholderText('Add tag…') as HTMLInputElement;
     await user.type(tagInput, 'Health!');
     await user.keyboard('{Enter}');
@@ -99,7 +84,6 @@ describe('HabitForm', () => {
     await user.keyboard('{Enter}');
     expect(within(panel).getAllByText('#focus').length).toBe(1);
     expect((tagInput as HTMLInputElement).value).toBe('');
-
     for (const tag of ['running', 'sleep', 'reading']) {
       await user.type(screen.getByPlaceholderText('Add tag…'), tag);
       await user.keyboard('{Enter}');
@@ -108,10 +92,8 @@ describe('HabitForm', () => {
     expect((screen.getByPlaceholderText('Add tag…') as HTMLInputElement).disabled).toBe(true);
     expect(screen.getByRole('button', { name: 'Add tag' }).hasAttribute('disabled')).toBe(true);
     expect(within(panel).getAllByRole('button', { name: /\+fitness|\+productivity|\+learning/ }).every((button) => button.hasAttribute('disabled'))).toBe(true);
-
     await user.click(screen.getByRole('button', { name: 'Back to habit editor dashboard' }));
     expect(within(screen.getByRole('button', { name: 'Edit Organization' })).getByText('#health · #focus · #running · #sleep · #reading · 5/5 tags')).toBeTruthy();
-
     await user.click(screen.getByRole('button', { name: 'Edit Identity' }));
     await user.type(screen.getByLabelText('Name *'), 'Tagged habit');
     await user.click(screen.getAllByRole('button', { name: 'Create habit' }).at(-1)!);

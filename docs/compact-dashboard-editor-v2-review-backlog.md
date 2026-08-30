@@ -272,7 +272,7 @@ git commit -m "fix(habits): restore focused schedule screens"
 
 ## CDE-RVW-005: Use reference-specific focused-screen subtitles
 
-**Status:** TODO
+**Status:** DONE
 **Priority:** P2
 **Depends on:** CDE-RVW-004
 
