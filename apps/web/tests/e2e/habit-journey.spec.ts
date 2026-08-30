@@ -262,7 +262,7 @@ test.describe.serial('critical habit journey', () => {
       }
     }
     expect(mutations).toEqual([]);
-  });
+  }); test('routes dashboard validation to Identity at compact widths without saving', async ({ page }) => { const mutations: string[] = []; trackHabitMutations(page, mutations); for (const viewport of [{ width: 320, height: 740 }, { width: 390, height: 844 }] as const) { await page.setViewportSize(viewport); await page.goto('/app/habit/new'); await page.getByRole('button', { name: 'Create habit' }).last().click(); await expect(page.locator('form')).toHaveAttribute('data-editor-panel', 'identity'); await expect(page.getByRole('alert')).toContainText('Name is required'); await expect(page.locator('#habit-name')).toBeFocused(); await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight)); expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true); const [fieldBox, footerBox] = await Promise.all([page.locator('#habit-name').boundingBox(), page.locator('[class~="fixed"]').last().boundingBox()]); expect(fieldBox).not.toBeNull(); expect(footerBox).not.toBeNull(); expect(fieldBox!.y + fieldBox!.height).toBeLessThanOrEqual(footerBox!.y); } expect(mutations).toEqual([]); });
 
   test('edits habit type on the focused panel without saving before Save', async ({ page }) => {
     const mutations: string[] = [];
@@ -287,7 +287,6 @@ test.describe.serial('critical habit journey', () => {
     await expect(page.getByRole('button', { name: 'Edit Habit type' })).toContainText('Avoid habit');
     expect(mutations).toEqual([]);
 
-    // Draft persists and both segment buttons keep 44px touch targets.
     await page.locator('[data-editor-tile="habit-type"]').click();
     const optionHeights = await page.locator('[data-habit-type-option]').evaluateAll((options) => options.map((o) => (o as HTMLElement).offsetHeight));
     expect(Math.min(...optionHeights)).toBeGreaterThanOrEqual(44);
@@ -306,13 +305,11 @@ test.describe.serial('critical habit journey', () => {
     await expect(chooser.getByRole('button')).toHaveCount(5);
     expect(await chooser.getByRole('button').evaluateAll((b) => b.map((x) => x.getAttribute('data-editor-schedule-option')))).toEqual(['daily', 'weekly_days', 'weekly_quota', 'monthly_quota', 'monthly_weeks']);
     await expect(chooser.getByRole('button', { name: 'Daily Every day' })).toHaveAttribute('aria-pressed', 'true');
-    // Daily sub-view snapshot and no-editable-controls check; full copy coverage lives in unit tests.
     await chooser.getByRole('button', { name: 'Daily Every day' }).dispatchEvent('click');
     for (const control of [/Toggle .* for the schedule/, 'Times per week', 'Times per month']) { await expect(page.getByLabel(control)).toHaveCount(0); }
     await chooser.getByRole('button', { name: 'Days of week Pick weekdays' }).dispatchEvent('click');
     await expect(chooser.getByRole('button', { name: 'Days of week Pick weekdays' })).toHaveAttribute('aria-pressed', 'true');
     await expect(page.locator('[data-editor-schedule-weekdays] [data-editor-schedule-weekdays-count]')).toHaveText('5');
-    // Quota bounds: weekly and monthly counters clamp with disabled increments; copy covered in unit tests.
     const quota = page.locator('[data-editor-schedule-weekly-quota]');
     await page.getByRole('group', { name: 'Schedule type' }).getByRole('button', { name: 'Weekly quota Target completions per week' }).dispatchEvent('click');
     for (let step = 0; step < 5; step += 1) { await quota.getByRole('button', { name: 'Increase weekly quota' }).click(); }
@@ -321,14 +318,12 @@ test.describe.serial('critical habit journey', () => {
     await page.getByRole('group', { name: 'Schedule type' }).getByRole('button', { name: 'Monthly quota Target completions per month' }).dispatchEvent('click');
     for (let step = 0; step < 28; step += 1) { await monthly.getByRole('button', { name: 'Increase monthly quota' }).click(); }
     await expect(monthly.locator('[data-editor-quota-monthly-metric]')).toHaveText('31 / month');
-    // Monthly weeks: Week 5 maps to the last-week domain; combined rule renders from both groups.
     const weeks = page.locator('[data-editor-schedule-monthly-weeks]');
     await page.getByRole('group', { name: 'Schedule type' }).getByRole('button', { name: 'Monthly weeks Choose weeks of month' }).dispatchEvent('click');
     await expect(weeks.locator('[data-editor-month-weeks-rule]')).toContainText('during week 1 of each month.');
     await weeks.getByRole('button', { name: 'Toggle last week of the month' }).dispatchEvent('click');
     await expect(weeks.locator('[data-editor-month-weeks-rule]')).toContainText('week 1 and the last week of each month.');
     await expect(page.getByRole('group', { name: 'Days inside selected weeks' }).getByRole('button', { name: 'Toggle Monday in the selected weeks' })).toHaveAttribute('aria-pressed', 'true');
-    // Draft survives panel back-and-forth; the dashboard summary reflects the new schedule (goto resets the draft).
     await page.getByRole('button', { name: 'Back to habit editor dashboard' }).click();
     await expect(page.getByRole('button', { name: 'Edit Schedule' })).toContainText('1st, Last weeks on Mon, Tue, Wed, Thu, Fri');
     await expectViewportsClean(page, async () => { await page.locator('[data-editor-tile="schedule"]').click(); await page.getByRole('button', { name: 'Back to habit editor dashboard' }).click(); });
@@ -347,7 +342,7 @@ test.describe.serial('critical habit journey', () => {
     await openHabitIdentity(page);
     await page.getByLabel('Name *').fill('Conflict proof');
     await page.getByRole('button', { name: 'Create habit' }).last().click();
-    await expect(page.getByRole('alert')).toContainText('Check the highlighted fields');
+    await expect(page.getByText('Check the highlighted fields and try again.')).toBeVisible();
   });
 
   test('keeps dashboard heatmaps usable in compact and comfortable layouts', async ({ page }) => {

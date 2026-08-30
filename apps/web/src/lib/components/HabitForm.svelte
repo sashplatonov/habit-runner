@@ -208,8 +208,12 @@
           ? '#habit-name'
           : nextErrors.description
             ? '#habit-description'
-          : nextErrors.schedule || nextErrors.scheduleWeeks || nextErrors.scheduleWeekdays
-            ? '[aria-label*="schedule" i]'
+          : nextErrors.scheduleWeeks
+            ? '[aria-label^="Toggle week" i]'
+          : nextErrors.scheduleWeekdays
+            ? '[aria-label*="in the selected weeks" i]'
+          : nextErrors.schedule
+            ? '[aria-label*="for the schedule" i]'
             : nextErrors.reminderTime
               ? '#habit-reminder'
               : nextErrors.tags
@@ -221,10 +225,23 @@
     });
   }
 
+  function panelForValidationErrors(nextErrors: Record<string, string>): HabitEditorPanel {
+    if (nextErrors.name || nextErrors.description) {
+      return 'identity';
+    }
+    if (nextErrors.schedule || nextErrors.scheduleWeeks || nextErrors.scheduleWeekdays) {
+      return 'schedule';
+    }
+    return activePanel;
+  }
+
   async function handleSubmit() {
     const nextErrors = validateHabitForm({ name, description, schedule });
     errors = nextErrors;
     if (Object.keys(nextErrors).length > 0) {
+      if (activePanel === 'dashboard') {
+        activePanel = panelForValidationErrors(nextErrors);
+      }
       focusFirstInvalidField(nextErrors);
       return;
     }
@@ -418,7 +435,7 @@
     />{/if}
 
     {#if Object.keys(errors).length > 0}
-      <div class="rounded-[1.5rem] border border-accent-secondary/30 bg-accent-secondary/10 px-4 py-3 text-sm text-accent-secondary">
+      <div class="rounded-[1.5rem] border border-accent-secondary/30 bg-accent-secondary/10 px-4 py-3 text-sm text-accent-secondary" role="alert" aria-live="assertive">
         <p class="font-semibold">Fix the highlighted fields before saving.</p>
         <ul class="mt-2 list-disc space-y-1 pl-5 text-xs">
           {#each Object.values(errors) as errorText, errorIndex (`${errorText}-${errorIndex}`)}

@@ -85,7 +85,7 @@ git commit -m "fix(api): validate supplied habit schedules"
 
 ## CDE-RVW-002: Route dashboard validation failures to the owning editor panel
 
-**Status:** TODO
+**Status:** DONE
 **Priority:** P1
 **Depends on:** -
 

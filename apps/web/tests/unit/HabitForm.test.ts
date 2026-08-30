@@ -49,8 +49,6 @@ async function openPanel(user: ReturnType<typeof userEvent.setup>, panel: string
 }
 
 describe('HabitForm', () => {
-  // Disable fake timers for simplicity; the component does not heavily depend on real timing in these tests.
-  // If needed, individual tests can set up fake timers locally.
 
   it('shows and dismisses the soft-limit warning for over-limit create flows', async () => {
     const user = userEvent.setup();
@@ -73,7 +71,6 @@ describe('HabitForm', () => {
     const customIconInput = screen.getByLabelText('Custom habit icon') as HTMLInputElement;
     await user.type(customIconInput, '🛰');
 
-    // Check that the input is not empty (emoji handling may normalize)
     expect(customIconInput.value.length).toBeGreaterThan(0);
 
     await openPanel(user, 'organization');
@@ -91,7 +88,6 @@ describe('HabitForm', () => {
     const panel = screen.getByTestId('habit-organization-panel');
     expect(within(panel).getByText('Tags · 0/5')).toBeTruthy();
 
-    // Enter adds a sanitized lowercase tag; comma add works; removal and duplicate prevention hold.
     const tagInput = screen.getByPlaceholderText('Add tag…') as HTMLInputElement;
     await user.type(tagInput, 'Health!');
     await user.keyboard('{Enter}');
@@ -105,7 +101,6 @@ describe('HabitForm', () => {
     expect(within(panel).getAllByText('#focus').length).toBe(1);
     expect((tagInput as HTMLInputElement).value).toBe('');
 
-    // Fill to the five-tag limit: running(3), sleep(4), reading(5) and the add controls disable.
     for (const tag of ['running', 'sleep', 'reading']) {
       await user.type(screen.getByPlaceholderText('Add tag…'), tag);
       await user.keyboard('{Enter}');
@@ -118,7 +113,6 @@ describe('HabitForm', () => {
     await user.click(screen.getByRole('button', { name: 'Back to habit editor dashboard' }));
     expect(within(screen.getByRole('button', { name: 'Edit Organization' })).getByText('#health · #focus · #running · #sleep · #reading · 5/5 tags')).toBeTruthy();
 
-    // A named draft submits the accumulated tags through the single save action.
     await user.click(screen.getByRole('button', { name: 'Edit Identity' }));
     await user.type(screen.getByLabelText('Name *'), 'Tagged habit');
     await user.click(screen.getAllByRole('button', { name: 'Create habit' }).at(-1)!);
@@ -174,7 +168,15 @@ describe('HabitForm', () => {
     });
     expect(screen.getAllByText('Name is required').length).toBeGreaterThan(0);
     expect(onSubmit).not.toHaveBeenCalled();
-  });
+  }); it('routes a dashboard name validation failure to Identity and focuses the name field', async () => {
+    const user = userEvent.setup(); const onSubmit = vi.fn().mockResolvedValue(undefined); render(HabitForm, { props: { mode: 'create', allHabits: [], onBack: vi.fn(), onSubmit } }); await user.click(screen.getAllByRole('button', { name: 'Create habit' }).at(-1)!);
+    await waitFor(() => { expect(document.querySelector('form')?.getAttribute('data-editor-panel')).toBe('identity'); expect(document.activeElement?.id).toBe('habit-name'); });
+    expect(screen.getByRole('alert').textContent).toContain('Name is required'); expect(onSubmit).not.toHaveBeenCalled(); }); it('routes an invalid monthly-weeks dashboard save to Schedule without changing the draft', async () => {
+    const user = userEvent.setup(); const onSubmit = vi.fn().mockResolvedValue(undefined);
+    render(HabitForm, { props: { mode: 'create', allHabits: [], onBack: vi.fn(), onSubmit } }); await user.click(screen.getByRole('button', { name: 'Edit Identity' })); await user.type(screen.getByLabelText('Name *'), 'Monthly habit'); await user.click(screen.getByRole('button', { name: 'Back to habit editor dashboard' })); await user.click(screen.getByRole('button', { name: 'Edit Schedule' }));
+    await user.click(screen.getByRole('button', { name: 'Monthly weeks Choose weeks of month' })); await user.click(screen.getByRole('button', { name: 'Toggle week 1 of the month' })); await user.click(screen.getByRole('button', { name: 'Back to habit editor dashboard' }));
+    await user.click(screen.getAllByRole('button', { name: 'Create habit' }).at(-1)!); await waitFor(() => { expect(document.querySelector('form')?.getAttribute('data-editor-panel')).toBe('schedule'); expect(document.activeElement?.getAttribute('aria-label')).toBe('Toggle week 1 of the month'); });
+    expect(screen.getAllByRole('alert')[0].textContent).toContain('Select at least one week'); expect(screen.getByRole('button', { name: 'Monthly weeks Choose weeks of month' }).getAttribute('aria-pressed')).toBe('true'); expect(onSubmit).not.toHaveBeenCalled(); });
 
   it('keeps the habit-type draft when returning to the dashboard and submits it on save', async () => {
     const user = userEvent.setup();
