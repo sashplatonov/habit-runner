@@ -160,7 +160,7 @@ git commit -m "refactor(auth): require user repository in UserService"
 
 ## TASK-003: Extract habit error payloads into a domain factory
 
-**Status:** TODO
+**Status:** DONE
 **Priority:** P2
 **Depends on:** -
 

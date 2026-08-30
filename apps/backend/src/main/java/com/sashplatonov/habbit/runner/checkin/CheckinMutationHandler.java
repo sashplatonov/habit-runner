@@ -5,6 +5,7 @@ import com.sashplatonov.habbit.runner.checkin.dto.CheckinResponseDto;
 import com.sashplatonov.habbit.runner.checkin.dto.CheckinUpsertRequestDto;
 import com.sashplatonov.habbit.runner.checkin.support.CheckinMutationCoordinator;
 import com.sashplatonov.habbit.runner.checkin.support.CheckinResponses;
+import com.sashplatonov.habbit.runner.habit.support.HabitResponses;
 import com.sashplatonov.habbit.runner.model.CheckinEntity;
 import com.sashplatonov.habbit.runner.model.HabitEntity;
 import com.sashplatonov.habbit.runner.repository.CheckinRepository;
@@ -59,7 +60,7 @@ public class CheckinMutationHandler {
   ) {
     var habit = habitRepository.findByIdAndUserId(habitId, userId);
     if (habit == null) {
-      return CheckinResponses.notFound("Habit not found", "HABIT_NOT_FOUND");
+      return HabitResponses.notFound();
     }
     var parsedDate = parseDate(date);
     if (parsedDate == null) {
@@ -147,7 +148,7 @@ public class CheckinMutationHandler {
   private OperationResult<Void> deleteInternal(String userId, String habitId, String date) {
     var habit = habitRepository.findByIdAndUserId(habitId, userId);
     if (habit == null) {
-      return CheckinResponses.notFound("Habit not found", "HABIT_NOT_FOUND");
+      return HabitResponses.notFound();
     }
     var parsedDate = parseDate(date);
     if (parsedDate == null) {

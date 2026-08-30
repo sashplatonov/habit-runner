@@ -1,6 +1,5 @@
 package com.sashplatonov.habbit.runner.habit;
 
-import com.sashplatonov.habbit.runner.api.ErrorResponse;
 import com.sashplatonov.habbit.runner.api.OperationResult;
 import com.sashplatonov.habbit.runner.habit.dto.HabitCreateRequestDto;
 import com.sashplatonov.habbit.runner.habit.dto.HabitResponseDto;
@@ -8,6 +7,7 @@ import com.sashplatonov.habbit.runner.habit.dto.HabitStatusUpdateRequestDto;
 import com.sashplatonov.habbit.runner.habit.dto.HabitUpdateRequestDto;
 import com.sashplatonov.habbit.runner.model.HabitEntity;
 import com.sashplatonov.habbit.runner.habit.support.HabitMutationSupport;
+import com.sashplatonov.habbit.runner.habit.support.HabitResponses;
 import com.sashplatonov.habbit.runner.metrics.instrumentation.ServiceMetric;
 import com.sashplatonov.habbit.runner.metrics.instrumentation.ServiceMetricsInstrumentation;
 import com.sashplatonov.habbit.runner.repository.CheckinRepository;
@@ -52,13 +52,7 @@ public class HabitServiceImpl implements HabitService {
       log.debug("Creating habit userId={} habitId={}", userId, request.id());
       var existing = habitRepository.findHabitById(request.id());
       if (existing != null) {
-        return OperationResult.failure(new ErrorResponse(
-            "https://habbit-runner.dev/errors/habit-conflict",
-            "Conflict",
-            409,
-            "Habit id already exists",
-            "HABIT_CONFLICT"
-        ));
+        return HabitResponses.idConflict();
       }
 
       var habit = new HabitEntity();
@@ -80,10 +74,10 @@ public class HabitServiceImpl implements HabitService {
       log.debug("Updating habit userId={} habitId={}", userId, habitId);
       var habit = habitRepository.findByIdAndUserId(habitId, userId);
       if (habit == null) {
-        return notFound();
+        return HabitResponses.notFound();
       }
       if (request.version() != null && request.version() != habit.getVersion()) {
-        return versionConflict();
+        return HabitResponses.versionConflict();
       }
 
       habitMapper.applyUpdate(request, habit);
@@ -107,10 +101,10 @@ public class HabitServiceImpl implements HabitService {
       log.debug("Updating habit status userId={} habitId={} archived={}", userId, habitId, request.archived());
       var habit = habitRepository.findByIdAndUserId(habitId, userId);
       if (habit == null) {
-        return notFound();
+        return HabitResponses.notFound();
       }
       if (request.version() != null && request.version() != habit.getVersion()) {
-        return versionConflict();
+        return HabitResponses.versionConflict();
       }
 
       habit.setArchived(Boolean.TRUE.equals(request.archived()));
@@ -127,13 +121,7 @@ public class HabitServiceImpl implements HabitService {
       checkinRepository.deleteByHabitIdAndUserId(habitId, userId);
       var deleted = habitRepository.deleteByIdAndUserId(habitId, userId);
       if (deleted == 0) {
-        return OperationResult.failure(new ErrorResponse(
-            "https://habbit-runner.dev/errors/habit-not-found",
-            "Not Found",
-            404,
-            "Habit not found",
-            "HABIT_NOT_FOUND"
-        ));
+        return HabitResponses.notFound();
       }
       if (serviceMetricsInstrumentation != null) {
         serviceMetricsInstrumentation.record(ServiceMetric.HABIT_DELETED);
@@ -142,23 +130,4 @@ public class HabitServiceImpl implements HabitService {
     });
   }
 
-  private OperationResult<HabitResponseDto> notFound() {
-    return OperationResult.failure(new ErrorResponse(
-        "https://habbit-runner.dev/errors/habit-not-found",
-        "Not Found",
-        404,
-        "Habit not found",
-        "HABIT_NOT_FOUND"
-    ));
-  }
-
-  private OperationResult<HabitResponseDto> versionConflict() {
-    return OperationResult.failure(new ErrorResponse(
-        "https://habbit-runner.dev/errors/conflict",
-        "Conflict",
-        409,
-        "The resource was changed by another request",
-        "RESOURCE_VERSION_CONFLICT"
-    ));
-  }
 }
