@@ -12,25 +12,73 @@ import java.lang.reflect.Field;
 
 final class TestAuthService extends AuthService {
   private final TestOAuthStateAccess oauthStateAccess;
+  private final TestAuthJwtUtil jwtUtil;
+  private final TestAuthRefreshTokenService refreshTokenService;
+  private final TestAuthUserService userService;
+  private final TestOAuthSupport oauthSupport;
+  private final TestIdentityService identityService;
   private Instant currentTime = Instant.parse("2026-04-10T13:00:00Z");
 
-  TestAuthService(StubCollaborators collaborators) {
-    this(collaborators, new TestOAuthStateAccess());
-  }
-
-  TestAuthService(StubCollaborators collaborators, TestOAuthStateAccess oauthStateAccess) {
+  private TestAuthService(
+      TestAuthJwtUtil jwtUtil,
+      TestAuthRefreshTokenService refreshTokenService,
+      TestAuthUserService userService,
+      TestOAuthSupport oauthSupport,
+      TestIdentityService identityService,
+      TestOAuthStateAccess oauthStateAccess
+  ) {
     super(
         TestConfigFactory.defaultAuthConfig(),
-        collaborators,
+        jwtUtil,
+        refreshTokenService,
+        userService,
+        oauthSupport,
+        identityService,
         oauthStateAccess,
         new AuthServiceSupport(null, null),
-        new OAuthAccountLinkService(collaborators)
+        new OAuthAccountLinkService(userService)
     );
+    this.jwtUtil = jwtUtil;
+    this.refreshTokenService = refreshTokenService;
+    this.userService = userService;
+    this.oauthSupport = oauthSupport;
+    this.identityService = identityService;
     this.oauthStateAccess = oauthStateAccess;
   }
 
+  static TestAuthService create() {
+    return new TestAuthService(
+        new TestAuthJwtUtil(),
+        new TestAuthRefreshTokenService(),
+        new TestAuthUserService(),
+        new TestOAuthSupport(),
+        new TestIdentityService(),
+        new TestOAuthStateAccess()
+    );
+  }
+
+  TestAuthJwtUtil jwtUtil() {
+    return jwtUtil;
+  }
+
+  TestAuthRefreshTokenService refreshTokenService() {
+    return refreshTokenService;
+  }
+
+  TestAuthUserService userService() {
+    return userService;
+  }
+
+  TestOAuthSupport oauthSupport() {
+    return oauthSupport;
+  }
+
+  TestIdentityService identityService() {
+    return identityService;
+  }
+
   void setUserById(UserEntity userById) {
-    ((StubCollaborators) collaborators).setUserById(userById);
+    userService.setUserById(userById);
   }
 
   void setOauthState(OAuthStateEntity oauthState) {

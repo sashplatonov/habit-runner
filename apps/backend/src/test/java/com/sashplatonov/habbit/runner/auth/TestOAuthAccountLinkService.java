@@ -2,12 +2,12 @@ package com.sashplatonov.habbit.runner.auth;
 
 import com.sashplatonov.habbit.runner.auth.identity.AccountMergeService;
 import com.sashplatonov.habbit.runner.auth.service.OAuthAccountLinkService;
-import com.sashplatonov.habbit.runner.auth.support.AuthCollaborators;
+import com.sashplatonov.habbit.runner.auth.service.UserService;
 import java.lang.reflect.Field;
 
 final class TestOAuthAccountLinkService extends OAuthAccountLinkService {
-  TestOAuthAccountLinkService(AuthCollaborators collaborators, AccountMergeService mergeService) {
-    super(collaborators);
+  TestOAuthAccountLinkService(UserService userService, AccountMergeService mergeService) {
+    super(userService);
     try {
       Field field = OAuthAccountLinkService.class.getDeclaredField("accountMergeService");
       field.setAccessible(true);

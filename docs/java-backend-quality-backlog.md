@@ -356,7 +356,7 @@ git commit -m "refactor(auth): single-constructor DI and dead API removal"
 
 ## TASK-006: Dissolve the AuthCollaborators facade
 
-**Status:** TODO
+**Status:** DONE
 **Priority:** P1
 **Depends on:** TASK-005
 

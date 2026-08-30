@@ -3,9 +3,13 @@ package com.sashplatonov.habbit.runner.auth;
 import com.sashplatonov.habbit.runner.auth.security.CurrentUser;
 import com.sashplatonov.habbit.runner.auth.service.AuthService;
 import com.sashplatonov.habbit.runner.auth.service.OAuthAccountLinkService;
-import com.sashplatonov.habbit.runner.auth.support.AuthCollaborators;
 import com.sashplatonov.habbit.runner.auth.support.OAuthCallbackSession;
 import com.sashplatonov.habbit.runner.auth.dto.TokenResponse;
+import com.sashplatonov.habbit.runner.support.RecordingIdentityService;
+import com.sashplatonov.habbit.runner.support.RecordingJwtUtil;
+import com.sashplatonov.habbit.runner.support.RecordingOAuthSupport;
+import com.sashplatonov.habbit.runner.support.RecordingRefreshTokenService;
+import com.sashplatonov.habbit.runner.support.RecordingUserService;
 import com.sashplatonov.habbit.runner.support.TestConfigFactory;
 
 public class ResourceAuthService extends AuthService {
@@ -22,10 +26,14 @@ public class ResourceAuthService extends AuthService {
   public ResourceAuthService() {
     super(
         TestConfigFactory.defaultAuthConfig(),
-        new AuthCollaborators(null, null, null, null),
+        new RecordingJwtUtil(),
+        new RecordingRefreshTokenService(),
+        new RecordingUserService(),
+        new RecordingOAuthSupport(),
+        new RecordingIdentityService(),
         null,
         null,
-        new OAuthAccountLinkService(new AuthCollaborators(null, null, null, null))
+        new OAuthAccountLinkService(new RecordingUserService())
     );
   }
 

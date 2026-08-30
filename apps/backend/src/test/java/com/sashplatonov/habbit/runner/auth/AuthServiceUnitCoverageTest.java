@@ -2,7 +2,6 @@ package com.sashplatonov.habbit.runner.auth;
 
 import com.sashplatonov.habbit.runner.auth.service.OAuthAccountLinkService;
 import com.sashplatonov.habbit.runner.auth.support.RefreshTokenDigest;
-import com.sashplatonov.habbit.runner.auth.dto.TokenResponse;
 import com.sashplatonov.habbit.runner.auth.dto.UpdatePreferencesRequest;
 import com.sashplatonov.habbit.runner.model.OAuthStateEntity;
 import com.sashplatonov.habbit.runner.model.RefreshTokenEntity;
@@ -24,13 +23,12 @@ class AuthServiceUnitCoverageTest {
 
   @Test
   void shouldRefreshTokenWhenActiveRefreshRecordAndUserExist() {
-    var collaborators = new StubCollaborators();
-    var service = new TestAuthService(collaborators);
+    var service = TestAuthService.create();
     var refreshRecord = new RefreshTokenEntity();
     refreshRecord.setTokenHash(RefreshTokenDigest.hash("refresh-token"));
     refreshRecord.setFamilyId("family-1");
     refreshRecord.setUserId("user-1");
-    collaborators.setActiveRefreshToken(refreshRecord);
+    service.refreshTokenService().setActiveRefreshToken(refreshRecord);
     service.setUserById(user("user-1", "user@example.test"));
 
     var tokenResponse = service.refreshToken("refresh-token");
@@ -41,57 +39,53 @@ class AuthServiceUnitCoverageTest {
 
   @Test
   void shouldRejectRefreshWhenUserNoLongerExists() {
-    var collaborators = new StubCollaborators();
-    var service = new TestAuthService(collaborators);
+    var service = TestAuthService.create();
     var refreshRecord = new RefreshTokenEntity();
     refreshRecord.setTokenHash(RefreshTokenDigest.hash("refresh-token"));
     refreshRecord.setFamilyId("family-1");
     refreshRecord.setUserId("missing-user");
-    collaborators.setActiveRefreshToken(refreshRecord);
+    service.refreshTokenService().setActiveRefreshToken(refreshRecord);
 
     assertThrows(NotAuthorizedException.class, () -> service.refreshToken("refresh-token"));
   }
 
   @Test
-  void shouldDelegateTokenRevocationToCollaborators() {
-    var collaborators = new StubCollaborators();
-    var service = new TestAuthService(collaborators);
+  void shouldDelegateTokenRevocationToRefreshTokenService() {
+    var service = TestAuthService.create();
 
     service.revokeToken("refresh-token");
 
-    assertEquals("refresh-token", collaborators.getRevokedToken());
+    assertEquals("refresh-token", service.refreshTokenService().getRevokedToken());
   }
 
   @Test
   void shouldIssueCanonicalSessionAfterTelegramPairingMerge() {
-    var collaborators = new StubCollaborators();
-    collaborators.setUserById(user("owner", "owner@example.test"));
-    var service = new TestAuthService(collaborators);
+    var service = TestAuthService.create();
+    service.setUserById(user("owner", "owner@example.test"));
 
     var session = service.issueSessionForUserId("owner");
 
-    assertEquals("access-1", session.accessToken());
+    assertEquals("access::owner::owner@example.test::3600", session.accessToken());
   }
 
   @Test
   void shouldRejectCanonicalSessionWhenOwnerWasRemoved() {
-    var service = new TestAuthService(new StubCollaborators());
+    var service = TestAuthService.create();
 
     assertThrows(NotAuthorizedException.class, () -> service.issueSessionForUserId("missing"));
   }
 
   @Test
   void shouldTranslateInvalidAccessTokenToUnauthorized() {
-    var collaborators = new StubCollaborators();
-    collaborators.setVerifyFailure(new IllegalArgumentException("invalid"));
-    var service = new TestAuthService(collaborators);
+    var service = TestAuthService.create();
+    service.jwtUtil().setVerifyFailure(new IllegalArgumentException("invalid"));
 
     assertThrows(NotAuthorizedException.class, () -> service.verifyAccessToken("bad-token"));
   }
 
   @Test
   void shouldReturnCurrentUserWhenAccessTokenIsValid() {
-    var service = new TestAuthService(new StubCollaborators());
+    var service = TestAuthService.create();
 
     var currentUser = service.verifyAccessToken("good-token");
 
@@ -101,9 +95,8 @@ class AuthServiceUnitCoverageTest {
 
   @Test
   void shouldCreateOAuthAuthorizationUrlAndStoreNormalizedState() {
-    var collaborators = new StubCollaborators();
-    collaborators.setNormalizedReturnTo("/dashboard");
-    var service = new TestAuthService(collaborators);
+    var service = TestAuthService.create();
+    service.oauthSupport().setNormalizedReturnTo("/dashboard");
     service.setCurrentTime(Instant.parse("2026-04-10T13:00:00Z"));
 
     var authorizationUrl = service.createOAuthAuthorizationUrl("/settings");
@@ -116,9 +109,8 @@ class AuthServiceUnitCoverageTest {
 
   @Test
   void shouldCreateGoogleLinkAuthorizationUrlWithOwnerIntent() {
-    var collaborators = new StubCollaborators();
-    collaborators.setNormalizedReturnTo("/app/account");
-    var service = new TestAuthService(collaborators);
+    var service = TestAuthService.create();
+    service.oauthSupport().setNormalizedReturnTo("/app/account");
 
     var authorizationUrl = service.createGoogleLinkAuthorizationUrl("telegram-user", "/app/account");
 
@@ -129,7 +121,7 @@ class AuthServiceUnitCoverageTest {
 
   @Test
   void shouldRejectOAuthCallbackWhenParametersAreMissing() {
-    var service = new TestAuthService(new StubCollaborators());
+    var service = TestAuthService.create();
 
     assertThrows(BadRequestException.class, () -> service.handleOAuthCallbackSession(" ", "state-token"));
     assertThrows(BadRequestException.class, () -> service.handleOAuthCallbackSession("code-123", " "));
@@ -137,7 +129,7 @@ class AuthServiceUnitCoverageTest {
 
   @Test
   void shouldRejectOAuthCallbackWhenStateIsMissingOrExpired() {
-    var service = new TestAuthService(new StubCollaborators());
+    var service = TestAuthService.create();
     service.setCurrentTime(Instant.parse("2026-04-10T13:00:00Z"));
 
     assertThrows(NotAuthorizedException.class, () -> service.handleOAuthCallbackSession("code-123", "state-token"));
@@ -154,12 +146,10 @@ class AuthServiceUnitCoverageTest {
 
   @Test
   void shouldBuildRedirectWhenOAuthCallbackStateIsValid() {
-    var collaborators = new StubCollaborators();
-    collaborators.setOauthEmail("oauth@example.test");
-    collaborators.setOauthUser(user("oauth-user", "oauth@example.test"));
-    collaborators.setIssuedSession(new TokenResponse("access-1", "refresh-1", 3600, "Bearer"));
-    collaborators.setCallbackRedirect("https://app.example.test/callback?ok=1");
-    var service = new TestAuthService(collaborators);
+    var service = TestAuthService.create();
+    service.oauthSupport().setOauthEmail("oauth@example.test");
+    service.userService().setOauthUser(user("oauth-user", "oauth@example.test"));
+    service.oauthSupport().setCallbackRedirect("https://app.example.test/callback?ok=1");
     service.setCurrentTime(Instant.parse("2026-04-10T13:00:00Z"));
     var oauthState = new OAuthStateEntity();
     oauthState.state = "state-token";
@@ -171,19 +161,18 @@ class AuthServiceUnitCoverageTest {
 
     assertEquals("https://app.example.test/callback?ok=1", redirect);
     assertEquals("state-token", service.getDeletedState());
-    assertEquals("code-123", collaborators.getExchangedCode());
+    assertEquals("code-123", service.oauthSupport().getExchangedCode());
   }
 
   @Test
   void shouldMergeGoogleAccountIntoTelegramOwnerWhenLinkIntentIsPresent() {
-    var collaborators = new StubCollaborators();
+    var service = TestAuthService.create();
     var telegramOwner = user("telegram-user", null);
     var googleUser = user("google-user", "oauth@example.test");
-    collaborators.setUserById(telegramOwner);
-    collaborators.setOauthUser(googleUser);
-    var service = new TestAuthService(collaborators);
+    service.userService().setUserById(telegramOwner);
+    service.userService().setOauthUser(googleUser);
     var merge = new RecordingAccountMergeService();
-    service.setAccountLinkService(new TestOAuthAccountLinkService(collaborators, merge));
+    service.setAccountLinkService(new TestOAuthAccountLinkService(service.userService(), merge));
     var oauthState = new OAuthStateEntity();
     oauthState.state = "state-token";
     oauthState.returnTo = "/app/account";
@@ -200,10 +189,10 @@ class AuthServiceUnitCoverageTest {
 
   @Test
   void shouldKeepExistingUserWhenGoogleLinkAlreadyPointsToThatUser() {
-    var collaborators = new StubCollaborators();
+    var userService = new TestAuthUserService();
     var user = user("same-user", "old@example.test");
-    collaborators.setUserById(user);
-    var service = new OAuthAccountLinkService(collaborators);
+    userService.setUserById(user);
+    var service = new OAuthAccountLinkService(userService);
 
     var resolved = service.resolve(user, "new@example.test", "same-user");
 
@@ -214,7 +203,7 @@ class AuthServiceUnitCoverageTest {
   @Test
   void shouldReturnGoogleUserWhenNoLinkIntentExists() {
     var user = user("google-user", "oauth@example.test");
-    var service = new OAuthAccountLinkService();
+    var service = new OAuthAccountLinkService(new TestAuthUserService());
 
     assertEquals(user, service.resolve(user, user.getEmail(), null));
   }
