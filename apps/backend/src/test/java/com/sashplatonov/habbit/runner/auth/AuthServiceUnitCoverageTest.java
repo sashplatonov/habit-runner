@@ -1,6 +1,7 @@
 package com.sashplatonov.habbit.runner.auth;
 
 import com.sashplatonov.habbit.runner.auth.service.OAuthAccountLinkService;
+import com.sashplatonov.habbit.runner.auth.support.AuthRateLimitException;
 import com.sashplatonov.habbit.runner.auth.support.RefreshTokenDigest;
 import com.sashplatonov.habbit.runner.auth.dto.UpdatePreferencesRequest;
 import com.sashplatonov.habbit.runner.model.OAuthStateEntity;
@@ -47,6 +48,23 @@ class AuthServiceUnitCoverageTest {
     service.refreshTokenService().setActiveRefreshToken(refreshRecord);
 
     assertThrows(NotAuthorizedException.class, () -> service.refreshToken("refresh-token"));
+  }
+
+  @Test
+  void shouldEnforceAccountRateLimitOnRefresh() {
+    var service = TestAuthService.create();
+    var refreshRecord = new RefreshTokenEntity();
+    refreshRecord.setTokenHash(RefreshTokenDigest.hash("refresh-token"));
+    refreshRecord.setFamilyId("family-1");
+    refreshRecord.setUserId("user-1");
+    service.refreshTokenService().setActiveRefreshToken(refreshRecord);
+    service.setUserById(user("user-1", "user@example.test"));
+
+    for (var i = 0; i < 10; i++) {
+      service.refreshToken("refresh-token");
+    }
+
+    assertThrows(AuthRateLimitException.class, () -> service.refreshToken("refresh-token"));
   }
 
   @Test

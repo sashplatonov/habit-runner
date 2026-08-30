@@ -418,7 +418,7 @@ git commit -m "refactor(auth): inject collaborators directly and drop facade"
 
 ## TASK-007: Dissolve AuthServiceSupport into direct collaborators
 
-**Status:** TODO
+**Status:** DONE
 **Priority:** P1
 **Depends on:** TASK-006
 

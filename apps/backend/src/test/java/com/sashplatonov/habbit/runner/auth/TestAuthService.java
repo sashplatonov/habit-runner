@@ -2,13 +2,16 @@ package com.sashplatonov.habbit.runner.auth;
 
 import com.sashplatonov.habbit.runner.auth.service.AuthService;
 import com.sashplatonov.habbit.runner.auth.service.OAuthAccountLinkService;
-import com.sashplatonov.habbit.runner.auth.support.AuthServiceSupport;
+import com.sashplatonov.habbit.runner.auth.support.AuthRateLimitService;
+import com.sashplatonov.habbit.runner.metrics.instrumentation.ServiceMetricsInstrumentation;
 import com.sashplatonov.habbit.runner.model.OAuthStateEntity;
 import com.sashplatonov.habbit.runner.model.UserEntity;
 import com.sashplatonov.habbit.runner.support.TestConfigFactory;
 
 import java.time.Instant;
 import java.lang.reflect.Field;
+
+import static org.mockito.Mockito.mock;
 
 final class TestAuthService extends AuthService {
   private final TestOAuthStateAccess oauthStateAccess;
@@ -35,7 +38,8 @@ final class TestAuthService extends AuthService {
         oauthSupport,
         identityService,
         oauthStateAccess,
-        new AuthServiceSupport(null, null),
+        new AuthRateLimitService(),
+        mock(ServiceMetricsInstrumentation.class),
         new OAuthAccountLinkService(userService)
     );
     this.jwtUtil = jwtUtil;

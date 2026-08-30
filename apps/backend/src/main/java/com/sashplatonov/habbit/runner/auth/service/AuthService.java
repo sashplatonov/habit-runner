@@ -8,12 +8,13 @@ import com.sashplatonov.habbit.runner.auth.security.JwtUtil;
 import com.sashplatonov.habbit.runner.auth.support.OAuthCallbackSession;
 import com.sashplatonov.habbit.runner.auth.support.OAuthSupport;
 import com.sashplatonov.habbit.runner.auth.support.AuthSupport;
-import com.sashplatonov.habbit.runner.auth.support.AuthServiceSupport;
+import com.sashplatonov.habbit.runner.auth.support.AuthRateLimitService;
 import com.sashplatonov.habbit.runner.auth.telegram.TelegramWebAppUser;
 import com.sashplatonov.habbit.runner.auth.support.RefreshTokenRejectedException;
 import com.sashplatonov.habbit.runner.auth.dto.TokenResponse;
 import com.sashplatonov.habbit.runner.infrastructure.http.TraceContextSupport;
 import com.sashplatonov.habbit.runner.metrics.instrumentation.ServiceMetric;
+import com.sashplatonov.habbit.runner.metrics.instrumentation.ServiceMetricsInstrumentation;
 import com.sashplatonov.habbit.runner.model.OAuthStateEntity;
 import com.sashplatonov.habbit.runner.model.UserEntity;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -37,7 +38,8 @@ public class AuthService {
   protected final OAuthSupport oauthSupport;
   protected final IdentityService identityService;
   protected final OAuthStateAccess oauthStateAccess;
-  protected final AuthServiceSupport authServiceSupport;
+  protected final AuthRateLimitService authRateLimitService;
+  protected final ServiceMetricsInstrumentation serviceMetricsInstrumentation;
   protected OAuthAccountLinkService oauthAccountLinkService;
 
   @Inject
@@ -49,7 +51,8 @@ public class AuthService {
       OAuthSupport oauthSupport,
       IdentityService identityService,
       OAuthStateAccess oauthStateAccess,
-      AuthServiceSupport authServiceSupport,
+      AuthRateLimitService authRateLimitService,
+      ServiceMetricsInstrumentation serviceMetricsInstrumentation,
       OAuthAccountLinkService oauthAccountLinkService
   ) {
     this.authConfig = authConfig;
@@ -59,21 +62,20 @@ public class AuthService {
     this.oauthSupport = oauthSupport;
     this.identityService = identityService;
     this.oauthStateAccess = oauthStateAccess;
-    this.authServiceSupport = authServiceSupport;
+    this.authRateLimitService = authRateLimitService;
+    this.serviceMetricsInstrumentation = serviceMetricsInstrumentation;
     this.oauthAccountLinkService = oauthAccountLinkService;
   }
 
   @Transactional
   public TokenResponse refreshToken(String token) {
     var record = refreshTokenService.requireActive(token);
-    if (authServiceSupport != null) {
-      authServiceSupport.checkAccountRateLimit(
-          "auth:refresh",
-          record.getFamilyId(),
-          10,
-          Duration.ofMinutes(10)
-      );
-    }
+    authRateLimitService.checkAccount(
+        "auth:refresh",
+        record.getFamilyId(),
+        10,
+        Duration.ofMinutes(10)
+    );
     var user = userService.findRequiredUserById(record.getUserId());
     if (user == null) {
       log.warn(
@@ -90,9 +92,7 @@ public class AuthService {
         record.getUserId(),
         TraceContextSupport.traceIdOrUnknown()
     );
-    if (authServiceSupport != null) {
-      authServiceSupport.record(ServiceMetric.AUTH_REFRESH_SUCCESS);
-    }
+    serviceMetricsInstrumentation.record(ServiceMetric.AUTH_REFRESH_SUCCESS);
     return new TokenResponse(accessToken, refreshToken, authConfig.accessTokenTtlSeconds(), "Bearer");
   }
 
@@ -106,10 +106,8 @@ public class AuthService {
     var resolution = identityService.resolveTelegram(Long.toString(telegramUser.id()), displayName);
     var user = userService.findRequiredUserById(resolution.userId());
     var session = issueTokenPair(user, authConfig.accessTokenTtlSeconds(), authConfig.refreshTokenDays());
-    if (authServiceSupport != null) {
-      authServiceSupport.checkAccountRateLimit("auth:telegram:session", Long.toString(telegramUser.id()), 10, Duration.ofMinutes(10));
-      authServiceSupport.record(ServiceMetric.AUTH_LOGIN_SUCCESS_GOOGLE);
-    }
+    authRateLimitService.checkAccount("auth:telegram:session", Long.toString(telegramUser.id()), 10, Duration.ofMinutes(10));
+    serviceMetricsInstrumentation.record(ServiceMetric.AUTH_LOGIN_SUCCESS_GOOGLE);
     return new TokenResponse(session.accessToken(), session.refreshToken(), session.expiresIn(),
         session.tokenType(), resolution.existingAccount());
   }
@@ -172,14 +170,12 @@ public class AuthService {
       throw new NotAuthorizedException("Invalid or expired OAuth state");
     }
     var email = oauthSupport.exchangeCodeForEmail(code);
-    if (authServiceSupport != null) {
-      authServiceSupport.checkAccountRateLimit(
-          "auth:google:callback",
-          email,
-          10,
-          Duration.ofMinutes(10)
-      );
-    }
+    authRateLimitService.checkAccount(
+        "auth:google:callback",
+        email,
+        10,
+        Duration.ofMinutes(10)
+    );
     var googleUser = userService.findOrCreateUser(email);
     var user = oauthAccountLinkService.resolve(googleUser, email, stateEntity.linkUserId());
     var session = issueTokenPair(user, authConfig.accessTokenTtlSeconds(), authConfig.refreshTokenDays());
@@ -188,9 +184,7 @@ public class AuthService {
         user.getId(),
         TraceContextSupport.traceIdOrUnknown()
     );
-    if (authServiceSupport != null) {
-      authServiceSupport.record(ServiceMetric.AUTH_LOGIN_SUCCESS_GOOGLE);
-    }
+    serviceMetricsInstrumentation.record(ServiceMetric.AUTH_LOGIN_SUCCESS_GOOGLE);
     return new OAuthCallbackSession(oauthSupport.buildCallbackRedirect(stateEntity.returnTo), session);
   }
 
