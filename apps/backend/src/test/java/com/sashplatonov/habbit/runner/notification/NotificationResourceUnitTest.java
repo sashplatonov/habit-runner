@@ -3,10 +3,12 @@ package com.sashplatonov.habbit.runner.notification;
 import com.sashplatonov.habbit.runner.auth.security.CurrentUser;
 import com.sashplatonov.habbit.runner.auth.security.CurrentUserContext;
 import com.sashplatonov.habbit.runner.api.ErrorResponse;
+import com.sashplatonov.habbit.runner.metrics.instrumentation.ServiceMetricsInstrumentation;
 import com.sashplatonov.habbit.runner.notification.dto.PushSubscriptionEndpointRequest;
 import com.sashplatonov.habbit.runner.notification.dto.VapidPublicKeyResponse;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.mock;
 import com.sashplatonov.habbit.runner.support.TestHelpers;
 
 class NotificationResourceUnitTest {
@@ -42,7 +44,11 @@ class NotificationResourceUnitTest {
     var currentUserContext = new CurrentUserContext();
     currentUserContext.setUser(new CurrentUser("user-1", "user@example.test"));
     return new NotificationResource(
-        new NotificationServiceImpl(() -> java.util.Optional.ofNullable(vapidPublicKey), null),
+        new NotificationServiceImpl(
+            () -> java.util.Optional.ofNullable(vapidPublicKey),
+            null,
+            mock(ServiceMetricsInstrumentation.class)
+        ),
         currentUserContext
     );
   }

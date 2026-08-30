@@ -480,7 +480,7 @@ git commit -m "refactor(auth): require rate limit and metrics collaborators dire
 
 ## TASK-008: Notification service DI hygiene and import cleanup
 
-**Status:** TODO
+**Status:** DONE
 **Priority:** P1
 **Depends on:** -
 

@@ -2,6 +2,7 @@ package com.sashplatonov.habbit.runner.notification;
 
 import com.sashplatonov.habbit.runner.api.OperationFailure;
 import com.sashplatonov.habbit.runner.api.OperationSuccess;
+import com.sashplatonov.habbit.runner.metrics.instrumentation.ServiceMetricsInstrumentation;
 import com.sashplatonov.habbit.runner.model.PushSubscriptionEntity;
 import com.sashplatonov.habbit.runner.notification.dto.PushSubscriptionEndpointRequest;
 import com.sashplatonov.habbit.runner.notification.dto.PushSubscriptionKeys;
@@ -15,12 +16,15 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.mockito.Mockito.mock;
 
 class NotificationServiceUnitCoverageTest {
 
+  private final ServiceMetricsInstrumentation metrics = mock(ServiceMetricsInstrumentation.class);
+
   @Test
   void shouldReturnFailureWhenVapidKeyIsMissing() {
-    var service = new NotificationServiceImpl(() -> Optional.empty(), new StubPushSubscriptionRepository());
+    var service = new NotificationServiceImpl(() -> Optional.empty(), new StubPushSubscriptionRepository(), metrics);
 
     var result = service.getVapidPublicKey();
 
@@ -33,7 +37,7 @@ class NotificationServiceUnitCoverageTest {
   @Test
   void shouldHandleSubscribeAndUnsubscribeScenarios() {
     var repository = new StubPushSubscriptionRepository();
-    var service = new NotificationServiceImpl(() -> Optional.of("public-key"), repository);
+    var service = new NotificationServiceImpl(() -> Optional.of("public-key"), repository, metrics);
     var request = new PushSubscriptionRequest(
         "https://push.example/subscriptions/1",
         new PushSubscriptionKeys("p256dh-key", "auth-key")

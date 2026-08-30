@@ -3,6 +3,7 @@ package com.sashplatonov.habbit.runner.notification;
 import com.sashplatonov.habbit.runner.auth.security.CurrentUser;
 import com.sashplatonov.habbit.runner.auth.security.CurrentUserContext;
 import com.sashplatonov.habbit.runner.api.ErrorResponse;
+import com.sashplatonov.habbit.runner.metrics.instrumentation.ServiceMetricsInstrumentation;
 import com.sashplatonov.habbit.runner.model.PushSubscriptionEntity;
 import com.sashplatonov.habbit.runner.notification.dto.PushSubscriptionEndpointRequest;
 import com.sashplatonov.habbit.runner.notification.dto.PushSubscriptionKeys;
@@ -21,6 +22,7 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.mock;
 import com.sashplatonov.habbit.runner.support.TestHelpers;
 
 @QuarkusTest
@@ -122,7 +124,11 @@ class NotificationResourceCoverageTest extends AuthenticatedApiTestSupport {
     var currentUserContext = new CurrentUserContext();
     currentUserContext.setUser(new CurrentUser(userId, email));
     return new NotificationResource(
-        new NotificationServiceImpl(TestConfigFactory.notificationConfig(vapidPublicKey), pushSubscriptionRepository),
+        new NotificationServiceImpl(
+            TestConfigFactory.notificationConfig(vapidPublicKey),
+            pushSubscriptionRepository,
+            mock(ServiceMetricsInstrumentation.class)
+        ),
         currentUserContext
     );
   }

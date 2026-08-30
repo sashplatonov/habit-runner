@@ -1,5 +1,6 @@
 package com.sashplatonov.habbit.runner.notification;
 
+import com.sashplatonov.habbit.runner.api.ErrorResponse;
 import com.sashplatonov.habbit.runner.api.OperationResult;
 import com.sashplatonov.habbit.runner.model.PushSubscriptionEntity;
 import com.sashplatonov.habbit.runner.notification.dto.PushSubscriptionEndpointRequest;
@@ -12,6 +13,7 @@ import com.sashplatonov.habbit.runner.metrics.instrumentation.ServiceMetricsInst
 import com.sashplatonov.habbit.runner.repository.PushSubscriptionRepository;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import jakarta.ws.rs.core.Response;
 import lombok.extern.slf4j.Slf4j;
 
 @ApplicationScoped
@@ -24,13 +26,6 @@ public class NotificationServiceImpl implements NotificationService {
   private final NotificationConfig notificationConfig;
   private final PushSubscriptionRepository pushSubscriptionRepository;
   private final ServiceMetricsInstrumentation serviceMetricsInstrumentation;
-
-  NotificationServiceImpl(
-      NotificationConfig notificationConfig,
-      PushSubscriptionRepository pushSubscriptionRepository
-  ) {
-    this(notificationConfig, pushSubscriptionRepository, null);
-  }
 
   @Inject
   NotificationServiceImpl(
@@ -50,10 +45,10 @@ public class NotificationServiceImpl implements NotificationService {
         .orElse(null);
     if (key == null) {
       return OperationResult.failure(
-          new com.sashplatonov.habbit.runner.api.ErrorResponse(
+          new ErrorResponse(
               CONFIG_TYPE,
               "Service Unavailable",
-              jakarta.ws.rs.core.Response.Status.SERVICE_UNAVAILABLE.getStatusCode(),
+              Response.Status.SERVICE_UNAVAILABLE.getStatusCode(),
               "VAPID public key is not configured",
               "VAPID_PUBLIC_KEY_MISSING"
           )
@@ -72,10 +67,10 @@ public class NotificationServiceImpl implements NotificationService {
           TraceContextSupport.traceIdOrUnknown()
       );
       return OperationResult.failure(
-          new com.sashplatonov.habbit.runner.api.ErrorResponse(
+          new ErrorResponse(
               CONFLICT_TYPE,
               "Conflict",
-              jakarta.ws.rs.core.Response.Status.CONFLICT.getStatusCode(),
+              Response.Status.CONFLICT.getStatusCode(),
               "Subscription endpoint already registered by another user",
               "SUBSCRIPTION_ENDPOINT_CONFLICT"
           )
@@ -88,9 +83,7 @@ public class NotificationServiceImpl implements NotificationService {
       entity.setP256dh(request.keys().p256dh());
       entity.setAuth(request.keys().auth());
       pushSubscriptionRepository.save(entity);
-      if (serviceMetricsInstrumentation != null) {
-        serviceMetricsInstrumentation.record(ServiceMetric.PUSH_SUBSCRIPTION_CREATED);
-      }
+      serviceMetricsInstrumentation.record(ServiceMetric.PUSH_SUBSCRIPTION_CREATED);
       log.debug(
           "event=push_subscription_saved userId={} traceId={} endpoint={} created=true",
           userId,
@@ -120,10 +113,10 @@ public class NotificationServiceImpl implements NotificationService {
             TraceContextSupport.traceIdOrUnknown()
         );
         return OperationResult.failure(
-            new com.sashplatonov.habbit.runner.api.ErrorResponse(
+            new ErrorResponse(
                 FORBIDDEN_TYPE,
                 "Forbidden",
-                jakarta.ws.rs.core.Response.Status.FORBIDDEN.getStatusCode(),
+                Response.Status.FORBIDDEN.getStatusCode(),
                 "Subscription endpoint belongs to another user",
                 "SUBSCRIPTION_ENDPOINT_FORBIDDEN"
             )
@@ -139,9 +132,7 @@ public class NotificationServiceImpl implements NotificationService {
       );
       return OperationResult.success(null);
     }
-    if (serviceMetricsInstrumentation != null) {
-      serviceMetricsInstrumentation.record(ServiceMetric.PUSH_SUBSCRIPTION_DELETED);
-    }
+    serviceMetricsInstrumentation.record(ServiceMetric.PUSH_SUBSCRIPTION_DELETED);
     log.debug(
         "event=push_subscription_removed userId={} traceId={} endpoint={} removed=true",
         userId,
