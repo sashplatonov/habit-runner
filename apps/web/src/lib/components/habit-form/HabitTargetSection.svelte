@@ -32,7 +32,7 @@
 </script>
 
 <section
-  class="rounded-surface border border-border bg-bg-card shadow-surface p-4 sm:p-5"
+  class="rounded-surface border border-border bg-bg-card shadow-surface p-3.5 sm:p-4"
   aria-labelledby="habit-goal-title"
   data-editor-goal
   data-testid="habit-goal-panel"
@@ -40,15 +40,15 @@
   <div class="flex items-start justify-between gap-3">
     <div class="min-w-0">
       <h2 id="habit-goal-title" class="text-[10px] font-mono uppercase tracking-[0.18em] text-muted">Goal</h2>
-      <p class="mt-1 text-[13px] leading-5 text-muted">Define daily completion and streak target.</p>
+      <p class="mt-0.5 text-[13px] leading-5 text-muted">Define daily completion and streak target.</p>
     </div>
-    <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-orange-50 text-orange-500">
-      <Target size={18} strokeWidth={1.8} aria-hidden="true" />
+    <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-[11px] bg-orange-50 text-orange-500">
+      <Target size={17} strokeWidth={1.8} aria-hidden="true" />
     </span>
   </div>
 
-  <div class="mt-4 space-y-5">
-    <div class="space-y-2">
+  <div class="mt-3 space-y-3">
+    <div class="space-y-1.5">
       <p id="daily-target-label" class="text-[10px] font-mono uppercase tracking-[0.18em] text-muted">Daily target</p>
       <input
         type="range"
@@ -77,18 +77,18 @@
         <span class="text-[11px] font-mono text-muted">times/day (max {DAILY_TARGET_MAX})</span>
       </div>
       <div class="grid grid-cols-2 gap-2">
-        <div class="rounded-2xl border border-border bg-bg-primary p-2.5">
+        <div class="rounded-2xl border border-border bg-bg-primary p-2.5 leading-snug">
           <p class="text-[13px] font-bold text-foreground" data-editor-goal-daily-metric>{dailyTarget}× / day</p>
           <p class="mt-0.5 text-[10px] leading-[14px] text-muted">required to complete</p>
         </div>
-        <div class="rounded-2xl border border-border bg-bg-primary p-2.5">
+        <div class="rounded-2xl border border-border bg-bg-primary p-2.5 leading-snug">
           <p class="text-[13px] font-bold text-foreground" data-editor-goal-done-metric>{dailyTarget} done</p>
           <p class="mt-0.5 text-[10px] leading-[14px] text-muted">day becomes complete</p>
         </div>
       </div>
     </div>
 
-    <div class="space-y-2">
+    <div class="space-y-1.5">
       <p id="target-streak-label" class="text-[10px] font-mono uppercase tracking-[0.18em] text-muted">Target streak</p>
       <input
         type="range"
@@ -120,10 +120,10 @@
   </div>
 </section>
 
-<section class="rounded-surface border border-border bg-bg-card shadow-surface p-4 sm:p-5" data-editor-goal-rule data-testid="habit-goal-rule-card">
+<section class="rounded-surface border border-border bg-bg-card shadow-surface p-3.5 sm:p-4" data-editor-goal-rule data-testid="habit-goal-rule-card">
   <h2 class="text-[10px] font-mono uppercase tracking-[0.18em] text-muted">Resulting rule</h2>
-  <div class="mt-2.5 rounded-2xl border border-border bg-bg-primary p-3">
-    <p class="text-[13px] font-bold text-foreground" data-editor-goal-rule-text>{dailyRule}</p>
+  <div class="mt-2 rounded-2xl border border-border bg-bg-primary p-2.5">
+    <p class="text-[13px] font-bold leading-snug text-foreground" data-editor-goal-rule-text>{dailyRule}</p>
     <p class="mt-0.5 text-[11px] leading-4 text-muted">Streak milestone: {targetStreak} days.</p>
   </div>
 </section>
