@@ -3,6 +3,7 @@ package com.sashplatonov.habbit.runner.habit.dto;
 import com.sashplatonov.habbit.runner.model.HabitColor;
 import com.sashplatonov.habbit.runner.model.HabitFrequency;
 import com.sashplatonov.habbit.runner.model.HabitType;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
 import lombok.Builder;
@@ -17,7 +18,7 @@ public record HabitUpdateRequestDto(
     @Size(max = 100) String icon,
     HabitFrequency frequency,
     @Size(max = 7) List<Integer> customDays,
-    HabitScheduleDto schedule,
+    @Valid HabitScheduleDto schedule,
     @Positive Integer targetStreak,
     @Positive Integer dailyTarget,
     List<String> tags,

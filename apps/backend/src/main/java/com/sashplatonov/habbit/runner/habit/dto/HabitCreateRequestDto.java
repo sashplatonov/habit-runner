@@ -7,6 +7,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
+import jakarta.validation.Valid;
 import lombok.Builder;
 
 import java.util.List;
@@ -20,7 +21,7 @@ public record HabitCreateRequestDto(
     @NotBlank @Size(max = 100) String icon,
     @NotNull HabitFrequency frequency,
     @Size(max = 7) List<Integer> customDays,
-    HabitScheduleDto schedule,
+    @Valid HabitScheduleDto schedule,
     @Positive int targetStreak,
     @Positive int dailyTarget,
     @Size(max = 50) List<String> tags,
