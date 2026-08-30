@@ -6,10 +6,18 @@ import jakarta.validation.ConstraintValidatorContext;
 public class HabitScheduleValidator implements ConstraintValidator<ValidHabitSchedule, HabitScheduleDto> {
   @Override
   public boolean isValid(HabitScheduleDto schedule, ConstraintValidatorContext context) {
-    if (schedule == null || schedule.type() == null) {
+    if (schedule == null) {
       return true;
     }
 
+    if (schedule.type() == null) {
+      return true;
+    }
+
+    return isValidScheduleType(schedule);
+  }
+
+  private boolean isValidScheduleType(HabitScheduleDto schedule) {
     return switch (schedule.type()) {
       case DAILY -> true;
       case WEEKLY_DAYS -> hasValues(schedule.weekdays());

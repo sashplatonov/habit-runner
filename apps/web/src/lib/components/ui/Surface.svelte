@@ -5,6 +5,7 @@
     class?: string;
     style?: string;
     ariaLive?: 'off' | 'polite' | 'assertive';
+    ariaLabelledby?: string;
     children: import('svelte').Snippet;
   };
 
@@ -14,6 +15,7 @@
     class: className = '',
     style = '',
     ariaLive,
+    ariaLabelledby,
     children
   }: Props = $props();
 
@@ -22,6 +24,6 @@
   );
 </script>
 
-<svelte:element this={as} class={`${tagClass} ${className}`.trim()} {style} aria-live={ariaLive}>
+<svelte:element this={as} class={`${tagClass} ${className}`.trim()} {style} aria-live={ariaLive} aria-labelledby={ariaLabelledby}>
   {@render children()}
 </svelte:element>
