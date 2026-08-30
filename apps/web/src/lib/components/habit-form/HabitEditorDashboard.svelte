@@ -10,7 +10,7 @@
     UserRound
   } from 'lucide-svelte';
   import HabitPreview from '../habits/HabitPreview.svelte';
-  import type { HabitEditorPanel } from '../HabitForm.svelte';
+  import type { HabitEditorPanel } from './types';
 
   type Tile = {
     panel: Exclude<HabitEditorPanel, 'dashboard'>;

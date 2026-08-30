@@ -1,19 +1,7 @@
-<script module lang="ts">
-  export type HabitEditorPanel =
-    | 'dashboard'
-    | 'identity'
-    | 'habit-type'
-    | 'schedule'
-    | 'goal'
-    | 'reminder'
-    | 'organization';
-</script>
-
 <script lang="ts">
   import { beforeNavigate, goto } from '$app/navigation';
   import { resolve } from '$app/paths';
   import { describeSchedule } from '@habbit-runner/shared';
-  import { ArrowLeft, Plus } from 'lucide-svelte';
   import type { Habit } from '@/types/habit';
   import type { HabitSchedule } from '@habbit-runner/shared';
   import type { HabitUpsertInput } from '$lib/stores/habits';
@@ -29,15 +17,11 @@
     type HabitFormValues
   } from '$lib/habits/habitFormModel';
   import { formatHabitLabel } from '$lib/habits/formatHabitLabel';
-  import HabitIdentitySection from './habit-form/HabitIdentitySection.svelte';
-  import HabitTypeSection from './habit-form/HabitTypeSection.svelte';
-  import HabitScheduleSection from './habit-form/HabitScheduleSection.svelte';
-  import HabitTargetSection from './habit-form/HabitTargetSection.svelte';
-  import HabitTagsSection from './habit-form/HabitTagsSection.svelte';
-  import HabitReminderSection from './habit-form/HabitReminderSection.svelte';
-  import FormActionBar from './habit-form/FormActionBar.svelte';
-  import HabitEditorDashboard from './habit-form/HabitEditorDashboard.svelte';
-  import Overlay from './overlays/Overlay.svelte';
+  import HabitFormEditor from './habit-form/HabitFormEditor.svelte';
+  import HabitFormHeader from './habit-form/HabitFormHeader.svelte';
+  import SoftLimitWarningDialog from './habit-form/SoftLimitWarningDialog.svelte';
+  import DiscardChangesDialog from './habit-form/DiscardChangesDialog.svelte';
+  import type { HabitEditorPanel } from './habit-form/types';
   import { isApiError } from '$lib/api/ApiError';
 
   type Props = {
@@ -308,76 +292,19 @@
   }
 </script>
 
-{#if showSoftLimitWarning}
-  <Overlay
-    open={showSoftLimitWarning}
-    onClose={onBack}
-    ariaLabel="Add another habit"
-    closeOnEscape={true}
-    closeOnOutsideClick={false}
-    trapFocus={true}
-    restoreFocus={false}
-    lockScroll={true}
-    class="inset-0 z-[100] flex items-center justify-center bg-bg-primary/80 p-4 backdrop-blur-sm"
-  >
-    <div class="w-full max-w-sm rounded-3xl border border-border bg-bg-secondary p-6 shadow-2xl">
-      <div class="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-accent/10">
-        <Plus class="text-accent" size={24} aria-hidden="true" />
-      </div>
-      <h3 class="mb-2 text-xl font-bold text-foreground">Focus is key</h3>
-      <p class="mb-6 text-sm leading-relaxed text-muted">
-        Consider getting the current habits into a steadier rhythm before adding another one.
-        <br /><br />
-        A short run of consistency usually gives the new habit more room to stick.
-      </p>
-      <div class="flex flex-col gap-2">
-        <button
-          type="button"
-          class="w-full rounded-2xl border border-border bg-bg-primary py-3 text-sm font-semibold transition hover:bg-bg-card"
-          onclick={onBack}
-        >
-          Go back
-        </button>
-        <button
-          type="button"
-          class="w-full rounded-2xl py-3 text-[10px] font-mono uppercase tracking-widest text-muted transition hover:text-foreground"
-          onclick={() => {
-            hasAcknowledgedSoftLimit = true;
-          }}
-        >
-          Add anyway
-        </button>
-      </div>
-    </div>
-  </Overlay>
-{/if}
+<SoftLimitWarningDialog
+  open={showSoftLimitWarning}
+  onBack={onBack}
+  onContinue={() => {
+    hasAcknowledgedSoftLimit = true;
+  }}
+/>
 
-{#if discardDialogOpen}
-  <Overlay
-    open={discardDialogOpen}
-    onClose={keepEditing}
-    ariaLabel="Discard unsaved changes"
-    closeOnEscape={true}
-    closeOnOutsideClick={false}
-    trapFocus={true}
-    restoreFocus={true}
-    lockScroll={true}
-    class="inset-0 z-[110] flex items-center justify-center bg-bg-primary/80 p-4 backdrop-blur-sm"
-  >
-    <div class="w-full max-w-sm rounded-3xl border border-border bg-bg-secondary p-6 shadow-2xl">
-      <h2 class="text-xl font-bold text-foreground">Discard unsaved changes?</h2>
-      <p class="mt-2 text-sm leading-6 text-muted">Your latest edits will be lost.</p>
-      <div class="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-        <button type="button" class="min-h-11 rounded-full border border-border px-4 py-2 text-sm font-semibold text-muted transition-colors hover:text-foreground" onclick={keepEditing}>
-          Keep editing
-        </button>
-        <button type="button" class="min-h-11 rounded-full border border-danger/40 bg-danger/10 px-4 py-2 text-sm font-semibold text-danger transition-colors hover:bg-danger/20" onclick={() => void discardChanges()}>
-          Discard changes
-        </button>
-      </div>
-    </div>
-  </Overlay>
-{/if}
+<DiscardChangesDialog
+  open={discardDialogOpen}
+  onKeepEditing={keepEditing}
+  onDiscard={() => void discardChanges()}
+/>
 
 <form
   bind:this={formEl}
@@ -388,143 +315,46 @@
   }}
   class="min-h-screen bg-transparent"
 >
-  <div
-    class="sticky top-0 z-10 bg-transparent px-4 pt-4 sm:px-6"
-    style="padding-bottom: 1rem;"
-  >
-    <div class="mx-auto flex max-w-3xl flex-col items-stretch gap-3 rounded-[1.75rem] border border-border bg-bg-secondary/90 px-4 py-4 shadow-[0_24px_60px_rgba(15,23,42,0.1)] backdrop-blur-xl sm:flex-row sm:items-center sm:justify-between sm:px-5">
-      <div class="flex items-center gap-3">
-        <button
-          type="button"
-          class="inline-flex h-11 w-11 items-center justify-center rounded-[1rem] border border-border text-muted transition-colors hover:border-border-hover hover:text-foreground"
-          aria-label={activePanel === 'dashboard' ? 'Back' : 'Back to habit editor dashboard'}
-          data-editor-back="dashboard"
-          onclick={handleEditorBack}
-        >
-          <ArrowLeft size={16} aria-hidden="true" />
-        </button>
-        <div>
-          <h1 class="text-base font-semibold text-foreground">{panelTitle}</h1>
-          <p class="text-xs text-muted">{panelSubtitle}</p>
-        </div>
-      </div>
+  <HabitFormHeader
+    {activePanel}
+    title={panelTitle}
+    subtitle={panelSubtitle}
+    colorHex={selectedColor.hex}
+    submitLabel={mode === 'edit' ? 'Save habit' : 'Create habit'}
+    {isSaving}
+    onBack={handleEditorBack}
+  />
 
-      <button
-        type="submit"
-        class="hidden w-full rounded-full px-5 py-2.5 text-xs font-mono font-bold uppercase tracking-[0.22em] text-bg-primary transition-[background-color,box-shadow,opacity] duration-200 disabled:cursor-not-allowed disabled:opacity-50 sm:inline-flex sm:w-auto"
-        style={`background-color: ${selectedColor.hex}; box-shadow: 0 0 16px ${selectedColor.hex}40;`}
-        disabled={isSaving}
-      >
-        {isSaving ? 'Saving…' : mode === 'edit' ? 'Save habit' : 'Create habit'}
-      </button>
-    </div>
-  </div>
-
-  {#if saveError}
-    <div class="mx-auto max-w-3xl px-4 pb-2 sm:px-6">
-      <p class="rounded-lg border border-accent-secondary/40 bg-accent-secondary/10 px-3 py-2 text-xs font-mono text-accent-secondary" role="alert">
-        {saveError}
-      </p>
-    </div>
-  {/if}
-
-  {#if isDirty}
-    <div class="mx-auto max-w-3xl px-4 pb-2 sm:px-6">
-      <p class="rounded-lg border border-attention/30 bg-attention/10 px-3 py-2 text-xs font-mono text-attention" role="status">
-        You have unsaved changes
-      </p>
-    </div>
-  {/if}
-
-  <div class="mx-auto max-w-3xl space-y-5 px-4 pb-28 pt-6 sm:px-6 sm:pb-6">
-    {#if activePanel === 'dashboard'}
-      <HabitEditorDashboard
-        {habitLabel}
-        colorHex={selectedColor.hex}
-        colorLabel={selectedColor.label}
-        {typeLabel}
-        {scheduleSummary}
-        {previewTargetSummary}
-        {previewTagsSummary}
-        {reminderSummary}
-        {targetLabel}
-        {tagsSummary}
-        onSelect={(panel) => (activePanel = panel)}
-      />
-    {:else}
-      <div class="space-y-5">
-
-    {#if activePanel === 'habit-type'}<HabitTypeSection
-      bind:habitType={type}
-      dailyTarget={Math.max(1, Math.trunc(dailyTarget))}
-    />{/if}
-
-    {#if Object.keys(errors).length > 0}
-      <div class="rounded-[1.5rem] border border-accent-secondary/30 bg-accent-secondary/10 px-4 py-3 text-sm text-accent-secondary" role="alert" aria-live="assertive">
-        <p class="font-semibold">Fix the highlighted fields before saving.</p>
-        <ul class="mt-2 list-disc space-y-1 pl-5 text-xs">
-          {#each Object.values(errors) as errorText, errorIndex (`${errorText}-${errorIndex}`)}
-            <li>{errorText}</li>
-          {/each}
-        </ul>
-      </div>
-    {/if}
-
-    {#if activePanel === 'identity'}<HabitIdentitySection
-      bind:name
-      bind:description
-      bind:color
-      bind:icon
-      {errors}
-      {selectedColor}
-      previewLabel={habitLabel}
-      previewSchedule={scheduleSummary}
-      previewType={typeLabel}
-      {previewTargetSummary}
-      {previewTagsSummary}
-    />{/if}
-
-    {#if activePanel === 'schedule'}<HabitScheduleSection
-      bind:schedule
-      bind:openSlot={openScheduleSlot}
-      {errors}
-    />{/if}
-
-    {#if activePanel === 'goal'}<HabitTargetSection
-      bind:targetStreak
-      bind:dailyTarget
-      {selectedColor}
-    />{/if}
-
-    {#if activePanel === 'reminder'}<HabitReminderSection
-      bind:reminderTime
-      bind:reminderEnabled
-    />{/if}
-
-    {#if activePanel === 'organization'}<HabitTagsSection
-      bind:tags
-      bind:tagInput
-      {selectedColor}
-    />{/if}
-      </div>
-    {/if}
-  </div>
-
-  <FormActionBar sticky={false} class="fixed inset-x-4 bottom-0 z-30 sm:hidden">
-    <button
-      type="button"
-      class="rounded-full border border-border bg-bg-primary px-4 py-2 text-xs font-semibold uppercase tracking-[0.22em] text-muted transition hover:text-foreground"
-      onclick={handleEditorBack}
-    >
-      Cancel
-    </button>
-    <button
-      type="submit"
-      class="rounded-full px-5 py-2.5 text-xs font-mono font-bold uppercase tracking-[0.22em] text-bg-primary transition-[background-color,box-shadow,opacity] duration-200 disabled:cursor-not-allowed disabled:opacity-50"
-      style={`background-color: ${selectedColor.hex}; box-shadow: 0 0 16px ${selectedColor.hex}40;`}
-      disabled={isSaving}
-    >
-      {isSaving ? 'Saving…' : mode === 'edit' ? 'Save habit' : 'Create habit'}
-    </button>
-  </FormActionBar>
+  <HabitFormEditor
+    {activePanel}
+    bind:name
+    bind:description
+    bind:color
+    bind:icon
+    bind:schedule
+    bind:targetStreak
+    bind:dailyTarget
+    bind:habitType={type}
+    bind:tags
+    bind:tagInput
+    bind:reminderTime
+    bind:reminderEnabled
+    bind:openScheduleSlot
+    {errors}
+    {selectedColor}
+    {habitLabel}
+    {typeLabel}
+    {scheduleSummary}
+    {previewTargetSummary}
+    {previewTagsSummary}
+    {reminderSummary}
+    {targetLabel}
+    {tagsSummary}
+    {saveError}
+    {isDirty}
+    {isSaving}
+    submitLabel={mode === 'edit' ? 'Save habit' : 'Create habit'}
+    onSelectPanel={(panel) => (activePanel = panel)}
+    onBack={handleEditorBack}
+  />
 </form>
