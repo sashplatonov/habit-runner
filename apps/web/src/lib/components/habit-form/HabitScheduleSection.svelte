@@ -220,10 +220,11 @@
   }
 </script>
 
-<div
-  class="rounded-[1.75rem] border border-border bg-bg-card/92 p-5 shadow-[0_20px_54px_rgba(15,23,42,0.08)]"
-  data-editor-schedule
->
+{#if openSlot === null}
+  <div
+    class="rounded-[1.75rem] border border-border bg-bg-card/92 p-5 shadow-[0_20px_54px_rgba(15,23,42,0.08)]"
+    data-editor-schedule
+  >
   <div class="mb-2 flex items-start justify-between gap-3">
     <div>
       <p class="block text-[10px] font-mono uppercase tracking-wider text-muted">Schedule</p>
@@ -233,7 +234,7 @@
       <CalendarDays size={18} strokeWidth={1.8} aria-hidden="true" />
     </span>
   </div>
-  <div class="mt-2 grid gap-2" role="group" aria-label="Schedule type">
+    <div class="mt-2 grid gap-2" role="group" aria-label="Schedule type">
     {#each SCHEDULE_TYPE_OPTIONS as option (`${option.value}`)}
       {@const ChoiceIcon = CHOICE_ICONS[option.value]}
       <button
@@ -256,9 +257,21 @@
         </span>
       </button>
     {/each}
+    </div>
   </div>
+{:else}
+  <div class="rounded-[1.75rem] border border-border bg-bg-card/92 p-5 shadow-[0_20px_54px_rgba(15,23,42,0.08)]" data-editor-schedule-detail>
+    <div class="mb-3 flex items-start justify-between gap-3">
+      <div>
+        <p class="block text-[10px] font-mono uppercase tracking-wider text-muted">{typeLabel(schedule.type)}</p>
+        <p class="mt-1 text-[13px] leading-5 text-muted">{effectSummary(schedule.type)}</p>
+      </div>
+      <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-indigo-50 text-indigo-500">
+        <CalendarDays size={18} strokeWidth={1.8} aria-hidden="true" />
+      </span>
+    </div>
 
-  <div class="mt-3 space-y-3">
+    <div class="mt-3 space-y-3">
     {#if openSlot === 'daily'}
       <div class="space-y-3" data-editor-schedule-daily data-testid="daily-summary">
         <div class="flex items-center gap-2.5 rounded-2xl border border-border bg-bg-primary p-3" data-editor-schedule-daily-summary>
@@ -281,6 +294,7 @@
           </div>
         </div>
         <div class="rounded-2xl border border-border bg-bg-primary p-3" data-editor-schedule-daily-rule>
+          <p class="mb-1 text-[10px] font-mono uppercase tracking-[0.18em] text-muted">Resulting rule</p>
           <p class="text-[12px] font-semibold leading-5 text-foreground">A scheduled opportunity is created every calendar day.</p>
           <p class="mt-0.5 text-[11px] leading-4 text-muted">Existing history remains unchanged.</p>
         </div>
@@ -322,6 +336,7 @@
           </div>
         </div>
         <div class="rounded-2xl border border-border bg-bg-primary p-3" data-editor-schedule-weekdays-rule>
+          <p class="mb-1 text-[10px] font-mono uppercase tracking-[0.18em] text-muted">Resulting rule</p>
           <p class="text-[12px] font-semibold leading-5 text-foreground">{weekdaysRule}</p>
           <p class="mt-0.5 text-[11px] leading-4 text-muted">Other weekdays are not treated as missed opportunities.</p>
         </div>
@@ -378,6 +393,7 @@
           </div>
         </div>
         <div class="rounded-2xl border border-border bg-bg-primary p-3" data-editor-quota-weekly-rule>
+          <p class="mb-1 text-[10px] font-mono uppercase tracking-[0.18em] text-muted">How it counts</p>
           <p class="text-[12px] font-semibold leading-5 text-foreground">The week is on target after {getWeeklyQuota(schedule)} completion{getWeeklyQuota(schedule) === 1 ? '' : 's'}.</p>
           <p class="mt-0.5 text-[11px] leading-4 text-muted">
             {getWeekdaysFromSchedule(schedule)?.length
@@ -457,6 +473,7 @@
         </div>
 
         <div class="rounded-2xl border border-border bg-bg-primary p-3" data-editor-month-weeks-rule>
+          <p class="mb-1 text-[10px] font-mono uppercase tracking-[0.18em] text-muted">Resulting rule</p>
           <p class="text-[12px] font-semibold leading-5 text-foreground">{monthWeeksRule}</p>
           <p class="mt-0.5 text-[11px] leading-4 text-muted">If a month has a 5th week, it is ignored unless selected.</p>
         </div>
@@ -513,6 +530,7 @@
           </div>
         </div>
         <div class="rounded-2xl border border-border bg-bg-primary p-3" data-editor-quota-monthly-rule>
+          <p class="mb-1 text-[10px] font-mono uppercase tracking-[0.18em] text-muted">How it counts</p>
           <p class="text-[12px] font-semibold leading-5 text-foreground">The month is on target after {getMonthlyQuota(schedule)} completion{getMonthlyQuota(schedule) === 1 ? '' : 's'}.</p>
           <p class="mt-0.5 text-[11px] leading-4 text-muted">
             {getWeekdaysFromSchedule(schedule)?.length
@@ -541,10 +559,12 @@
         </div>
       </div>
     {/if}
+    </div>
   </div>
-</div>
+{/if}
 
-<div
+{#if openSlot === null}
+  <div
   class="rounded-[1.75rem] border border-border bg-bg-card/92 p-5 shadow-[0_20px_54px_rgba(15,23,42,0.08)]"
   data-editor-schedule-effect
 >
@@ -560,4 +580,5 @@
   <p class="mt-2.5 rounded-xl border border-border bg-bg-secondary px-3 py-2.5 text-[11px] leading-4 text-muted">
     Changing the schedule affects future opportunities only. Existing history stays unchanged.
   </p>
-</div>
+  </div>
+{/if}

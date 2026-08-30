@@ -209,7 +209,7 @@ git commit -m "fix(habits): align compact editor previews"
 
 ## CDE-RVW-004: Make each schedule variant a focused reference screen
 
-**Status:** TODO
+**Status:** DONE
 **Priority:** P1
 **Depends on:** -
 

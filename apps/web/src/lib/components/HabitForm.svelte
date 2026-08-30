@@ -105,9 +105,23 @@
   const typeLabel = $derived(type === 'negative' ? 'Avoid habit' : 'Build habit');
   const tagsSummary = $derived(tags.length > 0 ? `${tags.map((tag) => `#${tag}`).join(' · ')} · ${tags.length}/5 tags` : 'No tags · 0/5 tags');
   const previewTagsSummary = $derived(tags.length > 0 ? tags.map((tag) => `#${tag}`).join(' · ') : 'No tags');
-  const panelTitle = $derived(activePanel === 'dashboard' ? (mode === 'edit' ? 'Edit habit' : 'New habit') : {
-    identity: 'Identity', 'habit-type': 'Habit type', schedule: 'Schedule', goal: 'Goal', reminder: 'Reminder', organization: 'Organization'
-  }[activePanel]);
+  const scheduleDetailLabels: Record<Exclude<HabitSchedule['type'], never>, { title: string; subtitle: string }> = {
+    daily: { title: 'Daily schedule', subtitle: 'Schedule · Daily' },
+    weekly_days: { title: 'Days of week', subtitle: 'Schedule · Pick weekdays' },
+    weekly_quota: { title: 'Weekly quota', subtitle: 'Schedule · Flexible weekly target' },
+    monthly_quota: { title: 'Monthly quota', subtitle: 'Schedule · Flexible monthly target' },
+    monthly_weeks: { title: 'Monthly weeks', subtitle: 'Schedule · Weeks of month' }
+  };
+  const panelTitle = $derived(activePanel === 'dashboard' ? (mode === 'edit' ? 'Edit habit' : 'New habit') : activePanel === 'schedule' && openScheduleSlot
+    ? scheduleDetailLabels[openScheduleSlot].title
+    : {
+      identity: 'Identity', 'habit-type': 'Habit type', schedule: 'Schedule', goal: 'Goal', reminder: 'Reminder', organization: 'Organization'
+    }[activePanel]);
+  const panelSubtitle = $derived(activePanel === 'dashboard'
+    ? `${habitLabel} · ${scheduleSummary} · Active`
+    : activePanel === 'schedule' && openScheduleSlot
+      ? scheduleDetailLabels[openScheduleSlot].subtitle
+      : 'Edit this part of your habit.');
 
   function hydrateForm(values: HabitFormValues) {
     name = values.name;
@@ -145,6 +159,10 @@
 
   function handleEditorBack() {
     if (activePanel !== 'dashboard') {
+      if (activePanel === 'schedule' && openScheduleSlot) {
+        openScheduleSlot = null;
+        return;
+      }
       returnToDashboard();
       return;
     }
@@ -243,6 +261,9 @@
     if (Object.keys(nextErrors).length > 0) {
       if (activePanel === 'dashboard') {
         activePanel = panelForValidationErrors(nextErrors);
+        if (activePanel === 'schedule') {
+          openScheduleSlot = schedule.type;
+        }
       }
       focusFirstInvalidField(nextErrors);
       return;
@@ -384,7 +405,7 @@
         </button>
         <div>
           <h1 class="text-base font-semibold text-foreground">{panelTitle}</h1>
-          <p class="text-xs text-muted">{activePanel === 'dashboard' ? `${habitLabel} · ${scheduleSummary} · Active` : 'Edit this part of your habit.'}</p>
+          <p class="text-xs text-muted">{panelSubtitle}</p>
         </div>
       </div>
 

@@ -171,9 +171,9 @@ describe('HabitForm', () => {
     expect(screen.getByRole('alert').textContent).toContain('Name is required'); expect(onSubmit).not.toHaveBeenCalled(); }); it('routes an invalid monthly-weeks dashboard save to Schedule without changing the draft', async () => {
     const user = userEvent.setup(); const onSubmit = vi.fn().mockResolvedValue(undefined);
     render(HabitForm, { props: { mode: 'create', allHabits: [], onBack: vi.fn(), onSubmit } }); await user.click(screen.getByRole('button', { name: 'Edit Identity' })); await user.type(screen.getByLabelText('Name *'), 'Monthly habit'); await user.click(screen.getByRole('button', { name: 'Back to habit editor dashboard' })); await user.click(screen.getByRole('button', { name: 'Edit Schedule' }));
-    await user.click(screen.getByRole('button', { name: 'Monthly weeks Choose weeks of month' })); await user.click(screen.getByRole('button', { name: 'Toggle week 1 of the month' })); await user.click(screen.getByRole('button', { name: 'Back to habit editor dashboard' }));
+    await user.click(screen.getByRole('button', { name: 'Monthly weeks Choose weeks of month' })); await user.click(screen.getByRole('button', { name: 'Toggle week 1 of the month' })); await user.click(screen.getByRole('button', { name: 'Back to habit editor dashboard' })); await user.click(screen.getByRole('button', { name: 'Back to habit editor dashboard' }));
     await user.click(screen.getAllByRole('button', { name: 'Create habit' }).at(-1)!); await waitFor(() => { expect(document.querySelector('form')?.getAttribute('data-editor-panel')).toBe('schedule'); expect(document.activeElement?.getAttribute('aria-label')).toBe('Toggle week 1 of the month'); });
-    expect(screen.getAllByRole('alert')[0].textContent).toContain('Select at least one week'); expect(screen.getByRole('button', { name: 'Monthly weeks Choose weeks of month' }).getAttribute('aria-pressed')).toBe('true'); expect(onSubmit).not.toHaveBeenCalled(); });
+    expect(screen.getAllByRole('alert')[0].textContent).toContain('Select at least one week'); expect(screen.getByRole('heading', { name: 'Monthly weeks' })).toBeTruthy(); expect(screen.getByTestId('monthly-weeks-view')).toBeTruthy(); expect(onSubmit).not.toHaveBeenCalled(); });
 
   it('keeps the habit-type draft when returning to the dashboard and submits it on save', async () => {
     const user = userEvent.setup();
@@ -228,19 +228,18 @@ describe('HabitForm', () => {
       ]);
 
     expect(screen.getByRole('button', { name: 'Daily Every day' }).getAttribute('aria-pressed')).toBe('true');
-    expect(screen.getByText('A scheduled opportunity is created every calendar day.')).toBeTruthy();
-    expect(screen.getByText('Changing the schedule affects future opportunities only. Existing history stays unchanged.')).toBeTruthy();
+    expect(screen.getByText('A scheduled opportunity is created every calendar day.')).toBeTruthy(); expect(screen.getByText('Changing the schedule affects future opportunities only. Existing history stays unchanged.')).toBeTruthy();
 
     await user.click(screen.getByRole('button', { name: 'Days of week Pick weekdays' }));
+    expect(screen.getByRole('heading', { name: 'Days of week' })).toBeTruthy();
+    expect(screen.getByLabelText('Toggle Monday for the schedule').getAttribute('aria-pressed')).toBe('true');
+    await user.click(screen.getByRole('button', { name: 'Back to habit editor dashboard' }));
     expect(screen.getByRole('button', { name: 'Days of week Pick weekdays' }).getAttribute('aria-pressed')).toBe('true');
     expect(screen.getByRole('button', { name: 'Daily Every day' }).getAttribute('aria-pressed')).toBe('false');
-    expect(screen.getByLabelText('Toggle Monday for the schedule').getAttribute('aria-pressed')).toBe('true');
-
     await user.click(screen.getByRole('button', { name: 'Back to habit editor dashboard' }));
     expect(within(screen.getByRole('button', { name: 'Edit Schedule' })).getByText('Every Mon, Tue, Wed, Thu, Fri')).toBeTruthy();
     expect(onSubmit).not.toHaveBeenCalled();
 
-    // Draft keeps the transitioned schedule and active state after reopening the panel.
     await user.click(screen.getByRole('button', { name: 'Edit Schedule' }));
     expect(screen.getByRole('button', { name: 'Days of week Pick weekdays' }).getAttribute('aria-pressed')).toBe('true');
 
@@ -262,23 +261,21 @@ describe('HabitForm', () => {
 
     await user.click(screen.getByRole('button', { name: 'Edit Schedule' }));
     await user.click(screen.getByRole('button', { name: 'Daily Every day' }));
-    expect(screen.getByRole('button', { name: 'Daily Every day' }).getAttribute('aria-pressed')).toBe('true');
+    expect(screen.getByRole('heading', { name: 'Daily schedule' })).toBeTruthy();
     const dailySummary = screen.getByTestId('daily-summary');
-    expect(within(dailySummary).getByText('Every day')).toBeTruthy();
-    expect(within(dailySummary).getByText('Monday through Sunday')).toBeTruthy();
-    expect(within(dailySummary).getByText('scheduled days / week')).toBeTruthy();
-    expect(within(dailySummary).getByText('opportunity frequency')).toBeTruthy();
+    expect(within(dailySummary).getByText('Every day')).toBeTruthy(); expect(within(dailySummary).getByText('Monday through Sunday')).toBeTruthy();
+    expect(within(dailySummary).getByText('scheduled days / week')).toBeTruthy(); expect(within(dailySummary).getByText('opportunity frequency')).toBeTruthy();
     expect(within(dailySummary).getByText('A scheduled opportunity is created every calendar day.')).toBeTruthy();
     expect(within(dailySummary).getByText('Existing history remains unchanged.')).toBeTruthy();
 
-    // No editable weekday or quota control is rendered for the daily rule.
     expect(screen.queryByLabelText(/Toggle .* for the schedule/)).toBeNull();
     expect(screen.queryByLabelText('Times per week')).toBeNull();
     expect(screen.queryByLabelText('Times per month')).toBeNull();
 
-    // Back from the daily slot keeps the draft and returns to the chooser.
+    await user.click(screen.getByRole('button', { name: 'Back to habit editor dashboard' }));
     await user.click(screen.getByRole('button', { name: 'Days of week Pick weekdays' }));
     expect(screen.getByLabelText('Toggle Monday for the schedule')).toBeTruthy();
+    await user.click(screen.getByRole('button', { name: 'Back to habit editor dashboard' }));
     await user.click(screen.getByRole('button', { name: 'Daily Every day' }));
     expect(screen.getByTestId('daily-summary')).toBeTruthy();
     expect(onSubmit).not.toHaveBeenCalled();
@@ -294,7 +291,6 @@ describe('HabitForm', () => {
     await user.click(screen.getByRole('button', { name: 'Days of week Pick weekdays' }));
     const weekdays = screen.getByTestId('schedule-weekdays-view');
 
-    // Default transition seeds Mon-Fri; metrics reflect it immediately.
     expect(within(weekdays).getByText(/^(5)$/)).toBeTruthy();
     expect(within(weekdays).getByText('Mon · Tue · Wed · Thu · Fri')).toBeTruthy();
     expect(within(weekdays).getByText('Only Monday, Tuesday, Wednesday, Thursday and Friday count as scheduled days.')).toBeTruthy();
@@ -302,7 +298,6 @@ describe('HabitForm', () => {
     const buttons = [1, 2, 3, 4, 5, 6, 0].map((day) => screen.getByLabelText(`Toggle ${['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][day]} for the schedule`));
     expect(buttons.filter((button) => button.getAttribute('aria-pressed') === 'true')).toHaveLength(5);
 
-    // Deselecting updates count, pattern, and rule; deselecting all surfaces validation, then Save still submits the cleared state.
     await user.click(screen.getByLabelText('Toggle Tuesday for the schedule'));
     await user.click(screen.getByLabelText('Toggle Thursday for the schedule'));
     await user.click(screen.getByLabelText('Toggle Friday for the schedule'));
@@ -310,7 +305,7 @@ describe('HabitForm', () => {
     expect(within(weekdays).getByText('Mon · Wed')).toBeTruthy();
     expect(within(weekdays).getByText('Only Monday and Wednesday count as scheduled days.')).toBeTruthy();
 
-    await user.click(screen.getByRole('button', { name: 'Back to habit editor dashboard' }));
+    await user.click(screen.getByRole('button', { name: 'Back to habit editor dashboard' })); await user.click(screen.getByRole('button', { name: 'Back to habit editor dashboard' }));
     expect(within(screen.getByRole('button', { name: 'Edit Schedule' })).getByText('Every Mon, Wed')).toBeTruthy();
     await user.click(screen.getByRole('button', { name: 'Edit Identity' }));
     await user.type(screen.getByLabelText('Name *'), 'Mon Wednesday');
@@ -333,13 +328,11 @@ describe('HabitForm', () => {
     await user.click(screen.getByRole('button', { name: 'Weekly quota Target completions per week' }));
     const view = screen.getByTestId('weekly-quota-view');
 
-    // Default transition seeds 2; metrics, rule, and truthful flexible copy update live.
     expect(within(view).getByText('2 / week')).toBeTruthy();
     expect(within(view).getByText('Flexible days')).toBeTruthy();
     expect(within(view).getByText('The week is on target after 2 completions.')).toBeTruthy();
     expect(within(view).getByText('No individual weekday is automatically considered missed.')).toBeTruthy();
 
-    // Increment three times: 2 -> 5. Decrease twice: 5 -> 3.
     await user.click(screen.getByRole('button', { name: 'Increase weekly quota' }));
     await user.click(screen.getByRole('button', { name: 'Increase weekly quota' }));
     await user.click(screen.getByRole('button', { name: 'Increase weekly quota' }));
@@ -348,20 +341,18 @@ describe('HabitForm', () => {
     expect(within(view).getByText('3 / week')).toBeTruthy();
     expect(within(view).getByText('The week is on target after 3 completions.')).toBeTruthy();
 
-    // Bounds: cannot go below 1.
     await user.click(screen.getByRole('button', { name: 'Decrease weekly quota' }));
     await user.click(screen.getByRole('button', { name: 'Decrease weekly quota' }));
     expect(within(view).getByText('1 / week')).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Decrease weekly quota' }).hasAttribute('disabled')).toBe(true);
 
-    // Panel back-and-forth retains the draft and weekly_days weekday choices.
-    await user.click(screen.getByRole('button', { name: 'Back to habit editor dashboard' }));
+    await user.click(screen.getByRole('button', { name: 'Back to habit editor dashboard' })); await user.click(screen.getByRole('button', { name: 'Back to habit editor dashboard' }));
     expect(within(screen.getByRole('button', { name: 'Edit Schedule' })).getByText('1x a week')).toBeTruthy();
     await user.click(screen.getByRole('button', { name: 'Edit Schedule' }));
     await user.click(screen.getByRole('button', { name: 'Weekly quota Target completions per week' }));
     expect(screen.getByLabelText('Weekly quota: 1 completions per week')).toBeTruthy();
 
-    await user.click(screen.getByRole('button', { name: 'Back to habit editor dashboard' }));
+    await user.click(screen.getByRole('button', { name: 'Back to habit editor dashboard' })); await user.click(screen.getByRole('button', { name: 'Back to habit editor dashboard' }));
     await user.click(screen.getByRole('button', { name: 'Edit Identity' }));
     await user.type(screen.getByLabelText('Name *'), 'Weekly quota habit');
     await user.click(screen.getAllByRole('button', { name: 'Create habit' }).at(-1)!);
@@ -380,12 +371,9 @@ describe('HabitForm', () => {
     await user.click(screen.getByRole('button', { name: 'Monthly quota Target completions per month' }));
     const view = screen.getByTestId('monthly-quota-view');
 
-    // Default transition seeds 3; metrics and rule update live.
-    expect(within(view).getByText('3 / month')).toBeTruthy();
-    expect(within(view).getByText('Flexible timing')).toBeTruthy();
+    expect(within(view).getByText('3 / month')).toBeTruthy(); expect(within(view).getByText('Flexible timing')).toBeTruthy();
     expect(within(view).getByText('Progress is measured against the monthly quota rather than calendar-day attendance.')).toBeTruthy();
 
-    // Increments clamp at 31; decrements clamp at 1.
     for (let step = 0; step < 30; step += 1) {
       await user.click(screen.getByRole('button', { name: 'Increase monthly quota' }));
     }
@@ -394,16 +382,15 @@ describe('HabitForm', () => {
     for (let step = 0; step < 30; step += 1) {
       await user.click(screen.getByRole('button', { name: 'Decrease monthly quota' }));
     }
-    expect(within(view).getByText('1 / month')).toBeTruthy();
-    expect(screen.getByRole('button', { name: 'Decrease monthly quota' }).hasAttribute('disabled')).toBe(true);
+    expect(within(view).getByText('1 / month')).toBeTruthy(); expect(screen.getByRole('button', { name: 'Decrease monthly quota' }).hasAttribute('disabled')).toBe(true);
 
-    // Panel back-and-forth retains the draft summary.
-    await user.click(screen.getByRole('button', { name: 'Back to habit editor dashboard' }));
+    await user.click(screen.getByRole('button', { name: 'Back to habit editor dashboard' })); await user.click(screen.getByRole('button', { name: 'Back to habit editor dashboard' }));
     expect(within(screen.getByRole('button', { name: 'Edit Schedule' })).getByText('1x a month')).toBeTruthy();
     await user.click(screen.getByRole('button', { name: 'Edit Schedule' }));
+    await user.click(screen.getByRole('button', { name: 'Monthly quota Target completions per month' }));
     expect(screen.getByLabelText('Monthly quota: 1 completions per month')).toBeTruthy();
 
-    await user.click(screen.getByRole('button', { name: 'Back to habit editor dashboard' }));
+    await user.click(screen.getByRole('button', { name: 'Back to habit editor dashboard' })); await user.click(screen.getByRole('button', { name: 'Back to habit editor dashboard' }));
     await user.click(screen.getByRole('button', { name: 'Edit Identity' }));
     await user.type(screen.getByLabelText('Name *'), 'Monthly quota habit');
     await user.click(screen.getAllByRole('button', { name: 'Create habit' }).at(-1)!);
@@ -472,22 +459,18 @@ describe('HabitForm', () => {
     await user.click(screen.getByRole('button', { name: 'Monthly weeks Choose weeks of month' }));
     const view = screen.getByTestId('monthly-weeks-view');
 
-    // Default transition seeds week 1 plus Mon-Fri; the combined rule renders with exact names.
-    expect(within(view).getByText('Schedule Monday, Tuesday, Wednesday, Thursday and Friday during week 1 of each month.')).toBeTruthy();
-    expect(within(view).getByText('If a month has a 5th week, it is ignored unless selected.')).toBeTruthy();
+    expect(within(view).getByText('Schedule Monday, Tuesday, Wednesday, Thursday and Friday during week 1 of each month.')).toBeTruthy(); expect(within(view).getByText('If a month has a 5th week, it is ignored unless selected.')).toBeTruthy();
 
-    // Week 5 maps to the existing last-week domain value; toggles update the combined rule.
     await user.click(screen.getByRole('button', { name: 'Toggle last week of the month' }));
     for (const dayName of ['Tuesday', 'Wednesday', 'Thursday', 'Friday']) {
       await user.click(screen.getByLabelText(`Toggle ${dayName} in the selected weeks`));
     }
     expect(within(view).getByText('Schedule Monday during week 1 and the last week of each month.')).toBeTruthy();
 
-    // Both groups validate independently: an empty weekday group blocks Save with its own message.
     await user.click(screen.getByRole('button', { name: 'Toggle Monday in the selected weeks' }));
     expect(within(view).getByText('Select at least one weekday inside the selected weeks.')).toBeTruthy();
 
-    await user.click(screen.getByRole('button', { name: 'Back to habit editor dashboard' }));
+    await user.click(screen.getByRole('button', { name: 'Back to habit editor dashboard' })); await user.click(screen.getByRole('button', { name: 'Back to habit editor dashboard' }));
     await user.click(screen.getByRole('button', { name: 'Edit Identity' }));
     await user.type(screen.getByLabelText('Name *'), 'Month weeks habit');
     await user.click(screen.getAllByRole('button', { name: 'Create habit' }).at(-1)!);
@@ -496,9 +479,9 @@ describe('HabitForm', () => {
     });
     expect(onSubmit).not.toHaveBeenCalled();
 
-    // Restoring a weekday lets the same schedule submit; week values map to the last-week domain.
     await user.click(screen.getByRole('button', { name: 'Back to habit editor dashboard' }));
     await user.click(screen.getByRole('button', { name: 'Edit Schedule' }));
+    await user.click(screen.getByRole('button', { name: 'Monthly weeks Choose weeks of month' }));
     await user.click(screen.getByRole('button', { name: 'Toggle Monday in the selected weeks' }));
     expect(within(screen.getByTestId('monthly-weeks-view')).getByText('Schedule Monday during week 1 and the last week of each month.')).toBeTruthy();
     await user.click(screen.getAllByRole('button', { name: 'Create habit' }).at(-1)!);
@@ -520,7 +503,6 @@ describe('HabitForm', () => {
     expect(screen.getByText('1 completed repetition = scheduled day complete.')).toBeTruthy();
     expect(within(rule).getByText('Streak milestone: 21 days.')).toBeTruthy();
 
-    // Number input updates the rule and the metric cards, clamping within configured bounds.
     const dailyNumber = screen.getByLabelText('Daily target value') as HTMLInputElement;
     const streakNumber = screen.getByLabelText('Target streak value') as HTMLInputElement;
     await user.clear(dailyNumber);
@@ -532,11 +514,9 @@ describe('HabitForm', () => {
     expect(within(rule).getByText('3 completed repetitions = scheduled day complete.')).toBeTruthy();
     expect(within(rule).getByText('Streak milestone: 60 days.')).toBeTruthy();
 
-    // Slider bound stays synchronized with the number input.
     expect((screen.getByRole('slider', { name: 'Daily target' }) as HTMLInputElement).value).toBe('3');
     expect((screen.getByRole('slider', { name: 'Target streak' }) as HTMLInputElement).value).toBe('60');
 
-    // Oversized values clamp the streak state back into 1..365 (rule reflects the clamped draft).
     await user.clear(streakNumber);
     await user.type(streakNumber, '999');
     expect(within(rule).getByText('Streak milestone: 365 days.')).toBeTruthy();
@@ -567,7 +547,6 @@ describe('HabitForm', () => {
 
       await waitFor(() => { expect(onSubmit).toHaveBeenCalledTimes(1); });
 
-      // Check that the submitted icon is not empty (exact emoji may be normalized)
       const submittedIcon = onSubmit.mock.calls[0][0].icon;
       expect(submittedIcon).toBeTruthy();
       expect(typeof submittedIcon).toBe('string');
@@ -581,7 +560,6 @@ describe('HabitForm', () => {
 
       await user.click(screen.getByRole('button', { name: 'Edit Identity' }));
       const customIconInput = screen.getByLabelText('Custom habit icon') as HTMLInputElement;
-      // Use a simple emoji that doesn't have variation selectors
       await user.type(customIconInput, '📝');
 
       await user.type(screen.getByLabelText('Name *'), 'Writing Habit');
@@ -589,7 +567,6 @@ describe('HabitForm', () => {
 
       await waitFor(() => { expect(onSubmit).toHaveBeenCalledTimes(1); });
 
-      // Check that the submitted icon is not empty (exact emoji may be normalized)
       const submittedIcon = onSubmit.mock.calls[0][0].icon;
       expect(submittedIcon).toBeTruthy();
       expect(typeof submittedIcon).toBe('string');
@@ -603,7 +580,6 @@ describe('HabitForm', () => {
 
       await user.click(screen.getByRole('button', { name: 'Edit Identity' }));
       const customIconInput = screen.getByLabelText('Custom habit icon') as HTMLInputElement;
-      // 🇺🇸 is U+1F1FA (regional indicator U) + U+1F1F8 (regional indicator S)
       await user.type(customIconInput, '🇺🇸');
 
       expect(customIconInput.value).toBe('🇺🇸');
@@ -628,10 +604,8 @@ describe('HabitForm', () => {
       const customIconInput = screen.getByLabelText('Custom habit icon') as HTMLInputElement;
       await user.type(customIconInput, '🎯');
 
-      // Click on the first preset icon (⚡)
       await user.click(screen.getByRole('button', { name: 'Use ⚡ as habit icon' }));
 
-      // After clicking preset, the custom input should be cleared (preset takes over)
       expect(customIconInput.value).toBe('');
 
       await user.type(screen.getByLabelText('Name *'), 'Test Habit');
@@ -639,7 +613,6 @@ describe('HabitForm', () => {
 
       await waitFor(() => { expect(onSubmit).toHaveBeenCalledTimes(1); });
 
-      // Should use the preset icon (⚡) after clicking it
       expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({
         icon: '⚡'
       }));
