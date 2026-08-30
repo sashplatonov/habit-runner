@@ -8,6 +8,7 @@ import com.sashplatonov.habbit.runner.auth.support.AuthCookieBuilder;
 import com.sashplatonov.habbit.runner.auth.support.AuthRateLimitService;
 import com.sashplatonov.habbit.runner.auth.support.AuthResourceSupport;
 import com.sashplatonov.habbit.runner.auth.support.OAuthCallbackSession;
+import com.sashplatonov.habbit.runner.auth.support.RefreshedSession;
 import com.sashplatonov.habbit.runner.auth.dto.AuthSessionResponse;
 import com.sashplatonov.habbit.runner.auth.dto.TokenResponse;
 // Preference DTOs moved to AuthPreferencesResourceUnitTest
@@ -24,7 +25,8 @@ class AuthResourceUnitTest {
   @Test
   void shouldDelegateAuthEndpointsToAuthService() {
     var authService = new ResourceAuthService();
-    authService.setRefreshResponse(new TokenResponse("access-2", "refresh-2", 3600, "Bearer"));
+    authService.setRefreshResponse(new RefreshedSession(
+        "access-2", "refresh-2", 3600, new CurrentUser("user-1", "user@example.test")));
     authService.setGoogleStartRedirect("https://accounts.example.test/start");
     authService.setGoogleCallbackRedirect(new OAuthCallbackSession(
       "https://app.example.test/callback",

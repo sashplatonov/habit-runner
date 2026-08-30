@@ -26,8 +26,11 @@ public class AuthCookieBuilder {
     return cookie(REFRESH_TOKEN_COOKIE, token, ttlSeconds, true);
   }
 
-  public NewCookie csrfToken(String token, int ttlSeconds) {
-    return cookie(CSRF_TOKEN_COOKIE, token, ttlSeconds, false);
+  public NewCookie csrfToken(String existingCsrfToken, int ttlSeconds) {
+    var value = existingCsrfToken == null || existingCsrfToken.isBlank()
+        ? AuthSupport.randomToken(16)
+        : existingCsrfToken;
+    return cookie(CSRF_TOKEN_COOKIE, value, ttlSeconds, false);
   }
 
   public NewCookie expiredAccessToken() {

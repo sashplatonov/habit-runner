@@ -5,7 +5,7 @@ import com.sashplatonov.habbit.runner.auth.service.AuthService;
 import com.sashplatonov.habbit.runner.auth.service.OAuthAccountLinkService;
 import com.sashplatonov.habbit.runner.auth.support.AuthRateLimitService;
 import com.sashplatonov.habbit.runner.auth.support.OAuthCallbackSession;
-import com.sashplatonov.habbit.runner.auth.dto.TokenResponse;
+import com.sashplatonov.habbit.runner.auth.support.RefreshedSession;
 import com.sashplatonov.habbit.runner.metrics.instrumentation.ServiceMetricsInstrumentation;
 import com.sashplatonov.habbit.runner.support.RecordingIdentityService;
 import com.sashplatonov.habbit.runner.support.RecordingJwtUtil;
@@ -22,7 +22,7 @@ public class ResourceAuthService extends AuthService {
   private String lastCode;
   private String lastState;
   private String revokedToken;
-  private TokenResponse refreshResponse;
+  private RefreshedSession refreshResponse;
   private String googleStartRedirect;
   private String googleLinkStartRedirect;
   private OAuthCallbackSession googleCallbackRedirect;
@@ -42,7 +42,7 @@ public class ResourceAuthService extends AuthService {
     );
   }
 
-  public void setRefreshResponse(TokenResponse refreshResponse) {
+  public void setRefreshResponse(RefreshedSession refreshResponse) {
     this.refreshResponse = refreshResponse;
   }
 
@@ -94,7 +94,7 @@ public class ResourceAuthService extends AuthService {
   }
 
   @Override
-  public TokenResponse refreshToken(String token) {
+  public RefreshedSession refreshToken(String token) {
     lastRefreshToken = token;
     return refreshResponse;
   }

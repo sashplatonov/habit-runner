@@ -9,6 +9,7 @@ import com.sashplatonov.habbit.runner.auth.support.OAuthCallbackSession;
 import com.sashplatonov.habbit.runner.auth.support.OAuthSupport;
 import com.sashplatonov.habbit.runner.auth.support.AuthSupport;
 import com.sashplatonov.habbit.runner.auth.support.AuthRateLimitService;
+import com.sashplatonov.habbit.runner.auth.support.RefreshedSession;
 import com.sashplatonov.habbit.runner.auth.telegram.TelegramWebAppUser;
 import com.sashplatonov.habbit.runner.auth.support.RefreshTokenRejectedException;
 import com.sashplatonov.habbit.runner.auth.dto.TokenResponse;
@@ -68,7 +69,7 @@ public class AuthService {
   }
 
   @Transactional
-  public TokenResponse refreshToken(String token) {
+  public RefreshedSession refreshToken(String token) {
     var record = refreshTokenService.requireActive(token);
     authRateLimitService.checkAccount(
         "auth:refresh",
@@ -93,7 +94,12 @@ public class AuthService {
         TraceContextSupport.traceIdOrUnknown()
     );
     serviceMetricsInstrumentation.record(ServiceMetric.AUTH_REFRESH_SUCCESS);
-    return new TokenResponse(accessToken, refreshToken, authConfig.accessTokenTtlSeconds(), "Bearer");
+    return new RefreshedSession(
+        accessToken,
+        refreshToken,
+        authConfig.accessTokenTtlSeconds(),
+        new CurrentUser(user.getId(), user.getEmail())
+    );
   }
 
   @Transactional

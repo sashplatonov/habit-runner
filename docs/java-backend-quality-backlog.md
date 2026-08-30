@@ -540,7 +540,7 @@ git commit -m "refactor(notification): require metrics collaborator and clean im
 
 ## TASK-009: Move session assembly and CSRF token policy out of AuthResource
 
-**Status:** TODO
+**Status:** DONE
 **Priority:** P1
 **Depends on:** TASK-007
 

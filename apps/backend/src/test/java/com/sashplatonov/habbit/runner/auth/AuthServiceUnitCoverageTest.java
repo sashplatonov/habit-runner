@@ -36,6 +36,8 @@ class AuthServiceUnitCoverageTest {
 
     assertEquals("access::user-1::user@example.test::3600", tokenResponse.accessToken());
     assertEquals("rotated-refresh", tokenResponse.refreshToken());
+    assertEquals("user-1", tokenResponse.user().id());
+    assertEquals("user@example.test", tokenResponse.user().email());
   }
 
   @Test
