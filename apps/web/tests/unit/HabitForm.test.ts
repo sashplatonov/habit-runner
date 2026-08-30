@@ -397,6 +397,62 @@ describe('HabitForm', () => {
     }));
   });
 
+  it('bounds the monthly quota counter and reflects target summaries before save', async () => {
+    const user = userEvent.setup();
+    const onSubmit = vi.fn().mockResolvedValue(undefined);
+
+    render(HabitForm, {
+      props: {
+        mode: 'create',
+        allHabits: [],
+        onBack: vi.fn(),
+        onSubmit
+      }
+    });
+
+    await user.click(screen.getByRole('button', { name: 'Edit Schedule' }));
+    await user.click(screen.getByRole('button', { name: 'Monthly quota Target completions per month' }));
+    const view = screen.getByTestId('monthly-quota-view');
+
+    // Default transition seeds 3; metrics and rule update live.
+    expect(within(view).getByText('3 / month')).toBeTruthy();
+    expect(within(view).getByText('Flexible timing')).toBeTruthy();
+    expect(within(view).getByText('The month is on target after 3 completions.')).toBeTruthy();
+    expect(within(view).getByText('Progress is measured against the monthly quota rather than calendar-day attendance.')).toBeTruthy();
+
+    // Increment to 31: 3 -> 8 -> 31 (increments clamp at the top bound).
+    for (let step = 0; step < 30; step += 1) {
+      await user.click(screen.getByRole('button', { name: 'Increase monthly quota' }));
+    }
+    expect(within(view).getByText('31 / month')).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Increase monthly quota' }).hasAttribute('disabled')).toBe(true);
+    expect(within(view).getByText('The month is on target after 31 completions.')).toBeTruthy();
+
+    // Decrease to the bottom bound 1.
+    for (let step = 0; step < 30; step += 1) {
+      await user.click(screen.getByRole('button', { name: 'Decrease monthly quota' }));
+    }
+    expect(within(view).getByText('1 / month')).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Decrease monthly quota' }).hasAttribute('disabled')).toBe(true);
+
+    // Panel back-and-forth retains the draft summary.
+    await user.click(screen.getByRole('button', { name: 'Back to habit editor dashboard' }));
+    expect(within(screen.getByRole('button', { name: 'Edit Schedule' })).getByText('1x a month')).toBeTruthy();
+    await user.click(screen.getByRole('button', { name: 'Edit Schedule' }));
+    expect(screen.getByLabelText('Monthly quota: 1 completions per month')).toBeTruthy();
+
+    await user.click(screen.getByRole('button', { name: 'Back to habit editor dashboard' }));
+    await user.click(screen.getByRole('button', { name: 'Edit Identity' }));
+    await user.type(screen.getByLabelText('Name *'), 'Monthly quota habit');
+    await user.click(screen.getAllByRole('button', { name: 'Create habit' }).at(-1)!);
+    await waitFor(() => {
+      expect(onSubmit).toHaveBeenCalledTimes(1);
+    });
+    expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({
+      schedule: { type: 'monthly_quota', timesPerMonth: 1 }
+    }));
+  });
+
   it('preserves advanced monthly-week schedules on submit', async () => {
     const user = userEvent.setup();
     const onSubmit = vi.fn().mockResolvedValue(undefined);

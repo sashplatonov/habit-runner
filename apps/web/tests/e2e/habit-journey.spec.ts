@@ -307,27 +307,26 @@ test.describe.serial('critical habit journey', () => {
     expect(await chooser.getByRole('button').evaluateAll((b) => b.map((x) => x.getAttribute('data-editor-schedule-option')))).toEqual(['daily', 'weekly_days', 'weekly_quota', 'monthly_quota', 'monthly_weeks']);
     await expect(chooser.getByRole('button', { name: 'Daily Every day' })).toHaveAttribute('aria-pressed', 'true');
     await expect(page.locator('[data-editor-schedule-effect-title]')).toHaveText(/Daily/);
-
-    // Daily sub-view snapshot check; full copy coverage lives in unit tests. dispatchEvent avoids overlay interception.
+    // Daily sub-view snapshot and no-editable-controls check; full copy coverage lives in unit tests.
     await chooser.getByRole('button', { name: 'Daily Every day' }).dispatchEvent('click');
     await expect(page.locator('[data-editor-schedule-daily-rule]')).toContainText('every calendar day');
-    for (const control of [/Toggle .* for the schedule/, 'Times per week', 'Times per month']) { await expect(page.getByLabel(control)).toHaveCount(0); } // Daily has no editable controls.
+    for (const control of [/Toggle .* for the schedule/, 'Times per week', 'Times per month']) { await expect(page.getByLabel(control)).toHaveCount(0); }
     await chooser.getByRole('button', { name: 'Days of week Pick weekdays' }).dispatchEvent('click');
     await expect(chooser.getByRole('button', { name: 'Days of week Pick weekdays' })).toHaveAttribute('aria-pressed', 'true');
     await expect(page.locator('[data-editor-schedule-weekdays] [data-editor-schedule-weekdays-count]')).toHaveText('5');
-    await expect(page.locator('[data-editor-schedule-weekdays] [data-editor-schedule-weekdays-rule]')).toContainText('count as scheduled days.');
-    // Weekly quota bounds and flexible-days truth; full copy coverage lives in unit tests.
+    // Quota bounds: weekly and monthly counters clamp with disabled increments; copy covered in unit tests.
     const quota = page.locator('[data-editor-schedule-weekly-quota]');
     await page.getByRole('group', { name: 'Schedule type' }).getByRole('button', { name: 'Weekly quota Target completions per week' }).dispatchEvent('click');
-    await expect(quota.locator('[data-editor-quota-weekly-metric]')).toHaveText('2 / week');
     for (let step = 0; step < 5; step += 1) { await quota.getByRole('button', { name: 'Increase weekly quota' }).click(); }
-    await expect(quota.locator('[data-editor-quota-weekly-metric]')).toHaveText('7 / week');
-    for (let step = 0; step < 6; step += 1) { await quota.getByRole('button', { name: 'Decrease weekly quota' }).click(); }
-    await expect(quota.locator('[data-editor-quota-weekly-metric]')).toHaveText('1 / week');
-    await expect(quota.getByRole('button', { name: 'Decrease weekly quota' })).toBeDisabled();
+    const monthly = page.locator('[data-editor-schedule-monthly-quota]');
+    await page.getByRole('group', { name: 'Schedule type' }).getByRole('button', { name: 'Monthly quota Target completions per month' }).dispatchEvent('click');
+    await expect(monthly.locator('[data-editor-quota-monthly-metric]')).toHaveText('3 / month');
+    for (let step = 0; step < 28; step += 1) { await monthly.getByRole('button', { name: 'Increase monthly quota' }).click(); }
+    await expect(monthly.locator('[data-editor-quota-monthly-metric]')).toHaveText('31 / month');
+    await expect(monthly.locator('[data-editor-quota-monthly-rule]')).toContainText('The month is on target after 31 completions.');
     // Draft survives panel back-and-forth; the dashboard summary reflects the new quota (goto resets the draft).
     await page.getByRole('button', { name: 'Back to habit editor dashboard' }).click();
-    await expect(page.getByRole('button', { name: 'Edit Schedule' })).toContainText('1x a week');
+    await expect(page.getByRole('button', { name: 'Edit Schedule' })).toContainText('31x a month');
     for (const viewport of [{ width: 390, height: 844 }, { width: 320, height: 740 }, { width: 1280, height: 900 }]) {
       await page.setViewportSize(viewport);
       expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);

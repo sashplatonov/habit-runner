@@ -441,38 +441,76 @@
     {/if}
 
     {#if openSlot === 'monthly_quota'}
-      <div class="space-y-3">
-        <div class="flex items-center gap-3">
-          <input
-            type="number"
-            min="1"
-            max="31"
-            name="monthly-quota"
-            aria-label="Times per month"
-            inputmode="numeric"
-            value={schedule.timesPerMonth}
-            class="w-20 rounded-lg border border-border bg-bg-secondary px-3 py-2 text-sm font-mono focus:border-accent/60"
-            oninput={(event) => {
-              setMonthlyQuota(Number((event.currentTarget as HTMLInputElement).value));
-            }}
-          />
-          <span class="text-sm font-semibold text-foreground">{`${schedule.timesPerMonth} times per month`}</span>
-        </div>
-
+      <div class="space-y-3" data-testid="monthly-quota-view" data-editor-schedule-monthly-quota>
         <div class="space-y-2">
-          <p class="text-[11px] font-mono uppercase tracking-[0.3em] text-muted">Optional weekdays</p>
-          <div class="flex gap-1">
-            {#each DAY_LABELS as day, index (`${day}-${index}`)}
+          <p class="text-[10px] font-mono uppercase tracking-[0.18em] text-muted">Completions per month</p>
+          <div class="flex items-center gap-2">
+            <button
+              type="button"
+              class="flex h-11 w-11 items-center justify-center rounded-xl border border-border bg-bg-primary text-lg text-muted transition hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
+              aria-label="Decrease monthly quota"
+              disabled={schedule.timesPerMonth <= 1}
+              data-editor-quota-decrement="monthly"
+              onclick={() => {
+                setMonthlyQuota(schedule.timesPerMonth - 1);
+              }}
+            >
+              −
+            </button>
+            <p
+              class="flex h-11 min-w-14 items-center justify-center rounded-xl border border-border bg-bg-primary text-lg font-bold text-foreground"
+              aria-live="polite"
+              aria-label={`Monthly quota: ${schedule.timesPerMonth} completions per month`}
+              data-editor-quota-value="monthly"
+            >
+              {schedule.timesPerMonth}
+            </p>
+            <button
+              type="button"
+              class="flex h-11 w-11 items-center justify-center rounded-xl border border-border bg-bg-primary text-lg text-muted transition hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
+              aria-label="Increase monthly quota"
+              disabled={schedule.timesPerMonth >= 31}
+              data-editor-quota-increment="monthly"
+              onclick={() => {
+                setMonthlyQuota(schedule.timesPerMonth + 1);
+              }}
+            >
+              +
+            </button>
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <div class="rounded-2xl border border-border bg-bg-primary p-2.5">
+            <p class="whitespace-nowrap text-[13px] font-bold text-foreground" data-editor-quota-monthly-metric>{schedule.timesPerMonth} / month</p>
+            <p class="mt-0.5 text-[10px] leading-[14px] text-muted">monthly target</p>
+          </div>
+          <div class="rounded-2xl border border-border bg-bg-primary p-2.5">
+            <p class="text-[11px] font-bold leading-4 text-foreground" data-editor-quota-monthly-flex>{(schedule.weekdays ?? []).length > 0 ? 'Restricted days' : 'Flexible timing'}</p>
+            <p class="mt-0.5 text-[10px] leading-[14px] text-muted">{(schedule.weekdays ?? []).length > 0 ? 'only the selected weekdays count' : 'no fixed days'}</p>
+          </div>
+        </div>
+        <div class="rounded-2xl border border-border bg-bg-primary p-3" data-editor-quota-monthly-rule>
+          <p class="text-[12px] font-semibold leading-5 text-foreground">The month is on target after {schedule.timesPerMonth} completion{schedule.timesPerMonth === 1 ? '' : 's'}.</p>
+          <p class="mt-0.5 text-[11px] leading-4 text-muted">
+            {(schedule.weekdays ?? []).length > 0
+              ? 'Only the selected weekdays count toward the monthly target.'
+              : 'Progress is measured against the monthly quota rather than calendar-day attendance.'}
+          </p>
+        </div>
+        <div class="space-y-2">
+          <p class="text-[10px] font-mono uppercase tracking-[0.18em] text-muted">Optional weekdays</p>
+          <div class="grid grid-cols-7 gap-1.5">
+            {#each WEEKDAY_ORDER as day (`${day}`)}
               <button
                 type="button"
-                class={`flex min-h-11 flex-1 items-center justify-center rounded-lg border px-2 py-1 text-xs font-mono transition ${(schedule.weekdays ?? []).includes(index) ? 'border-accent bg-accent/10 text-accent' : 'border-border text-muted hover:border-border-hover'}`}
-                aria-label={`Toggle ${day} for the monthly quota schedule`}
-                aria-pressed={(schedule.weekdays ?? []).includes(index)}
+                class={`flex min-h-11 items-center justify-center rounded-xl border px-1 py-1 text-[11px] font-bold transition ${(schedule.weekdays ?? []).includes(day) ? 'border-accent bg-accent/10 text-accent' : 'border-border bg-bg-primary text-muted hover:border-border-hover'}`}
+                aria-label={`Toggle ${DAY_FULL_NAMES[day]} for the monthly quota schedule`}
+                aria-pressed={(schedule.weekdays ?? []).includes(day)}
                 onclick={() => {
-                  toggleWeekday(index);
+                  toggleWeekday(day);
                 }}
               >
-                {day[0]}
+                {DAY_LABELS[day]}
               </button>
             {/each}
           </div>

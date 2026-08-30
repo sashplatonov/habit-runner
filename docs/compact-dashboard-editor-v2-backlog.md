@@ -534,7 +534,7 @@ git commit -m "feat(habits): add weekly quota schedule screen"
 
 ## CDE-009: Implement the Monthly quota screen
 
-**Status:** TODO  
+**Status:** DONE  
 **Priority:** P1  
 **Depends on:** CDE-005
 
