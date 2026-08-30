@@ -832,7 +832,7 @@ git commit -m "feat(habits): add organization editor screen"
 
 ## CDE-014: Verify complete editor journey and all reference screens
 
-**Status:** TODO  
+**Status:** DONE
 **Priority:** P2  
 **Depends on:** CDE-002, CDE-003, CDE-004, CDE-005, CDE-006, CDE-007, CDE-008, CDE-009, CDE-010, CDE-011, CDE-012, CDE-013
 
