@@ -15,6 +15,7 @@
   import { describeSchedule } from '@habbit-runner/shared';
   import { ArrowLeft, Plus } from 'lucide-svelte';
   import type { Habit } from '@/types/habit';
+  import type { HabitSchedule } from '@habbit-runner/shared';
   import type { HabitUpsertInput } from '$lib/stores/habits';
   import { COLORS } from '$lib/habits/constants';
   import {

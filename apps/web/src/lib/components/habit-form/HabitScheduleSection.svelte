@@ -8,44 +8,6 @@
   const DAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
   const DAY_FULL_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
-  const selectedWeekdays = $derived(
-    schedule.type === 'weekly_days' || schedule.type === 'monthly_weeks'
-      ? WEEKDAY_ORDER.filter((day) => schedule.weekdays.includes(day))
-      : []
-  );
-  const weekdayPattern = $derived(
-    selectedWeekdays.length > 0 ? selectedWeekdays.map((day) => DAY_LABELS[day]).join(' · ') : 'None selected'
-  );
-  const weekdaysRule = $derived.by(() => {
-    const names = selectedWeekdays.map((day) => DAY_FULL_NAMES[day]);
-    if (names.length === 0) {
-      return 'Select at least one weekday to schedule opportunities.';
-    }
-    if (names.length === 1) {
-      return `Only ${names[0]} counts as a scheduled day.`;
-    }
-    return `Only ${names.slice(0, -1).join(', ')} and ${names[names.length - 1]} count as scheduled days.`;
-  });
-
-  const selectedWeeks = $derived(
-    schedule.type === 'monthly_weeks' ? WEEK_OF_MONTH_OPTIONS.filter((week) => schedule.weeksOfMonth.includes(week)) : []
-  );
-  const monthWeeksRule = $derived.by(() => {
-    const dayNames = selectedWeekdays.map((day) => DAY_FULL_NAMES[day]);
-    const weekLabels = selectedWeekdays.length === 0 ? [] : selectedWeeks.map((week) => (week === 'last' ? 'the last week' : `week ${week}`));
-    if (dayNames.length === 0) {
-      return 'Select at least one weekday inside the selected weeks.';
-    }
-    if (weekLabels.length === 0) {
-      return 'Select at least one week of the month.';
-    }
-    const dayList = dayNames.length === 1 ? dayNames[0] : `${dayNames.slice(0, -1).join(', ')} and ${dayNames[dayNames.length - 1]}`;
-    if (weekLabels.length === 1) {
-      return `Schedule ${dayList} during ${weekLabels[0]} of each month.`;
-    }
-    return `Schedule ${dayList} during ${weekLabels.slice(0, -1).join(', ')} and ${weekLabels[weekLabels.length - 1]} of each month.`;
-  });
-
   const CHOICE_ICONS: Record<HabitSchedule['type'], typeof Icon> = {
     daily: Calendar,
     weekly_days: CalendarDays,
@@ -87,6 +49,27 @@
     openSlot?: HabitSchedule['type'] | null;
     errors: Record<string, string>;
   } = $props();
+
+  const selectedWeekdays = $derived(WEEKDAY_ORDER.filter((day) => (getWeekdaysFromSchedule(schedule) ?? []).includes(day)));
+  const weekdayPattern = $derived(
+    selectedWeekdays.length > 0 ? selectedWeekdays.map((day) => DAY_LABELS[day]).join(' · ') : 'None selected'
+  );
+  const weekdaysRule = $derived.by(() => {
+    const names = selectedWeekdays.map((day) => DAY_FULL_NAMES[day]);
+    if (names.length === 0) return 'Select at least one weekday to schedule opportunities.';
+    if (names.length === 1) return `Only ${names[0]} counts as a scheduled day.`;
+    return `Only ${names.slice(0, -1).join(', ')} and ${names[names.length - 1]} count as scheduled days.`;
+  });
+  const selectedWeeks = $derived(WEEK_OF_MONTH_OPTIONS.filter((week) => getWeeksOfMonth(schedule).includes(week)));
+  const monthWeeksRule = $derived.by(() => {
+    const dayNames = selectedWeekdays.map((day) => DAY_FULL_NAMES[day]);
+    const weekLabels = selectedWeekdays.length === 0 ? [] : selectedWeeks.map((week) => (week === 'last' ? 'the last week' : `week ${week}`));
+    if (dayNames.length === 0) return 'Select at least one weekday inside the selected weeks.';
+    if (weekLabels.length === 0) return 'Select at least one week of the month.';
+    const dayList = dayNames.length === 1 ? dayNames[0] : `${dayNames.slice(0, -1).join(', ')} and ${dayNames[dayNames.length - 1]}`;
+    if (weekLabels.length === 1) return `Schedule ${dayList} during ${weekLabels[0]} of each month.`;
+    return `Schedule ${dayList} during ${weekLabels.slice(0, -1).join(', ')} and ${weekLabels[weekLabels.length - 1]} of each month.`;
+  });
 
   function openType(nextType: HabitSchedule['type']) {
     if (openSlot === nextType) {
@@ -180,6 +163,18 @@
     return undefined;
   }
 
+  function getWeeksOfMonth(current: HabitSchedule): WeekOfMonth[] {
+    return current.type === 'monthly_weeks' ? current.weeksOfMonth : [];
+  }
+
+  function getWeeklyQuota(current: HabitSchedule): number {
+    return current.type === 'weekly_quota' ? current.timesPerWeek : 1;
+  }
+
+  function getMonthlyQuota(current: HabitSchedule): number {
+    return current.type === 'monthly_quota' ? current.timesPerMonth : 1;
+  }
+
   function toggleArray<T>(items: T[], value: T): T[] {
     if (items.includes(value)) {
       return items.filter((item) => item !== value);
@@ -240,6 +235,7 @@
   </div>
   <div class="mt-2 grid gap-2" role="group" aria-label="Schedule type">
     {#each SCHEDULE_TYPE_OPTIONS as option (`${option.value}`)}
+      {@const ChoiceIcon = CHOICE_ICONS[option.value]}
       <button
         type="button"
         class={`flex min-h-[64px] w-full items-center gap-3 rounded-2xl border px-3.5 py-2.5 text-left transition-[background-color,border-color] ${schedule.type === option.value ? 'border-accent bg-accent/10' : 'border-border bg-bg-primary hover:border-border-hover'}`}
@@ -252,7 +248,7 @@
         <span
           class={`flex h-[34px] w-[34px] shrink-0 items-center justify-center rounded-[10px] ${schedule.type === option.value ? 'bg-bg-card text-accent' : 'bg-bg-secondary text-muted'}`}
         >
-          <svelte:component this={CHOICE_ICONS[option.value]} size={18} strokeWidth={1.8} aria-hidden="true" />
+          <ChoiceIcon size={18} strokeWidth={1.8} aria-hidden="true" />
         </span>
         <span class="min-w-0">
           <span class="block text-[13px] font-semibold text-foreground">{option.label}</span>
@@ -299,9 +295,9 @@
             {#each WEEKDAY_ORDER as day (`${day}`)}
               <button
                 type="button"
-                class={`flex min-h-11 items-center justify-center rounded-xl border px-1 py-1 text-[11px] font-bold transition ${schedule.weekdays.includes(day) ? 'border-accent bg-accent/10 text-accent' : 'border-border bg-bg-primary text-muted hover:border-border-hover'}`}
+                class={`flex min-h-11 items-center justify-center rounded-xl border px-1 py-1 text-[11px] font-bold transition ${getWeekdaysFromSchedule(schedule)?.includes(day) ? 'border-accent bg-accent/10 text-accent' : 'border-border bg-bg-primary text-muted hover:border-border-hover'}`}
                 aria-label={`Toggle ${DAY_FULL_NAMES[day]} for the schedule`}
-                aria-pressed={schedule.weekdays.includes(day)}
+                aria-pressed={getWeekdaysFromSchedule(schedule)?.includes(day)}
                 data-editor-schedule-weekday={day}
                 onclick={() => {
                   toggleWeekday(day);
@@ -317,7 +313,7 @@
         </div>
         <div class="grid grid-cols-2 gap-2">
           <div class="rounded-2xl border border-border bg-bg-primary p-2.5">
-            <p class="text-[13px] font-bold text-foreground" data-editor-schedule-weekdays-count>{schedule.weekdays.length}</p>
+            <p class="text-[13px] font-bold text-foreground" data-editor-schedule-weekdays-count>{getWeekdaysFromSchedule(schedule)?.length ?? 0}</p>
             <p class="mt-0.5 text-[10px] leading-[14px] text-muted">days selected</p>
           </div>
           <div class="rounded-2xl border border-border bg-bg-primary p-2.5">
@@ -341,10 +337,10 @@
               type="button"
               class="flex h-11 w-11 items-center justify-center rounded-xl border border-border bg-bg-primary text-lg text-muted transition hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
               aria-label="Decrease weekly quota"
-              disabled={schedule.timesPerWeek <= 1}
+              disabled={getWeeklyQuota(schedule) <= 1}
               data-editor-quota-decrement="weekly"
               onclick={() => {
-                setWeeklyQuota(schedule.timesPerWeek - 1);
+                setWeeklyQuota(getWeeklyQuota(schedule) - 1);
               }}
             >
               −
@@ -352,19 +348,19 @@
             <p
               class="flex h-11 min-w-14 items-center justify-center rounded-xl border border-border bg-bg-primary text-lg font-bold text-foreground"
               aria-live="polite"
-              aria-label={`Weekly quota: ${schedule.timesPerWeek} completions per week`}
+              aria-label={`Weekly quota: ${getWeeklyQuota(schedule)} completions per week`}
               data-editor-quota-value="weekly"
             >
-              {schedule.timesPerWeek}
+              {getWeeklyQuota(schedule)}
             </p>
             <button
               type="button"
               class="flex h-11 w-11 items-center justify-center rounded-xl border border-border bg-bg-primary text-lg text-muted transition hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
               aria-label="Increase weekly quota"
-              disabled={schedule.timesPerWeek >= 7}
+              disabled={getWeeklyQuota(schedule) >= 7}
               data-editor-quota-increment="weekly"
               onclick={() => {
-                setWeeklyQuota(schedule.timesPerWeek + 1);
+                setWeeklyQuota(getWeeklyQuota(schedule) + 1);
               }}
             >
               +
@@ -373,18 +369,18 @@
         </div>
         <div class="grid grid-cols-2 gap-2">
           <div class="rounded-2xl border border-border bg-bg-primary p-2.5">
-            <p class="whitespace-nowrap text-[13px] font-bold text-foreground" data-editor-quota-weekly-metric>{schedule.timesPerWeek} / week</p>
+            <p class="whitespace-nowrap text-[13px] font-bold text-foreground" data-editor-quota-weekly-metric>{getWeeklyQuota(schedule)} / week</p>
             <p class="mt-0.5 text-[10px] leading-[14px] text-muted">required completions</p>
           </div>
           <div class="rounded-2xl border border-border bg-bg-primary p-2.5">
-            <p class="text-[11px] font-bold leading-4 text-foreground" data-editor-quota-weekly-flex>{(schedule.weekdays ?? []).length > 0 ? 'Restricted days' : 'Flexible days'}</p>
-            <p class="mt-0.5 text-[10px] leading-[14px] text-muted">{(schedule.weekdays ?? []).length > 0 ? 'only the selected weekdays count' : 'do them anytime in the week'}</p>
+            <p class="text-[11px] font-bold leading-4 text-foreground" data-editor-quota-weekly-flex>{getWeekdaysFromSchedule(schedule)?.length ? 'Restricted days' : 'Flexible days'}</p>
+            <p class="mt-0.5 text-[10px] leading-[14px] text-muted">{getWeekdaysFromSchedule(schedule)?.length ? 'only the selected weekdays count' : 'do them anytime in the week'}</p>
           </div>
         </div>
         <div class="rounded-2xl border border-border bg-bg-primary p-3" data-editor-quota-weekly-rule>
-          <p class="text-[12px] font-semibold leading-5 text-foreground">The week is on target after {schedule.timesPerWeek} completion{schedule.timesPerWeek === 1 ? '' : 's'}.</p>
+          <p class="text-[12px] font-semibold leading-5 text-foreground">The week is on target after {getWeeklyQuota(schedule)} completion{getWeeklyQuota(schedule) === 1 ? '' : 's'}.</p>
           <p class="mt-0.5 text-[11px] leading-4 text-muted">
-            {(schedule.weekdays ?? []).length > 0
+            {getWeekdaysFromSchedule(schedule)?.length
               ? 'Only the selected weekdays count toward the weekly target.'
               : 'No individual weekday is automatically considered missed.'}
           </p>
@@ -396,9 +392,9 @@
             {#each WEEKDAY_ORDER as day (`${day}`)}
               <button
                 type="button"
-                class={`flex min-h-11 items-center justify-center rounded-xl border px-1 py-1 text-[11px] font-bold transition ${(schedule.weekdays ?? []).includes(day) ? 'border-accent bg-accent/10 text-accent' : 'border-border bg-bg-primary text-muted hover:border-border-hover'}`}
+                class={`flex min-h-11 items-center justify-center rounded-xl border px-1 py-1 text-[11px] font-bold transition ${getWeekdaysFromSchedule(schedule)?.includes(day) ? 'border-accent bg-accent/10 text-accent' : 'border-border bg-bg-primary text-muted hover:border-border-hover'}`}
                 aria-label={`Toggle ${DAY_FULL_NAMES[day]} for the weekly quota schedule`}
-                aria-pressed={(schedule.weekdays ?? []).includes(day)}
+                aria-pressed={getWeekdaysFromSchedule(schedule)?.includes(day)}
                 onclick={() => {
                   toggleWeekday(day);
                 }}
@@ -420,8 +416,8 @@
             {#each WEEK_OF_MONTH_OPTIONS as week (`${week}`)}
               <button
                 type="button"
-                class={`flex min-h-11 items-center justify-center rounded-xl border px-1 py-1 text-[11px] font-bold transition ${schedule.weeksOfMonth.includes(week) ? 'border-accent bg-accent/10 text-accent' : 'border-border bg-bg-primary text-muted hover:border-border-hover'}`}
-                aria-pressed={schedule.weeksOfMonth.includes(week)}
+                class={`flex min-h-11 items-center justify-center rounded-xl border px-1 py-1 text-[11px] font-bold transition ${getWeeksOfMonth(schedule).includes(week) ? 'border-accent bg-accent/10 text-accent' : 'border-border bg-bg-primary text-muted hover:border-border-hover'}`}
+                aria-pressed={getWeeksOfMonth(schedule).includes(week)}
                 aria-label={`Toggle ${week === 'last' ? 'last week' : `week ${week}`} of the month`}
                 data-editor-month-week={week}
                 onclick={() => {
@@ -443,9 +439,9 @@
             {#each WEEKDAY_ORDER as day (`${day}`)}
               <button
                 type="button"
-                class={`flex min-h-11 items-center justify-center rounded-xl border px-1 py-1 text-[11px] font-bold transition ${schedule.weekdays.includes(day) ? 'border-accent bg-accent/10 text-accent' : 'border-border bg-bg-primary text-muted hover:border-border-hover'}`}
+                class={`flex min-h-11 items-center justify-center rounded-xl border px-1 py-1 text-[11px] font-bold transition ${getWeekdaysFromSchedule(schedule)?.includes(day) ? 'border-accent bg-accent/10 text-accent' : 'border-border bg-bg-primary text-muted hover:border-border-hover'}`}
                 aria-label={`Toggle ${DAY_FULL_NAMES[day]} in the selected weeks`}
-                aria-pressed={schedule.weekdays.includes(day)}
+                aria-pressed={getWeekdaysFromSchedule(schedule)?.includes(day)}
                 data-editor-schedule-weekday={day}
                 onclick={() => {
                   toggleWeekday(day);
@@ -476,10 +472,10 @@
               type="button"
               class="flex h-11 w-11 items-center justify-center rounded-xl border border-border bg-bg-primary text-lg text-muted transition hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
               aria-label="Decrease monthly quota"
-              disabled={schedule.timesPerMonth <= 1}
+              disabled={getMonthlyQuota(schedule) <= 1}
               data-editor-quota-decrement="monthly"
               onclick={() => {
-                setMonthlyQuota(schedule.timesPerMonth - 1);
+                setMonthlyQuota(getMonthlyQuota(schedule) - 1);
               }}
             >
               −
@@ -487,19 +483,19 @@
             <p
               class="flex h-11 min-w-14 items-center justify-center rounded-xl border border-border bg-bg-primary text-lg font-bold text-foreground"
               aria-live="polite"
-              aria-label={`Monthly quota: ${schedule.timesPerMonth} completions per month`}
+              aria-label={`Monthly quota: ${getMonthlyQuota(schedule)} completions per month`}
               data-editor-quota-value="monthly"
             >
-              {schedule.timesPerMonth}
+              {getMonthlyQuota(schedule)}
             </p>
             <button
               type="button"
               class="flex h-11 w-11 items-center justify-center rounded-xl border border-border bg-bg-primary text-lg text-muted transition hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
               aria-label="Increase monthly quota"
-              disabled={schedule.timesPerMonth >= 31}
+              disabled={getMonthlyQuota(schedule) >= 31}
               data-editor-quota-increment="monthly"
               onclick={() => {
-                setMonthlyQuota(schedule.timesPerMonth + 1);
+                setMonthlyQuota(getMonthlyQuota(schedule) + 1);
               }}
             >
               +
@@ -508,18 +504,18 @@
         </div>
         <div class="grid grid-cols-2 gap-2">
           <div class="rounded-2xl border border-border bg-bg-primary p-2.5">
-            <p class="whitespace-nowrap text-[13px] font-bold text-foreground" data-editor-quota-monthly-metric>{schedule.timesPerMonth} / month</p>
+            <p class="whitespace-nowrap text-[13px] font-bold text-foreground" data-editor-quota-monthly-metric>{getMonthlyQuota(schedule)} / month</p>
             <p class="mt-0.5 text-[10px] leading-[14px] text-muted">monthly target</p>
           </div>
           <div class="rounded-2xl border border-border bg-bg-primary p-2.5">
-            <p class="text-[11px] font-bold leading-4 text-foreground" data-editor-quota-monthly-flex>{(schedule.weekdays ?? []).length > 0 ? 'Restricted days' : 'Flexible timing'}</p>
-            <p class="mt-0.5 text-[10px] leading-[14px] text-muted">{(schedule.weekdays ?? []).length > 0 ? 'only the selected weekdays count' : 'no fixed days'}</p>
+            <p class="text-[11px] font-bold leading-4 text-foreground" data-editor-quota-monthly-flex>{getWeekdaysFromSchedule(schedule)?.length ? 'Restricted days' : 'Flexible timing'}</p>
+            <p class="mt-0.5 text-[10px] leading-[14px] text-muted">{getWeekdaysFromSchedule(schedule)?.length ? 'only the selected weekdays count' : 'no fixed days'}</p>
           </div>
         </div>
         <div class="rounded-2xl border border-border bg-bg-primary p-3" data-editor-quota-monthly-rule>
-          <p class="text-[12px] font-semibold leading-5 text-foreground">The month is on target after {schedule.timesPerMonth} completion{schedule.timesPerMonth === 1 ? '' : 's'}.</p>
+          <p class="text-[12px] font-semibold leading-5 text-foreground">The month is on target after {getMonthlyQuota(schedule)} completion{getMonthlyQuota(schedule) === 1 ? '' : 's'}.</p>
           <p class="mt-0.5 text-[11px] leading-4 text-muted">
-            {(schedule.weekdays ?? []).length > 0
+            {getWeekdaysFromSchedule(schedule)?.length
               ? 'Only the selected weekdays count toward the monthly target.'
               : 'Progress is measured against the monthly quota rather than calendar-day attendance.'}
           </p>
@@ -530,9 +526,9 @@
             {#each WEEKDAY_ORDER as day (`${day}`)}
               <button
                 type="button"
-                class={`flex min-h-11 items-center justify-center rounded-xl border px-1 py-1 text-[11px] font-bold transition ${(schedule.weekdays ?? []).includes(day) ? 'border-accent bg-accent/10 text-accent' : 'border-border bg-bg-primary text-muted hover:border-border-hover'}`}
+                class={`flex min-h-11 items-center justify-center rounded-xl border px-1 py-1 text-[11px] font-bold transition ${getWeekdaysFromSchedule(schedule)?.includes(day) ? 'border-accent bg-accent/10 text-accent' : 'border-border bg-bg-primary text-muted hover:border-border-hover'}`}
                 aria-label={`Toggle ${DAY_FULL_NAMES[day]} for the monthly quota schedule`}
-                aria-pressed={(schedule.weekdays ?? []).includes(day)}
+                aria-pressed={getWeekdaysFromSchedule(schedule)?.includes(day)}
                 onclick={() => {
                   toggleWeekday(day);
                 }}
