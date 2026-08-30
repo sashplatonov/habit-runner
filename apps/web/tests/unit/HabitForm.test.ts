@@ -102,9 +102,7 @@ describe('HabitForm', () => {
     expect(screen.getByRole('button', { name: 'Select Cyan color' }).getAttribute('aria-pressed')).toBe('true');
 
     await user.click(screen.getAllByRole('button', { name: 'Create habit' }).at(-1)!);
-    await waitFor(() => {
-      expect(onSubmit).toHaveBeenCalledTimes(1);
-    });
+    await waitFor(() => { expect(onSubmit).toHaveBeenCalledTimes(1); });
     expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({
       name: 'Breath 4-7-8',
       icon: '🧘',
@@ -203,9 +201,7 @@ describe('HabitForm', () => {
     await user.click(screen.getByRole('button', { name: 'Edit Identity' }));
     await user.type(screen.getByLabelText('Name *'), 'Weekday reading');
     await user.click(screen.getAllByRole('button', { name: 'Create habit' }).at(-1)!);
-    await waitFor(() => {
-      expect(onSubmit).toHaveBeenCalledTimes(1);
-    });
+    await waitFor(() => { expect(onSubmit).toHaveBeenCalledTimes(1); });
     expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({
       schedule: { type: 'weekly_days', weekdays: [1, 2, 3, 4, 5] }
     }));
@@ -272,9 +268,7 @@ describe('HabitForm', () => {
     await user.click(screen.getByRole('button', { name: 'Edit Identity' }));
     await user.type(screen.getByLabelText('Name *'), 'Mon Wednesday');
     await user.click(screen.getAllByRole('button', { name: 'Create habit' }).at(-1)!);
-    await waitFor(() => {
-      expect(onSubmit).toHaveBeenCalledTimes(1);
-    });
+    await waitFor(() => { expect(onSubmit).toHaveBeenCalledTimes(1); });
     expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({
       schedule: { type: 'weekly_days', weekdays: [1, 3] },
       frequency: 'custom',
@@ -324,9 +318,7 @@ describe('HabitForm', () => {
     await user.click(screen.getByRole('button', { name: 'Edit Identity' }));
     await user.type(screen.getByLabelText('Name *'), 'Weekly quota habit');
     await user.click(screen.getAllByRole('button', { name: 'Create habit' }).at(-1)!);
-    await waitFor(() => {
-      expect(onSubmit).toHaveBeenCalledTimes(1);
-    });
+    await waitFor(() => { expect(onSubmit).toHaveBeenCalledTimes(1); });
     expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({
       schedule: { type: 'weekly_quota', timesPerWeek: 1 }
     }));
@@ -368,9 +360,7 @@ describe('HabitForm', () => {
     await user.click(screen.getByRole('button', { name: 'Edit Identity' }));
     await user.type(screen.getByLabelText('Name *'), 'Monthly quota habit');
     await user.click(screen.getAllByRole('button', { name: 'Create habit' }).at(-1)!);
-    await waitFor(() => {
-      expect(onSubmit).toHaveBeenCalledTimes(1);
-    });
+    await waitFor(() => { expect(onSubmit).toHaveBeenCalledTimes(1); });
     expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({
       schedule: { type: 'monthly_quota', timesPerMonth: 1 }
     }));
@@ -379,21 +369,7 @@ describe('HabitForm', () => {
   it('preserves advanced monthly-week schedules on submit', async () => {
     const user = userEvent.setup();
     const onSubmit = vi.fn().mockResolvedValue(undefined);
-    render(HabitForm, {
-      props: {
-        mode: 'edit',
-        habit: createHabit({
-          id: 'habit-42',
-          frequency: 'daily',
-          schedule: { type: 'monthly_weeks', weeksOfMonth: [1, 'last'], weekdays: [1, 5] },
-          reminderTime: '08:30',
-          reminderEnabled: true
-        }),
-        allHabits: [createHabit({ id: 'habit-42' })],
-        onBack: vi.fn(),
-        onSubmit
-      }
-    });
+    render(HabitForm, { props: { mode: 'edit', habit: createHabit({ id: 'habit-42', frequency: 'daily', schedule: { type: 'monthly_weeks', weeksOfMonth: [1, 'last'], weekdays: [1, 5] }, reminderTime: '08:30', reminderEnabled: true }), allHabits: [createHabit({ id: 'habit-42' })], onBack: vi.fn(), onSubmit } });
 
     await user.click(screen.getAllByRole('button', { name: 'Save habit' }).at(-1)!);
     await waitFor(() => {
@@ -406,6 +382,38 @@ describe('HabitForm', () => {
       reminderTime: '08:30',
       reminderEnabled: true
     }));
+  });
+
+  it('sets, disables, and clears the reminder time with truthful copy and null payload', async () => {
+    const user = userEvent.setup();
+    const onSubmit = vi.fn().mockResolvedValue(undefined);
+    render(HabitForm, { props: { mode: 'edit', habit: createHabit({ id: 'habit-7', reminderTime: '08:30', reminderEnabled: true }), allHabits: [createHabit({ id: 'habit-7' })], onBack: vi.fn(), onSubmit } });
+
+    await user.click(screen.getByRole('button', { name: 'Edit Reminder' }));
+    const panel = screen.getByTestId('habit-reminder-panel');
+    expect(within(panel).getByText('Daily at 08:30')).toBeTruthy();
+    expect(within(panel).getByText('Reminder currently enabled')).toBeTruthy();
+    expect(within(panel).getByText(/Enable notifications in app or system settings/)).toBeTruthy();
+
+    // Toggle off: state summary flips truthfully.
+    await user.click(screen.getByRole('button', { name: 'Reminders enabled' }));
+    expect(within(panel).getByText('Reminder currently disabled')).toBeTruthy();
+    expect(within(panel).getByText(/Notifications are disabled/)).toBeTruthy();
+
+    // Clear the time: null submission per the existing contract.
+    const timeInput = screen.getByLabelText('Reminder time') as HTMLInputElement;
+    await user.clear(timeInput);
+    expect(within(panel).getByText('No reminder time configured')).toBeTruthy();
+
+    await user.click(screen.getByRole('button', { name: 'Back to habit editor dashboard' }));
+    expect(within(screen.getByRole('button', { name: 'Edit Reminder' })).getByText('Reminders disabled')).toBeTruthy();
+    expect(onSubmit).not.toHaveBeenCalled();
+
+    await user.click(screen.getAllByRole('button', { name: 'Save habit' }).at(-1)!);
+    await waitFor(() => {
+      expect(onSubmit).toHaveBeenCalledTimes(1);
+    });
+    expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({ reminderTime: null, reminderEnabled: false }));
   });
 
   it('selects month weeks with the combined rule and validates both groups independently', async () => {
@@ -447,9 +455,7 @@ describe('HabitForm', () => {
     await user.click(screen.getByRole('button', { name: 'Toggle Monday in the selected weeks' }));
     expect(within(screen.getByTestId('monthly-weeks-view')).getByText('Schedule Monday during week 1 and the last week of each month.')).toBeTruthy();
     await user.click(screen.getAllByRole('button', { name: 'Create habit' }).at(-1)!);
-    await waitFor(() => {
-      expect(onSubmit).toHaveBeenCalledTimes(1);
-    });
+    await waitFor(() => { expect(onSubmit).toHaveBeenCalledTimes(1); });
     expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({
       schedule: { type: 'monthly_weeks', weeksOfMonth: [1, 'last'], weekdays: [1] },
       frequency: 'custom',
@@ -483,10 +489,10 @@ describe('HabitForm', () => {
     expect((screen.getByRole('slider', { name: 'Daily target' }) as HTMLInputElement).value).toBe('3');
     expect((screen.getByRole('slider', { name: 'Target streak' }) as HTMLInputElement).value).toBe('60');
 
-    // Oversized values clamp the state back into 1..365 (the rule reflects the clamped draft).
+    // Oversized values clamp the streak state back into 1..365 (rule reflects the clamped draft).
     await user.clear(streakNumber);
     await user.type(streakNumber, '999');
-    expect(within(screen.getByTestId('habit-goal-rule-card')).getByText('Streak milestone: 365 days.')).toBeTruthy();
+    expect(within(rule).getByText('Streak milestone: 365 days.')).toBeTruthy();
 
     await user.click(screen.getByRole('button', { name: 'Back to habit editor dashboard' }));
     expect(within(screen.getByRole('button', { name: 'Edit Goal' })).getByText('3x/day, streak 365 days')).toBeTruthy();

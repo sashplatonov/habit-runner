@@ -1,5 +1,6 @@
 <script lang="ts">
-  import FormSection from './FormSection.svelte';
+  import { Bell, Clock } from 'lucide-svelte';
+
   let {
     reminderTime = $bindable(''),
     reminderEnabled = $bindable(true)
@@ -7,36 +8,67 @@
     reminderTime: string;
     reminderEnabled: boolean;
   } = $props();
+
+  const timeSummary = $derived(reminderTime ? `Daily at ${reminderTime}` : 'No reminder time configured');
+  const stateSummary = $derived(reminderEnabled ? 'Reminder currently enabled' : 'Reminder currently disabled');
+  const notice = $derived(reminderEnabled
+    ? 'Reminder calls appear on the dashboard when the app is open. Enable notifications in app or system settings to receive reminders.'
+    : 'Notifications are disabled. Enable them in app or system settings to receive reminders.');
 </script>
 
-<FormSection title="Reminder" description="Optional reminder time and reminder state.">
-<div class="space-y-3">
-  <label class="mb-2 block text-[10px] font-mono uppercase tracking-wider text-muted" for="habit-reminder">Reminder</label>
-  <div class="flex flex-col items-stretch gap-3 sm:flex-row sm:flex-wrap sm:items-center">
-    <input
-      id="habit-reminder"
-      type="time"
-      name="habit-reminder"
-      autocomplete="off"
-      bind:value={reminderTime}
-      class="min-h-11 rounded-lg border border-border bg-bg-secondary px-3 py-2 text-sm font-mono transition focus:border-accent/60 focus:shadow-[0_0_12px_var(--glow)]"
-    />
+<section
+  class="rounded-surface border border-border bg-bg-card shadow-surface p-4 sm:p-5"
+  aria-labelledby="habit-reminder-title"
+  data-editor-reminder
+  data-testid="habit-reminder-panel"
+>
+  <div class="flex items-start justify-between gap-3">
+    <div class="min-w-0">
+      <h2 id="habit-reminder-title" class="text-[10px] font-mono uppercase tracking-[0.18em] text-muted">Reminder</h2>
+      <p class="mt-1 text-[13px] leading-5 text-muted">Optional time to prompt the habit.</p>
+    </div>
+    <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-violet-50 text-violet-500">
+      <Bell size={18} strokeWidth={1.8} aria-hidden="true" />
+    </span>
+  </div>
+
+  <div class="mt-4 space-y-2">
+    <label id="habit-reminder-time-label" for="habit-reminder" class="text-[10px] font-mono uppercase tracking-[0.18em] text-muted">Reminder time</label>
+    <div class="flex items-center gap-2">
+      <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-border bg-bg-primary text-muted" aria-hidden="true">
+        <Clock size={16} strokeWidth={1.8} />
+      </span>
+      <input
+        id="habit-reminder"
+        type="time"
+        name="habit-reminder"
+        autocomplete="off"
+        aria-labelledby="habit-reminder-time-label"
+        bind:value={reminderTime}
+        class="min-h-11 flex-1 rounded-lg border border-border bg-bg-secondary px-3 py-2 text-sm font-mono text-foreground transition focus:border-accent/60"
+        data-editor-reminder-time
+      />
+    </div>
+  </div>
+
+  <div class="mt-3 space-y-2">
     <button
       type="button"
-      class={`min-h-11 rounded-lg border px-3 py-2 text-[9px] font-mono uppercase tracking-wider transition ${reminderEnabled ? 'border-accent/40 bg-accent/10 text-accent' : 'border-border bg-bg-secondary text-muted hover:border-border-hover'}`}
+      class={`min-h-11 w-full rounded-lg border px-3 py-2 text-[10px] font-mono uppercase tracking-wider transition ${reminderEnabled ? 'border-accent/40 bg-accent/10 text-accent' : 'border-border bg-bg-secondary text-muted hover:border-border-hover'}`}
       aria-pressed={reminderEnabled}
+      data-editor-reminder-toggle
       onclick={() => {
         reminderEnabled = !reminderEnabled;
       }}
     >
       {reminderEnabled ? 'Reminders enabled' : 'Reminders disabled'}
     </button>
-    <span class="text-[11px] font-mono text-muted">{reminderTime ? `Daily at ${reminderTime}` : 'No reminder yet'}</span>
+    <p class="rounded-lg border border-border bg-bg-secondary px-3 py-2 text-[11px] leading-4 text-muted" data-editor-reminder-summary>
+      <span class="block font-semibold text-foreground">{timeSummary}</span>
+      <span class="mt-0.5 block">{stateSummary}</span>
+    </p>
+    <p class="rounded-lg border border-border bg-bg-secondary px-3 py-2 text-[11px] leading-4 text-muted" data-editor-reminder-notice>
+      {notice}
+    </p>
   </div>
-  <p class="mt-1 text-[9px] font-mono text-muted">
-    {reminderEnabled
-      ? 'Reminder calls appear on the dashboard when the app is open.'
-      : 'Notifications are disabled. Enable them to receive reminders.'}
-  </p>
-  </div>
-</FormSection>
+</section>

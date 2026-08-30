@@ -240,12 +240,12 @@ test.describe.serial('critical habit journey', () => {
     await page.goto('/app/habit/new');
     await expect(page.locator('[data-editor-dashboard]')).toBeVisible();
     await expect(page.locator('[data-editor-tile]')).toHaveCount(6);
-    expect(await page.locator('[data-editor-tile]').evaluateAll((tiles) =>
-      tiles.map((tile) => tile.getAttribute('data-editor-tile'))
-    )).toEqual(['identity', 'habit-type', 'schedule', 'goal', 'reminder', 'organization']);
-    await page.getByRole('button', { name: 'Edit Goal' }).click();
-    await expect(page.locator('[data-testid="habit-goal-panel"]')).toBeVisible();
-    await page.getByRole('button', { name: 'Back to habit editor dashboard' }).click();
+    expect(await page.locator('[data-editor-tile]').evaluateAll((tiles) => tiles.map((tile) => tile.getAttribute('data-editor-tile')))).toEqual(['identity', 'habit-type', 'schedule', 'goal', 'reminder', 'organization']);
+    for (const [tile, panel] of [['Edit Goal', 'habit-goal-panel'], ['Edit Reminder', 'habit-reminder-panel']] as const) {
+      await page.getByRole('button', { name: tile }).click();
+      await expect(page.locator(`[data-testid="${panel}"]`)).toBeVisible();
+      await page.getByRole('button', { name: 'Back to habit editor dashboard' }).click();
+    }
     await expect(page.locator('[data-editor-dashboard]')).toBeVisible();
     for (const viewport of EDITOR_VIEWPORTS) {
       await page.setViewportSize(viewport);

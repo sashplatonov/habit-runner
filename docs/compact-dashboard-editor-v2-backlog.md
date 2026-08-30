@@ -712,7 +712,7 @@ git commit -m "feat(habits): add goal editor screen"
 
 ## CDE-012: Implement the Reminder screen
 
-**Status:** TODO  
+**Status:** DONE  
 **Priority:** P1  
 **Depends on:** CDE-001
 
