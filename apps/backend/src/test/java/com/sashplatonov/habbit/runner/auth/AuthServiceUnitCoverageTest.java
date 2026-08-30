@@ -131,8 +131,8 @@ class AuthServiceUnitCoverageTest {
   void shouldRejectOAuthCallbackWhenParametersAreMissing() {
     var service = new TestAuthService(new StubCollaborators());
 
-    assertThrows(BadRequestException.class, () -> service.handleOAuthCallback(" ", "state-token"));
-    assertThrows(BadRequestException.class, () -> service.handleOAuthCallback("code-123", " "));
+    assertThrows(BadRequestException.class, () -> service.handleOAuthCallbackSession(" ", "state-token"));
+    assertThrows(BadRequestException.class, () -> service.handleOAuthCallbackSession("code-123", " "));
   }
 
   @Test
@@ -140,7 +140,7 @@ class AuthServiceUnitCoverageTest {
     var service = new TestAuthService(new StubCollaborators());
     service.setCurrentTime(Instant.parse("2026-04-10T13:00:00Z"));
 
-    assertThrows(NotAuthorizedException.class, () -> service.handleOAuthCallback("code-123", "state-token"));
+    assertThrows(NotAuthorizedException.class, () -> service.handleOAuthCallbackSession("code-123", "state-token"));
 
     var expiredState = new OAuthStateEntity();
     expiredState.state = "state-token";
@@ -148,7 +148,7 @@ class AuthServiceUnitCoverageTest {
     expiredState.setExpiry(Instant.parse("2026-04-10T12:59:59Z"));
     service.setOauthState(expiredState);
 
-    assertThrows(NotAuthorizedException.class, () -> service.handleOAuthCallback("code-123", "state-token"));
+    assertThrows(NotAuthorizedException.class, () -> service.handleOAuthCallbackSession("code-123", "state-token"));
     assertEquals("state-token", service.getDeletedState());
   }
 
@@ -167,7 +167,7 @@ class AuthServiceUnitCoverageTest {
     oauthState.setExpiry(Instant.parse("2026-04-10T13:10:00Z"));
     service.setOauthState(oauthState);
 
-    var redirect = service.handleOAuthCallback("code-123", "state-token");
+    var redirect = service.handleOAuthCallbackSession("code-123", "state-token").redirectUrl();
 
     assertEquals("https://app.example.test/callback?ok=1", redirect);
     assertEquals("state-token", service.getDeletedState());
@@ -191,7 +191,7 @@ class AuthServiceUnitCoverageTest {
     oauthState.setLinkUserId("telegram-user");
     service.setOauthState(oauthState);
 
-    service.handleOAuthCallback("code-123", "state-token");
+    service.handleOAuthCallbackSession("code-123", "state-token");
 
     assertEquals("telegram-user", merge.survivor());
     assertEquals("google-user", merge.absorbed());

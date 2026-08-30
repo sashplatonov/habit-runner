@@ -2,6 +2,7 @@ package com.sashplatonov.habbit.runner.auth;
 
 import com.sashplatonov.habbit.runner.auth.security.CurrentUser;
 import com.sashplatonov.habbit.runner.auth.service.AuthService;
+import com.sashplatonov.habbit.runner.auth.service.OAuthAccountLinkService;
 import com.sashplatonov.habbit.runner.auth.support.AuthCollaborators;
 import com.sashplatonov.habbit.runner.auth.support.OAuthCallbackSession;
 import com.sashplatonov.habbit.runner.auth.dto.TokenResponse;
@@ -19,7 +20,13 @@ public class ResourceAuthService extends AuthService {
   private OAuthCallbackSession googleCallbackRedirect;
 
   public ResourceAuthService() {
-    super(TestConfigFactory.defaultAuthConfig(), new AuthCollaborators(null, null, null, null));
+    super(
+        TestConfigFactory.defaultAuthConfig(),
+        new AuthCollaborators(null, null, null, null),
+        null,
+        null,
+        new OAuthAccountLinkService(new AuthCollaborators(null, null, null, null))
+    );
   }
 
   public void setRefreshResponse(TokenResponse refreshResponse) {

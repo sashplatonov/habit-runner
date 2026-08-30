@@ -1,8 +1,11 @@
 package com.sashplatonov.habbit.runner.auth;
 
 import com.sashplatonov.habbit.runner.auth.client.GoogleOAuthClient;
+import com.sashplatonov.habbit.runner.metrics.instrumentation.ServiceMetricsInstrumentation;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sashplatonov.habbit.runner.support.TestConfigFactory;
+
+import static org.mockito.Mockito.mock;
 
 public final class RecordingGoogleOAuthClient extends GoogleOAuthClient {
   private String lastState;
@@ -10,7 +13,11 @@ public final class RecordingGoogleOAuthClient extends GoogleOAuthClient {
   private String lastCode;
 
   public RecordingGoogleOAuthClient() {
-    super(TestConfigFactory.defaultAuthConfig(), new ObjectMapper());
+    super(
+        TestConfigFactory.defaultAuthConfig(),
+        new ObjectMapper(),
+        mock(ServiceMetricsInstrumentation.class)
+    );
   }
 
   public String getLastState() {

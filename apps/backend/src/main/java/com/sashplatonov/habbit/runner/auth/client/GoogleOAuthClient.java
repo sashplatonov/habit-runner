@@ -54,16 +54,6 @@ public class GoogleOAuthClient {
     );
   }
 
-  public GoogleOAuthClient(AuthConfig authConfig, ObjectMapper objectMapper) {
-    this(authConfig, objectMapper, HttpClient.newBuilder()
-        .connectTimeout(REQUEST_TIMEOUT)
-        .build(), null);
-  }
-
-  GoogleOAuthClient(AuthConfig authConfig, ObjectMapper objectMapper, HttpClient httpClient) {
-    this(authConfig, objectMapper, httpClient, null);
-  }
-
   GoogleOAuthClient(
       AuthConfig authConfig,
       ObjectMapper objectMapper,
@@ -103,13 +93,6 @@ public class GoogleOAuthClient {
       throw logAndWrapInterrupted(exception);
     } finally {
       finishGoogleOAuthExchange(sample, success);
-    }
-  }
-
-  public void ensureConfigured() {
-    if (authConfig.googleClientId().map(String::isBlank).orElse(true)
-        || authConfig.googleClientSecret().map(String::isBlank).orElse(true)) {
-      throw new BadRequestException("Google OAuth is not configured on this server");
     }
   }
 
@@ -224,13 +207,11 @@ public class GoogleOAuthClient {
   }
 
   private Timer.Sample startGoogleOAuthExchange() {
-    return serviceMetricsInstrumentation == null ? null : serviceMetricsInstrumentation.startGoogleOAuthExchange();
+    return serviceMetricsInstrumentation.startGoogleOAuthExchange();
   }
 
   private void finishGoogleOAuthExchange(Timer.Sample sample, boolean success) {
-    if (sample != null) {
-      serviceMetricsInstrumentation.stopGoogleOAuthExchange(sample, success);
-    }
+    serviceMetricsInstrumentation.stopGoogleOAuthExchange(sample, success);
   }
 
   private RuntimeException logAndWrapIOException(IOException exception) {
@@ -255,9 +236,7 @@ public class GoogleOAuthClient {
   }
 
   private void recordOAuthFailure() {
-    if (serviceMetricsInstrumentation != null) {
-      serviceMetricsInstrumentation.record(ServiceMetric.OAUTH_GOOGLE_FAILURE);
-    }
+    serviceMetricsInstrumentation.record(ServiceMetric.OAUTH_GOOGLE_FAILURE);
   }
 
   private long elapsedMs(long startedAt) {

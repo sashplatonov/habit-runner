@@ -23,7 +23,8 @@ final class TestAuthService extends AuthService {
         TestConfigFactory.defaultAuthConfig(),
         collaborators,
         oauthStateAccess,
-        new AuthServiceSupport(null, null)
+        new AuthServiceSupport(null, null),
+        new OAuthAccountLinkService(collaborators)
     );
     this.oauthStateAccess = oauthStateAccess;
   }

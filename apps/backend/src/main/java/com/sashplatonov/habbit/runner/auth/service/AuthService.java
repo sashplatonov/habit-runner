@@ -31,25 +31,21 @@ public class AuthService {
   protected final AuthCollaborators collaborators;
   protected final OAuthStateAccess oauthStateAccess;
   protected final AuthServiceSupport authServiceSupport;
-
-  @Inject
-  OAuthAccountLinkService oauthAccountLinkService;
-
-  protected AuthService(AuthConfig authConfig, AuthCollaborators collaborators) {
-    this(authConfig, collaborators, null, (AuthServiceSupport) null);
-  }
+  protected OAuthAccountLinkService oauthAccountLinkService;
 
   @Inject
   public AuthService(
       AuthConfig authConfig,
       AuthCollaborators collaborators,
       OAuthStateAccess oauthStateAccess,
-      AuthServiceSupport authServiceSupport
+      AuthServiceSupport authServiceSupport,
+      OAuthAccountLinkService oauthAccountLinkService
   ) {
     this.authConfig = authConfig;
     this.collaborators = collaborators;
     this.oauthStateAccess = oauthStateAccess;
     this.authServiceSupport = authServiceSupport;
+    this.oauthAccountLinkService = oauthAccountLinkService;
   }
 
   @Transactional
@@ -150,11 +146,6 @@ public class AuthService {
   }
 
   @Transactional
-  public String handleOAuthCallback(String code, String state) {
-    return handleOAuthCallbackSession(code, state).redirectUrl();
-  }
-
-  @Transactional
   public OAuthCallbackSession handleOAuthCallbackSession(String code, String state) {
     validateOAuthCallbackInput(code, state);
     var stateEntity = oauthStateAccess.consume(state);
@@ -175,9 +166,7 @@ public class AuthService {
       );
     }
     var googleUser = collaborators.findOrCreateUser(email);
-    var user = oauthAccountLinkService == null
-        ? googleUser
-        : oauthAccountLinkService.resolve(googleUser, email, stateEntity.linkUserId());
+    var user = oauthAccountLinkService.resolve(googleUser, email, stateEntity.linkUserId());
     var session = collaborators.issueTokenPair(user, authConfig.accessTokenTtlSeconds(), authConfig.refreshTokenDays());
     log.info(
         "OAuth login succeeded: userId={}, provider=google, traceId={}",

@@ -2,6 +2,7 @@ package com.sashplatonov.habbit.runner.auth.client;
 
 import com.sashplatonov.habbit.runner.auth.config.AuthConfig;
 import com.sashplatonov.habbit.runner.api.RequestTraceFilter;
+import com.sashplatonov.habbit.runner.metrics.instrumentation.ServiceMetricsInstrumentation;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sashplatonov.habbit.runner.support.TestConfigFactory;
 import com.sashplatonov.habbit.runner.support.FakeHttpClient;
@@ -16,14 +17,20 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.mock;
 
 class GoogleOAuthClientTest {
 
   private final ObjectMapper objectMapper = new ObjectMapper();
+  private final ServiceMetricsInstrumentation metrics = mock(ServiceMetricsInstrumentation.class);
+
+  private GoogleOAuthClient client(AuthConfig config, java.net.http.HttpClient httpClient) {
+    return new GoogleOAuthClient(config, objectMapper, httpClient, metrics);
+  }
 
   @Test
   void shouldBuildAuthorizationUrlWhenGoogleOauthIsConfigured() {
-    var client = new GoogleOAuthClient(TestConfigFactory.defaultAuthConfig(), objectMapper, new FakeHttpClient());
+    var client = client(TestConfigFactory.defaultAuthConfig(), new FakeHttpClient());
 
     var url = client.buildAuthorizationUrl("state-token", "https://app.example.test/auth/callback");
 
@@ -34,7 +41,7 @@ class GoogleOAuthClientTest {
 
   @Test
   void shouldRejectAuthorizationUrlWhenGoogleOauthIsMissing() {
-    var client = new GoogleOAuthClient(blankGoogleConfig(), objectMapper, new FakeHttpClient());
+    var client = client(blankGoogleConfig(), new FakeHttpClient());
 
     var exception = assertThrows(
         BadRequestException.class,
@@ -49,7 +56,7 @@ class GoogleOAuthClientTest {
     var httpClient = new FakeHttpClient()
         .enqueueResponse(200, "{\"access_token\":\"token-123\"}")
         .enqueueResponse(200, "{\"email\":\"user@example.test\"}");
-    var client = new GoogleOAuthClient(TestConfigFactory.defaultAuthConfig(), objectMapper, httpClient);
+    var client = client(TestConfigFactory.defaultAuthConfig(), httpClient);
 
     var email = client.exchangeCodeForEmail("code-123", "https://app.example.test/auth/callback");
 
@@ -65,7 +72,7 @@ class GoogleOAuthClientTest {
     var httpClient = new FakeHttpClient()
         .enqueueResponse(200, "{\"access_token\":\"token-123\"}")
         .enqueueResponse(200, "{\"email\":\"user@example.test\"}");
-    var client = new GoogleOAuthClient(TestConfigFactory.defaultAuthConfig(), objectMapper, httpClient);
+    var client = client(TestConfigFactory.defaultAuthConfig(), httpClient);
     MDC.put("traceId", "trace-123");
 
     try {
@@ -80,9 +87,8 @@ class GoogleOAuthClientTest {
 
   @Test
   void shouldRejectWhenGoogleTokenExchangeReturnsNonSuccessStatus() {
-    var client = new GoogleOAuthClient(
+    var client = client(
         TestConfigFactory.defaultAuthConfig(),
-        objectMapper,
         new FakeHttpClient().enqueueResponse(401, "{}")
     );
 
@@ -94,9 +100,8 @@ class GoogleOAuthClientTest {
 
   @Test
   void shouldRejectWhenGoogleTokenExchangeReturnsNoAccessToken() {
-    var client = new GoogleOAuthClient(
+    var client = client(
         TestConfigFactory.defaultAuthConfig(),
-        objectMapper,
         new FakeHttpClient().enqueueResponse(200, "{\"token_type\":\"Bearer\"}")
     );
 
@@ -108,9 +113,8 @@ class GoogleOAuthClientTest {
 
   @Test
   void shouldRejectWhenGoogleUserInfoReturnsNonSuccessStatus() {
-    var client = new GoogleOAuthClient(
+    var client = client(
         TestConfigFactory.defaultAuthConfig(),
-        objectMapper,
         new FakeHttpClient()
             .enqueueResponse(200, "{\"access_token\":\"token-123\"}")
             .enqueueResponse(403, "{}")
@@ -124,9 +128,8 @@ class GoogleOAuthClientTest {
 
   @Test
   void shouldRejectWhenGoogleUserInfoReturnsNoEmail() {
-    var client = new GoogleOAuthClient(
+    var client = client(
         TestConfigFactory.defaultAuthConfig(),
-        objectMapper,
         new FakeHttpClient()
             .enqueueResponse(200, "{\"access_token\":\"token-123\"}")
             .enqueueResponse(200, "{\"sub\":\"123\"}")
@@ -140,9 +143,8 @@ class GoogleOAuthClientTest {
 
   @Test
   void shouldWrapIoFailuresDuringGoogleExchange() {
-    var client = new GoogleOAuthClient(
+    var client = client(
         TestConfigFactory.defaultAuthConfig(),
-        objectMapper,
         new FakeHttpClient().enqueueFailure(new IOException("network-down"))
     );
 
@@ -156,9 +158,8 @@ class GoogleOAuthClientTest {
 
   @Test
   void shouldWrapInterruptedGoogleExchangeAndRestoreThreadInterrupt() {
-    var client = new GoogleOAuthClient(
+    var client = client(
         TestConfigFactory.defaultAuthConfig(),
-        objectMapper,
         new FakeHttpClient().enqueueFailure(new InterruptedException("interrupted"))
     );
 

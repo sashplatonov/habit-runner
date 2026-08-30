@@ -291,7 +291,7 @@ git commit -m "refactor(checkin): drop metrics null-seams and coordinator middle
 
 ## TASK-005: Auth client/service constructor hygiene and dead API removal
 
-**Status:** TODO
+**Status:** DONE
 **Priority:** P1
 **Depends on:** -
 
