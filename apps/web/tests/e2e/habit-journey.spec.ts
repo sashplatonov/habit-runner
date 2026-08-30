@@ -24,45 +24,11 @@ const habit = {
 const secondHabit = {
   ...habit, id: 'e2e-second-habit', name: 'Stretch for five minutes', icon: '🧘'
 };
-const scheduledSummaryHabits = [  {
-    ...habit,
-    id: 'summary-daily',
-    name: 'Daily reading',
-    createdAt: '2026-08-01T10:00:00Z',
-    updatedAt: '2026-08-01T10:00:00Z'
-  },
-  {
-    ...habit,
-    id: 'summary-weekday', name: 'Friday stretch', icon: '🧘',
-    schedule: { type: 'weekly_days', weekdays: [5] },
-    frequency: 'CUSTOM',
-    customDays: [5],
-    createdAt: '2026-08-01T10:00:00Z',
-    updatedAt: '2026-08-01T10:00:00Z',
-    sortOrder: 2
-  },
-  {
-    ...habit,
-    id: 'summary-quota',
-    name: 'Weekly quota',
-    schedule: { type: 'weekly_quota', timesPerWeek: 2, weekdays: [1, 3, 5] },
-    frequency: 'CUSTOM',
-    customDays: [1, 3, 5],
-    createdAt: '2026-08-01T10:00:00Z',
-    updatedAt: '2026-08-01T10:00:00Z',
-    sortOrder: 3
-  },
-  {
-    ...habit,
-    id: 'summary-unscheduled',
-    name: 'Thursday only',
-    schedule: { type: 'weekly_days', weekdays: [4] },
-    frequency: 'CUSTOM',
-    customDays: [4],
-    createdAt: '2026-08-01T10:00:00Z',
-    updatedAt: '2026-08-01T10:00:00Z',
-    sortOrder: 4
-  }
+const scheduledSummaryHabits = [
+  { ...habit, id: 'summary-daily', name: 'Daily reading', createdAt: '2026-08-01T10:00:00Z', updatedAt: '2026-08-01T10:00:00Z' },
+  { ...habit, id: 'summary-weekday', name: 'Friday stretch', icon: '🧘', schedule: { type: 'weekly_days', weekdays: [5] }, frequency: 'CUSTOM', customDays: [5], createdAt: '2026-08-01T10:00:00Z', updatedAt: '2026-08-01T10:00:00Z', sortOrder: 2 },
+  { ...habit, id: 'summary-quota', name: 'Weekly quota', schedule: { type: 'weekly_quota', timesPerWeek: 2, weekdays: [1, 3, 5] }, frequency: 'CUSTOM', customDays: [1, 3, 5], createdAt: '2026-08-01T10:00:00Z', updatedAt: '2026-08-01T10:00:00Z', sortOrder: 3 },
+  { ...habit, id: 'summary-unscheduled', name: 'Thursday only', schedule: { type: 'weekly_days', weekdays: [4] }, frequency: 'CUSTOM', customDays: [4], createdAt: '2026-08-01T10:00:00Z', updatedAt: '2026-08-01T10:00:00Z', sortOrder: 4 }
 ];
 const progressHabits = [
   { ...habit, id: 'progress-attention', name: 'Attention habit', createdAt: '2026-04-01T10:00:00Z' },
@@ -194,6 +160,16 @@ async function expectOneRowHeatmap(container: ReturnType<Page['locator']>): Prom
   expect(Math.abs(firstBox!.width - firstBox!.height)).toBeLessThanOrEqual(1);
   expect(firstBox!.width).toBeLessThanOrEqual(9);
   expect(firstBox!.x).toBeLessThan(lastBox!.x);
+}
+// The density toggle lives inside the View options popover in the shared toolbar.
+async function setDashboardDensity(page: Page, density: 'comfortable' | 'compact'): Promise<void> {
+  const label = density === 'compact' ? 'List' : 'Cards';
+  const densityButton = page.getByRole('group', { name: 'Density mode' }).getByRole('button', { name: label });
+  if ((await densityButton.count()) === 0) { await page.getByRole('button', { name: 'View options' }).click(); }
+  await densityButton.click();
+  await expect(densityButton).toHaveAttribute('aria-pressed', 'true');
+  await page.keyboard.press('Escape');
+  await page.getByRole('region', { name: 'Dashboard view options' }).waitFor({ state: 'detached' });
 }
 // eslint-disable-next-line max-lines-per-function
 test.describe.serial('critical habit journey', () => {
@@ -341,8 +317,7 @@ test.describe.serial('critical habit journey', () => {
   test('keeps dashboard heatmaps usable in compact and comfortable layouts', async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 900 });
     await page.goto('/app/dashboard');
-
-    await page.getByRole('button', { name: 'List view' }).click();
+    await setDashboardDensity(page, 'compact');
     const rows = page.locator('li[data-habit-id]');
     await expect(rows).toHaveCount(2);
     for (const row of await rows.all()) {
@@ -353,15 +328,14 @@ test.describe.serial('critical habit journey', () => {
     await expect(rows.first().getByRole('button', { name: /Read for ten minutes, not completed/ })).toBeVisible();
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
     await page.setViewportSize({ width: 320, height: 740 });
-    await page.getByRole('button', { name: 'Grid view' }).click();
+    await setDashboardDensity(page, 'comfortable');
     const tiles = page.locator('article[aria-label*="completed"], article[aria-label*="not completed"]');
     await expect(tiles).toHaveCount(2);
     for (const tile of await tiles.all()) {
       const heatmap = tile.getByRole('img', { name: /last 30 days/ });
       await expect(heatmap).toBeVisible();
       await expectOneRowHeatmap(tile);
-      const tileBox = await tile.boundingBox(); const heatmapBox = await heatmap.boundingBox();
-      expect(tileBox).not.toBeNull();
+      const tileBox = await tile.boundingBox(); const heatmapBox = await heatmap.boundingBox();      expect(tileBox).not.toBeNull();
       expect(heatmapBox).not.toBeNull();
       expect(heatmapBox!.x).toBeGreaterThanOrEqual(tileBox!.x);
       expect(heatmapBox!.x + heatmapBox!.width).toBeLessThanOrEqual(tileBox!.x + tileBox!.width);
@@ -449,8 +423,8 @@ test.describe.serial('scheduled dashboard summary', () => {
       } else {
         await expect(summary.getByLabel('Heatmap brightness legend')).toBeVisible();
         const summaryBox = await summary.boundingBox();
-        const toolbarButton = page.getByRole('button', { name: 'Grid view' });
-        const toolbarBox = await toolbarButton.boundingBox();
+        const optionsToggle = page.getByRole('button', { name: 'View options' });
+        const toolbarBox = await optionsToggle.boundingBox();
         expect(summaryBox).not.toBeNull();
         expect(toolbarBox).not.toBeNull();
         expect(summaryBox!.y + summaryBox!.height).toBeLessThanOrEqual(toolbarBox!.y);

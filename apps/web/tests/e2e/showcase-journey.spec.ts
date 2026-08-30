@@ -50,11 +50,7 @@ test.describe('real anonymous showcase journey', () => {
         window.dispatchEvent(new CustomEvent('showcase-write-observed', { detail: (event as CustomEvent<string>).detail }));
       });
     });
-    await page.exposeFunction('recordShowcaseWrite', (key: string) => {
-      if (!key.startsWith('hr_dashboard_')) {
-        persistenceWrites.push(key);
-      }
-    });
+    await page.exposeFunction('recordShowcaseWrite', (key: string) => persistenceWrites.push(key));
     await page.addInitScript(() => {
       window.addEventListener('showcase-write-observed', (event) => {
         void (window as Window & { recordShowcaseWrite?: (key: string) => void }).recordShowcaseWrite?.((event as CustomEvent<string>).detail);
@@ -90,11 +86,11 @@ test.describe('real anonymous showcase journey', () => {
     await expect(page.getByRole('heading', { name: 'Progress' })).toBeVisible();
     await page.goto('/showcase');
     await page.getByRole('button', { name: 'Reset demo' }).click();
-    await expect(page.getByRole('heading', { name: 'Habit Runner is ready' })).toBeVisible();
-    await expect(page.getByText('Demo reading')).toHaveCount(0);
+    await expect(page.getByRole('button', { name: '✍️ Morning pages', exact: true })).toBeVisible();
+    await expect(page.getByText('Morning pages — updated', { exact: true })).toHaveCount(0);
     await page.reload();
-    await expect(page.getByRole('heading', { name: 'Habit Runner is ready' })).toBeVisible();
-    await expect(page.getByText('Demo reading')).toHaveCount(0);
+    await expect(page.getByRole('button', { name: '✍️ Morning pages', exact: true })).toBeVisible();
+    await expect(page.getByText('Morning pages — updated', { exact: true })).toHaveCount(0);
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
     expect(apiRequests).toEqual([]);
     expect(authRequests).toEqual([]);

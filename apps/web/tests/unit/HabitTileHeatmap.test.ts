@@ -18,4 +18,9 @@ describe('HabitTile heatmap contract', () => {
     expect(source).toContain('<HabitCompletionControl');
     expect(source).toContain('onclick={onDetail}');
   });
+
+  it('renders the heatmap as a permanent, always-visible block', () => {
+    expect(source).toMatch(/role="img"[\s\S]{0,200}aria-label="Habit activity for the last 30 days/);
+    expect(source).not.toMatch(/hidden[^\n]*aria-label="Habit activity for the last 30 days/);
+  });
 });

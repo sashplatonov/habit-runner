@@ -61,6 +61,8 @@
   const LS_SORT      = 'hr_dashboard_sort_mode_v1';
   const LS_TAGS      = 'hr_dashboard_tags_v1';
 
+  let isDemoSurface = false;
+
   function lsGet<T>(key: string, fallback: T): T {
     if (typeof localStorage === 'undefined') { return fallback; }
     try {
@@ -70,13 +72,15 @@
   }
 
   function lsSet(key: string, value: unknown) {
-    if (typeof localStorage === 'undefined') { return; }
+    // The anonymous demo keeps every preference in memory; nothing lands in storage.
+    if (isDemoSurface || typeof localStorage === 'undefined') { return; }
     try { localStorage.setItem(key, JSON.stringify(value)); } catch {}
   }
 
   // ─── State ────────────────────────────────────────────────────────────────────
   const runtime = getAppRuntime();
   const habitsStore = runtime.habitsStore as unknown as HabitsStore;
+  isDemoSurface = runtime.isDemo;
 
   let addingTemplate   = $state<string | null>(null);
   // Initialize from URL first, then localStorage as fallback

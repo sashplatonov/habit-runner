@@ -33,10 +33,10 @@ test.describe('compact mobile UX baseline', () => {
     await page.setViewportSize({ width: 320, height: 740 });
     await page.goto('/showcase/stats');
 
-    await expect(page.getByRole('heading', { name: 'Your scheduled progress' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Progress' })).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Needs attention' })).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Strong' })).toBeVisible();
-    await expect(page.getByRole('heading', { name: '12-week history' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'History' })).toBeVisible();
     await expect(page.getByRole('list', { name: '12-week completion history' }).locator('[role="listitem"]')).toHaveCount(84);
     await expect(page.getByRole('button', { name: '4 weeks' })).toBeVisible();
     await expect(page.getByRole('button', { name: '12 weeks' })).toBeVisible();
@@ -44,8 +44,8 @@ test.describe('compact mobile UX baseline', () => {
     await expect(page.getByRole('link', { name: 'Back to today' })).toBeHidden();
     await page.getByRole('button', { name: '4 weeks' }).click();
     await expect(page.getByRole('button', { name: '4 weeks' })).toHaveAttribute('aria-pressed', 'true');
-    await page.getByRole('button', { name: 'This week' }).click();
-    await expect(page.getByRole('button', { name: 'This week' })).toHaveAttribute('aria-pressed', 'true');
+    await page.getByRole('button', { name: 'This week', exact: true }).click();
+    await expect(page.getByRole('button', { name: 'This week', exact: true })).toHaveAttribute('aria-pressed', 'true');
     await expectNoHorizontalOverflow(page);
   });
 

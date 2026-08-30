@@ -18,10 +18,15 @@
   let reminderLastCheck: number | null = null;
 
   const habitsStore = getAppRuntime().habitsStore;
+  const isDemoSurface = getAppRuntime().isDemo;
   const activeHabits = $derived($habitsStore.habits);
   const allHabits = $derived($habitsStore.allHabits);
 
-  async function reminderDb() {
+  function reminderDb() {
+    // The anonymous demo keeps reminders in memory; persisting them in the demo is disabled.
+    if (isDemoSurface) {
+      return Promise.reject(new Error('Reminder persistence is disabled in the demo.'));
+    }
     return import('$lib/storage/db');
   }
   const habitsById = $derived.by(() => new Map(allHabits.map((habit) => [habit.id, habit])));

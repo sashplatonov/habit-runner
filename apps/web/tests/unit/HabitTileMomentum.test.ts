@@ -16,4 +16,10 @@ describe('HabitTile momentum rendering contract', () => {
     expect(source).toContain('<SnowflakeIcon');
     expect(source).toContain('aria-label={momentum.label}');
   });
+
+  it('pairs momentum values with accessible flame and ice signals', () => {
+    expect(source).toContain('{momentum.streak}d');
+    expect(source).toContain('{momentum.inactiveScheduledDays}d inactive');
+    expect(source).toContain('aria-hidden="true"');
+  });
 });
