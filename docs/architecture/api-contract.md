@@ -117,3 +117,22 @@ For a pairing 403, compare the non-HttpOnly `habbit_runner_csrf_token` cookie
 with the `X-CSRF-Token` request header and use the response `X-Trace-Id` when
 checking server logs; do not disable CSRF checks or paste cookie values into
 issues.
+
+## Auth error status contract
+
+Authentication and authorization failures are pinned by
+`AuthErrorStatusContractTest` so a future change is a conscious decision rather
+than an accident. The mapping is:
+
+| Exception | HTTP status | `errorCode` | `title` |
+| --- | --- | --- | --- |
+| `NotAuthorizedException` (missing/invalid credentials) | `403` | `AUTH_REQUIRED` | `Forbidden` |
+| `ForbiddenException` (insufficient rights) | `403` | `REQUEST_REJECTED` | `Forbidden` |
+
+Rationale: JAX-RS semantics for `NotAuthorizedException` are `401`, but the
+backend deliberately maps it to `403` + `AUTH_REQUIRED`. Both the web client
+and any deployed clients treat `401` and `403` as "refresh needed"
+(`apps/web/src/lib/auth/session.ts`), so the current mapping is the chosen
+interpretation. The alternative (`401` for missing/invalid credentials, `403`
+for insufficient rights) is a possible follow-up that would require a frontend
+audit; changing the status is out of scope for this contract.

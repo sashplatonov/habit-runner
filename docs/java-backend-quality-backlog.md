@@ -686,7 +686,7 @@ git commit -m "refactor(api): deduplicate error and result response assembly"
 
 ## TASK-011: Pin and document the auth error-status contract
 
-**Status:** TODO
+**Status:** DONE
 **Priority:** P3
 **Depends on:** TASK-010
 
