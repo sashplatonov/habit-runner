@@ -244,7 +244,7 @@ test.describe.serial('critical habit journey', () => {
       tiles.map((tile) => tile.getAttribute('data-editor-tile'))
     )).toEqual(['identity', 'habit-type', 'schedule', 'goal', 'reminder', 'organization']);
     await page.getByRole('button', { name: 'Edit Goal' }).click();
-    await expect(page.locator('form')).toHaveAttribute('data-editor-panel', 'goal');
+    await expect(page.locator('[data-testid="habit-goal-panel"]')).toBeVisible();
     await page.getByRole('button', { name: 'Back to habit editor dashboard' }).click();
     await expect(page.locator('[data-editor-dashboard]')).toBeVisible();
     for (const viewport of EDITOR_VIEWPORTS) {

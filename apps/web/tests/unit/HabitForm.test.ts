@@ -55,14 +55,7 @@ describe('HabitForm', () => {
   it('shows and dismisses the soft-limit warning for over-limit create flows', async () => {
     const user = userEvent.setup();
 
-    render(HabitForm, {
-      props: {
-        mode: 'create',
-        allHabits: [createHabit({ id: '1' }), createHabit({ id: '2' }), createHabit({ id: '3' })],
-        onBack: vi.fn(),
-        onSubmit: vi.fn().mockResolvedValue(undefined)
-      }
-    });
+    render(HabitForm, { props: { mode: 'create', allHabits: [createHabit({ id: '1' }), createHabit({ id: '2' }), createHabit({ id: '3' })], onBack: vi.fn(), onSubmit: vi.fn().mockResolvedValue(undefined) } });
 
     expect(screen.getByText('Focus is key')).toBeTruthy();
 
@@ -74,15 +67,7 @@ describe('HabitForm', () => {
   it('restores legacy tag and custom icon controls on edit', async () => {
     const user = userEvent.setup();
 
-    render(HabitForm, {
-      props: {
-        mode: 'edit',
-        habit: createHabit(),
-        allHabits: [createHabit()],
-        onBack: vi.fn(),
-        onSubmit: vi.fn().mockResolvedValue(undefined)
-      }
-    });
+    render(HabitForm, { props: { mode: 'edit', habit: createHabit(), allHabits: [createHabit()], onBack: vi.fn(), onSubmit: vi.fn().mockResolvedValue(undefined) } });
 
     await openPanel(user, 'identity');
     const customIconInput = screen.getByLabelText('Custom habit icon') as HTMLInputElement;
@@ -131,15 +116,7 @@ describe('HabitForm', () => {
     const user = userEvent.setup();
     const onSubmit = vi.fn().mockResolvedValue(undefined);
 
-    render(HabitForm, {
-      props: {
-        mode: 'edit',
-        habit: createHabit(),
-        allHabits: [createHabit()],
-        onBack: vi.fn(),
-        onSubmit
-      }
-    });
+    render(HabitForm, { props: { mode: 'edit', habit: createHabit(), allHabits: [createHabit()], onBack: vi.fn(), onSubmit } });
 
     await openPanel(user, 'identity');
     const nameInput = screen.getByLabelText('Name *') as HTMLInputElement;
@@ -478,6 +455,47 @@ describe('HabitForm', () => {
       frequency: 'custom',
       customDays: [1]
     }));
+  });
+
+  it('synchronizes goal range and number controls and renders the resulting rule', async () => {
+    const user = userEvent.setup();
+    const onSubmit = vi.fn().mockResolvedValue(undefined);
+    render(HabitForm, { props: { mode: 'edit', habit: createHabit(), allHabits: [createHabit()], onBack: vi.fn(), onSubmit } });
+
+    await user.click(screen.getByRole('button', { name: 'Edit Goal' }));
+    const rule = screen.getByTestId('habit-goal-rule-card');
+    expect(screen.getByText('1 completed repetition = scheduled day complete.')).toBeTruthy();
+    expect(within(rule).getByText('Streak milestone: 21 days.')).toBeTruthy();
+
+    // Number input updates the rule and the metric cards, clamping within configured bounds.
+    const dailyNumber = screen.getByLabelText('Daily target value') as HTMLInputElement;
+    const streakNumber = screen.getByLabelText('Target streak value') as HTMLInputElement;
+    await user.clear(dailyNumber);
+    await user.type(dailyNumber, '3');
+    await user.clear(streakNumber);
+    await user.type(streakNumber, '60');
+    expect(within(screen.getByTestId('habit-goal-panel')).getByText('3× / day')).toBeTruthy();
+    expect(within(screen.getByTestId('habit-goal-panel')).getByText('3 done')).toBeTruthy();
+    expect(within(rule).getByText('3 completed repetitions = scheduled day complete.')).toBeTruthy();
+    expect(within(rule).getByText('Streak milestone: 60 days.')).toBeTruthy();
+
+    // Slider bound stays synchronized with the number input.
+    expect((screen.getByRole('slider', { name: 'Daily target' }) as HTMLInputElement).value).toBe('3');
+    expect((screen.getByRole('slider', { name: 'Target streak' }) as HTMLInputElement).value).toBe('60');
+
+    // Oversized values clamp the state back into 1..365 (the rule reflects the clamped draft).
+    await user.clear(streakNumber);
+    await user.type(streakNumber, '999');
+    expect(within(screen.getByTestId('habit-goal-rule-card')).getByText('Streak milestone: 365 days.')).toBeTruthy();
+
+    await user.click(screen.getByRole('button', { name: 'Back to habit editor dashboard' }));
+    expect(within(screen.getByRole('button', { name: 'Edit Goal' })).getByText('3x/day, streak 365 days')).toBeTruthy();
+
+    await user.click(screen.getAllByRole('button', { name: 'Save habit' }).at(-1)!);
+    await waitFor(() => {
+      expect(onSubmit).toHaveBeenCalledTimes(1);
+    });
+    expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({ dailyTarget: 3, targetStreak: 365 }));
   });
 
   describe('emoji handling', () => {

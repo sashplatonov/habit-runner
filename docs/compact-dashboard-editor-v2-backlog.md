@@ -653,7 +653,7 @@ git commit -m "feat(habits): add monthly weeks schedule screen"
 
 ## CDE-011: Implement the Goal screen
 
-**Status:** TODO  
+**Status:** DONE  
 **Priority:** P1  
 **Depends on:** CDE-001
 
