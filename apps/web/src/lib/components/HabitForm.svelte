@@ -101,8 +101,10 @@
     reminderEnabled ? (reminderTime ? `Daily at ${reminderTime}` : 'Reminders enabled') : 'Reminders disabled'
   );
   const targetLabel = $derived(`Target ${dailyTarget}x/day, streak ${targetStreak} days`);
+  const previewTargetSummary = $derived(`${dailyTarget}×/day · streak ${targetStreak}d`);
   const typeLabel = $derived(type === 'negative' ? 'Avoid habit' : 'Build habit');
   const tagsSummary = $derived(tags.length > 0 ? `${tags.map((tag) => `#${tag}`).join(' · ')} · ${tags.length}/5 tags` : 'No tags · 0/5 tags');
+  const previewTagsSummary = $derived(tags.length > 0 ? tags.map((tag) => `#${tag}`).join(' · ') : 'No tags');
   const panelTitle = $derived(activePanel === 'dashboard' ? (mode === 'edit' ? 'Edit habit' : 'New habit') : {
     identity: 'Identity', 'habit-type': 'Habit type', schedule: 'Schedule', goal: 'Goal', reminder: 'Reminder', organization: 'Organization'
   }[activePanel]);
@@ -421,6 +423,8 @@
         colorLabel={selectedColor.label}
         {typeLabel}
         {scheduleSummary}
+        {previewTargetSummary}
+        {previewTagsSummary}
         {reminderSummary}
         {targetLabel}
         {tagsSummary}
@@ -454,6 +458,9 @@
       {selectedColor}
       previewLabel={habitLabel}
       previewSchedule={scheduleSummary}
+      previewType={typeLabel}
+      {previewTargetSummary}
+      {previewTagsSummary}
     />{/if}
 
     {#if activePanel === 'schedule'}<HabitScheduleSection

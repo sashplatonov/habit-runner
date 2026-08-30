@@ -1,6 +1,5 @@
 <script lang="ts">
   import Surface from '$lib/components/ui/Surface.svelte';
-  import StatusPill from '$lib/components/ui/StatusPill.svelte';
 
   type Props = {
     habitLabel: string;
@@ -8,8 +7,8 @@
     colorLabel: string;
     typeLabel: string;
     scheduleSummary: string;
-    reminderSummary: string;
-    targetLabel: string;
+    previewTargetSummary: string;
+    previewTagsSummary: string;
   };
 
   const {
@@ -18,30 +17,21 @@
     colorLabel,
     typeLabel,
     scheduleSummary,
-    reminderSummary,
-    targetLabel
+    previewTargetSummary,
+    previewTagsSummary
   }: Props = $props();
 </script>
 
-<Surface as="section" padding="md" class="border-accent/10">
-  <div class="flex items-start gap-3">
-    <div class="flex h-12 w-12 flex-none items-center justify-center rounded-2xl border border-border bg-bg-secondary text-xl" style={`box-shadow: 0 0 0 1px ${colorHex}30;`}>
+<Surface as="section" padding="md" class="border-accent/10" aria-labelledby="habit-preview-title">
+  <h2 id="habit-preview-title" class="text-[10px] font-mono uppercase tracking-[0.18em] text-muted">Preview</h2>
+  <div class="mt-2.5 flex min-w-0 items-center gap-2.5 rounded-2xl border border-border bg-bg-primary p-2.5" data-testid="habit-preview">
+    <div class="flex h-[50px] w-[50px] flex-none items-center justify-center rounded-2xl border text-[23px]" style={`background-color: ${colorHex}18; border-color: ${colorHex}55;`} aria-hidden="true">
       {habitLabel.split(' ')[0]}
     </div>
     <div class="min-w-0 flex-1">
-      <div class="flex flex-wrap items-center gap-2">
-        <h2 class="truncate text-sm font-semibold text-foreground">{habitLabel}</h2>
-        <StatusPill tone="neutral">{typeLabel}</StatusPill>
-      </div>
-      <p class="mt-1 text-xs leading-5 text-muted">{scheduleSummary}</p>
-      <p class="mt-0.5 text-xs leading-5 text-muted">{reminderSummary}</p>
-      <div class="mt-2 flex flex-wrap gap-2">
-        <StatusPill tone="progress">{targetLabel}</StatusPill>
-        <span class="inline-flex items-center gap-1 rounded-full border border-border bg-bg-secondary px-3 py-1 text-[11px] text-muted">
-          <span class="h-2 w-2 rounded-full" style={`background: ${colorHex};`}></span>
-          {colorLabel}
-        </span>
-      </div>
+      <p class="truncate text-sm font-bold text-foreground" data-editor-preview-name>{habitLabel.slice(habitLabel.indexOf(' ') + 1) || habitLabel}</p>
+      <p class="truncate text-[11px] text-muted" data-testid="preview-behavior">{typeLabel} · {scheduleSummary} · {previewTargetSummary}</p>
+      <p class="truncate text-[11px] text-muted" data-testid="preview-tags">{previewTagsSummary} · {colorLabel}</p>
     </div>
   </div>
 </Surface>

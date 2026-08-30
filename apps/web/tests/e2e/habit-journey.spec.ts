@@ -197,13 +197,11 @@ async function expectOneRowHeatmap(container: ReturnType<Page['locator']>): Prom
   expect(firstBox!.width).toBeLessThanOrEqual(9);
   expect(firstBox!.x).toBeLessThan(lastBox!.x);
 }
-
 // eslint-disable-next-line max-lines-per-function
 test.describe.serial('critical habit journey', () => {
   test.beforeEach(async ({ page }) => {
     await seedSession(page);
-    await mockBackend(page);
-  });
+    await mockBackend(page); });
 
   test('creates, checks in, edits, reviews progress, and deletes a habit', async ({ page }) => {
     await page.goto('/app/dashboard');
@@ -232,13 +230,14 @@ test.describe.serial('critical habit journey', () => {
     await deleteHabitButton.click();
     await page.getByRole('button', { name: 'Delete', exact: true }).click();
   });
-
   test('renders the compact editor dashboard without saving draft navigation', async ({ page }) => {
     const mutations: string[] = [];
     trackHabitMutations(page, mutations);
 
     await page.goto('/app/habit/new');
     await expect(page.locator('[data-editor-dashboard]')).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Preview' })).toBeVisible();
+    await expect(page.locator('[data-editor-dashboard] [data-testid="preview-behavior"]')).toContainText('Build habit · Daily');
     await expect(page.locator('[data-editor-tile]')).toHaveCount(6);
     expect(await page.locator('[data-editor-tile]').evaluateAll((tiles) => tiles.map((tile) => tile.getAttribute('data-editor-tile')))).toEqual(['identity', 'habit-type', 'schedule', 'goal', 'reminder', 'organization']);
     for (const [tile, panel] of [['Edit Goal', 'habit-goal-panel'], ['Edit Reminder', 'habit-reminder-panel'], ['Edit Organization', 'habit-organization-panel']] as const) {
@@ -263,7 +262,6 @@ test.describe.serial('critical habit journey', () => {
     }
     expect(mutations).toEqual([]);
   }); test('routes dashboard validation to Identity at compact widths without saving', async ({ page }) => { const mutations: string[] = []; trackHabitMutations(page, mutations); for (const viewport of [{ width: 320, height: 740 }, { width: 390, height: 844 }] as const) { await page.setViewportSize(viewport); await page.goto('/app/habit/new'); await page.getByRole('button', { name: 'Create habit' }).last().click(); await expect(page.locator('form')).toHaveAttribute('data-editor-panel', 'identity'); await expect(page.getByRole('alert')).toContainText('Name is required'); await expect(page.locator('#habit-name')).toBeFocused(); await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight)); expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true); const [fieldBox, footerBox] = await Promise.all([page.locator('#habit-name').boundingBox(), page.locator('[class~="fixed"]').last().boundingBox()]); expect(fieldBox).not.toBeNull(); expect(footerBox).not.toBeNull(); expect(fieldBox!.y + fieldBox!.height).toBeLessThanOrEqual(footerBox!.y); } expect(mutations).toEqual([]); });
-
   test('edits habit type on the focused panel without saving before Save', async ({ page }) => {
     const mutations: string[] = [];
     trackHabitMutations(page, mutations);
@@ -539,5 +537,4 @@ test.describe('authenticated progress analytics', () => {
       await expect(page.getByRole('tooltip')).toHaveCount(0);
       await expect(guide).toBeFocused();
     }
-  });
-});
+  }); });

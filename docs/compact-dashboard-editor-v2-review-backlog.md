@@ -146,7 +146,7 @@ git commit -m "fix(habits): reveal dashboard validation errors"
 
 ## CDE-RVW-003: Restore complete compact previews on Dashboard and Identity
 
-**Status:** TODO
+**Status:** DONE
 **Priority:** P1
 **Depends on:** -
 

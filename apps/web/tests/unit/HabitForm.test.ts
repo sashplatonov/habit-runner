@@ -4,7 +4,6 @@ import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import HabitForm from '../../src/lib/components/HabitForm.svelte';
 import type { Habit } from '../../src/types/habit';
-
 const BASE_HABIT: Habit = {
   id: 'habit-1',
   name: 'Deep Work',
@@ -125,9 +124,7 @@ describe('HabitForm', () => {
   });
 
   it('keeps the identity draft when returning to the dashboard and submits it on save', async () => {
-    const user = userEvent.setup();
-    const onSubmit = vi.fn().mockResolvedValue(undefined);
-
+    const user = userEvent.setup(); const onSubmit = vi.fn().mockResolvedValue(undefined);
     render(HabitForm, { props: { mode: 'create', allHabits: [], onBack: vi.fn(), onSubmit } });
 
     await user.click(screen.getByRole('button', { name: 'Edit Identity' }));
@@ -137,7 +134,8 @@ describe('HabitForm', () => {
     await user.click(screen.getByRole('button', { name: 'Back to habit editor dashboard' }));
 
     expect(screen.getByText('🧘 Breath 4-7-8 · Cyan')).toBeTruthy();
-
+    expect(screen.getByRole('heading', { name: 'Preview' })).toBeTruthy();
+    expect(screen.getByTestId('preview-behavior').textContent).toContain('Build habit · Daily');
     await user.click(screen.getByRole('button', { name: 'Edit Identity' }));
     expect((screen.getByLabelText('Name *') as HTMLInputElement).value).toBe('Breath 4-7-8');
     expect(screen.getByRole('button', { name: 'Use 🧘 as habit icon' }).getAttribute('aria-pressed')).toBe('true');
@@ -151,7 +149,6 @@ describe('HabitForm', () => {
       color: 'cyan'
     }));
   });
-
   it('keeps invalid-name feedback on the identity panel and refocuses the name field', async () => {
     const user = userEvent.setup();
     const onSubmit = vi.fn().mockResolvedValue(undefined);
@@ -647,5 +644,4 @@ describe('HabitForm', () => {
         icon: '⚡'
       }));
     });
-  });
-});
+  }); });

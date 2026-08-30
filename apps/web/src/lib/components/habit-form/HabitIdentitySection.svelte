@@ -4,6 +4,7 @@
   import { MAX_HABIT_DESCRIPTION_LENGTH } from '$lib/habits/habitFormModel';
   import { UserRound } from 'lucide-svelte';
   import FieldMessage from './FieldMessage.svelte';
+  import HabitPreview from '../habits/HabitPreview.svelte';
 
   let {
     name = $bindable(''),
@@ -13,7 +14,10 @@
     errors = {},
     selectedColor = COLORS[0],
     previewLabel = '',
-    previewSchedule = ''
+    previewSchedule = '',
+    previewType = '',
+    previewTargetSummary = '',
+    previewTagsSummary = ''
   }: {
     name: string;
     description: string;
@@ -23,6 +27,9 @@
     selectedColor: (typeof COLORS)[number];
     previewLabel: string;
     previewSchedule: string;
+    previewType: string;
+    previewTargetSummary: string;
+    previewTagsSummary: string;
   } = $props();
 
   function handleCustomIconInput(event: Event) {
@@ -165,24 +172,14 @@
   </div>
 </section>
 
-<section
-  class="rounded-[1.5rem] border border-border bg-bg-card/92 p-4 shadow-[0_20px_54px_rgba(15,23,42,0.08)] sm:p-5"
-  aria-labelledby="identity-preview-title"
-  data-editor-identity-preview
->
-  <h2 id="identity-preview-title" class="text-[10px] font-mono uppercase tracking-[0.18em] text-muted">Preview</h2>
-  <div class="mt-2.5 flex items-center gap-2.5 rounded-2xl border border-border bg-bg-primary p-2.5">
-    <span
-      class="flex h-[50px] w-[50px] flex-none items-center justify-center rounded-2xl border text-[23px]"
-      style={`background-color: ${selectedColor.hex}18; border-color: ${selectedColor.hex}55;`}
-      aria-hidden="true"
-    >
-      {icon || '⚡'}
-    </span>
-    <div class="min-w-0">
-      <p class="truncate text-sm font-bold text-foreground" data-editor-identity-name>{previewLabel}</p>
-      <p class="mt-0.5 truncate text-[11px] text-muted">{previewSchedule}</p>
-      <p class="mt-0.5 truncate text-[11px] text-muted">Color · {selectedColor.label}</p>
-    </div>
-  </div>
-</section>
+<div data-editor-identity-preview>
+  <HabitPreview
+    habitLabel={previewLabel}
+    colorHex={selectedColor.hex}
+    colorLabel={selectedColor.label}
+    typeLabel={previewType}
+    scheduleSummary={previewSchedule}
+    {previewTargetSummary}
+    {previewTagsSummary}
+  />
+</div>
