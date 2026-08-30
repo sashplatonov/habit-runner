@@ -38,6 +38,9 @@ class AuthDataAccessTest extends AuthenticatedApiTestSupport {
   @Inject
   AuthService authService;
 
+  @Inject
+  UserService userService;
+
   @Test
   void shouldReturnStoredPreferencesWhenUserExists() throws Exception {
     var user = createAuthenticatedUser("mint");
@@ -99,7 +102,7 @@ class AuthDataAccessTest extends AuthenticatedApiTestSupport {
   @Test
   void shouldCreateUserWhenEmailNotFound() throws Exception {
     var email = UUID.randomUUID() + "@example.test";
-    var user = inTransaction(() -> new UserService().findOrCreateUser(email));
+    var user = inTransaction(() -> userService.findOrCreateUser(email));
 
     assertEquals(email, user.getEmail());
     assertEquals("cloud", user.getTheme());
@@ -117,7 +120,7 @@ class AuthDataAccessTest extends AuthenticatedApiTestSupport {
       return entity;
     });
 
-    var result = new UserService().findOrCreateUser(email);
+    var result = userService.findOrCreateUser(email);
 
     assertEquals(existing.getId(), result.getId());
     assertEquals(existing.getEmail(), result.getEmail());

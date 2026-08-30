@@ -11,10 +11,6 @@ import lombok.extern.slf4j.Slf4j;
 public class UserService {
   private final UserRepository userRepository;
 
-  public UserService() {
-    this(null);
-  }
-
   @Inject
   public UserService(UserRepository userRepository) {
     this.userRepository = userRepository;
@@ -40,25 +36,17 @@ public class UserService {
   }
 
   protected UserEntity findByEmail(String email) {
-    return userRepository == null
-        ? UserEntity.<UserEntity>find("email", email).firstResult()
-        : userRepository.findByEmail(email);
+    return userRepository.findByEmail(email);
   }
 
   protected UserEntity findRequiredById(String userId) {
-    return userRepository == null
-        ? UserEntity.findById(userId)
-        : userRepository.findRequiredById(userId);
+    return userRepository.findRequiredById(userId);
   }
 
   protected UserEntity createUser(String email) {
     var user = new UserEntity();
     user.setEmail(email);
-    if (userRepository != null) {
-      userRepository.save(user);
-    } else {
-      user.persist();
-    }
+    userRepository.save(user);
     return user;
   }
 }

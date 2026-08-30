@@ -100,7 +100,7 @@ git commit -m "chore(quality): enforce checkstyle on backend test sources"
 
 ## TASK-002: Remove the static Panache fallback from UserService
 
-**Status:** TODO
+**Status:** DONE
 **Priority:** P1
 **Depends on:** -
 
