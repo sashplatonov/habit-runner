@@ -32,7 +32,7 @@ describe('ThemePicker', () => {
 
     expect(themeButtons).toHaveLength(14);
     expect(cloudButton.getAttribute('aria-pressed')).toBe('true');
-    expect(screen.getByText('Selected')).toBeTruthy();
+    expect(cloudButton.querySelector('svg')).toBeTruthy();
   });
 
   it('emits the chosen theme and closes through the shared callback', async () => {
@@ -79,12 +79,14 @@ describe('ThemePicker', () => {
     expect(themeButtons[0]?.getAttribute('aria-label')).toBe('Switch to Sakura theme');
   });
 
-  it('keeps the selected badge inside the flexible content column', () => {
+  it('keeps the selected indicator outside the flexible content column', () => {
     render(ThemePicker, { theme: 'cloud', onThemeChange: vi.fn() });
 
-    const selectedBadge = screen.getByText('Selected').parentElement;
+    const cloudButton = screen.getByRole('button', { name: 'Switch to Cloud theme' });
+    const contentColumn = cloudButton.querySelector('.min-w-0');
 
-    expect(selectedBadge?.parentElement?.className).toContain('min-w-0');
-    expect(selectedBadge?.className).toContain('max-w-full');
+    expect(contentColumn).toBeTruthy();
+    expect(contentColumn?.textContent).toContain('Cloud');
+    expect(contentColumn?.nextElementSibling?.tagName).toBe('svg');
   });
 });
