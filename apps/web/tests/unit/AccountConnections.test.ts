@@ -118,4 +118,10 @@ describe('AccountConnections', () => {
     resolveConnections?.({ connections: [] });
     await waitFor(() => expect(screen.getByRole('region').getAttribute('aria-busy')).toBe('false'));
   });
+
+  it('keeps the export action on one line with its icon', () => {
+    render(AccountConnections);
+
+    expect(screen.getByRole('button', { name: 'Export CSV' }).classList.contains('export-button')).toBe(true);
+  });
 });

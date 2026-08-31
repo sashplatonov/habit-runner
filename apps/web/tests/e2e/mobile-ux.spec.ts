@@ -45,6 +45,16 @@ test.describe('compact mobile UX baseline', () => {
     await expect(filtersToggle).toHaveAttribute('aria-expanded', 'true');
     await expect(filtersPanel).toBeVisible();
     await expect(page.getByRole('button', { name: 'All tags' })).toBeVisible();
+
+    const allFilter = filtersPanel.getByRole('button', { name: 'All', exact: true });
+    await allFilter.click();
+    await expect(allFilter).toHaveAttribute('aria-pressed', 'true');
+    await expect(page).toHaveURL(/\/showcase\?filter=all$/);
+
+    const pendingFilter = filtersPanel.getByRole('button', { name: /^To do/ });
+    await pendingFilter.click();
+    await expect(pendingFilter).toHaveAttribute('aria-pressed', 'true');
+    await expect(page).toHaveURL(/\/showcase$/);
     await expectNoHorizontalOverflow(page);
   });
 

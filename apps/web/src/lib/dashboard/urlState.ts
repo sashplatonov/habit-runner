@@ -1,6 +1,6 @@
 /* eslint-disable complexity */
 import { browser } from '$app/environment';
-import { goto } from '$app/navigation';
+import { replaceState } from '$app/navigation';
 import { resolve } from '$app/paths';
 import type { PathnameWithSearchOrHash } from '$app/types';
 
@@ -36,7 +36,7 @@ export function updateDashboardURL(state: Partial<DashboardUrlState>) {
   const params = url.searchParams;
 
   // Update or remove each param
-  if (state.filter !== undefined) {
+  if ('filter' in state) {
     if (state.filter && state.filter !== 'pending') {
       params.set('filter', state.filter);
     } else {
@@ -44,7 +44,7 @@ export function updateDashboardURL(state: Partial<DashboardUrlState>) {
     }
   }
 
-  if (state.search !== undefined) {
+  if ('search' in state) {
     if (state.search) {
       params.set('search', state.search);
     } else {
@@ -52,7 +52,7 @@ export function updateDashboardURL(state: Partial<DashboardUrlState>) {
     }
   }
 
-  if (state.tags !== undefined) {
+  if ('tags' in state) {
     if (state.tags) {
       params.set('tags', state.tags);
     } else {
@@ -60,7 +60,7 @@ export function updateDashboardURL(state: Partial<DashboardUrlState>) {
     }
   }
 
-  if (state.sort !== undefined) {
+  if ('sort' in state) {
     if (state.sort && state.sort !== 'custom') {
       params.set('sort', state.sort);
     } else {
@@ -68,7 +68,7 @@ export function updateDashboardURL(state: Partial<DashboardUrlState>) {
     }
   }
 
-  if (state.density !== undefined) {
+  if ('density' in state) {
     if (state.density && state.density !== 'comfortable') {
       params.set('density', state.density);
     } else {
@@ -76,7 +76,7 @@ export function updateDashboardURL(state: Partial<DashboardUrlState>) {
     }
   }
 
-  if (state.collapsed !== undefined) {
+  if ('collapsed' in state) {
     if (state.collapsed === 'true') {
       params.set('collapsed', 'true');
     } else {
@@ -84,11 +84,11 @@ export function updateDashboardURL(state: Partial<DashboardUrlState>) {
     }
   }
 
-  // Update URL without full reload
+  // Keep dashboard state shareable without triggering a route navigation.
   const queryString = params.toString();
   const newUrl = url.pathname + (queryString ? '?' + queryString : '') + url.hash;
   if (newUrl !== window.location.pathname + window.location.search + window.location.hash) {
-    void goto(resolve(newUrl as PathnameWithSearchOrHash, {} as never), { replaceState: true, keepFocus: true, noScroll: true });
+    replaceState(resolve(newUrl as PathnameWithSearchOrHash, {} as never), {});
   }
 }
 

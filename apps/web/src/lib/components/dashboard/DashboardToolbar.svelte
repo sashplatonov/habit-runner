@@ -86,7 +86,7 @@
       onChange={(value) => {
         void onFilterChange(value as Filter);
       }}
-      class="hidden min-w-0 flex-1 sm:inline-flex [&>button]:min-w-0 [&>button]:flex-1 [&>button]:justify-center"
+      class="!hidden min-w-0 flex-1 sm:!inline-flex [&>button]:min-w-0 [&>button]:flex-1 [&>button]:justify-center"
     />
 
     <button
@@ -211,7 +211,7 @@
       onChange={(value) => {
         void onFilterChange(value as Filter);
       }}
-      class="w-full sm:hidden [&>button]:min-w-0 [&>button]:flex-1 [&>button]:justify-center"
+      class="w-full sm:!hidden [&>button]:min-w-0 [&>button]:flex-1 [&>button]:justify-center"
     />
 
     {#if availableTags.length > 0 || activeTags.length > 0}

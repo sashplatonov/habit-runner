@@ -166,7 +166,7 @@
 
   <div class="card">
     <div class="card-main"><strong>Data export</strong><span class="identity">Download your habits and completion history.</span></div>
-    <button class="button" type="button" onclick={exportHabitsCsv}>
+    <button class="button export-button" type="button" onclick={exportHabitsCsv}>
       <DownloadIcon size={16} aria-hidden="true" />
       Export CSV
     </button>
@@ -198,6 +198,7 @@
   .confirm { max-width: min(30rem, calc(100vw - 2rem)); display: grid; gap: .75rem; padding: 1rem; border: 1px solid var(--color-border, #e2e8f0); border-radius: 1rem; }
   .confirm::backdrop { background: rgb(15 23 42 / .45); }
   .button { min-height: 44px; border: 1px solid var(--color-border, #cbd5e1); border-radius: .8rem; padding: 0 1rem; cursor: pointer; }
+  .export-button { display: inline-flex; flex: 0 0 auto; align-items: center; gap: .5rem; white-space: nowrap; }
   .primary { background: var(--color-progress, #15803d); color: white; text-align: center; display: inline-flex; align-items: center; justify-content: center; text-decoration: none; }
   .mini-app-link { border: 0; padding: 0; color: var(--color-progress, #15803d); background: transparent; font: inherit; font-size: .8rem; font-weight: 700; white-space: nowrap; cursor: pointer; }
   .error { margin: 0; color: #b91c1c; }
