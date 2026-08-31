@@ -3,9 +3,9 @@ package com.sashplatonov.habbit.runner.auth;
 import com.sashplatonov.habbit.runner.auth.service.TelegramSessionService;
 import com.sashplatonov.habbit.runner.auth.service.TokenIssuer;
 import com.sashplatonov.habbit.runner.auth.telegram.TelegramWebAppUser;
+import com.sashplatonov.habbit.runner.auth.identity.IdentityService;
+import com.sashplatonov.habbit.runner.auth.identity.TelegramIdentityResolution;
 import com.sashplatonov.habbit.runner.metrics.instrumentation.ServiceMetricsInstrumentation;
-import com.sashplatonov.habbit.runner.repository.AuthIdentityRepository;
-import com.sashplatonov.habbit.runner.repository.UserRepository;
 import com.sashplatonov.habbit.runner.support.TestConfigFactory;
 import jakarta.ws.rs.BadRequestException;
 import org.junit.jupiter.api.Test;
@@ -13,12 +13,16 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 class TelegramSessionServiceTest {
 
   private TelegramSessionService service(TestAuthUserService userService) {
+    var identityService = mock(IdentityService.class);
+    when(identityService.resolveTelegram("42", "@alice"))
+        .thenReturn(new TelegramIdentityResolution("telegram-user", false));
     return new TelegramSessionService(
-        new TestIdentityService(mock(AuthIdentityRepository.class), mock(UserRepository.class)),
+        identityService,
         userService,
         new TokenIssuer(
             new TestAuthJwtUtil(),

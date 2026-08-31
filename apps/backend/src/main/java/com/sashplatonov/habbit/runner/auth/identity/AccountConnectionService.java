@@ -19,7 +19,7 @@ public class AccountConnectionService {
   private final UserRepository userRepository;
 
   @Inject
-  public AccountConnectionService(AuthIdentityRepository identityRepository, UserRepository userRepository) {
+  AccountConnectionService(AuthIdentityRepository identityRepository, UserRepository userRepository) {
     this.identityRepository = identityRepository;
     this.userRepository = userRepository;
   }

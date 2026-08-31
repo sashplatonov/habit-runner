@@ -14,7 +14,7 @@ public class IdentityService {
   private final UserRepository userRepository;
 
   @Inject
-  public IdentityService(AuthIdentityRepository identityRepository, UserRepository userRepository) {
+  IdentityService(AuthIdentityRepository identityRepository, UserRepository userRepository) {
     this.identityRepository = identityRepository;
     this.userRepository = userRepository;
   }
