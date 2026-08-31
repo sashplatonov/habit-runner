@@ -902,7 +902,7 @@
                       </div>
 
                       {#if habit.description}
-                        <span class="shrink-0"><DescriptionTooltip description={habit.description} triggerClassName="h-11 w-11" /></span>
+                        <span class="shrink-0"><DescriptionTooltip description={habit.description} triggerClassName="!size-8 !min-h-8 !min-w-8 !rounded-lg sm:!size-11 sm:!min-h-11 sm:!min-w-11 sm:!rounded-[1rem]" /></span>
                       {/if}
                     </div>
                     <div class="relative z-10 mt-2 flex w-full min-w-0 items-center gap-2 border-t border-border/40 pt-2">
@@ -1095,7 +1095,7 @@
                     </div>
 
                     {#if habit.description}
-                      <span class="shrink-0"><DescriptionTooltip description={habit.description} triggerClassName="h-11 w-11" /></span>
+                      <span class="shrink-0"><DescriptionTooltip description={habit.description} triggerClassName="!size-8 !min-h-8 !min-w-8 !rounded-lg sm:!size-11 sm:!min-h-11 sm:!min-w-11 sm:!rounded-[1rem]" /></span>
                     {/if}
                   </div>
                   <div class="relative z-10 mt-2 flex w-full min-w-0 items-center gap-2 border-t border-border/40 pt-2">
