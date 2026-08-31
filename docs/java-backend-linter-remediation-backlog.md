@@ -129,7 +129,7 @@ git commit -m "fix(quality): close identity repository exposure findings"
 
 ## JAVA-LINT-002: Remove the raw generic Supplier matcher warning
 
-**Status:** TODO
+**Status:** DONE
 **Priority:** P1
 **Depends on:** JAVA-LINT-001
 

@@ -25,10 +25,10 @@ import java.util.function.Supplier;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -48,8 +48,8 @@ class CheckinServiceImplTest {
 
   @BeforeEach
   void stubMetricsToRunAction() {
-    when(metrics.measureMutation(any(Supplier.class)))
-        .thenAnswer(invocation -> ((Supplier<?>) invocation.getArgument(0)).get());
+    doAnswer(invocation -> invocation.<Supplier<Object>>getArgument(0).get())
+        .when(metrics).measureMutation(ArgumentMatchers.<Supplier<Object>>any());
   }
 
   @Test
