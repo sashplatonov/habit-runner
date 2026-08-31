@@ -83,14 +83,9 @@
   <div class="h-[3px] w-full" style:background={accent.hex}></div>
 
   <div class="flex min-h-[108px] flex-col p-2.5">
-    <!-- Top row: completion ring -->
-    <div class="mb-1 flex items-center justify-end">
-      <CompletionRing percentage={completionRate} size={24} strokeWidth={2.25} color={habit.color} showText={false} />
-    </div>
-
     <!-- Name + meta -->
     <div class="flex-1 min-w-0 text-left">
-      <div class="flex min-h-[2.75rem] items-start gap-1 leading-tight">
+      <div class="flex min-h-[2.75rem] items-center gap-1 leading-tight">
         <button
           type="button"
           class="flex min-h-11 min-w-0 flex-1 items-center whitespace-normal text-left text-sm font-semibold transition-colors hover:text-accent {completed ? 'text-muted line-through' : 'text-foreground'}"
@@ -104,6 +99,14 @@
         {#if habit.description}
           <DescriptionTooltip description={habit.description} triggerClassName="h-11 w-11" />
         {/if}
+        <CompletionRing
+          percentage={completionRate}
+          size={24}
+          strokeWidth={2.25}
+          color={habit.color}
+          showText={false}
+          className="shrink-0"
+        />
       </div>
 
       <!-- Streak and recovery signal -->
