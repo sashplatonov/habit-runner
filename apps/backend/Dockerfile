@@ -18,7 +18,9 @@ RUN --mount=type=cache,target=/root/.m2 ./mvnw -B -T1 -Dmaven.test.skip=true dep
 # Copy application sources after dependency warmup to avoid invalidating the cache on every change.
 COPY src src
 
-RUN --mount=type=cache,target=/root/.m2 ./mvnw -B -T1 -Djacoco.skip=true -Dmaven.test.skip=true -Dtest.jvm.argline.extra="-Xms256m -Xmx1024m -XX:ActiveProcessorCount=1" package
+# CI runs Checkstyle, PMD, and SpotBugs. Skip those analysis-only plugins here so
+# the deployment image build only compiles and packages the application.
+RUN --mount=type=cache,target=/root/.m2 ./mvnw -B -T1 -Djacoco.skip=true -Dcheckstyle.skip=true -Dpmd.skip=true -Dspotbugs.skip=true -Dmaven.test.skip=true -Dtest.jvm.argline.extra="-Xms256m -Xmx1024m -XX:ActiveProcessorCount=1" package
 
 FROM docker.io/library/eclipse-temurin:25-jre AS runtime
 WORKDIR /work
