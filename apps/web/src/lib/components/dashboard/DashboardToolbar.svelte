@@ -105,6 +105,16 @@
       <DashboardIconButton ariaLabel="Add habit" title="Add habit" onClick={onAddHabit} class="shrink-0">
         <PlusIcon size={18} />
       </DashboardIconButton>
+      <DashboardIconButton
+        ariaLabel="Open search"
+        title="Open search"
+        onClick={() => {
+          isOpen = true;
+        }}
+        class="shrink-0 sm:hidden"
+      >
+        <SearchIcon size={18} />
+      </DashboardIconButton>
     </div>
 
     <div id="dashboard-filter-panel" class={`${isOpen ? 'block' : 'hidden'} mt-2 rounded-[1rem] border border-border bg-bg-secondary/60 p-2`}>

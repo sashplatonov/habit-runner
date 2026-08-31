@@ -33,10 +33,9 @@ test.describe('public showcase', () => {
     await expect(page.getByRole('button', { name: '📚 Read one chapter', exact: true })).toBeVisible();
     if (await page.getByRole('button', { name: 'More actions' }).count() > 0) {
       await page.getByRole('button', { name: 'More actions' }).click();
-    } else {
-      await page.getByRole('button', { name: 'Choose color theme' }).click();
     }
-    await page.getByRole('button', { name: 'Switch to Midnight theme' }).click();
+    await page.getByRole('button', { name: 'Choose color theme' }).click();
+    await page.getByRole('button', { name: 'Switch to Midnight OLED theme' }).click();
     await expect.poll(() => page.locator('html').getAttribute('data-theme')).toBe('midnight');
     await page.getByRole('button', { name: 'Reset demo' }).click();
     await page.goto('/showcase/habit/morning-pages');

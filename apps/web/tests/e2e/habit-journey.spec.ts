@@ -163,10 +163,13 @@ async function expectOneRowHeatmap(container: ReturnType<Page['locator']>): Prom
 }
 // The density toggle is an inline icon control in the shared toolbar.
 async function setDashboardDensity(page: Page, density: 'comfortable' | 'compact'): Promise<void> {
-  const label = density === 'compact' ? 'Cards' : 'List';
-  const densityButton = page.getByRole('button', { name: `View density: ${label}` });
+  const filterToggle = page.locator('button[aria-controls="dashboard-filter-panel"]');
+  if (await filterToggle.getAttribute('aria-expanded') === 'false') {
+    await filterToggle.click();
+  }
+  const densityButton = page.getByRole('button', { name: 'Toggle view density' });
   await densityButton.click();
-  await expect(page.getByRole('button', { name: `View density: ${density === 'compact' ? 'List' : 'Cards'}` })).toHaveAttribute('aria-pressed', 'true');
+  await expect(densityButton).toHaveAttribute('aria-pressed', density === 'compact' ? 'true' : 'false');
 }
 // eslint-disable-next-line max-lines-per-function
 test.describe.serial('critical habit journey', () => {
@@ -419,8 +422,10 @@ test.describe.serial('scheduled dashboard summary', () => {
         await expect(page.getByRole('button', { name: 'Add habit' }).first()).toBeVisible();
       } else {
         await expect(summary.getByLabel('Heatmap brightness legend')).toBeVisible();
+        const filterToggle = page.locator('button[aria-controls="dashboard-filter-panel"]');
+        await filterToggle.click();
         const summaryBox = await summary.boundingBox();
-        const densityToggle = page.getByRole('button', { name: /View density:/ });
+        const densityToggle = page.getByRole('button', { name: 'Toggle view density' });
         const toolbarBox = await densityToggle.boundingBox();
         expect(summaryBox).not.toBeNull();
         expect(toolbarBox).not.toBeNull();

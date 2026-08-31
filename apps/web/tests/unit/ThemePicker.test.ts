@@ -30,7 +30,7 @@ describe('ThemePicker', () => {
     const themeButtons = screen.getAllByRole('button', { name: /Switch to .+ theme/ });
     const cloudButton = screen.getByRole('button', { name: 'Switch to Cloud theme' });
 
-    expect(themeButtons).toHaveLength(14);
+    expect(themeButtons).toHaveLength(10);
     expect(cloudButton.getAttribute('aria-pressed')).toBe('true');
     expect(cloudButton.querySelector('svg')).toBeTruthy();
   });
@@ -41,7 +41,7 @@ describe('ThemePicker', () => {
     const onChoose = vi.fn();
     render(ThemePicker, { theme: 'cloud', onThemeChange, onChoose });
 
-    await user.click(screen.getByRole('button', { name: 'Switch to Graphite theme' }));
+    await user.click(screen.getByRole('button', { name: 'Switch to Graphite Pro theme' }));
 
     expect(onThemeChange).toHaveBeenCalledWith('graphite');
     expect(onChoose).toHaveBeenCalledTimes(1);
@@ -56,7 +56,7 @@ describe('ThemePicker', () => {
     const onThemeChange = vi.fn();
     render(ThemePicker, { theme: 'cloud', onThemeChange });
 
-    const click = user.click(screen.getByRole('button', { name: 'Switch to Graphite theme' }));
+    const click = user.click(screen.getByRole('button', { name: 'Switch to Graphite Pro theme' }));
     await waitFor(() => expect(recordUsage).toHaveBeenCalledWith('graphite'));
     expect(onThemeChange).not.toHaveBeenCalled();
 
@@ -69,14 +69,14 @@ describe('ThemePicker', () => {
     const user = userEvent.setup();
     const { unmount } = render(ThemePicker, { theme: 'cloud', onThemeChange: vi.fn() });
 
-    await user.click(screen.getByRole('button', { name: 'Switch to Sakura theme' }));
-    await user.click(screen.getByRole('button', { name: 'Switch to Sakura theme' }));
+    await user.click(screen.getByRole('button', { name: 'Switch to Peach Paper theme' }));
+    await user.click(screen.getByRole('button', { name: 'Switch to Peach Paper theme' }));
     unmount();
 
     render(ThemePicker, { theme: 'cloud', onThemeChange: vi.fn() });
     const themeButtons = screen.getAllByRole('button', { name: /Switch to .+ theme/ });
 
-    expect(themeButtons[0]?.getAttribute('aria-label')).toBe('Switch to Sakura theme');
+    expect(themeButtons[0]?.getAttribute('aria-label')).toBe('Switch to Peach Paper theme');
   });
 
   it('keeps the selected indicator outside the flexible content column', () => {
