@@ -22,11 +22,10 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class TelegramInitDataVerifier {
   private static final int FINGERPRINT_LENGTH = 12;
-  @jakarta.inject.Inject
-  AuthConfig authConfig;
-  @jakarta.inject.Inject
-  ObjectMapper objectMapper;
+  private final AuthConfig authConfig;
+  private final ObjectMapper objectMapper;
 
+  @jakarta.inject.Inject
   TelegramInitDataVerifier(AuthConfig authConfig, ObjectMapper objectMapper) {
     this.authConfig = authConfig;
     this.objectMapper = objectMapper;

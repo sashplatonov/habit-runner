@@ -15,10 +15,14 @@ import jakarta.ws.rs.core.Response;
 
 @ApplicationScoped
 public class AccountConnectionService {
+  private final AuthIdentityRepository identityRepository;
+  private final UserRepository userRepository;
+
   @Inject
-  AuthIdentityRepository identityRepository;
-  @Inject
-  UserRepository userRepository;
+  public AccountConnectionService(AuthIdentityRepository identityRepository, UserRepository userRepository) {
+    this.identityRepository = identityRepository;
+    this.userRepository = userRepository;
+  }
 
   public AccountConnectionsResponse connections(String ownerUserId) {
     var user = requireUser(ownerUserId);

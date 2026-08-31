@@ -30,6 +30,27 @@
     <rule ref="category/java/performance.xml/UseArraysAsList"/>
 
     <!-- ═══════════════════════════════════════════
+         DEPENDENCY INJECTION
+         ═══════════════════════════════════════════ -->
+    <rule name="NoFieldInjection"
+          language="java"
+          message="Field injection is forbidden. Use constructor injection instead."
+          class="net.sourceforge.pmd.lang.rule.xpath.XPathRule">
+        <description>
+            Forbids dependency injection via fields (@Inject, @Autowired, @Resource).
+            Prefer constructor injection for immutable, testable dependencies.
+        </description>
+        <priority>1</priority>
+        <properties>
+            <property name="xpath">
+                <value><![CDATA[
+//FieldDeclaration[.//Annotation[@SimpleName = 'Inject' or @SimpleName = 'Autowired' or @SimpleName = 'Resource']]
+]]></value>
+            </property>
+        </properties>
+    </rule>
+
+    <!-- ═══════════════════════════════════════════
          CODE STYLE
          ═══════════════════════════════════════════ -->
     <rule ref="category/java/codestyle.xml/UnnecessaryImport"/>

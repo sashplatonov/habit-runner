@@ -784,7 +784,7 @@
                   {/if}
 
                   <div
-                    class="habit-card-inner flex items-center rounded-2xl border bg-bg-card px-4 py-3 transition-all duration-150 cursor-pointer overflow-hidden
+                    class="habit-card-inner flex flex-col rounded-2xl border bg-bg-card px-3 py-2.5 transition-all duration-150 cursor-pointer overflow-hidden
                       {dragOverId === habit.id ? 'border-accent/50' : 'border-border hover:border-border-hover'}
                       {isFrozen ? 'opacity-75' : ''}"
                     role="button"
@@ -808,7 +808,7 @@
                       style:background-color={indicatorColor}
                     ></span>
 
-                    <div class="relative z-10 flex w-full items-center gap-3">
+                    <div class="relative z-10 flex w-full min-w-0 items-center gap-3">
                       {#if isDragActive()}
                         <button
                           type="button"
@@ -931,10 +931,10 @@
                             ></div>
                           {/each}
                         </div>
-                        <div class="hidden md:flex justify-center" role="img" aria-label="Habit activity for the last 30 days, from 30 days ago through today">
-                          <MiniHeatmap completions={habit.completions} dailyTarget={habit.dailyTarget} color={habit.color} />
-                        </div>
                       </div>
+                    </div>
+                    <div class="relative z-10 mt-2 w-full border-t border-border/40 pt-2" role="img" aria-label="Habit activity for the last 30 days, from 30 days ago through today">
+                      <MiniHeatmap completions={habit.completions} dailyTarget={tgt} color={habit.color} />
                     </div>
                   </div>
                 </li>
@@ -1000,7 +1000,7 @@
                 {/if}
 
                 <div
-                  class="habit-card-inner flex items-center rounded-2xl border bg-bg-card px-4 py-3 transition-all duration-150 cursor-pointer overflow-hidden
+                  class="habit-card-inner flex flex-col rounded-2xl border bg-bg-card px-3 py-2.5 transition-all duration-150 cursor-pointer overflow-hidden
                     {dragOverId === habit.id ? 'border-accent/50' : 'border-border hover:border-border-hover'}
                     {isFrozen ? 'opacity-75' : ''}"
                   role="button"
@@ -1024,7 +1024,7 @@
                     style:background-color={indicatorColor}
                   ></span>
 
-                  <div class="relative z-10 flex w-full items-center gap-3">
+                  <div class="relative z-10 flex w-full min-w-0 items-center gap-3">
                     {#if isDragActive()}
                       <button
                         type="button"
@@ -1150,10 +1150,10 @@
                           ></div>
                         {/each}
                       </div>
-                      <div class="hidden md:block">
-                        <MiniHeatmap completions={habit.completions} dailyTarget={habit.dailyTarget} color={habit.color} />
-                      </div>
                     </div>
+                  </div>
+                  <div class="relative z-10 mt-2 w-full border-t border-border/40 pt-2" role="img" aria-label="Habit activity for the last 30 days, from 30 days ago through today">
+                    <MiniHeatmap completions={habit.completions} dailyTarget={tgt} color={habit.color} />
                   </div>
                 </div>
                 </li>

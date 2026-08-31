@@ -25,9 +25,7 @@ class IdentityServiceTest {
     var user = new UserEntity();
     when(identities.findByProviderAndSubject(AuthProvider.TELEGRAM, "42")).thenReturn(identity);
     when(users.findRequiredById("user-1")).thenReturn(user);
-    var service = new IdentityService();
-    service.identityRepository = identities;
-    service.userRepository = users;
+    var service = new IdentityService(identities, users);
     assertNotNull(service.findOrCreateTelegram("42"));
     assertTrue(service.resolveTelegram("42", null).existingAccount());
   }
@@ -37,9 +35,7 @@ class IdentityServiceTest {
     var identities = mock(AuthIdentityRepository.class);
     var users = mock(UserRepository.class);
     when(identities.findByProviderAndSubject(any(), any())).thenReturn(null);
-    var service = new IdentityService();
-    service.identityRepository = identities;
-    service.userRepository = users;
+    var service = new IdentityService(identities, users);
     var result = service.resolveTelegram("42", null);
     verify(users).save(any(UserEntity.class));
     verify(identities).save(any(AuthIdentityEntity.class));

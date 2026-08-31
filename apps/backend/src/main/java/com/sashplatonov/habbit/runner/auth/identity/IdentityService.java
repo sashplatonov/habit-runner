@@ -10,10 +10,14 @@ import jakarta.transaction.Transactional;
 
 @ApplicationScoped
 public class IdentityService {
+  private final AuthIdentityRepository identityRepository;
+  private final UserRepository userRepository;
+
   @Inject
-  AuthIdentityRepository identityRepository;
-  @Inject
-  UserRepository userRepository;
+  public IdentityService(AuthIdentityRepository identityRepository, UserRepository userRepository) {
+    this.identityRepository = identityRepository;
+    this.userRepository = userRepository;
+  }
 
   public AuthIdentityEntity find(AuthProvider provider, String providerSubject) {
     if (providerSubject == null || providerSubject.isBlank()) {

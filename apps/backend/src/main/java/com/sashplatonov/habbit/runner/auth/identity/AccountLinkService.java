@@ -20,14 +20,10 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class AccountLinkService {
   private static final int TOKEN_REFERENCE_LENGTH = 12;
-  @jakarta.inject.Inject
-  AccountLinkChallengeRepository challengeRepository;
-  @jakarta.inject.Inject
-  AuthIdentityRepository identityRepository;
-  @jakarta.inject.Inject
-  TelegramInitDataVerifier telegramVerifier;
-  @jakarta.inject.Inject
-  AccountMergeService mergeService;
+  private final AccountLinkChallengeRepository challengeRepository;
+  private final AuthIdentityRepository identityRepository;
+  private final TelegramInitDataVerifier telegramVerifier;
+  private final AccountMergeService mergeService;
 
   @jakarta.inject.Inject
   AccountLinkService(AccountLinkChallengeRepository challengeRepository,

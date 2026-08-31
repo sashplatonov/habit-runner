@@ -4,6 +4,8 @@ import com.sashplatonov.habbit.runner.auth.service.TelegramSessionService;
 import com.sashplatonov.habbit.runner.auth.service.TokenIssuer;
 import com.sashplatonov.habbit.runner.auth.telegram.TelegramWebAppUser;
 import com.sashplatonov.habbit.runner.metrics.instrumentation.ServiceMetricsInstrumentation;
+import com.sashplatonov.habbit.runner.repository.AuthIdentityRepository;
+import com.sashplatonov.habbit.runner.repository.UserRepository;
 import com.sashplatonov.habbit.runner.support.TestConfigFactory;
 import jakarta.ws.rs.BadRequestException;
 import org.junit.jupiter.api.Test;
@@ -16,7 +18,7 @@ class TelegramSessionServiceTest {
 
   private TelegramSessionService service(TestAuthUserService userService) {
     return new TelegramSessionService(
-        new TestIdentityService(),
+        new TestIdentityService(mock(AuthIdentityRepository.class), mock(UserRepository.class)),
         userService,
         new TokenIssuer(
             new TestAuthJwtUtil(),

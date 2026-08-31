@@ -21,9 +21,7 @@ class AccountConnectionServiceTest {
   void returnsDetailsAndDetachesEitherProviderWhenAnotherRemains() {
     var identities = mock(AuthIdentityRepository.class);
     var users = mock(UserRepository.class);
-    var service = new AccountConnectionService();
-    service.identityRepository = identities;
-    service.userRepository = users;
+    var service = new AccountConnectionService(identities, users);
     var user = new UserEntity();
     user.setEmail("owner@example.test");
     var telegram = new AuthIdentityEntity();
@@ -49,9 +47,7 @@ class AccountConnectionServiceTest {
   void rejectsDetachingTheLastSignInMethod() {
     var identities = mock(AuthIdentityRepository.class);
     var users = mock(UserRepository.class);
-    var service = new AccountConnectionService();
-    service.identityRepository = identities;
-    service.userRepository = users;
+    var service = new AccountConnectionService(identities, users);
     var user = new UserEntity();
     user.setEmail("owner@example.test");
     when(users.findRequiredById("owner")).thenReturn(user);
@@ -69,9 +65,7 @@ class AccountConnectionServiceTest {
   void rejectsDetachingTelegramWhenEmailIsNotConnected() {
     var identities = mock(AuthIdentityRepository.class);
     var users = mock(UserRepository.class);
-    var service = new AccountConnectionService();
-    service.identityRepository = identities;
-    service.userRepository = users;
+    var service = new AccountConnectionService(identities, users);
     var user = new UserEntity();
     var telegram = new AuthIdentityEntity();
     when(users.findRequiredByIdForUpdate("owner")).thenReturn(user);
