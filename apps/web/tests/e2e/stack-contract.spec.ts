@@ -27,6 +27,7 @@ test.describe('real stack contract', () => {
     const habitName = `Stack contract ${Date.now()}`;
     await page.goto('/app/habit/new');
     await expect(page.getByRole('heading', { name: 'New habit', exact: true })).toBeVisible();
+    await page.locator('[data-editor-tile="identity"]').click();
     await page.getByLabel('Name *').fill(habitName);
 
     const createResponse = page.waitForResponse((response) =>
@@ -73,6 +74,7 @@ test.describe('real stack contract', () => {
     });
     expect(externalUpdate.status()).toBe(200);
 
+    await page.locator('[data-editor-tile="identity"]').click();
     await page.getByLabel('Name *').fill(`${habitName} stale write`);
     const staleResponse = page.waitForResponse((response) =>
       response.url().includes(`/api/habits/${createdHabit.id}`) && response.request().method() === 'PUT'
