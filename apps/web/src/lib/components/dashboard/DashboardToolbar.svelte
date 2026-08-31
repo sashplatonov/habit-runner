@@ -1,6 +1,6 @@
 <script lang="ts">
   import { page } from '$app/state';
-  import { SearchIcon, SlidersHorizontalIcon, PlusIcon, ArchiveIcon, XIcon, Grid3x3Icon, TagIcon, DownloadIcon, Settings2Icon } from 'lucide-svelte';
+  import { SearchIcon, SlidersHorizontalIcon, PlusIcon, ArchiveIcon, XIcon, Grid3x3Icon, TagIcon } from 'lucide-svelte';
   import DashboardIconButton from '$lib/components/dashboard/DashboardIconButton.svelte';
   import DashboardSegmentedControl from '$lib/components/dashboard/DashboardSegmentedControl.svelte';
 
@@ -24,7 +24,6 @@
     onToggleTag: (tag: string) => void | Promise<void>;
     onClearTags: () => void | Promise<void>;
     onAddHabit: () => void | Promise<void>;
-    onExportCsv: () => void | Promise<void>;
   };
 
   let {
@@ -42,13 +41,10 @@
     onDensityChange,
     onToggleTag,
     onClearTags,
-    onAddHabit,
-    onExportCsv
+    onAddHabit
   }: Props = $props();
 
-  let isOptionsOpen = $state(false);
   let isMobileSearchOpen = $state(false);
-  let optionsElement = $state<HTMLDivElement | null>(null);
 
   $effect(() => {
     if (page.url.hash === '#habit-search') {
@@ -62,32 +58,16 @@
     { id: 'done', label: 'Done' }
   ]);
 
-  const activeOptionsCount = $derived(
-    (filter === 'archived' ? 1 : 0) + (sortMode !== 'custom' ? 1 : 0) + (viewDensity !== 'comfortable' ? 1 : 0)
-  );
-
-  function handleWindowClick(event: MouseEvent) {
-    if (!isOptionsOpen) {
-      return;
-    }
-
-    const target = event.target;
-    if (optionsElement && target instanceof Node && !optionsElement.contains(target)) {
-      isOptionsOpen = false;
-    }
-  }
-
   function handleWindowKeydown(event: KeyboardEvent) {
     if (event.key === 'Escape') {
-      isOptionsOpen = false;
       isMobileSearchOpen = false;
     }
   }
 </script>
 
-<svelte:window onpointerdown={handleWindowClick} onkeydown={handleWindowKeydown} />
+<svelte:window onkeydown={handleWindowKeydown} />
 
-<section class="space-y-3">
+<section class="mx-auto w-full max-w-5xl space-y-2 px-4 py-2 sm:px-6">
   <div class="flex flex-nowrap items-center justify-center gap-2">
     <DashboardSegmentedControl
       ariaLabel="Dashboard filter"
@@ -158,123 +138,39 @@
       {/if}
     </div>
 
-    <div class="relative" bind:this={optionsElement}>
+    <div class="flex shrink-0 items-center gap-1.5">
       <DashboardIconButton
-        ariaLabel="View options"
-        active={isOptionsOpen}
-        class="relative"
-        ariaExpanded={isOptionsOpen}
-        ariaControls="dashboard-view-options"
+        ariaLabel={`Sort: ${sortMode === 'custom' ? 'Custom' : 'Smart'}`}
+        title={`Sort: ${sortMode === 'custom' ? 'Custom' : 'Smart'}`}
+        active={sortMode === 'smart'}
         onClick={() => {
-          isOptionsOpen = !isOptionsOpen;
+          void onSortChange(sortMode === 'custom' ? 'smart' : 'custom');
         }}
       >
-        <Settings2Icon size={18} />
-        {#if activeOptionsCount > 0}
-          <span class="absolute -right-1 -top-1 inline-flex min-h-5 min-w-5 items-center justify-center rounded-full bg-accent px-1 text-[10px] font-semibold tabular-nums text-bg-primary">
-            {activeOptionsCount}
-          </span>
-        {/if}
+        <SlidersHorizontalIcon size={18} />
       </DashboardIconButton>
 
-      {#if isOptionsOpen}
-      <div
-        id="dashboard-view-options"
-        role="region"
-        aria-label="Dashboard view options"
-        class="absolute right-0 top-full z-[80] mt-2 max-h-[min(70vh,34rem)] w-[min(calc(100vw-2rem),24rem)] overflow-y-auto overscroll-contain rounded-[1.35rem] border border-border bg-bg-card p-3 shadow-[0_24px_60px_rgba(15,23,42,0.18)] sm:p-4"
+      <DashboardIconButton
+        ariaLabel={`View density: ${viewDensity === 'comfortable' ? 'Cards' : 'List'}`}
+        title={`View density: ${viewDensity === 'comfortable' ? 'Cards' : 'List'}`}
+        active={viewDensity === 'compact'}
+        onClick={() => {
+          void onDensityChange(viewDensity === 'comfortable' ? 'compact' : 'comfortable');
+        }}
       >
-        <div class="flex items-center justify-between gap-3">
-          <div>
-            <p class="text-[10px] font-semibold uppercase tracking-[0.24em] text-muted">View options</p>
-            <p class="mt-1 text-sm text-muted">Sort, density, archive, and export live here.</p>
-          </div>
-          <button
-            type="button"
-            class="flex h-11 w-11 items-center justify-center rounded-full border border-border bg-bg-secondary text-muted transition-colors hover:text-foreground"
-            aria-label="Close options"
-            onclick={() => {
-              isOptionsOpen = false;
-            }}
-          >
-            <XIcon size={18} />
-          </button>
-        </div>
+        <Grid3x3Icon size={18} />
+      </DashboardIconButton>
 
-        <div class="mt-3 space-y-3 sm:mt-4 sm:space-y-4">
-          <div class="space-y-2">
-            <div class="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.22em] text-muted">
-              <SlidersHorizontalIcon size={12} />
-              Sort
-            </div>
-            <DashboardSegmentedControl
-              ariaLabel="Sort mode"
-              options={[
-                { id: 'custom', label: 'Custom' },
-                { id: 'smart', label: 'Smart' }
-              ]}
-              value={sortMode}
-              onChange={(value) => {
-                void onSortChange(value as SortMode);
-              }}
-            />
-          </div>
-
-          <div class="space-y-2">
-            <div class="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.22em] text-muted">
-              <Grid3x3Icon size={12} />
-              Density
-            </div>
-            <DashboardSegmentedControl
-              ariaLabel="Density mode"
-              options={[
-                { id: 'comfortable', label: 'Cards' },
-                { id: 'compact', label: 'List' }
-              ]}
-              value={viewDensity}
-              onChange={(value) => {
-                void onDensityChange(value as ViewDensity);
-              }}
-            />
-          </div>
-
-          <div class="flex flex-wrap items-center gap-2">
-            <button
-              type="button"
-              class={`inline-flex min-h-11 items-center gap-2 rounded-full border px-3.5 py-2 text-sm font-semibold transition-colors ${filter === 'archived' ? 'border-accent/30 bg-accent/10 text-accent' : 'border-border bg-bg-secondary text-muted hover:text-foreground'}`}
-              aria-pressed={filter === 'archived'}
-              aria-label={filter === 'archived' ? 'Hide archived habits' : 'Show archived habits'}
-              onclick={() => {
-                void onFilterChange(filter === 'archived' ? 'all' : 'archived');
-              }}
-            >
-              <ArchiveIcon size={16} />
-              Archived
-            </button>
-
-            <button
-              type="button"
-              class="inline-flex min-h-11 items-center gap-2 rounded-full border border-border bg-bg-secondary px-4 py-2 text-sm font-semibold text-muted transition-colors hover:text-foreground"
-              onclick={() => {
-                void onExportCsv();
-              }}
-            >
-              <DownloadIcon size={16} />
-              Export CSV
-            </button>
-          </div>
-        </div>
-
-        <div class="mt-3 flex flex-wrap items-center justify-between gap-3 border-t border-border pt-3 sm:mt-4 sm:pt-4">
-          <div class="text-[11px] font-medium text-muted">
-            {activeOptionsCount > 0 ? `${activeOptionsCount} active option${activeOptionsCount === 1 ? '' : 's'}` : 'Default view'}
-          </div>
-          <DashboardIconButton ariaLabel="Add habit" onClick={onAddHabit}>
-            <PlusIcon size={18} />
-          </DashboardIconButton>
-        </div>
-      </div>
-      {/if}
+      <DashboardIconButton
+        ariaLabel={filter === 'archived' ? 'Hide archived habits' : 'Show archived habits'}
+        title={filter === 'archived' ? 'Hide archived habits' : 'Show archived habits'}
+        active={filter === 'archived'}
+        onClick={() => {
+          void onFilterChange(filter === 'archived' ? 'all' : 'archived');
+        }}
+      >
+        <ArchiveIcon size={18} />
+      </DashboardIconButton>
     </div>
   </div>
 

@@ -661,9 +661,6 @@
           selectedTags = [];
         }}
         onAddHabit={navigateToNewHabit}
-        onExportCsv={() => {
-          /* Export CSV lives in the full-screen stats view now. */
-        }}
       />
     </div>
 

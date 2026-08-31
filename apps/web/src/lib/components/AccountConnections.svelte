@@ -1,6 +1,14 @@
 <script lang="ts">
   import { onMount, tick } from 'svelte';
+  import { DownloadIcon } from 'lucide-svelte';
   import { detachAccountConnection, getAccountConnections, startTelegramLink, telegramMiniAppUrl, type AccountConnection, type AccountProvider } from '@/lib/api/accountLinks';
+  import type { Habit } from '@/types/habit';
+
+  type Props = {
+    habits?: Habit[];
+  };
+
+  let { habits = [] }: Props = $props();
 
   let connections = $state<AccountConnection[]>([]);
   let loading = $state(true);
@@ -90,6 +98,35 @@
     finally { working = false; }
   }
 
+  function csvCell(value: string | number | boolean): string {
+    const text = String(value);
+    return /[",\n]/.test(text) ? `"${text.replaceAll('"', '""')}"` : text;
+  }
+
+  function exportHabitsCsv() {
+    const header = ['name', 'description', 'icon', 'color', 'type', 'frequency', 'dailyTarget', 'targetStreak', 'tags', 'archived', 'completions'];
+    const rows = habits.map((habit) => [
+      habit.name,
+      habit.description,
+      habit.icon,
+      habit.color,
+      habit.type,
+      habit.frequency,
+      habit.dailyTarget,
+      habit.targetStreak,
+      habit.tags.join(', '),
+      habit.archived,
+      JSON.stringify(habit.completions)
+    ]);
+    const csv = [header, ...rows].map((row) => row.map((value) => csvCell(value)).join(',')).join('\n');
+    const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `habbit-runner-habits-${new Date().toISOString().slice(0, 10)}.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
+  }
+
   onMount(() => {
     void refresh();
     const timer = window.setInterval(() => void refresh(), 3_000);
@@ -126,6 +163,15 @@
     </div>
 
   {/if}
+
+  <div class="card">
+    <div class="card-main"><strong>Data export</strong><span class="identity">Download your habits and completion history.</span></div>
+    <button class="button" type="button" onclick={exportHabitsCsv}>
+      <DownloadIcon size={16} aria-hidden="true" />
+      Export CSV
+    </button>
+  </div>
+
   <dialog bind:this={unlinkDialog} class="confirm" aria-labelledby="unlink-title" aria-describedby="unlink-description" onclose={() => { confirmingProvider = null; }}>
     {#if confirmingProvider}
       <strong id="unlink-title">Unlink {confirmingProvider === 'TELEGRAM' ? 'Telegram' : 'Google/email'}?</strong>

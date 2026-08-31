@@ -161,15 +161,12 @@ async function expectOneRowHeatmap(container: ReturnType<Page['locator']>): Prom
   expect(firstBox!.width).toBeLessThanOrEqual(9);
   expect(firstBox!.x).toBeLessThan(lastBox!.x);
 }
-// The density toggle lives inside the View options popover in the shared toolbar.
+// The density toggle is an inline icon control in the shared toolbar.
 async function setDashboardDensity(page: Page, density: 'comfortable' | 'compact'): Promise<void> {
-  const label = density === 'compact' ? 'List' : 'Cards';
-  const densityButton = page.getByRole('group', { name: 'Density mode' }).getByRole('button', { name: label });
-  if ((await densityButton.count()) === 0) { await page.getByRole('button', { name: 'View options' }).click(); }
+  const label = density === 'compact' ? 'Cards' : 'List';
+  const densityButton = page.getByRole('button', { name: `View density: ${label}` });
   await densityButton.click();
-  await expect(densityButton).toHaveAttribute('aria-pressed', 'true');
-  await page.keyboard.press('Escape');
-  await page.getByRole('region', { name: 'Dashboard view options' }).waitFor({ state: 'detached' });
+  await expect(page.getByRole('button', { name: `View density: ${density === 'compact' ? 'List' : 'Cards'}` })).toHaveAttribute('aria-pressed', 'true');
 }
 // eslint-disable-next-line max-lines-per-function
 test.describe.serial('critical habit journey', () => {
@@ -423,8 +420,8 @@ test.describe.serial('scheduled dashboard summary', () => {
       } else {
         await expect(summary.getByLabel('Heatmap brightness legend')).toBeVisible();
         const summaryBox = await summary.boundingBox();
-        const optionsToggle = page.getByRole('button', { name: 'View options' });
-        const toolbarBox = await optionsToggle.boundingBox();
+        const densityToggle = page.getByRole('button', { name: /View density:/ });
+        const toolbarBox = await densityToggle.boundingBox();
         expect(summaryBox).not.toBeNull();
         expect(toolbarBox).not.toBeNull();
         expect(summaryBox!.y + summaryBox!.height).toBeLessThanOrEqual(toolbarBox!.y);

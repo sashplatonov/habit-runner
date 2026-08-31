@@ -21,8 +21,7 @@ function renderToolbar() {
     onDensityChange: vi.fn(),
     onToggleTag: vi.fn(),
     onClearTags: vi.fn(),
-    onAddHabit: vi.fn(),
-    onExportCsv: vi.fn()
+    onAddHabit: vi.fn()
   });
 }
 
@@ -40,7 +39,7 @@ describe('dashboard controls', () => {
 
     expect(screen.getByRole('button', { name: 'Add habit' }).classList.contains('min-h-11')).toBe(true);
     expect(screen.getByRole('button', { name: 'Open search' }).classList.contains('min-h-11')).toBe(true);
-    expect(screen.getByRole('button', { name: 'View options' }).classList.contains('min-h-11')).toBe(true);
+    expect(screen.getByRole('button', { name: 'Sort: Custom' }).classList.contains('min-h-11')).toBe(true);
   });
 
   it('keeps dashboard filters equal-width and centered beside add habit', () => {
@@ -53,33 +52,11 @@ describe('dashboard controls', () => {
     expect(filterGroup.parentElement?.querySelector('[aria-label="Add habit"]')).toBeTruthy();
   });
 
-  it('opens and closes view options from the same trigger', async () => {
-    const user = userEvent.setup();
-    renderToolbar();
-    const trigger = screen.getByRole('button', { name: 'View options' });
-
-    await user.click(trigger);
-    expect(screen.getByRole('region', { name: 'Dashboard view options' })).toBeTruthy();
-    expect(trigger.getAttribute('aria-expanded')).toBe('true');
-
-    await user.click(trigger);
-    expect(screen.queryByRole('region', { name: 'Dashboard view options' })).toBeNull();
-    expect(trigger.getAttribute('aria-expanded')).toBe('false');
-  });
-
-  it('closes view options with Escape', async () => {
-    const user = userEvent.setup();
-    renderToolbar();
-
-    await user.click(screen.getByRole('button', { name: 'View options' }));
-    await user.keyboard('{Escape}');
-
-    expect(screen.queryByRole('region', { name: 'Dashboard view options' })).toBeNull();
-  });
-
-  it('toggles the archived filter on and off', async () => {
+  it('toggles inline sort, density, and archived controls', async () => {
     const user = userEvent.setup();
     const onFilterChange = vi.fn();
+    const onSortChange = vi.fn();
+    const onDensityChange = vi.fn();
     render(DashboardToolbar, {
       filter: 'archived',
       searchQuery: '',
@@ -91,15 +68,18 @@ describe('dashboard controls', () => {
       onFilterChange,
       onSearchChange: vi.fn(),
       onClearSearch: vi.fn(),
-      onSortChange: vi.fn(),
-      onDensityChange: vi.fn(),
+      onSortChange,
+      onDensityChange,
       onToggleTag: vi.fn(),
       onClearTags: vi.fn(),
-      onAddHabit: vi.fn(),
-      onExportCsv: vi.fn()
+      onAddHabit: vi.fn()
     });
 
-    await user.click(screen.getByRole('button', { name: 'View options' }));
+    await user.click(screen.getByRole('button', { name: 'Sort: Custom' }));
+    await user.click(screen.getByRole('button', { name: 'View density: Cards' }));
+    expect(onSortChange).toHaveBeenCalledWith('smart');
+    expect(onDensityChange).toHaveBeenCalledWith('compact');
+
     const archivedButton = screen.getByRole('button', { name: 'Hide archived habits' });
     expect(archivedButton.getAttribute('aria-pressed')).toBe('true');
 
