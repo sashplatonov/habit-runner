@@ -1,6 +1,6 @@
 package com.sashplatonov.habbit.runner.auth.security;
 
-import com.sashplatonov.habbit.runner.auth.service.AuthService;
+import com.sashplatonov.habbit.runner.auth.service.TokenVerifier;
 import com.sashplatonov.habbit.runner.auth.service.PreferencesService;
 import com.sashplatonov.habbit.runner.auth.service.UserService;
 import com.sashplatonov.habbit.runner.auth.dto.UpdatePreferencesRequest;
@@ -36,7 +36,7 @@ class AuthDataAccessTest extends AuthenticatedApiTestSupport {
   );
 
   @Inject
-  AuthService authService;
+  TokenVerifier tokenVerifier;
 
   @Inject
   UserService userService;
@@ -131,7 +131,7 @@ class AuthDataAccessTest extends AuthenticatedApiTestSupport {
     var user = createAuthenticatedUser("cloud");
     var currentUserContext = new CurrentUserContext();
 
-    new AuthGuardFilter(authService, currentUserContext).filter(requestContext("Bearer " + user.accessToken()));
+    new AuthGuardFilter(tokenVerifier, currentUserContext).filter(requestContext("Bearer " + user.accessToken()));
 
     assertEquals(user.getId(), currentUserContext.requireUser().getId());
     assertEquals(user.email(), currentUserContext.requireUser().email());
@@ -139,7 +139,7 @@ class AuthDataAccessTest extends AuthenticatedApiTestSupport {
 
   @Test
   void shouldThrowUnauthorizedWhenAuthGuardReceivesMissingHeader() {
-    var filter = new AuthGuardFilter(authService, new CurrentUserContext());
+    var filter = new AuthGuardFilter(tokenVerifier, new CurrentUserContext());
 
     assertThrows(NotAuthorizedException.class, () -> filter.filter(requestContext(null)));
   }

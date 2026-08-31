@@ -1,6 +1,6 @@
 package com.sashplatonov.habbit.runner.auth.security;
 
-import com.sashplatonov.habbit.runner.auth.service.AuthService;
+import com.sashplatonov.habbit.runner.auth.service.TokenVerifier;
 import com.sashplatonov.habbit.runner.auth.support.AuthCookieBuilder;
 import jakarta.annotation.Priority;
 import jakarta.enterprise.context.RequestScoped;
@@ -16,11 +16,11 @@ import jakarta.ws.rs.ext.Provider;
 @RequireAuth
 @Priority(Priorities.AUTHENTICATION)
 public class AuthGuardFilter implements ContainerRequestFilter {
-  final AuthService authService;
+  final TokenVerifier tokenVerifier;
   final CurrentUserContext currentUserContext;
 
-  AuthGuardFilter(AuthService authService, CurrentUserContext currentUserContext) {
-    this.authService = authService;
+  AuthGuardFilter(TokenVerifier tokenVerifier, CurrentUserContext currentUserContext) {
+    this.tokenVerifier = tokenVerifier;
     this.currentUserContext = currentUserContext;
   }
 
@@ -31,7 +31,7 @@ public class AuthGuardFilter implements ContainerRequestFilter {
       throw new NotAuthorizedException("Authentication required");
     }
 
-    var user = authService.verifyAccessToken(token);
+    var user = tokenVerifier.verify(token);
     currentUserContext.setUser(user);
   }
 

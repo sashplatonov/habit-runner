@@ -1,15 +1,10 @@
 package com.sashplatonov.habbit.runner.auth.resource;
 
-import com.sashplatonov.habbit.runner.auth.ResourceAuthService;
 import com.sashplatonov.habbit.runner.auth.ResourcePreferencesService;
 import com.sashplatonov.habbit.runner.auth.dto.UserPreferencesResponse;
 import com.sashplatonov.habbit.runner.auth.security.CurrentUser;
 import com.sashplatonov.habbit.runner.auth.security.CurrentUserContext;
-import com.sashplatonov.habbit.runner.auth.support.AuthCookieBuilder;
-import com.sashplatonov.habbit.runner.auth.support.AuthRateLimitService;
-import com.sashplatonov.habbit.runner.auth.support.AuthResourceSupport;
 import com.sashplatonov.habbit.runner.auth.dto.UpdatePreferencesRequest;
-import com.sashplatonov.habbit.runner.support.TestConfigFactory;
 import com.sashplatonov.habbit.runner.support.TestHelpers;
 import org.junit.jupiter.api.Test;
 
@@ -24,7 +19,7 @@ class AuthPreferencesResourceUnitTest {
     preferencesService.setUpdateResponse(new UserPreferencesResponse("matrix", null));
     var currentUserContext = new CurrentUserContext();
     currentUserContext.setUser(new CurrentUser("user-1", "user@example.test"));
-    var resource = resource(new ResourceAuthService(), preferencesService, currentUserContext);
+    var resource = new AuthPreferencesResource(preferencesService, currentUserContext);
 
     var current = resource.getPreferences();
     var updated = resource.updatePreferences(new UpdatePreferencesRequest("matrix", null));
@@ -37,21 +32,5 @@ class AuthPreferencesResourceUnitTest {
         preferencesService.getUpdateResponse(),
         TestHelpers.entityOf(updated, UserPreferencesResponse.class));
     assertEquals("matrix", preferencesService.getLastRequestTheme());
-  }
-
-  private AuthResource resource(
-      ResourceAuthService authService,
-      ResourcePreferencesService preferencesService,
-      CurrentUserContext currentUserContext
-  ) {
-    return new AuthResource(
-        authService,
-        preferencesService,
-        currentUserContext,
-        new AuthResourceSupport(
-            new AuthCookieBuilder(TestConfigFactory.defaultAuthConfig()),
-            new AuthRateLimitService()
-        )
-    );
   }
 }

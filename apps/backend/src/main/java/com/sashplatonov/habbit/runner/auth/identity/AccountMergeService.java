@@ -8,7 +8,7 @@ import jakarta.transaction.Transactional;
 @ApplicationScoped
 public class AccountMergeService {
   @PersistenceContext
-  EntityManager entityManager;
+  private EntityManager entityManager;
 
   @Transactional
   public void merge(String survivorUserId, String absorbedUserId) {

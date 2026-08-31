@@ -45,6 +45,10 @@ public class AuthCookieBuilder {
     return cookie(CSRF_TOKEN_COOKIE, "", 0, false);
   }
 
+  public int refreshTokenMaxAgeSeconds() {
+    return authConfig.refreshTokenDays() * 24 * 60 * 60;
+  }
+
   private NewCookie cookie(String name, String value, int maxAge, boolean httpOnly) {
     return new NewCookie.Builder(name)
         .value(value)
