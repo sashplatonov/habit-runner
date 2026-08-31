@@ -142,10 +142,12 @@
   title={triggerLabel}
   active={open}
   toggle={true}
+  stopPropagation={true}
   expanded={open}
   controls={panelId}
   class={`cursor-help ${triggerClassName}`}
-  onClick={() => {
+  onClick={(event) => {
+    event.stopPropagation();
     if (open && pinned) {
       closePanel();
     } else {

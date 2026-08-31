@@ -45,4 +45,21 @@ describe('DescriptionTooltip', () => {
     expect(secondId).toBeTruthy();
     expect(firstId).not.toBe(secondId);
   });
+
+  it('keeps the trigger click from reaching a clickable habit card', async () => {
+    const user = userEvent.setup();
+    render(DescriptionTooltip, { props: { description: 'Habit details' } });
+    const trigger = screen.getByRole('button', { name: 'Description' });
+    let parentClicked = false;
+    const parentClickHandler = () => {
+      parentClicked = true;
+    };
+    document.body.addEventListener('click', parentClickHandler);
+
+    await user.click(trigger);
+
+    document.body.removeEventListener('click', parentClickHandler);
+    expect(parentClicked).toBe(false);
+    expect(screen.getByRole('dialog', { name: 'Description' })).toBeTruthy();
+  });
 });

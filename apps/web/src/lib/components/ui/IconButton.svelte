@@ -8,11 +8,12 @@
     toggle?: boolean;
     disabled?: boolean;
     loading?: boolean;
+    stopPropagation?: boolean;
     expanded?: boolean;
     controls?: string;
     class?: string;
     element?: HTMLButtonElement | null;
-    onClick?: () => void | Promise<void>;
+    onClick?: (event: MouseEvent) => void | Promise<void>;
     onMouseEnter?: () => void;
     onMouseLeave?: () => void;
     onFocus?: (event: FocusEvent) => void;
@@ -27,6 +28,7 @@
     toggle = false,
     disabled = false,
     loading = false,
+    stopPropagation = false,
     expanded,
     controls,
     class: className = '',
@@ -51,9 +53,12 @@
   aria-busy={loading}
   disabled={disabled || loading}
   class={`inline-flex min-h-11 min-w-11 items-center justify-center rounded-[1rem] border transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 focus-visible:ring-offset-2 focus-visible:ring-offset-bg-primary ${active ? 'border-accent/30 bg-accent/12 text-accent shadow-[0_12px_26px_rgba(15,23,42,0.08)]' : 'border-border bg-bg-secondary text-muted hover:border-border-hover hover:text-foreground'} ${disabled || loading ? 'cursor-not-allowed opacity-50' : ''} ${className}`.trim()}
-  onclick={() => {
+  onclick={(event) => {
+    if (stopPropagation) {
+      event.stopPropagation();
+    }
     if (!disabled && !loading) {
-      void onClick?.();
+      void onClick?.(event);
     }
   }}
   onmouseenter={onMouseEnter}

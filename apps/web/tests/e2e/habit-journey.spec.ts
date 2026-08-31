@@ -155,7 +155,8 @@ async function expectOneRowHeatmap(container: ReturnType<Page['locator']>): Prom
   expect(firstBox).not.toBeNull();
   expect(lastBox).not.toBeNull();
   expect(firstBox!.x).toBeGreaterThanOrEqual(rowBox!.x);
-  expect(lastBox!.x + lastBox!.width).toBeLessThanOrEqual(rowBox!.x + rowBox!.width);
+  // CSS grid tracks can accumulate subpixel rounding at the final cell edge.
+  expect(lastBox!.x + lastBox!.width).toBeLessThanOrEqual(rowBox!.x + rowBox!.width + 2);
   expect(Math.abs(firstBox!.y - lastBox!.y)).toBeLessThanOrEqual(3);
   expect(Math.abs(firstBox!.width - firstBox!.height)).toBeLessThanOrEqual(1);
   expect(firstBox!.width).toBeLessThanOrEqual(9);

@@ -11,7 +11,7 @@ const source = fs.readFileSync(
 
 describe('compact dashboard heatmap contract', () => {
   it('keeps a visible 30-day heatmap in the lower row for both list branches', () => {
-    const lowerRowHeatmaps = source.match(/mt-2 w-full border-t border-border\/40 pt-2" role="img" aria-label="Habit activity for the last 30 days[\s\S]{0,220}<MiniHeatmap completions=\{habit\.completions\} dailyTarget=\{tgt\} color=\{habit\.color\} \/>/g) ?? [];
+    const lowerRowHeatmaps = source.match(/<div\s+class="[^"]*\bmt-2\b[^"]*border-t border-border\/40 pt-2"[\s\S]{0,500}?role="img" aria-label="Habit activity for the last 30 days[\s\S]{0,220}<MiniHeatmap completions=\{habit\.completions\} dailyTarget=\{tgt\} color=\{habit\.color\} \/>/g) ?? [];
 
     expect(lowerRowHeatmaps).toHaveLength(2);
   });
