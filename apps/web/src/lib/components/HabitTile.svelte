@@ -4,7 +4,6 @@
   import HabitCompletionControl from '$lib/components/habits/HabitCompletionControl.svelte';
   import DescriptionTooltip from '$lib/components/DescriptionTooltip.svelte';
   import MiniHeatmap from '$lib/components/MiniHeatmap.svelte';
-  import ChartGuideTooltip from '$lib/components/ChartGuideTooltip.svelte';
   import { HABIT_COLOR_THEMES } from '$lib/theme/habit-colors';
   import { computeTileHint } from '$lib/habits/tileHint';
   import {
@@ -83,34 +82,21 @@
   <!-- Accent bar -->
   <div class="h-[3px] w-full" style:background={accent.hex}></div>
 
-  <div class="p-3 flex flex-col" style="min-height: 120px;">
-    <!-- Top row: icon + tooltip + ring -->
-    <div class="flex items-center justify-between mb-2">
-      <div class="ml-auto flex items-center gap-1">
-        <ChartGuideTooltip
-          title="{habitLabel} card"
-          summary="This card is your quick control surface for one habit: review today's status, recent consistency, and mark progress without opening details."
-          focusPoints={[
-            'Top-right ring: long-term completion rate for this habit.',
-            'Bottom heatmap: recent activity pattern and dead zones.',
-            'Action button: log today progress directly from the dashboard.'
-          ]}
-          variant="grid"
-          triggerClassName="h-11 w-11"
-        />
-        <CompletionRing percentage={completionRate} size={26} strokeWidth={2.5} color={habit.color} showText={false} />
-      </div>
+  <div class="flex min-h-[108px] flex-col p-2.5">
+    <!-- Top row: completion ring -->
+    <div class="mb-1 flex items-center justify-end">
+      <CompletionRing percentage={completionRate} size={24} strokeWidth={2.25} color={habit.color} showText={false} />
     </div>
 
-      <!-- Name + meta -->
+    <!-- Name + meta -->
     <div class="flex-1 min-w-0 text-left">
-      <div class="flex items-center gap-1 leading-tight">
+      <div class="flex min-h-[2.75rem] items-start gap-1 leading-tight">
         <button
           type="button"
-          class="flex min-h-11 min-w-0 flex-1 items-center text-left text-sm font-semibold transition-colors hover:text-accent {completed ? 'text-muted line-through' : 'text-foreground'}"
+          class="flex min-h-11 min-w-0 flex-1 items-center whitespace-normal text-left text-sm font-semibold transition-colors hover:text-accent {completed ? 'text-muted line-through' : 'text-foreground'}"
           onclick={onDetail}
         >
-          <span class="truncate">{habitLabel}</span>
+          <span class="line-clamp-2">{habitLabel}</span>
           {#if target > 1}
             <span class="ml-1 flex-shrink-0 rounded bg-accent/10 px-1 py-0.5 text-[10px] font-mono font-medium text-accent-secondary">×{target}</span>
           {/if}
@@ -153,7 +139,7 @@
     </div>
 
     <!-- Bottom row: heatmap + toggle -->
-    <div class="flex items-center justify-between mt-2 pt-1 border-t border-border/30">
+    <div class="mt-1.5 flex items-center justify-between border-t border-border/30 pt-1">
       <div
         class="relative z-10 flex min-w-0 flex-1 items-center pr-3"
         role="img"
