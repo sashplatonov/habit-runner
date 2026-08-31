@@ -252,7 +252,7 @@ git commit -m "chore(quality): migrate deprecated PMD rules"
 
 ## JAVA-LINT-004: Explicitly enforce uppercase Java enum member names
 
-**Status:** TODO
+**Status:** DONE
 **Priority:** P2
 **Depends on:** JAVA-LINT-003
 
