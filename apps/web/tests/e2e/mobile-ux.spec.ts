@@ -19,7 +19,8 @@ test.describe('compact mobile UX baseline', () => {
 
     await page.getByRole('button', { name: 'More actions' }).click();
     await expect(page.getByRole('button', { name: 'Search habits' })).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Choose color theme' })).toHaveCount(0);
+    await expect(page.getByRole('button', { name: 'Choose color theme' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Switch to Midnight theme' })).toHaveCount(0);
     await page.getByRole('button', { name: 'Close menu' }).last().click();
     await expect(page.getByRole('button', { name: 'More actions' })).toBeFocused();
 
@@ -81,6 +82,7 @@ test.describe('compact mobile UX baseline', () => {
   test('keeps theme choices reachable inside More', async ({ page }) => {
     await page.goto('/showcase');
     await page.getByRole('button', { name: 'More actions' }).click();
+    await page.getByRole('button', { name: 'Choose color theme' }).click();
 
     const themeButton = page.getByRole('button', { name: 'Switch to Midnight theme' });
     await expect(themeButton).toBeVisible();
