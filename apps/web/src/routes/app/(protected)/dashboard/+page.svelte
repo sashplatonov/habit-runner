@@ -669,7 +669,7 @@
     <RemindersPanel />
 
     <!-- ═══════════ HABIT LIST ════════════════════════════════════════════════ -->
-    <div class="mx-auto px-4 py-4 sm:px-6 {viewDensity === 'comfortable' ? 'max-w-6xl' : 'max-w-5xl'}">
+    <div class="mx-auto max-w-5xl px-4 py-4 sm:px-6">
       {#if filteredHabits.length === 0}
         <div class="rounded-[1.75rem] border border-border bg-bg-secondary/88 py-16 text-center text-muted shadow-[0_20px_54px_rgba(15,23,42,0.08)]">
           <p class="text-4xl mb-3">
