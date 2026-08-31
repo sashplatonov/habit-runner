@@ -20,7 +20,6 @@
     Shield, Activity, Star, Trophy, SnowflakeIcon, Moon
   } from 'lucide-svelte';
   import DashboardToolbar from '$lib/components/dashboard/DashboardToolbar.svelte';
-  import CompletionRing from '$lib/components/CompletionRing.svelte';
   import MiniHeatmap from '$lib/components/MiniHeatmap.svelte';
   import HabitTile from '$lib/components/HabitTile.svelte';
   import Onboarding from '$lib/components/Onboarding.svelte';
@@ -930,7 +929,6 @@
                             {streak}
                           </span>
                         {/if}
-                        <CompletionRing percentage={completionRate} size={26} strokeWidth={2.5} color={habit.color} showText={false} />
                         <div class="hidden h-4 items-end gap-[2px] sm:flex">
                           {#each last7 as done, lj ('' + lj)}
                             <div
@@ -1149,7 +1147,6 @@
                           {streak}
                         </span>
                       {/if}
-                      <CompletionRing percentage={completionRate} size={26} strokeWidth={2.5} color={habit.color} showText={false} />
                       <div class="hidden sm:flex items-end gap-[2px] h-4">
                         {#each last7 as done, lj ('' + lj)}
                           <div

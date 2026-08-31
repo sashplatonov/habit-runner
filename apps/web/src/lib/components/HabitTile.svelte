@@ -1,6 +1,5 @@
 <script lang="ts">
   import { Flame, SnowflakeIcon, Moon } from 'lucide-svelte';
-  import CompletionRing from '$lib/components/CompletionRing.svelte';
   import HabitCompletionControl from '$lib/components/habits/HabitCompletionControl.svelte';
   import DescriptionTooltip from '$lib/components/DescriptionTooltip.svelte';
   import MiniHeatmap from '$lib/components/MiniHeatmap.svelte';
@@ -101,14 +100,6 @@
         {#if habit.description}
           <DescriptionTooltip description={habit.description} triggerClassName="h-11 w-11" />
         {/if}
-        <CompletionRing
-          percentage={completionRate}
-          size={24}
-          strokeWidth={2.25}
-          color={habit.color}
-          showText={false}
-          className="shrink-0"
-        />
       </div>
 
       <!-- Streak and recovery signal -->
