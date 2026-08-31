@@ -92,7 +92,7 @@
     <DashboardSegmentedControl
       ariaLabel="Dashboard filter"
       options={filterOptions}
-      value={filter === 'archived' ? 'all' : filter}
+      value={filter === 'archived' ? '' : filter}
       onChange={(value) => {
         void onFilterChange(value as Filter);
       }}
@@ -182,7 +182,7 @@
         id="dashboard-view-options"
         role="region"
         aria-label="Dashboard view options"
-        class="absolute right-0 top-full z-[80] mt-2 max-h-[min(70vh,38rem)] w-[min(calc(100vw-2rem),34rem)] overflow-y-auto overscroll-contain rounded-[1.5rem] border border-border bg-bg-card p-4 shadow-[0_24px_60px_rgba(15,23,42,0.18)]"
+        class="absolute right-0 top-full z-[80] mt-2 max-h-[min(70vh,34rem)] w-[min(calc(100vw-2rem),24rem)] overflow-y-auto overscroll-contain rounded-[1.35rem] border border-border bg-bg-card p-3 shadow-[0_24px_60px_rgba(15,23,42,0.18)] sm:p-4"
       >
         <div class="flex items-center justify-between gap-3">
           <div>
@@ -201,7 +201,7 @@
           </button>
         </div>
 
-        <div class="mt-4 space-y-4">
+        <div class="mt-3 space-y-3 sm:mt-4 sm:space-y-4">
           <div class="space-y-2">
             <div class="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.22em] text-muted">
               <SlidersHorizontalIcon size={12} />
@@ -241,8 +241,12 @@
           <div class="flex flex-wrap items-center gap-2">
             <button
               type="button"
-              class={`inline-flex min-h-11 items-center gap-2 rounded-full border px-4 py-2 text-sm font-semibold transition-colors ${filter === 'archived' ? 'border-accent/30 bg-accent/10 text-accent' : 'border-border bg-bg-secondary text-muted hover:text-foreground'}`}
-              onclick={() => onFilterChange('archived')}
+              class={`inline-flex min-h-11 items-center gap-2 rounded-full border px-3.5 py-2 text-sm font-semibold transition-colors ${filter === 'archived' ? 'border-accent/30 bg-accent/10 text-accent' : 'border-border bg-bg-secondary text-muted hover:text-foreground'}`}
+              aria-pressed={filter === 'archived'}
+              aria-label={filter === 'archived' ? 'Hide archived habits' : 'Show archived habits'}
+              onclick={() => {
+                void onFilterChange(filter === 'archived' ? 'all' : 'archived');
+              }}
             >
               <ArchiveIcon size={16} />
               Archived
@@ -261,7 +265,7 @@
           </div>
         </div>
 
-        <div class="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-border pt-4">
+        <div class="mt-3 flex flex-wrap items-center justify-between gap-3 border-t border-border pt-3 sm:mt-4 sm:pt-4">
           <div class="text-[11px] font-medium text-muted">
             {activeOptionsCount > 0 ? `${activeOptionsCount} active option${activeOptionsCount === 1 ? '' : 's'}` : 'Default view'}
           </div>

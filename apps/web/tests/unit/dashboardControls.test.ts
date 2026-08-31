@@ -77,6 +77,36 @@ describe('dashboard controls', () => {
     expect(screen.queryByRole('region', { name: 'Dashboard view options' })).toBeNull();
   });
 
+  it('toggles the archived filter on and off', async () => {
+    const user = userEvent.setup();
+    const onFilterChange = vi.fn();
+    render(DashboardToolbar, {
+      filter: 'archived',
+      searchQuery: '',
+      sortMode: 'custom',
+      viewDensity: 'comfortable',
+      pendingCount: 2,
+      activeTags: [],
+      availableTags: [],
+      onFilterChange,
+      onSearchChange: vi.fn(),
+      onClearSearch: vi.fn(),
+      onSortChange: vi.fn(),
+      onDensityChange: vi.fn(),
+      onToggleTag: vi.fn(),
+      onClearTags: vi.fn(),
+      onAddHabit: vi.fn(),
+      onExportCsv: vi.fn()
+    });
+
+    await user.click(screen.getByRole('button', { name: 'View options' }));
+    const archivedButton = screen.getByRole('button', { name: 'Hide archived habits' });
+    expect(archivedButton.getAttribute('aria-pressed')).toBe('true');
+
+    await user.click(archivedButton);
+    expect(onFilterChange).toHaveBeenCalledWith('all');
+  });
+
   it('renders and invokes the summary next action', async () => {
     const user = userEvent.setup();
     const onPrimaryAction = vi.fn();
