@@ -5,7 +5,7 @@ import DashboardToolbar from '$lib/components/dashboard/DashboardToolbar.svelte'
 import TodaySummary from '$lib/components/dashboard/TodaySummary.svelte';
 import { buildTodaySummary } from '$lib/dashboard/todaySummary';
 
-function renderToolbar() {
+function renderToolbar(overrides: Record<string, unknown> = {}) {
   return render(DashboardToolbar, {
     filter: 'pending',
     searchQuery: '',
@@ -21,17 +21,38 @@ function renderToolbar() {
     onDensityChange: vi.fn(),
     onToggleTag: vi.fn(),
     onClearTags: vi.fn(),
-    onAddHabit: vi.fn()
+    onAddHabit: vi.fn(),
+    ...overrides
   });
 }
 
 describe('dashboard controls', () => {
-  it('shows tag filters below the search without opening view options', () => {
+  it('keeps mobile filters collapsed until the user expands them', async () => {
+    const user = userEvent.setup();
     renderToolbar();
 
+    const toggle = screen.getByRole('button', { name: 'Filters, 0 active filters' });
+    const panel = document.getElementById('dashboard-mobile-filters');
+
+    expect(toggle.getAttribute('aria-expanded')).toBe('false');
+    expect(panel?.className).toContain('hidden');
+
+    await user.click(toggle);
+
+    expect(toggle.getAttribute('aria-expanded')).toBe('true');
+    expect(panel?.className).not.toContain('hidden');
     expect(screen.getByRole('button', { name: 'All tags' })).toBeTruthy();
     expect(screen.getByRole('button', { name: '#health' })).toBeTruthy();
-    expect(screen.queryByRole('region', { name: 'Dashboard view options' })).toBeNull();
+  });
+
+  it('shows the number of active filters in the mobile disclosure', () => {
+    renderToolbar({
+      filter: 'done',
+      activeTags: ['health', 'focus'],
+      availableTags: ['health', 'focus']
+    });
+
+    expect(screen.getByRole('button', { name: 'Filters, 3 active filters' })).toBeTruthy();
   });
 
   it('keeps primary mobile controls touch-sized', () => {
@@ -45,7 +66,7 @@ describe('dashboard controls', () => {
   it('keeps dashboard filters equal-width and centered beside add habit', () => {
     renderToolbar();
 
-    const filterGroup = screen.getByRole('group', { name: 'Dashboard filter' });
+    const filterGroup = screen.getAllByRole('group', { name: 'Dashboard filter' })[0];
     expect(filterGroup.className).toContain('[&>button]:flex-1');
     expect(filterGroup.className).toContain('[&>button]:justify-center');
     expect(filterGroup.parentElement?.className).toContain('justify-center');

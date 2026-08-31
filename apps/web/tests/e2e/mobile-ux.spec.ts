@@ -29,6 +29,25 @@ test.describe('compact mobile UX baseline', () => {
     await expectNoHorizontalOverflow(page);
   });
 
+  test('keeps filters compact until they are requested', async ({ page }) => {
+    await page.setViewportSize({ width: 320, height: 740 });
+    await page.goto('/showcase');
+
+    const filtersToggle = page.getByRole('button', { name: 'Filters, 0 active filters' });
+    const filtersPanel = page.locator('#dashboard-mobile-filters');
+
+    await expect(filtersToggle).toBeVisible();
+    await expect(filtersToggle).toHaveAttribute('aria-expanded', 'false');
+    await expect(filtersPanel).toBeHidden();
+
+    await filtersToggle.click();
+
+    await expect(filtersToggle).toHaveAttribute('aria-expanded', 'true');
+    await expect(filtersPanel).toBeVisible();
+    await expect(page.getByRole('button', { name: 'All tags' })).toBeVisible();
+    await expectNoHorizontalOverflow(page);
+  });
+
   test('keeps Progress readable and switchable', async ({ page }) => {
     await page.setViewportSize({ width: 320, height: 740 });
     await page.goto('/showcase/stats');

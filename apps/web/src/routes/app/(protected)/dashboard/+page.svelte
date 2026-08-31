@@ -24,6 +24,7 @@
   import MiniHeatmap from '$lib/components/MiniHeatmap.svelte';
   import HabitTile from '$lib/components/HabitTile.svelte';
   import Onboarding from '$lib/components/Onboarding.svelte';
+  import PageLoadingSpinner from '$lib/components/PageLoadingSpinner.svelte';
   import RemindersPanel from '$lib/components/RemindersPanel.svelte';
   import DescriptionTooltip from '$lib/components/DescriptionTooltip.svelte';
   import type { OnboardingTemplate } from '$lib/components/onboarding';
@@ -619,7 +620,11 @@
   <title>Dashboard - Habbit Runner</title>
 </svelte:head>
 
-{#if $habitsStore.habits.length === 0}
+{#if !$habitsStore.hasHydrated}
+  <div class="min-h-screen bg-transparent">
+    <PageLoadingSpinner label="Loading habits…" />
+  </div>
+{:else if $habitsStore.habits.length === 0}
   <Onboarding onCreateCustom={navigateToNewHabit} onTemplateSelect={handleTemplateSelect} activeTemplate={addingTemplate} />
 {:else}
   <div class="min-h-screen bg-transparent">
