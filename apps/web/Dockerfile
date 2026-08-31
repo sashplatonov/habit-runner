@@ -2,6 +2,9 @@
 FROM node:22.23.1 AS build
 WORKDIR /app
 
+# Bound Vite/esbuild memory when this image is built alongside the API image.
+ENV NODE_OPTIONS="--max-old-space-size=1024"
+
 # Copy dependency manifests first so npm install stays cached across source changes.
 COPY package.json package-lock.json ./
 COPY packages/shared/package.json ./packages/shared/

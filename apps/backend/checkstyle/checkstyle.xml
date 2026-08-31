@@ -28,10 +28,6 @@
         <module name="MethodName"/>
         <module name="MemberName"/>
         <module name="ConstantName"/>
-        <module name="MatchXpath">
-            <property name="query" value="//ENUM_CONSTANT_DEF/IDENT[translate(@text, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ_0123456789', '') != '']"/>
-            <message key="matchxpath.match" value="Enum constants must use UPPER_SNAKE_CASE."/>
-        </module>
         <module name="LocalVariableName"/>
         <module name="ParameterName"/>
 

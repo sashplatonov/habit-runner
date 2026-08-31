@@ -3,7 +3,8 @@
 FROM docker.io/library/eclipse-temurin:25-jdk AS build
 WORKDIR /workspace
 
-ENV MAVEN_OPTS="-XX:MaxRAMPercentage=70 -XX:ActiveProcessorCount=1"
+# Keep the API build bounded when Dokploy builds API and web images together.
+ENV MAVEN_OPTS="-Xms256m -Xmx1024m -XX:ActiveProcessorCount=1"
 
 # Copy build metadata first so Maven dependencies can stay cached across source changes.
 COPY .mvn .mvn
@@ -17,7 +18,7 @@ RUN --mount=type=cache,target=/root/.m2 ./mvnw -B -T1 -Dmaven.test.skip=true dep
 # Copy application sources after dependency warmup to avoid invalidating the cache on every change.
 COPY src src
 
-RUN --mount=type=cache,target=/root/.m2 ./mvnw -B -T1 -Djacoco.skip=true -Dmaven.test.skip=true -Dtest.jvm.argline.extra="-XX:ActiveProcessorCount=1 -XX:MaxRAMPercentage=70" package
+RUN --mount=type=cache,target=/root/.m2 ./mvnw -B -T1 -Djacoco.skip=true -Dmaven.test.skip=true -Dtest.jvm.argline.extra="-Xms256m -Xmx1024m -XX:ActiveProcessorCount=1" package
 
 FROM docker.io/library/eclipse-temurin:25-jre AS runtime
 WORKDIR /work
