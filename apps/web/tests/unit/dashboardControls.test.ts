@@ -27,12 +27,12 @@ function renderToolbar(overrides: Record<string, unknown> = {}) {
 }
 
 describe('dashboard controls', () => {
-  it('keeps mobile filters collapsed until the user expands them', async () => {
+  it('keeps the filter panel collapsed until the user expands it', async () => {
     const user = userEvent.setup();
     renderToolbar();
 
-    const toggle = screen.getByRole('button', { name: 'Filters, 0 active filters' });
-    const panel = document.getElementById('dashboard-mobile-filters');
+    const toggle = screen.getByRole('button', { name: /To do habits/ });
+    const panel = document.getElementById('dashboard-filter-panel');
 
     expect(toggle.getAttribute('aria-expanded')).toBe('false');
     expect(panel?.className).toContain('hidden');
@@ -45,32 +45,31 @@ describe('dashboard controls', () => {
     expect(screen.getByRole('button', { name: '#health' })).toBeTruthy();
   });
 
-  it('shows the number of active filters in the mobile disclosure', () => {
+  it('shows the number of active filters in the status bar', () => {
     renderToolbar({
       filter: 'done',
       activeTags: ['health', 'focus'],
       availableTags: ['health', 'focus']
     });
 
-    expect(screen.getByRole('button', { name: 'Filters, 3 active filters' })).toBeTruthy();
+    expect(screen.getByLabelText('3 active filters')).toBeTruthy();
   });
 
   it('keeps primary mobile controls touch-sized', () => {
     renderToolbar();
 
     expect(screen.getByRole('button', { name: 'Add habit' }).classList.contains('min-h-11')).toBe(true);
-    expect(screen.getByRole('button', { name: 'Open search' }).classList.contains('min-h-11')).toBe(true);
-    expect(screen.getByRole('button', { name: 'Sort: Custom' }).classList.contains('min-h-11')).toBe(true);
+    expect(screen.getByRole('searchbox', { name: 'Search habits' })).toBeTruthy();
   });
 
-  it('keeps dashboard filters equal-width and centered beside add habit', () => {
+  it('keeps dashboard filters equal-width in the expanded panel', async () => {
+    const user = userEvent.setup();
     renderToolbar();
 
-    const filterGroup = screen.getAllByRole('group', { name: 'Dashboard filter' })[0];
-    expect(filterGroup.className).toContain('[&>button]:flex-1');
-    expect(filterGroup.className).toContain('[&>button]:justify-center');
-    expect(filterGroup.parentElement?.className).toContain('justify-center');
-    expect(filterGroup.parentElement?.querySelector('[aria-label="Add habit"]')).toBeTruthy();
+    await user.click(screen.getByRole('button', { name: /To do habits/ }));
+    const filterGroup = screen.getByRole('group', { name: 'Dashboard filter' });
+    expect(filterGroup.querySelectorAll('button')).toHaveLength(3);
+    expect(screen.getByRole('button', { name: 'Add habit' })).toBeTruthy();
   });
 
   it('toggles inline sort, density, and archived controls', async () => {
@@ -96,8 +95,8 @@ describe('dashboard controls', () => {
       onAddHabit: vi.fn()
     });
 
-    await user.click(screen.getByRole('button', { name: 'Sort: Custom' }));
-    await user.click(screen.getByRole('button', { name: 'View density: Cards' }));
+    await user.click(screen.getByRole('button', { name: 'Toggle smart sort' }));
+    await user.click(screen.getByRole('button', { name: 'Toggle view density' }));
     expect(onSortChange).toHaveBeenCalledWith('smart');
     expect(onDensityChange).toHaveBeenCalledWith('compact');
 

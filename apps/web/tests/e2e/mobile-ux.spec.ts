@@ -34,8 +34,8 @@ test.describe('compact mobile UX baseline', () => {
     await page.setViewportSize({ width: 320, height: 740 });
     await page.goto('/showcase');
 
-    const filtersToggle = page.getByRole('button', { name: 'Filters, 0 active filters' });
-    const filtersPanel = page.locator('#dashboard-mobile-filters');
+    const filtersToggle = page.getByRole('button', { name: /To do habits/ });
+    const filtersPanel = page.locator('#dashboard-filter-panel');
 
     await expect(filtersToggle).toBeVisible();
     await expect(filtersToggle).toHaveAttribute('aria-expanded', 'false');
