@@ -61,41 +61,43 @@
   }
 </script>
 
-<div role="region" aria-label="Scheduled completion summary">
+<div class="mx-auto w-full max-w-5xl px-4 pt-2 sm:px-6" role="region" aria-label="Scheduled completion summary">
 <Surface as="section" padding="none" class="relative overflow-hidden">
   <div class="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-accent/10 via-accent/60 to-progress/20" aria-hidden="true"></div>
   <p class="sr-only" aria-live="polite">{todayBarLabel()}</p>
 
-  <div data-layout="desktop" class="desktop-summary p-4 sm:p-5">
-    <div class="flex items-end justify-between gap-6">
+  <div data-layout="desktop" class="desktop-summary p-3 sm:p-4">
+    <div class="flex items-center justify-between gap-4">
       <div class="min-w-0">
-        <p class="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted">{dateLabel}</p>
-        <h1 class="mt-1 text-xl font-semibold tracking-tight text-foreground">Daily completion</h1>
+        <div class="flex min-w-0 items-baseline gap-2">
+          <h1 class="truncate text-base font-semibold tracking-tight text-foreground">Daily completion</h1>
+          <p class="truncate text-[10px] font-semibold uppercase tracking-[0.16em] text-muted">{dateLabel}</p>
+        </div>
       </div>
-      <div class="flex shrink-0 items-end gap-5 text-right">
+      <div class="flex shrink-0 items-center gap-4 text-right">
         <div>
-          <strong class="block text-xl font-semibold tabular-nums text-foreground">{summary.perfectDays}</strong>
-          <span class="text-[10px] uppercase tracking-[0.12em] text-muted">perfect days</span>
+          <strong class="text-base font-semibold tabular-nums text-foreground">{summary.perfectDays}</strong>
+          <span class="ml-1 text-[9px] uppercase tracking-[0.1em] text-muted">perfect days</span>
         </div>
         <div>
-          <strong class="block text-xl font-semibold tabular-nums text-foreground">{scoreLabel(summary.today.percentage)}</strong>
-          <span class="text-[10px] uppercase tracking-[0.12em] text-muted">today</span>
+          <strong class="text-base font-semibold tabular-nums text-foreground">{scoreLabel(summary.today.percentage)}</strong>
+          <span class="ml-1 text-[9px] uppercase tracking-[0.1em] text-muted">today</span>
         </div>
       </div>
     </div>
 
-    <div class="mt-5 border-t border-border/60 pt-4">
-      <div class="mb-2 flex items-center justify-between gap-3">
+    <div class="mt-3">
+      <div class="mb-1.5 flex items-center justify-between gap-3">
         <span class="text-xs text-muted">30 days</span>
-        <span class="text-[11px] text-muted">Brighter means more complete</span>
+        <span class="text-[10px] text-muted">Brighter means more complete</span>
       </div>
       <div class="grid grid-cols-[repeat(30,minmax(0,1fr))] gap-1" role="img" aria-label="30-day scheduled completion heatmap" aria-describedby="scheduled-completion-desktop-heatmap-description">
         {#each summary.days as day, index (day.calendarDate + '-' + index)}
-          <span class={`h-3.5 rounded-[3px] ${cellClass(day)}`} aria-label={dayLabel(day)} title={dayLabel(day)}></span>
+          <span class={`h-3 rounded-[3px] ${cellClass(day)}`} aria-label={dayLabel(day)} title={dayLabel(day)}></span>
         {/each}
       </div>
       <span id="scheduled-completion-desktop-heatmap-description" class="sr-only">{heatmapDescription()}</span>
-      <div class="mt-2 flex items-center gap-1.5 text-[10px] text-muted" aria-label="Heatmap brightness legend">
+      <div class="mt-1.5 flex items-center gap-1.5 text-[9px] text-muted" aria-label="Heatmap brightness legend">
         <span class="h-2.5 w-2.5 rounded-sm border border-dashed border-border bg-bg-secondary/70" aria-hidden="true"></span>
         <span>none scheduled</span>
         <span class="ml-1 h-2.5 w-2.5 rounded-sm bg-accent/20" aria-hidden="true"></span>
@@ -105,7 +107,7 @@
       </div>
     </div>
 
-    <div class="mt-4 border-t border-border/60 pt-4">
+    <div class="mt-3 border-t border-border/60 pt-3">
       <div class="flex items-center justify-between gap-3 text-xs">
         <div class="min-w-0">
           <strong class="font-semibold tabular-nums text-foreground">{summary.today.completed}/{summary.today.required}</strong>
@@ -113,7 +115,7 @@
         </div>
         <strong class="shrink-0 text-base font-semibold tabular-nums text-foreground">{scoreLabel(summary.today.percentage)}</strong>
       </div>
-      <div class="mt-2 grid min-w-0 gap-1" style={`grid-template-columns: repeat(${Math.max(summary.today.segments.length, 1)}, minmax(0, 1fr));`} role="img" aria-label={todayBarLabel()} aria-describedby="scheduled-completion-desktop-today-description">
+      <div class="mt-1.5 grid min-w-0 gap-1" style={`grid-template-columns: repeat(${Math.max(summary.today.segments.length, 1)}, minmax(0, 1fr));`} role="img" aria-label={todayBarLabel()} aria-describedby="scheduled-completion-desktop-today-description">
         {#each summary.today.segments as segment, index (segment.habitId + '-' + index)}
           <span class={`h-3.5 min-w-0 rounded-[3px] ${segment.completed ? 'bg-accent' : 'bg-bg-secondary/80 border border-border'}`} aria-label={segmentLabel(index)}></span>
         {/each}
