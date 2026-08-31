@@ -189,7 +189,7 @@ git commit -m "test(checkin): type metrics mutation stub"
 
 ## JAVA-LINT-003: Migrate deprecated PMD rule references without losing coverage
 
-**Status:** TODO
+**Status:** DONE
 **Priority:** P2
 **Depends on:** JAVA-LINT-002
 

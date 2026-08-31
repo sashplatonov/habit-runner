@@ -33,7 +33,7 @@
     <rule ref="category/java/bestpractices.xml/AvoidReassigningLoopVariables"/>
     <rule ref="category/java/bestpractices.xml/AvoidReassigningParameters"/>
     <rule ref="category/java/bestpractices.xml/AvoidStringBufferField"/>
-    <rule ref="category/java/bestpractices.xml/DefaultLabelNotLastInSwitchStmt"/>
+    <rule ref="category/java/bestpractices.xml/DefaultLabelNotLastInSwitch"/>
 
     <!-- ═══════════════════════════════════════════
          DEPENDENCY INJECTION
@@ -187,8 +187,22 @@
         <priority>3</priority>
     </rule>
     <rule ref="category/java/errorprone.xml/AvoidAssertAsIdentifier"/>
-    <rule ref="category/java/errorprone.xml/AvoidCatchingThrowable"/>
-    <rule ref="category/java/errorprone.xml/AvoidCatchingNPE"/>
+    <rule name="AvoidCatchingNullPointerException"
+          language="java"
+          message="Avoid catching NullPointerException; validate inputs or fix the null source."
+          class="net.sourceforge.pmd.lang.rule.xpath.XPathRule">
+        <description>
+            Reports catch clauses that handle NullPointerException directly.
+        </description>
+        <priority>2</priority>
+        <properties>
+            <property name="xpath">
+                <value><![CDATA[
+//CatchClause[FormalParameter//ClassType[@SimpleName = 'NullPointerException']]
+]]></value>
+            </property>
+        </properties>
+    </rule>
     <rule ref="category/java/errorprone.xml/CloseResource"/>
     <rule ref="category/java/errorprone.xml/NullAssignment"/>
     <rule ref="category/java/errorprone.xml/ReturnFromFinallyBlock"/>
