@@ -310,6 +310,8 @@ components:
             type: string
     HabitScheduleDto:
       type: object
+      required:
+      - type
       properties:
         type:
           $ref: "#/components/schemas/HabitScheduleType"
@@ -605,7 +607,7 @@ paths:
                 $ref: "#/components/schemas/AccountConnectionsResponse"
       summary: Connections
       tags:
-      - Account Link Resource
+      - Account Connections Resource
   /auth/link/connections/{provider}:
     delete:
       parameters:
@@ -622,7 +624,7 @@ paths:
               schema: {}
       summary: Detach
       tags:
-      - Account Link Resource
+      - Account Connections Resource
   /auth/link/telegram/complete:
     post:
       parameters:
@@ -646,7 +648,7 @@ paths:
           description: Bad Request
       summary: Complete Telegram Link
       tags:
-      - Account Link Resource
+      - Telegram Link Resource
   /auth/link/telegram/connection:
     get:
       responses:
@@ -657,7 +659,7 @@ paths:
               schema: {}
       summary: Telegram Connection
       tags:
-      - Account Link Resource
+      - Telegram Link Resource
   /auth/link/telegram/start:
     post:
       responses:
@@ -668,7 +670,7 @@ paths:
               schema: {}
       summary: Start Telegram Link
       tags:
-      - Account Link Resource
+      - Telegram Link Resource
   /auth/logout:
     post:
       summary: Logout current session
@@ -855,8 +857,9 @@ paths:
   /checkins:
     get:
       summary: List checkins
-      description: Returns up to the default page of checkins for the authenticated
-        user.
+      description: Legacy compatibility endpoint that returns the complete check-in
+        list for the authenticated user. New clients should use the cursor-based /checkins/page
+        endpoint.
       tags:
       - Checkins
       responses:

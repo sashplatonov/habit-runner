@@ -428,6 +428,7 @@
       },
       "HabitScheduleDto" : {
         "type" : "object",
+        "required" : [ "type" ],
         "properties" : {
           "type" : {
             "$ref" : "#/components/schemas/HabitScheduleType"
@@ -816,7 +817,7 @@
           }
         },
         "summary" : "Connections",
-        "tags" : [ "Account Link Resource" ]
+        "tags" : [ "Account Connections Resource" ]
       }
     },
     "/auth/link/connections/{provider}" : {
@@ -840,7 +841,7 @@
           }
         },
         "summary" : "Detach",
-        "tags" : [ "Account Link Resource" ]
+        "tags" : [ "Account Connections Resource" ]
       }
     },
     "/auth/link/telegram/complete" : {
@@ -876,7 +877,7 @@
           }
         },
         "summary" : "Complete Telegram Link",
-        "tags" : [ "Account Link Resource" ]
+        "tags" : [ "Telegram Link Resource" ]
       }
     },
     "/auth/link/telegram/connection" : {
@@ -892,7 +893,7 @@
           }
         },
         "summary" : "Telegram Connection",
-        "tags" : [ "Account Link Resource" ]
+        "tags" : [ "Telegram Link Resource" ]
       }
     },
     "/auth/link/telegram/start" : {
@@ -908,7 +909,7 @@
           }
         },
         "summary" : "Start Telegram Link",
-        "tags" : [ "Account Link Resource" ]
+        "tags" : [ "Telegram Link Resource" ]
       }
     },
     "/auth/logout" : {
@@ -1193,7 +1194,7 @@
     "/checkins" : {
       "get" : {
         "summary" : "List checkins",
-        "description" : "Returns up to the default page of checkins for the authenticated user.",
+        "description" : "Legacy compatibility endpoint that returns the complete check-in list for the authenticated user. New clients should use the cursor-based /checkins/page endpoint.",
         "tags" : [ "Checkins" ],
         "responses" : {
           "200" : {
