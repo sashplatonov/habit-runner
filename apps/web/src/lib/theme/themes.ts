@@ -1,18 +1,14 @@
 export type ThemeId =
+  | 'cloud'
+  | 'peach'
+  | 'mint'
+  | 'lavender'
+  | 'paper'
   | 'midnight'
+  | 'graphite'
   | 'ember'
   | 'violet'
-  | 'matrix'
-  | 'arctic'
-  | 'sakura'
-  | 'lavender'
-  | 'mint'
-  | 'peach'
-  | 'graphite'
-  | 'aurora'
-  | 'dune'
-  | 'lagoon'
-  | 'cloud';
+  | 'matrix';
 
 export interface Theme {
   id: ThemeId;
@@ -29,132 +25,16 @@ export type ThemeUsage = Partial<Record<ThemeId, number>>;
 export const DEFAULT_THEME_ID: ThemeId = 'cloud';
 
 export const THEMES: readonly Theme[] = [
-  {
-    id: 'midnight',
-    name: 'Midnight',
-    accent: '#65d6a0',
-    accentSecondary: '#9aa8ff',
-    progress: '#65d6a0',
-    group: 'dark',
-    themeColor: '#0b100d'
-  },
-  {
-    id: 'ember',
-    name: 'Ember',
-    accent: '#f2a36b',
-    accentSecondary: '#ff8b85',
-    progress: '#f2a36b',
-    group: 'dark',
-    themeColor: '#0d0b09'
-  },
-  {
-    id: 'violet',
-    name: 'Violet',
-    accent: '#9aa8ff',
-    accentSecondary: '#c69bff',
-    progress: '#9aa8ff',
-    group: 'dark',
-    themeColor: '#0c0b13'
-  },
-  {
-    id: 'matrix',
-    name: 'Matrix',
-    accent: '#65d6a0',
-    accentSecondary: '#9be2bb',
-    progress: '#65d6a0',
-    group: 'dark',
-    themeColor: '#08110a'
-  },
-  {
-    id: 'arctic',
-    name: 'Arctic',
-    accent: '#7eb8ff',
-    accentSecondary: '#dce7f7',
-    progress: '#7eb8ff',
-    group: 'dark',
-    themeColor: '#0a1118'
-  },
-  {
-    id: 'sakura',
-    name: 'Sakura',
-    accent: '#e56e93',
-    accentSecondary: '#c95cb7',
-    progress: '#e56e93',
-    group: 'light',
-    themeColor: '#fff8f8'
-  },
-  {
-    id: 'lavender',
-    name: 'Lavender',
-    accent: '#8b7bff',
-    accentSecondary: '#6fb4ff',
-    progress: '#8b7bff',
-    group: 'light',
-    themeColor: '#f8f7ff'
-  },
-  {
-    id: 'mint',
-    name: 'Mint',
-    accent: '#3fc48a',
-    accentSecondary: '#56b8c9',
-    progress: '#3fc48a',
-    group: 'light',
-    themeColor: '#f5fbf8'
-  },
-  {
-    id: 'peach',
-    name: 'Peach',
-    accent: '#f08d52',
-    accentSecondary: '#dd6d86',
-    progress: '#f08d52',
-    group: 'light',
-    themeColor: '#fffaf5'
-  },
-  {
-    id: 'graphite',
-    name: 'Graphite',
-    accent: '#77c8ff',
-    accentSecondary: '#a78bfa',
-    progress: '#48d7a3',
-    group: 'dark',
-    themeColor: '#101216'
-  },
-  {
-    id: 'aurora',
-    name: 'Aurora',
-    accent: '#98a7ff',
-    accentSecondary: '#f28ccb',
-    progress: '#5dd6b0',
-    group: 'dark',
-    themeColor: '#0c1020'
-  },
-  {
-    id: 'dune',
-    name: 'Dune',
-    accent: '#93451f',
-    accentSecondary: '#3d6f73',
-    progress: '#26785f',
-    group: 'light',
-    themeColor: '#faf7f0'
-  },
-  {
-    id: 'lagoon',
-    name: 'Lagoon',
-    accent: '#155e75',
-    accentSecondary: '#2563eb',
-    progress: '#087a63',
-    group: 'light',
-    themeColor: '#f3f9fa'
-  },
-  {
-    id: 'cloud',
-    name: 'Cloud',
-    accent: '#4e63d8',
-    accentSecondary: '#23835d',
-    progress: '#23835d',
-    group: 'light',
-    themeColor: '#f4f6f1'
-  }
+  { id: 'cloud', name: 'Cloud', accent: '#5876e8', accentSecondary: '#48c7e9', progress: '#48c7e9', group: 'light', themeColor: '#f3f6f2' },
+  { id: 'peach', name: 'Peach Paper', accent: '#ef8f6f', accentSecondary: '#ef8f6f', progress: '#ef8f6f', group: 'light', themeColor: '#fff9f5' },
+  { id: 'mint', name: 'Neo Mint', accent: '#17b98b', accentSecondary: '#25d2a1', progress: '#25d2a1', group: 'light', themeColor: '#f0fbf7' },
+  { id: 'lavender', name: 'Lavender Glass', accent: '#7b67e8', accentSecondary: '#9b82ff', progress: '#9b82ff', group: 'light', themeColor: '#f8f6ff' },
+  { id: 'paper', name: 'Editorial Mono', accent: '#22211f', accentSecondary: '#586e5c', progress: '#22211f', group: 'light', themeColor: '#f7f5ef' },
+  { id: 'midnight', name: 'Midnight OLED', accent: '#55d1bb', accentSecondary: '#55d1bb', progress: '#55d1bb', group: 'dark', themeColor: '#0b0f10' },
+  { id: 'graphite', name: 'Graphite Pro', accent: '#7c9cff', accentSecondary: '#7c9cff', progress: '#7c9cff', group: 'dark', themeColor: '#17191e' },
+  { id: 'ember', name: 'Ember Cyber', accent: '#ff7a45', accentSecondary: '#ff7a45', progress: '#ff7a45', group: 'dark', themeColor: '#160e0d' },
+  { id: 'violet', name: 'Violet Glass', accent: '#a68cff', accentSecondary: '#b39bff', progress: '#b39bff', group: 'dark', themeColor: '#171521' },
+  { id: 'matrix', name: 'Matrix Terminal', accent: '#34f07a', accentSecondary: '#34f07a', progress: '#34f07a', group: 'dark', themeColor: '#050a07' }
 ];
 
 export const THEME_IDS: ReadonlySet<ThemeId> = new Set(THEMES.map((theme) => theme.id));
@@ -165,20 +45,16 @@ export function readThemeUsage(): ThemeUsage {
   if (typeof window === 'undefined') {
     return {};
   }
-
   try {
     const storedUsage = window.localStorage?.getItem(THEME_USAGE_STORAGE_KEY);
     const parsedUsage: unknown = storedUsage ? JSON.parse(storedUsage) : {};
     if (!parsedUsage || typeof parsedUsage !== 'object' || Array.isArray(parsedUsage)) {
       return {};
     }
-
     return Object.fromEntries(
       [...THEME_IDS]
         .map((themeId) => [themeId, Reflect.get(parsedUsage, themeId)] as const)
-        .filter((entry): entry is readonly [ThemeId, number] => (
-          Number.isSafeInteger(entry[1]) && entry[1] >= 0
-        ))
+        .filter((entry): entry is readonly [ThemeId, number] => Number.isSafeInteger(entry[1]) && entry[1] >= 0)
     );
   } catch {
     return {};
@@ -186,36 +62,20 @@ export function readThemeUsage(): ThemeUsage {
 }
 
 export function recordThemeSelection(themeId: ThemeId): ThemeUsage {
-  const usage = readThemeUsage();
-  const nextUsage = {
-    ...usage,
-    [themeId]: (usage[themeId] ?? 0) + 1
-  };
-
-  if (typeof window === 'undefined') {
-    return nextUsage;
+  const nextUsage = { ...readThemeUsage(), [themeId]: (readThemeUsage()[themeId] ?? 0) + 1 };
+  if (typeof window !== 'undefined') {
+    try { window.localStorage?.setItem(THEME_USAGE_STORAGE_KEY, JSON.stringify(nextUsage)); } catch { /* Storage is optional. */ }
   }
-
-  try {
-    window.localStorage?.setItem(THEME_USAGE_STORAGE_KEY, JSON.stringify(nextUsage));
-  } catch {
-    // Keep the updated ranking in memory when storage is unavailable.
-  }
-
   return nextUsage;
 }
 
 export function rankThemesByUsage(themes: readonly Theme[], usage: ThemeUsage): Theme[] {
   return themes
     .map((theme, catalogIndex) => ({ theme, catalogIndex }))
-    .sort((first, second) => (
-      (usage[second.theme.id] ?? 0) - (usage[first.theme.id] ?? 0)
-      || first.catalogIndex - second.catalogIndex
-    ))
+    .sort((first, second) => (usage[second.theme.id] ?? 0) - (usage[first.theme.id] ?? 0) || first.catalogIndex - second.catalogIndex)
     .map(({ theme }) => theme);
 }
 
 export function getTheme(themeId: ThemeId): Theme {
-  return THEMES.find((theme) => theme.id === themeId)
-    ?? THEMES.find((theme) => theme.id === DEFAULT_THEME_ID)!;
+  return THEMES.find((theme) => theme.id === themeId) ?? THEMES.find((theme) => theme.id === DEFAULT_THEME_ID)!;
 }

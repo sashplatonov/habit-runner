@@ -16,11 +16,8 @@ function parseThemeBlock(themeId: string): { block: string; vars: Record<string,
 
   const block = blockMatch[1];
   const vars: Record<string, string> = {};
-  for (const line of block.split('\n')) {
-    const match = line.trim().match(/^--([a-z-]+):\s*(.+?);$/);
-    if (match) {
-      vars[`--${match[1]}`] = match[2];
-    }
+  for (const match of block.matchAll(/--([a-z-]+):\s*(.+?);/g)) {
+    vars[`--${match[1]}`] = match[2].trim();
   }
 
   return { block, vars };
@@ -50,12 +47,12 @@ function contrastRatio(first: string, second: string): number {
 }
 
 describe('theme contract', () => {
-  it('keeps fourteen unique ids split across seven dark and seven light themes', () => {
-    expect(THEMES).toHaveLength(14);
-    expect(new Set(THEMES.map((theme) => theme.id)).size).toBe(14);
-    expect(new Set(THEME_IDS).size).toBe(14);
-    expect(THEMES.filter((theme) => theme.group === 'dark')).toHaveLength(7);
-    expect(THEMES.filter((theme) => theme.group === 'light')).toHaveLength(7);
+  it('keeps ten unique reference ids split across five dark and five light themes', () => {
+    expect(THEMES).toHaveLength(10);
+    expect(new Set(THEMES.map((theme) => theme.id)).size).toBe(10);
+    expect(new Set(THEME_IDS).size).toBe(10);
+    expect(THEMES.filter((theme) => theme.group === 'dark')).toHaveLength(5);
+    expect(THEMES.filter((theme) => theme.group === 'light')).toHaveLength(5);
   });
 
   it('defines the semantic token contract for every theme block', () => {
@@ -93,7 +90,7 @@ describe('theme contract', () => {
       expect(vars['--accent-secondary']).toBe(theme.accentSecondary);
       expect(vars['--progress']).toBe(theme.progress);
       expect(contrastRatio(vars['--text-primary'], vars['--bg-primary'])).toBeGreaterThanOrEqual(4.5);
-      expect(contrastRatio(vars['--text-muted'], vars['--bg-card'])).toBeGreaterThanOrEqual(4.5);
+      expect(contrastRatio(vars['--text-muted'], vars['--bg-card']), `${theme.id} muted contrast`).toBeGreaterThanOrEqual(4.5);
       expect(contrastRatio(vars['--focus-ring'], vars['--bg-primary'])).toBeGreaterThanOrEqual(3);
     }
   });
