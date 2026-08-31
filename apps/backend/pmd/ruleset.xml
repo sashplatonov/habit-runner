@@ -28,6 +28,12 @@
     <rule ref="category/java/bestpractices.xml/AvoidUsingHardCodedIP"/>
     <rule ref="category/java/bestpractices.xml/UnusedPrivateField"/>
     <rule ref="category/java/performance.xml/UseArraysAsList"/>
+    <rule ref="category/java/bestpractices.xml/AvoidPrintStackTrace"/>
+    <rule ref="category/java/bestpractices.xml/ArrayIsStoredDirectly"/>
+    <rule ref="category/java/bestpractices.xml/AvoidReassigningLoopVariables"/>
+    <rule ref="category/java/bestpractices.xml/AvoidReassigningParameters"/>
+    <rule ref="category/java/bestpractices.xml/AvoidStringBufferField"/>
+    <rule ref="category/java/bestpractices.xml/DefaultLabelNotLastInSwitchStmt"/>
 
     <!-- ═══════════════════════════════════════════
          DEPENDENCY INJECTION
@@ -45,6 +51,27 @@
             <property name="xpath">
                 <value><![CDATA[
 //FieldDeclaration[.//Annotation[@SimpleName = 'Inject' or @SimpleName = 'Autowired' or @SimpleName = 'Resource']]
+]]></value>
+            </property>
+        </properties>
+    </rule>
+
+    <!-- ═══════════════════════════════════════════
+         LOMBOK USAGE
+         ═══════════════════════════════════════════ -->
+    <rule name="NoDataAnnotation"
+          language="java"
+          message="Do not use Lombok @Data. Use explicit @Getter/@Setter and explicit equals/hashCode."
+          class="net.sourceforge.pmd.lang.rule.xpath.XPathRule">
+        <description>
+            Forbids Lombok @Data, which generates equals/hashCode/toString and can
+            cause JPA identity and mutation-semantics problems.
+        </description>
+        <priority>2</priority>
+        <properties>
+            <property name="xpath">
+                <value><![CDATA[
+//Annotation[@SimpleName = 'Data']
 ]]></value>
             </property>
         </properties>
@@ -160,6 +187,12 @@
         <priority>3</priority>
     </rule>
     <rule ref="category/java/errorprone.xml/AvoidAssertAsIdentifier"/>
+    <rule ref="category/java/errorprone.xml/AvoidCatchingThrowable"/>
+    <rule ref="category/java/errorprone.xml/AvoidCatchingNPE"/>
+    <rule ref="category/java/errorprone.xml/CloseResource"/>
+    <rule ref="category/java/errorprone.xml/NullAssignment"/>
+    <rule ref="category/java/errorprone.xml/ReturnFromFinallyBlock"/>
+    <rule ref="category/java/errorprone.xml/DoNotThrowExceptionInFinally"/>
 
     <!-- ═══════════════════════════════════════════
          DESIGN — COMPLEXITY AND ARCHITECTURE

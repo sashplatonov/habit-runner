@@ -32,6 +32,7 @@
         <module name="ParameterName"/>
 
         <!-- ── Code structure ─────────────────────────────────────────── -->
+        <module name="OneTopLevelClass"/>
         <module name="NeedBraces"/>
         <module name="MethodLength">
             <property name="max" value="60"/>
