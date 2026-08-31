@@ -16,11 +16,11 @@
   import { goto } from '$app/navigation';
   import { resolve } from '$app/paths';
   import {
-    Zap, GripVertical,
-    Shield, Activity, Star, Trophy, SnowflakeIcon, Moon
+    GripVertical, SnowflakeIcon, Moon
   } from 'lucide-svelte';
   import DashboardToolbar from '$lib/components/dashboard/DashboardToolbar.svelte';
   import MiniHeatmap from '$lib/components/MiniHeatmap.svelte';
+  import HabitStreakPill from '$lib/components/habits/HabitStreakPill.svelte';
   import HabitTile from '$lib/components/HabitTile.svelte';
   import Onboarding from '$lib/components/Onboarding.svelte';
   import PageLoadingSpinner from '$lib/components/PageLoadingSpinner.svelte';
@@ -43,8 +43,9 @@
   import { buildScheduledCompletionSummary } from '$lib/dashboard/scheduledCompletionSummary';
   import ScheduledCompletionSummary from '$lib/components/dashboard/ScheduledCompletionSummary.svelte';
   import { HABIT_COLOR_THEMES } from '$lib/theme/habit-colors';
-  import { getHabitPhase, isPhaseTransition } from '$lib/habits/phases';
+  import { isPhaseTransition } from '$lib/habits/phases';
   import { computeTileHint } from '$lib/habits/tileHint';
+  import { getDashboardMomentumStatus } from '$lib/habits/dashboardMomentumStatus';
   import { sortHabits } from '$lib/habits/dashboardSort';
   import type { Habit } from '@/types/habit';
 
@@ -202,14 +203,6 @@
   });
 
   // ─── Helpers ─────────────────────────────────────────────────────────────────
-  function buildLast7(habit: Habit) {
-    return Array.from({ length: 7 }, (_, i) => {
-      const key = formatDate(new Date(todayDate.getTime() + (i - 6) * 86_400_000));
-      const tgt = Math.max(1, habit.dailyTarget ?? 1);
-      return (habit.completions[key] ?? 0) >= tgt;
-    });
-  }
-
   function detectHorizontalSwipe(dx: number, dy: number): boolean | null {
     if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 8) {
       return true;
@@ -750,10 +743,9 @@
                 {@const isFrozen = status === 'frozen'}
                 {@const isScheduled = isMandatoryToday(habit, todayDate)}
                 {@const streak = calculateScheduledStreak(habit, habit.completions).current}
+                {@const momentum = getDashboardMomentumStatus(habit, todayDate)}
                 {@const completionRate = calculateScheduledCompletionRate(habit, habit.completions)}
-                {@const last7 = buildLast7(habit)}
                 {@const hint = computeTileHint(habit, completionRate, streak)}
-                {@const phase = getHabitPhase(streak)}
                 {@const isAnimating = animatingHabitId === habit.id}
                 {@const dropHintPosition = dropHint?.habitId === habit.id ? dropHint.position : null}
                 {@const showDropAbove = dropHintPosition === 'above'}
@@ -815,7 +807,7 @@
                       style:background-color={indicatorColor}
                     ></span>
 
-                    <div class="relative z-10 flex w-full min-w-0 items-center gap-3">
+                    <div class="relative z-10 flex w-full min-w-0 items-start gap-3">
                       {#if isDragActive()}
                         <button
                           type="button"
@@ -872,19 +864,16 @@
                         </button>
                       </div>
 
-                      <div class="flex min-w-0 flex-1 items-center gap-3 text-left">
+                      <div class="flex min-w-0 flex-1 items-start gap-3 text-left">
                         <span class="flex-shrink-0 text-xl leading-none">{habit.icon}</span>
                         <div class="min-w-0 flex-1">
-                          <div class="flex items-center gap-1 overflow-hidden">
-                            <p class="min-w-0 truncate text-sm font-semibold text-foreground {completed ? 'opacity-60 line-through' : ''}">{habit.name}</p>
+                          <div class="min-h-8">
+                            <p class="line-clamp-2 text-[13px] font-semibold leading-4 text-foreground sm:truncate sm:text-sm sm:leading-tight {completed ? 'opacity-60 line-through' : ''}" data-habit-title>{habit.name}</p>
                             {#if tgt > 1}
-                              <span class="flex-shrink-0 rounded bg-accent/10 px-1 py-0.5 text-[10px] font-mono text-accent-secondary">×{tgt}</span>
-                            {/if}
-                            {#if habit.description}
-                              <span class="flex-shrink-0"><DescriptionTooltip description={habit.description} /></span>
+                              <span class="hidden rounded bg-accent/10 px-1 py-0.5 text-[10px] font-mono text-accent-secondary sm:inline-flex">×{tgt}</span>
                             {/if}
                             {#if inlineTags.length > 0}
-                              <div class="hidden flex-shrink-0 items-center gap-1 sm:flex">
+                              <div class="hidden items-center gap-1 sm:flex">
                                 {#each inlineTags as tag, ti (tag + '-' + ti)}
                                   <span class="whitespace-nowrap rounded bg-accent/10 px-1 py-0.5 text-[10px] font-mono text-accent-secondary">#{tag}</span>
                                 {/each}
@@ -896,51 +885,31 @@
                           </div>
 
                           {#if isFrozen}
-                            <span class="inline-flex items-center gap-0.5 text-[10px] font-mono text-muted">
+                            <span class="hidden items-center gap-0.5 text-[10px] font-mono text-muted sm:inline-flex">
                               <SnowflakeIcon size={8} /> Frozen
                             </span>
                           {:else if !isScheduled}
-                            <span class="inline-flex items-center gap-0.5 text-[10px] font-mono text-muted">
+                            <span class="hidden items-center gap-0.5 text-[10px] font-mono text-muted sm:inline-flex">
                               <Moon size={8} /> Not today
                             </span>
                           {/if}
 
                           {#if hint}
                             {@const hc = hint.type === 'good' ? 'text-accent' : hint.type === 'warn' ? 'text-accent-secondary' : 'text-muted'}
-                            <p class="mt-0.5 truncate text-[10px] font-mono {hc}">{hint.text}</p>
+                            <p class="mt-0.5 hidden truncate text-[10px] font-mono sm:block {hc}">{hint.text}</p>
                           {/if}
                         </div>
                       </div>
 
-                      <div class="flex flex-shrink-0 items-center gap-2">
-                        {#if streak > 0}
-                          <span class="hidden items-center gap-0.5 text-[10px] font-mono text-accent-secondary sm:flex">
-                            {#if habit.type === 'negative'}
-                              <Trophy size={10} />
-                            {:else if phase.id === 1}
-                              <Shield size={10} />
-                            {:else if phase.id === 2}
-                              <Zap size={10} />
-                            {:else if phase.id === 3}
-                              <Activity size={10} />
-                            {:else}
-                              <Star size={10} />
-                            {/if}
-                            {streak}
-                          </span>
-                        {/if}
-                        <div class="hidden h-4 items-end gap-[2px] sm:flex">
-                          {#each last7 as done, lj ('' + lj)}
-                            <div
-                              class="w-[3px] rounded-sm transition-all"
-                              style="height: {done ? '100%' : '30%'}; background-color: {done ? accent.hex : 'var(--border)'}; opacity: {0.4 + lj * 0.09}"
-                            ></div>
-                          {/each}
-                        </div>
-                      </div>
+                      {#if habit.description}
+                        <span class="shrink-0"><DescriptionTooltip description={habit.description} triggerClassName="h-11 w-11" /></span>
+                      {/if}
                     </div>
-                    <div class="relative z-10 mt-2 w-full border-t border-border/40 pt-2" role="img" aria-label="Habit activity for the last 30 days, from 30 days ago through today">
-                      <MiniHeatmap completions={habit.completions} dailyTarget={tgt} color={habit.color} />
+                    <div class="relative z-10 mt-2 flex w-full min-w-0 items-center gap-2 border-t border-border/40 pt-2">
+                      <HabitStreakPill {streak} missedScheduledDays={momentum.inactiveScheduledDays} />
+                      <div class="min-w-0 flex-1" role="img" aria-label="Habit activity for the last 30 days, from 30 days ago through today">
+                        <MiniHeatmap completions={habit.completions} dailyTarget={tgt} color={habit.color} />
+                      </div>
                     </div>
                   </div>
                 </li>
@@ -964,10 +933,9 @@
               {@const isFrozen = status === 'frozen'}
               {@const isScheduled = isMandatoryToday(habit, todayDate)}
               {@const streak = calculateScheduledStreak(habit, habit.completions).current}
+              {@const momentum = getDashboardMomentumStatus(habit, todayDate)}
               {@const completionRate = calculateScheduledCompletionRate(habit, habit.completions)}
-              {@const last7 = buildLast7(habit)}
               {@const hint = computeTileHint(habit, completionRate, streak)}
-              {@const phase = getHabitPhase(streak)}
               {@const isAnimating = animatingHabitId === habit.id}
               {@const dropHintPosition = dropHint?.habitId === habit.id ? dropHint.position : null}
               {@const showDropAbove = dropHintPosition === 'above'}
@@ -1030,7 +998,7 @@
                     style:background-color={indicatorColor}
                   ></span>
 
-                  <div class="relative z-10 flex w-full min-w-0 items-center gap-3">
+                  <div class="relative z-10 flex w-full min-w-0 items-start gap-3">
                     {#if isDragActive()}
                       <button
                         type="button"
@@ -1089,19 +1057,16 @@
                     </div>
 
                     <!-- Habit info (clickable) -->
-                    <div class="flex flex-1 items-center gap-3 text-left min-w-0">
-                      <span class="text-xl leading-none flex-shrink-0">{habit.icon}</span>
+                    <div class="flex min-w-0 flex-1 items-start gap-3 text-left">
+                      <span class="flex-shrink-0 text-xl leading-none">{habit.icon}</span>
                       <div class="min-w-0 flex-1">
-                        <div class="flex items-center gap-1 overflow-hidden">
-                          <p class="min-w-0 truncate text-sm font-semibold text-foreground {completed ? 'opacity-60 line-through' : ''}">{habit.name}</p>
+                        <div class="min-h-8">
+                          <p class="line-clamp-2 text-[13px] font-semibold leading-4 text-foreground sm:truncate sm:text-sm sm:leading-tight {completed ? 'opacity-60 line-through' : ''}" data-habit-title>{habit.name}</p>
                           {#if tgt > 1}
-                            <span class="flex-shrink-0 text-[10px] font-mono px-1 rounded bg-accent/10 text-accent-secondary">×{tgt}</span>
-                          {/if}
-                          {#if habit.description}
-                            <span class="flex-shrink-0"><DescriptionTooltip description={habit.description} /></span>
+                            <span class="hidden rounded bg-accent/10 px-1 py-0.5 text-[10px] font-mono text-accent-secondary sm:inline-flex">×{tgt}</span>
                           {/if}
                           {#if inlineTags.length > 0}
-                            <div class="hidden sm:flex items-center gap-1 flex-shrink-0">
+                            <div class="hidden items-center gap-1 sm:flex">
                               {#each inlineTags as tag, ti (tag + '-' + ti)}
                                 <span class="whitespace-nowrap rounded bg-accent/10 px-1 py-0.5 text-[10px] font-mono text-accent-secondary">#{tag}</span>
                               {/each}
@@ -1113,52 +1078,31 @@
                         </div>
 
                         {#if isFrozen}
-                          <span class="inline-flex items-center gap-0.5 text-[10px] font-mono text-muted">
+                          <span class="hidden items-center gap-0.5 text-[10px] font-mono text-muted sm:inline-flex">
                             <SnowflakeIcon size={8} /> Frozen
                           </span>
                         {:else if !isScheduled}
-                          <span class="inline-flex items-center gap-0.5 text-[10px] font-mono text-muted">
+                          <span class="hidden items-center gap-0.5 text-[10px] font-mono text-muted sm:inline-flex">
                             <Moon size={8} /> Not today
                           </span>
                         {/if}
 
                         {#if hint}
                           {@const hc = hint.type === 'good' ? 'text-accent' : hint.type === 'warn' ? 'text-accent-secondary' : 'text-muted'}
-                          <p class="mt-0.5 text-[10px] font-mono truncate {hc}">{hint.text}</p>
+                          <p class="mt-0.5 hidden truncate text-[10px] font-mono sm:block {hc}">{hint.text}</p>
                         {/if}
                       </div>
                     </div>
 
-                    <!-- Right metrics -->
-                    <div class="flex flex-shrink-0 items-center gap-2">
-                      {#if streak > 0}
-                        <span class="hidden items-center gap-0.5 text-[10px] font-mono text-accent-secondary sm:flex">
-                          {#if habit.type === 'negative'}
-                            <Trophy size={10} />
-                          {:else if phase.id === 1}
-                            <Shield size={10} />
-                          {:else if phase.id === 2}
-                            <Zap size={10} />
-                          {:else if phase.id === 3}
-                            <Activity size={10} />
-                          {:else}
-                            <Star size={10} />
-                          {/if}
-                          {streak}
-                        </span>
-                      {/if}
-                      <div class="hidden sm:flex items-end gap-[2px] h-4">
-                        {#each last7 as done, lj ('' + lj)}
-                          <div
-                            class="w-[3px] rounded-sm transition-all"
-                            style="height: {done ? '100%' : '30%'}; background-color: {done ? accent.hex : 'var(--border)'}; opacity: {0.4 + lj * 0.09}"
-                          ></div>
-                        {/each}
-                      </div>
-                    </div>
+                    {#if habit.description}
+                      <span class="shrink-0"><DescriptionTooltip description={habit.description} triggerClassName="h-11 w-11" /></span>
+                    {/if}
                   </div>
-                  <div class="relative z-10 mt-2 w-full border-t border-border/40 pt-2" role="img" aria-label="Habit activity for the last 30 days, from 30 days ago through today">
-                    <MiniHeatmap completions={habit.completions} dailyTarget={tgt} color={habit.color} />
+                  <div class="relative z-10 mt-2 flex w-full min-w-0 items-center gap-2 border-t border-border/40 pt-2">
+                    <HabitStreakPill {streak} missedScheduledDays={momentum.inactiveScheduledDays} />
+                    <div class="min-w-0 flex-1" role="img" aria-label="Habit activity for the last 30 days, from 30 days ago through today">
+                      <MiniHeatmap completions={habit.completions} dailyTarget={tgt} color={habit.color} />
+                    </div>
                   </div>
                 </div>
                 </li>

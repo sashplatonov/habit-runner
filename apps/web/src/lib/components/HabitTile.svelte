@@ -1,6 +1,7 @@
 <script lang="ts">
   import { Flame, SnowflakeIcon, Moon } from 'lucide-svelte';
   import HabitCompletionControl from '$lib/components/habits/HabitCompletionControl.svelte';
+  import HabitStreakPill from '$lib/components/habits/HabitStreakPill.svelte';
   import DescriptionTooltip from '$lib/components/DescriptionTooltip.svelte';
   import MiniHeatmap from '$lib/components/MiniHeatmap.svelte';
   import { HABIT_COLOR_THEMES } from '$lib/theme/habit-colors';
@@ -135,9 +136,10 @@
     </div>
 
     <!-- Bottom row: heatmap + toggle -->
-    <div class="mt-1.5 flex items-center justify-between border-t border-border/30 pt-1">
+    <div class="mt-1.5 flex items-center gap-2 border-t border-border/30 pt-2">
+      <HabitStreakPill {streak} missedScheduledDays={momentum.inactiveScheduledDays} />
       <div
-        class="relative z-10 flex min-w-0 flex-1 items-center pr-3"
+        class="relative z-10 flex min-w-0 flex-1 items-center"
         role="img"
         aria-label="Habit activity for the last 30 days, from 30 days ago through today"
       >

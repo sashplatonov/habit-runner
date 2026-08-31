@@ -47,6 +47,14 @@ describe('dashboard momentum status', () => {
     expect(result).toMatchObject({ kind: 'ice', inactiveScheduledDays: 7 });
   });
 
+  it('exposes consecutive scheduled misses before the ice threshold for the streak pill', () => {
+    const result = getDashboardMomentumStatus(habit({
+      completions: { '2026-08-05T00:00:00Z': 1 }
+    }), new Date('2026-08-08T12:00:00Z'), 'UTC');
+
+    expect(result).toMatchObject({ kind: 'none', inactiveScheduledDays: 3 });
+  });
+
   it('keeps no-history, negative, frozen, and unscheduled habits neutral', () => {
     expect(getDashboardMomentumStatus(habit(), new Date('2026-08-08T12:00:00Z'), 'UTC').kind).toBe('none');
     expect(getDashboardMomentumStatus(habit({ type: 'negative' }), new Date('2026-08-08T12:00:00Z'), 'UTC').kind).toBe('flame');
@@ -61,6 +69,6 @@ describe('dashboard momentum status', () => {
     }), new Date('2026-08-08T12:00:00Z'), 'UTC');
 
     expect(result.kind).toBe('none');
-    expect(result.inactiveScheduledDays).toBe(0);
+    expect(result.inactiveScheduledDays).toBe(6);
   });
 });

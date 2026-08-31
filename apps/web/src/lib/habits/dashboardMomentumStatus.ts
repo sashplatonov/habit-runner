@@ -81,7 +81,11 @@ export function getDashboardMomentumStatus(
 
   const today = formatCalendarDateInTimeZone(referenceDate, timeZone);
   const inactiveScheduledDays = countScheduledMissesSinceLatestSuccess(habit, today, timeZone);
-  if (inactiveScheduledDays !== null && inactiveScheduledDays >= INACTIVITY_THRESHOLD) {
+  if (inactiveScheduledDays === null) {
+    return neutral();
+  }
+
+  if (inactiveScheduledDays >= INACTIVITY_THRESHOLD) {
     return {
       kind: 'ice',
       streak: 0,
@@ -90,5 +94,10 @@ export function getDashboardMomentumStatus(
     };
   }
 
-  return neutral();
+  return {
+    kind: 'none',
+    streak: 0,
+    inactiveScheduledDays,
+    label: `${inactiveScheduledDays} consecutive scheduled days missed`
+  };
 }
