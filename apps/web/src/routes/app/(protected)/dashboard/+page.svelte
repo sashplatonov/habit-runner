@@ -91,6 +91,7 @@
   let sortMode         = $state<SortMode>((urlState.sort as SortMode) ?? lsGet<SortMode>(LS_SORT, 'custom'));
   let viewDensity      = $state<ViewDensity>((urlState.density as ViewDensity) ?? lsGet<ViewDensity>(LS_DENSITY, 'comfortable'));
   let selectedTags     = $state<string[]>(urlState.tags ? urlState.tags.split(',').map(t => t.trim()).filter(Boolean) : lsGet<string[]>(LS_TAGS, []));
+  let shouldAnimateListEntrance = $state(true);
 
   let animatingHabitId = $state<string | null>(null);
   let animParticles    = $state<CelebrationParticle[]>([]);
@@ -645,6 +646,9 @@
         activeTags={selectedTags}
         availableTags={allTags}
         onFilterChange={(nextFilter) => {
+          // Filters should reveal matching habits immediately, without replaying
+          // the staggered entrance animation for newly visible cards.
+          shouldAnimateListEntrance = false;
           filter = nextFilter;
         }}
         onSearchChange={(nextQuery) => {
@@ -702,6 +706,7 @@
                 {todayKey}
                 {todayDate}
                 appearanceIndex={idx}
+                animateOnMount={shouldAnimateListEntrance}
                 onToggle={() => void toggleHabit(habit)}
                 onDetail={() => navigateToDetail(habit.id)}
               />
@@ -721,6 +726,7 @@
                         {todayKey}
                         {todayDate}
                         appearanceIndex={idx}
+                        animateOnMount={shouldAnimateListEntrance}
                         onToggle={() => void toggleHabit(habit)}
                         onDetail={() => navigateToDetail(habit.id)}
                       />
@@ -762,11 +768,11 @@
                 <li
                   data-habit-id={habit.id}
                   role="listitem"
-                  class="group relative transition-all duration-200 animate-fade-slide-up
+                  class="group relative transition-all duration-200 {shouldAnimateListEntrance ? 'animate-fade-slide-up' : ''}
                     {dragId && dragId !== habit.id ? 'opacity-50 scale-[0.97]' : ''}
                     {dragId === habit.id ? 'ring-2 ring-accent/40 rounded-2xl' : ''}
                     {dropTransformClass}"
-                  style:animation-delay="{Math.min(idx, 12) * 0.05}s"
+                  style:animation-delay={shouldAnimateListEntrance ? `${Math.min(idx, 12) * 0.05}s` : undefined}
                   draggable={isDragActive()}
                   ondragstart={(e) => isDragActive() && onDragStart(e, habit.id)}
                   ondragover={(e) => isDragActive() && onDragOver(e, habit.id)}
@@ -977,11 +983,11 @@
               <li
                 data-habit-id={habit.id}
                 role="listitem"
-                class="group relative transition-all duration-200 animate-fade-slide-up
+                class="group relative transition-all duration-200 {shouldAnimateListEntrance ? 'animate-fade-slide-up' : ''}
                   {dragId && dragId !== habit.id ? 'opacity-50 scale-[0.97]' : ''}
                   {dragId === habit.id ? 'ring-2 ring-accent/40 rounded-2xl' : ''}
                   {dropTransformClass}"
-                style:animation-delay="{Math.min(idx, 12) * 0.05}s"
+                style:animation-delay={shouldAnimateListEntrance ? `${Math.min(idx, 12) * 0.05}s` : undefined}
                 draggable={isDragActive()}
                 ondragstart={(e) => isDragActive() && onDragStart(e, habit.id)}
                 ondragover={(e) => isDragActive() && onDragOver(e, habit.id)}

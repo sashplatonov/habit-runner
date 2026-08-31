@@ -28,6 +28,7 @@
     onToggle: () => void;
     onDetail: () => void;
     appearanceIndex?: number;
+    animateOnMount?: boolean;
     pending?: boolean;
     error?: boolean;
     animating?: boolean;
@@ -42,6 +43,7 @@
     onToggle,
     onDetail,
     appearanceIndex = 0,
+    animateOnMount = true,
     pending = false,
     error = false,
     animating = false,
@@ -76,8 +78,8 @@
 
 <article
   aria-label="{habitLabel}, {completed ? 'completed' : 'not completed'}"
-  class="relative overflow-hidden rounded-[1.5rem] border bg-bg-card transition-[border-color,opacity] duration-200 hover:border-border-hover animate-fade-slide-up shadow-[0_12px_28px_rgba(15,23,42,0.06)] {isFrozen ? 'opacity-75 border-border/50' : 'border-border'}"
-  style:animation-delay={animDelay}
+  class="relative overflow-hidden rounded-[1.5rem] border bg-bg-card transition-[border-color,opacity] duration-200 hover:border-border-hover {animateOnMount ? 'animate-fade-slide-up' : ''} shadow-[0_12px_28px_rgba(15,23,42,0.06)] {isFrozen ? 'opacity-75 border-border/50' : 'border-border'}"
+  style:animation-delay={animateOnMount ? animDelay : undefined}
 >
   <!-- Accent bar -->
   <div class="h-[3px] w-full" style:background={accent.hex}></div>
