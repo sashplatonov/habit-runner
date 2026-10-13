@@ -307,3 +307,82 @@ test.describe('workspace preference canonical state', () => {
     }
   });
 });
+
+
+test('restores sort and density after logout, login, and a failed preference load', async ({ browser }, testInfo) => {
+  test.skip(testInfo.project.name !== 'desktop', 'Uses the desktop logout control.');
+  const state = createUser('relogin-user', 'relogin@example.test');
+  state.revision = 1;
+  const context = await browser.newContext();
+  await installBackend(context, state, true);
+  await context.route('**/api/auth/logout', (route) => route.fulfill({ status: 204 }));
+  const page = await context.newPage();
+  await page.addInitScript(({ userId, email }) => {
+    if (!sessionStorage.getItem('session-seeded')) {
+      localStorage.setItem('habbitRunner.auth.session', JSON.stringify({ userId, email }));
+      sessionStorage.setItem('session-seeded', 'true');
+    }
+  }, { userId: state.userId, email: state.email });
+  try {
+    await page.goto('/app/dashboard');
+    await page.getByRole('button', { name: 'To do habits' }).click();
+    await page.getByRole('button', { name: 'Toggle smart sort' }).click();
+    await page.getByRole('button', { name: 'Toggle view density' }).click();
+    await expect.poll(() => state.workspace.dashboard).toMatchObject({ sort: 'smart', density: 'compact' });
+    await page.getByRole('button', { name: 'Log out', exact: true }).click();
+    await expect(page).toHaveURL(/\/$/);
+    expect(await page.evaluate(() => localStorage.getItem('habbitRunner.auth.session'))).toBeNull();
+
+    await page.evaluate(({ userId, email }) => {
+      localStorage.setItem('habbitRunner.auth.session', JSON.stringify({ userId, email }));
+    }, { userId: state.userId, email: state.email });
+    await context.route('**/api/auth/preferences', async (route) => {
+      if (route.request().method() === 'GET') {
+        await json(route, { message: 'Temporarily unavailable' }, 503);
+      } else {
+        await route.fallback();
+      }
+    });
+    await page.goto('/app/dashboard');
+    const retry = page.getByRole('button', { name: 'Retry preference synchronization' });
+    await expect(retry).toBeVisible();
+    await context.unroute('**/api/auth/preferences');
+    await retry.click();
+    await expect(retry).toBeHidden();
+    await page.getByRole('button', { name: 'To do habits' }).click();
+    await expect(page.getByRole('button', { name: 'Toggle smart sort' })).toHaveAttribute('aria-pressed', 'true');
+    await expect(page.getByRole('button', { name: 'Toggle view density' })).toHaveAttribute('aria-pressed', 'true');
+    expect(state.workspace.dashboard).toMatchObject({ sort: 'smart', density: 'compact' });
+  } finally {
+    await context.close();
+  }
+});
+
+
+test('loads saved dashboard preferences when login completes without reloading the app', async ({ browser }, testInfo) => {
+  test.skip(testInfo.project.name !== 'desktop', 'Uses an explicit browser login callback.');
+  const state = createUser('callback-user', 'callback@example.test');
+  state.revision = 1;
+  state.workspace.dashboard.sort = 'smart';
+  state.workspace.dashboard.density = 'compact';
+  const context = await browser.newContext();
+  await installBackend(context, state, true);
+  const page = await context.newPage();
+  try {
+    await page.goto('/');
+    await expect(page.getByRole('button', { name: /Sign in with Google/ })).toBeVisible();
+    await page.evaluate(() => {
+      const callback = document.createElement('a');
+      callback.href = '/auth/callback';
+      callback.textContent = 'Complete test login';
+      document.body.append(callback);
+    });
+    await page.getByRole('link', { name: 'Complete test login' }).click();
+    await expect(page).toHaveURL(/\/app\/dashboard$/);
+    await page.getByRole('button', { name: 'To do habits' }).click();
+    await expect(page.getByRole('button', { name: 'Toggle smart sort' })).toHaveAttribute('aria-pressed', 'true');
+    await expect(page.getByRole('button', { name: 'Toggle view density' })).toHaveAttribute('aria-pressed', 'true');
+  } finally {
+    await context.close();
+  }
+});

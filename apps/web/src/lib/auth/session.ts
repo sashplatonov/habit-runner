@@ -9,6 +9,9 @@ export interface AuthSession {
   email?: string;
 }
 
+class AuthSessionRejectedError extends Error {}
+class AuthRefreshSupersededError extends Error {}
+
 let refreshInFlight: Promise<AuthSession> | null = null;
 let authSessionRevision = 0;
 
@@ -97,21 +100,26 @@ function normalizeAuthSession(payload: unknown): AuthSession {
   return saveAuthSession({ userId, email });
 }
 
-async function loadAuthSessionFromServer(): Promise<AuthSession | null> {
-  const response = await fetch(`${API_BASE_URL}/auth/session`, {
+async function loadAuthSessionFromServer(allowRefresh = true, expectedRevision?: number): Promise<AuthSession | null> {
+  const request = allowRefresh ? authenticatedFetch : fetch;
+  const response = await request(`${API_BASE_URL}/auth/session`, {
     method: 'GET',
     credentials: 'include',
     cache: 'no-store'
   });
 
-  if (response.status === 403) {
-    clearAuthSession();
+  if (response.status === 401 || response.status === 403) {
+    if (allowRefresh) { clearAuthSession(); }
     return null;
   }
   if (!response.ok) {
     throw new Error(`Auth session fetch failed: ${response.status}`);
   }
-  return normalizeAuthSession(await response.json());
+  const payload = await response.json();
+  if (expectedRevision !== undefined && expectedRevision !== authSessionRevision) {
+    throw new AuthRefreshSupersededError('Auth refresh was superseded by a newer session change');
+  }
+  return normalizeAuthSession(payload);
 }
 
 async function refreshSession(): Promise<AuthSession> {
@@ -129,21 +137,27 @@ async function refreshSession(): Promise<AuthSession> {
       signal: controller.signal
     });
 
+    if (revisionAtStart !== authSessionRevision) {
+      throw new AuthRefreshSupersededError('Auth refresh was superseded by a newer session change');
+    }
     if (response.status === 409) {
       await new Promise((resolve) => setTimeout(resolve, 50));
-      const recoveredSession = await loadAuthSessionFromServer();
+      const recoveredSession = await loadAuthSessionFromServer(false, revisionAtStart);
       if (recoveredSession) {
         return recoveredSession;
       }
     }
 
+    if (response.status === 401 || response.status === 403) {
+      throw new AuthSessionRejectedError('Authentication session has expired');
+    }
     if (!response.ok) {
       throw new Error('Unable to refresh authentication token');
     }
 
     const payload = await response.json();
     if (revisionAtStart !== authSessionRevision) {
-      throw new Error('Auth refresh was superseded by a newer session change');
+      throw new AuthRefreshSupersededError('Auth refresh was superseded by a newer session change');
     }
     return normalizeAuthSession(payload);
   } catch (err: unknown) {
@@ -209,9 +223,8 @@ export async function authenticatedFetch(input: string, init: RequestInit = {}):
 
   try {
     await refreshSessionOnce();
-  } catch {
-    clearAuthSession();
-    return response;
+  } catch (error) {
+    return handleRefreshFailure(error, response);
   }
 
   const retryHeaders = new Headers(init.headers);
@@ -221,6 +234,15 @@ export async function authenticatedFetch(input: string, init: RequestInit = {}):
     clearAuthSession();
   }
   return response;
+}
+
+function handleRefreshFailure(error: unknown, response: Response): Response {
+  if (error instanceof AuthRefreshSupersededError) { return response; }
+  if (error instanceof AuthSessionRejectedError) {
+    clearAuthSession();
+    return response;
+  }
+  throw error;
 }
 
 export function getSessionUserId(session: AuthSession | null): string | null {

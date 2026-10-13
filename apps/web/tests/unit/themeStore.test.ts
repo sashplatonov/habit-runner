@@ -319,3 +319,95 @@ describe('themeStore conflict recovery', () => {
     });
   });
 });
+
+
+describe('workspace login lifecycle', () => {
+  it('waits for real preferences and retries a failed login hydration', async () => {
+    const saved = serverPreferences({ ...defaultPreferences, sort: 'smart', density: 'compact' });
+    fetchUserPreferences.mockRejectedValueOnce(new Error('Unavailable')).mockResolvedValue(saved);
+    const store = createThemeStore();
+
+    await store.initialize(true);
+    expect(get(store).serverSyncReady).toBe(false);
+    await store.retrySync();
+
+    expect(get(store).serverSyncReady).toBe(true);
+    expect(get(store).dashboard).toMatchObject({ sort: 'smart', density: 'compact' });
+    expect(saveUserPreferences).not.toHaveBeenCalled();
+  });
+
+  it('shares hydration when root and protected layouts initialize together', async () => {
+    let release: ((value: UserPreferences) => void) | undefined;
+    fetchUserPreferences.mockReturnValue(new Promise((resolve) => { release = resolve; }));
+    const store = createThemeStore();
+    const first = store.setAuthenticated(true);
+    const second = store.initialize(true);
+    expect(fetchUserPreferences).toHaveBeenCalledTimes(1);
+    release?.(serverPreferences({ ...defaultPreferences, sort: 'smart', density: 'compact' }));
+    await Promise.all([first, second]);
+    expect(get(store).dashboard).toMatchObject({ sort: 'smart', density: 'compact' });
+  });
+
+  it('restores saved sort and density on the same store after logout and login', async () => {
+    window.localStorage.setItem('habbitRunner.auth.session', JSON.stringify({ userId: 'user-1' }));
+    let remote = serverPreferences();
+    fetchUserPreferences.mockImplementation(async () => remote);
+    saveUserPreferences.mockImplementation(async (request) => {
+      remote = confirmedFromRequest(request);
+      return remote;
+    });
+    const store = createThemeStore();
+    await store.initialize(true);
+    await store.setDashboardPreferences({ ...defaultPreferences, sort: 'smart', density: 'compact' });
+    window.localStorage.removeItem('habbitRunner.auth.session');
+    await store.setAuthenticated(false);
+    window.localStorage.setItem('habbitRunner.auth.session', JSON.stringify({ userId: 'user-1' }));
+    await store.setAuthenticated(true);
+
+    expect(get(store).dashboard).toMatchObject({ sort: 'smart', density: 'compact' });
+  });
+
+  it('ignores an old login response and keeps another account free of pending changes', async () => {
+    window.localStorage.setItem('habbitRunner.auth.session', JSON.stringify({ userId: 'user-1' }));
+    let release: ((value: UserPreferences) => void) | undefined;
+    fetchUserPreferences.mockReturnValueOnce(new Promise((resolve) => { release = resolve; }))
+      .mockResolvedValue(serverPreferences());
+    const store = createThemeStore();
+    const oldLogin = store.initialize(true);
+    await store.setDashboardPreferences({ ...defaultPreferences, sort: 'smart', density: 'compact' });
+    window.localStorage.removeItem('habbitRunner.auth.session');
+    await store.setAuthenticated(false);
+    window.localStorage.setItem('habbitRunner.auth.session', JSON.stringify({ userId: 'user-2' }));
+    await store.setAuthenticated(true);
+    release?.(serverPreferences({ ...defaultPreferences, sort: 'smart', density: 'compact' }));
+    await oldLogin;
+
+    expect(get(store).dashboard).toMatchObject({ sort: 'custom', density: 'comfortable' });
+    expect(saveUserPreferences).not.toHaveBeenCalled();
+    expect(window.localStorage.getItem('hr_workspace_pending_v1:user-1')).not.toBeNull();
+    expect(window.localStorage.getItem('hr_workspace_pending_v1:user-2')).toBeNull();
+  });
+});
+
+
+it('ignores a preference save that completes after logout and replays its outbox on login', async () => {
+  window.localStorage.setItem('habbitRunner.auth.session', JSON.stringify({ userId: 'user-1' }));
+  fetchUserPreferences.mockResolvedValue(serverPreferences());
+  let release: ((value: UserPreferences) => void) | undefined;
+  saveUserPreferences.mockReturnValueOnce(new Promise((resolve) => { release = resolve; }));
+  const store = createThemeStore();
+  await store.initialize(true);
+  const saving = store.setDashboardPreferences({ ...defaultPreferences, sort: 'smart', density: 'compact' });
+  await vi.waitFor(() => expect(saveUserPreferences).toHaveBeenCalledTimes(1));
+  window.localStorage.removeItem('habbitRunner.auth.session');
+  await store.setAuthenticated(false);
+  release?.(confirmedFromRequest(saveUserPreferences.mock.calls[0][0]));
+  await saving;
+  expect(get(store).isAuthenticated).toBe(false);
+  expect(window.localStorage.getItem('hr_workspace_pending_v1:user-1')).not.toBeNull();
+
+  window.localStorage.setItem('habbitRunner.auth.session', JSON.stringify({ userId: 'user-1' }));
+  await store.setAuthenticated(true);
+  expect(get(store).dashboard).toMatchObject({ sort: 'smart', density: 'compact' });
+  expect(window.localStorage.getItem('hr_workspace_pending_v1:user-1')).toBeNull();
+});

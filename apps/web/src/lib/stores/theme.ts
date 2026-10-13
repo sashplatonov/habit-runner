@@ -132,6 +132,8 @@ function applyMutation(base: UserWorkspacePreferences, mutation: WorkspaceMutati
 
 interface PreferenceSynchronizerContext {
   store: Writable<ThemeStoreSnapshot>;
+  userId: string | null;
+  isActive: () => boolean;
   confirmed: UserPreferences | null;
   pending: PendingWorkspaceMutation | null;
   setConfirmed: (value: UserPreferences) => void;
@@ -163,7 +165,7 @@ async function retryConflict(
   if (sent.some((mutation) => !canRebase(mutation))) {
     context.setConfirmed(conflict.current);
     context.setPending(null);
-    clearPendingWorkspaceMutation(currentUserId());
+    clearPendingWorkspaceMutation(context.userId);
     context.store.update((current) => ({ ...current, syncError: 'Preferences changed on another device' }));
     return;
   }
@@ -172,15 +174,17 @@ async function retryConflict(
     : { revision: conflict.current.revision, mutations: sent };
   try {
     context.setPending(pending);
-    persistPendingWorkspaceMutation(currentUserId(), pending);
+    persistPendingWorkspaceMutation(context.userId, pending);
     const retry = await preferencesApi.saveUserPreferences(
       requestFor(conflict.current, pending.mutations, conflict.current.revision));
+    if (!context.isActive()) { return; }
     context.setConfirmed(retry);
     context.removeMutations(sent);
   } catch (retryError) {
+    if (!context.isActive()) { return; }
     const rebased = { ...pending, revision: conflict.current.revision };
     context.setPending(rebased);
-    persistPendingWorkspaceMutation(currentUserId(), rebased);
+    persistPendingWorkspaceMutation(context.userId, rebased);
     context.setConfirmed(conflict.current);
     context.store.update((current) => ({ ...current,
       syncError: retryError instanceof Error ? retryError.message : 'Preference retry failed' }));
@@ -193,16 +197,18 @@ async function writePending(context: PreferenceSynchronizerContext): Promise<voi
   try {
     const saved = await preferencesApi.saveUserPreferences(
       requestFor(context.confirmed, sent, context.confirmed.revision));
+    if (!context.isActive()) { return; }
     context.setConfirmed(saved);
     context.removeMutations(sent);
   } catch (error) {
+    if (!context.isActive()) { return; }
     if (isPreferencesConflict(error)) {
       await retryConflict(context, error, sent);
       return;
     }
     const pending = context.pending ?? { revision: 0, mutations: sent };
     context.setPending(pending);
-    persistPendingWorkspaceMutation(currentUserId(), pending);
+    persistPendingWorkspaceMutation(context.userId, pending);
     logClientError('theme.persist_failed', 'Failed to synchronize user preferences', {
       error: error instanceof Error ? error.message : String(error)
     });
@@ -236,7 +242,7 @@ function importedWorkspace(remote: UserPreferences): { theme: ThemeId; workspace
 export function createThemeStore(): ThemeStore {
   const store = writable(snapshot({ theme: DEFAULT_THEME_ID, timezone: getBrowserTimeZone(), workspace: DEFAULT_WORKSPACE_PREFERENCES, revision: 0, serverSyncReady: false, isAuthenticated: false }));
   let initialized = false;
-  const sync = createPreferenceSynchronizer(store);
+  let sync = createPreferenceSynchronizer(store);
   async function mutate(mutation: WorkspaceMutation, nextTheme?: ThemeId): Promise<void> {
     const current = get(store);
     const theme = nextTheme ?? current.theme;
@@ -253,7 +259,10 @@ export function createThemeStore(): ThemeStore {
   return {
     subscribe: store.subscribe,
     async initialize(isAuthenticated = false) {
+      if (initialized) { return this.setAuthenticated(isAuthenticated); }
       initialized = true;
+      sync.dispose();
+      sync = createPreferenceSynchronizer(store);
       const timezone = isAuthenticated ? getCurrentUserTimeZone() : getBrowserTimeZone();
       store.set(snapshot({ theme: DEFAULT_THEME_ID, timezone, workspace: DEFAULT_WORKSPACE_PREFERENCES,
         revision: 0, serverSyncReady: !isAuthenticated, isAuthenticated }));
@@ -301,6 +310,8 @@ export function createThemeStore(): ThemeStore {
     async setAuthenticated(isAuthenticated) {
       if (!initialized) {return this.initialize(isAuthenticated);}
       if (!isAuthenticated) {
+        sync.dispose();
+        sync = createPreferenceSynchronizer(store);
         store.set(snapshot({ theme: DEFAULT_THEME_ID, timezone: getBrowserTimeZone(),
           workspace: DEFAULT_WORKSPACE_PREFERENCES, revision: 0, serverSyncReady: false, isAuthenticated: false }));
         applyTheme(DEFAULT_THEME_ID);
@@ -309,6 +320,10 @@ export function createThemeStore(): ThemeStore {
       if (get(store).isAuthenticated && get(store).serverSyncReady) {
         return;
       }
+      if (!get(store).isAuthenticated) {
+        sync.dispose();
+        sync = createPreferenceSynchronizer(store);
+      }
       store.update((current) => ({ ...current, isAuthenticated: true, serverSyncReady: false, syncError: null }));
       await sync.hydrate();
     }
@@ -316,7 +331,9 @@ export function createThemeStore(): ThemeStore {
 }
 
 function createPreferenceSynchronizer(store: Writable<ThemeStoreSnapshot>) {
-  let hydrating = false;
+  const userId = currentUserId();
+  let active = true;
+  let hydrating: Promise<void> | null = null;
   let confirmed: UserPreferences | null = null;
   let queue = Promise.resolve();
   let pending: PendingWorkspaceMutation | null = null;
@@ -337,7 +354,7 @@ function createPreferenceSynchronizer(store: Writable<ThemeStoreSnapshot>) {
   function appendPending(mutation: WorkspaceMutation, revision: number): void {
     const mutations = pending?.mutations ?? [];
     pending = { revision: pending?.revision ?? revision, mutations: [...mutations, mutation].slice(-32) };
-    persistPendingWorkspaceMutation(currentUserId(), pending);
+    persistPendingWorkspaceMutation(userId, pending);
   }
 
   function removeMutations(sent: WorkspaceMutation[]): void {
@@ -345,9 +362,9 @@ function createPreferenceSynchronizer(store: Writable<ThemeStoreSnapshot>) {
     const remaining = pending.mutations.filter((mutation) => !sent.includes(mutation));
     pending = remaining.length > 0 ? { ...pending, mutations: remaining } : null;
     if (pending) {
-      persistPendingWorkspaceMutation(currentUserId(), pending);
+      persistPendingWorkspaceMutation(userId, pending);
     } else {
-      clearPendingWorkspaceMutation(currentUserId());
+      clearPendingWorkspaceMutation(userId);
     }
   }
 
@@ -365,8 +382,11 @@ function createPreferenceSynchronizer(store: Writable<ThemeStoreSnapshot>) {
 
   function enqueue(): Promise<void> {
     queue = queue.catch(() => undefined).then(() => {
+      if (!active) { return; }
       return writePending({
         store,
+        userId,
+        isActive: () => active,
         confirmed,
         pending,
         setConfirmed,
@@ -377,13 +397,17 @@ function createPreferenceSynchronizer(store: Writable<ThemeStoreSnapshot>) {
     return queue;
   }
 
-  async function hydrate(): Promise<void> {
-    if (hydrating) { return; }
-    hydrating = true;
+  function hydrate(): Promise<void> {
+    hydrating ??= loadPreferences().finally(() => { hydrating = null; });
+    return hydrating;
+  }
+
+  async function loadPreferences(): Promise<void> {
     store.update((current) => ({ ...current, serverSyncReady: false, syncError: null }));
     try {
       const remote = await preferencesApi.fetchUserPreferences();
-      pending ??= readPendingWorkspaceMutation(currentUserId());
+      if (!active) { return; }
+      pending ??= readPendingWorkspaceMutation(userId);
       if (remote.revision === 0) {
         const imported = importedWorkspace(remote);
         setConfirmed({ ...remote, theme: imported.theme, workspace: imported.workspace });
@@ -395,12 +419,11 @@ function createPreferenceSynchronizer(store: Writable<ThemeStoreSnapshot>) {
       }
       if (pending) { await enqueue(); }
     } catch (error) {
+      if (!active) { return; }
       logClientError('theme.hydrate_failed', 'Failed to synchronize user preferences', {
         error: error instanceof Error ? error.message : String(error)
       });
-      store.update((current) => ({ ...current, serverSyncReady: true, syncError: 'Preferences could not be loaded' }));
-    } finally {
-      hydrating = false;
+      store.update((current) => ({ ...current, serverSyncReady: false, syncError: 'Preferences could not be loaded' }));
     }
   }
 
@@ -409,12 +432,13 @@ function createPreferenceSynchronizer(store: Writable<ThemeStoreSnapshot>) {
   }
 
   function retry(): Promise<void> {
+    if (!get(store).serverSyncReady) { return hydrate(); }
     if (!pending?.mutations.length || retryInFlight) { return Promise.resolve(); }
     retryInFlight = true;
     return enqueue().finally(() => { retryInFlight = false; });
   }
 
-  return { enqueue, hydrate, remember, retry };
+  return { enqueue, hydrate, remember, retry, dispose: () => { active = false; } };
 }
 
 export const themeStore = createThemeStore();

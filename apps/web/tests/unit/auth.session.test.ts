@@ -3,6 +3,7 @@ import {
   AUTH_SESSION_CLEARED_EVENT,
   authenticatedFetch,
   clearAuthSession,
+  ensureAuthSession,
   readAuthSession,
   saveAuthSession
 } from '$lib/auth/session';
@@ -208,4 +209,59 @@ describe('authenticatedFetch endpoint exclusions', () => {
     expect(response.status).toBe(401);
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
+});
+
+
+describe('session lifetime recovery', () => {
+  it('refreshes the session check after the access cookie expires', async () => {
+    saveAuthSession({ userId: 'user-1' });
+    let sessionAttempts = 0;
+    const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
+      if (String(input).endsWith('/auth/session') && ++sessionAttempts === 1) {
+        return new Response(null, { status: 403 });
+      }
+      return Response.json({ userId: 'user-1' });
+    });
+    vi.stubGlobal('fetch', fetchMock);
+
+    expect(await ensureAuthSession()).toEqual({ userId: 'user-1', email: undefined });
+    expect(fetchMock).toHaveBeenCalledTimes(3);
+    expect(readAuthSession()?.userId).toBe('user-1');
+  });
+
+  it.each(['network', 'server', 'rate-limit'])('preserves login on a temporary %s refresh failure', async (failure) => {
+    saveAuthSession({ userId: 'user-1' });
+    vi.stubGlobal('fetch', vi.fn(async (input: RequestInfo | URL) => {
+      if (String(input).endsWith('/auth/refresh')) {
+        if (failure === 'network') { throw new TypeError('Network unavailable'); }
+        return new Response(null, { status: failure === 'server' ? 503 : 429 });
+      }
+      return new Response(null, { status: 401 });
+    }));
+
+    await expect(authenticatedFetch('/api/habits')).rejects.toThrow();
+    expect(readAuthSession()?.userId).toBe('user-1');
+  });
+
+  it('clears login when the refresh session is actually expired', async () => {
+    saveAuthSession({ userId: 'user-1' });
+    vi.stubGlobal('fetch', vi.fn(async () => new Response(null, { status: 403 })));
+
+    expect(await ensureAuthSession()).toBeNull();
+    expect(readAuthSession()).toBeNull();
+  });
+});
+
+
+it('does not clear a newer login when an older refresh is rejected', async () => {
+  saveAuthSession({ userId: 'old-user' });
+  vi.stubGlobal('fetch', vi.fn(async (input: RequestInfo | URL) => {
+    if (String(input).endsWith('/auth/refresh')) {
+      saveAuthSession({ userId: 'new-user' });
+    }
+    return new Response(null, { status: 403 });
+  }));
+
+  await authenticatedFetch('/api/habits');
+  expect(readAuthSession()?.userId).toBe('new-user');
 });

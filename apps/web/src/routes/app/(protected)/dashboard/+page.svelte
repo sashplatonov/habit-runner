@@ -95,7 +95,7 @@
   let touchDragOriginTop = 0;
 
   $effect(() => {
-    if (!$themeStore.serverSyncReady || restoredFromWorkspace) { return; }
+    if (!$themeStore.isAuthenticated || !$themeStore.serverSyncReady || restoredFromWorkspace) { return; }
     const workspace = $themeStore.workspace.dashboard;
     filter = urlState.filter ?? workspace.filter;
     searchQuery = urlState.search ?? workspace.searchQuery;

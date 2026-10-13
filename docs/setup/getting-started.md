@@ -94,7 +94,7 @@ For the standard local setup, the backend dev profile now provides matching defa
 - `API_PORT=3000`
 - `AUTH_SECRET=change-me` (development profile only)
 - `ACCESS_TOKEN_TTL_SECONDS=3600`
-- `REFRESH_TOKEN_EXPIRES_DAYS=30`
+- `REFRESH_TOKEN_EXPIRES_DAYS=90`
 - `JWT_ISSUER=habittracker-local`
 - `API_PUBLIC_URL=http://localhost:3000`
 - `OAUTH_DEFAULT_RETURN_TO=http://localhost:5173`
