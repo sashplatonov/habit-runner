@@ -61,12 +61,12 @@
   }
 </script>
 
-<div class="mx-auto w-full max-w-5xl px-4 pt-2 sm:px-6" role="region" aria-label="Scheduled completion summary">
+<div class="w-full px-4 pt-3 sm:px-6" role="region" aria-label="Scheduled completion summary">
 <Surface as="section" padding="none" class="relative overflow-hidden">
   <div class="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-accent/10 via-accent/60 to-progress/20" aria-hidden="true"></div>
   <p class="sr-only" aria-live="polite">{todayBarLabel()}</p>
 
-  <div data-layout="desktop" class="desktop-summary p-3 sm:p-4">
+  <div data-layout="desktop" class="desktop-summary p-3 sm:px-4 sm:py-3">
     <div class="flex items-center justify-between gap-4">
       <div class="min-w-0">
         <div class="flex min-w-0 items-baseline gap-2">
@@ -86,7 +86,7 @@
       </div>
     </div>
 
-    <div class="mt-3">
+    <div class="mt-1.5">
       <div class="mb-1.5 flex items-center justify-between gap-3">
         <span class="text-xs text-muted">30 days</span>
         <span class="text-[10px] text-muted">Brighter means more complete</span>
@@ -107,7 +107,7 @@
       </div>
     </div>
 
-    <div class="mt-3 border-t border-border/60 pt-3">
+    <div class="mt-2 border-t border-border/60 pt-2">
       <div class="flex items-center justify-between gap-3 text-xs">
         <div class="min-w-0">
           <strong class="font-semibold tabular-nums text-foreground">{summary.today.completed}/{summary.today.required}</strong>

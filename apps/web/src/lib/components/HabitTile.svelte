@@ -82,11 +82,11 @@
   style:animation-delay={animateOnMount ? animDelay : undefined}
 >
   <!-- Accent bar -->
-  <div class="h-[3px] w-full" style:background={accent.hex}></div>
+  <div class="habit-tile-accent h-[3px] w-full" style:background={accent.hex}></div>
 
-  <div class="flex min-h-[108px] flex-col p-2.5">
+  <div class="habit-tile-body flex min-h-[108px] flex-col p-2.5">
     <!-- Name + meta -->
-    <div class="flex-1 min-w-0 text-left">
+    <div class="habit-tile-content flex-1 min-w-0 text-left">
       <div class="flex min-h-[2.75rem] items-center gap-1 leading-tight">
         <button
           type="button"
@@ -136,7 +136,7 @@
     </div>
 
     <!-- Bottom row: heatmap + toggle -->
-    <div class="mt-1.5 flex items-center gap-2 border-t border-border/30 pt-2">
+    <div class="habit-tile-history mt-1.5 flex items-center gap-2 border-t border-border/30 pt-2">
       <HabitStreakPill {streak} missedScheduledDays={momentum.inactiveScheduledDays} />
       <div
         class="relative z-10 flex min-w-0 flex-1 items-center"
@@ -147,7 +147,7 @@
       </div>
 
       <!-- Toggle button with particles -->
-      <div class="relative flex-shrink-0">
+      <div class="habit-tile-toggle relative flex-shrink-0">
         {#if animating}
           {#each animParticles as p (p.id)}
             <span
@@ -173,3 +173,51 @@
     </div>
   </div>
 </article>
+
+<style>
+  @media (min-width: 1024px) {
+    .habit-tile-accent {
+      position: absolute;
+      inset: 0 auto 0 0;
+      width: 3px;
+      height: 100%;
+    }
+
+    .habit-tile-body {
+      display: grid;
+      grid-template-columns: 44px minmax(0, 1fr) auto 292px;
+      align-items: center;
+      gap: 12px;
+      min-height: 88px;
+      padding: 10px 14px;
+    }
+
+    .habit-tile-content {
+      grid-column: 2;
+      grid-row: 1;
+    }
+
+    .habit-tile-history {
+      display: contents;
+    }
+
+    .habit-tile-history :global(> [data-streak-pill]) {
+      grid-column: 3;
+      grid-row: 1;
+    }
+
+    .habit-tile-history > [role='img'] {
+      grid-column: 4;
+      grid-row: 1;
+    }
+
+    .habit-tile-history :global([data-heatmap-row]) {
+      max-width: none;
+    }
+
+    .habit-tile-toggle {
+      grid-column: 1;
+      grid-row: 1;
+    }
+  }
+</style>

@@ -664,7 +664,7 @@
     <RemindersPanel />
 
     <!-- ═══════════ HABIT LIST ════════════════════════════════════════════════ -->
-    <div class="mx-auto max-w-5xl px-4 py-4 sm:px-6">
+    <div class="w-full px-4 pb-4 pt-0 sm:px-6">
       {#if filteredHabits.length === 0}
         <div class="rounded-[1.75rem] border border-border bg-bg-secondary/88 py-16 text-center text-muted shadow-[0_20px_54px_rgba(15,23,42,0.08)]">
           <p class="text-4xl mb-3">
@@ -682,7 +682,7 @@
 
       {:else if viewDensity === 'comfortable'}
         <div
-          class={`${selectedTags.length === 0 ? 'grid gap-4 [grid-template-columns:repeat(auto-fit,minmax(18rem,1fr))]' : ''}`}
+          class={`${selectedTags.length === 0 ? 'grid grid-cols-1 gap-2' : ''}`}
           role="list"
           aria-label="Habit list"
         >
@@ -706,7 +706,7 @@
                     <span class="h-1.5 w-1.5 rounded-full bg-accent"></span>
                     <h3 class="text-[10px] font-mono font-bold uppercase tracking-widest text-muted">{group.tag}</h3>
                   </div>
-                  <div class="mt-3 grid gap-4 [grid-template-columns:repeat(auto-fit,minmax(18rem,1fr))]">
+                  <div class="mt-3 grid grid-cols-1 gap-2">
                     {#each group.habits as habit, idx (habit.id)}
                       <HabitTile
                         {habit}
@@ -726,7 +726,7 @@
         </div>
 
       {:else}
-        <div class="mx-auto flex w-full max-w-5xl flex-col" style="gap: 0.5rem;" role="list" aria-label="Habit list">
+        <div class="flex w-full flex-col" style="gap: 0.5rem;" role="list" aria-label="Habit list">
           {#if selectedTags.length === 0}
             <ul class="space-y-1" role="list">
               {#each filteredHabits as habit, idx (habit.id)}
@@ -802,7 +802,7 @@
                       style:background-color={indicatorColor}
                     ></span>
 
-                    <div class="relative z-10 flex w-full min-w-0 items-start gap-3">
+                    <div class="habit-row-content relative z-10 flex w-full min-w-0 items-start gap-3">
                       {#if isDragActive()}
                         <button
                           type="button"
@@ -900,7 +900,7 @@
                         <span class="shrink-0"><DescriptionTooltip description={habit.description} triggerClassName="!size-8 !min-h-8 !min-w-8 !rounded-lg sm:!size-11 sm:!min-h-11 sm:!min-w-11 sm:!rounded-[1rem]" /></span>
                       {/if}
                     </div>
-                    <div class="relative z-10 mt-2 flex w-full min-w-0 items-center gap-2 border-t border-border/40 pt-2">
+                    <div class="habit-row-history relative z-10 mt-2 flex w-full min-w-0 items-center gap-2 border-t border-border/40 pt-2">
                       <HabitStreakPill {streak} missedScheduledDays={momentum.inactiveScheduledDays} />
                       <div class="min-w-0 flex-1" role="img" aria-label="Habit activity for the last 30 days, from 30 days ago through today">
                         <MiniHeatmap completions={habit.completions} dailyTarget={tgt} color={habit.color} />
@@ -993,7 +993,7 @@
                     style:background-color={indicatorColor}
                   ></span>
 
-                  <div class="relative z-10 flex w-full min-w-0 items-start gap-3">
+                  <div class="habit-row-content relative z-10 flex w-full min-w-0 items-start gap-3">
                     {#if isDragActive()}
                       <button
                         type="button"
@@ -1093,7 +1093,7 @@
                       <span class="shrink-0"><DescriptionTooltip description={habit.description} triggerClassName="!size-8 !min-h-8 !min-w-8 !rounded-lg sm:!size-11 sm:!min-h-11 sm:!min-w-11 sm:!rounded-[1rem]" /></span>
                     {/if}
                   </div>
-                  <div class="relative z-10 mt-2 flex w-full min-w-0 items-center gap-2 border-t border-border/40 pt-2">
+                  <div class="habit-row-history relative z-10 mt-2 flex w-full min-w-0 items-center gap-2 border-t border-border/40 pt-2">
                     <HabitStreakPill {streak} missedScheduledDays={momentum.inactiveScheduledDays} />
                     <div class="min-w-0 flex-1" role="img" aria-label="Habit activity for the last 30 days, from 30 days ago through today">
                       <MiniHeatmap completions={habit.completions} dailyTarget={tgt} color={habit.color} />
@@ -1113,3 +1113,30 @@
 
   </div>
 {/if}
+
+<style>
+  @media (min-width: 1024px) {
+    .habit-card-inner {
+      flex-direction: row;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .habit-row-content {
+      flex: 1;
+      align-items: center;
+    }
+
+    .habit-row-history {
+      width: 350px;
+      flex-shrink: 0;
+      margin-top: 0;
+      border-top: 0;
+      padding-top: 0;
+    }
+
+    .habit-row-history :global([data-heatmap-row]) {
+      max-width: none;
+    }
+  }
+</style>

@@ -15,12 +15,15 @@
 
   let { theme, onThemeChange, onLogout, routeBase = '/app/(protected)', children }: Props = $props();
 
+  const isTodayRoute = $derived(page.url.pathname.endsWith('/dashboard') || page.url.pathname === '/showcase');
+
   const isHabitFormRoute = $derived(
     page.url.pathname.endsWith('/habit/new') || /\/habit\/[^/]+\/edit$/.test(page.url.pathname)
   );
 </script>
 
-<div class="relative min-h-[var(--telegram-viewport-height)] overflow-x-clip bg-bg-primary text-foreground">
+<div class:today-layout={isTodayRoute}
+  class="relative min-h-[var(--telegram-viewport-height)] overflow-x-clip bg-bg-primary text-foreground">
   <div aria-hidden="true" class="pointer-events-none fixed inset-0 -z-10 hidden sm:block">
     <div class="absolute left-[-8rem] top-[-8rem] h-[24rem] w-[24rem] rounded-full bg-progress/10 blur-3xl"></div>
     <div class="absolute right-[-6rem] top-[12rem] h-[24rem] w-[24rem] rounded-full bg-accent-secondary/10 blur-3xl"></div>
@@ -41,7 +44,7 @@
     {routeBase}
   />
 
-  <div class="sm:ml-[252px]">
+  <div class="app-content sm:ml-[252px]">
     <main
       id="main-content"
       tabindex="-1"
@@ -74,3 +77,16 @@
     <BottomNav {theme} {onThemeChange} {onLogout} {routeBase} />
   {/if}
 </div>
+
+<style>
+  @media (min-width: 1024px) {
+    .today-layout :global(aside[aria-label='Sidebar navigation']) {
+      width: 205px;
+      padding-inline: 9px;
+    }
+
+    .today-layout .app-content {
+      margin-left: 205px;
+    }
+  }
+</style>

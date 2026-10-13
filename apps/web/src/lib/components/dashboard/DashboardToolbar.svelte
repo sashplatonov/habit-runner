@@ -73,7 +73,7 @@
 
 <svelte:window onkeydown={handleKeydown} />
 
-<section class="mx-auto w-full max-w-5xl px-4 py-2 sm:px-6" aria-label="Today controls">
+<section class="w-full px-4 py-2 sm:px-6" aria-label="Today controls">
   <div class="rounded-[1.25rem] border border-border bg-bg-card p-2 shadow-[0_10px_30px_rgba(15,23,42,0.06)] transition-colors {isOpen ? 'border-accent/35 bg-bg-card/95' : ''}">
     <div class="flex min-h-12 items-center gap-2">
       <button
