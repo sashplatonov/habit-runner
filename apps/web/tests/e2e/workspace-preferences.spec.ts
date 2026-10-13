@@ -378,7 +378,7 @@ test('loads saved dashboard preferences when login completes without reloading t
       document.body.append(callback);
     });
     await page.getByRole('link', { name: 'Complete test login' }).click();
-    await expect(page).toHaveURL(/\/app\/dashboard$/);
+    await expect(page).toHaveURL((url) => url.pathname === '/app/dashboard');
     await page.getByRole('button', { name: 'To do habits' }).click();
     await expect(page.getByRole('button', { name: 'Toggle smart sort' })).toHaveAttribute('aria-pressed', 'true');
     await expect(page.getByRole('button', { name: 'Toggle view density' })).toHaveAttribute('aria-pressed', 'true');
