@@ -157,7 +157,7 @@ Notification endpoints:
 Root `docker-compose.yml` defines:
 - `web`: nginx-served frontend image built from `apps/web`
 - `api`: Quarkus image built from `apps/backend`
-- `db`: PostgreSQL 18 image behind the optional `db` profile
+- `db`: PostgreSQL 19 image behind the optional `db` profile
 
 Important runtime assumptions:
 - the web container proxies `/api/*` to the internal `api` service;
