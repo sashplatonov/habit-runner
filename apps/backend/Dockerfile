@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1.7
 # JVM build for local development
-FROM docker.io/library/eclipse-temurin:25-jdk AS build
+FROM docker.io/library/eclipse-temurin:25.0.5.1_2-jdk AS build
 WORKDIR /workspace
 
 # Keep the API build bounded when Dokploy builds API and web images together.
@@ -22,7 +22,7 @@ COPY src src
 # the deployment image build only compiles and packages the application.
 RUN --mount=type=cache,target=/root/.m2 ./mvnw -B -T1 -Djacoco.skip=true -Dcheckstyle.skip=true -Dpmd.skip=true -Dspotbugs.skip=true -Dmaven.test.skip=true -Dtest.jvm.argline.extra="-Xms256m -Xmx1024m -XX:ActiveProcessorCount=1" package
 
-FROM docker.io/library/eclipse-temurin:25-jre AS runtime
+FROM docker.io/library/eclipse-temurin:25.0.5.1_2-jre AS runtime
 WORKDIR /work
 # Ensure wget is available for the healthcheck
 RUN set -eux; \
